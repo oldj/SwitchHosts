@@ -142,6 +142,8 @@ class TaskBarIcon(wx.TaskBarIcon):
         try:
             open(sys_hosts_fn, "wb").write(open(fn, "rb").read())
             self.current_hosts = fn
+            title = os.path.split(fn)[1]
+            self.SetIcon(GetMondrianIcon(), "Hosts: %s" % title)
         except Exception:
             wx.MessageBox(traceback.format_exc(), "Error!")
 
