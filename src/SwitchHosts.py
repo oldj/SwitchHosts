@@ -16,6 +16,11 @@ import wx
 
 VERSION = "0.1.0"
 
+if os.name == "nt":
+    from libs.win_notify import showNotify
+else:
+    from libs.nix_notify import showNotify
+
 
 def GetMondrianData():
     return "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x10\x00\x00\x00\
@@ -153,8 +158,12 @@ class TaskBarIcon(wx.TaskBarIcon):
             self.current_hosts = fn
             title = os.path.split(fn)[1]
             self.SetIcon(GetMondrianIcon(), "Hosts: %s" % title)
+            showNotify(u"Hosts切换成功！", u"hosts 已切换为 %s" % title)
+
         except Exception:
-            wx.MessageBox(traceback.format_exc(), "Error!")
+            print(traceback.format_exc())
+#            wx.MessageBox(traceback.format_exc(), "Error!")
+            showNotify(u"Hosts切换失败！", u"hosts 未能成功切换！")
 
 
 class Frame(wx.Frame):
