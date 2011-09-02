@@ -95,7 +95,16 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 
     def OnAbout(self, event):
-        wx.MessageBox(u"快速切换 hosts 文件！\n\nVERSION: %s" % VERSION, u"About")
+#        wx.MessageBox(u"快速切换 hosts 文件！\n\nVERSION: %s" % VERSION, u"About")
+        msg = u"Switch Hosts!\n\n" + \
+            u"本程序用于在多个 hosts 配置之间快速切换。\n\n" +\
+            u"by oldj, oldj.wu@gmail.com\n" +\
+            u"https://github.com/oldj/SwitchHosts\n" +\
+            u"VERSION: %s" % VERSION
+        
+        dlg = wx.MessageDialog(self.frame, msg, "About", wx.OK | wx.ICON_INFORMATION)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     # override
     def CreatePopupMenu(self):
@@ -149,6 +158,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 
 class Frame(wx.Frame):
+
     def __init__(
             self, parent=None, id=wx.ID_ANY, title="TaskBarIcon", pos=wx.DefaultPosition,
             size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE
@@ -170,12 +180,15 @@ class Frame(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_ICONIZE, self.OnIconfiy)
 
+
     def OnHide(self, event):
         self.Hide()
+
 
     def OnIconfiy(self, event):
         wx.MessageBox("Frame has been iconized!", "Prompt")
         event.Skip()
+
 
     def OnClose(self, event):
         self.taskBarIcon.Destroy()
