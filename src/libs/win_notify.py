@@ -12,7 +12,8 @@ import sys, os
 import struct
 import time
 
-class PyNOTIFYICONDATA:
+class PyNOTIFYICONDATA(object):
+
     _struct_format = (
         "I" # DWORD cbSize;
         "I" # HWND hWnd;
