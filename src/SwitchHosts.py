@@ -14,12 +14,7 @@ import glob
 import traceback
 import wx
 
-VERSION = "0.1.0"
-
-if os.name == "nt":
-    from libs.win_notify import showNotify
-else:
-    from libs.nix_notify import showNotify
+VERSION = "0.1.1"
 
 
 def GetMondrianData():
