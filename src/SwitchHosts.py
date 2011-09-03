@@ -158,12 +158,18 @@ class TaskBarIcon(wx.TaskBarIcon):
             self.current_hosts = fn
             title = os.path.split(fn)[1]
             self.SetIcon(GetMondrianIcon(), "Hosts: %s" % title)
-            showNotify(u"Hosts切换成功！", u"hosts 已切换为 %s" % title)
+            wx.NotificationMessage(
+                u"Hosts切换成功！",
+                u"hosts 已切换为 %s" % title,
+                self.frame).Show()
 
         except Exception:
             print(traceback.format_exc())
 #            wx.MessageBox(traceback.format_exc(), "Error!")
-            showNotify(u"Hosts切换失败！", u"hosts 未能成功切换！")
+            wx.NotificationMessage(
+                u"Hosts切换失败！",
+                u"hosts 未能成功切换！",
+                self.frame).Show()
 
 
 class Frame(wx.Frame):
