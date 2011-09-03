@@ -81,15 +81,31 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.current_hosts = None
 
 
+    def notify(self, msg=None, title=None):
+
+        import libs.ToasterBox as TB
+
+        sw, sh = wx.GetDisplaySize()
+        width, height = 210, 50
+        px = sw - 230
+        py = sh - 100
+
+        tb = TB.ToasterBox(self.frame)
+        tb.SetPopupText(msg)
+        tb.SetPopupSize((width, height))
+        tb.SetPopupPosition((px, py))
+        tb.Play()
+
+
     def OnTaskBarLeftDClick(self, event):
 
-#        if self.frame.IsIconized():
-#           self.frame.Iconize(False)
-#        if not self.frame.IsShown():
-#           self.frame.Show(True)
-#        self.frame.Raise()
+        if self.frame.IsIconized():
+           self.frame.Iconize(False)
+        if not self.frame.IsShown():
+           self.frame.Show(True)
+        self.frame.Raise()
 
-        self.OnAbout(event)
+#        self.OnAbout(event)
 
 
     def OnExit(self, event):
@@ -148,7 +164,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 
         hosts_id = event.GetId()
         fn = self.hosts[hosts_id]
-#        print(fn, os.path.isfile(fn))
+#        print(dir(event))
         if not os.path.isfile(fn):
             wx.MessageBox(u"hosts 文件 '%s' 不存在！" % fn, "Error!")
 
@@ -158,18 +174,20 @@ class TaskBarIcon(wx.TaskBarIcon):
             self.current_hosts = fn
             title = os.path.split(fn)[1]
             self.SetIcon(GetMondrianIcon(), "Hosts: %s" % title)
-            wx.NotificationMessage(
-                u"Hosts切换成功！",
-                u"hosts 已切换为 %s" % title,
-                self.frame).Show()
+#            wx.NotificationMessage(
+#                u"Hosts切换成功！",
+#                u"hosts 已切换为 %s" % title,
+#                self.frame).Show()
+            self.notify(u"Hosts 已切换为 %s。" % title)
 
         except Exception:
             print(traceback.format_exc())
-#            wx.MessageBox(traceback.format_exc(), "Error!")
-            wx.NotificationMessage(
-                u"Hosts切换失败！",
-                u"hosts 未能成功切换！",
-                self.frame).Show()
+            wx.MessageBox(u"hosts 未能成功切换！", "Error!")
+#            wx.NotificationMessage(
+#                u"Hosts切换失败！",
+#                u"hosts 未能成功切换！",
+#                self.frame).Show()
+#            self.notify(u"hosts 未能成功切换！")
 
 
 class Frame(wx.Frame):
