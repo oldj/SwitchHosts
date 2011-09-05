@@ -72,10 +72,10 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.frame = frame
         self.SetIcon(GetMondrianIcon(), "Switch Hosts!")
         #        self.SetIcon(wx.Icon(name="arrow_switch.png", type=wx.BITMAP_TYPE_PNG), "Switch Hosts!")
-        self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
+#        self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=self.ID_About)
         self.Bind(wx.EVT_MENU, self.OnExit, id=self.ID_Exit)
-        self.Bind(wx.EVT_MENU, self.OnMainFrame, id=self.ID_MainFrame)
+#        self.Bind(wx.EVT_MENU, self.OnMainFrame, id=self.ID_MainFrame)
 
         self.current_hosts = None
 
@@ -313,6 +313,10 @@ class Frame(wx.Frame):
             self.m_list.InsertColumn(col, txt)
 
 
+    def updateHostsList(self):
+        u"""更新 hosts 列表"""
+
+
     def OnHide(self, event):
         self.Hide()
 
@@ -370,7 +374,7 @@ def main():
     app = wx.PySimpleApp()
     frame = Frame(size=(640, 480))
     frame.Centre()
-    frame.Show()
+#    frame.Show()
     app.MainLoop()
 
 
