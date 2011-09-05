@@ -43,13 +43,17 @@ def GetMondrianData():
 \x8a\x1a#\xf5*\xda\xa5b'S\x9d\xb3\xd1\rga\xf2\xf1\xd7~5\xda\xadF+\xd7Q\xd8l\x9c\x7f\x02\
 \x9f\xa4l\xb4#4\xd4~\x00\x00\x00\x00IEND\xaeB`\x82"
 
+
 def GetMondrianBitmap():
     return wx.BitmapFromImage(GetMondrianImage())
 
+
 def GetMondrianImage():
     import cStringIO
+
     stream = cStringIO.StringIO(GetMondrianData())
     return wx.ImageFromStream(stream)
+
 
 def GetMondrianIcon():
     icon = wx.EmptyIcon()
@@ -58,26 +62,25 @@ def GetMondrianIcon():
 
 
 class TaskBarIcon(wx.TaskBarIcon):
-
     ID_About = wx.NewId()
     ID_Exit = wx.NewId()
+    ID_MAINFRAME = wx.NewId()
 
     def __init__(self, frame):
-
         wx.TaskBarIcon.__init__(self)
-#        super(wx.TaskBarIcon, self).__init__()
+        #        super(wx.TaskBarIcon, self).__init__()
         self.frame = frame
         self.SetIcon(GetMondrianIcon(), "Switch Hosts!")
-#        self.SetIcon(wx.Icon(name="arrow_switch.png", type=wx.BITMAP_TYPE_PNG), "Switch Hosts!")
+        #        self.SetIcon(wx.Icon(name="arrow_switch.png", type=wx.BITMAP_TYPE_PNG), "Switch Hosts!")
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=self.ID_About)
         self.Bind(wx.EVT_MENU, self.OnExit, id=self.ID_Exit)
+        self.Bind(wx.EVT_MENU, self.OnMainFrame, id=self.ID_MAINFRAME)
 
         self.current_hosts = None
 
 
     def notify(self, msg=None, title=None):
-
         import libs.ToasterBox as TB
 
         sw, sh = wx.GetDisplaySize()
@@ -93,43 +96,47 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 
     def OnTaskBarLeftDClick(self, event):
-
         if self.frame.IsIconized():
-           self.frame.Iconize(False)
+            self.frame.Iconize(False)
         if not self.frame.IsShown():
-           self.frame.Show(True)
+            self.frame.Show(True)
         self.frame.Raise()
 
-#        self.OnAbout(event)
+    #        self.OnAbout(event)
 
 
     def OnExit(self, event):
-
         self.frame.Destroy()
         self.Destroy()
         sys.exit()
 
 
     def OnAbout(self, event):
-#        wx.MessageBox(u"快速切换 hosts 文件！\n\nVERSION: %s" % VERSION, u"About")
-        msg = u"Switch Hosts!\n\n" + \
-            u"本程序用于在多个 hosts 配置之间快速切换。\n\n" +\
-            u"by oldj, oldj.wu@gmail.com\n" +\
-            u"https://github.com/oldj/SwitchHosts\n" +\
-            u"VERSION: %s" % VERSION
-        
+    #        wx.MessageBox(u"快速切换 hosts 文件！\n\nVERSION: %s" % VERSION, u"About")
+        msg = u"Switch Hosts!\n\n" +\
+              u"本程序用于在多个 hosts 配置之间快速切换。\n\n" +\
+              u"by oldj, oldj.wu@gmail.com\n" +\
+              u"https://github.com/oldj/SwitchHosts\n" +\
+              u"VERSION: %s" % VERSION
+
         dlg = wx.MessageDialog(self.frame, msg, "About", wx.OK | wx.ICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
 
+
+    def OnMainFrame(self, event):
+        u"""显示主面板"""
+        if not self.frame.IsShown():
+            self.frame.Show(True)
+        self.frame.Raise()
+
     # override
     def CreatePopupMenu(self):
-
         self.hosts = {}
 
         hosts_list = listLocalHosts()
         menu = wx.Menu()
-        menu.Append(wx.ID_ANY, u"Switch Hosts!")
+        menu.Append(self.ID_MAINFRAME, u"Switch Hosts!")
         menu.AppendSeparator()
 
         if not self.current_hosts:
@@ -156,10 +163,9 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 
     def switchHost(self, event):
-
         hosts_id = event.GetId()
         fn = self.hosts[hosts_id]
-#        print(dir(event))
+        #        print(dir(event))
         if not os.path.isfile(fn):
             wx.MessageBox(u"hosts 文件 '%s' 不存在！" % fn, "Error!")
 
@@ -169,15 +175,16 @@ class TaskBarIcon(wx.TaskBarIcon):
             self.current_hosts = fn
             title = os.path.split(fn)[1]
             self.SetIcon(GetMondrianIcon(), "Hosts: %s" % title)
-#            wx.NotificationMessage(
-#                u"Hosts切换成功！",
-#                u"hosts 已切换为 %s" % title,
-#                self.frame).Show()
+            #            wx.NotificationMessage(
+            #                u"Hosts切换成功！",
+            #                u"hosts 已切换为 %s" % title,
+            #                self.frame).Show()
             self.notify(u"Hosts 已切换为 %s。" % title)
 
         except Exception:
             print(traceback.format_exc())
             wx.MessageBox(u"hosts 未能成功切换！", "Error!")
+
 #            wx.NotificationMessage(
 #                u"Hosts切换失败！",
 #                u"hosts 未能成功切换！",
@@ -186,27 +193,120 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 
 class Frame(wx.Frame):
-
     def __init__(
-            self, parent=None, id=wx.ID_ANY, title="TaskBarIcon", pos=wx.DefaultPosition,
-            size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE
-            ):
+        self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
+        size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE
+    ):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
-#        self.SetIcon(wx.Icon("arrow_switch.png", wx.BITMAP_TYPE_PNG))
-        self.SetIcon(GetMondrianIcon())
-        panel = wx.Panel(self, wx.ID_ANY)
-        button = wx.Button(panel, wx.ID_ANY, "Hide Frame", pos=(60, 60))
-
-        sizer = wx.BoxSizer()
-        sizer.Add(button, 0)
-        panel.SetSizer(sizer)
+        #        self.SetIcon(wx.Icon("arrow_switch.png", wx.BITMAP_TYPE_PNG))
+        #        self.SetIcon(GetMondrianIcon())
+        #        panel = wx.Panel(self, wx.ID_ANY)
+        #        button = wx.Button(panel, wx.ID_ANY, "Hide Frame", pos=(60, 60))
+        #
+        #        sizer = wx.BoxSizer()
+        #        sizer.Add(button, 0)
+        #        panel.SetSizer(sizer)
         self.taskBarIcon = TaskBarIcon(self)
 
         # bind event
-        self.Bind(wx.EVT_BUTTON, self.OnHide, button)
+        #        self.Bind(wx.EVT_BUTTON, self.OnHide, button)
+        #        self.Bind(wx.EVT_CLOSE, self.OnClose)
+        #        self.Bind(wx.EVT_ICONIZE, self.OnIconfiy)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.Bind(wx.EVT_ICONIZE, self.OnIconfiy)
+
+        self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
+
+        self.m_menubar1 = wx.MenuBar(0)
+        self.m_menu1 = wx.Menu()
+        self.m_menuItem_exit = wx.MenuItem(self.m_menu1, wx.ID_ANY, u"退出(&E)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menu1.AppendItem(self.m_menuItem_exit)
+
+        self.m_menubar1.Append(self.m_menu1, u"文件(&F)")
+
+        self.m_menu3 = wx.Menu()
+        self.m_menuItem_about = wx.MenuItem(self.m_menu3, wx.ID_ANY, u"关于(&A)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menu3.AppendItem(self.m_menuItem_about)
+
+        self.m_menubar1.Append(self.m_menu3, u"帮助(&H)")
+
+        self.SetMenuBar(self.m_menubar1)
+
+        bSizer16 = wx.BoxSizer(wx.VERTICAL)
+
+        self.m_notebook3 = wx.Notebook(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_panel24 = wx.Panel(self.m_notebook3, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        bSizer17 = wx.BoxSizer(wx.VERTICAL)
+
+        self.m_list = wx.ListCtrl(self.m_panel24, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, style=wx.LC_REPORT)
+        bSizer17.Add(self.m_list, 1, wx.ALL | wx.EXPAND, 5)
+
+        bSizer20 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.m_panel25 = wx.Panel(self.m_panel24, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        bSizer20.Add(self.m_panel25, 1, wx.EXPAND | wx.ALL, 5)
+
+        self.m_button8 = wx.Button(self.m_panel24, wx.ID_ANY, u"编辑", wx.DefaultPosition, wx.DefaultSize, 0)
+        bSizer20.Add(self.m_button8, 0, wx.ALL, 5)
+
+        self.m_button10 = wx.Button(self.m_panel24, wx.ID_ANY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
+        bSizer20.Add(self.m_button10, 0, wx.ALL, 5)
+
+        bSizer17.Add(bSizer20, 0, wx.EXPAND, 5)
+
+        self.m_panel24.SetSizer(bSizer17)
+        self.m_panel24.Layout()
+        bSizer17.Fit(self.m_panel24)
+        self.m_notebook3.AddPage(self.m_panel24, u"hosts列表", False)
+        self.m_panel26 = wx.Panel(self.m_notebook3, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        bSizer22 = wx.BoxSizer(wx.VERTICAL)
+
+        bSizer27 = wx.BoxSizer(wx.VERTICAL)
+
+        m_comboBox1Choices = []
+        self.m_comboBox1 = wx.ComboBox(self.m_panel26, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.DefaultSize,
+                                       m_comboBox1Choices, 0)
+        bSizer27.Add(self.m_comboBox1, 0, wx.ALL, 5)
+
+        self.m_textCtrl_content = wx.TextCtrl(self.m_panel26, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+                                              wx.DefaultSize, wx.TE_MULTILINE)
+        bSizer27.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 5)
+
+        bSizer22.Add(bSizer27, 1, wx.EXPAND, 5)
+
+        bSizer25 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.m_panel27 = wx.Panel(self.m_panel26, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        bSizer25.Add(self.m_panel27, 1, wx.EXPAND | wx.ALL, 5)
+
+        self.m_button_cancel_edit = wx.Button(self.m_panel26, wx.ID_ANY, u"取消", wx.DefaultPosition, wx.DefaultSize, 0)
+        bSizer25.Add(self.m_button_cancel_edit, 0, wx.ALL, 5)
+
+        self.m_button_save_edit = wx.Button(self.m_panel26, wx.ID_ANY, u"保存", wx.DefaultPosition, wx.DefaultSize, 0)
+        bSizer25.Add(self.m_button_save_edit, 0, wx.ALL, 5)
+
+        bSizer22.Add(bSizer25, 0, wx.EXPAND, 5)
+
+        self.m_panel26.SetSizer(bSizer22)
+        self.m_panel26.Layout()
+        bSizer22.Fit(self.m_panel26)
+        self.m_notebook3.AddPage(self.m_panel26, u"编辑hosts", False)
+
+        bSizer16.Add(self.m_notebook3, 1, wx.EXPAND | wx.ALL, 0)
+
+        self.SetSizer(bSizer16)
+        self.Layout()
+
+        self.Centre(wx.BOTH)
+
+        self.init2()
+
+
+    def init2(self):
+        pass
+        hosts_cols = (u"hosts", u"描述")
+        for col, txt in enumerate(hosts_cols):
+            self.m_list.InsertColumn(col, txt)
 
 
     def OnHide(self, event):
@@ -217,10 +317,12 @@ class Frame(wx.Frame):
         wx.MessageBox("Frame has been iconized!", "Prompt")
         event.Skip()
 
-
     def OnClose(self, event):
-        self.taskBarIcon.Destroy()
-        self.Destroy()
+        self.Hide()
+#        self.taskBarIcon.Destroy()
+#        self.Destroy()
+#        event.Skip()
+        return False
 
 
 def getSysHostsPath():
@@ -239,8 +341,8 @@ def listLocalHosts():
 
     global g_local_hosts_dir
 
-    fns = [fn for fn in glob.glob(os.path.join(g_local_hosts_dir, "*")) if \
-           os.path.isfile(fn) and not fn.startswith(".") \
+    fns = [fn for fn in glob.glob(os.path.join(g_local_hosts_dir, "*")) if\
+           os.path.isfile(fn) and not fn.startswith(".")\
            and not fn.startswith("_")
     ]
 
@@ -248,7 +350,6 @@ def listLocalHosts():
 
 
 def init():
-
     global g_local_hosts_dir
 
     base_dir = os.getcwd()
@@ -262,7 +363,7 @@ def main():
     app = wx.PySimpleApp()
     frame = Frame(size=(640, 480))
     frame.Centre()
-#    frame.Show()
+    frame.Show()
     app.MainLoop()
 
 
