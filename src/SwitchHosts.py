@@ -6,6 +6,7 @@ u"""
 @author: oldj
 @blog: http://oldj.net
 @email: oldj.wu@gmail.com
+@version: 0.1.1.100
 """
 
 import os
@@ -193,10 +194,9 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 
 class Frame(wx.Frame):
-
     def __init__(
-        self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
-        size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE
+    self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
+    size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE
     ):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
@@ -236,41 +236,41 @@ class Frame(wx.Frame):
 
         bSizer16 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_notebook3 = wx.Notebook(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0)
-        self.m_panel24 = wx.Panel(self.m_notebook3, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        self.m_notebook = wx.Notebook(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_panel_page1 = wx.Panel(self.m_notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         bSizer17 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_list = wx.ListCtrl(self.m_panel24, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, style=wx.LC_REPORT)
+        self.m_list = wx.ListCtrl(self.m_panel_page1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, style=wx.LC_REPORT)
         bSizer17.Add(self.m_list, 1, wx.ALL | wx.EXPAND, 5)
 
         bSizer20 = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.m_panel25 = wx.Panel(self.m_panel24, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        self.m_panel25 = wx.Panel(self.m_panel_page1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         bSizer20.Add(self.m_panel25, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.m_button8 = wx.Button(self.m_panel24, wx.ID_ANY, u"编辑", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_button8 = wx.Button(self.m_panel_page1, wx.ID_ANY, u"编辑", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer20.Add(self.m_button8, 0, wx.ALL, 5)
 
-        self.m_button10 = wx.Button(self.m_panel24, wx.ID_ANY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_button10 = wx.Button(self.m_panel_page1, wx.ID_ANY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer20.Add(self.m_button10, 0, wx.ALL, 5)
 
         bSizer17.Add(bSizer20, 0, wx.EXPAND, 5)
 
-        self.m_panel24.SetSizer(bSizer17)
-        self.m_panel24.Layout()
-        bSizer17.Fit(self.m_panel24)
-        self.m_notebook3.AddPage(self.m_panel24, u"hosts列表", False)
-        self.m_panel26 = wx.Panel(self.m_notebook3, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        self.m_panel_page1.SetSizer(bSizer17)
+        self.m_panel_page1.Layout()
+        bSizer17.Fit(self.m_panel_page1)
+        self.m_notebook.AddPage(self.m_panel_page1, u"hosts列表", False)
+        self.m_panel_page2 = wx.Panel(self.m_notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         bSizer22 = wx.BoxSizer(wx.VERTICAL)
 
         bSizer27 = wx.BoxSizer(wx.VERTICAL)
 
-        m_comboBox1Choices = []
-        self.m_comboBox1 = wx.ComboBox(self.m_panel26, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.DefaultSize,
-                                       m_comboBox1Choices, 0)
-        bSizer27.Add(self.m_comboBox1, 0, wx.ALL, 5)
+        m_comboBox_hosts_Choices = []
+        self.m_comboBox_hosts = wx.ComboBox(self.m_panel_page2, wx.ID_ANY, u"", wx.DefaultPosition, wx.DefaultSize,
+                                            m_comboBox_hosts_Choices, 0)
+        bSizer27.Add(self.m_comboBox_hosts, 0, wx.ALL, 5)
 
-        self.m_textCtrl_content = wx.TextCtrl(self.m_panel26, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
+        self.m_textCtrl_content = wx.TextCtrl(self.m_panel_page2, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition,
                                               wx.DefaultSize, wx.TE_MULTILINE)
         bSizer27.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 5)
 
@@ -278,23 +278,23 @@ class Frame(wx.Frame):
 
         bSizer25 = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.m_panel27 = wx.Panel(self.m_panel26, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        self.m_panel27 = wx.Panel(self.m_panel_page2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         bSizer25.Add(self.m_panel27, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.m_button_cancel_edit = wx.Button(self.m_panel26, wx.ID_ANY, u"取消", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_button_cancel_edit = wx.Button(self.m_panel_page2, wx.ID_ANY, u"取消", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer25.Add(self.m_button_cancel_edit, 0, wx.ALL, 5)
 
-        self.m_button_save_edit = wx.Button(self.m_panel26, wx.ID_ANY, u"保存", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_button_save_edit = wx.Button(self.m_panel_page2, wx.ID_ANY, u"保存", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer25.Add(self.m_button_save_edit, 0, wx.ALL, 5)
 
         bSizer22.Add(bSizer25, 0, wx.EXPAND, 5)
 
-        self.m_panel26.SetSizer(bSizer22)
-        self.m_panel26.Layout()
-        bSizer22.Fit(self.m_panel26)
-        self.m_notebook3.AddPage(self.m_panel26, u"编辑hosts", False)
+        self.m_panel_page2.SetSizer(bSizer22)
+        self.m_panel_page2.Layout()
+        bSizer22.Fit(self.m_panel_page2)
+        self.m_notebook.AddPage(self.m_panel_page2, u"编辑hosts", False)
 
-        bSizer16.Add(self.m_notebook3, 1, wx.EXPAND | wx.ALL, 0)
+        bSizer16.Add(self.m_notebook, 1, wx.EXPAND | wx.ALL, 0)
 
         self.SetSizer(bSizer16)
         self.Layout()
@@ -305,14 +305,31 @@ class Frame(wx.Frame):
 
 
     def init2(self):
-
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.taskbar_icon.OnAbout, id=wx.ID_ABOUT)
+        self.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.OnPageChanged, self.m_notebook)
 
-        hosts_cols = (u"hosts", u"描述")
-        for col, txt in enumerate(hosts_cols):
+        hosts_cols = (
+            (u"", wx.LIST_AUTOSIZE),
+            (u"hosts", 120),
+            (u"描述", 360),
+            )
+        for col, (txt, width) in enumerate(hosts_cols):
             self.m_list.InsertColumn(col, txt)
+            self.m_list.SetColumnWidth(col, width)
         self.updateHostsList()
+
+        self.hosts_item_menu = wx.Menu()
+        self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
+        self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
+        self.hosts_item_menu.AppendSeparator()
+        self.hosts_item_menu.Append(wx.ID_DELETE, u"删除")
+
+
+    def OnPageChanged(self, event):
+
+#        print(dir(event))
+        print(event.GetSelection())
 
 
     def updateHostsList(self):
@@ -323,9 +340,9 @@ class Frame(wx.Frame):
         hosts_list = [os.path.split(fn) for fn in hosts_list]
 
         for idx, (folder, fn) in enumerate(hosts_list):
-            print(fn)
-            index = self.m_list.InsertStringItem(sys.maxint, fn)
-            self.m_list.SetStringItem(index, 1, folder)
+            index = self.m_list.InsertStringItem(sys.maxint, "")
+            self.m_list.SetStringItem(index, 1, fn)
+            self.m_list.SetStringItem(index, 2, folder)
             self.hosts_list_indexes.append(index)
 
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnHostsItemRClick, self.m_list)
@@ -334,7 +351,8 @@ class Frame(wx.Frame):
     def OnHostsItemRClick(self, event):
         u""""""
 
-        print(2)
+        #        print dir(event)
+        self.m_list.PopupMenu(self.hosts_item_menu, event.GetPosition())
 
 
     def editHost(self, event):
@@ -352,9 +370,9 @@ class Frame(wx.Frame):
         event.Skip()
 
     def OnExit(self, event):
-#        self.taskbar_icon.Destroy()
-#        self.Destroy()
-#        event.Skip()
+    #        self.taskbar_icon.Destroy()
+    #        self.Destroy()
+    #        event.Skip()
         self.taskbar_icon.OnExit(event)
 
     def OnClose(self, event):
