@@ -72,10 +72,10 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.frame = frame
         self.SetIcon(GetMondrianIcon(), "Switch Hosts!")
         #        self.SetIcon(wx.Icon(name="arrow_switch.png", type=wx.BITMAP_TYPE_PNG), "Switch Hosts!")
-#        self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
+        self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=self.ID_About)
         self.Bind(wx.EVT_MENU, self.OnExit, id=self.ID_Exit)
-#        self.Bind(wx.EVT_MENU, self.OnMainFrame, id=self.ID_MainFrame)
+        self.Bind(wx.EVT_MENU, self.OnMainFrame, id=self.ID_MainFrame)
 
         self.current_hosts = None
 
@@ -200,6 +200,7 @@ class Frame(wx.Frame):
     ):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
+        self.SetIcon(GetMondrianIcon())
         #        self.SetIcon(wx.Icon("arrow_switch.png", wx.BITMAP_TYPE_PNG))
         #        self.SetIcon(GetMondrianIcon())
         #        panel = wx.Panel(self, wx.ID_ANY)
@@ -311,10 +312,35 @@ class Frame(wx.Frame):
         hosts_cols = (u"hosts", u"描述")
         for col, txt in enumerate(hosts_cols):
             self.m_list.InsertColumn(col, txt)
+        self.updateHostsList()
 
 
     def updateHostsList(self):
         u"""更新 hosts 列表"""
+
+        self.hosts_list_indexes = []
+        hosts_list = listLocalHosts()
+        hosts_list = [os.path.split(fn) for fn in hosts_list]
+
+        for idx, (folder, fn) in enumerate(hosts_list):
+            print(fn)
+            index = self.m_list.InsertStringItem(sys.maxint, fn)
+            self.m_list.SetStringItem(index, 1, folder)
+            self.hosts_list_indexes.append(index)
+
+        self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnHostsItemRClick, self.m_list)
+
+
+    def OnHostsItemRClick(self, event):
+        u""""""
+
+        print(2)
+
+
+    def editHost(self, event):
+        u"""编辑一个 hosts 文件"""
+
+        print(1)
 
 
     def OnHide(self, event):
@@ -374,7 +400,7 @@ def main():
     app = wx.PySimpleApp()
     frame = Frame(size=(640, 480))
     frame.Centre()
-#    frame.Show()
+    frame.Show()
     app.MainLoop()
 
 
