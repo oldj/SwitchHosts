@@ -18,6 +18,7 @@ setup(
             "optimize": 2,
             "bundle_files": 1, # 打包为一个文件
             "dll_excludes": ["MSVCP90.dll"],
+            #"ascii": False,
         },
     },
     windows=[{
