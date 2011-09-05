@@ -64,7 +64,7 @@ def GetMondrianIcon():
 class TaskBarIcon(wx.TaskBarIcon):
     ID_About = wx.NewId()
     ID_Exit = wx.NewId()
-    ID_MAINFRAME = wx.NewId()
+    ID_MainFrame = wx.NewId()
 
     def __init__(self, frame):
         wx.TaskBarIcon.__init__(self)
@@ -75,7 +75,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=self.ID_About)
         self.Bind(wx.EVT_MENU, self.OnExit, id=self.ID_Exit)
-        self.Bind(wx.EVT_MENU, self.OnMainFrame, id=self.ID_MAINFRAME)
+        self.Bind(wx.EVT_MENU, self.OnMainFrame, id=self.ID_MainFrame)
 
         self.current_hosts = None
 
@@ -136,7 +136,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 
         hosts_list = listLocalHosts()
         menu = wx.Menu()
-        menu.Append(self.ID_MAINFRAME, u"Switch Hosts!")
+        menu.Append(self.ID_MainFrame, u"Switch Hosts!")
         menu.AppendSeparator()
 
         if not self.current_hosts:
@@ -193,6 +193,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 
 class Frame(wx.Frame):
+
     def __init__(
         self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
         size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE
@@ -207,7 +208,7 @@ class Frame(wx.Frame):
         #        sizer = wx.BoxSizer()
         #        sizer.Add(button, 0)
         #        panel.SetSizer(sizer)
-        self.taskBarIcon = TaskBarIcon(self)
+        self.taskbar_icon = TaskBarIcon(self)
 
         # bind event
         #        self.Bind(wx.EVT_BUTTON, self.OnHide, button)
@@ -219,13 +220,13 @@ class Frame(wx.Frame):
 
         self.m_menubar1 = wx.MenuBar(0)
         self.m_menu1 = wx.Menu()
-        self.m_menuItem_exit = wx.MenuItem(self.m_menu1, wx.ID_ANY, u"退出(&E)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menuItem_exit = wx.MenuItem(self.m_menu1, wx.ID_EXIT, u"退出(&E)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu1.AppendItem(self.m_menuItem_exit)
 
         self.m_menubar1.Append(self.m_menu1, u"文件(&F)")
 
         self.m_menu3 = wx.Menu()
-        self.m_menuItem_about = wx.MenuItem(self.m_menu3, wx.ID_ANY, u"关于(&A)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menuItem_about = wx.MenuItem(self.m_menu3, wx.ID_ABOUT, u"关于(&A)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu3.AppendItem(self.m_menuItem_about)
 
         self.m_menubar1.Append(self.m_menu3, u"帮助(&H)")
@@ -303,7 +304,10 @@ class Frame(wx.Frame):
 
 
     def init2(self):
-        pass
+
+        self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
+        self.Bind(wx.EVT_MENU, self.taskbar_icon.OnAbout, id=wx.ID_ABOUT)
+
         hosts_cols = (u"hosts", u"描述")
         for col, txt in enumerate(hosts_cols):
             self.m_list.InsertColumn(col, txt)
@@ -317,11 +321,14 @@ class Frame(wx.Frame):
         wx.MessageBox("Frame has been iconized!", "Prompt")
         event.Skip()
 
-    def OnClose(self, event):
-        self.Hide()
-#        self.taskBarIcon.Destroy()
+    def OnExit(self, event):
+#        self.taskbar_icon.Destroy()
 #        self.Destroy()
 #        event.Skip()
+        self.taskbar_icon.OnExit(event)
+
+    def OnClose(self, event):
+        self.Hide()
         return False
 
 
