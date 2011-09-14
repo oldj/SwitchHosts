@@ -194,9 +194,12 @@ class TaskBarIcon(wx.TaskBarIcon):
 
 
 class Frame(wx.Frame):
+
+    ID_RENAME = wx.NewId()
+
     def __init__(
-    self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
-    size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE
+        self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
+        size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE
     ):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
@@ -227,17 +230,16 @@ class Frame(wx.Frame):
 
         bSizer5 = wx.BoxSizer(wx.VERTICAL)
 
-        m_listBox2Choices = []
-        self.m_listBox2 = wx.ListBox(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size(-1, 320), m_listBox2Choices, 0)
-        self.m_listBox2.SetMinSize(wx.Size(-1, 240))
-
-        bSizer5.Add(self.m_listBox2, 0, wx.ALL, 5)
+        self.m_list = wx.ListCtrl(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size(160, 320),
+                                       wx.LC_REPORT | wx.LC_SORT_ASCENDING)
+        bSizer5.Add(self.m_list, 0, wx.ALL | wx.EXPAND, 5)
 
         bSizer4.Add(bSizer5, 0, wx.EXPAND, 5)
 
         bSizer6 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_textCtrl1 = wx.TextCtrl(self.m_panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE)
+        self.m_textCtrl1 = wx.TextCtrl(self.m_panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize,
+                                       wx.TE_MULTILINE)
         bSizer6.Add(self.m_textCtrl1, 1, wx.ALL | wx.EXPAND, 5)
 
         bSizer7 = wx.BoxSizer(wx.HORIZONTAL)
@@ -248,7 +250,7 @@ class Frame(wx.Frame):
         self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer7.Add(self.m_btn_apply, 0, wx.ALL, 5)
 
-        self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"退出", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"关闭", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer7.Add(self.m_btn_exit, 0, wx.ALL, 5)
 
         bSizer6.Add(bSizer7, 0, wx.EXPAND, 5)
@@ -273,11 +275,22 @@ class Frame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.taskbar_icon.OnAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_BUTTON, self.OnHide, id=wx.ID_CLOSE)
 
+        hosts_cols = (
+            (u"", wx.LIST_AUTOSIZE),
+            (u"hosts", 120),
+            )
+        for col, (txt, width) in enumerate(hosts_cols):
+            self.m_list.InsertColumn(col, txt)
+            self.m_list.SetColumnWidth(col, width)
+        self.updateHostsList()
+
         self.hosts_item_menu = wx.Menu()
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
         self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
+        self.hosts_item_menu.Append(self.ID_RENAME, u"重命名")
         self.hosts_item_menu.AppendSeparator()
         self.hosts_item_menu.Append(wx.ID_DELETE, u"删除")
+
 
 
     def updateHostsList(self):
@@ -294,6 +307,12 @@ class Frame(wx.Frame):
             self.hosts_list_indexes.append(index)
 
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnHostsItemRClick, self.m_list)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnHostsItemBeSelected, self.m_list)
+
+
+    def OnHostsItemBeSelected(self, event):
+        
+        print dir(event.GetItem())
 
 
     def OnHostsItemRClick(self, event):
