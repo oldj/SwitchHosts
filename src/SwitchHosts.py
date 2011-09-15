@@ -159,8 +159,6 @@ class Frame(ui.Frame):
             self.m_list.InsertColumn(col, txt)
             self.m_list.SetColumnWidth(col, width)
         self.updateHostsList()
-        self.current_hosts_index = -1
-        self.current_hosts_fn = None
 
         self.hosts_item_menu = wx.Menu()
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
@@ -172,15 +170,24 @@ class Frame(ui.Frame):
         self.m_btn_apply.Disable()
 
         self.Bind(wx.EVT_MENU, self.menuApplyHost, id=wx.ID_APPLY)
+        self.Bind(wx.EVT_MENU, self.deleteHosts, id=wx.ID_DELETE)
+
+        self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnHostsItemRClick, self.m_list)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnHostsItemBeSelected, self.m_list)
+
 
 
     def updateHostsList(self):
         u"""更新 hosts 列表"""
 
+        self.current_hosts_index = -1
+        self.current_hosts_fn = None
         hosts_list = listLocalHosts()
 #        hosts_list.insert(0, co.getSysHostsPath())
         hosts_list = [list(os.path.split(fn)) + [fn] for fn in hosts_list]
         self.hosts_lists = hosts_list
+
+        self.m_list.DeleteAllItems()
 
         for idx, (folder, fn, fn2) in enumerate(hosts_list):
             c = ""
@@ -190,9 +197,6 @@ class Frame(ui.Frame):
             index = self.m_list.InsertStringItem(sys.maxint, c)
             self.m_list.SetStringItem(index, 1, fn)
 #            self.m_list.SetStringItem(index, 2, folder)
-
-        self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnHostsItemRClick, self.m_list)
-        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnHostsItemBeSelected, self.m_list)
 
 
     def hostsContentChange(self, event):
@@ -204,6 +208,29 @@ class Frame(ui.Frame):
 
         print self.current_hosts_fn
         self.applyHost(event)
+
+
+    def deleteHosts(self, event):
+        u"""删除 hosts"""
+
+        path, fn = os.path.split(self.current_hosts_fn)
+        if os.name == "nt":
+            fn = fn.decode("GB18030")#.encode("UTF-8")
+
+        dlg = wx.MessageDialog(None, u"确定要删除 hosts '%s'？" % fn, u"删除 hosts",
+                wx.YES_NO | wx.ICON_QUESTION
+            )
+        ret_code = dlg.ShowModal()
+        if ret_code == wx.ID_YES:
+            # 删除当前 hosts
+            try:
+                os.remove(self.current_hosts_fn)
+            except Exception:
+                pass
+
+            self.updateHostsList()
+
+        dlg.Destroy()
 
 
     def applyHost(self, event=None):
