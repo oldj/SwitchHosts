@@ -160,6 +160,9 @@ class Frame(ui.Frame):
         for col, (txt, width) in enumerate(hosts_cols):
             self.m_list.InsertColumn(col, txt)
             self.m_list.SetColumnWidth(col, width)
+        self.current_selected_hosts_index = -1
+        self.current_selected_hosts_fn = None
+
         self.updateHostsList()
 
         self.hosts_item_menu = wx.Menu()
@@ -183,21 +186,22 @@ class Frame(ui.Frame):
     def updateHostsList(self):
         u"""更新 hosts 列表"""
 
-        self.current_selected_hosts_index = -1
-        self.current_selected_hosts_fn = None
         hosts_list = listLocalHosts()
 #        hosts_list.insert(0, co.getSysHostsPath())
         hosts_list = [list(os.path.split(fn)) + [fn] for fn in hosts_list]
         self.hosts_lists = hosts_list
 
         self.m_list.DeleteAllItems()
+        ch = self.taskbar_icon.current_hosts
 
         for idx, (folder, fn, fn2) in enumerate(hosts_list):
             c = ""
             if os.name == "nt":
                 fn = fn.decode("GB18030")
 
-            if fn == DEFAULT_HOSTS_FN:
+            print self.current_selected_hosts_fn, fn, fn2
+            if (ch and ch == fn2) or \
+                (not ch and fn == DEFAULT_HOSTS_FN):
                 c = u"√"
                 self.m_textCtrl_content.Value = open(fn2, "rb").read()
             index = self.m_list.InsertStringItem(sys.maxint, c)
