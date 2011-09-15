@@ -220,7 +220,8 @@ class Frame(ui.Frame):
             c_idx = self.current_selected_hosts_index
             c_fn = self.current_selected_hosts_fn
         self.m_list.Select(c_idx)
-        self.m_textCtrl_content.Value = co.decode(open(c_fn, "rb").read())
+        if os.path.isfile(c_fn):
+            self.m_textCtrl_content.Value = co.decode(open(c_fn, "rb").read())
 
 
     def hostsContentChange(self, event):
