@@ -220,7 +220,7 @@ class Frame(ui.Frame):
 
         global g_local_hosts_dir
 
-        fn_exists = False
+        repeat = False
         new_fn = default
 
         dlg = wx.TextEntryDialog(None, u"新建 hosts", u"输入 hosts 名：", new_fn,
@@ -231,11 +231,16 @@ class Frame(ui.Frame):
 
             if new_fn:
 
-                # 删除老文件
                 fn2 = os.path.join(g_local_hosts_dir, new_fn)
-                if os.path.isfile(fn2):
+
+                if new_fn == DEFAULT_HOSTS_FN:
+
+                    repeat = True
+                    self.alert(u"命名失败！", u"新建的 hosts 不可以命名为 '%s' ！" % DEFAULT_HOSTS_FN)
+
+                elif os.path.isfile(fn2):
                     # 同名的文件已经存在
-                    fn_exists = True
+                    repeat = True
                     self.alert(u"重名了！", u"名为 '%s' 的 hosts 已经存在了！" % new_fn)
 
                 else:
@@ -246,15 +251,17 @@ class Frame(ui.Frame):
 
         dlg.Destroy()
 
-        if fn_exists:
+        if repeat:
             self.newHosts(event, default=new_fn)
 
 
-    def renameHosts(self, evnet):
+    def renameHosts(self, event):
         u"""重命名一个 hosts"""
 
         path, fn = os.path.split(self.current_selected_hosts_fn)
         fn2 = self.current_selected_hosts_fn
+
+        repeat = False
 
         dlg = wx.TextEntryDialog(None, u"重命名 hosts", u"输入新的 hosts 名：", fn,
                 style=wx.OK | wx.CANCEL
@@ -265,19 +272,35 @@ class Frame(ui.Frame):
 
             if new_fn and new_fn != fn:
 
-                # 删除老文件
-                c = ""
-                if os.path.isfile(fn2):
-                    c = open(fn2, "rb").read()
-                    os.remove(fn2)
-
-                # 保存新文件
                 new_fn2 = os.path.join(path, new_fn)
-                open(new_fn2, "wb").write(c)
 
-                self.updateHostsList()
+                if new_fn == DEFAULT_HOSTS_FN:
+
+                    repeat = True
+                    self.alert(u"重命名失败！", u"hosts 不可以命名为 '%s' ！" % DEFAULT_HOSTS_FN)
+
+                elif os.path.isfile(new_fn2):
+
+                    repeat = True
+                    self.alert(u"文件已存在！", u"'%s' 已存在，请先将它删除！" % new_fn)
+
+                else:
+
+                    # 删除老文件
+                    c = ""
+                    if os.path.isfile(fn2):
+                        c = open(fn2, "rb").read()
+                        os.remove(fn2)
+
+                    # 保存新文件
+                    open(new_fn2, "wb").write(c)
+
+                    self.updateHostsList()
 
         dlg.Destroy()
+
+        if repeat:
+            self.renameHosts(event)
 
 
     def deleteHosts(self, event):
