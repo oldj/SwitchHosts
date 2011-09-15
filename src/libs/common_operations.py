@@ -77,6 +77,10 @@ def switchHost(obj, fn):
         open(sys_hosts_fn, "wb").write(open(fn, "rb").read())
         obj.current_hosts = fn
         title = os.path.split(fn)[1]
+
+        if os.name == "nt":
+            title = title.decode("GB18030")
+
         obj.SetIcon(GetMondrianIcon(), "Hosts: %s" % title)
         notify(obj.frame, u"Hosts 已切换为 %s。" % title)
 

@@ -99,8 +99,8 @@ class TaskBarIcon(wx.TaskBarIcon):
         menu.Append(self.ID_MainFrame, u"Switch Hosts!")
         menu.AppendSeparator()
 
-        if not self.current_hosts:
-            menu.AppendRadioItem(wx.ID_ANY, DEFAULT_HOSTS_FN)
+#        if not self.current_hosts:
+#            menu.AppendRadioItem(wx.ID_ANY, DEFAULT_HOSTS_FN)
         for fn in hosts_list:
             self.addHosts(menu, fn)
 
@@ -127,6 +127,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         fn = self.hosts[hosts_id]
 
         co.switchHost(self, fn)
+        self.frame.updateListCtrl()
 
 
 class Frame(ui.Frame):
@@ -163,13 +164,14 @@ class Frame(ui.Frame):
 
         self.hosts_item_menu = wx.Menu()
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
-        self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
+#        self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
         self.hosts_item_menu.Append(self.ID_RENAME, u"重命名")
         self.hosts_item_menu.AppendSeparator()
         self.hosts_item_menu.Append(wx.ID_DELETE, u"删除")
 
         self.m_btn_apply.Disable()
 
+        self.Bind(wx.EVT_MENU, self.menuApplyHost, id=wx.ID_APPLY)
 
 
     def updateHostsList(self):
@@ -181,7 +183,6 @@ class Frame(ui.Frame):
         self.hosts_lists = hosts_list
 
         for idx, (folder, fn, fn2) in enumerate(hosts_list):
-            print fn, fn == DEFAULT_HOSTS_FN
             c = ""
             if fn == DEFAULT_HOSTS_FN:
                 c = u"√"
@@ -196,12 +197,16 @@ class Frame(ui.Frame):
 
     def hostsContentChange(self, event):
 
-        print 1
-
         self.m_btn_apply.Enable()
 
 
-    def applyHost(self, event):
+    def menuApplyHost(self, event):
+
+        print self.current_hosts_fn
+        self.applyHost(event)
+
+
+    def applyHost(self, event=None):
         u"""应用某个 hosts"""
 
         # 保存当前 hosts 的内容
@@ -210,12 +215,19 @@ class Frame(ui.Frame):
 
         # 切换 hosts
         co.switchHost(self.taskbar_icon, self.current_hosts_fn)
-
-        for idx in range(len(self.hosts_lists)):
-            c = "" if idx != self.current_hosts_index else u"√"
-            self.m_list.SetStringItem(idx, 0, c)
+        self.updateListCtrl()
 
         self.m_btn_apply.Disable()
+
+
+    def updateListCtrl(self):
+
+        for idx in range(len(self.hosts_lists)):
+            c = ""
+            if self.hosts_lists[idx][2] == self.taskbar_icon.current_hosts:
+                c = u"√"
+            self.m_list.SetStringItem(idx, 0, c)
+
 
 
     def OnHostsItemBeSelected(self, event):
