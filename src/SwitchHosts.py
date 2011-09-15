@@ -171,6 +171,7 @@ class Frame(ui.Frame):
 
         self.Bind(wx.EVT_MENU, self.menuApplyHost, id=wx.ID_APPLY)
         self.Bind(wx.EVT_MENU, self.deleteHosts, id=wx.ID_DELETE)
+        self.Bind(wx.EVT_MENU, self.renameHosts, id=self.ID_RENAME)
 
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnHostsItemRClick, self.m_list)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnHostsItemBeSelected, self.m_list)
@@ -180,8 +181,8 @@ class Frame(ui.Frame):
     def updateHostsList(self):
         u"""更新 hosts 列表"""
 
-        self.current_hosts_index = -1
-        self.current_hosts_fn = None
+        self.current_selected_hosts_index = -1
+        self.current_selected_hosts_fn = None
         hosts_list = listLocalHosts()
 #        hosts_list.insert(0, co.getSysHostsPath())
         hosts_list = [list(os.path.split(fn)) + [fn] for fn in hosts_list]
@@ -191,6 +192,9 @@ class Frame(ui.Frame):
 
         for idx, (folder, fn, fn2) in enumerate(hosts_list):
             c = ""
+            if os.name == "nt":
+                fn = fn.decode("GB18030")
+
             if fn == DEFAULT_HOSTS_FN:
                 c = u"√"
                 self.m_textCtrl_content.Value = open(fn2, "rb").read()
@@ -206,14 +210,43 @@ class Frame(ui.Frame):
 
     def menuApplyHost(self, event):
 
-        print self.current_hosts_fn
         self.applyHost(event)
+
+
+    def renameHosts(self, evnet):
+        u"""重命名一个 hosts"""
+
+        path, fn = os.path.split(self.current_selected_hosts_fn)
+        fn2 = self.current_selected_hosts_fn
+
+        dlg = wx.TextEntryDialog(None, u"重命名 hosts", u"输入新的 hosts 名：", fn,
+                style=wx.OK | wx.CANCEL
+            )
+        if dlg.ShowModal() == wx.ID_OK:
+            # 改名
+            new_fn = dlg.GetValue()
+
+            if new_fn and new_fn != fn:
+
+                # 删除老文件
+                c = ""
+                if os.path.isfile(fn2):
+                    c = open(fn2, "rb").read()
+                    os.remove(fn2)
+
+                # 保存新文件
+                new_fn2 = os.path.join(path, new_fn)
+                open(new_fn2, "wb").write(c)
+
+                self.updateHostsList()
+
+        dlg.Destroy()
 
 
     def deleteHosts(self, event):
         u"""删除 hosts"""
 
-        path, fn = os.path.split(self.current_hosts_fn)
+        path, fn = os.path.split(self.current_selected_hosts_fn)
         if os.name == "nt":
             fn = fn.decode("GB18030")#.encode("UTF-8")
 
@@ -224,7 +257,7 @@ class Frame(ui.Frame):
         if ret_code == wx.ID_YES:
             # 删除当前 hosts
             try:
-                os.remove(self.current_hosts_fn)
+                os.remove(self.current_selected_hosts_fn)
             except Exception:
                 pass
 
@@ -238,10 +271,10 @@ class Frame(ui.Frame):
 
         # 保存当前 hosts 的内容
         c = self.m_textCtrl_content.Value.rstrip()
-        open(self.current_hosts_fn, "wb").write(c)
+        open(self.current_selected_hosts_fn, "wb").write(c)
 
         # 切换 hosts
-        co.switchHost(self.taskbar_icon, self.current_hosts_fn)
+        co.switchHost(self.taskbar_icon, self.current_selected_hosts_fn)
         self.updateListCtrl()
 
         self.m_btn_apply.Disable()
@@ -264,8 +297,8 @@ class Frame(ui.Frame):
         c = open(fn, "rb").read() if os.path.isfile(fn) else ""
         self.m_textCtrl_content.Value = c
 
-        self.current_hosts_index = idx
-        self.current_hosts_fn = fn
+        self.current_selected_hosts_index = idx
+        self.current_selected_hosts_fn = fn
         self.m_btn_apply.Enable()
 
 
