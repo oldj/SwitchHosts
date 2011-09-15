@@ -21,6 +21,9 @@ class Frame(wx.Frame):
 
         self.m_menubar1 = wx.MenuBar(0)
         self.m_menu1 = wx.Menu()
+        self.m_menuItem_new = wx.MenuItem(self.m_menu1, wx.ID_NEW, u"新建(&N)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menu1.AppendItem(self.m_menuItem_new)
+        self.m_menu1.AppendSeparator()
         self.m_menuItem_exit = wx.MenuItem(self.m_menu1, wx.ID_EXIT, u"退出(&X)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu1.AppendItem(self.m_menuItem_exit)
 
@@ -78,3 +81,9 @@ class Frame(wx.Frame):
 
         self.Centre(wx.BOTH)
 
+
+    def alert(self, title, msg):
+
+        dlg = wx.MessageDialog(None, msg, title, wx.OK | wx.ICON_WARNING)
+        dlg.ShowModal()
+        dlg.Destroy()
