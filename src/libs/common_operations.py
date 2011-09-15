@@ -100,3 +100,11 @@ def getSysHostsPath():
     return path if os.path.isfile(path) else None
 
 
+def encode(s):
+
+    return unicode(s).encode("UTF-8")
+
+
+def decode(s):
+
+    return s.decode("UTF-8")
