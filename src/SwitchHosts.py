@@ -147,6 +147,7 @@ class Frame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.taskbar_icon.OnAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_BUTTON, self.OnHide, id=wx.ID_CLOSE)
         self.Bind(wx.EVT_BUTTON, self.applyHost, id=wx.ID_APPLY)
+        self.Bind(wx.EVT_TEXT, self.hostsContentChange, id=self.ID_HOSTS_TEXT)
 
         hosts_cols = (
             (u"", wx.LIST_AUTOSIZE),
@@ -186,12 +187,15 @@ class Frame(ui.Frame):
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnHostsItemBeSelected, self.m_list)
 
 
+    def hostsContentChange(self, event):
+
+        print 1
+
+        self.m_btn_apply.Enable()
+
+
     def applyHost(self, event):
         u"""应用某个 hosts"""
-
-        for idx in range(len(self.hosts_lists)):
-            c = "" if idx != self.current_hosts_index else u"√"
-            self.m_list.SetStringItem(idx, 0, c)
 
         # 保存当前 hosts 的内容
         c = self.m_textCtrl_content.Value.rstrip()
@@ -199,6 +203,12 @@ class Frame(ui.Frame):
 
         # 切换 hosts
         co.switchHost(self.taskbar_icon, self.current_hosts_fn)
+
+        for idx in range(len(self.hosts_lists)):
+            c = "" if idx != self.current_hosts_index else u"√"
+            self.m_list.SetStringItem(idx, 0, c)
+
+        self.m_btn_apply.Disable()
 
 
     def OnHostsItemBeSelected(self, event):
