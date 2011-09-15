@@ -258,7 +258,7 @@
                                             <property name="permission">protected</property>
                                             <property name="pos"></property>
                                             <property name="size">160,320</property>
-                                            <property name="style">wxLC_REPORT</property>
+                                            <property name="style">wxLC_REPORT|wxLC_SORT_ASCENDING</property>
                                             <property name="subclass"></property>
                                             <property name="tooltip"></property>
                                             <property name="validator_data_type"></property>
