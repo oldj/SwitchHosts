@@ -193,6 +193,8 @@ class Frame(ui.Frame):
 
         self.m_list.DeleteAllItems()
         ch = self.taskbar_icon.current_hosts
+        c_idx = -1
+        c_fn = None
 
         for idx, (folder, fn, fn2) in enumerate(hosts_list):
             c = ""
@@ -202,13 +204,23 @@ class Frame(ui.Frame):
             if (ch and ch == fn2) or \
                 (not ch and fn == DEFAULT_HOSTS_FN):
                 c = u"√"
-                self.m_textCtrl_content.Value = co.decode(open(fn2, "rb").read())
+#                self.m_textCtrl_content.Value = co.decode(open(fn2, "rb").read())
             index = self.m_list.InsertStringItem(sys.maxint, c)
+            if c:
+                c_idx = index
+                c_fn = fn2
+#                self.m_list.Select(index)
             self.m_list.SetStringItem(index, 1, fn)
 #            self.m_list.SetStringItem(index, 2, folder)
 
         self.m_list.SetColumnWidth(0, 20)
         self.m_list.SetColumnWidth(1, 130)
+
+        if self.current_selected_hosts_index > 0:
+            c_idx = self.current_selected_hosts_index
+            c_fn = self.current_selected_hosts_fn
+        self.m_list.Select(c_idx)
+        self.m_textCtrl_content.Value = co.decode(open(c_fn, "rb").read())
 
 
     def hostsContentChange(self, event):
