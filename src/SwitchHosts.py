@@ -199,11 +199,10 @@ class Frame(ui.Frame):
             if os.name == "nt":
                 fn = fn.decode("GB18030")
 
-            print self.current_selected_hosts_fn, fn, fn2
             if (ch and ch == fn2) or \
                 (not ch and fn == DEFAULT_HOSTS_FN):
                 c = u"√"
-                self.m_textCtrl_content.Value = open(fn2, "rb").read()
+                self.m_textCtrl_content.Value = co.decode(open(fn2, "rb").read())
             index = self.m_list.InsertStringItem(sys.maxint, c)
             self.m_list.SetStringItem(index, 1, fn)
 #            self.m_list.SetStringItem(index, 2, folder)
@@ -250,7 +249,7 @@ class Frame(ui.Frame):
                 else:
 
                     # 保存新文件
-                    open(fn2, "wb").write(u"# %s" % new_fn)
+                    open(fn2, "wb").write(co.encode(u"# %s" % new_fn))
                     self.updateHostsList()
 
         dlg.Destroy()
@@ -297,7 +296,7 @@ class Frame(ui.Frame):
                         os.remove(fn2)
 
                     # 保存新文件
-                    open(new_fn2, "wb").write(c)
+                    open(new_fn2, "wb").write(co.encode(c))
 
                     self.updateHostsList()
 
@@ -335,7 +334,7 @@ class Frame(ui.Frame):
 
         # 保存当前 hosts 的内容
         c = self.m_textCtrl_content.Value.rstrip()
-        open(self.current_selected_hosts_fn, "wb").write(c)
+        open(self.current_selected_hosts_fn, "wb").write(co.encode(c))
 
         # 切换 hosts
         co.switchHost(self.taskbar_icon, self.current_selected_hosts_fn)
@@ -359,7 +358,7 @@ class Frame(ui.Frame):
         idx = event.GetIndex()
         fn = self.hosts_lists[idx][2]
         c = open(fn, "rb").read() if os.path.isfile(fn) else ""
-        self.m_textCtrl_content.Value = c
+        self.m_textCtrl_content.Value = co.decode(c)
 
         self.current_selected_hosts_index = idx
         self.current_selected_hosts_fn = fn
