@@ -207,6 +207,9 @@ class Frame(ui.Frame):
             self.m_list.SetStringItem(index, 1, fn)
 #            self.m_list.SetStringItem(index, 2, folder)
 
+        self.m_list.SetColumnWidth(0, 20)
+        self.m_list.SetColumnWidth(1, 130)
+
 
     def hostsContentChange(self, event):
 
@@ -263,6 +266,8 @@ class Frame(ui.Frame):
 
         path, fn = os.path.split(self.current_selected_hosts_fn)
         fn2 = self.current_selected_hosts_fn
+        if os.name == "nt":
+            fn = fn.decode("GB18030")#.encode("UTF-8")
 
         repeat = False
 
@@ -296,8 +301,13 @@ class Frame(ui.Frame):
                         os.remove(fn2)
 
                     # 保存新文件
-                    open(new_fn2, "wb").write(co.encode(c))
+                    open(new_fn2, "wb").write(c)
 
+                    if self.taskbar_icon.current_hosts == fn2:
+                        if os.name == "nt":
+                            new_fn2 = new_fn2.encode("GB18030")
+                        self.current_selected_hosts_fn = self.taskbar_icon.current_hosts = new_fn2
+                        self.applyHost()
                     self.updateHostsList()
 
         dlg.Destroy()
