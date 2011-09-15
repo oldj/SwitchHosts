@@ -64,7 +64,7 @@ class Frame(wx.Frame):
         self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer7.Add(self.m_btn_apply, 0, wx.ALL, 5)
 
-        self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"关闭", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"隐藏", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer7.Add(self.m_btn_exit, 0, wx.ALL, 5)
 
         bSizer6.Add(bSizer7, 0, wx.EXPAND, 5)
