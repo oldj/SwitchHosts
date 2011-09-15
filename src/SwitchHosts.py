@@ -157,6 +157,7 @@ class Frame(ui.Frame):
             self.m_list.SetColumnWidth(col, width)
         self.updateHostsList()
         self.current_hosts_index = -1
+        self.current_hosts_fn = None
 
         self.hosts_item_menu = wx.Menu()
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
@@ -177,7 +178,7 @@ class Frame(ui.Frame):
         self.hosts_lists = hosts_list
 
         for idx, (folder, fn, fn2) in enumerate(hosts_list):
-            index = self.m_list.InsertStringItem(sys.maxint, u"√")
+            index = self.m_list.InsertStringItem(sys.maxint, "")
             self.m_list.SetStringItem(index, 1, fn)
             self.m_list.SetStringItem(index, 2, folder)
 
@@ -188,7 +189,16 @@ class Frame(ui.Frame):
     def applyHost(self, event):
         u"""应用某个 hosts"""
 
-        print self.current_hosts_index
+        for idx in range(len(self.hosts_lists)):
+            c = "" if idx != self.current_hosts_index else u"√"
+            self.m_list.SetStringItem(idx, 0, c)
+
+        # 保存当前 hosts 的内容
+        c = self.m_textCtrl_content.Value.rstrip()
+        open(self.current_hosts_fn, "wb").write(c)
+
+        # 切换 hosts
+        co.switchHost(self.taskbar_icon, self.current_hosts_fn)
 
 
     def OnHostsItemBeSelected(self, event):
@@ -199,13 +209,13 @@ class Frame(ui.Frame):
         self.m_textCtrl_content.Value = c
 
         self.current_hosts_index = idx
+        self.current_hosts_fn = fn
         self.m_btn_apply.Enable()
 
 
     def OnHostsItemRClick(self, event):
         u""""""
 
-        #        print dir(event)
         self.m_list.PopupMenu(self.hosts_item_menu, event.GetPosition())
 
 
