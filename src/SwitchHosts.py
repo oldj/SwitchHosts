@@ -313,6 +313,11 @@ class Frame(ui.Frame):
         if os.name == "nt":
             fn = fn.decode("GB18030")#.encode("UTF-8")
 
+        if self.current_selected_hosts_fn == self.taskbar_icon.current_hosts or \
+            (self.taskbar_icon.current_hosts is None and fn == DEFAULT_HOSTS_FN):
+            self.alert(u"不可删除", u"当前 hosts 正在使用中，不可删除！")
+            return
+
         dlg = wx.MessageDialog(None, u"确定要删除 hosts '%s'？" % fn, u"删除 hosts",
                 wx.YES_NO | wx.ICON_QUESTION
             )
