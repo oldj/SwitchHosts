@@ -145,6 +145,8 @@ class Frame(ui.Frame):
 
 
     def init2(self):
+
+        self.Bind(wx.EVT_MENU, self.newHosts, id=wx.ID_NEW)
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.taskbar_icon.OnAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_BUTTON, self.OnHide, id=wx.ID_CLOSE)
@@ -213,6 +215,41 @@ class Frame(ui.Frame):
         self.applyHost(event)
 
 
+    def newHosts(self, event=None, default=""):
+        u"""新建一个 hosts"""
+
+        global g_local_hosts_dir
+
+        fn_exists = False
+        new_fn = default
+
+        dlg = wx.TextEntryDialog(None, u"新建 hosts", u"输入 hosts 名：", new_fn,
+                style=wx.OK | wx.CANCEL
+            )
+        if dlg.ShowModal() == wx.ID_OK:
+            new_fn = dlg.GetValue().strip()
+
+            if new_fn:
+
+                # 删除老文件
+                fn2 = os.path.join(g_local_hosts_dir, new_fn)
+                if os.path.isfile(fn2):
+                    # 同名的文件已经存在
+                    fn_exists = True
+                    self.alert(u"重名了！", u"名为 '%s' 的 hosts 已经存在了！" % new_fn)
+
+                else:
+
+                    # 保存新文件
+                    open(fn2, "wb").write(u"# %s" % new_fn)
+                    self.updateHostsList()
+
+        dlg.Destroy()
+
+        if fn_exists:
+            self.newHosts(event, default=new_fn)
+
+
     def renameHosts(self, evnet):
         u"""重命名一个 hosts"""
 
@@ -224,7 +261,7 @@ class Frame(ui.Frame):
             )
         if dlg.ShowModal() == wx.ID_OK:
             # 改名
-            new_fn = dlg.GetValue()
+            new_fn = dlg.GetValue().strip()
 
             if new_fn and new_fn != fn:
 
