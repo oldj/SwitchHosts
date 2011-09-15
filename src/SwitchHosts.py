@@ -18,6 +18,7 @@ import libs.common_operations as co
 import libs.ui as ui
 
 VERSION = "0.1.1"
+DEFAULT_HOSTS_FN = u"DEFAULT"
 
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -99,7 +100,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         menu.AppendSeparator()
 
         if not self.current_hosts:
-            menu.AppendRadioItem(wx.ID_ANY, u"系统默认")
+            menu.AppendRadioItem(wx.ID_ANY, DEFAULT_HOSTS_FN)
         for fn in hosts_list:
             self.addHosts(menu, fn)
 
@@ -175,13 +176,19 @@ class Frame(ui.Frame):
         u"""更新 hosts 列表"""
 
         hosts_list = listLocalHosts()
+#        hosts_list.insert(0, co.getSysHostsPath())
         hosts_list = [list(os.path.split(fn)) + [fn] for fn in hosts_list]
         self.hosts_lists = hosts_list
 
         for idx, (folder, fn, fn2) in enumerate(hosts_list):
-            index = self.m_list.InsertStringItem(sys.maxint, "")
+            print fn, fn == DEFAULT_HOSTS_FN
+            c = ""
+            if fn == DEFAULT_HOSTS_FN:
+                c = u"√"
+                self.m_textCtrl_content.Value = open(fn2, "rb").read()
+            index = self.m_list.InsertStringItem(sys.maxint, c)
             self.m_list.SetStringItem(index, 1, fn)
-            self.m_list.SetStringItem(index, 2, folder)
+#            self.m_list.SetStringItem(index, 2, folder)
 
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnHostsItemRClick, self.m_list)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnHostsItemBeSelected, self.m_list)
@@ -274,6 +281,9 @@ def init():
     g_local_hosts_dir = os.path.join(base_dir, "hosts")
     if not os.path.isdir(g_local_hosts_dir):
         os.makedirs(g_local_hosts_dir)
+
+    sys_hosts = co.getSysHostsPath()
+    open(os.path.join(g_local_hosts_dir, DEFAULT_HOSTS_FN), "wb").write(open(sys_hosts, "rb").read())
 
 
 def main():
