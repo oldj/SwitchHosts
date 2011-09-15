@@ -5,6 +5,8 @@ import common_operations as co
 
 class Frame(wx.Frame):
 
+    ID_HOSTS_TEXT = wx.NewId()
+
     def __init__(
         self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
         size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
@@ -47,7 +49,7 @@ class Frame(wx.Frame):
 
         bSizer6 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize,
+        self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize,
                                               wx.TE_MULTILINE)
         bSizer6.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 5)
 
