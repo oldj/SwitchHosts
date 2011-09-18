@@ -222,6 +222,12 @@ class Frame(ui.Frame):
         c_idx = -1
         c_fn = None
 
+        il = wx.ImageList(16, 16, True)
+        icons_count = len(co.ICONS)
+        for i in xrange(icons_count):
+            il.Add(co.GetMondrianBitmap(i))
+        self.m_list.AssignImageList(il, wx.IMAGE_LIST_SMALL)
+
         for idx, (folder, fn, fn2) in enumerate(hosts_list):
             c = ""
             if os.name == "nt":
@@ -238,6 +244,8 @@ class Frame(ui.Frame):
 #                self.m_list.Select(index)
             self.m_list.SetStringItem(index, 1, fn)
 #            self.m_list.SetStringItem(index, 2, folder)
+            icon_i = idx if idx < icons_count else icons_count - 1
+            self.m_list.SetItemImage(index, icon_i, icon_i)
 
         self.m_list.SetColumnWidth(0, 20)
         self.m_list.SetColumnWidth(1, 130)
