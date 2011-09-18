@@ -10,9 +10,11 @@ class Hosts(object):
 
     CONFIG_FLAG = "#SwitchHost"
 
-    def __init__(self, path, icon_idx=0):
+    def __init__(self, index, path, icon_idx=0):
 
+        self.index = index
         self.path = path
+        self.dc_path = co.decode(path)
         self.folder, self.fn = os.path.split(path)
         self.fn = co.decode(self.fn)
 #        if os.name == "nt":
@@ -61,3 +63,8 @@ class Hosts(object):
     def getTitle(self):
 
         return self.title or self.fn
+
+
+    def setIcon(self, icon_idx):
+
+        self.icon_idx = icon_idx
