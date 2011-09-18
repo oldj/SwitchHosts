@@ -332,11 +332,13 @@ class Frame(ui.Frame):
     def deleteHosts(self, event):
         u"""删除 hosts"""
 
-        path, fn = os.path.split(self.current_selected_hosts_fn)
-        if os.name == "nt":
-            fn = fn.decode("GB18030")#.encode("UTF-8")
+        if self.current_selected_hosts_fn:
+            path, fn = os.path.split(self.current_selected_hosts_fn)
+            if os.name == "nt":
+                fn = fn.decode("GB18030")#.encode("UTF-8")
 
-        if self.current_selected_hosts_fn == self.taskbar_icon.current_hosts or \
+        if not self.current_selected_hosts_fn or \
+            self.current_selected_hosts_fn == self.taskbar_icon.current_hosts or \
             (self.taskbar_icon.current_hosts is None and fn == DEFAULT_HOSTS_FN):
             self.alert(u"不可删除", u"当前 hosts 正在使用中，不可删除！")
             return
