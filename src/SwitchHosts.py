@@ -188,14 +188,23 @@ class Frame(ui.Frame):
 
         menu = wx.Menu()
 
+        def _f(i):
+            return lambda e: self.setHostIcon(e, i)
+
         icons_length = len(co.ICONS)
         for i in range(icons_length):
-            mitem = wx.MenuItem(menu, -1, u"图标#%d" % (i + 1))
+            item_id = wx.NewId()
+            mitem = wx.MenuItem(menu, item_id, u"图标#%d" % (i + 1))
             mitem.SetBitmap(co.GetMondrianBitmap(i))
             menu.AppendItem(mitem)
 
+            self.Bind(wx.EVT_MENU, _f(i), id=item_id)
+
         return menu
 
+
+    def setHostIcon(self, event, i):
+        print i, event.GetId()
 
 
     def updateHostsList(self):
