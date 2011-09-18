@@ -15,6 +15,7 @@ import glob
 import wx
 import libs.common_operations as co
 import libs.ui as ui
+from libs.cls_Hosts import Hosts
 
 VERSION = "0.1.2"
 DEFAULT_HOSTS_FN = u"DEFAULT"
@@ -153,8 +154,8 @@ class Frame(ui.Frame):
         self.Bind(wx.EVT_TEXT, self.hostsContentChange, id=self.ID_HOSTS_TEXT)
 
         hosts_cols = (
-            (u"", wx.LIST_AUTOSIZE),
-            (u"hosts", 120),
+            (u"hosts", 130),
+            (u"", 20),
             )
         for col, (txt, width) in enumerate(hosts_cols):
             self.m_list.InsertColumn(col, txt)
@@ -216,6 +217,7 @@ class Frame(ui.Frame):
 #        hosts_list.insert(0, co.getSysHostsPath())
         hosts_list = [list(os.path.split(fn)) + [fn] for fn in hosts_list]
         self.hosts_lists = hosts_list
+        self.hosts_objects = []
 
         self.m_list.DeleteAllItems()
         ch = self.taskbar_icon.current_hosts
@@ -229,26 +231,23 @@ class Frame(ui.Frame):
         self.m_list.AssignImageList(il, wx.IMAGE_LIST_SMALL)
 
         for idx, (folder, fn, fn2) in enumerate(hosts_list):
+
+            icon_idx = idx if idx < icons_count else icons_count - 1
+            ohosts = Hosts(fn2, icon_idx)
+            self.hosts_objects.append(ohosts)
+
             c = ""
-            if os.name == "nt":
-                fn = fn.decode("GB18030")
+            index = self.m_list.InsertStringItem(sys.maxint, ohosts.getTitle())
 
             if (ch and ch == fn2) or \
                 (not ch and fn == DEFAULT_HOSTS_FN):
                 c = u"√"
-#                self.m_textCtrl_content.Value = co.decode(open(fn2, "rb").read())
-            index = self.m_list.InsertStringItem(sys.maxint, c)
             if c:
                 c_idx = index
                 c_fn = fn2
-#                self.m_list.Select(index)
-            self.m_list.SetStringItem(index, 1, fn)
-#            self.m_list.SetStringItem(index, 2, folder)
-            icon_i = idx if idx < icons_count else icons_count - 1
-            self.m_list.SetItemImage(index, icon_i, icon_i)
+            self.m_list.SetStringItem(index, 1, c)
+            self.m_list.SetItemImage(index, ohosts.icon_idx, ohosts.icon_idx)
 
-        self.m_list.SetColumnWidth(0, 20)
-        self.m_list.SetColumnWidth(1, 130)
 
         if self.current_selected_hosts_index > 0:
             c_idx = self.current_selected_hosts_index
@@ -413,7 +412,7 @@ class Frame(ui.Frame):
             c = ""
             if self.hosts_lists[idx][2] == self.taskbar_icon.current_hosts:
                 c = u"√"
-            self.m_list.SetStringItem(idx, 0, c)
+            self.m_list.SetStringItem(idx, 1, c)
 
 
 
