@@ -162,6 +162,7 @@ class Frame(ui.Frame):
             self.m_list.SetColumnWidth(col, width)
         self.current_selected_hosts_index = -1
         self.current_selected_hosts_fn = None
+        self.current_use_hosts_index = -1
 
         self.updateHostsList()
 
@@ -206,8 +207,14 @@ class Frame(ui.Frame):
 
     def setHostIcon(self, event, i=0):
 
-        self.SetIcon(co.GetMondrianIcon(i))
-        self.taskbar_icon.SetIcon(co.GetMondrianIcon(i))
+        index = self.current_selected_hosts_index
+        ohosts = self.hosts_objects[index]
+        ohosts.setIcon(i)
+        self.m_list.SetItemImage(index, ohosts.icon_idx, ohosts.icon_idx)
+
+        if i == self.current_use_hosts_index:
+            self.SetIcon(co.GetMondrianIcon(i))
+            self.taskbar_icon.SetIcon(co.GetMondrianIcon(i))
 
 
     def updateHostsList(self):
@@ -233,7 +240,7 @@ class Frame(ui.Frame):
         for idx, (folder, fn, fn2) in enumerate(hosts_list):
 
             icon_idx = idx if idx < icons_count else icons_count - 1
-            ohosts = Hosts(fn2, icon_idx)
+            ohosts = Hosts(idx, fn2, icon_idx)
             self.hosts_objects.append(ohosts)
 
             c = ""
@@ -406,6 +413,18 @@ class Frame(ui.Frame):
         self.updateListCtrl()
 
         self.m_btn_apply.Disable()
+
+
+    def getOHostsFromFn(self, fn):
+        u"""从 hosts 的文件名取得它的 id"""
+
+        fn = co.decode(fn)
+
+        for oh in self.hosts_objects:
+            if oh.fn == fn or oh.dc_path == fn:
+                return oh
+
+        return None
 
 
     def updateListCtrl(self):

@@ -67,6 +67,12 @@ def switchHost(obj, fn):
         obj.SetIcon(GetMondrianIcon(), "Hosts: %s" % title)
         notify(obj.frame, u"Hosts 已切换为 %s。" % title)
 
+        ohosts = obj.frame.getOHostsFromFn(fn)
+        obj.SetIcon(GetMondrianIcon(ohosts.icon_idx))
+        obj.frame.SetIcon(GetMondrianIcon(ohosts.icon_idx))
+        obj.frame.current_use_hosts_index = ohosts.index
+
+
     except Exception:
         print(traceback.format_exc())
         wx.MessageBox(u"hosts 未能成功切换！", "Error!")
@@ -97,10 +103,10 @@ def decode(s):
 #        print(traceback.format_exc())
         pass
 
-    encoding = cd.get("encoding") if cd.get("confidence", 0) > 0.5 else None
+    encoding = cd.get("encoding") if cd.get("confidence", 0) > 0.85 else None
     if not encoding:
         encoding = "GB18030" if os.name == "nt" else "UTF-8"
-#    print cd, encoding
+#    print s, cd, encoding, s.decode(encoding)
 
     return s.decode(encoding)
 
