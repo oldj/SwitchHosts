@@ -9,16 +9,16 @@ import traceback
 import wx
 from icons import ICONS
 
-def GetMondrianData(i):
+def GetMondrianData(i=0):
     idx = i if 0 <= i < len(ICONS) else 0
     return ICONS[idx]
 
 
-def GetMondrianBitmap(i):
+def GetMondrianBitmap(i=0):
     return wx.BitmapFromImage(GetMondrianImage(i))
 
 
-def GetMondrianImage(i):
+def GetMondrianImage(i=0):
     import cStringIO
 
     stream = cStringIO.StringIO(GetMondrianData(i))
