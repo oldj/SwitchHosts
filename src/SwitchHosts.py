@@ -12,7 +12,6 @@ u"""
 import os
 import sys
 import glob
-#import traceback
 import wx
 import libs.common_operations as co
 import libs.ui as ui
@@ -169,6 +168,8 @@ class Frame(ui.Frame):
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
 #        self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
         self.hosts_item_menu.Append(self.ID_RENAME, u"重命名")
+        self.hosts_item_menu.AppendMenu(-1, u"图标", self.mkSubIconMenu())
+
         self.hosts_item_menu.AppendSeparator()
         self.hosts_item_menu.Append(wx.ID_DELETE, u"删除")
 
@@ -180,6 +181,20 @@ class Frame(ui.Frame):
 
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnHostsItemRClick, self.m_list)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnHostsItemBeSelected, self.m_list)
+
+
+    def mkSubIconMenu(self):
+        u"""生成图标子菜单"""
+
+        menu = wx.Menu()
+
+        icons_length = len(co.ICONS)
+        for i in range(icons_length):
+            mitem = wx.MenuItem(menu, -1, u"图标#%d" % (i + 1))
+            mitem.SetBitmap(co.GetMondrianBitmap(i))
+            menu.AppendItem(mitem)
+
+        return menu
 
 
 
