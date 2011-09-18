@@ -240,7 +240,7 @@ class Frame(ui.Frame):
             index = self.m_list.InsertStringItem(sys.maxint, ohosts.getTitle())
 
             if (ch and ch == fn2) or \
-                (not ch and fn == DEFAULT_HOSTS_FN):
+                (not ch and co.decode(fn) == DEFAULT_HOSTS_FN):
                 c = u"√"
             if c:
                 c_idx = index
@@ -312,8 +312,9 @@ class Frame(ui.Frame):
 
         path, fn = os.path.split(self.current_selected_hosts_fn)
         fn2 = self.current_selected_hosts_fn
-        if os.name == "nt":
-            fn = fn.decode("GB18030")#.encode("UTF-8")
+        fn = co.decode(fn)
+#        if os.name == "nt":
+#            fn = fn.decode("GB18030")#.encode("UTF-8")
 
         repeat = False
 
@@ -367,8 +368,9 @@ class Frame(ui.Frame):
 
         if self.current_selected_hosts_fn:
             path, fn = os.path.split(self.current_selected_hosts_fn)
-            if os.name == "nt":
-                fn = fn.decode("GB18030")#.encode("UTF-8")
+            fn = co.decode(fn)
+#            if os.name == "nt":
+#                fn = fn.decode("GB18030")#.encode("UTF-8")
 
         if not self.current_selected_hosts_fn or \
             self.current_selected_hosts_fn == self.taskbar_icon.current_hosts or \

@@ -3,6 +3,8 @@
 import os
 import json
 
+import common_operations as co
+
 
 class Hosts(object):
 
@@ -12,8 +14,9 @@ class Hosts(object):
 
         self.path = path
         self.folder, self.fn = os.path.split(path)
-        if os.name == "nt":
-            self.fn = self.fn.decode("GB18030")
+        self.fn = co.decode(self.fn)
+#        if os.name == "nt":
+#            self.fn = self.fn.decode("GB18030")
 
         self.title = None
         self.icon_idx = icon_idx
