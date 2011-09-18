@@ -7,6 +7,7 @@ u"""
 import os
 import traceback
 import wx
+import chardet
 from icons import ICONS
 
 def GetMondrianData(i=0):
@@ -89,4 +90,17 @@ def encode(s):
 
 def decode(s):
 
-    return s.decode("UTF-8")
+    cd = {}
+    try:
+        cd = chardet.detect(s)
+    except Exception:
+#        print(traceback.format_exc())
+        pass
+
+    encoding = cd.get("encoding") if cd.get("confidence", 0) > 0.5 else None
+    if not encoding:
+        encoding = "GB18030" if os.name == "nt" else "UTF-8"
+#    print cd, encoding
+
+    return s.decode(encoding)
+
