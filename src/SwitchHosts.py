@@ -203,8 +203,10 @@ class Frame(ui.Frame):
         return menu
 
 
-    def setHostIcon(self, event, i):
-        print i, event.GetId()
+    def setHostIcon(self, event, i=0):
+
+        self.SetIcon(co.GetMondrianIcon(i))
+        self.taskbar_icon.SetIcon(co.GetMondrianIcon(i))
 
 
     def updateHostsList(self):
