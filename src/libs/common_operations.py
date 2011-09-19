@@ -49,14 +49,18 @@ def notify(frame, msg=None, title=None):
 def switchHost(obj, fn):
     u"""切换 hosts 为 fn 的内容"""
 
+    from cls_Hosts import Hosts
+
     if not os.path.isfile(fn):
         wx.MessageBox(u"hosts 文件 '%s' 不存在！" % fn, "Error!")
+
+    ohosts = Hosts(path=fn)
 
     sys_hosts_fn = getSysHostsPath()
     try:
         open(sys_hosts_fn, "wb").write(open(fn, "rb").read())
         obj.current_hosts = fn
-        title = os.path.split(fn)[1]
+        title = ohosts.getTitle()
 
         if os.name == "nt":
             try:
@@ -91,6 +95,8 @@ def getSysHostsPath():
 
 def encode(s):
 
+#    print("--")
+#    print(chardet.detect(s))
     return unicode(s).encode("UTF-8")
 
 
@@ -103,7 +109,7 @@ def decode(s):
 #        print(traceback.format_exc())
         pass
 
-    encoding = cd.get("encoding") if cd.get("confidence", 0) > 0.85 else None
+    encoding = cd.get("encoding") if cd.get("confidence", 0) > 0.65 else None
     if not encoding:
         encoding = "GB18030" if os.name == "nt" else "UTF-8"
 #    print s, cd, encoding, s.decode(encoding)

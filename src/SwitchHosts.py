@@ -18,7 +18,7 @@ import libs.ui as ui
 from libs.cls_Hosts import Hosts
 
 VERSION = "0.1.2"
-DEFAULT_HOSTS_FN = u"DEFAULT"
+DEFAULT_HOSTS_FN = u"DEFAULT.hosts"
 
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -98,10 +98,10 @@ class TaskBarIcon(wx.TaskBarIcon):
         menu.Append(self.ID_MainFrame, u"Switch Hosts!")
         menu.AppendSeparator()
 
-#        if not self.current_hosts:
-#            menu.AppendRadioItem(wx.ID_ANY, DEFAULT_HOSTS_FN)
         for fn in hosts_list:
-            self.addHosts(menu, fn)
+            oh = self.frame.getOHostsFromFn(fn)
+            if oh:
+                self.addHosts(menu, oh.getTitle())
 
         menu.AppendSeparator()
         menu.Append(self.ID_About, "About")
@@ -123,10 +123,12 @@ class TaskBarIcon(wx.TaskBarIcon):
 
     def switchHost(self, event):
         hosts_id = event.GetId()
-        fn = self.hosts[hosts_id]
+        title = self.hosts[hosts_id]
 
-        co.switchHost(self, fn)
-        self.frame.updateListCtrl()
+        oh = self.frame.getOHostsFromTitle(title)
+        if oh:
+            co.switchHost(self, oh.path)
+            self.frame.updateListCtrl()
 
 
 class Frame(ui.Frame):
@@ -162,6 +164,7 @@ class Frame(ui.Frame):
         self.current_selected_hosts_index = -1
         self.current_selected_hosts_fn = None
         self.current_use_hosts_index = -1
+        self.current_max_hosts_index = -1
 
         self.updateHostsList()
 
@@ -242,6 +245,12 @@ class Frame(ui.Frame):
             ohosts = Hosts(idx, fn2, icon_idx)
             self.hosts_objects.append(ohosts)
 
+            i, t, t2 = fn.partition(".")
+            if i.isdigit():
+                i = int(i)
+                if i > self.current_max_hosts_index:
+                    self.current_max_hosts_index = i
+
             c = ""
             index = self.m_list.InsertStringItem(sys.maxint, ohosts.getTitle())
 
@@ -273,93 +282,81 @@ class Frame(ui.Frame):
         self.applyHost(event)
 
 
+    def mkNewHostsPath(self):
+
+        global g_local_hosts_dir
+
+        self.current_max_hosts_index += 1
+        return os.path.join(g_local_hosts_dir, "%d.hosts" % self.current_max_hosts_index)
+
+
     def newHosts(self, event=None, default=""):
         u"""新建一个 hosts"""
 
         global g_local_hosts_dir
 
         repeat = False
-        new_fn = default
+        title = default
 
-        dlg = wx.TextEntryDialog(None, u"新建 hosts", u"输入 hosts 名：", new_fn,
+        dlg = wx.TextEntryDialog(None, u"新建 hosts", u"输入 hosts 名：", title,
                 style=wx.OK | wx.CANCEL
             )
         if dlg.ShowModal() == wx.ID_OK:
-            new_fn = dlg.GetValue().strip()
+            title = dlg.GetValue().strip()
 
-            if new_fn:
+            if title:
 
-                fn2 = os.path.join(g_local_hosts_dir, new_fn)
-
-                if new_fn == DEFAULT_HOSTS_FN:
+                oh = self.getOHostsFromTitle(title)
+                if oh:
 
                     repeat = True
-                    self.alert(u"命名失败！", u"新建的 hosts 不可以命名为 '%s' ！" % DEFAULT_HOSTS_FN)
-
-                elif os.path.isfile(fn2):
-                    # 同名的文件已经存在
-                    repeat = True
-                    self.alert(u"重名了！", u"名为 '%s' 的 hosts 已经存在了！" % new_fn)
+                    self.alert(u"命名失败！", u"名为 '%s' 的 hosts 已经存在了！" % title)
 
                 else:
-
                     # 保存新文件
-                    open(fn2, "wb").write(co.encode(u"# %s" % new_fn))
+
+                    path = self.mkNewHostsPath()
+                    c = u"# %s" % title
+                    oh = Hosts(path=path)
+                    oh.setTitle(title)
+                    oh.setContent(c)
                     self.updateHostsList()
 
         dlg.Destroy()
 
         if repeat:
-            self.newHosts(event, default=new_fn)
+            self.newHosts(event, default=title)
 
 
     def renameHosts(self, event):
         u"""重命名一个 hosts"""
 
-        path, fn = os.path.split(self.current_selected_hosts_fn)
-        fn2 = self.current_selected_hosts_fn
-        fn = co.decode(fn)
-#        if os.name == "nt":
-#            fn = fn.decode("GB18030")#.encode("UTF-8")
+        ohosts = self.hosts_objects[self.current_selected_hosts_index]
+        old_title = ohosts.getTitle()
 
         repeat = False
 
-        dlg = wx.TextEntryDialog(None, u"重命名 hosts", u"输入新的 hosts 名：", fn,
+        dlg = wx.TextEntryDialog(None, u"重命名 hosts", u"输入新的 hosts 名：", old_title,
                 style=wx.OK | wx.CANCEL
             )
         if dlg.ShowModal() == wx.ID_OK:
             # 改名
-            new_fn = dlg.GetValue().strip()
+            new_title = dlg.GetValue().strip()
 
-            if new_fn and new_fn != fn:
+            if new_title and new_title != old_title:
 
-                new_fn2 = os.path.join(path, new_fn)
+                oh2 = self.getOHostsFromTitle(new_title)
 
-                if new_fn == DEFAULT_HOSTS_FN:
-
-                    repeat = True
-                    self.alert(u"重命名失败！", u"hosts 不可以命名为 '%s' ！" % DEFAULT_HOSTS_FN)
-
-                elif os.path.isfile(new_fn2):
+                if oh2:
 
                     repeat = True
-                    self.alert(u"文件已存在！", u"'%s' 已存在，请先将它删除！" % new_fn)
+                    self.alert(u"重命名失败！", u"'%s' 已存在，请先将它删除！" % new_title)
 
                 else:
 
-                    # 删除老文件
-                    c = ""
-                    if os.path.isfile(fn2):
-                        c = open(fn2, "rb").read()
-                        os.remove(fn2)
+                    ohosts.setTitle(new_title)
 
-                    # 保存新文件
-                    open(new_fn2, "wb").write(c)
-
-                    if self.taskbar_icon.current_hosts == fn2:
-                        if os.name == "nt":
-                            new_fn2 = new_fn2.encode("GB18030")
-                        self.current_selected_hosts_fn = self.taskbar_icon.current_hosts = new_fn2
+                    if self.taskbar_icon.current_hosts == ohosts.path:
                         self.applyHost()
                     self.updateHostsList()
 
@@ -405,7 +402,11 @@ class Frame(ui.Frame):
 
         # 保存当前 hosts 的内容
         c = self.m_textCtrl_content.Value.rstrip()
-        open(self.current_selected_hosts_fn, "wb").write(co.encode(c))
+#        open(self.current_selected_hosts_fn, "wb").write(co.encode(c))
+        ohost = self.getOHostsFromFn()
+        if ohost:
+            ohost.setContent(c)
+            ohost.save()
 
         # 切换 hosts
         co.switchHost(self.taskbar_icon, self.current_selected_hosts_fn)
@@ -414,8 +415,20 @@ class Frame(ui.Frame):
         self.m_btn_apply.Disable()
 
 
-    def getOHostsFromFn(self, fn):
+    def getOHostsFromTitle(self, title):
+
+        for oh in self.hosts_objects:
+            if oh.getTitle() == title:
+                return oh
+
+        return None
+
+
+    def getOHostsFromFn(self, fn=None):
         u"""从 hosts 的文件名取得它的 id"""
+
+        if not fn:
+            fn = self.current_selected_hosts_fn
 
         fn = co.decode(fn)
 
@@ -440,6 +453,7 @@ class Frame(ui.Frame):
 
         idx = event.GetIndex()
         fn = self.hosts_lists[idx][2]
+#        ohosts = self.hosts_objects[idx]
         c = open(fn, "rb").read() if os.path.isfile(fn) else ""
         self.m_textCtrl_content.Value = co.decode(c)
 
@@ -484,7 +498,7 @@ def listLocalHosts():
 
     global g_local_hosts_dir
 
-    fns = [fn for fn in glob.glob(os.path.join(g_local_hosts_dir, "*")) if\
+    fns = [fn for fn in glob.glob(os.path.join(g_local_hosts_dir, "*.hosts")) if\
            os.path.isfile(fn) and not fn.startswith(".")\
            and not fn.startswith("_")
     ]
@@ -501,7 +515,10 @@ def init():
         os.makedirs(g_local_hosts_dir)
 
     sys_hosts = co.getSysHostsPath()
-    open(os.path.join(g_local_hosts_dir, DEFAULT_HOSTS_FN), "wb").write(open(sys_hosts, "rb").read())
+    path = os.path.join(g_local_hosts_dir, DEFAULT_HOSTS_FN)
+    if not os.path.isfile(path):
+        # 仅当这个文件不存在时才复制过来
+        open(path, "wb").write(open(sys_hosts, "rb").read())
 
 
 def main():

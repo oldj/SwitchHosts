@@ -8,9 +8,9 @@ import common_operations as co
 
 class Hosts(object):
 
-    CONFIG_FLAG = "#SwitchHost"
+    CONFIG_FLAG = "#@SwitchHost!"
 
-    def __init__(self, index, path, icon_idx=0):
+    def __init__(self, index=0, path=None, icon_idx=0):
 
         self.index = index
         self.path = path
@@ -31,13 +31,9 @@ class Hosts(object):
     def read(self):
 
         c = open(self.path, "rb").read().strip() if os.path.isfile(self.path) else ""
-        self.content = c
+#        c = co.decode(c)
+        self.setContent(c, save=False)
 
-        # 查看第一行是否为配置内容
-        # 第一行以 #SwitchHost 开头表示为配置信息
-        a = [i.strip() for i in c.split("\n")]
-        if a[0].startswith(self.CONFIG_FLAG):
-            self.getConfig(a[0])
 
     def getConfig(self, ln):
         u"""从一行内容中取得配置信息"""
@@ -51,13 +47,28 @@ class Hosts(object):
                 pass
 
         if cfg:
-            self.title = cfg.get("title")
-            self.icon_idx = cfg.get("icon_idx")
+            self.title = cfg.get("title", self.title)
+            self.icon_idx = cfg.get("icon_idx", self.icon_idx)
 
 
     def save(self):
 
-        open(self.path, "wb").write(self.content)
+        if not self.path:
+            return
+
+        cfg = {
+            "title": self.title,
+            "icon_idx": self.icon_idx,
+        }
+        cfg_ln = u"%s %s" % (self.CONFIG_FLAG, json.dumps(cfg).replace("\n", "").replace("\r", ""))
+
+        c = self.content
+        print(1, c)
+        print(1, c.decode("utf-8"))
+#        print(1, c.encode("utf-8"))
+        c = u"%s\n%s" % (cfg_ln, c.decode("utf-8"))
+        print(1, c)
+        open(self.path, "wb").write(c.encode("utf-8"))
 
 
     def getTitle(self):
@@ -65,6 +76,29 @@ class Hosts(object):
         return self.title or self.fn
 
 
+    def setTitle(self, title):
+
+        self.title = title
+        self.save()
+
+
     def setIcon(self, icon_idx):
 
         self.icon_idx = icon_idx
+        self.save()
+
+
+    def setContent(self, c, save=True):
+
+        self.content = c #co.encode(c)
+
+        # 查看第一行是否为配置内容
+        # 第一行以 #SwitchHost 开头表示为配置信息
+        a = [i.strip() for i in c.split("\n")]
+        if a[0].startswith(self.CONFIG_FLAG):
+            self.getConfig(a[0])
+            self.content = "\n".join(a[1:])
+
+        if save:
+            self.save()
+
