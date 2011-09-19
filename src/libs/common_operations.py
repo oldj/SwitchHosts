@@ -31,7 +31,16 @@ def GetMondrianIcon(i=0):
     icon.CopyFromBitmap(GetMondrianBitmap(i))
     return icon
 
-def notify(frame, msg=None, title=None):
+def notify(frame, msg="", title=u"消息"):
+
+    if os.name == "posix":
+        # linux 系统
+
+        import pynotify
+        pynotify.Notification(title, msg).show()
+
+        return
+
     import ToasterBox as TB
 
     sw, sh = wx.GetDisplaySize()
@@ -91,10 +100,13 @@ def encode(s):
 
 #    print("--")
 #    print(chardet.detect(s))
-    return unicode(s).encode("UTF-8")
+    return unicode(s).encode("UTF-8") if s else ""
 
 
 def decode(s):
+
+    if not s:
+        return ""
 
     cd = {}
     try:
