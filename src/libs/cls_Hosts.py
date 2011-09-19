@@ -63,11 +63,10 @@ class Hosts(object):
         cfg_ln = u"%s %s" % (self.CONFIG_FLAG, json.dumps(cfg).replace("\n", "").replace("\r", ""))
 
         c = self.content
-        print(1, c)
-        print(1, c.decode("utf-8"))
-#        print(1, c.encode("utf-8"))
-        c = u"%s\n%s" % (cfg_ln, c.decode("utf-8"))
-        print(1, c)
+        if not repr(c).startswith("u"):
+            c = c.decode("utf-8")
+
+        c = u"%s\n%s" % (cfg_ln, c)
         open(self.path, "wb").write(c.encode("utf-8"))
 
 

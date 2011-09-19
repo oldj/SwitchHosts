@@ -62,12 +62,6 @@ def switchHost(obj, fn):
         obj.current_hosts = fn
         title = ohosts.getTitle()
 
-        if os.name == "nt":
-            try:
-                title = title.decode("GB18030")
-            except UnicodeEncodeError:
-                print(traceback.format_exc())
-
         obj.SetIcon(GetMondrianIcon(), "Hosts: %s" % title)
         notify(obj.frame, u"Hosts 已切换为 %s。" % title)
 
