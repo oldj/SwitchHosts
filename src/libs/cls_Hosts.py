@@ -22,6 +22,7 @@ class Hosts(object):
 
         self.title = None
         self.icon_idx = icon_idx
+        self.content = ""
         self.is_selected = False
 
         self.read()
@@ -101,3 +102,11 @@ class Hosts(object):
         if save:
             self.save()
 
+
+    def getContent(self):
+
+        c = self.content
+        if not repr(c).startswith("u"):
+            c = c.decode("utf-8")
+
+        return c

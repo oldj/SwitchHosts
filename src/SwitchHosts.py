@@ -267,17 +267,19 @@ class Frame(ui.Frame):
                 c = u"√"
             if c:
                 c_idx = index
-                c_fn = fn2
+#                c_fn = fn2
             self.m_list.SetStringItem(index, 1, c)
             self.m_list.SetItemImage(index, ohosts.icon_idx, ohosts.icon_idx)
 
 
-        if self.current_selected_hosts_index > 0:
+        if self.current_selected_hosts_index >= 0:
             c_idx = self.current_selected_hosts_index
-            c_fn = self.current_selected_hosts_fn
+#            c_fn = self.current_selected_hosts_fn
+
+        ohosts = self.hosts_objects[c_idx]
+        self.m_textCtrl_content.Value = ohosts.getContent()
+
         self.m_list.Select(c_idx)
-        if c_fn and os.path.isfile(c_fn):
-            self.m_textCtrl_content.Value = co.decode(open(c_fn, "rb").read())
 
 
     def hostsContentChange(self, event):
@@ -460,9 +462,9 @@ class Frame(ui.Frame):
 
         idx = event.GetIndex()
         fn = self.hosts_lists[idx][2]
-#        ohosts = self.hosts_objects[idx]
-        c = open(fn, "rb").read() if os.path.isfile(fn) else ""
-        self.m_textCtrl_content.Value = co.decode(c)
+        ohosts = self.hosts_objects[idx]
+#        c = open(fn, "rb").read() if os.path.isfile(fn) else ""
+        self.m_textCtrl_content.Value = ohosts.getContent()
 
         self.current_selected_hosts_index = idx
         self.current_selected_hosts_fn = fn
