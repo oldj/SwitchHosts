@@ -6,7 +6,7 @@ u"""
 @author: oldj
 @blog: http://oldj.net
 @email: oldj.wu@gmail.com
-@version: 0.1.2.100
+@version: 0.1.3.200
 """
 
 import os
@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts
 
-VERSION = "0.1.2"
+VERSION = "0.1.3"
 DEFAULT_HOSTS_FN = u"DEFAULT.hosts"
 
 
