@@ -137,15 +137,16 @@ class Frame(ui.Frame):
 
     def __init__(
         self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
-        size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE
+        size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
+        sys_hosts_title=None,
     ):
         ui.Frame.__init__(self, parent, id, title, pos, size, style, TaskBarIcon=TaskBarIcon)
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.init2()
+        self.init2(sys_hosts_title)
 
 
-    def init2(self):
+    def init2(self, sys_hosts_title):
 
         self.Bind(wx.EVT_MENU, self.newHosts, id=wx.ID_NEW)
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
@@ -166,7 +167,7 @@ class Frame(ui.Frame):
         self.current_use_hosts_index = -1
         self.current_max_hosts_index = -1
 
-        self.updateHostsList()
+        self.updateHostsList(sys_hosts_title)
 
         self.hosts_item_menu = wx.Menu()
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
@@ -219,7 +220,7 @@ class Frame(ui.Frame):
             self.taskbar_icon.SetIcon(co.GetMondrianIcon(i))
 
 
-    def updateHostsList(self):
+    def updateHostsList(self, selected_title=None):
         u"""更新 hosts 列表"""
 
         hosts_list = listLocalHosts()
@@ -245,6 +246,9 @@ class Frame(ui.Frame):
             ohosts = Hosts(idx, fn2, icon_idx)
             self.hosts_objects.append(ohosts)
 
+            if ohosts.getTitle() == selected_title:
+                ch = self.taskbar_icon.current_hosts = fn2
+
             i, t, t2 = fn.partition(".")
             if i.isdigit():
                 i = int(i)
@@ -268,7 +272,7 @@ class Frame(ui.Frame):
             c_idx = self.current_selected_hosts_index
             c_fn = self.current_selected_hosts_fn
         self.m_list.Select(c_idx)
-        if os.path.isfile(c_fn):
+        if c_fn and os.path.isfile(c_fn):
             self.m_textCtrl_content.Value = co.decode(open(c_fn, "rb").read())
 
 
@@ -397,16 +401,16 @@ class Frame(ui.Frame):
         dlg.Destroy()
 
 
-    def applyHost(self, event=None):
+    def applyHost(self, event=None, ohosts=None):
         u"""应用某个 hosts"""
 
         # 保存当前 hosts 的内容
         c = self.m_textCtrl_content.Value.rstrip()
 #        open(self.current_selected_hosts_fn, "wb").write(co.encode(c))
-        ohost = self.getOHostsFromFn()
-        if ohost:
-            ohost.setContent(c)
-            ohost.save()
+        ohosts = ohosts or self.getOHostsFromFn()
+        if ohosts:
+            ohosts.setContent(c)
+            ohosts.save()
 
         # 切换 hosts
         co.switchHost(self.taskbar_icon, self.current_selected_hosts_fn)
@@ -506,6 +510,38 @@ def listLocalHosts():
     return fns
 
 
+def getSysHostsTitle():
+
+    global g_local_hosts_dir
+
+    sys_hosts = co.getSysHostsPath()
+    path = os.path.join(g_local_hosts_dir, DEFAULT_HOSTS_FN)
+
+    ohosts_sys = Hosts(path=sys_hosts)
+    sys_hosts_title = ohosts_sys.getTitle()
+    is_title_valid = False
+
+    fns = listLocalHosts()
+    for fn in fns:
+        fn2 = os.path.split(fn)[1]
+        i, t, t2 = fn2.partition(".")
+        if not i.isdigit():
+            continue
+
+        ohosts = Hosts(path=fn)
+        if ohosts.getTitle() == sys_hosts_title:
+            is_title_valid = True
+            break
+
+    if not is_title_valid:
+        open(path, "wb").write(open(sys_hosts, "rb").read())
+    else:
+        if os.path.isfile(path):
+            os.remove(path)
+
+    return sys_hosts_title if is_title_valid else None
+
+
 def init():
     global g_local_hosts_dir
 
@@ -516,15 +552,14 @@ def init():
 
     sys_hosts = co.getSysHostsPath()
     path = os.path.join(g_local_hosts_dir, DEFAULT_HOSTS_FN)
-    if not os.path.isfile(path):
-        # 仅当这个文件不存在时才复制过来
-        open(path, "wb").write(open(sys_hosts, "rb").read())
+
+    return getSysHostsTitle()
 
 
 def main():
-    init()
+    sys_hosts_title = init()
     app = wx.PySimpleApp()
-    frame = Frame(size=(640, 480))
+    frame = Frame(size=(640, 480), sys_hosts_title=sys_hosts_title)
     frame.Centre()
     frame.Show()
     app.MainLoop()

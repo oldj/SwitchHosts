@@ -110,3 +110,4 @@ def decode(s):
 
     return s.decode(encoding)
 
+
