@@ -540,9 +540,9 @@ def getSysHostsTitle():
 
     if not is_title_valid:
         open(path, "wb").write(open(sys_hosts, "rb").read())
-    else:
-        if os.path.isfile(path):
-            os.remove(path)
+#    else:
+#        if os.path.isfile(path):
+#            os.remove(path)
 
     return sys_hosts_title if is_title_valid else None
 
@@ -554,9 +554,6 @@ def init():
     g_local_hosts_dir = os.path.join(base_dir, "hosts")
     if not os.path.isdir(g_local_hosts_dir):
         os.makedirs(g_local_hosts_dir)
-
-    sys_hosts = co.getSysHostsPath()
-    path = os.path.join(g_local_hosts_dir, DEFAULT_HOSTS_FN)
 
     return getSysHostsTitle()
 
