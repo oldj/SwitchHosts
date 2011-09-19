@@ -19,6 +19,7 @@ from libs.cls_Hosts import Hosts
 
 VERSION = "0.1.3"
 DEFAULT_HOSTS_FN = u"DEFAULT.hosts"
+SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
     ID_About = wx.NewId()
@@ -39,21 +40,6 @@ class TaskBarIcon(wx.TaskBarIcon):
 
         self.font_bold = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         self.font_bold.SetWeight(wx.BOLD)
-
-
-    def notify(self, msg=None, title=None):
-        import libs.ToasterBox as TB
-
-        sw, sh = wx.GetDisplaySize()
-        width, height = 210, 50
-        px = sw - 230
-        py = sh - 100
-
-        tb = TB.ToasterBox(self.frame)
-        tb.SetPopupText(msg)
-        tb.SetPopupSize((width, height))
-        tb.SetPopupPosition((px, py))
-        tb.Play()
 
 
     def OnTaskBarLeftDClick(self, event):
@@ -146,7 +132,7 @@ class Frame(ui.Frame):
     def __init__(
         self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
         size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
-        sys_hosts_title=None,
+        sys_hosts_title=None
     ):
         ui.Frame.__init__(self, parent, id, title, pos, size, style, TaskBarIcon=TaskBarIcon)
 
@@ -273,7 +259,7 @@ class Frame(ui.Frame):
 
             if (ch and ch == fn2) or \
                 (not ch and co.decode(fn) == DEFAULT_HOSTS_FN):
-                c = u"√"
+                c = SELECTED_FLAG
             if c:
                 c_idx = index
 #                c_fn = fn2
@@ -463,7 +449,7 @@ class Frame(ui.Frame):
             c = ""
             font = self.font_normal
             if self.hosts_lists[idx][2] == self.taskbar_icon.current_hosts:
-                c = u"√"
+                c = SELECTED_FLAG
                 font = self.font_bold
             self.m_list.SetStringItem(idx, 1, c)
             self.m_list.SetItemFont(idx, font)
