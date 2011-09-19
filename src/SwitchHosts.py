@@ -258,7 +258,7 @@ class Frame(ui.Frame):
 
 
             if (ch and ch == fn2) or \
-                (not ch and co.decode(fn) == DEFAULT_HOSTS_FN):
+                (not selected_title and not ch and co.decode(fn) == DEFAULT_HOSTS_FN):
                 c = SELECTED_FLAG
             if c:
                 c_idx = index
