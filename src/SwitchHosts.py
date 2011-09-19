@@ -20,7 +20,6 @@ from libs.cls_Hosts import Hosts
 VERSION = "0.1.3"
 DEFAULT_HOSTS_FN = u"DEFAULT.hosts"
 
-
 class TaskBarIcon(wx.TaskBarIcon):
     ID_About = wx.NewId()
     ID_Exit = wx.NewId()
@@ -37,6 +36,9 @@ class TaskBarIcon(wx.TaskBarIcon):
         self.Bind(wx.EVT_MENU, self.OnMainFrame, id=self.ID_MainFrame)
 
         self.current_hosts = None
+
+        self.font_bold = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self.font_bold.SetWeight(wx.BOLD)
 
 
     def notify(self, msg=None, title=None):
@@ -112,13 +114,19 @@ class TaskBarIcon(wx.TaskBarIcon):
     def addHosts(self, menu, ohost):
         u"""在菜单项中添加一个 hosts"""
 
-        hosts_id = wx.NewId()
         title = ohost.getTitle()
-        menu.AppendRadioItem(hosts_id, title)
-        menu.Check(hosts_id, self.current_hosts == ohost.path)
-        self.hosts[hosts_id] = title
 
-        self.Bind(wx.EVT_MENU, self.switchHost, id=hosts_id)
+        item_id = wx.NewId()
+        mitem = wx.MenuItem(menu, item_id, title, kind=wx.ITEM_RADIO)
+        mitem.SetBitmap(co.GetMondrianBitmap(ohost.icon_idx))
+        menu.AppendItem(mitem)
+
+        menu.Check(item_id, self.current_hosts == ohost.path)
+        if self.current_hosts == ohost.path:
+            mitem.SetFont(self.font_bold)
+        self.hosts[item_id] = title
+
+        self.Bind(wx.EVT_MENU, self.switchHost, id=item_id)
 
 
     def switchHost(self, event):
@@ -246,13 +254,6 @@ class Frame(ui.Frame):
             ohosts = Hosts(idx, fn2, icon_idx)
             self.hosts_objects.append(ohosts)
 
-            # 如果指定了当前选中的 hosts
-            if ohosts.getTitle() == selected_title:
-                ch = self.taskbar_icon.current_hosts = fn2
-                self.SetIcon(co.GetMondrianIcon(ohosts.icon_idx))
-                self.taskbar_icon.SetIcon(co.GetMondrianIcon(ohosts.icon_idx))
-
-
             i, t, t2 = fn.partition(".")
             if i.isdigit():
                 i = int(i)
@@ -261,6 +262,14 @@ class Frame(ui.Frame):
 
             c = ""
             index = self.m_list.InsertStringItem(sys.maxint, ohosts.getTitle())
+
+            # 如果指定了当前选中的 hosts
+            if ohosts.getTitle() == selected_title:
+                ch = self.taskbar_icon.current_hosts = fn2
+                self.SetIcon(co.GetMondrianIcon(ohosts.icon_idx))
+                self.taskbar_icon.SetIcon(co.GetMondrianIcon(ohosts.icon_idx))
+                self.m_list.SetItemFont(idx, self.font_bold)
+
 
             if (ch and ch == fn2) or \
                 (not ch and co.decode(fn) == DEFAULT_HOSTS_FN):
@@ -452,9 +461,12 @@ class Frame(ui.Frame):
 
         for idx in range(len(self.hosts_lists)):
             c = ""
+            font = self.font_normal
             if self.hosts_lists[idx][2] == self.taskbar_icon.current_hosts:
                 c = u"√"
+                font = self.font_bold
             self.m_list.SetStringItem(idx, 1, c)
+            self.m_list.SetItemFont(idx, font)
 
 
 

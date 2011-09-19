@@ -3,6 +3,7 @@
 import wx
 import common_operations as co
 
+
 class Frame(wx.Frame):
 
     ID_HOSTS_TEXT = wx.NewId()
@@ -80,6 +81,11 @@ class Frame(wx.Frame):
         self.Layout()
 
         self.Centre(wx.BOTH)
+
+        self.font_bold = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self.font_bold.SetWeight(wx.BOLD)
+        self.font_normal = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self.font_normal.SetWeight(wx.NORMAL)
 
 
     def alert(self, title, msg):
