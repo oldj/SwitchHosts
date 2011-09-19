@@ -2,7 +2,6 @@
 
 import glob
 from distutils.core import setup
-import py2exe
 
 from SwitchHosts import VERSION
 
@@ -19,10 +18,12 @@ setup(
             "bundle_files": 1, # 打包为一个文件
             "dll_excludes": ["MSVCP90.dll"],
             #"ascii": False,
+            "includes": ["chardet"],
         },
     },
     windows=[{
         "script": "SwitchHosts.py",
-        "icon_resources": [(1, "arrow_switch.ico")],
+        "icon_resources": [(1, "icon_0.ico")],
     }],
+#    py_modules=["chardet",],
 )

@@ -31,7 +31,6 @@ class TaskBarIcon(wx.TaskBarIcon):
         #        super(wx.TaskBarIcon, self).__init__()
         self.frame = frame
         self.SetIcon(co.GetMondrianIcon(), "Switch Hosts!")
-        #        self.SetIcon(wx.Icon(name="arrow_switch.png", type=wx.BITMAP_TYPE_PNG), "Switch Hosts!")
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=self.ID_About)
         self.Bind(wx.EVT_MENU, self.OnExit, id=self.ID_Exit)
