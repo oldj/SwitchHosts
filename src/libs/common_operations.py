@@ -8,6 +8,10 @@ import os
 import traceback
 import wx
 import chardet
+
+if os.name == "posix":
+    import pynotify
+
 from icons import ICONS
 
 def GetMondrianData(i=0):
@@ -36,7 +40,6 @@ def notify(frame, msg="", title=u"消息"):
     if os.name == "posix":
         # linux 系统
 
-        import pynotify
         pynotify.Notification(title, msg).show()
 
         return
