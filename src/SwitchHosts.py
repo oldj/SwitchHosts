@@ -101,7 +101,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         for fn in hosts_list:
             oh = self.frame.getOHostsFromFn(fn)
             if oh:
-                self.addHosts(menu, oh.getTitle())
+                self.addHosts(menu, oh)
 
         menu.AppendSeparator()
         menu.Append(self.ID_About, "About")
@@ -109,14 +109,14 @@ class TaskBarIcon(wx.TaskBarIcon):
         return menu
 
 
-    def addHosts(self, menu, fn):
+    def addHosts(self, menu, ohost):
         u"""在菜单项中添加一个 hosts"""
 
-        folder, fn2 = os.path.split(fn)
         hosts_id = wx.NewId()
-        menu.AppendRadioItem(hosts_id, fn2)
-        menu.Check(hosts_id, self.current_hosts == fn)
-        self.hosts[hosts_id] = fn
+        title = ohost.getTitle()
+        menu.AppendRadioItem(hosts_id, title)
+        menu.Check(hosts_id, self.current_hosts == ohost.path)
+        self.hosts[hosts_id] = title
 
         self.Bind(wx.EVT_MENU, self.switchHost, id=hosts_id)
 
