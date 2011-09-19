@@ -208,7 +208,7 @@ class Frame(ui.Frame):
         return menu
 
 
-    def setHostIcon(self, event, i=0):
+    def setHostIcon(self, event=None, i=0):
 
         index = self.current_selected_hosts_index
         ohosts = self.hosts_objects[index]
@@ -246,8 +246,12 @@ class Frame(ui.Frame):
             ohosts = Hosts(idx, fn2, icon_idx)
             self.hosts_objects.append(ohosts)
 
+            # 如果指定了当前选中的 hosts
             if ohosts.getTitle() == selected_title:
                 ch = self.taskbar_icon.current_hosts = fn2
+                self.SetIcon(co.GetMondrianIcon(ohosts.icon_idx))
+                self.taskbar_icon.SetIcon(co.GetMondrianIcon(ohosts.icon_idx))
+
 
             i, t, t2 = fn.partition(".")
             if i.isdigit():
@@ -374,10 +378,9 @@ class Frame(ui.Frame):
         u"""删除 hosts"""
 
         if self.current_selected_hosts_fn:
-            path, fn = os.path.split(self.current_selected_hosts_fn)
-            fn = co.decode(fn)
-#            if os.name == "nt":
-#                fn = fn.decode("GB18030")#.encode("UTF-8")
+            folder, fn = os.path.split(self.current_selected_hosts_fn)
+#            fn = co.decode(fn)
+        ohosts = self.getOHostsFromFn(fn)
 
         if not self.current_selected_hosts_fn or \
             self.current_selected_hosts_fn == self.taskbar_icon.current_hosts or \
@@ -385,7 +388,7 @@ class Frame(ui.Frame):
             self.alert(u"不可删除", u"当前 hosts 正在使用中，不可删除！")
             return
 
-        dlg = wx.MessageDialog(None, u"确定要删除 hosts '%s'？" % fn, u"删除 hosts",
+        dlg = wx.MessageDialog(None, u"确定要删除 hosts '%s'？" % ohosts.getTitle(), u"删除 hosts",
                 wx.YES_NO | wx.ICON_QUESTION
             )
         ret_code = dlg.ShowModal()
