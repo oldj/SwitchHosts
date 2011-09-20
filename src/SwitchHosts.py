@@ -275,6 +275,7 @@ class Frame(ui.Frame):
         self.m_textCtrl_content.Value = ohosts.getContent()
 
         self.m_list.Select(c_idx)
+        self.current_selected_hosts_index = c_idx
 
 
     def hostsContentChange(self, event):
