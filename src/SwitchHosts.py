@@ -337,6 +337,10 @@ class Frame(ui.Frame):
         u"""重命名一个 hosts"""
 
         ohosts = self.hosts_objects[self.current_selected_hosts_index]
+        if ohosts.fn == DEFAULT_HOSTS_FN:
+            self.alert(u"不可操作", u"默认 hosts 不可重命名！")
+            return
+
         old_title = ohosts.getTitle()
 
         repeat = False
