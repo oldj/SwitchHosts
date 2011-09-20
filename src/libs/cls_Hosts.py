@@ -5,6 +5,7 @@ import json
 
 import common_operations as co
 
+DEFAULT_HOSTS_FN = u"DEFAULT.hosts"
 
 class Hosts(object):
 
@@ -73,7 +74,7 @@ class Hosts(object):
 
     def getTitle(self):
 
-        return self.title or self.fn
+        return self.title or self.fn if self.fn != DEFAULT_HOSTS_FN else self.fn
 
 
     def setTitle(self, title):
