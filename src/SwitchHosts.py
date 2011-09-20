@@ -114,7 +114,7 @@ class Frame(ui.Frame):
     ID_RENAME = wx.NewId()
 
     def __init__(
-        self, parent=None, id=wx.ID_ANY, title="Switch Host! %s" % VERSION, pos=wx.DefaultPosition,
+        self, parent=None, id=wx.ID_ANY, title="Switch Hosts! %s" % VERSION, pos=wx.DefaultPosition,
         size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
         sys_hosts_title=None
     ):
