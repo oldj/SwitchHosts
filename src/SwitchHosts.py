@@ -472,7 +472,7 @@ class Frame(ui.Frame):
               u"https://github.com/oldj/SwitchHosts\n" +\
               u"VERSION: %s" % VERSION
 
-        dlg = wx.MessageDialog(self.frame, msg, "About", wx.OK | wx.ICON_INFORMATION)
+        dlg = wx.MessageDialog(self, msg, "About", wx.OK | wx.ICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
 
