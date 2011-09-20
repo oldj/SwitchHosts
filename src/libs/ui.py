@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import wx
 import common_operations as co
 
@@ -11,12 +12,12 @@ class Frame(wx.Frame):
     def __init__(
         self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
         size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
-        TaskBarIcon=None
+        cls_TaskBarIcon=None
     ):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
         self.SetIcon(co.GetMondrianIcon())
-        self.taskbar_icon = TaskBarIcon(self)
+        self.taskbar_icon = cls_TaskBarIcon(self)
 #        self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
 
@@ -65,8 +66,13 @@ class Frame(wx.Frame):
         self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer7.Add(self.m_btn_apply, 0, wx.ALL, 5)
 
-        self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"隐藏", wx.DefaultPosition, wx.DefaultSize, 0)
-        bSizer7.Add(self.m_btn_exit, 0, wx.ALL, 5)
+        if cls_TaskBarIcon and os.name == "nt":
+            # ubuntu 10.04 下点击这个图标时会报错，图标的菜单无法正常工作
+            # ubuntu 11.04 下这个图标总是无法显示
+            # 由于跨平台问题，暂时决定只在 windows 下显示快捷的任务栏图标
+            # 参见：http://stackoverflow.com/questions/7144756/wx-taskbaricon-on-ubuntu-11-04
+            self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"隐藏", wx.DefaultPosition, wx.DefaultSize, 0)
+            bSizer7.Add(self.m_btn_exit, 0, wx.ALL, 5)
 
         bSizer6.Add(bSizer7, 0, wx.EXPAND, 5)
 

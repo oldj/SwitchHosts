@@ -15,10 +15,9 @@ import glob
 import wx
 import libs.common_operations as co
 import libs.ui as ui
-from libs.cls_Hosts import Hosts
+from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
 VERSION = "0.1.3"
-DEFAULT_HOSTS_FN = u"DEFAULT.hosts"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -30,9 +29,9 @@ class TaskBarIcon(wx.TaskBarIcon):
         wx.TaskBarIcon.__init__(self)
         #        super(wx.TaskBarIcon, self).__init__()
         self.frame = frame
-        self.SetIcon(co.GetMondrianIcon(), "Switch Hosts!")
+        self.SetIcon(co.GetMondrianIcon(), "Switch Hosts! %s" % VERSION)
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
-        self.Bind(wx.EVT_MENU, self.OnAbout, id=self.ID_About)
+        self.Bind(wx.EVT_MENU, self.frame.OnAbout, id=self.ID_About)
         self.Bind(wx.EVT_MENU, self.OnExit, id=self.ID_Exit)
         self.Bind(wx.EVT_MENU, self.OnMainFrame, id=self.ID_MainFrame)
 
@@ -49,26 +48,11 @@ class TaskBarIcon(wx.TaskBarIcon):
             self.frame.Show(True)
         self.frame.Raise()
 
-    #        self.OnAbout(event)
-
 
     def OnExit(self, event):
         self.frame.Destroy()
         self.Destroy()
         sys.exit()
-
-
-    def OnAbout(self, event):
-    #        wx.MessageBox(u"快速切换 hosts 文件！\n\nVERSION: %s" % VERSION, u"About")
-        msg = u"Switch Hosts!\n\n" +\
-              u"本程序用于在多个 hosts 配置之间快速切换。\n\n" +\
-              u"by oldj, oldj.wu@gmail.com\n" +\
-              u"https://github.com/oldj/SwitchHosts\n" +\
-              u"VERSION: %s" % VERSION
-
-        dlg = wx.MessageDialog(self.frame, msg, "About", wx.OK | wx.ICON_INFORMATION)
-        dlg.ShowModal()
-        dlg.Destroy()
 
 
     def OnMainFrame(self, event):
@@ -130,11 +114,11 @@ class Frame(ui.Frame):
     ID_RENAME = wx.NewId()
 
     def __init__(
-        self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
+        self, parent=None, id=wx.ID_ANY, title="Switch Host! %s" % VERSION, pos=wx.DefaultPosition,
         size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
         sys_hosts_title=None
     ):
-        ui.Frame.__init__(self, parent, id, title, pos, size, style, TaskBarIcon=TaskBarIcon)
+        ui.Frame.__init__(self, parent, id, title, pos, size, style, cls_TaskBarIcon=TaskBarIcon)
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.init2(sys_hosts_title)
@@ -144,7 +128,7 @@ class Frame(ui.Frame):
 
         self.Bind(wx.EVT_MENU, self.newHosts, id=wx.ID_NEW)
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
-        self.Bind(wx.EVT_MENU, self.taskbar_icon.OnAbout, id=wx.ID_ABOUT)
+        self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_BUTTON, self.OnHide, id=wx.ID_CLOSE)
         self.Bind(wx.EVT_BUTTON, self.applyHost, id=wx.ID_APPLY)
         self.Bind(wx.EVT_TEXT, self.hostsContentChange, id=self.ID_HOSTS_TEXT)
@@ -478,6 +462,19 @@ class Frame(ui.Frame):
         u""""""
 
         self.m_list.PopupMenu(self.hosts_item_menu, event.GetPosition())
+
+
+    def OnAbout(self, event):
+    #        wx.MessageBox(u"快速切换 hosts 文件！\n\nVERSION: %s" % VERSION, u"About")
+        msg = u"Switch Hosts!\n\n" +\
+              u"本程序用于在多个 hosts 配置之间快速切换。\n\n" +\
+              u"by oldj, oldj.wu@gmail.com\n" +\
+              u"https://github.com/oldj/SwitchHosts\n" +\
+              u"VERSION: %s" % VERSION
+
+        dlg = wx.MessageDialog(self.frame, msg, "About", wx.OK | wx.ICON_INFORMATION)
+        dlg.ShowModal()
+        dlg.Destroy()
 
 
     def editHost(self, event):
