@@ -2,6 +2,7 @@
 
 import os
 import json
+import chardet
 
 import common_operations as co
 
@@ -108,6 +109,8 @@ class Hosts(object):
 
         c = self.content
         if not repr(c).startswith("u"):
-            c = c.decode("utf-8")
+#            c = c.decode("utf-8")
+            cd = chardet.detect(c)
+            c = c.decode(cd.get("encoding", "utf-8"))
 
         return c
