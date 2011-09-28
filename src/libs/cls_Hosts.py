@@ -18,7 +18,7 @@ class Hosts(object):
         self.path = path
         self.dc_path = co.decode(path)
         self.folder, self.fn = os.path.split(path)
-        self.fn = co.decode(self.fn)
+#        self.fn = co.decode(self.fn)
 #        if os.name == "nt":
 #            self.fn = self.fn.decode("GB18030")
 
