@@ -264,9 +264,16 @@ class Frame(ui.Frame):
 
         self.m_list.Select(c_idx)
         self.current_selected_hosts_index = c_idx
+        self.current_selected_hosts_fn = self.hosts_objects[c_idx].fn
 
 
     def hostsContentChange(self, event):
+
+        c = self.m_textCtrl_content.Value.rstrip()
+        ohosts = self.getOHostsFromFn()
+        if ohosts and c != ohosts.getContent():
+            print("%s, changed!" % self.current_selected_hosts_fn)
+            self.saveCurrentHost(ohosts, c)
 
         self.m_btn_apply.Enable()
 
@@ -395,16 +402,21 @@ class Frame(ui.Frame):
         dlg.Destroy()
 
 
-    def applyHost(self, event=None, ohosts=None):
-        u"""应用某个 hosts"""
+    def saveCurrentHost(self, ohosts=None, content=None):
+        u"""保存当前 hosts"""
 
-        # 保存当前 hosts 的内容
-        c = self.m_textCtrl_content.Value.rstrip()
-#        open(self.current_selected_hosts_fn, "wb").write(co.encode(c))
+        c = content or self.m_textCtrl_content.Value.rstrip()
         ohosts = ohosts or self.getOHostsFromFn()
         if ohosts:
             ohosts.setContent(c)
             ohosts.save()
+
+
+    def applyHost(self, event=None, ohosts=None):
+        u"""应用某个 hosts"""
+
+        # 保存当前 hosts 的内容
+        self.saveCurrentHost()
 
         # 切换 hosts
         co.switchHost(self.taskbar_icon, self.current_selected_hosts_fn)
@@ -426,7 +438,7 @@ class Frame(ui.Frame):
         u"""从 hosts 的文件名取得它的 id"""
 
         if not fn:
-            fn = self.current_selected_hosts_fn
+            fn = self.current_selected_hosts_fn or DEFAULT_HOSTS_FN.encode()
 
         fn = co.decode(fn)
 
@@ -456,10 +468,11 @@ class Frame(ui.Frame):
         fn = self.hosts_lists[idx][2]
         ohosts = self.hosts_objects[idx]
 #        c = open(fn, "rb").read() if os.path.isfile(fn) else ""
-        self.m_textCtrl_content.Value = ohosts.getContent()
 
         self.current_selected_hosts_index = idx
         self.current_selected_hosts_fn = fn
+        self.m_textCtrl_content.Value = ohosts.getContent()
+
         self.m_btn_apply.Enable()
 
 

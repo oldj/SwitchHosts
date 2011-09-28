@@ -52,7 +52,6 @@ class Frame(wx.Frame):
 
         bSizer61 = wx.BoxSizer(wx.HORIZONTAL)
 
-        
         self.m_btn_add = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ADD, co.GetMondrianBitmap(fn="add"), u"添加")
         bSizer61.Add(self.m_btn_add, 0, wx.ALL, 5)
 
@@ -73,10 +72,19 @@ class Frame(wx.Frame):
         bSizer7 = wx.BoxSizer(wx.HORIZONTAL)
 
         self.m_panel3 = wx.Panel(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        bSizer71 = wx.BoxSizer(wx.HORIZONTAL)
+
+#        self.m_btn_save = buttons.GenBitmapTextButton(self.m_panel3, wx.ID_SAVE, co.GetMondrianBitmap(fn="disk"), u"保存")
+#        bSizer71.Add(self.m_btn_save, 0, wx.ALL, 0)
+
+        self.m_panel3.SetSizer(bSizer71)
+        self.m_panel3.Layout()
+        bSizer71.Fit(self.m_panel3)
         bSizer7.Add(self.m_panel3, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY, co.GetMondrianBitmap(fn="accept"), u"应用")
-#        self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY, co.GetMondrianBitmap(fn="accept"),
+                                                       u"应用")
+        #        self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer7.Add(self.m_btn_apply, 0, wx.ALL, 5)
 
         if cls_TaskBarIcon and os.name == "nt":
@@ -84,8 +92,9 @@ class Frame(wx.Frame):
             # ubuntu 11.04 下这个图标总是无法显示
             # 由于跨平台问题，暂时决定只在 windows 下显示快捷的任务栏图标
             # 参见：http://stackoverflow.com/questions/7144756/wx-taskbaricon-on-ubuntu-11-04
-            self.m_btn_exit = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_CLOSE, co.GetMondrianBitmap(fn="door"), u"隐藏")
-#            self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"隐藏", wx.DefaultPosition, wx.DefaultSize, 0)
+            self.m_btn_exit = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_CLOSE, co.GetMondrianBitmap(fn="door"),
+                                                          u"隐藏")
+            #            self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"隐藏", wx.DefaultPosition, wx.DefaultSize, 0)
             bSizer7.Add(self.m_btn_exit, 0, wx.ALL, 5)
 
         bSizer6.Add(bSizer7, 0, wx.EXPAND, 5)
