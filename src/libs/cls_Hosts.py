@@ -109,8 +109,10 @@ class Hosts(object):
 
         c = self.content
         if not repr(c).startswith("u"):
-#            c = c.decode("utf-8")
-            cd = chardet.detect(c)
-            c = c.decode(cd.get("encoding", "utf-8"))
+            try:
+                cd = chardet.detect(c)
+                c = c.decode(cd.get("encoding", "utf-8"))
+            except Exception:
+                c = c.decode("utf-8")
 
         return c

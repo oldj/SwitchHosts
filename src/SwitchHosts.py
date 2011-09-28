@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.4"
+VERSION = "0.1.4.1726"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -264,7 +264,7 @@ class Frame(ui.Frame):
 
         self.m_list.Select(c_idx)
         self.current_selected_hosts_index = c_idx
-        self.current_selected_hosts_fn = self.hosts_objects[c_idx].fn
+        self.current_selected_hosts_fn = self.hosts_objects[c_idx].path
 
 
     def hostsContentChange(self, event):
@@ -272,7 +272,7 @@ class Frame(ui.Frame):
         c = self.m_textCtrl_content.Value.rstrip()
         ohosts = self.getOHostsFromFn()
         if ohosts and c != ohosts.getContent():
-            print("%s, changed!" % self.current_selected_hosts_fn)
+#            print("%s, changed!" % self.current_selected_hosts_fn)
             self.saveCurrentHost(ohosts, c)
 
         self.m_btn_apply.Enable()
@@ -380,6 +380,8 @@ class Frame(ui.Frame):
 #            fn = co.decode(fn)
         ohosts = self.getOHostsFromFn(fn)
 
+        print(self.current_selected_hosts_fn, self.taskbar_icon.current_hosts)
+
         if not self.current_selected_hosts_fn or \
             self.current_selected_hosts_fn == self.taskbar_icon.current_hosts or \
             (self.taskbar_icon.current_hosts is None and fn == DEFAULT_HOSTS_FN):
@@ -393,7 +395,7 @@ class Frame(ui.Frame):
         if ret_code == wx.ID_YES:
             # 删除当前 hosts
             try:
-                os.remove(self.current_selected_hosts_fn)
+                os.remove(ohosts.path)
             except Exception:
                 pass
 
