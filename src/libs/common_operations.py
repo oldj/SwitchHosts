@@ -12,27 +12,30 @@ import chardet
 if os.name == "posix":
     import pynotify
 
-from icons import ICONS
+from icons import ICONS, ICONS2
 
-def GetMondrianData(i=0):
-    idx = i if 0 <= i < len(ICONS) else 0
-    return ICONS[idx]
+def GetMondrianData(i=0, fn=None):
+    if not fn:
+        idx = i if 0 <= i < len(ICONS) else 0
+        return ICONS[idx]
+    else:
+        return ICONS2[fn]
 
 
-def GetMondrianBitmap(i=0):
-    return wx.BitmapFromImage(GetMondrianImage(i))
+def GetMondrianBitmap(i=0, fn=None):
+    return wx.BitmapFromImage(GetMondrianImage(i, fn))
 
 
-def GetMondrianImage(i=0):
+def GetMondrianImage(i=0, fn=None):
     import cStringIO
 
-    stream = cStringIO.StringIO(GetMondrianData(i))
+    stream = cStringIO.StringIO(GetMondrianData(i, fn))
     return wx.ImageFromStream(stream)
 
 
-def GetMondrianIcon(i=0):
+def GetMondrianIcon(i=0, fn=None):
     icon = wx.EmptyIcon()
-    icon.CopyFromBitmap(GetMondrianBitmap(i))
+    icon.CopyFromBitmap(GetMondrianBitmap(i, fn))
     return icon
 
 def notify(frame, msg="", title=u"消息"):

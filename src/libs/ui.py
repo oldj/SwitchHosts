@@ -2,23 +2,23 @@
 
 import os
 import wx
+import wx.lib.buttons as buttons
 import common_operations as co
 
 
 class Frame(wx.Frame):
-
     ID_HOSTS_TEXT = wx.NewId()
 
-    def __init__(
-        self, parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
-        size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
-        cls_TaskBarIcon=None
+    def __init__(self,
+                 parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
+                 size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
+                 cls_TaskBarIcon=None
     ):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
         self.SetIcon(co.GetMondrianIcon())
         self.taskbar_icon = cls_TaskBarIcon(self)
-#        self.Bind(wx.EVT_CLOSE, self.OnClose)
+        #        self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
 
         self.m_menubar1 = wx.MenuBar(0)
@@ -50,11 +50,23 @@ class Frame(wx.Frame):
                                   wx.LC_REPORT)
         bSizer5.Add(self.m_list, 0, wx.ALL | wx.EXPAND, 5)
 
+        bSizer61 = wx.BoxSizer(wx.HORIZONTAL)
+
+        
+        self.m_btn_add = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ANY, co.GetMondrianBitmap(fn="add"), u"添加")
+        bSizer61.Add(self.m_btn_add, 0, wx.ALL, 5)
+
+        self.m_btn_del = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ANY, co.GetMondrianBitmap(fn="delete"), u"删除")
+        bSizer61.Add(self.m_btn_del, 0, wx.ALL, 5)
+
+        bSizer5.Add(bSizer61, 1, wx.EXPAND, 5)
+
         bSizer4.Add(bSizer5, 0, wx.EXPAND, 5)
 
         bSizer6 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize,
+        self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition,
+                                              wx.DefaultSize,
                                               wx.TE_MULTILINE)
         bSizer6.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 5)
 
@@ -63,7 +75,8 @@ class Frame(wx.Frame):
         self.m_panel3 = wx.Panel(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         bSizer7.Add(self.m_panel3, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY, co.GetMondrianBitmap(fn="accept"), u"应用")
+#        self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer7.Add(self.m_btn_apply, 0, wx.ALL, 5)
 
         if cls_TaskBarIcon and os.name == "nt":
@@ -71,7 +84,8 @@ class Frame(wx.Frame):
             # ubuntu 11.04 下这个图标总是无法显示
             # 由于跨平台问题，暂时决定只在 windows 下显示快捷的任务栏图标
             # 参见：http://stackoverflow.com/questions/7144756/wx-taskbaricon-on-ubuntu-11-04
-            self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"隐藏", wx.DefaultPosition, wx.DefaultSize, 0)
+            self.m_btn_exit = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_CLOSE, co.GetMondrianBitmap(fn="door"), u"隐藏")
+#            self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"隐藏", wx.DefaultPosition, wx.DefaultSize, 0)
             bSizer7.Add(self.m_btn_exit, 0, wx.ALL, 5)
 
         bSizer6.Add(bSizer7, 0, wx.EXPAND, 5)
@@ -95,7 +109,6 @@ class Frame(wx.Frame):
 
 
     def alert(self, title, msg):
-
         dlg = wx.MessageDialog(None, msg, title, wx.OK | wx.ICON_WARNING)
         dlg.ShowModal()
         dlg.Destroy()
