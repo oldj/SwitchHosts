@@ -53,10 +53,10 @@ class Frame(wx.Frame):
         bSizer61 = wx.BoxSizer(wx.HORIZONTAL)
 
         
-        self.m_btn_add = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ANY, co.GetMondrianBitmap(fn="add"), u"添加")
+        self.m_btn_add = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ADD, co.GetMondrianBitmap(fn="add"), u"添加")
         bSizer61.Add(self.m_btn_add, 0, wx.ALL, 5)
 
-        self.m_btn_del = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ANY, co.GetMondrianBitmap(fn="delete"), u"删除")
+        self.m_btn_del = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_DELETE, co.GetMondrianBitmap(fn="delete"), u"删除")
         bSizer61.Add(self.m_btn_del, 0, wx.ALL, 5)
 
         bSizer5.Add(bSizer61, 1, wx.EXPAND, 5)
