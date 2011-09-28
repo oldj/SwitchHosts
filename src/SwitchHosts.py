@@ -364,6 +364,7 @@ class Frame(ui.Frame):
     def deleteHosts(self, event):
         u"""删除 hosts"""
 
+        fn = DEFAULT_HOSTS_FN
         if self.current_selected_hosts_fn:
             folder, fn = os.path.split(self.current_selected_hosts_fn)
 #            fn = co.decode(fn)
@@ -461,6 +462,11 @@ class Frame(ui.Frame):
 
     def OnHostsItemRClick(self, event):
         u""""""
+
+        idx = event.GetIndex()
+        fn = self.hosts_lists[idx][2]
+        self.current_selected_hosts_index = idx
+        self.current_selected_hosts_fn = fn
 
         self.m_list.PopupMenu(self.hosts_item_menu, event.GetPosition())
 
