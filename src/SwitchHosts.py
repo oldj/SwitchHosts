@@ -133,6 +133,9 @@ class Frame(ui.Frame):
         self.Bind(wx.EVT_BUTTON, self.applyHost, id=wx.ID_APPLY)
         self.Bind(wx.EVT_TEXT, self.hostsContentChange, id=self.ID_HOSTS_TEXT)
 
+        self.Bind(wx.EVT_BUTTON, self.newHosts, id=wx.ID_ADD)
+        self.Bind(wx.EVT_BUTTON, self.deleteHosts, id=wx.ID_DELETE)
+
         hosts_cols = (
             (u"hosts", 130),
             (u"", 20),
@@ -211,7 +214,6 @@ class Frame(ui.Frame):
         self.m_list.DeleteAllItems()
         ch = self.taskbar_icon.current_hosts
         c_idx = -1
-        c_fn = None
 
         il = wx.ImageList(16, 16, True)
         icons_count = len(co.ICONS)
@@ -247,14 +249,15 @@ class Frame(ui.Frame):
                 c = SELECTED_FLAG
             if c:
                 c_idx = index
-#                c_fn = fn2
             self.m_list.SetStringItem(index, 1, c)
             self.m_list.SetItemImage(index, ohosts.icon_idx, ohosts.icon_idx)
 
 
         if self.current_selected_hosts_index >= 0:
             c_idx = self.current_selected_hosts_index
-#            c_fn = self.current_selected_hosts_fn
+
+        while c_idx >= len(self.hosts_objects) and c_idx > 0:
+            c_idx -= 1
 
         ohosts = self.hosts_objects[c_idx]
         self.m_textCtrl_content.Value = ohosts.getContent()
@@ -364,7 +367,7 @@ class Frame(ui.Frame):
     def deleteHosts(self, event):
         u"""删除 hosts"""
 
-        fn = DEFAULT_HOSTS_FN
+        fn = DEFAULT_HOSTS_FN.encode()
         if self.current_selected_hosts_fn:
             folder, fn = os.path.split(self.current_selected_hosts_fn)
 #            fn = co.decode(fn)
