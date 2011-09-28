@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.3"
+VERSION = "0.1.4"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -164,6 +164,7 @@ class Frame(ui.Frame):
 
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnHostsItemRClick, self.m_list)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnHostsItemBeSelected, self.m_list)
+        self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.applyHost, self.m_list)
 
 
     def mkSubIconMenu(self):
