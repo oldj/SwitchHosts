@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.4.1728"
+VERSION = "0.1.5.1730"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -274,11 +274,15 @@ class Frame(ui.Frame):
         ohosts = self.getOHostsFromFn()
         old_c = ohosts.getContent()
         if ohosts and c != old_c:
+            # 内容改变
 #            print ohosts.getTitle()
 #            print("%s, changed!" % self.current_selected_hosts_fn)
             self.saveCurrentHost(ohosts, c)
+            self.textStyle(old_c)
+        else:
+            # 新切换
+            self.textStyle()
 
-        self.textStyle(old_c)
         self.m_btn_apply.Enable()
 
 
