@@ -114,6 +114,8 @@ class Frame(wx.Frame):
         self.font_normal = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         self.font_normal.SetWeight(wx.NORMAL)
 
+        self.font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
+
 
     def alert(self, title, msg):
         dlg = wx.MessageDialog(None, msg, title, wx.OK | wx.ICON_WARNING)

@@ -272,12 +272,13 @@ class Frame(ui.Frame):
 
         c = self.m_textCtrl_content.Value.rstrip()
         ohosts = self.getOHostsFromFn()
-        if ohosts and c != ohosts.getContent():
+        old_c = ohosts.getContent()
+        if ohosts and c != old_c:
 #            print ohosts.getTitle()
 #            print("%s, changed!" % self.current_selected_hosts_fn)
             self.saveCurrentHost(ohosts, c)
 
-        self.textStyle()
+        self.textStyle(old_c)
         self.m_btn_apply.Enable()
 
 
@@ -511,12 +512,13 @@ class Frame(ui.Frame):
         print(1)
 
 
-    def textStyle(self):
+    def textStyle(self, old_content=None):
         u"""更新文本区的样式"""
 
         from libs.highLight import highLight
 
-        highLight(self.m_textCtrl_content)
+        self.m_textCtrl_content.SetFont(self.font_mono)
+        highLight(self.m_textCtrl_content, old_content=old_content)
 
 
     def OnHide(self, event):
