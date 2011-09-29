@@ -60,6 +60,8 @@ def notify(frame, msg="", title=u"消息"):
     tb.SetPopupPosition((px, py))
     tb.Play()
 
+    frame.SetFocus()
+
 
 def switchHost(obj, fn):
     u"""切换 hosts 为 fn 的内容"""
