@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.4.1727"
+VERSION = "0.1.4.1728"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -273,10 +273,11 @@ class Frame(ui.Frame):
         c = self.m_textCtrl_content.Value.rstrip()
         ohosts = self.getOHostsFromFn()
         if ohosts and c != ohosts.getContent():
-            print ohosts.getTitle()
-            print("%s, changed!" % self.current_selected_hosts_fn)
+#            print ohosts.getTitle()
+#            print("%s, changed!" % self.current_selected_hosts_fn)
             self.saveCurrentHost(ohosts, c)
 
+        self.textStyle()
         self.m_btn_apply.Enable()
 
 
@@ -382,7 +383,7 @@ class Frame(ui.Frame):
 #            fn = co.decode(fn)
         ohosts = self.getOHostsFromFn(fn)
 
-        print(self.current_selected_hosts_fn, self.taskbar_icon.current_hosts)
+#        print(self.current_selected_hosts_fn, self.taskbar_icon.current_hosts)
 
         if not self.current_selected_hosts_fn or \
             self.current_selected_hosts_fn == self.taskbar_icon.current_hosts or \
@@ -508,6 +509,14 @@ class Frame(ui.Frame):
         u"""编辑一个 hosts 文件"""
 
         print(1)
+
+
+    def textStyle(self):
+        u"""更新文本区的样式"""
+
+        from libs.highLight import highLight
+
+        highLight(self.m_textCtrl_content)
 
 
     def OnHide(self, event):
