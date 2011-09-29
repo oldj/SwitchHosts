@@ -66,7 +66,7 @@ class Frame(wx.Frame):
 
         self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition,
                                               wx.DefaultSize,
-                                              wx.TE_MULTILINE)
+                                              wx.TE_MULTILINE|wx.TE_RICH2)
         bSizer6.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 5)
 
         bSizer7 = wx.BoxSizer(wx.HORIZONTAL)
@@ -82,8 +82,7 @@ class Frame(wx.Frame):
         bSizer71.Fit(self.m_panel3)
         bSizer7.Add(self.m_panel3, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY, co.GetMondrianBitmap(fn="accept"),
-                                                       u"应用")
+        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY, co.GetMondrianBitmap(fn="accept"), u"应用")
         #        self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
         bSizer7.Add(self.m_btn_apply, 0, wx.ALL, 5)
 
@@ -92,8 +91,7 @@ class Frame(wx.Frame):
             # ubuntu 11.04 下这个图标总是无法显示
             # 由于跨平台问题，暂时决定只在 windows 下显示快捷的任务栏图标
             # 参见：http://stackoverflow.com/questions/7144756/wx-taskbaricon-on-ubuntu-11-04
-            self.m_btn_exit = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_CLOSE, co.GetMondrianBitmap(fn="door"),
-                                                          u"隐藏")
+            self.m_btn_exit = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_CLOSE, co.GetMondrianBitmap(fn="door"), u"隐藏")
             #            self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"隐藏", wx.DefaultPosition, wx.DefaultSize, 0)
             bSizer7.Add(self.m_btn_exit, 0, wx.ALL, 5)
 
