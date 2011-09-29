@@ -3,11 +3,14 @@
 import wx
 import re
 
+
+font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
+
 def __highLightOneLine(txtctrl, ln, start_pos, styles):
 
     ln_content, t, ln_comment = ln.partition("#")
     end_pos = start_pos + len(ln)
-    txtctrl.SetStyle(start_pos, end_pos, wx.TextAttr(styles["color_normal"]))
+    txtctrl.SetStyle(start_pos, end_pos, wx.TextAttr(styles["color_normal"], wx.NullColor, styles["font_mono"]))
 
     # 行正文部分
     re_ip = re.match(r"^(\s*(?:\d+\.)+\d+)\s+\w", ln_content)
@@ -15,15 +18,15 @@ def __highLightOneLine(txtctrl, ln, start_pos, styles):
         s_ip = re_ip.group(1)
         pos2 = start_pos + len(s_ip)
         pos = pos2 - len(s_ip.lstrip())
-        txtctrl.SetStyle(pos, pos2, wx.TextAttr(styles["color_ip"]))
+        txtctrl.SetStyle(pos, pos2, wx.TextAttr(styles["color_ip"], wx.NullColor, styles["font_mono"]))
     elif len(ln_content.strip()) > 0:
         pos2 = start_pos + len(ln_content)
-        txtctrl.SetStyle(start_pos, pos2, wx.TextAttr(styles["color_error"]))
+        txtctrl.SetStyle(start_pos, pos2, wx.TextAttr(styles["color_error"], wx.NullColor, styles["font_mono"]))
 
     # 行注释部分
     if t:
         pos = start_pos + len(ln_content)
-        txtctrl.SetStyle(pos, end_pos, wx.TextAttr(styles["color_comment"]))
+        txtctrl.SetStyle(pos, end_pos, wx.TextAttr(styles["color_comment"], wx.NullColor, styles["font_mono"]))
 
 
 def highLight(txtctrl, styles=None, old_content=None):
@@ -34,6 +37,7 @@ def highLight(txtctrl, styles=None, old_content=None):
         "color_comment": "#339933",
         "color_ip": "#0000cc",
         "color_error": "#ff0000",
+        "font_mono": font_mono,
     }
     if styles:
         default_style.update(styles)
