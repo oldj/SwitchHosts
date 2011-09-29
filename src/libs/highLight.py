@@ -26,7 +26,7 @@ def __highLightOneLine(txtctrl, ln, start_pos, styles):
         txtctrl.SetStyle(pos, end_pos, wx.TextAttr(styles["color_comment"]))
 
 
-def highLight(txtctrl, styles=None):
+def highLight(txtctrl, styles=None, old_content=None):
 
     default_style = {
         "color_normal": "#000000",
@@ -41,10 +41,21 @@ def highLight(txtctrl, styles=None):
 
     content = txtctrl.Value.replace("\r", "")
     lns = content.split("\n")
+    if old_content:
+        old_content = old_content.replace("\r", "")
+        lns_old = old_content.split("\n")
+    else:
+        lns_old = None
     pos = 0
 
-    for ln in lns:
-        __highLightOneLine(txtctrl, ln, pos, styles)
+    for idx, ln in enumerate(lns):
+        ln_old = None
+        if lns_old and idx < len(lns_old):
+            ln_old = lns_old[idx]
+
+        if not ln_old or ln != ln_old:
+            __highLightOneLine(txtctrl, ln, pos, styles)
+
         pos += len(ln) + 1
 
 

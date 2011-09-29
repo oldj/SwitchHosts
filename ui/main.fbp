@@ -488,7 +488,7 @@
                                             <property name="context_menu">1</property>
                                             <property name="enabled">1</property>
                                             <property name="fg"></property>
-                                            <property name="font"></property>
+                                            <property name="font">Courier New,90,90,-1,70,0</property>
                                             <property name="hidden">0</property>
                                             <property name="id">wxID_ANY</property>
                                             <property name="maximum_size"></property>
