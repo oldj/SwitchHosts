@@ -10,9 +10,9 @@ def __highLightOneLine(txtctrl, ln, start_pos, styles):
     txtctrl.SetStyle(start_pos, end_pos, wx.TextAttr(styles["color_normal"]))
 
     # 行正文部分
-    re_ip = re.match(r"^(\s*(?:\d+\.)+\d+)\s", ln_content)
+    re_ip = re.match(r"^(\s*(?:\d+\.)+\d+)\s+\w", ln_content)
     if re_ip:
-        s_ip = re_ip.group(0)
+        s_ip = re_ip.group(1)
         pos2 = start_pos + len(s_ip)
         pos = pos2 - len(s_ip.lstrip())
         txtctrl.SetStyle(pos, pos2, wx.TextAttr(styles["color_ip"]))
