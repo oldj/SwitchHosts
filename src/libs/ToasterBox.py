@@ -640,7 +640,7 @@ class ToasterBoxWindow(wx.Frame):
        if self._tbstyle == TB_SIMPLE:
            self.DrawText()
 
-       self.SetFocus()
+#       self.SetFocus()
 
 
    def ScrollDown(self):
