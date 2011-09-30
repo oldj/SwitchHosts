@@ -75,7 +75,9 @@ def switchHost(obj, fn):
 
     sys_hosts_fn = getSysHostsPath()
     try:
-        open(sys_hosts_fn, "wb").write(open(fn, "rb").read())
+        a = open(fn, "rb").read().split("\n")
+        a = [ln.rstrip() for ln in a]
+        open(sys_hosts_fn, "wb").write(os.linesep.join(a))
         obj.current_hosts = fn
         title = ohosts.getTitle()
 
