@@ -12,12 +12,12 @@ import chardet
 if os.name == "posix":
     import pynotify
 
-from icons import ICONS, ICONS2
+from icons import ICONS, ICONS2, ICONS_ICO
 
 def GetMondrianData(i=0, fn=None):
     if not fn:
         idx = i if 0 <= i < len(ICONS) else 0
-        return ICONS[idx]
+        return ICONS_ICO[idx]
     else:
         return ICONS2[fn]
 

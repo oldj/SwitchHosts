@@ -5,7 +5,7 @@ def main():
     icons = []
 
     for i in range(7):
-        fn = "icon_%d.png" % i
+        fn = "icon_%d.ico" % i
         c = open(fn, "rb").read()
         icons.append(c)
 
