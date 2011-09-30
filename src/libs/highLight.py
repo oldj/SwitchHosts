@@ -13,7 +13,7 @@ def __highLightOneLine(txtctrl, ln, start_pos, styles):
     txtctrl.SetStyle(start_pos, end_pos, wx.TextAttr(styles["color_normal"], wx.NullColor, styles["font_mono"]))
 
     # 行正文部分
-    re_ip = re.match(r"^(\s*(?:\d+\.)+\d+)\s+\w", ln_content)
+    re_ip = re.match(r"^(\s*[\da-f\.:]+[\da-f]+)\s+\w", ln_content)
     if re_ip:
         s_ip = re_ip.group(1)
         pos2 = start_pos + len(s_ip)
