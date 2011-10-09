@@ -126,7 +126,7 @@ class Frame(wx.Frame):
 
 class AboutHtml(wx.html.HtmlWindow):
 
-    def __init__(self, parent, id=-1, size=(480, 320)):
+    def __init__(self, parent, id=-1, size=(480, 360)):
 
         wx.html.HtmlWindow.__init__(self, parent, id, size=size)
         if "gtk2" in wx.PlatformInfo:
@@ -139,6 +139,10 @@ class AboutHtml(wx.html.HtmlWindow):
 
 
 class AboutBox(wx.Dialog):
+    u"""关于对话框
+
+    参考自：http://wiki.wxpython.org/wxPython%20by%20Example
+    """
 
     def __init__(self, version=None):
 
@@ -148,7 +152,8 @@ class AboutBox(wx.Dialog):
 
         hwin = AboutHtml(self)
         hwin.SetPage(u"""
-            <h2>SwitchHost!</h2>
+            <font size="9" color="#44474D"><b>SwitchHost!</b></font><br />
+            <font size="3" color="#44474D">%s</font><br />
             <p>
                 本程序用于在多个 hosts 之间快速切换。
             </p>
@@ -156,14 +161,11 @@ class AboutBox(wx.Dialog):
                 源码：<a href="https://github.com/oldj/SwitchHosts">https://github.com/oldj/SwitchHosts</a><br />
                 作者：<a href="http://oldj.net">oldj</a>
             </p>
-            <p>
-                版本：%s
-            </p><br><br>
         """ % version)
 
         btn = hwin.FindWindowById(wx.ID_OK)
         irep = hwin.GetInternalRepresentation()
-        hwin.SetSize((irep.GetWidth() + 25, irep.GetHeight() + 10))
+        hwin.SetSize((irep.GetWidth() + 25, irep.GetHeight() + 30))
         self.SetClientSize(hwin.GetSize())
         self.CenterOnParent(wx.BOTH)
         self.SetFocus()
