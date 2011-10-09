@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.5.1738"
+VERSION = "0.1.5.1740"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -498,16 +498,11 @@ class Frame(ui.Frame):
 
 
     def OnAbout(self, event):
-    #        wx.MessageBox(u"快速切换 hosts 文件！\n\nVERSION: %s" % VERSION, u"About")
-        msg = u"Switch Hosts!\n\n" +\
-              u"本程序用于在多个 hosts 配置之间快速切换。\n\n" +\
-              u"by oldj, oldj.wu@gmail.com\n" +\
-              u"https://github.com/oldj/SwitchHosts\n" +\
-              u"VERSION: %s" % VERSION
 
-        dlg = wx.MessageDialog(self, msg, "About", wx.OK | wx.ICON_INFORMATION)
+        dlg = ui.AboutBox(version=VERSION)
         dlg.ShowModal()
         dlg.Destroy()
+
 
 
     def editHost(self, event):
