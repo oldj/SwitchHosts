@@ -10,7 +10,7 @@ def __highLightOneLine(txtctrl, ln, start_pos, styles):
 
     ln_content, t, ln_comment = ln.partition("#")
     end_pos = start_pos + len(ln)
-    txtctrl.SetStyle(start_pos, end_pos, wx.TextAttr(styles["color_normal"], wx.NullColor, styles["font_mono"]))
+    txtctrl.SetStyle(start_pos, end_pos, wx.TextAttr(styles["color_normal"], "#ffffff", styles["font_mono"]))
 
     # 行正文部分
     re_ip = re.match(r"^(\s*[\da-f\.:]+[\da-f]+)\s+\w", ln_content)
@@ -18,15 +18,15 @@ def __highLightOneLine(txtctrl, ln, start_pos, styles):
         s_ip = re_ip.group(1)
         pos2 = start_pos + len(s_ip)
         pos = pos2 - len(s_ip.lstrip())
-        txtctrl.SetStyle(pos, pos2, wx.TextAttr(styles["color_ip"], wx.NullColor, styles["font_mono"]))
+        txtctrl.SetStyle(pos, pos2, wx.TextAttr(styles["color_ip"], "#ffffff", styles["font_mono"]))
     elif len(ln_content.strip()) > 0:
         pos2 = start_pos + len(ln_content)
-        txtctrl.SetStyle(start_pos, pos2, wx.TextAttr(styles["color_error"], wx.NullColor, styles["font_mono"]))
+        txtctrl.SetStyle(start_pos, pos2, wx.TextAttr(styles["color_error"], "#ffffff", styles["font_mono"]))
 
     # 行注释部分
     if t:
         pos = start_pos + len(ln_content)
-        txtctrl.SetStyle(pos, end_pos, wx.TextAttr(styles["color_comment"], wx.NullColor, styles["font_mono"]))
+        txtctrl.SetStyle(pos, end_pos, wx.TextAttr(styles["color_comment"], "#ffffff", styles["font_mono"]))
 
 
 def highLight(txtctrl, styles=None, old_content=None):
