@@ -66,7 +66,7 @@ class Frame(wx.Frame):
 
         self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition,
                                               wx.DefaultSize,
-                                              wx.TE_MULTILINE|wx.TE_RICH2)
+                                              wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB)
         bSizer6.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 5)
 
         bSizer7 = wx.BoxSizer(wx.HORIZONTAL)
