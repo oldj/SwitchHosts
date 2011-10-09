@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-import wx
+import wx, wx.html
 import wx.lib.buttons as buttons
 import common_operations as co
 
@@ -121,3 +121,50 @@ class Frame(wx.Frame):
         dlg = wx.MessageDialog(None, msg, title, wx.OK | wx.ICON_WARNING)
         dlg.ShowModal()
         dlg.Destroy()
+
+
+
+class AboutHtml(wx.html.HtmlWindow):
+
+    def __init__(self, parent, id=-1, size=(480, 320)):
+
+        wx.html.HtmlWindow.__init__(self, parent, id, size=size)
+        if "gtk2" in wx.PlatformInfo:
+            self.SetStandardFonts()
+
+
+    def OnLinkClicked(self, link):
+
+        wx.LaunchDefaultBrowser(link.GetHref())
+
+
+class AboutBox(wx.Dialog):
+
+    def __init__(self, version=None):
+
+        wx.Dialog.__init__(self, None, -1, u"关于",
+                style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL
+            )
+
+        hwin = AboutHtml(self)
+        hwin.SetPage(u"""
+            <h2>SwitchHost!</h2>
+            <p>
+                本程序用于在多个 hosts 之间快速切换。
+            </p>
+            <p>
+                源码：<a href="https://github.com/oldj/SwitchHosts">https://github.com/oldj/SwitchHosts</a><br />
+                作者：<a href="http://oldj.net">oldj</a>
+            </p>
+            <p>
+                版本：%s
+            </p><br><br>
+        """ % version)
+
+        btn = hwin.FindWindowById(wx.ID_OK)
+        irep = hwin.GetInternalRepresentation()
+        hwin.SetSize((irep.GetWidth() + 25, irep.GetHeight() + 10))
+        self.SetClientSize(hwin.GetSize())
+        self.CenterOnParent(wx.BOTH)
+        self.SetFocus()
+
