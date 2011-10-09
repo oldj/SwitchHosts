@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.5.1735"
+VERSION = "0.1.5.1736"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -199,7 +199,7 @@ class Frame(ui.Frame):
 
         if i == self.current_use_hosts_index:
             self.SetIcon(co.GetMondrianIcon(i))
-            self.taskbar_icon.SetIcon(co.GetMondrianIcon(i))
+            self.taskbar_icon.SetIcon(co.GetMondrianIcon(i), u"当前 hosts 方案：%s" % ohosts.getTitle())
 
 
     def updateHostsList(self, selected_title=None):
@@ -240,7 +240,7 @@ class Frame(ui.Frame):
             if ohosts.getTitle() == selected_title:
                 ch = self.taskbar_icon.current_hosts = fn2
                 self.SetIcon(co.GetMondrianIcon(ohosts.icon_idx))
-                self.taskbar_icon.SetIcon(co.GetMondrianIcon(ohosts.icon_idx))
+                self.taskbar_icon.SetIcon(co.GetMondrianIcon(ohosts.icon_idx), u"当前 hosts 方案：%s" % ohosts.getTitle())
                 self.m_list.SetItemFont(idx, self.font_bold)
 
 

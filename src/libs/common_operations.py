@@ -85,7 +85,7 @@ def switchHost(obj, fn):
         notify(obj.frame, u"Hosts 已切换为 %s。" % title)
 
         ohosts = obj.frame.getOHostsFromFn(fn)
-        obj.SetIcon(GetMondrianIcon(ohosts.icon_idx))
+        obj.SetIcon(GetMondrianIcon(ohosts.icon_idx), u"当前 hosts 方案：%s" % ohosts.getTitle())
         obj.frame.SetIcon(GetMondrianIcon(ohosts.icon_idx))
         obj.frame.current_use_hosts_index = ohosts.index
 
