@@ -5,7 +5,7 @@ Switch Host!
  * Email: oldj.wu@gmail.com
  * Blog: http://oldj.net/
  * Source: https://github.com/oldj/SwitchHosts
- * Latest Stable: 0.1.5.1745
+ * Latest Stable: 0.1.6.1750
 
 
 这是一个用于快速切换 hosts 文件的小程序，基于 Python 和 wxPython 开发。
@@ -14,6 +14,7 @@ Switch Host!
  更新历史：
 ----------
 
+ - 2011-10-09 发布 0.1.6 版，修复若干 bug，增加自动检查最新版本的功能。
  - 2011-09-29 发布 0.1.5 版，新增 hosts 内容语法高亮。
  - 2011-09-28 发布 0.1.4 版，新增“添加”、“删除”按钮；hosts 内容修改后自动保存；修改若干 bug。
  - 2011-09-19 发布 0.1.3 版，修复若干 bug。

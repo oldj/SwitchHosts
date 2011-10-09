@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.5.1742"
+VERSION = "0.1.6.1750"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -147,6 +147,7 @@ class Frame(ui.Frame):
         self.current_selected_hosts_fn = None
         self.current_use_hosts_index = -1
         self.current_max_hosts_index = -1
+        self.latest_stable_version = None
 
         self.updateHostsList(sys_hosts_title)
 
@@ -161,6 +162,8 @@ class Frame(ui.Frame):
 
         self.m_btn_apply.Disable()
 
+        co.checkLatestStableVersion(self)
+
         self.Bind(wx.EVT_MENU, self.menuApplyHost, id=wx.ID_APPLY)
         self.Bind(wx.EVT_MENU, self.deleteHosts, id=wx.ID_DELETE)
         self.Bind(wx.EVT_MENU, self.renameHosts, id=self.ID_RENAME)
@@ -168,6 +171,12 @@ class Frame(ui.Frame):
         self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.OnHostsItemRClick, self.m_list)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnHostsItemBeSelected, self.m_list)
         self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.applyHost, self.m_list)
+
+
+    def setLatestStableVersion(self, version):
+
+        self.latest_stable_version = version
+        print(version)
 
 
     def mkSubIconMenu(self):
@@ -499,7 +508,7 @@ class Frame(ui.Frame):
 
     def OnAbout(self, event):
 
-        dlg = ui.AboutBox(version=VERSION)
+        dlg = ui.AboutBox(version=VERSION, latest_stable_version=self.latest_stable_version)
         dlg.ShowModal()
         dlg.Destroy()
 

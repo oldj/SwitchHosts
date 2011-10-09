@@ -144,16 +144,26 @@ class AboutBox(wx.Dialog):
     参考自：http://wiki.wxpython.org/wxPython%20by%20Example
     """
 
-    def __init__(self, version=None):
+    def __init__(self, version=None, latest_stable_version=None):
 
         wx.Dialog.__init__(self, None, -1, u"关于",
                 style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL
             )
 
+        update_version = u"正在检查新版本..."
+        if latest_stable_version:
+            cv = self.compareVersion(version, latest_stable_version)
+            if cv < 0:
+                update_version = u"更新的稳定版 v%s 已经发布！" % latest_stable_version
+            else:
+                update_version = u"当前版本已是最新版。"
+            
+
         hwin = AboutHtml(self)
         hwin.SetPage(u"""
             <font size="9" color="#44474D"><b>SwitchHost!</b></font><br />
-            <font size="3" color="#44474D">%s</font><br />
+            <font size="3" color="#44474D">%(version)s</font><br /><br />
+            <font size="3" color="#909090"><i>%(update_version)s</i></font><br />
             <p>
                 本程序用于在多个 hosts 之间快速切换。
             </p>
@@ -161,7 +171,10 @@ class AboutBox(wx.Dialog):
                 源码：<a href="https://github.com/oldj/SwitchHosts">https://github.com/oldj/SwitchHosts</a><br />
                 作者：<a href="http://oldj.net">oldj</a>
             </p>
-        """ % version)
+        """ % {
+            "version": version,
+            "update_version": update_version,
+        })
 
         btn = hwin.FindWindowById(wx.ID_OK)
         irep = hwin.GetInternalRepresentation()
@@ -169,4 +182,40 @@ class AboutBox(wx.Dialog):
         self.SetClientSize(hwin.GetSize())
         self.CenterOnParent(wx.BOTH)
         self.SetFocus()
+
+
+    def compareVersion(self, v1, v2):
+        u"""比较两个版本的大小
+        版本的格式形如：0.1.5.3456
+
+        如果 v1 > v2，则返回 1
+        如果 v1 = v2，则返回 0
+        如果 v1 < v2，则返回 -1
+        """
+
+        a1 = v1.split(".")
+        a2 = v2.split(".")
+
+        try:
+            a1 = [int(i) for i in a1]
+            a2 = [int(i) for i in a2]
+        except Exception:
+            return 0
+
+        len1 = len(a1)
+        len2 = len(a2)
+        l = min(len1, len2)
+        for i in range(l):
+            if a1[i] > a2[i]:
+                return 1
+            elif a1[i] < a2[i]:
+                return -1
+
+        if len1 > len2:
+            return 1
+        elif len1 < len2:
+            return -1
+        else:
+            return 0
+
 
