@@ -8,6 +8,9 @@ import os
 import traceback
 import wx
 import chardet
+import urllib
+import re
+import threading
 
 if os.name == "posix":
     import pynotify
@@ -133,3 +136,25 @@ def decode(s):
     return s.decode(encoding)
 
 
+def checkLatestStableVersion(obj):
+
+    def _f(obj):
+        url = "https://github.com/oldj/SwitchHosts/blob/master/README.md"
+        ver = None
+
+        try:
+            c = urllib.urlopen(url).read()
+            v = re.search(r"\bLatest Stable:\s?(?P<version>[\d\.]+)\b", c)
+            if v:
+                ver = v.group("version")
+
+        except Exception:
+            pass
+
+        obj.setLatestStableVersion(ver)
+
+        return ver
+
+    t = threading.Thread(target=_f, args=(obj,))
+    t.setDaemon(True)
+    t.start()
