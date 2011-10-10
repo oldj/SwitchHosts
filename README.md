@@ -11,8 +11,21 @@ Switch Host!
 这是一个用于快速切换 hosts 文件的小程序，基于 Python 和 wxPython 开发。
 
 
- 截图：
+
+
+ 下载地址：
 ----------
+
+你可以直接下载源码到本地运行或编辑，或者在下面下载可执行版本：
+
+[SwitchHosts! Windows 绿色版下载](http://www.everbox.com/f/9cbLWDWEumPjoZSuyFmLqtnmjh)
+
+
+
+ 程序截图：
+----------
+
+以下为本程序在 Windows 系统下的运行截图。
 
 ![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/1.png?raw=true)
 
