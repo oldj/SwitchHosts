@@ -11,6 +11,14 @@ Switch Host!
 这是一个用于快速切换 hosts 文件的小程序，基于 Python 和 wxPython 开发。
 
 
+ 截图：
+----------
+
+![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/1.png?raw=true)
+
+![系统托盘菜单](https://github.com/oldj/SwitchHosts/blob/master/screenshots/2.png?raw=true)
+
+
  更新历史：
 ----------
 
