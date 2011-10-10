@@ -12,13 +12,20 @@ Switch Host!
 
 
 
+ 功能特性：
+----------
+
+ * 快速切换 hosts
+ * 跨平台（基于 wxPython）
+ * hosts 文件语法高亮
+
 
  下载地址：
 ----------
 
 你可以直接下载源码到本地运行或编辑，或者在下面下载可执行版本：
 
-[SwitchHosts! Windows 绿色版下载](http://www.everbox.com/f/9cbLWDWEumPjoZSuyFmLqtnmjh)
+ * [SwitchHosts! Windows 绿色版下载](http://www.everbox.com/f/9cbLWDWEumPjoZSuyFmLqtnmjh)
 
 
 
