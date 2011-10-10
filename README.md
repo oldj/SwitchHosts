@@ -8,12 +8,7 @@ Switch Host!
  * Latest Stable: 0.1.6.1750
 
 
-
-
-
-
 这是一个用于快速切换 hosts 文件的小程序，基于 Python 和 wxPython 开发。
-
 
 
  功能特性：
@@ -23,6 +18,7 @@ Switch Host!
  * 跨平台（基于 wxPython）
  * hosts 文件语法高亮
  * 可为不同的 hosts 方案设置不同的图标
+ * 切换 hosts 方案时浮出窗口提示
 
 
  下载地址：
@@ -41,7 +37,12 @@ Switch Host!
 
 ![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/1.png?raw=true)
 
+程序主界面
+
+
 ![系统托盘菜单](https://github.com/oldj/SwitchHosts/blob/master/screenshots/2.png?raw=true)
+
+系统托盘菜单
 
 
  更新历史：
