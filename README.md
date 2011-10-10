@@ -8,6 +8,10 @@ Switch Host!
  * Latest Stable: 0.1.6.1750
 
 
+
+
+
+
 这是一个用于快速切换 hosts 文件的小程序，基于 Python 和 wxPython 开发。
 
 
