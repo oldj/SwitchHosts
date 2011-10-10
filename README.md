@@ -18,6 +18,7 @@ Switch Host!
  * 快速切换 hosts
  * 跨平台（基于 wxPython）
  * hosts 文件语法高亮
+ * 可为不同的 hosts 方案设置不同的图标
 
 
  下载地址：
