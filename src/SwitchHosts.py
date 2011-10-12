@@ -29,7 +29,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         wx.TaskBarIcon.__init__(self)
         #        super(wx.TaskBarIcon, self).__init__()
         self.frame = frame
-        self.SetIcon(co.GetMondrianIcon(), "Switch Hosts! %s" % VERSION)
+        self.SetIcon(co.GetMondrianIcon(), "SwitchHosts! %s" % VERSION)
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
         self.Bind(wx.EVT_MENU, self.frame.OnAbout, id=self.ID_About)
         self.Bind(wx.EVT_MENU, self.OnExit, id=self.ID_Exit)
@@ -67,7 +67,7 @@ class TaskBarIcon(wx.TaskBarIcon):
 
         hosts_list = listLocalHosts()
         menu = wx.Menu()
-        menu.Append(self.ID_MainFrame, u"Switch Hosts!")
+        menu.Append(self.ID_MainFrame, u"SwitchHosts!")
         menu.AppendSeparator()
 
         for fn in hosts_list:
@@ -114,7 +114,7 @@ class Frame(ui.Frame):
     ID_RENAME = wx.NewId()
 
     def __init__(
-        self, parent=None, id=wx.ID_ANY, title="Switch Hosts! %s" % VERSION, pos=wx.DefaultPosition,
+        self, parent=None, id=wx.ID_ANY, title="SwitchHosts! %s" % VERSION, pos=wx.DefaultPosition,
         size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
         sys_hosts_title=None
     ):
