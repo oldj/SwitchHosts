@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.6.1750"
+VERSION = "0.1.6.1752"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -206,7 +206,9 @@ class Frame(ui.Frame):
         ohosts.setIcon(i)
         self.m_list.SetItemImage(index, ohosts.icon_idx, ohosts.icon_idx)
 
-        if i == self.current_use_hosts_index:
+        if self.taskbar_icon.current_hosts == ohosts.path:
+            # 如果当前设置图片的 hosts 正是正在使用的 hosts，则
+            
             self.SetIcon(co.GetMondrianIcon(i))
             self.taskbar_icon.SetIcon(co.GetMondrianIcon(i), u"当前 hosts 方案：%s" % ohosts.getTitle())
 
