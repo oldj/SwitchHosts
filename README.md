@@ -1,4 +1,4 @@
-Switch Host!
+SwitchHost!
 ==================================================
 
  * Author: oldj

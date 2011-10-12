@@ -10,7 +10,7 @@ class Frame(wx.Frame):
     ID_HOSTS_TEXT = wx.NewId()
 
     def __init__(self,
-                 parent=None, id=wx.ID_ANY, title="Switch Host!", pos=wx.DefaultPosition,
+                 parent=None, id=wx.ID_ANY, title="SwitchHost!", pos=wx.DefaultPosition,
                  size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
                  cls_TaskBarIcon=None
     ):
