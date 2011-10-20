@@ -26,7 +26,7 @@ SwitchHost!
 
 你可以直接下载源码到本地运行或编辑，或者在下面下载可执行版本：
 
- * [SwitchHosts! Windows 绿色版下载](http://www.everbox.com/f/9cbLWDWEumPjoZSuyFmLqtnmjh)
+ * [SwitchHosts! Windows 绿色版下载](http://www.everbox.com/f/QTrmjdqBCMXlmG4lipbtmam6Dk)
 
 
 
@@ -63,3 +63,11 @@ SwitchHost!
  - 可选择是否修改注册表以便让 IE 浏览器在修改 hosts 后马上更新
  - 增加快捷键
  - hosts 内容配色方案
+
+
+ 版权及致谢：
+----------
+
+ 本程序的 Windows 及 Mac 版中，使用了基于 [wxWidgets License](http://www.wxwindows.org/about/newlicen.htm) 发行的 [ToasterBox](http://xoomer.virgilio.it/infinity77/main/ToasterBox.html) 作为浮出提示解决方案，在此对作者的工作表示感谢！
+
+ 本程序完全免费，并基于 LGPL 协议开源。
