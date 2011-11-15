@@ -5,6 +5,7 @@ u"""
 """
 
 import os
+import sys
 import traceback
 import wx
 import chardet
@@ -12,7 +13,8 @@ import urllib
 import re
 import threading
 
-if os.name == "posix":
+if os.name == "posix" and sys.platform != "darwin":
+    # Linux
     import pynotify
 
 from icons import ICONS, ICONS2, ICONS_ICO
@@ -43,7 +45,7 @@ def GetMondrianIcon(i=0, fn=None):
 
 def notify(frame, msg="", title=u"消息"):
 
-    if os.name == "posix":
+    if os.name == "posix" and sys.platform != "darwin":
         # linux 系统
 
         pynotify.Notification(title, msg).show()
