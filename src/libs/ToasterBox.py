@@ -54,6 +54,7 @@ Latest Revision: Andrea Gavana @ 31 Oct 2007, 21.30 CET
 
 import textwrap
 import wx
+import sys
 
 from wx.lib.statbmp import GenStaticBitmap as StaticBitmap
 
@@ -118,7 +119,10 @@ class ToasterBox(wx.Timer):
 
        self._backgroundcolour = wx.WHITE
        self._foregroundcolour = wx.BLACK
-       self._textfont = wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL, False, "Verdana")
+       if sys.platform != "darwin":
+           self._textfont = wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL, False, "Verdana")
+       else:
+           self._textfont = wx.Font(12, wx.SWISS, wx.NORMAL, wx.NORMAL, False, "Monaco")
 
        self._bitmap = None
 
@@ -194,7 +198,10 @@ class ToasterBox(wx.Timer):
        TB_SIMPLE Style. """
 
        if font is None:
-           font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL, False, "Verdana")
+           if sys.platform != "darwin":
+               font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.NORMAL, False, "Verdana")
+           else:
+               font = wx.Font(12, wx.SWISS, wx.NORMAL, wx.NORMAL, False, "Monaco")
 
        self._textfont = font
 

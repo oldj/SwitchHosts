@@ -2,9 +2,16 @@
 
 import wx
 import re
+import sys
 
 
-font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
+if sys.platform != "darwin":
+    font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
+
+else:
+    # 系统是 Mac OS X
+    font_mono = wx.Font(12, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Monaco")
+
 
 def __highLightOneLine(txtctrl, ln, start_pos, styles):
 

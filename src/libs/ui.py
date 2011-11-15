@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import wx, wx.html
 import wx.lib.buttons as buttons
 import common_operations as co
@@ -114,7 +115,10 @@ class Frame(wx.Frame):
         self.font_normal = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         self.font_normal.SetWeight(wx.NORMAL)
 
-        self.font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
+        if sys.platform != "darwin":
+            self.font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
+        else:
+            self.font_mono = wx.Font(12, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Monaco")
 
 
     def alert(self, title, msg):
