@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
 import wx, wx.html
 import wx.lib.buttons as buttons
 import common_operations as co
@@ -68,6 +67,7 @@ class Frame(wx.Frame):
         self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition,
                                               wx.DefaultSize,
                                               wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB|wx.HSCROLL)
+        self.m_textCtrl_content.SetMaxLength(0)
         bSizer6.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 5)
 
         bSizer7 = wx.BoxSizer(wx.HORIZONTAL)
@@ -115,10 +115,7 @@ class Frame(wx.Frame):
         self.font_normal = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         self.font_normal.SetWeight(wx.NORMAL)
 
-        if sys.platform != "darwin":
-            self.font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
-        else:
-            self.font_mono = wx.Font(12, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Monaco")
+        self.font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
 
 
     def alert(self, title, msg):
