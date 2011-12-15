@@ -2,3 +2,5 @@
 *.pyc
 src/build
 src/dist
+dist
+projectFilesBackup
