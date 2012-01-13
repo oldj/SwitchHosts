@@ -79,10 +79,15 @@ def switchHost(obj, fn):
     ohosts = Hosts(path=fn)
 
     sys_hosts_fn = getSysHostsPath()
+    if not sys_hosts_fn:
+        wx.MessageBox(u"没有找到 hosts 目录！")
+        return
+
     try:
         a = open(fn, "rb").read().split("\n")
         a = [ln.rstrip() for ln in a]
-        open(sys_hosts_fn, "wb").write(os.linesep.join(a))
+        if sys_hosts_fn:
+            open(sys_hosts_fn, "wb").write(os.linesep.join(a))
         obj.current_hosts = fn
         title = ohosts.getTitle()
 
