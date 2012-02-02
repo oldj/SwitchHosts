@@ -69,6 +69,7 @@ def highLight(txtctrl, styles=None, old_content=None):
 
         pos += len(ln) + 1
 
+#        if idx > 100: break # TODO 只对当前显示区域内的内容语法着色，以加快长 hosts 文件的处理
 
 
   
