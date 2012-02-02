@@ -132,6 +132,7 @@ class Frame(ui.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnHide, id=wx.ID_CLOSE)
         self.Bind(wx.EVT_BUTTON, self.applyHost, id=wx.ID_APPLY)
         self.Bind(wx.EVT_TEXT, self.hostsContentChange, id=self.ID_HOSTS_TEXT)
+#        self.Bind(wx.EVT_SCROLL, self.hostsContentScroll, id=self.ID_HOSTS_TEXT) # TODO 2012-02-02 这个事件没有响应...
 
         self.Bind(wx.EVT_BUTTON, self.newHosts, id=wx.ID_ADD)
         self.Bind(wx.EVT_BUTTON, self.deleteHosts, id=wx.ID_DELETE)
@@ -278,6 +279,10 @@ class Frame(ui.Frame):
         self.current_selected_hosts_fn = self.hosts_objects[c_idx].path
 
         self.m_textCtrl_content.Value = ohosts.getContent()
+
+
+    def hostsContentScroll(self, event):
+        print(1)
 
 
     def hostsContentChange(self, event):
