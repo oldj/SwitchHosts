@@ -1,28 +1,31 @@
 # -*- coding: utf-8 -*-
 
+import time
 import wx
 import re
 import sys
 
 
 if sys.platform != "darwin":
-    font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
-
+    font_face_mono = "Courier New"
 else:
     # 系统是 Mac OS X
-    font_mono = wx.Font(12, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Monaco")
+    font_face_mono = "Monaco"
+font_mono = wx.Font(12, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName=font_face_mono)
 
+hl_count = 0
+cre_ip = re.compile(r"^(\s*[\da-f\.:]+[\da-f]+)\s+\w")
 
 def __highLightOneLine(txtctrl, ln, start_pos, styles):
 
-    ln = ln.encode("utf-8")
     ln_content, comment_sep, ln_comment = ln.partition("#")
     end_pos = start_pos + len(ln)
 #    txtctrl.SetStyle(start_pos, end_pos, wx.TextAttr(styles["color_normal"], "#ffffff", styles["font_mono"]))
     txtctrl.setStyle(start_pos, end_pos, styles["color_normal"])
 
     # 行正文部分
-    re_ip = re.match(r"^(\s*[\da-f\.:]+[\da-f]+)\s+\w", ln_content)
+    #re_ip = re.match(r"^(\s*[\da-f\.:]+[\da-f]+)\s+\w", ln_content)
+    re_ip = cre_ip.match(ln_content)
     if re_ip:
         s_ip = re_ip.group(1)
         pos2 = start_pos + len(s_ip)
@@ -43,6 +46,8 @@ def __highLightOneLine(txtctrl, ln, start_pos, styles):
 
 def highLight(txtctrl, styles=None, old_content=None):
 
+    global hl_count
+
     default_style = {
         "color_normal": "#000000",
         "color_bg": "#ffffff",
@@ -58,6 +63,10 @@ def highLight(txtctrl, styles=None, old_content=None):
 #    content = txtctrl.Value.replace("\r", "")
     content = txtctrl().replace("\r", "")
     lns = content.split("\n")
+    if len(lns) > 100:
+        # 如果行数太多，跳过语法高亮
+        return
+
     if old_content:
         old_content = old_content.replace("\r", "")
         lns_old = old_content.split("\n")
@@ -66,6 +75,7 @@ def highLight(txtctrl, styles=None, old_content=None):
     pos = 0
 
     for idx, ln in enumerate(lns):
+        ln = ln.encode("utf-8")
         ln_old = None
         if lns_old and idx < len(lns_old):
             ln_old = lns_old[idx]
@@ -73,9 +83,8 @@ def highLight(txtctrl, styles=None, old_content=None):
         if not ln_old or ln != ln_old:
             __highLightOneLine(txtctrl, ln, pos, styles)
 
-        pos += len(ln.encode("utf-8")) + 1
+        pos += len(ln) + 1
 
-#        if idx > 100: break # TODO 只对当前显示区域内的内容语法着色，以加快长 hosts 文件的处理
+    hl_count += 1
+#    print("high lighted #%d!" % hl_count)
 
-
-  
