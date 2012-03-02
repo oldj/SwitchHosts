@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import os
+import re
 import sys
 import json
 import chardet
+import urllib2
 
+import wx
 import common_operations as co
 
 DEFAULT_HOSTS_FN = u"DEFAULT.hosts"
@@ -56,20 +59,64 @@ class Hosts(object):
             self.icon_idx = cfg.get("icon_idx", self.icon_idx)
 
 
-    def _doImport(self, ln):
-        u""""""
+    def _doImport(self, ln, froms, frame=None):
+        u"""将一行内容替换为它对应的 import 的内容"""
 
-        return "xxx"
+        act, t, source = ln.strip().partition(" ")
+        source = source.strip()
+
+        # 判断是否有循环引用
+        if source in froms:
+            wx.MessageBox(u"检测到循环引用！")
+            return None
+        froms.add(source)
+
+        if re.match(r"https?://", source, re.I):
+            # source 是一个 http 文件
+
+            try:
+                c = urllib2.urlopen(source, timeout=15).read()
+            except Exception:
+                wx.MessageBox(u"导入网络 hosts 文件 \"%s\" 失败！" % source)
+                return None
+            c = co.decode(c)
+
+            return c
+
+        else:
+            # 尝试从本地加载
+
+            if frame and not self.frame:
+                self.frame = frame
+
+            oh = self.frame.getOHostsFromTitle(source)
+            if not oh:
+                oh = self.frame.getOHostsFromFn(fn=source)
+
+            if not oh:
+                wx.MessageBox(u"找不到名为 \"%s\" 的 hosts 文件！" % source)
+                return None
+
+            return oh.getContent(replace_import=True, with_config=False, froms=froms, frame=frame)
 
 
-    def replaceImport(self, content):
+    def replaceImport(self, content, froms=None, frame=None):
         u"""将 content 中的各 import 值替换为对应的内容"""
+
+        if not froms:
+            froms = set()
+        froms.add(self.fn)
+        froms.add(self.title)
 
         lines = content.split("\n")
         for idx, ln in enumerate(lines):
             c = ln.strip()
             if c.startswith("#@import "):
-                lines[idx] = self._doImport(c)
+                ipt = self._doImport(c, froms=froms, frame=frame)
+                if ipt is None:
+                    pass
+                else:
+                    lines[idx] = ipt.decode("utf-8")
 
         return u"\n".join(lines).encode("utf-8")
 
@@ -115,9 +162,12 @@ class Hosts(object):
             self.save()
 
 
-    def getContent(self, replace_import=False, with_config=False):
+    def getContent(self, replace_import=False, with_config=False, froms=None, frame=None):
 
         c = self.content
+        if type(c) == unicode:
+            c = c.encode("utf-8")
+
         if not repr(c).startswith("u"):
             try:
                 cd = chardet.detect(c)
@@ -143,4 +193,4 @@ class Hosts(object):
 
             c = u"%s\n%s" % (cfg_ln, c)
 
-        return c if not replace_import else self.replaceImport(c)
+        return c if not replace_import else self.replaceImport(c, froms=froms, frame=frame)

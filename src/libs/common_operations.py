@@ -131,17 +131,23 @@ def decode(s):
 
     if not s:
         return ""
+    if type(s) == unicode:
+        s = s.encode("utf-8")
 
-    cd = {}
+    encoding = None
     try:
         cd = chardet.detect(s)
+        encoding = cd.get("encoding")# if cd.get("confidence", 0) > 0.65 else None
     except Exception:
 #        print(traceback.format_exc())
         pass
 
-    encoding = cd.get("encoding") if cd.get("confidence", 0) > 0.65 else None
     if not encoding:
-        encoding = "GB18030" if os.name == "nt" else "UTF-8"
+        encoding = sys.getfilesystemencoding()
+
+    if encoding in ("GB2312", "GBK", "ascii"):
+        encoding = "GB18030"
+#        encoding = "GB18030" if os.name == "nt" else "UTF-8"
 #    print s, cd, encoding, s.decode(encoding)
 
     return s.decode(encoding)

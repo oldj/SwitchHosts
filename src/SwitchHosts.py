@@ -459,8 +459,9 @@ class Frame(ui.Frame):
         self.saveCurrentHost(ohosts)
 
         # 切换 hosts
+        ohosts.frame = self
         co.switchHost(self.taskbar_icon, self.current_selected_hosts_fn, ohosts.getContent(
-            replace_import=True, with_config=True
+            replace_import=True, with_config=True, frame=self,
         ))
         self.updateListCtrl()
 
@@ -542,8 +543,6 @@ class Frame(ui.Frame):
 
     def editHost(self, event):
         u"""编辑一个 hosts 文件"""
-
-        print(1)
 
 
     def textStyle(self, old_content=None):
