@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.6.1755"
+VERSION = "0.1.7.1756"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -120,6 +120,7 @@ class Frame(ui.Frame):
     ):
         ui.Frame.__init__(self, parent, id, title, pos, size, style, cls_TaskBarIcon=TaskBarIcon)
 
+        self.content = self.m_textCtrl_content
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.init2(sys_hosts_title)
 
@@ -131,7 +132,7 @@ class Frame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_BUTTON, self.OnHide, id=wx.ID_CLOSE)
         self.Bind(wx.EVT_BUTTON, self.applyHost, id=wx.ID_APPLY)
-        self.Bind(wx.EVT_TEXT, self.hostsContentChange, id=self.ID_HOSTS_TEXT)
+        self.Bind(wx.EVT_LEFT_DOWN, self.hostsContentChange, id=self.ID_HOSTS_TEXT)
 #        self.Bind(wx.EVT_SCROLL, self.hostsContentScroll, id=self.ID_HOSTS_TEXT) # TODO 2012-02-02 这个事件没有响应...
 
         self.Bind(wx.EVT_BUTTON, self.newHosts, id=wx.ID_ADD)
@@ -278,7 +279,7 @@ class Frame(ui.Frame):
         self.current_selected_hosts_index = c_idx
         self.current_selected_hosts_fn = self.hosts_objects[c_idx].path
 
-        self.m_textCtrl_content.Value = ohosts.getContent()
+        self.content(ohosts.getContent())
 
 
     def hostsContentScroll(self, event):
@@ -287,13 +288,13 @@ class Frame(ui.Frame):
 
     def hostsContentChange(self, event):
 
-        c = self.m_textCtrl_content.Value.rstrip()
+        c = self.content()
         ohosts = self.getOHostsFromFn()
         old_c = ohosts.getContent()
         if ohosts and c != old_c:
             # 内容改变
-#            print ohosts.getTitle()
-#            print("%s, changed!" % self.current_selected_hosts_fn)
+            print ohosts.getTitle()
+            print("%s, changed!" % self.current_selected_hosts_fn)
             self.saveCurrentHost(ohosts, c)
             self.textStyle(old_c)
         else:
@@ -432,7 +433,7 @@ class Frame(ui.Frame):
     def saveCurrentHost(self, ohosts=None, content=None):
         u"""保存当前 hosts"""
 
-        c = content or self.m_textCtrl_content.Value.rstrip()
+        c = content or self.content()
         ohosts = ohosts or self.getOHostsFromFn()
         if ohosts:
             ohosts.setContent(c)
@@ -498,7 +499,7 @@ class Frame(ui.Frame):
 
         self.current_selected_hosts_index = idx
         self.current_selected_hosts_fn = fn
-        self.m_textCtrl_content.Value = ohosts.getContent()
+        self.content(ohosts.getContent())
 
         self.m_btn_apply.Enable()
 
@@ -545,11 +546,13 @@ class Frame(ui.Frame):
         wx.MessageBox("Frame has been iconized!", "Prompt")
         event.Skip()
 
+
     def OnExit(self, event):
     #        self.taskbar_icon.Destroy()
     #        self.Destroy()
     #        event.Skip()
         self.taskbar_icon.OnExit(event)
+
 
     def OnClose(self, event):
         self.Hide()
