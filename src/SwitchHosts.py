@@ -291,16 +291,17 @@ class Frame(ui.Frame):
         c = self.content()
         ohosts = self.getOHostsFromFn()
         old_c = ohosts.getContent()
+#        print(type(c), type(old_c), c, old_c)
         if ohosts and c != old_c:
             # 内容改变
 #            print ohosts.getTitle()
 #            print("%s, changed!" % self.current_selected_hosts_fn)
             self.saveCurrentHost(ohosts, c)
-#            self.textStyle(old_c)
+            self.textStyle(old_c)
         else:
             # 新切换
             pass
-#            self.textStyle()
+            self.textStyle()
 
         self.m_btn_apply.Enable()
 
@@ -496,7 +497,6 @@ class Frame(ui.Frame):
         idx = event.GetIndex()
         fn = self.hosts_lists[idx][2]
         ohosts = self.hosts_objects[idx]
-#        c = open(fn, "rb").read() if os.path.isfile(fn) else ""
 
         self.current_selected_hosts_index = idx
         self.current_selected_hosts_fn = fn
@@ -535,8 +535,8 @@ class Frame(ui.Frame):
 
         from libs.highLight import highLight
 
-        self.m_textCtrl_content.SetFont(self.font_mono)
-        highLight(self.m_textCtrl_content, old_content=old_content)
+        self.content.SetFont(self.font_mono)
+#        highLight(self.m_textCtrl_content, old_content=old_content)
 
 
     def OnHide(self, event):
