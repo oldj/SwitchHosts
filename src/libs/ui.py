@@ -17,7 +17,7 @@ class ContentCtrl(stc.StyledTextCtrl):
         stc.StyledTextCtrl.__init__(self, parent, id, style=style, *kw, **kw2)
         self._styles = [None] * 32
         self._free = 1
-        self.font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
+#        self.font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
 
 
     def getStyle(self, c="black"):
@@ -37,7 +37,8 @@ class ContentCtrl(stc.StyledTextCtrl):
 
         try:
             style = self._styles.index(c)
-            self.StyleSetFont(style, self.font_mono)
+#            self.StyleSetFont(style, self.font_mono)
+            self.StyleSetFontAttr(style, 10, "Courier New", False, False, False)
             return style
 
         except ValueError:
@@ -49,19 +50,33 @@ class ContentCtrl(stc.StyledTextCtrl):
             if free > 31:
                 free = 0
             self._free = free
-            self.StyleSetFont(style, self.font_mono)
+#            self.StyleSetFont(style, self.font_mono)
+            self.StyleSetFontAttr(style, 10, "Courier New", False, False, False)
             return style
 
 
-    def setVal(self, text, c=None):
+    def setStyle(self, start_pos, end_pos, style):
+        u"""设置样式"""
+
+        style = self.getStyle(style)
+        length = end_pos - start_pos
+        self.StartStyling(start_pos, 31)
+        self.SetStyling(length, style)
+#        print(start_pos, end_pos, style)
+
+
+    def setVal(self, text, c="blue"):
         u"""重写控件的文本内容"""
 
-        style = self.getStyle(c)
-        lenText = len(text.encode("utf8"))
+        from highLight import highLight
+
+        print("setVal")
         self.SetText(text)
-        end = self.GetLength()
-        self.StartStyling(end, 31)
-        self.SetStyling(lenText, style)
+#        end = self.GetLength()
+#        self.setStyle(0, end, c)
+
+        highLight(self)
+        self.EnsureCaretVisible()
 
 
     def getVal(self):

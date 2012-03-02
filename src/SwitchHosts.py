@@ -535,8 +535,8 @@ class Frame(ui.Frame):
 
         from libs.highLight import highLight
 
-        self.content.SetFont(self.font_mono)
-#        highLight(self.m_textCtrl_content, old_content=old_content)
+        print("textStyle")
+        highLight(self.m_textCtrl_content, old_content=old_content)
 
 
     def OnHide(self, event):

@@ -15,9 +15,11 @@ else:
 
 def __highLightOneLine(txtctrl, ln, start_pos, styles):
 
-    ln_content, t, ln_comment = ln.partition("#")
+    ln = ln.encode("utf-8")
+    ln_content, comment_sep, ln_comment = ln.partition("#")
     end_pos = start_pos + len(ln)
-    txtctrl.SetStyle(start_pos, end_pos, wx.TextAttr(styles["color_normal"], "#ffffff", styles["font_mono"]))
+#    txtctrl.SetStyle(start_pos, end_pos, wx.TextAttr(styles["color_normal"], "#ffffff", styles["font_mono"]))
+    txtctrl.setStyle(start_pos, end_pos, styles["color_normal"])
 
     # 行正文部分
     re_ip = re.match(r"^(\s*[\da-f\.:]+[\da-f]+)\s+\w", ln_content)
@@ -25,15 +27,18 @@ def __highLightOneLine(txtctrl, ln, start_pos, styles):
         s_ip = re_ip.group(1)
         pos2 = start_pos + len(s_ip)
         pos = pos2 - len(s_ip.lstrip())
-        txtctrl.SetStyle(pos, pos2, wx.TextAttr(styles["color_ip"], "#ffffff", styles["font_mono"]))
+#        txtctrl.SetStyle(pos, pos2, wx.TextAttr(styles["color_ip"], "#ffffff", styles["font_mono"]))
+        txtctrl.setStyle(pos, pos2, styles["color_ip"])
     elif len(ln_content.strip()) > 0:
         pos2 = start_pos + len(ln_content)
-        txtctrl.SetStyle(start_pos, pos2, wx.TextAttr(styles["color_error"], "#ffffff", styles["font_mono"]))
+#        txtctrl.SetStyle(start_pos, pos2, wx.TextAttr(styles["color_error"], "#ffffff", styles["font_mono"]))
+        txtctrl.setStyle(start_pos, pos2, styles["color_error"])
 
     # 行注释部分
-    if t:
+    if comment_sep:
         pos = start_pos + len(ln_content)
-        txtctrl.SetStyle(pos, end_pos, wx.TextAttr(styles["color_comment"], "#ffffff", styles["font_mono"]))
+#        txtctrl.SetStyle(pos, end_pos, wx.TextAttr(styles["color_comment"], "#ffffff", styles["font_mono"]))
+        txtctrl.setStyle(pos, end_pos, styles["color_comment"])
 
 
 def highLight(txtctrl, styles=None, old_content=None):
@@ -68,7 +73,7 @@ def highLight(txtctrl, styles=None, old_content=None):
         if not ln_old or ln != ln_old:
             __highLightOneLine(txtctrl, ln, pos, styles)
 
-        pos += len(ln) + 1
+        pos += len(ln.encode("utf-8")) + 1
 
 #        if idx > 100: break # TODO 只对当前显示区域内的内容语法着色，以加快长 hosts 文件的处理
 
