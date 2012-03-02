@@ -83,7 +83,6 @@ class ContentCtrl(stc.StyledTextCtrl):
         self.StartStyling(0, 31)
         self.SetStyling(self.GetLength(), self.getStyle(c))
         self.highLight()
-        print "SetText!"
 
 
     def getVal(self):
