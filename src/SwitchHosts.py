@@ -132,7 +132,7 @@ class Frame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_BUTTON, self.OnHide, id=wx.ID_CLOSE)
         self.Bind(wx.EVT_BUTTON, self.applyHost, id=wx.ID_APPLY)
-        self.Bind(wx.stc.EVT_STC_CHANGE, self.hostsContentChange, id=self.ID_HOSTS_TEXT)
+        self.Bind(wx.stc.EVT_STC_MODIFIED, self.hostsContentChange, id=self.ID_HOSTS_TEXT)
 #        self.Bind(wx.EVT_SCROLL, self.hostsContentScroll, id=self.ID_HOSTS_TEXT) # TODO 2012-02-02 这个事件没有响应...
 
         self.Bind(wx.EVT_BUTTON, self.newHosts, id=wx.ID_ADD)
@@ -294,16 +294,20 @@ class Frame(ui.Frame):
 #        print(type(c), type(old_c), c, old_c)
         if ohosts and c != old_c:
             # 内容改变
+            pass
 #            print ohosts.getTitle()
 #            print("%s, changed!" % self.current_selected_hosts_fn)
-            self.saveCurrentHost(ohosts, c)
-            self.textStyle(old_c)
+#            self.saveCurrentHost(ohosts, c)
+#            self.textStyle(old_c)
         else:
             # 新切换
             pass
-            self.textStyle()
+#            self.textStyle()
 
         self.m_btn_apply.Enable()
+
+#        print("changed!")
+#        self.content.highLight()
 
 
     def menuApplyHost(self, event):
@@ -533,10 +537,10 @@ class Frame(ui.Frame):
     def textStyle(self, old_content=None):
         u"""更新文本区的样式"""
 
-        from libs.highLight import highLight
+        self.content.highLight()
+#        highLight(self.m_textCtrl_content, old_content=old_content)
 
-        print("textStyle")
-        highLight(self.m_textCtrl_content, old_content=old_content)
+        self.content.write("test", "blue")
 
 
     def OnHide(self, event):

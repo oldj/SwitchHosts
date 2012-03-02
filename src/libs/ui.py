@@ -29,6 +29,9 @@ class ContentCtrl(stc.StyledTextCtrl):
         of the list and reuse previous styles.
 
         """
+
+        from highLight import font_face_mono
+
         free = self._free
         if c and isinstance(c, (str, unicode)):
             c = c.lower()
@@ -38,7 +41,7 @@ class ContentCtrl(stc.StyledTextCtrl):
         try:
             style = self._styles.index(c)
 #            self.StyleSetFont(style, self.font_mono)
-            self.StyleSetFontAttr(style, 10, "Courier New", False, False, False)
+            self.StyleSetFontAttr(style, 10, font_face_mono, False, False, False)
             return style
 
         except ValueError:
@@ -51,7 +54,7 @@ class ContentCtrl(stc.StyledTextCtrl):
                 free = 0
             self._free = free
 #            self.StyleSetFont(style, self.font_mono)
-            self.StyleSetFontAttr(style, 10, "Courier New", False, False, False)
+            self.StyleSetFontAttr(style, 10, font_face_mono, False, False, False)
             return style
 
 
@@ -62,21 +65,25 @@ class ContentCtrl(stc.StyledTextCtrl):
         length = end_pos - start_pos
         self.StartStyling(start_pos, 31)
         self.SetStyling(length, style)
-#        print(start_pos, end_pos, style)
 
 
-    def setVal(self, text, c="blue"):
-        u"""重写控件的文本内容"""
+    def highLight(self):
 
         from highLight import highLight
-
-        print("setVal")
-        self.SetText(text)
-#        end = self.GetLength()
-#        self.setStyle(0, end, c)
-
         highLight(self)
         self.EnsureCaretVisible()
+
+
+    def setVal(self, text, c=None):
+        u"""重写控件的文本内容"""
+
+#        self.ClearAll()
+#        self.AddText(text)
+        self.SetText(text)
+        self.StartStyling(0, 31)
+        self.SetStyling(self.GetLength(), self.getStyle(c))
+        self.highLight()
+        print "SetText!"
 
 
     def getVal(self):
