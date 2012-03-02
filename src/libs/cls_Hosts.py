@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import json
 import chardet
 
@@ -111,8 +112,14 @@ class Hosts(object):
         if not repr(c).startswith("u"):
             try:
                 cd = chardet.detect(c)
-                c = c.decode(cd.get("encoding", "utf-8"))
+                encoding = cd.get("encoding")
+                if encoding not in ("utf-8",):
+                    encoding = sys.getfilesystemencoding()
+                c = c.decode(encoding)
+
             except Exception:
                 c = c.decode("utf-8")
+
+            self.content = c
 
         return c

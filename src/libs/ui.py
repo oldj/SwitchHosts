@@ -17,6 +17,7 @@ class ContentCtrl(stc.StyledTextCtrl):
         stc.StyledTextCtrl.__init__(self, parent, id, style=style, *kw, **kw2)
         self._styles = [None] * 32
         self._free = 1
+        self.font_mono = wx.Font(10, wx.ROMAN, wx.NORMAL, wx.NORMAL, faceName="Courier New")
 
 
     def getStyle(self, c="black"):
@@ -36,6 +37,7 @@ class ContentCtrl(stc.StyledTextCtrl):
 
         try:
             style = self._styles.index(c)
+            self.StyleSetFont(style, self.font_mono)
             return style
 
         except ValueError:
@@ -47,19 +49,27 @@ class ContentCtrl(stc.StyledTextCtrl):
             if free > 31:
                 free = 0
             self._free = free
+            self.StyleSetFont(style, self.font_mono)
             return style
 
 
-    def setVal(self, text):
+    def setVal(self, text, c=None):
         u"""重写控件的文本内容"""
 
+        style = self.getStyle(c)
+        lenText = len(text.encode("utf8"))
         self.SetText(text)
+        end = self.GetLength()
+        self.StartStyling(end, 31)
+        self.SetStyling(lenText, style)
 
 
     def getVal(self):
         u"""取得 hosts 的内容"""
 
-        return self.GetTextRaw()
+        c = self.GetTextRaw()
+        c = u"%s" % c.decode("utf-8")
+        return c
 
 
     def write(self, text, c=None):
