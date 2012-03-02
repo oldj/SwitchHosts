@@ -4,9 +4,92 @@ import os
 import wx, wx.html
 import wx.lib.buttons as buttons
 import common_operations as co
+from wx import stc
+
+
+class ContentCtrl(stc.StyledTextCtrl):
+    u"""内容控件
+    参考自：http://wiki.wxpython.org/StyledTextCtrl%20Log%20Window%20Demo
+    """
+
+    def __init__(self, parent, id, style=wx.SIMPLE_BORDER, *kw, **kw2):
+
+        stc.StyledTextCtrl.__init__(self, parent, id, style=style, *kw, **kw2)
+        self._styles = [None] * 32
+        self._free = 1
+
+
+    def getStyle(self, c="black"):
+        u"""
+        Returns a style for a given colour if one exists.  If no style
+        exists for the colour, make a new style.
+
+        If we run out of styles, (only 32 allowed here) we go to the top
+        of the list and reuse previous styles.
+
+        """
+        free = self._free
+        if c and isinstance(c, (str, unicode)):
+            c = c.lower()
+        else:
+            c = "black"
+
+        try:
+            style = self._styles.index(c)
+            return style
+
+        except ValueError:
+            style = free
+            self._styles[style] = c
+            self.StyleSetForeground(style, wx.NamedColour(c))
+
+            free += 1
+            if free > 31:
+                free = 0
+            self._free = free
+            return style
+
+
+    def setVal(self, text):
+        u"""重写控件的文本内容"""
+
+        self.SetText(text)
+
+
+    def getVal(self):
+        u"""取得 hosts 的内容"""
+
+        return self.GetTextRaw()
+
+
+    def write(self, text, c=None):
+        u"""
+        Add the text to the end of the control using colour c which
+        should be suitable for feeding directly to wx.NamedColour.
+
+        "text" should be a unicode string or contain only ascii data.
+        """
+        style = self.getStyle(c)
+        lenText = len(text.encode("utf8"))
+        end = self.GetLength()
+        self.AddText(text)
+        self.StartStyling(end, 31)
+        self.SetStyling(lenText, style)
+        self.EnsureCaretVisible()
+
+
+    def __call__(self, *args, **kwargs):
+
+        if len(args) or len(kwargs):
+            self.setVal(*args, **kwargs)
+        else:
+            return self.getVal()
+
+
 
 
 class Frame(wx.Frame):
+
     ID_HOSTS_TEXT = wx.NewId()
 
     def __init__(self,
@@ -64,10 +147,11 @@ class Frame(wx.Frame):
 
         bSizer6 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition,
-                                              wx.DefaultSize,
-                                              wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB|wx.HSCROLL)
-        self.m_textCtrl_content.SetMaxLength(0)
+#        self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition,
+#                                              wx.DefaultSize,
+#                                              wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB|wx.HSCROLL)
+        self.m_textCtrl_content = ContentCtrl(self.m_panel1, self.ID_HOSTS_TEXT)
+#        self.m_textCtrl_content.SetMaxLength(0)
         bSizer6.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 5)
 
         bSizer7 = wx.BoxSizer(wx.HORIZONTAL)
