@@ -15,7 +15,10 @@ import threading
 
 if os.name == "posix" and sys.platform != "darwin":
     # Linux
-    import pynotify
+    try:
+        import pynotify
+    except ImportError:
+        pynotify = None
 
 from icons import ICONS, ICONS2, ICONS_ICO
 
@@ -68,7 +71,7 @@ def notify(frame, msg="", title=u"消息"):
     frame.SetFocus()
 
 
-def switchHost(obj, fn):
+def switchHost(obj, fn, content=None):
     u"""切换 hosts 为 fn 的内容"""
 
     from cls_Hosts import Hosts
@@ -84,7 +87,8 @@ def switchHost(obj, fn):
         return
 
     try:
-        a = open(fn, "rb").read().split("\n")
+        c = content or open(fn, "rb").read()
+        a = c.split("\n")
         a = [ln.rstrip() for ln in a]
         if sys_hosts_fn:
             open(sys_hosts_fn, "wb").write(os.linesep.join(a))

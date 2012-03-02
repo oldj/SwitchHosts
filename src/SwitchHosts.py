@@ -96,6 +96,8 @@ class TaskBarIcon(wx.TaskBarIcon):
             mitem.SetFont(self.font_bold)
         self.hosts[item_id] = title
 
+        ohost.frame = self.frame
+
         self.Bind(wx.EVT_MENU, self.switchHost, id=item_id)
 
 
@@ -105,7 +107,9 @@ class TaskBarIcon(wx.TaskBarIcon):
 
         oh = self.frame.getOHostsFromTitle(title)
         if oh:
-            co.switchHost(self, oh.path)
+            co.switchHost(self, oh.path, oh.getContent(
+                replace_import=True, with_config=True
+            ))
             self.frame.updateListCtrl()
 
 
@@ -297,7 +301,7 @@ class Frame(ui.Frame):
             pass
 #            print ohosts.getTitle()
 #            print("%s, changed!" % self.current_selected_hosts_fn)
-#            self.saveCurrentHost(ohosts, c)
+            self.saveCurrentHost(ohosts, c)
 #            self.textStyle(old_c)
         else:
             # 新切换
@@ -449,11 +453,15 @@ class Frame(ui.Frame):
     def applyHost(self, event=None, ohosts=None):
         u"""应用某个 hosts"""
 
+        ohosts = self.getOHostsFromFn() # 当前 hosts
+
         # 保存当前 hosts 的内容
-        self.saveCurrentHost()
+        self.saveCurrentHost(ohosts)
 
         # 切换 hosts
-        co.switchHost(self.taskbar_icon, self.current_selected_hosts_fn)
+        co.switchHost(self.taskbar_icon, self.current_selected_hosts_fn, ohosts.getContent(
+            replace_import=True, with_config=True
+        ))
         self.updateListCtrl()
 
         self.m_btn_apply.Disable()
@@ -499,6 +507,10 @@ class Frame(ui.Frame):
     def OnHostsItemBeSelected(self, event):
 
         idx = event.GetIndex()
+        if self.current_selected_hosts_index == idx:
+            # 如果选中的就是当前 hosts ，则什么也不做
+            return
+
         fn = self.hosts_lists[idx][2]
         ohosts = self.hosts_objects[idx]
 

@@ -39,9 +39,18 @@ def __highLightOneLine(txtctrl, ln, start_pos, styles):
 
     # 行注释部分
     if comment_sep:
-        pos = start_pos + len(ln_content)
-#        txtctrl.SetStyle(pos, end_pos, wx.TextAttr(styles["color_comment"], "#ffffff", styles["font_mono"]))
-        txtctrl.setStyle(pos, end_pos, styles["color_comment"])
+
+        if ln.strip().startswith("#@import "):
+            # import 语法
+            end_pos = start_pos + len(ln)
+            txtctrl.setStyle(start_pos, end_pos, styles["color_import"])
+
+        else:
+            # 注释
+            pos = start_pos + len(ln_content)
+    #        txtctrl.SetStyle(pos, end_pos, wx.TextAttr(styles["color_comment"], "#ffffff", styles["font_mono"]))
+            txtctrl.setStyle(pos, end_pos, styles["color_comment"])
+
 
 
 def highLight(txtctrl, styles=None, old_content=None):
@@ -54,6 +63,7 @@ def highLight(txtctrl, styles=None, old_content=None):
         "color_comment": "#339933",
         "color_ip": "#0000cc",
         "color_error": "#ff0000",
+        "color_import": "#990000",
         "font_mono": font_mono,
     }
     if styles:
