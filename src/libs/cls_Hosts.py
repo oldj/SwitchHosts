@@ -13,7 +13,7 @@ class Hosts(object):
 
     CONFIG_FLAG = "#@SwitchHost!"
 
-    def __init__(self, index=0, path=None, icon_idx=0):
+    def __init__(self, index=0, path=None, icon_idx=0, frame=None):
 
         self.index = index
         self.path = path
@@ -27,6 +27,7 @@ class Hosts(object):
         self.icon_idx = icon_idx
         self.content = ""
         self.is_selected = False
+        self.frame = frame
 
         self.read()
 
@@ -55,22 +56,30 @@ class Hosts(object):
             self.icon_idx = cfg.get("icon_idx", self.icon_idx)
 
 
+    def _doImport(self, ln):
+        u""""""
+
+        return "xxx"
+
+
+    def replaceImport(self, content):
+        u"""将 content 中的各 import 值替换为对应的内容"""
+
+        lines = content.split("\n")
+        for idx, ln in enumerate(lines):
+            c = ln.strip()
+            if c.startswith("#@import "):
+                lines[idx] = self._doImport(c)
+
+        return u"\n".join(lines).encode("utf-8")
+
+
     def save(self):
 
         if not self.path:
             return
 
-        cfg = {
-            "title": self.title,
-            "icon_idx": self.icon_idx,
-        }
-        cfg_ln = u"%s %s" % (self.CONFIG_FLAG, json.dumps(cfg).replace("\n", "").replace("\r", ""))
-
-        c = self.content
-        if not repr(c).startswith("u"):
-            c = c.decode("utf-8")
-
-        c = u"%s\n%s" % (cfg_ln, c)
+        c = self.getContent(with_config=True)
         open(self.path, "wb").write(c.encode("utf-8"))
 
 
@@ -106,7 +115,7 @@ class Hosts(object):
             self.save()
 
 
-    def getContent(self):
+    def getContent(self, replace_import=False, with_config=False):
 
         c = self.content
         if not repr(c).startswith("u"):
@@ -122,4 +131,16 @@ class Hosts(object):
 
             self.content = c
 
-        return c
+        if with_config:
+            cfg = {
+                "title": self.title,
+                "icon_idx": self.icon_idx,
+                }
+            cfg_ln = u"%s %s" % (self.CONFIG_FLAG, json.dumps(cfg).replace("\n", "").replace("\r", ""))
+
+            if not repr(c).startswith("u"):
+                c = c.decode("utf-8")
+
+            c = u"%s\n%s" % (cfg_ln, c)
+
+        return c if not replace_import else self.replaceImport(c)
