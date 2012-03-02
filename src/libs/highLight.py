@@ -50,7 +50,8 @@ def highLight(txtctrl, styles=None, old_content=None):
         default_style.update(styles)
     styles = default_style
 
-    content = txtctrl.Value.replace("\r", "")
+#    content = txtctrl.Value.replace("\r", "")
+    content = txtctrl().replace("\r", "")
     lns = content.split("\n")
     if old_content:
         old_content = old_content.replace("\r", "")
