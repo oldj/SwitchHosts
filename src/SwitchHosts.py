@@ -6,7 +6,8 @@ u"""
 @author: oldj
 @blog: http://oldj.net
 @email: oldj.wu@gmail.com
-@version: 0.1.3.200
+@version: 0.1.6.1755
+
 """
 
 import os
