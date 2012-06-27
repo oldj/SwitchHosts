@@ -17,7 +17,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.7.1756"
+VERSION = "0.1.7.1757"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -137,6 +137,7 @@ class Frame(ui.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnHide, id=wx.ID_CLOSE)
         self.Bind(wx.EVT_BUTTON, self.applyHost, id=wx.ID_APPLY)
         self.Bind(wx.stc.EVT_STC_MODIFIED, self.hostsContentChange, id=self.ID_HOSTS_TEXT)
+        self.is_content_changing = False
 #        self.Bind(wx.EVT_SCROLL, self.hostsContentScroll, id=self.ID_HOSTS_TEXT) # TODO 2012-02-02 这个事件没有响应...
 
         self.Bind(wx.EVT_BUTTON, self.newHosts, id=wx.ID_ADD)
@@ -292,6 +293,13 @@ class Frame(ui.Frame):
 
     def hostsContentChange(self, event):
 
+        if self.is_content_changing:
+            return
+        self.is_content_changing = True
+
+        import datetime
+        print(datetime.datetime.now())
+
         c = self.content()
         ohosts = self.getOHostsFromFn()
         old_c = ohosts.getContent()
@@ -312,6 +320,8 @@ class Frame(ui.Frame):
 
 #        print("changed!")
 #        self.content.highLight()
+
+        self.is_content_changing = False
 
 
     def menuApplyHost(self, event):
