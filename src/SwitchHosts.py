@@ -18,7 +18,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.6.1755"
+VERSION = "0.1.7.1760"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
@@ -610,7 +610,8 @@ def init():
 
 def main():
     sys_hosts_title = init()
-    app = wx.PySimpleApp()
+    app = wx.App()
+#    app = wx.PySimpleApp()
     frame = Frame(size=(640, 480), sys_hosts_title=sys_hosts_title)
     frame.Centre()
     frame.Show()

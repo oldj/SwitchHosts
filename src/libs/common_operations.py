@@ -13,9 +13,22 @@ import urllib
 import re
 import threading
 
-if os.name == "posix" and sys.platform != "darwin":
-    # Linux
-    import pynotify
+if os.name == "posix":
+    if sys.platform != "darwin":
+        # Linux
+        import pynotify
+    else:
+        # Mac
+        import gntp.notifier
+
+        growl = gntp.notifier.GrowlNotifier(
+            applicationName="SwitchHosts!",
+            notifications=["New Updates", "New Messages"],
+            defaultNotifications=["New Messages"],
+            hostname = "127.0.0.1", # Defaults to localhost
+            # password = "" # Defaults to a blank password
+        )
+        growl.register()
 
 from icons import ICONS, ICONS2, ICONS_ICO
 
@@ -43,14 +56,34 @@ def GetMondrianIcon(i=0, fn=None):
     icon.CopyFromBitmap(GetMondrianBitmap(i, fn))
     return icon
 
+
+def macNotify(msg, title):
+
+    print("mac nofity!")
+
+    growl.notify(
+        noteType="New Messages",
+        title=title,
+        description=msg,
+        sticky=False,
+        priority=1,
+    )
+
+
 def notify(frame, msg="", title=u"消息"):
 
-    if os.name == "posix" and sys.platform != "darwin":
-        # linux 系统
+    if os.name == "posix":
 
-        pynotify.Notification(title, msg).show()
+        if sys.platform != "darwin":
+            # linux 系统
+            pynotify.Notification(title, msg).show()
+
+        else:
+            # Mac 系统
+            macNotify(msg, title)
 
         return
+
 
     import ToasterBox as TB
 
@@ -79,10 +112,15 @@ def switchHost(obj, fn):
     ohosts = Hosts(path=fn)
 
     sys_hosts_fn = getSysHostsPath()
+
     try:
         a = open(fn, "rb").read().split("\n")
         a = [ln.rstrip() for ln in a]
-        open(sys_hosts_fn, "wb").write(os.linesep.join(a))
+        if sys_hosts_fn:
+            open(sys_hosts_fn, "wb").write(os.linesep.join(a))
+        else:
+            wx.MessageBox(u"无效的系统 hosts 路径！")
+
         obj.current_hosts = fn
         title = ohosts.getTitle()
 
