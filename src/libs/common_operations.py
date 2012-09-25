@@ -59,7 +59,7 @@ def GetMondrianIcon(i=0, fn=None):
 
 def macNotify(msg, title):
 
-    print("mac nofity!")
+#    print("mac nofity!")
 
     growl.notify(
         noteType="New Messages",
