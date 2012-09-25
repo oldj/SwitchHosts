@@ -18,7 +18,7 @@ import libs.common_operations as co
 import libs.ui as ui
 from libs.cls_Hosts import Hosts, DEFAULT_HOSTS_FN
 
-VERSION = "0.1.7.1760"
+VERSION = "0.1.7.1761"
 SELECTED_FLAG = u"√"
 
 class TaskBarIcon(wx.TaskBarIcon):
