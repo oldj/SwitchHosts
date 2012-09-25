@@ -26,9 +26,15 @@ class Hosts(object):
         self.icon_idx = icon_idx
         self.content = ""
         self.is_selected = False
+        self.url = None # 如果是在线hosts方案，则此项不为空
 
         self.read()
 
+
+    @property
+    def is_read_only(self):
+
+        return self.url is not None
 
 
     def read(self):

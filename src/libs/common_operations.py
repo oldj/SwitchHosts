@@ -16,7 +16,11 @@ import threading
 if os.name == "posix":
     if sys.platform != "darwin":
         # Linux
-        import pynotify
+        try:
+            import pynotify
+        except ImportError:
+            pynotify = None
+
     else:
         # Mac
         import gntp.notifier
@@ -134,8 +138,10 @@ def switchHost(obj, fn):
 
 
     except Exception:
-        print(traceback.format_exc())
-        wx.MessageBox(u"hosts 未能成功切换！", "Error!")
+        err_msg = traceback.format_exc()
+        if "Permission denied" in err_msg:
+            err_msg = u"权限不足！"
+        wx.MessageBox(err_msg, u"hosts 未能成功切换！")
 
 
 def getSysHostsPath():
