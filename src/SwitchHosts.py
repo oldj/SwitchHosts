@@ -177,7 +177,7 @@ class Frame(ui.Frame):
     def setLatestStableVersion(self, version):
 
         self.latest_stable_version = version
-        print(version)
+#        print(version)
 
 
     def mkSubIconMenu(self):
