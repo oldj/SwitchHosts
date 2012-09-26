@@ -41,6 +41,7 @@ class MainFrame(ui.Frame):
 
         self.configs = {}
         self.configs_path = configs_path
+        self.current_hosts = None
 
         self.local_hosts = []
         self.online_hosts = []
@@ -73,8 +74,21 @@ class MainFrame(ui.Frame):
 
         path = self.getSysHostsPath()
         if path:
-            hosts = Hosts(src=path)
+            hosts = Hosts(src=path, title="DEFAULT_hosts")
             self.addHosts(hosts)
+            self.selectHosts(hosts)
+
+
+    def showHosts(self, hosts):
+
+        self.current_hosts = hosts
+        self.m_textCtrl_content.SetValue(hosts.content)
+
+
+    def selectHosts(self, hosts):
+
+        self.m_tree.SelectItem(hosts.tree_item_id)
+        self.showHosts(hosts)
 
 
     def addHosts(self, hosts):
@@ -90,7 +104,7 @@ class MainFrame(ui.Frame):
     def addHosts2(self, tree, hosts):
 
         self.local_hosts.append(hosts)
-        hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.name)
+        hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
 
         self.m_tree.Expand(tree)
 
