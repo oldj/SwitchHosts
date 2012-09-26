@@ -38,6 +38,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
+        self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeSelect, self.m_tree)
 
         self.configs = {}
         self.configs_path = configs_path
@@ -53,6 +54,7 @@ class MainFrame(ui.Frame):
     def init2(self):
         self.loadConfigs()
         self.getSystemHosts()
+
 
 
     def setHostsDir(self):
@@ -92,6 +94,8 @@ class MainFrame(ui.Frame):
         if self.current_hosts:
             self.m_tree.SetItemBold(self.current_hosts.tree_item_id, bold=False)
         self.m_tree.SetItemBold(hosts.tree_item_id)
+        self.m_tree.SetItemBackgroundColour(hosts.tree_item_id, "#ccccff")
+
         self.showHosts(hosts)
 
         self.current_hosts = hosts
@@ -167,4 +171,14 @@ class MainFrame(ui.Frame):
         dlg = ui.AboutBox(version=self.version, latest_stable_version=self.latest_stable_version)
         dlg.ShowModal()
         dlg.Destroy()
+
+
+    def OnTreeSelect(self, event):
+
+        item = event.GetItem()
+        if item in (self.m_tree_online, self.m_tree_local, self.m_tree_root):
+            co.debugLog("ignore")
+
+        if self.current_hosts and item == self.current_hosts.tree_item_id:
+            co.debugLog("is current hosts!")
 
