@@ -156,17 +156,6 @@ def switchHost(obj, fn):
         wx.MessageBox(err_msg, u"hosts 未能成功切换！")
 
 
-def getSysHostsPath():
-    u"""取得系统 host 文件的路径"""
-
-    if os.name == "nt":
-        path = "C:\\Windows\\System32\\drivers\\etc\\hosts"
-    else:
-        path = "/etc/hosts"
-
-    return path if os.path.isfile(path) else None
-
-
 def encode(s):
 
 #    print("--")

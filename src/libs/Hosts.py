@@ -13,4 +13,15 @@ class Hosts(object):
 
         self.src = src
         self.is_online = is_online
+        self.__name = None
+
+
+    @property
+    def name(self):
+
+        return self.__name or u"未命名"
+
+    @name.setter
+    def name(self, value):
+        self.__name = value
 
