@@ -51,8 +51,7 @@ class MainFrame(ui.Frame):
         self.current_hosts = None
 
         self.origin_hosts = []
-        self.local_hosts = []
-        self.online_hosts = []
+        self.hosts = []
 
         self.init2()
 
@@ -131,6 +130,7 @@ class MainFrame(ui.Frame):
         self.m_tree.SelectItem(hosts.tree_item_id)
 
         if self.current_hosts:
+            self.m_tree.SetItemBackgroundColour(self.current_hosts.tree_item_id, None)
             self.m_tree.SetItemBold(self.current_hosts.tree_item_id, bold=False)
         self.m_tree.SetItemBold(hosts.tree_item_id)
         self.m_tree.SetItemBackgroundColour(hosts.tree_item_id, "#ccccff")
@@ -147,10 +147,10 @@ class MainFrame(ui.Frame):
             list_hosts = self.origin_hosts
         elif hosts.is_online:
             tree = self.m_tree_online
-            list_hosts = self.online_hosts
+            list_hosts = self.hosts
         else:
             tree = self.m_tree_local
-            list_hosts = self.local_hosts
+            list_hosts = self.hosts
 
         self.addHosts2(tree, hosts, list_hosts)
 
@@ -200,9 +200,9 @@ class MainFrame(ui.Frame):
             wx.MessageBox("保存配置信息失败！\n\n%s" % traceback.format_exc())
 
 
-    def eachLocalHosts(self, func):
+    def eachHosts(self, func):
 
-        for hosts in self.local_hosts:
+        for hosts in self.hosts:
             func(hosts)
 
 
@@ -248,8 +248,16 @@ class MainFrame(ui.Frame):
         if item in (self.m_tree_online, self.m_tree_local, self.m_tree_root):
             co.log("ignore")
 
-        if self.current_hosts and item == self.current_hosts.tree_item_id:
+        elif self.current_hosts and item == self.current_hosts.tree_item_id:
             co.log("is current hosts!")
+
+        else:
+            co.log("item")
+            hostses = self.origin_hosts + self.hosts
+            for hosts in hostses:
+                if item == hosts.tree_item_id:
+                    self.selectHosts(hosts)
+                    break
 
 
     def OnNew(self, event):
