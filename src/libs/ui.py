@@ -220,10 +220,11 @@ class AboutBox(wx.Dialog):
             return 0
 
 
-class MyDialog1(wx.Dialog):
+class Dlg_addHosts(wx.Dialog):
+
     def __init__( self, parent ):
         wx.Dialog.__init__(self, parent, id=wx.ID_ANY, title=wx.EmptyString, pos=wx.DefaultPosition,
-            size=wx.Size(400, 300), style=wx.DEFAULT_DIALOG_STYLE)
+            size=wx.Size(400, 200), style=wx.DEFAULT_DIALOG_STYLE)
 
         self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
 
@@ -232,9 +233,17 @@ class MyDialog1(wx.Dialog):
         self.m_panel9 = wx.Panel(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         bSizer10 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_radioBtn2 = wx.RadioButton(self.m_panel9, wx.ID_ANY, u"本地方案", wx.DefaultPosition, wx.DefaultSize, 0)
-        self.m_radioBtn2.SetValue(True)
-        bSizer10.Add(self.m_radioBtn2, 0, wx.ALL, 5)
+        bSizer231 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.m_radioBtn_local = wx.RadioButton(self.m_panel9, wx.ID_ANY, u"本地方案", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_radioBtn_local.SetValue(True)
+        bSizer231.Add(self.m_radioBtn_local, 0, wx.ALL, 5)
+
+        self.m_radioBtn_online = wx.RadioButton(self.m_panel9, wx.ID_ANY, u"在线方案", wx.DefaultPosition, wx.DefaultSize,
+            0)
+        bSizer231.Add(self.m_radioBtn_online, 0, wx.ALL, 5)
+
+        bSizer10.Add(bSizer231, 1, wx.EXPAND, 5)
 
         bSizer111 = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -242,52 +251,37 @@ class MyDialog1(wx.Dialog):
         self.m_staticText21.Wrap(-1)
         bSizer111.Add(self.m_staticText21, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
 
-        self.m_textCtrl31 = wx.TextCtrl(self.m_panel9, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0)
-        bSizer111.Add(self.m_textCtrl31, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.m_textCtrl_title = wx.TextCtrl(self.m_panel9, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize
+            , 0)
+        self.m_textCtrl_title.SetMaxLength(32)
+        self.m_textCtrl_title.SetToolTipString(u"在这儿输入方案名称。")
+
+        bSizer111.Add(self.m_textCtrl_title, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
 
         bSizer10.Add(bSizer111, 1, wx.EXPAND, 5)
+
+        bSizer1612 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.m_staticText512 = wx.StaticText(self.m_panel9, wx.ID_ANY, u"URL：", wx.DefaultPosition, wx.Size(60, -1), 0)
+        self.m_staticText512.Wrap(-1)
+        bSizer1612.Add(self.m_staticText512, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        self.m_textCtrl_url = wx.TextCtrl(self.m_panel9, wx.ID_ANY, u"http://", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_textCtrl_url.SetMaxLength(1024)
+        self.m_textCtrl_url.Enable(False)
+        self.m_textCtrl_url.SetToolTipString(u"在这儿输入方案的url地址，如：\nhttp://192.168.1.100/hosts/sample.hosts 。")
+
+        bSizer1612.Add(self.m_textCtrl_url, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        bSizer10.Add(bSizer1612, 1, wx.EXPAND, 5)
 
         self.m_panel9.SetSizer(bSizer10)
         self.m_panel9.Layout()
         bSizer10.Fit(self.m_panel9)
         bSizer9.Add(self.m_panel9, 2, wx.EXPAND | wx.ALL, 5)
 
-        self.m_staticline21 = wx.StaticLine(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL)
-        bSizer9.Add(self.m_staticline21, 0, wx.EXPAND | wx.ALL, 5)
-
-        self.m_panel10 = wx.Panel(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
-        bSizer12 = wx.BoxSizer(wx.VERTICAL)
-
-        self.m_radioBtn8 = wx.RadioButton(self.m_panel10, wx.ID_ANY, u"在线方案", wx.DefaultPosition, wx.DefaultSize, 0)
-        bSizer12.Add(self.m_radioBtn8, 0, wx.ALL, 5)
-
-        bSizer1611 = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.m_staticText511 = wx.StaticText(self.m_panel10, wx.ID_ANY, u"方案名：", wx.DefaultPosition, wx.Size(60, -1), 0)
-        self.m_staticText511.Wrap(-1)
-        bSizer1611.Add(self.m_staticText511, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-
-        self.m_textCtrl611 = wx.TextCtrl(self.m_panel10, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize,
-            0)
-        bSizer1611.Add(self.m_textCtrl611, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-
-        bSizer12.Add(bSizer1611, 1, wx.EXPAND, 5)
-
-        bSizer16 = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.m_staticText5 = wx.StaticText(self.m_panel10, wx.ID_ANY, u"URL：", wx.DefaultPosition, wx.Size(60, -1), 0)
-        self.m_staticText5.Wrap(-1)
-        bSizer16.Add(self.m_staticText5, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-
-        self.m_textCtrl6 = wx.TextCtrl(self.m_panel10, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0)
-        bSizer16.Add(self.m_textCtrl6, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-
-        bSizer12.Add(bSizer16, 1, wx.EXPAND, 5)
-
-        self.m_panel10.SetSizer(bSizer12)
-        self.m_panel10.Layout()
-        bSizer12.Fit(self.m_panel10)
-        bSizer9.Add(self.m_panel10, 2, wx.EXPAND | wx.ALL, 5)
+        self.m_staticline211 = wx.StaticLine(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL)
+        bSizer9.Add(self.m_staticline211, 0, wx.EXPAND | wx.ALL, 5)
 
         m_sdbSizer1 = wx.StdDialogButtonSizer()
         self.m_sdbSizer1OK = wx.Button(self, wx.ID_OK)
@@ -302,7 +296,27 @@ class MyDialog1(wx.Dialog):
 
         self.Centre(wx.BOTH)
 
+        self.__binds()
+
+
     def __del__( self ):
         pass
 
+
+    def __binds(self):
+
+        self.Bind(wx.EVT_RADIOBUTTON, self.switchToLocal, self.m_radioBtn_local)
+        self.Bind(wx.EVT_RADIOBUTTON, self.switchToOnline, self.m_radioBtn_online)
+
+
+    def switchToLocal(self, event):
+
+#        print("local!")
+        self.m_textCtrl_url.Enabled = False
+
+
+    def switchToOnline(self, event):
+
+#        print("online!")
+        self.m_textCtrl_url.Enabled = True
 

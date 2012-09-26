@@ -315,11 +315,13 @@ class Frame(ui.Frame):
     def newHosts_test(self):
 
         print(123)
-        dlg = ui.MyDialog1(None)
+        dlg = ui.Dlg_addHosts(None)
         if dlg.ShowModal() == wx.ID_OK:
             print("OK!")
 
-            print(dlg.m_textCtrl31.Value)
+            print(dlg.m_radioBtn_local.Value)
+            print(dlg.m_textCtrl_title.Value)
+            print(dlg.m_textCtrl_url.Value)
         else:
             print("Cancel!")
 
