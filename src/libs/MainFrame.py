@@ -7,6 +7,7 @@
 
 import os
 import sys
+import glob
 import simplejson as json
 import wx
 import ui
@@ -22,7 +23,7 @@ class MainFrame(ui.Frame):
     def __init__(self,
             parent=None, id=wx.ID_ANY, title=None, pos=wx.DefaultPosition,
             size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
-            version=None, configs_path=None,
+            version=None, working_path=None,
     ):
 
         self.version = version
@@ -38,10 +39,15 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
+        self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
+        self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeSelect, self.m_tree)
 
         self.configs = {}
-        self.configs_path = configs_path
+        if working_path:
+            self.working_path = working_path
+            self.configs_path = os.path.join(self.working_path, "configs.json")
+            self.hosts_path = os.path.join(self.working_path, "hosts")
         self.current_hosts = None
 
         self.origin_hosts = []
@@ -52,8 +58,12 @@ class MainFrame(ui.Frame):
 
 
     def init2(self):
+
         self.loadConfigs()
         self.getSystemHosts()
+
+        if not os.path.isdir(self.hosts_path):
+            os.makedirs(self.hosts_path)
 
 
 
@@ -77,7 +87,7 @@ class MainFrame(ui.Frame):
 
         path = self.getSysHostsPath()
         if path:
-            hosts = Hosts(src=path, title="DEFAULT_hosts", is_origin=True)
+            hosts = Hosts(path=path, title="DEFAULT_hosts", is_origin=True)
             self.addHosts(hosts)
             self.selectHosts(hosts)
 
@@ -154,9 +164,32 @@ class MainFrame(ui.Frame):
             wx.MessageBox("保存配置信息失败！\n\n%s" % traceback.format_exc())
 
 
+    def eachLocalHosts(self, func):
+
+        for hosts in self.local_hosts:
+            func(hosts)
+
+
+    def makeNewHostsFileName(self):
+        u"""生成一个新的 hosts 文件名"""
+
+        fns = glob.glob(os.path.join(self.hosts_path, "*.hosts"))
+        fns = [os.path.split(fn)[1] for fn in fns]
+        for i in xrange(1024):
+            fn = "%d.hosts" % i
+            if fn not in fns:
+                break
+
+        else:
+            return None
+
+        return fn
+
+
+
     def OnChkUpdate(self, event):
 
-        co.debugLog("chk update...")
+        co.log("chk update...")
 
 
     def OnExit(self, event):
@@ -177,8 +210,34 @@ class MainFrame(ui.Frame):
 
         item = event.GetItem()
         if item in (self.m_tree_online, self.m_tree_local, self.m_tree_root):
-            co.debugLog("ignore")
+            co.log("ignore")
 
         if self.current_hosts and item == self.current_hosts.tree_item_id:
-            co.debugLog("is current hosts!")
+            co.log("is current hosts!")
+
+
+    def OnNew(self, event):
+
+        dlg = ui.Dlg_addHosts(self)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        is_online = dlg.m_radioBtn_online.GetValue()
+        title = dlg.m_textCtrl_title.GetValue()
+        url = dlg.m_textCtrl_url.GetValue()
+
+        co.log([is_online, title, url])
+
+        fn = self.makeNewHostsFileName()
+        if not fn:
+            wx.MessageBox(u"hosts 文件数超出限制，无法再创建新 hosts 了！")
+            return
+
+        src = os.path.join(self.hosts_path, fn)
+        hosts = Hosts(src, is_online=is_online, title=title, url=url)
+        hosts.content = u"# %s" % title
+        hosts.save()
+
+        self.addHosts(hosts)
 

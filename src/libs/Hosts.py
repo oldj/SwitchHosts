@@ -5,19 +5,23 @@
 # email: oldj.wu@gmail.com
 #
 
+import os
 import simplejson as json
+import urllib
 import datetime
 import common_operations as co
 
 
 class Hosts(object):
 
+    flag = "#@SwitchHost!"
 
-    def __init__(self, src, is_online=False, is_origin=False, title=None):
+    def __init__(self, path, is_online=False, is_origin=False, title=None, url=None):
 
-        self.src = src
+        self.path = path
         self.is_online = is_online
         self.is_origin = is_origin
+        self.url = url
         self.last_fetch_dt = None
         self.__title = title
         self.__content = None
@@ -28,28 +32,43 @@ class Hosts(object):
 
         return self.__title or u"未命名"
 
+
     @title.setter
     def title(self, value):
         self.__title = value
 
 
+    def getContentFromUrl(self):
+
+        if co.httpExists(self.url):
+            try:
+                cnt = urllib.urlopen(self.url)
+            except Exception:
+                co.debugErr()
+                return
+
+            # todo cnt 解码...
+
+            self.content = cnt
+            self.last_fetch_dt = datetime.datetime.now()
+
+
     @property
     def content(self):
 
-        c = None
+        c = ""
         if self.is_online:
-            pass
+            self.getContentFromUrl()
 
-        else:
-            c = open(self.src, "rb").read()
+        elif os.path.isfile(self.path):
+            c = open(self.path, "rb").read()
 
         if c:
             c = c.strip().decode("utf-8")
             a = c.split("\n")
-            flag = "#@SwitchHost!"
-            if a[0].startswith(flag):
+            if a[0].startswith(self.flag):
                 # 首行是配置信息
-                self.parseConfigs(a[0][len(flag):])
+                self.parseConfigs(a[0][len(self.flag):])
                 c = "\n".join(a[1:])
 
         self.__content = c
@@ -72,3 +91,30 @@ class Hosts(object):
 
         if "title" in cfg:
             self.title = cfg["title"]
+
+
+    @property
+    def filename(self):
+
+        sep = "/" if self.is_online else os.sep
+        fn = self.path.split(sep)[-1]
+
+        return fn
+
+
+    def save(self):
+
+        cnt_for_save = [
+            "%s %s" % (self.flag, json.dumps({
+                "title": self.title,
+                "url": self.url,
+            })),
+            self.content,
+        ]
+
+        try:
+            open(self.path, "w").write("\n".join(cnt_for_save))
+
+        except Exception:
+
+            co.debugErr()

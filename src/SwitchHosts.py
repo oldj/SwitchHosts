@@ -19,7 +19,7 @@ class SwitchHosts(object):
         self.app = wx.App()
         self.frame = MainFrame(size=(640, 480),
             version=self.VERSION,
-            configs_path=os.path.join(pwd, "configs.json"),
+            working_path=pwd,
         )
 
 
