@@ -80,20 +80,19 @@ class MainFrame(ui.Frame):
     def addHosts(self, hosts):
 
         if hosts.is_online:
-            self.addHosts_online(hosts)
+            tree = self.m_tree_online
         else:
-            self.addHosts_local(hosts)
+            tree = self.m_tree_local
+
+        self.addHosts2(tree, hosts)
 
 
-    def addHosts_online(self, hosts):
-
-        pass
-
-
-    def addHosts_local(self, hosts):
+    def addHosts2(self, tree, hosts):
 
         self.local_hosts.append(hosts)
-        hosts.tree_item_id = self.m_tree.AppendItem(self.m_tree_local, hosts.name)
+        hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.name)
+
+        self.m_tree.Expand(tree)
 
 
     def loadConfigs(self):
