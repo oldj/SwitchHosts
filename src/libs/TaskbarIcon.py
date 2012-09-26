@@ -18,7 +18,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         wx.TaskBarIcon.__init__(self)
         #        super(wx.TaskBarIcon, self).__init__()
         self.frame = frame
-        self.SetIcon(co.GetMondrianIcon(), "SwitchHosts! %s")
+        self.SetIcon(co.GetMondrianIcon(), self.frame.default_title)
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
         self.Bind(wx.EVT_MENU, self.frame.OnAbout, id=self.ID_About)
         self.Bind(wx.EVT_MENU, self.OnExit, id=self.ID_Exit)
