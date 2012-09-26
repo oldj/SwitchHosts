@@ -132,13 +132,6 @@ class Frame(wx.Frame):
         dlg.Destroy()
 
 
-    def OnClose(self, event):
-
-        self.Hide()
-        return False
-
-
-
 
 class AboutHtml(wx.html.HtmlWindow):
 
