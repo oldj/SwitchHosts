@@ -7,6 +7,7 @@ import common_operations as co
 
 
 class Frame(wx.Frame):
+
     ID_HOSTS_TEXT = wx.NewId()
 
     def __init__(self,
@@ -17,7 +18,6 @@ class Frame(wx.Frame):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
         self.SetIcon(co.GetMondrianIcon())
-        self.taskbar_icon = cls_TaskBarIcon(self)
         #        self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
 
@@ -34,6 +34,8 @@ class Frame(wx.Frame):
         self.m_menu2 = wx.Menu()
         self.m_menuItem_about = wx.MenuItem(self.m_menu2, wx.ID_ABOUT, u"关于(&A)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu2.AppendItem(self.m_menuItem_about)
+        self.m_menuItem_chkUpdate = wx.MenuItem(self.m_menu2, wx.ID_ANY, u"检查更新(&U)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menu2.AppendItem(self.m_menuItem_chkUpdate)
 
         self.m_menubar1.Append(self.m_menu2, u"帮助(&H)")
 
