@@ -45,6 +45,14 @@ def debugLog(msg):
     print(msg)
 
 
+def debugErr():
+
+    err = traceback.format_exc()
+    debugLog("ERROR!")
+    debugLog("-" * 50)
+    debugLog(err)
+
+
 def GetMondrianData(i=0, fn=None):
     if not fn:
         idx = i if 0 <= i < len(ICONS) else 0

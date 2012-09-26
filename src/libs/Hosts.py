@@ -5,23 +5,69 @@
 # email: oldj.wu@gmail.com
 #
 
+import simplejson as json
+import datetime
+import common_operations as co
+
 
 class Hosts(object):
 
 
-    def __init__(self, src, is_online=False):
+    def __init__(self, src, is_online=False, title=None):
 
         self.src = src
         self.is_online = is_online
-        self.__name = None
+        self.last_fetch_dt = None
+        self.__title = title
+        self.__content = None
 
 
     @property
-    def name(self):
+    def title(self):
 
-        return self.__name or u"未命名"
+        return self.__title or u"未命名"
 
-    @name.setter
-    def name(self, value):
-        self.__name = value
+    @title.setter
+    def title(self, value):
+        self.__title = value
 
+
+    @property
+    def content(self):
+
+        c = None
+        if self.is_online:
+            pass
+
+        else:
+            c = open(self.src, "rb").read()
+
+        if c:
+            c = c.strip().decode("utf-8")
+            a = c.split("\n")
+            flag = "#@SwitchHost!"
+            if a[0].startswith(flag):
+                # 首行是配置信息
+                self.parseConfigs(a[0][len(flag):])
+                c = "\n".join(a[0:])
+
+        self.__content = c
+
+        return self.__content or ""
+
+
+    @content.setter
+    def content(self, value):
+        self.__content = value
+
+
+    def parseConfigs(self, json_str):
+
+        try:
+            cfg = json.loads(json_str)
+        except Exception:
+            co.debugErr()
+            return
+
+        if "title" in cfg:
+            self.title = cfg["title"]
