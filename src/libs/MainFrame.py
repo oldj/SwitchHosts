@@ -26,6 +26,9 @@ class MainFrame(ui.Frame):
             version=None, working_path=None,
     ):
 
+        """
+
+        """
         self.version = version
         self.default_title = "SwitchHosts! %s" % version
 
@@ -34,6 +37,7 @@ class MainFrame(ui.Frame):
 
         self.taskbar_icon = TaskBarIcon(self)
         self.latest_stable_version = "0"
+        self.is_switching_text = False
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
@@ -43,6 +47,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeSelect, self.m_tree)
+        self.Bind(wx.EVT_TEXT, self.OnHostsChange, self.m_textCtrl_content)
 
         self.configs = {}
         if working_path:
@@ -124,7 +129,9 @@ class MainFrame(ui.Frame):
 
     def showHosts(self, hosts):
 
+        self.is_switching_text = True
         self.m_textCtrl_content.SetValue(hosts.content)
+        self.is_switching_text = False
 
 
     def selectHosts(self, hosts):
@@ -223,6 +230,27 @@ class MainFrame(ui.Frame):
         return fn
 
 
+    def saveHosts(self, hosts):
+
+        try:
+            hosts.save()
+            return True
+
+        except Exception:
+            err = traceback.format_exc()
+
+            if "Permission denied:" in err:
+                msg = u"没有修改 '%s' 的权限！" % hosts.path
+
+            else:
+                msg = u"保存 hosts 失败！\n\n%s" % err
+
+            wx.MessageBox(msg)
+
+            return False
+
+
+
     def getHostsFromTreeByEvent(self, event):
 
         item = event.GetItem()
@@ -241,6 +269,15 @@ class MainFrame(ui.Frame):
                     return hosts
 
         return None
+
+
+    def OnHostsChange(self, event):
+
+        if self.is_switching_text:
+            return
+
+        self.current_hosts.content = self.m_textCtrl_content.GetValue()
+        self.saveHosts(self.current_hosts)
 
 
     def OnChkUpdate(self, event):
@@ -297,7 +334,7 @@ class MainFrame(ui.Frame):
         src = os.path.join(self.hosts_path, fn)
         hosts = Hosts(src, is_online=is_online, title=title, url=url if is_online else None)
         hosts.content = u"# %s" % title
-        hosts.save()
+        self.saveHosts(hosts)
 
         self.addHosts(hosts)
 
