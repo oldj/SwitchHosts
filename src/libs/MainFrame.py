@@ -13,12 +13,17 @@ class MainFrame(ui.Frame):
 
     ID_RENAME = wx.NewId()
 
-    def __init__(
-            self, parent=None, id=wx.ID_ANY, title="SwitchHosts! %s", pos=wx.DefaultPosition,
+    def __init__(self,
+            parent=None, id=wx.ID_ANY, title=None, pos=wx.DefaultPosition,
             size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
-            sys_hosts_title=None
+            sys_hosts_title=None, version=None,
     ):
-        ui.Frame.__init__(self, parent, id, title, pos, size, style, cls_TaskBarIcon=TaskBarIcon)
+
+        self.version = version
+        self.default_title = "SwitchHosts! %s" % version
+
+        ui.Frame.__init__(self, parent, id,
+            title or self.default_title, pos, size, style, cls_TaskBarIcon=TaskBarIcon)
 
         self.latest_stable_version = "0"
 
@@ -31,7 +36,7 @@ class MainFrame(ui.Frame):
 
 
     def OnAbout(self):
-        dlg = ui.AboutBox(version=VERSION, latest_stable_version=self.latest_stable_version)
+        dlg = ui.AboutBox(version=self.version, latest_stable_version=self.latest_stable_version)
         dlg.ShowModal()
         dlg.Destroy()
 

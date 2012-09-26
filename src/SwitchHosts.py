@@ -15,7 +15,7 @@ class SwitchHosts(object):
     def __init__(self):
 
         self.app = wx.App()
-        self.frame = MainFrame(size=(640, 480))
+        self.frame = MainFrame(size=(640, 480), version=self.VERSION)
 
 
     def run(self):
