@@ -220,3 +220,89 @@ class AboutBox(wx.Dialog):
             return 0
 
 
+class MyDialog1(wx.Dialog):
+    def __init__( self, parent ):
+        wx.Dialog.__init__(self, parent, id=wx.ID_ANY, title=wx.EmptyString, pos=wx.DefaultPosition,
+            size=wx.Size(400, 300), style=wx.DEFAULT_DIALOG_STYLE)
+
+        self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
+
+        bSizer9 = wx.BoxSizer(wx.VERTICAL)
+
+        self.m_panel9 = wx.Panel(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        bSizer10 = wx.BoxSizer(wx.VERTICAL)
+
+        self.m_radioBtn2 = wx.RadioButton(self.m_panel9, wx.ID_ANY, u"本地方案", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_radioBtn2.SetValue(True)
+        bSizer10.Add(self.m_radioBtn2, 0, wx.ALL, 5)
+
+        bSizer111 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.m_staticText21 = wx.StaticText(self.m_panel9, wx.ID_ANY, u"方案名：", wx.DefaultPosition, wx.Size(60, -1), 0)
+        self.m_staticText21.Wrap(-1)
+        bSizer111.Add(self.m_staticText21, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        self.m_textCtrl31 = wx.TextCtrl(self.m_panel9, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0)
+        bSizer111.Add(self.m_textCtrl31, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        bSizer10.Add(bSizer111, 1, wx.EXPAND, 5)
+
+        self.m_panel9.SetSizer(bSizer10)
+        self.m_panel9.Layout()
+        bSizer10.Fit(self.m_panel9)
+        bSizer9.Add(self.m_panel9, 2, wx.EXPAND | wx.ALL, 5)
+
+        self.m_staticline21 = wx.StaticLine(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL)
+        bSizer9.Add(self.m_staticline21, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.m_panel10 = wx.Panel(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        bSizer12 = wx.BoxSizer(wx.VERTICAL)
+
+        self.m_radioBtn8 = wx.RadioButton(self.m_panel10, wx.ID_ANY, u"在线方案", wx.DefaultPosition, wx.DefaultSize, 0)
+        bSizer12.Add(self.m_radioBtn8, 0, wx.ALL, 5)
+
+        bSizer1611 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.m_staticText511 = wx.StaticText(self.m_panel10, wx.ID_ANY, u"方案名：", wx.DefaultPosition, wx.Size(60, -1), 0)
+        self.m_staticText511.Wrap(-1)
+        bSizer1611.Add(self.m_staticText511, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        self.m_textCtrl611 = wx.TextCtrl(self.m_panel10, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize,
+            0)
+        bSizer1611.Add(self.m_textCtrl611, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        bSizer12.Add(bSizer1611, 1, wx.EXPAND, 5)
+
+        bSizer16 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.m_staticText5 = wx.StaticText(self.m_panel10, wx.ID_ANY, u"URL：", wx.DefaultPosition, wx.Size(60, -1), 0)
+        self.m_staticText5.Wrap(-1)
+        bSizer16.Add(self.m_staticText5, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        self.m_textCtrl6 = wx.TextCtrl(self.m_panel10, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0)
+        bSizer16.Add(self.m_textCtrl6, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        bSizer12.Add(bSizer16, 1, wx.EXPAND, 5)
+
+        self.m_panel10.SetSizer(bSizer12)
+        self.m_panel10.Layout()
+        bSizer12.Fit(self.m_panel10)
+        bSizer9.Add(self.m_panel10, 2, wx.EXPAND | wx.ALL, 5)
+
+        m_sdbSizer1 = wx.StdDialogButtonSizer()
+        self.m_sdbSizer1OK = wx.Button(self, wx.ID_OK)
+        m_sdbSizer1.AddButton(self.m_sdbSizer1OK)
+        self.m_sdbSizer1Cancel = wx.Button(self, wx.ID_CANCEL)
+        m_sdbSizer1.AddButton(self.m_sdbSizer1Cancel)
+        m_sdbSizer1.Realize();
+        bSizer9.Add(m_sdbSizer1, 1, wx.EXPAND, 5)
+
+        self.SetSizer(bSizer9)
+        self.Layout()
+
+        self.Centre(wx.BOTH)
+
+    def __del__( self ):
+        pass
+
+
