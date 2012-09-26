@@ -312,6 +312,19 @@ class Frame(ui.Frame):
         return os.path.join(g_local_hosts_dir, "%d.hosts" % self.current_max_hosts_index)
 
 
+    def newHosts_test(self):
+
+        print(123)
+        dlg = ui.MyDialog1(None)
+        if dlg.ShowModal() == wx.ID_OK:
+            print("OK!")
+
+            print(dlg.m_textCtrl31.Value)
+        else:
+            print("Cancel!")
+
+
+
     def newHosts(self, event=None, default=""):
         u"""新建一个 hosts"""
 
@@ -319,6 +332,9 @@ class Frame(ui.Frame):
 
         repeat = False
         title = default
+
+        self.newHosts_test()
+        return
 
         dlg = wx.TextEntryDialog(None, u"新建 hosts", u"输入 hosts 名：", title,
                 style=wx.OK | wx.CANCEL
