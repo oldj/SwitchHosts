@@ -39,6 +39,12 @@ if os.name == "posix":
 
 from icons import ICONS, ICONS2, ICONS_ICO
 
+
+def debugLog(msg):
+
+    print(msg)
+
+
 def GetMondrianData(i=0, fn=None):
     if not fn:
         idx = i if 0 <= i < len(ICONS) else 0
@@ -92,7 +98,10 @@ def notify(frame, msg="", title=u"消息"):
         return
 
 
-    import ToasterBox as TB
+    try:
+        import ToasterBox as TB
+    except ImportError:
+        TB = None
 
     sw, sh = wx.GetDisplaySize()
     width, height = 210, 50
@@ -111,7 +120,7 @@ def notify(frame, msg="", title=u"消息"):
 def switchHost(obj, fn):
     u"""切换 hosts 为 fn 的内容"""
 
-    from cls_Hosts import Hosts
+    from Hosts import Hosts
 
     if not os.path.isfile(fn):
         wx.MessageBox(u"hosts 文件 '%s' 不存在！" % fn, "Error!")
