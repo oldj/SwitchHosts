@@ -13,10 +13,11 @@ import common_operations as co
 class Hosts(object):
 
 
-    def __init__(self, src, is_online=False, title=None):
+    def __init__(self, src, is_online=False, is_origin=False, title=None):
 
         self.src = src
         self.is_online = is_online
+        self.is_origin = is_origin
         self.last_fetch_dt = None
         self.__title = title
         self.__content = None
@@ -49,7 +50,7 @@ class Hosts(object):
             if a[0].startswith(flag):
                 # 首行是配置信息
                 self.parseConfigs(a[0][len(flag):])
-                c = "\n".join(a[0:])
+                c = "\n".join(a[1:])
 
         self.__content = c
 

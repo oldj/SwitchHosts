@@ -43,6 +43,7 @@ class MainFrame(ui.Frame):
         self.configs_path = configs_path
         self.current_hosts = None
 
+        self.origin_hosts = []
         self.local_hosts = []
         self.online_hosts = []
 
@@ -74,37 +75,52 @@ class MainFrame(ui.Frame):
 
         path = self.getSysHostsPath()
         if path:
-            hosts = Hosts(src=path, title="DEFAULT_hosts")
+            hosts = Hosts(src=path, title="DEFAULT_hosts", is_origin=True)
             self.addHosts(hosts)
             self.selectHosts(hosts)
 
 
     def showHosts(self, hosts):
 
-        self.current_hosts = hosts
         self.m_textCtrl_content.SetValue(hosts.content)
 
 
     def selectHosts(self, hosts):
 
         self.m_tree.SelectItem(hosts.tree_item_id)
+
+        if self.current_hosts:
+            self.m_tree.SetItemBold(self.current_hosts.tree_item_id, bold=False)
+        self.m_tree.SetItemBold(hosts.tree_item_id)
         self.showHosts(hosts)
+
+        self.current_hosts = hosts
 
 
     def addHosts(self, hosts):
 
-        if hosts.is_online:
+        if hosts.is_origin:
+            tree = self.m_tree_origin
+            list_hosts = self.origin_hosts
+        elif hosts.is_online:
             tree = self.m_tree_online
+            list_hosts = self.online_hosts
         else:
             tree = self.m_tree_local
+            list_hosts = self.local_hosts
 
-        self.addHosts2(tree, hosts)
+        self.addHosts2(tree, hosts, list_hosts)
 
 
-    def addHosts2(self, tree, hosts):
+    def addHosts2(self, tree, hosts, list_hosts):
 
-        self.local_hosts.append(hosts)
-        hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
+        if hosts.is_origin:
+            pass
+            hosts.tree_item_id = self.m_tree_origin
+
+        else:
+            list_hosts.append(hosts)
+            hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
 
         self.m_tree.Expand(tree)
 
