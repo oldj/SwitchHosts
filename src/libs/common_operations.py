@@ -40,7 +40,7 @@ if os.name == "posix":
 from icons import ICONS, ICONS2, ICONS_ICO
 
 
-def debugLog(msg):
+def log(msg):
 
     print(msg)
 
@@ -48,9 +48,9 @@ def debugLog(msg):
 def debugErr():
 
     err = traceback.format_exc()
-    debugLog("ERROR!")
-    debugLog("-" * 50)
-    debugLog(err)
+    log("ERROR!")
+    log("-" * 50)
+    log(err)
 
 
 def GetMondrianData(i=0, fn=None):
