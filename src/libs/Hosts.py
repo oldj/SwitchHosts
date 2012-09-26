@@ -25,6 +25,7 @@ class Hosts(object):
         self.last_fetch_dt = None
         self.__title = title
         self.__content = None
+        self.tree_item_id = None
 
 
     @property

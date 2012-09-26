@@ -41,6 +41,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
         self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
+        self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeSelect, self.m_tree)
 
         self.configs = {}
@@ -50,8 +51,8 @@ class MainFrame(ui.Frame):
             self.hosts_path = os.path.join(self.working_path, "hosts")
         self.current_hosts = None
 
-        self.origin_hosts = []
-        self.hosts = []
+        self.origin_hostses = []
+        self.hostses = []
 
         self.init2()
 
@@ -116,6 +117,7 @@ class MainFrame(ui.Frame):
         path = self.getSysHostsPath()
         if path:
             hosts = Hosts(path=path, title="DEFAULT_hosts", is_origin=True)
+            self.origin_hostses = [hosts]
             self.addHosts(hosts)
             self.selectHosts(hosts)
 
@@ -144,13 +146,13 @@ class MainFrame(ui.Frame):
 
         if hosts.is_origin:
             tree = self.m_tree_origin
-            list_hosts = self.origin_hosts
+            list_hosts = self.origin_hostses
         elif hosts.is_online:
             tree = self.m_tree_online
-            list_hosts = self.hosts
+            list_hosts = self.hostses
         else:
             tree = self.m_tree_local
-            list_hosts = self.hosts
+            list_hosts = self.hostses
 
         self.addHosts2(tree, hosts, list_hosts)
 
@@ -158,7 +160,6 @@ class MainFrame(ui.Frame):
     def addHosts2(self, tree, hosts, list_hosts):
 
         if hosts.is_origin:
-            pass
             hosts.tree_item_id = self.m_tree_origin
 
         else:
@@ -202,7 +203,7 @@ class MainFrame(ui.Frame):
 
     def eachHosts(self, func):
 
-        for hosts in self.hosts:
+        for hosts in self.hostses:
             func(hosts)
 
 
@@ -221,6 +222,25 @@ class MainFrame(ui.Frame):
 
         return fn
 
+
+    def getHostsFromTreeByEvent(self, event):
+
+        item = event.GetItem()
+        if item in (self.m_tree_online, self.m_tree_local, self.m_tree_root):
+            co.log("ignore")
+
+        elif self.current_hosts and item == self.current_hosts.tree_item_id:
+            co.log("is current hosts!")
+            return self.current_hosts
+
+        else:
+            co.log("item")
+            hostses = self.origin_hostses + self.hostses
+            for hosts in hostses:
+                if item == hosts.tree_item_id:
+                    return hosts
+
+        return None
 
 
     def OnChkUpdate(self, event):
@@ -242,22 +262,18 @@ class MainFrame(ui.Frame):
         dlg.Destroy()
 
 
+    def OnTreeClick(self, event):
+
+        hosts = self.getHostsFromTreeByEvent(event)
+        if hosts:
+            self.showHosts(hosts)
+
+
     def OnTreeSelect(self, event):
 
-        item = event.GetItem()
-        if item in (self.m_tree_online, self.m_tree_local, self.m_tree_root):
-            co.log("ignore")
-
-        elif self.current_hosts and item == self.current_hosts.tree_item_id:
-            co.log("is current hosts!")
-
-        else:
-            co.log("item")
-            hostses = self.origin_hosts + self.hosts
-            for hosts in hostses:
-                if item == hosts.tree_item_id:
-                    self.selectHosts(hosts)
-                    break
+        hosts = self.getHostsFromTreeByEvent(event)
+        if hosts:
+            self.selectHosts(hosts)
 
 
     def OnNew(self, event):
