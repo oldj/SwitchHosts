@@ -27,6 +27,8 @@ class Hosts(object):
         self.__content = None
         self.tree_item_id = None
 
+        self.getContent()
+
 
     @property
     def title(self):
@@ -54,8 +56,7 @@ class Hosts(object):
             self.last_fetch_dt = datetime.datetime.now()
 
 
-    @property
-    def content(self):
+    def getContent(self):
 
         c = ""
         if self.is_online:
@@ -72,7 +73,11 @@ class Hosts(object):
                 self.parseConfigs(a[0][len(self.flag):])
                 c = "\n".join(a[1:])
 
-        self.__content = c
+        self.content = c
+
+
+    @property
+    def content(self):
 
         return self.__content or ""
 
@@ -124,5 +129,4 @@ class Hosts(object):
             open(self.path, "w").write("\n".join(cnt_for_save))
 
         except Exception:
-
-            co.debugErr()
+            raise
