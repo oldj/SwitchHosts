@@ -5,3 +5,5 @@ src/dist
 dist
 projectFilesBackup
 .DS_Store
+
+*.hosts
