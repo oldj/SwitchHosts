@@ -5,6 +5,7 @@
 # email: oldj.wu@gmail.com
 #
 
+import os
 import wx
 from libs.MainFrame import MainFrame
 
@@ -14,8 +15,12 @@ class SwitchHosts(object):
 
     def __init__(self):
 
+        pwd = os.path.abspath(os.path.split(__file__)[0])
         self.app = wx.App()
-        self.frame = MainFrame(size=(640, 480), version=self.VERSION)
+        self.frame = MainFrame(size=(640, 480),
+            version=self.VERSION,
+            configs_path=os.path.join(pwd, "configs.json"),
+        )
 
 
     def run(self):

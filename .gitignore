@@ -7,3 +7,5 @@ projectFilesBackup
 .DS_Store
 
 *.hosts
+
+src/configs.json
