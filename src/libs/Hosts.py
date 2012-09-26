@@ -61,10 +61,10 @@ class Hosts(object):
             self.getContentFromUrl()
 
         elif os.path.isfile(self.path):
-            c = open(self.path, "rb").read()
+            c = open(self.path, "rb").read().strip()
 
         if c:
-            c = c.strip().decode("utf-8")
+            c = c.decode("utf-8")
             a = c.split("\n")
             if a[0].startswith(self.flag):
                 # 首行是配置信息
@@ -81,7 +81,7 @@ class Hosts(object):
         self.__content = value
 
 
-    def parseConfigs(self, json_str):
+    def parseConfigs(self, json_str=None):
 
         try:
             cfg = json.loads(json_str)
@@ -89,8 +89,15 @@ class Hosts(object):
             co.debugErr()
             return
 
-        if "title" in cfg:
+        if type(cfg) != dict:
+            return
+
+        if cfg.get("title"):
             self.title = cfg["title"]
+
+        if cfg.get("url"):
+            self.url = cfg["url"]
+            self.is_online = True
 
 
     @property
