@@ -5,9 +5,12 @@
 # email: oldj.wu@gmail.com
 #
 
+import os
 import sys
+import simplejson as json
 import wx
 import ui
+import traceback
 from TaskbarIcon import TaskBarIcon
 import common_operations as co
 
@@ -18,7 +21,7 @@ class MainFrame(ui.Frame):
     def __init__(self,
             parent=None, id=wx.ID_ANY, title=None, pos=wx.DefaultPosition,
             size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
-            sys_hosts_title=None, version=None,
+            version=None, configs_path=None,
     ):
 
         self.version = version
@@ -35,11 +38,43 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
 
-        self.init2(sys_hosts_title)
+        self.configs = {}
+        self.configs_path = configs_path
+
+        self.init2()
 
 
-    def init2(self, sys_hosts_title):
+    def init2(self):
+        self.loadConfigs()
+
+
+    def setHostsDir(self):
         pass
+
+
+    def loadConfigs(self):
+
+        if os.path.isfile(self.configs_path):
+            try:
+                configs = json.loads(open(self.configs_path, "rb").read())
+            except Exception:
+                wx.MessageBox("读取配置信息失败！")
+                return
+
+            if type(configs) != dict:
+                wx.MessageBox("配置信息格式有误！")
+                return
+
+            self.configs.update(configs)
+
+        self.saveConfigs()
+
+
+    def saveConfigs(self):
+        try:
+            json.dump(self.configs, open(self.configs_path, "w"))
+        except Exception:
+            wx.MessageBox("保存配置信息失败！\n\n%s" % traceback.format_exc())
 
 
     def OnChkUpdate(self, event):
