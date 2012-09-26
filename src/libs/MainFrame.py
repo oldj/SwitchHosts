@@ -11,6 +11,7 @@ import simplejson as json
 import wx
 import ui
 import traceback
+from Hosts import Hosts
 from TaskbarIcon import TaskBarIcon
 import common_operations as co
 
@@ -41,15 +42,58 @@ class MainFrame(ui.Frame):
         self.configs = {}
         self.configs_path = configs_path
 
+        self.local_hosts = []
+        self.online_hosts = []
+
         self.init2()
 
 
     def init2(self):
         self.loadConfigs()
+        self.getSystemHosts()
 
 
     def setHostsDir(self):
         pass
+
+
+    def getSysHostsPath(self):
+        u"""取得系统 host 文件的路径"""
+
+        if os.name == "nt":
+            path = "C:\\Windows\\System32\\drivers\\etc\\hosts"
+        else:
+            path = "/etc/hosts"
+
+        return path if os.path.isfile(path) else None
+
+
+
+    def getSystemHosts(self):
+
+        path = self.getSysHostsPath()
+        if path:
+            hosts = Hosts(src=path)
+            self.addHosts(hosts)
+
+
+    def addHosts(self, hosts):
+
+        if hosts.is_online:
+            self.addHosts_online(hosts)
+        else:
+            self.addHosts_local(hosts)
+
+
+    def addHosts_online(self, hosts):
+
+        pass
+
+
+    def addHosts_local(self, hosts):
+
+        self.local_hosts.append(hosts)
+        hosts.tree_item_id = self.m_tree.AppendItem(self.m_tree_local, hosts.name)
 
 
     def loadConfigs(self):

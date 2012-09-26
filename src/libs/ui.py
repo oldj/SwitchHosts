@@ -54,9 +54,9 @@ class Frame(wx.Frame):
         bSizer5.Add(self.m_list, 0, wx.ALL | wx.EXPAND, 5)
 
         self.m_tree = wx.TreeCtrl(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size(160, 320))
-        self.tree_root = self.m_tree.AddRoot(u"hosts")
-        self.tree_local = self.m_tree.AppendItem(self.tree_root, u"本地方案")
-        self.tree_online = self.m_tree.AppendItem(self.tree_root, u"在线方案")
+        self.m_tree_root = self.m_tree.AddRoot(u"hosts")
+        self.m_tree_local = self.m_tree.AppendItem(self.m_tree_root, u"本地方案")
+        self.m_tree_online = self.m_tree.AppendItem(self.m_tree_root, u"在线方案")
         self.m_tree.ExpandAll()
         bSizer5.Add(self.m_tree, 0, wx.ALL | wx.EXPAND, 5)
 
