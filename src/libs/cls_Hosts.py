@@ -3,6 +3,7 @@
 import os
 import json
 import chardet
+import urllib2
 
 import common_operations as co
 
@@ -26,7 +27,9 @@ class Hosts(object):
         self.icon_idx = icon_idx
         self.content = ""
         self.is_selected = False
+
         self.url = None # 如果是在线hosts方案，则此项不为空
+        self.last_fetch_dt = None # 如果是在线hosts方案，则此项为最后更新时间
 
         self.read()
 
@@ -39,9 +42,15 @@ class Hosts(object):
 
     def read(self):
 
-        c = open(self.path, "rb").read().strip() if os.path.isfile(self.path) else ""
+        if not self.url:
+            c = open(self.path, "rb").read().strip() if os.path.isfile(self.path) else ""
+
+        else:
+            c = urllib2.urlopen(self.url).read().strip() if co.httpExists(self.url) else ""
+
 #        c = co.decode(c)
         self.setContent(c, save=False)
+
 
 
     def getConfig(self, ln):
@@ -69,6 +78,10 @@ class Hosts(object):
             "title": self.title,
             "icon_idx": self.icon_idx,
         }
+        if self.url:
+            cfg.update({
+                "url": self.url,
+            })
         cfg_ln = u"%s %s" % (self.CONFIG_FLAG, json.dumps(cfg).replace("\n", "").replace("\r", ""))
 
         c = self.content

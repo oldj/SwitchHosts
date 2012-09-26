@@ -12,6 +12,9 @@ import chardet
 import urllib
 import re
 import threading
+import httplib
+import urlparse
+
 
 if os.name == "posix":
     if sys.platform != "darwin":
@@ -204,3 +207,24 @@ def checkLatestStableVersion(obj):
     t = threading.Thread(target=_f, args=(obj,))
     t.setDaemon(True)
     t.start()
+
+
+def httpExists(url):
+    host, path = urlparse.urlsplit(url)[1:3]
+    found = 0
+    try:
+        connection = httplib.HTTPConnection(host)  ## Make HTTPConnection Object
+        connection.request("HEAD", path)
+        responseOb = connection.getresponse()      ## Grab HTTPResponse Object
+
+        if responseOb.status == 200:
+            found = 1
+        elif responseOb.status == 302:
+            found = httpExists(urlparse.urljoin(url, responseOb.getheader('location', '')))
+        else:
+            print "Status %d %s : %s" % (responseOb.status, responseOb.reason, url)
+    except Exception, e:
+        print e.__class__, e, url
+    return found
+
+
