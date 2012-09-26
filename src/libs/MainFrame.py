@@ -61,10 +61,39 @@ class MainFrame(ui.Frame):
 
         self.loadConfigs()
         self.getSystemHosts()
+        self.scanSavedHosts()
 
         if not os.path.isdir(self.hosts_path):
             os.makedirs(self.hosts_path)
 
+
+    def scanSavedHosts(self):
+        u"""扫描目前保存的各个hosts"""
+
+        fns = glob.glob(os.path.join(self.hosts_path, "*.hosts"))
+        fns = [os.path.split(fn)[1] for fn in fns]
+
+        cfg_hosts = self.configs["hosts"]
+        # 移除不存在的 hosts
+        tmp_hosts = []
+        for fn in cfg_hosts:
+            if fn in fns:
+                tmp_hosts.append(fn)
+        cfg_hosts = tmp_hosts
+
+        # 添加新的 hosts
+        for fn in fns:
+            if fn not in cfg_hosts:
+                cfg_hosts.append(fn)
+        self.configs["hosts"] = cfg_hosts
+        self.saveConfigs()
+
+        for fn in self.configs["hosts"]:
+            path = os.path.join(self.hosts_path, fn)
+            hosts = Hosts(path)
+            if hosts.content:
+                pass
+            self.addHosts(hosts)
 
 
     def setHostsDir(self):
@@ -152,7 +181,14 @@ class MainFrame(ui.Frame):
                 wx.MessageBox("配置信息格式有误！")
                 return
 
-            self.configs.update(configs)
+            keys = ("hosts",)
+            for k in keys:
+                if k in configs:
+                    self.configs[k] = configs[k]
+
+            # 校验配置有效性
+            if type(self.configs.get("hosts")) != list:
+                self.configs["hosts"] = []
 
         self.saveConfigs()
 
@@ -235,7 +271,7 @@ class MainFrame(ui.Frame):
             return
 
         src = os.path.join(self.hosts_path, fn)
-        hosts = Hosts(src, is_online=is_online, title=title, url=url)
+        hosts = Hosts(src, is_online=is_online, title=title, url=url if is_online else None)
         hosts.content = u"# %s" % title
         hosts.save()
 
