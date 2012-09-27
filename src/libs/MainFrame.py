@@ -78,7 +78,7 @@ class MainFrame(ui.Frame):
         fns = glob.glob(os.path.join(self.hosts_path, "*.hosts"))
         fns = [os.path.split(fn)[1] for fn in fns]
 
-        cfg_hosts = self.configs["hosts"]
+        cfg_hosts = self.configs.get("hosts", [])
         # 移除不存在的 hosts
         tmp_hosts = []
         for fn in cfg_hosts:
