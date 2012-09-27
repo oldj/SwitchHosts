@@ -1,5 +1,6 @@
 .idea
 *.pyc
+*.swp
 src/build
 src/dist
 dist
