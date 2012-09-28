@@ -304,6 +304,7 @@ class MainFrame(ui.Frame):
         hosts = self.getHostsFromTreeByEvent(event)
         if hosts:
             self.showHosts(hosts)
+            self.current_hosts = hosts
 
 
     def OnTreeSelect(self, event):

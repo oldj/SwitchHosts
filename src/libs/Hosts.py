@@ -125,8 +125,10 @@ class Hosts(object):
             self.content,
         ]
 
+        cnt_for_save = "\n".join(cnt_for_save).encode("utf-8")
+
         try:
-            open(self.path, "w").write("\n".join(cnt_for_save))
+            open(self.path, "w").write(cnt_for_save)
 
         except Exception:
             raise
