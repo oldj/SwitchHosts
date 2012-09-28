@@ -22,6 +22,7 @@ class Hosts(object):
         self.is_origin = is_origin
         self.url = url
         self.is_online = True if url else False
+        self.is_loading = False
         self.last_fetch_dt = None
         self.__title = title
         self.__content = None
@@ -66,6 +67,7 @@ class Hosts(object):
 
     def getContent(self, force=False):
 
+        self.is_loading = True
         c = ""
         if self.is_online:
 
@@ -76,7 +78,7 @@ class Hosts(object):
             c = open(self.path, "rb").read().strip()
 
         if c:
-            c = c.decode("utf-8")
+            c = self.tryToDecode(c)
             a = c.split("\n")
             if a[0].startswith(self.flag):
                 # 首行是配置信息
@@ -84,6 +86,12 @@ class Hosts(object):
                 c = "\n".join(a[1:])
 
         self.content = c
+        self.is_loading = False
+
+
+    def tryToDecode(self, s):
+
+        return co.decode(s)
 
 
     @property

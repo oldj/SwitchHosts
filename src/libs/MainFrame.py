@@ -12,8 +12,10 @@ import simplejson as json
 import wx
 import ui
 import traceback
+import Queue
 from Hosts import Hosts
 from TaskbarIcon import TaskBarIcon
+from BackThreads import BackThreads
 import common_operations as co
 
 class MainFrame(ui.Frame):
@@ -48,6 +50,7 @@ class MainFrame(ui.Frame):
 
         self.origin_hostses = []
         self.hostses = []
+        self.qu_hostses = Queue.Queue(4096)
 
         self.init2()
         self.initBind()
@@ -78,12 +81,29 @@ class MainFrame(ui.Frame):
     def init2(self):
 
         self.loadConfigs()
+        self.startBackThreads(2)
+
         self.getSystemHosts()
         self.scanSavedHosts()
         self.makeHostsContextMenu()
 
         if not os.path.isdir(self.hosts_path):
             os.makedirs(self.hosts_path)
+
+
+    def startBackThreads(self, count=1):
+
+        self.back_threads = []
+        for i in xrange(count):
+            t = BackThreads(main_frame=self)
+            t.start()
+            self.back_threads.append(t)
+
+
+    def stopBackThreads(self):
+
+        for t in self.back_threads:
+            t.stop()
 
 
     def makeHostsContextMenu(self):
@@ -188,11 +208,12 @@ class MainFrame(ui.Frame):
 
     def showHosts(self, hosts):
 
-        hosts.getContentOnce()
+#        hosts.getContentOnce()
         self.is_switching_text = True
 #        co.log(hosts.content)
-        self.m_textCtrl_content.SetValue(hosts.content)
-        self.m_textCtrl_content.Enable(not hosts.is_online)
+        content = hosts.content if not hosts.is_loading else "loading..."
+        self.m_textCtrl_content.SetValue(content)
+        self.m_textCtrl_content.Enable(not hosts.is_online and not hosts.is_loading)
         self.is_switching_text = False
 
         if self.current_showing_hosts:
@@ -202,7 +223,17 @@ class MainFrame(ui.Frame):
         self.current_showing_hosts = hosts
 
 
+    def tryToShowHosts(self, hosts):
+
+        if hosts == self.current_showing_hosts:
+            self.showHosts(hosts)
+
+
     def useHosts(self, hosts):
+
+        if hosts.is_online and not hosts.last_fetch_dt and not hosts.content:
+            wx.MessageBox(u"当前 hosts 内容尚未下载完成！")
+            return
 
         try:
             hosts.save(path=self.sys_hosts_path)
@@ -251,6 +282,7 @@ class MainFrame(ui.Frame):
         else:
             list_hosts.append(hosts)
             hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
+            self.qu_hostses.put(hosts)
 
         self.m_tree.Expand(tree)
 
@@ -462,6 +494,7 @@ class MainFrame(ui.Frame):
 
     def OnExit(self, event):
 
+        self.stopBackThreads()
         self.taskbar_icon.Destroy()
         self.Destroy()
         sys.exit()
