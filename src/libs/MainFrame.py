@@ -57,12 +57,15 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
         self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
         self.Bind(wx.EVT_MENU, self.OnDel, id=wx.ID_DELETE)
+        self.Bind(wx.EVT_MENU, self.OnApply, id=wx.ID_APPLY)
+        self.Bind(wx.EVT_MENU, self.OnRename, id=self.ID_RENAME)
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
-        self.Bind(wx.EVT_BUTTON, self.OnApplyBtnClick, self.m_btn_apply)
+        self.Bind(wx.EVT_BUTTON, self.OnApply, id=wx.ID_APPLY)
         self.Bind(wx.EVT_BUTTON, self.OnDel, id=wx.ID_DELETE)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeRClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
+        self.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.OnRenameEnd, self.m_tree)
         self.Bind(wx.EVT_TEXT, self.OnHostsChange, self.m_textCtrl_content)
 
 
@@ -367,7 +370,6 @@ class MainFrame(ui.Frame):
             return self.current_using_hosts
 
         else:
-            co.log("item")
             hostses = self.origin_hostses + self.hostses
             for hosts in hostses:
                 if item == hosts.tree_item_id:
@@ -424,7 +426,7 @@ class MainFrame(ui.Frame):
             self.useHosts(hosts)
 
 
-    def OnApplyBtnClick(self, event):
+    def OnApply(self, event):
 
         if self.current_showing_hosts:
             self.useHosts(self.current_showing_hosts)
@@ -461,3 +463,24 @@ class MainFrame(ui.Frame):
 
         self.addHosts(hosts, show_after_add=True)
 
+
+    def OnRename(self, event):
+
+        hosts = self.current_showing_hosts
+        if not hosts:
+            return
+
+        self.m_tree.EditLabel(hosts.tree_item_id)
+
+
+    def OnRenameEnd(self, event):
+
+        hosts = self.current_showing_hosts
+        if not hosts:
+            return
+
+        title = self.m_tree.GetItemText(hosts.tree_item_id)
+        co.log(title)
+        if hosts.title != title:
+            hosts.title = title
+            hosts.save()
