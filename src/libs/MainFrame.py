@@ -45,6 +45,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
         self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
+        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeSelect, self.m_tree)
         self.Bind(wx.EVT_TEXT, self.OnHostsChange, self.m_textCtrl_content)
@@ -54,7 +55,8 @@ class MainFrame(ui.Frame):
             self.working_path = working_path
             self.configs_path = os.path.join(self.working_path, "configs.json")
             self.hosts_path = os.path.join(self.working_path, "hosts")
-        self.current_hosts = None
+        self.current_using_hosts = None
+        self.current_showing_hosts = None
 
         self.origin_hostses = []
         self.hostses = []
@@ -133,20 +135,24 @@ class MainFrame(ui.Frame):
         self.m_textCtrl_content.SetValue(hosts.content)
         self.is_switching_text = False
 
+        if self.current_showing_hosts:
+            self.m_tree.SetItemBackgroundColour(self.current_showing_hosts.tree_item_id, None)
+        self.m_tree.SetItemBackgroundColour(hosts.tree_item_id, "#ccccff")
+
+        self.current_showing_hosts = hosts
+
 
     def selectHosts(self, hosts):
 
         self.m_tree.SelectItem(hosts.tree_item_id)
 
-        if self.current_hosts:
-            self.m_tree.SetItemBackgroundColour(self.current_hosts.tree_item_id, None)
-            self.m_tree.SetItemBold(self.current_hosts.tree_item_id, bold=False)
+        if self.current_using_hosts:
+            self.m_tree.SetItemBold(self.current_using_hosts.tree_item_id, bold=False)
         self.m_tree.SetItemBold(hosts.tree_item_id)
-        self.m_tree.SetItemBackgroundColour(hosts.tree_item_id, "#ccccff")
 
         self.showHosts(hosts)
 
-        self.current_hosts = hosts
+        self.current_using_hosts = hosts
 
 
     def addHosts(self, hosts):
@@ -257,9 +263,9 @@ class MainFrame(ui.Frame):
         if item in (self.m_tree_online, self.m_tree_local, self.m_tree_root):
             co.log("ignore")
 
-        elif self.current_hosts and item == self.current_hosts.tree_item_id:
+        elif self.current_using_hosts and item == self.current_using_hosts.tree_item_id:
             co.log("is current hosts!")
-            return self.current_hosts
+            return self.current_using_hosts
 
         else:
             co.log("item")
@@ -276,8 +282,8 @@ class MainFrame(ui.Frame):
         if self.is_switching_text:
             return
 
-        self.current_hosts.content = self.m_textCtrl_content.GetValue()
-        self.saveHosts(self.current_hosts)
+        self.current_using_hosts.content = self.m_textCtrl_content.GetValue()
+        self.saveHosts(self.current_using_hosts)
 
 
     def OnChkUpdate(self, event):
@@ -303,8 +309,8 @@ class MainFrame(ui.Frame):
 
         hosts = self.getHostsFromTreeByEvent(event)
         if hosts:
+
             self.showHosts(hosts)
-            self.current_hosts = hosts
 
 
     def OnTreeSelect(self, event):
