@@ -231,8 +231,8 @@ class MainFrame(ui.Frame):
 
     def useHosts(self, hosts):
 
-        if hosts.is_online and not hosts.last_fetch_dt and not hosts.content:
-            wx.MessageBox(u"当前 hosts 内容尚未下载完成！")
+        if hosts.is_loading:
+            wx.MessageBox(u"当前 hosts 内容正在下载中，请稍后再试...")
             return
 
         try:
