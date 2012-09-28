@@ -38,18 +38,6 @@ class MainFrame(ui.Frame):
         self.is_switching_text = False
         self.__sys_hosts_path = None
 
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
-        self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
-        self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
-        self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
-        self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
-        self.Bind(wx.EVT_BUTTON, self.OnApplyBtnClick, self.m_btn_apply)
-        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeClick, self.m_tree)
-        self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeRClick, self.m_tree)
-        self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
-        self.Bind(wx.EVT_TEXT, self.OnHostsChange, self.m_textCtrl_content)
-
         self.configs = {}
         if working_path:
             self.working_path = working_path
@@ -62,6 +50,20 @@ class MainFrame(ui.Frame):
         self.hostses = []
 
         self.init2()
+
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
+        self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
+        self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
+        self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
+        self.Bind(wx.EVT_MENU, self.OnDel, id=wx.ID_DELETE)
+        self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
+        self.Bind(wx.EVT_BUTTON, self.OnApplyBtnClick, self.m_btn_apply)
+        self.Bind(wx.EVT_BUTTON, self.OnDel, id=wx.ID_DELETE)
+        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeClick, self.m_tree)
+        self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeRClick, self.m_tree)
+        self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
+        self.Bind(wx.EVT_TEXT, self.OnHostsChange, self.m_textCtrl_content)
 
 
     def init2(self):
@@ -81,7 +83,7 @@ class MainFrame(ui.Frame):
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
         #        self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
         self.hosts_item_menu.Append(self.ID_RENAME, u"重命名")
-        self.hosts_item_menu.AppendMenu(-1, u"图标", self.mkSubIconMenu())
+        self.hosts_item_menu.AppendMenu(-1, u"图标", self.makeSubIconMenu())
 
         self.hosts_item_menu.AppendSeparator()
         self.hosts_item_menu.Append(wx.ID_DELETE, u"删除")
@@ -89,7 +91,7 @@ class MainFrame(ui.Frame):
 #        self.m_btn_apply.Disable()
 
 
-    def mkSubIconMenu(self):
+    def makeSubIconMenu(self):
         u"""生成图标子菜单"""
 
         menu = wx.Menu()
@@ -230,11 +232,6 @@ class MainFrame(ui.Frame):
             tree = self.m_tree_local
             list_hosts = self.hostses
 
-        self.addHosts2(tree, hosts, list_hosts)
-
-
-    def addHosts2(self, tree, hosts, list_hosts):
-
         if hosts.is_origin:
             hosts.tree_item_id = self.m_tree_origin
 
@@ -243,6 +240,41 @@ class MainFrame(ui.Frame):
             hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
 
         self.m_tree.Expand(tree)
+
+
+    def delHosts(self, hosts):
+
+        if hosts.is_origin:
+            wx.MessageBox(u"初始 hosts 不能删除哦～")
+            return False
+
+        if hosts == self.current_using_hosts:
+            wx.MessageBox(u"这个 hosts 方案正在使用，不能删除哦～")
+            return False
+
+        dlg = wx.MessageDialog(None, u"确定要删除 hosts '%s'？" % hosts.title, u"删除 hosts",
+            wx.YES_NO | wx.ICON_QUESTION
+        )
+        ret_code = dlg.ShowModal()
+        if ret_code != wx.ID_YES:
+            return False
+
+        try:
+            hosts.remove()
+
+        except Exception:
+            err = traceback.format_exc()
+            wx.MessageBox(u"出错啦！\n\n%s" % err)
+            return False
+
+        self.m_tree.Delete(hosts.tree_item_id)
+        self.hostses.remove(hosts)
+
+        cfg_hostses = self.configs.get("hostses")
+        if cfg_hostses:
+            cfg_hostses.remove(hosts.title)
+
+        return True
 
 
     def loadConfigs(self):
@@ -258,14 +290,14 @@ class MainFrame(ui.Frame):
                 wx.MessageBox("配置信息格式有误！")
                 return
 
-            keys = ("hosts",)
+            keys = ("hostses",)
             for k in keys:
                 if k in configs:
                     self.configs[k] = configs[k]
 
             # 校验配置有效性
-            if type(self.configs.get("hosts")) != list:
-                self.configs["hosts"] = []
+            if type(self.configs.get("hostses")) != list:
+                self.configs["hostses"] = []
 
         self.saveConfigs()
 
@@ -392,6 +424,12 @@ class MainFrame(ui.Frame):
 
         if self.current_showing_hosts:
             self.useHosts(self.current_showing_hosts)
+
+
+    def OnDel(self, event):
+
+        if self.delHosts(self.current_showing_hosts):
+            self.current_showing_hosts = None
 
 
     def OnNew(self, event):

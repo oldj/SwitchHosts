@@ -126,9 +126,11 @@ class Hosts(object):
         ]
 
         cnt_for_save = "\n".join(cnt_for_save).encode("utf-8")
+        open(path or self.path, "w").write(cnt_for_save)
 
-        try:
-            open(path or self.path, "w").write(cnt_for_save)
 
-        except Exception:
-            raise
+    def remove(self):
+
+        if os.path.isfile(self.path):
+            os.remove(self.path)
+
