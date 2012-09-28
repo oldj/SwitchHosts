@@ -38,6 +38,7 @@ class MainFrame(ui.Frame):
         self.taskbar_icon = TaskBarIcon(self)
         self.latest_stable_version = "0"
         self.is_switching_text = False
+        self.__sys_hosts_path = None
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
@@ -45,9 +46,10 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
         self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
+        self.Bind(wx.EVT_BUTTON, self.OnApplyBtnClick, self.m_btn_apply)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeClick, self.m_tree)
-        self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeSelect, self.m_tree)
+        self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
         self.Bind(wx.EVT_TEXT, self.OnHostsChange, self.m_textCtrl_content)
 
         self.configs = {}
@@ -107,26 +109,31 @@ class MainFrame(ui.Frame):
         pass
 
 
-    def getSysHostsPath(self):
+    @property
+    def sys_hosts_path(self):
         u"""取得系统 host 文件的路径"""
 
-        if os.name == "nt":
-            path = "C:\\Windows\\System32\\drivers\\etc\\hosts"
-        else:
-            path = "/etc/hosts"
+        if not self.__sys_hosts_path:
 
-        return path if os.path.isfile(path) else None
+            if os.name == "nt":
+                path = "C:\\Windows\\System32\\drivers\\etc\\hosts"
+            else:
+                path = "/etc/hosts"
+
+            self.__sys_hosts_path = path if os.path.isfile(path) else None
+
+        return self.__sys_hosts_path
 
 
 
     def getSystemHosts(self):
 
-        path = self.getSysHostsPath()
+        path = self.sys_hosts_path
         if path:
             hosts = Hosts(path=path, title="DEFAULT_hosts", is_origin=True)
             self.origin_hostses = [hosts]
             self.addHosts(hosts)
-            self.selectHosts(hosts)
+            self.useHosts(hosts)
 
 
     def showHosts(self, hosts):
@@ -142,7 +149,26 @@ class MainFrame(ui.Frame):
         self.current_showing_hosts = hosts
 
 
-    def selectHosts(self, hosts):
+    def useHosts(self, hosts):
+
+        try:
+            hosts.save(path=self.sys_hosts_path)
+
+        except Exception:
+
+            err = traceback.format_exc()
+            co.log(err)
+
+            if "Permission denied:" in err:
+                msg = u"切换 hosts 失败！\n没有修改 '%s' 的权限！" % self.sys_hosts_path
+
+            else:
+                msg = u"切换 hosts 失败！\n\n%s" % err
+
+            if self.current_showing_hosts:
+                wx.MessageBox(msg)
+                return
+
 
         self.m_tree.SelectItem(hosts.tree_item_id)
 
@@ -151,7 +177,6 @@ class MainFrame(ui.Frame):
         self.m_tree.SetItemBold(hosts.tree_item_id)
 
         self.showHosts(hosts)
-
         self.current_using_hosts = hosts
 
 
@@ -313,11 +338,17 @@ class MainFrame(ui.Frame):
             self.showHosts(hosts)
 
 
-    def OnTreeSelect(self, event):
+    def OnTreeActive(self, event):
 
         hosts = self.getHostsFromTreeByEvent(event)
         if hosts:
-            self.selectHosts(hosts)
+            self.useHosts(hosts)
+
+
+    def OnApplyBtnClick(self, event):
+
+        if self.current_showing_hosts:
+            self.useHosts(self.current_showing_hosts)
 
 
     def OnNew(self, event):

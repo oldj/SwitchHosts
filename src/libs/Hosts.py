@@ -115,7 +115,7 @@ class Hosts(object):
         return fn
 
 
-    def save(self):
+    def save(self, path=None):
 
         cnt_for_save = [
             "%s %s" % (self.flag, json.dumps({
@@ -128,7 +128,7 @@ class Hosts(object):
         cnt_for_save = "\n".join(cnt_for_save).encode("utf-8")
 
         try:
-            open(self.path, "w").write(cnt_for_save)
+            open(path or self.path, "w").write(cnt_for_save)
 
         except Exception:
             raise
