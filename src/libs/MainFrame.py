@@ -50,6 +50,11 @@ class MainFrame(ui.Frame):
         self.hostses = []
 
         self.init2()
+        self.initBind()
+
+
+    def initBind(self):
+        u"""初始化时绑定事件"""
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
@@ -59,6 +64,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnDel, id=wx.ID_DELETE)
         self.Bind(wx.EVT_MENU, self.OnApply, id=wx.ID_APPLY)
         self.Bind(wx.EVT_MENU, self.OnRename, id=self.ID_RENAME)
+        self.Bind(wx.EVT_MENU, self.OnEdit, id=wx.ID_EDIT)
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
         self.Bind(wx.EVT_BUTTON, self.OnApply, id=wx.ID_APPLY)
         self.Bind(wx.EVT_BUTTON, self.OnDel, id=wx.ID_DELETE)
@@ -86,6 +92,7 @@ class MainFrame(ui.Frame):
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
         #        self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
         self.hosts_item_menu.Append(self.ID_RENAME, u"重命名")
+        self.hosts_item_menu.Append(wx.ID_EDIT, u"详情")
         self.hosts_item_menu.AppendMenu(-1, u"图标", self.makeSubIconMenu())
 
         self.hosts_item_menu.AppendSeparator()
@@ -358,6 +365,64 @@ class MainFrame(ui.Frame):
             return False
 
 
+    def showDetail(self, hosts=None):
+
+        dlg = ui.Dlg_addHosts(self)
+
+        if hosts:
+            # 初始化值
+            dlg.m_radioBtn_local.SetValue(not hosts.is_online)
+            dlg.m_radioBtn_online.SetValue(hosts.is_online)
+            dlg.m_radioBtn_local.Enable(False)
+            dlg.m_radioBtn_online.Enable(False)
+            dlg.m_textCtrl_title.SetValue(hosts.title)
+            if hosts.url:
+                dlg.m_textCtrl_url.SetValue(hosts.url)
+                dlg.m_textCtrl_url.Enable(True)
+
+        if dlg.ShowModal() != wx.ID_OK:
+            return
+
+        is_online = dlg.m_radioBtn_online.GetValue()
+        title = dlg.m_textCtrl_title.GetValue().strip()
+        url = dlg.m_textCtrl_url.GetValue().strip()
+
+        if not title:
+            wx.MessageBox(u"方案名不能为空！")
+            return
+
+        for h in self.hostses:
+            if h != hosts and h.title == title:
+                wx.MessageBox(u"已经有名为 '%s' 的方案了！" % title)
+                return
+
+        if not hosts:
+            fn = self.makeNewHostsFileName()
+            if not fn:
+                wx.MessageBox(u"hosts 文件数超出限制，无法再创建新 hosts 了！")
+                return
+
+            path = os.path.join(self.hosts_path, fn)
+
+            hosts = Hosts(path, is_online=is_online, title=title, url=url if is_online else None)
+            hosts.content = u"# %s" % title
+
+            self.addHosts(hosts, show_after_add=True)
+
+        else:
+            hosts.is_online = is_online
+            hosts.title = title
+            hosts.url = url if is_online else None
+            self.refreshHosts(hosts)
+
+        self.saveHosts(hosts)
+
+
+    def refreshHosts(self, hosts):
+        u"""更新hosts的名称"""
+
+        self.m_tree.SetItemText(hosts.tree_item_id, hosts.title)
+
 
     def getHostsFromTreeByEvent(self, event):
 
@@ -440,35 +505,12 @@ class MainFrame(ui.Frame):
 
     def OnNew(self, event):
 
-        dlg = ui.Dlg_addHosts(self)
+        self.showDetail()
 
-        if dlg.ShowModal() != wx.ID_OK:
-            return
 
-        is_online = dlg.m_radioBtn_online.GetValue()
-        title = dlg.m_textCtrl_title.GetValue().strip()
-        url = dlg.m_textCtrl_url.GetValue().strip()
+    def OnEdit(self, event):
 
-        if not title:
-            wx.MessageBox(u"方案名不能为空！")
-            return
-
-        for hosts in self.hostses:
-            if hosts.title == title:
-                wx.MessageBox(u"已经有名为 '%s' 的方案了！" % title)
-                return
-
-        fn = self.makeNewHostsFileName()
-        if not fn:
-            wx.MessageBox(u"hosts 文件数超出限制，无法再创建新 hosts 了！")
-            return
-
-        src = os.path.join(self.hosts_path, fn)
-        hosts = Hosts(src, is_online=is_online, title=title, url=url if is_online else None)
-        hosts.content = u"# %s" % title
-        self.saveHosts(hosts)
-
-        self.addHosts(hosts, show_after_add=True)
+        self.showDetail(hosts=self.current_showing_hosts)
 
 
     def OnRename(self, event):
