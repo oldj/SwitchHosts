@@ -25,10 +25,8 @@ class MainFrame(ui.Frame):
             size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
             version=None, working_path=None,
     ):
+        u""""""
 
-        """
-
-        """
         self.version = version
         self.default_title = "SwitchHosts! %s" % version
 
@@ -48,7 +46,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
         self.Bind(wx.EVT_BUTTON, self.OnApplyBtnClick, self.m_btn_apply)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeClick, self.m_tree)
-        self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeClick, self.m_tree)
+        self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeRClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
         self.Bind(wx.EVT_TEXT, self.OnHostsChange, self.m_textCtrl_content)
 
@@ -71,9 +69,49 @@ class MainFrame(ui.Frame):
         self.loadConfigs()
         self.getSystemHosts()
         self.scanSavedHosts()
+        self.makeHostsContextMenu()
 
         if not os.path.isdir(self.hosts_path):
             os.makedirs(self.hosts_path)
+
+
+    def makeHostsContextMenu(self):
+
+        self.hosts_item_menu = wx.Menu()
+        self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
+        #        self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
+        self.hosts_item_menu.Append(self.ID_RENAME, u"重命名")
+        self.hosts_item_menu.AppendMenu(-1, u"图标", self.mkSubIconMenu())
+
+        self.hosts_item_menu.AppendSeparator()
+        self.hosts_item_menu.Append(wx.ID_DELETE, u"删除")
+
+#        self.m_btn_apply.Disable()
+
+
+    def mkSubIconMenu(self):
+        u"""生成图标子菜单"""
+
+        menu = wx.Menu()
+
+        def _f(i):
+            return lambda e: self.setHostIcon(e, i)
+
+        icons_length = len(co.ICONS)
+        for i in range(icons_length):
+            item_id = wx.NewId()
+            mitem = wx.MenuItem(menu, item_id, u"图标#%d" % (i + 1))
+            mitem.SetBitmap(co.GetMondrianBitmap(i))
+            menu.AppendItem(mitem)
+
+            self.Bind(wx.EVT_MENU, _f(i), id=item_id)
+
+        return menu
+
+
+    def setHostIcon(self, event=None, i=0):
+
+        pass
 
 
     def scanSavedHosts(self):
@@ -333,9 +371,14 @@ class MainFrame(ui.Frame):
     def OnTreeClick(self, event):
 
         hosts = self.getHostsFromTreeByEvent(event)
-        if hosts:
-
+        if hosts and hosts != self.current_showing_hosts:
             self.showHosts(hosts)
+
+
+    def OnTreeRClick(self, event):
+
+        self.OnTreeClick(event)
+        self.m_tree.PopupMenu(self.hosts_item_menu, event.GetPoint())
 
 
     def OnTreeActive(self, event):
