@@ -220,7 +220,7 @@ class MainFrame(ui.Frame):
         self.current_using_hosts = hosts
 
 
-    def addHosts(self, hosts):
+    def addHosts(self, hosts, show_after_add=False):
 
         if hosts.is_origin:
             tree = self.m_tree_origin
@@ -240,6 +240,10 @@ class MainFrame(ui.Frame):
             hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
 
         self.m_tree.Expand(tree)
+
+        if show_after_add:
+#            self.showHosts(hosts)
+            self.m_tree.SelectItem(hosts.tree_item_id)
 
 
     def delHosts(self, hosts):
@@ -455,5 +459,5 @@ class MainFrame(ui.Frame):
         hosts.content = u"# %s" % title
         self.saveHosts(hosts)
 
-        self.addHosts(hosts)
+        self.addHosts(hosts, show_after_add=True)
 
