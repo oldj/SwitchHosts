@@ -45,7 +45,7 @@ class Hosts(object):
     def getContentFromUrl(self):
 
         co.log("fetch '%s'.." % self.url)
-        cnt = ""
+
         if co.httpExists(self.url):
 
             try:
@@ -55,6 +55,9 @@ class Hosts(object):
                 return ""
 
             self.last_fetch_dt = datetime.datetime.now()
+
+        else:
+            cnt = u"### URL无法访问！ ###".encode("utf-8")
 
         return cnt
 
@@ -94,7 +97,7 @@ class Hosts(object):
         try:
             return co.decode(s)
         except Exception:
-            return u"### 解码错误！ ###"
+            return u"### 解码错误！###"
 
 
     @property
