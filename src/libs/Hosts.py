@@ -27,6 +27,8 @@ class Hosts(object):
         self.__title = title
         self.__content = None
         self.tree_item_id = None
+        self.taskbar_id = None
+        self.icon_idx = 0
 
         self.getContent()
 

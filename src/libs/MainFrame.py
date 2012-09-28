@@ -364,6 +364,12 @@ class MainFrame(ui.Frame):
             func(hosts)
 
 
+    @property
+    def all_hostses(self):
+
+        return self.origin_hostses + self.hostses
+
+
     def makeNewHostsFileName(self):
         u"""生成一个新的 hosts 文件名"""
 
