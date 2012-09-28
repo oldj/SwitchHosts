@@ -446,10 +446,17 @@ class MainFrame(ui.Frame):
             return
 
         is_online = dlg.m_radioBtn_online.GetValue()
-        title = dlg.m_textCtrl_title.GetValue()
-        url = dlg.m_textCtrl_url.GetValue()
+        title = dlg.m_textCtrl_title.GetValue().strip()
+        url = dlg.m_textCtrl_url.GetValue().strip()
 
-        co.log([is_online, title, url])
+        if not title:
+            wx.MessageBox(u"方案名不能为空！")
+            return
+
+        for hosts in self.hostses:
+            if hosts.title == title:
+                wx.MessageBox(u"已经有名为 '%s' 的方案了！" % title)
+                return
 
         fn = self.makeNewHostsFileName()
         if not fn:
@@ -479,8 +486,11 @@ class MainFrame(ui.Frame):
         if not hosts:
             return
 
-        title = self.m_tree.GetItemText(hosts.tree_item_id)
-        co.log(title)
-        if hosts.title != title:
+        title = event.GetLabel().strip()
+        if title and hosts.title != title:
             hosts.title = title
             hosts.save()
+
+        else:
+            event.Veto()
+
