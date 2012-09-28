@@ -188,7 +188,9 @@ class MainFrame(ui.Frame):
 
     def showHosts(self, hosts):
 
+        hosts.getContentOnce()
         self.is_switching_text = True
+#        co.log(hosts.content)
         self.m_textCtrl_content.SetValue(hosts.content)
         self.m_textCtrl_content.Enable(not hosts.is_online)
         self.is_switching_text = False
@@ -405,7 +407,7 @@ class MainFrame(ui.Frame):
 
             path = os.path.join(self.hosts_path, fn)
 
-            hosts = Hosts(path, is_online=is_online, title=title, url=url if is_online else None)
+            hosts = Hosts(path, title=title, url=url if is_online else None)
             hosts.content = u"# %s" % title
 
             self.addHosts(hosts, show_after_add=True)
