@@ -91,7 +91,10 @@ class Hosts(object):
 
     def tryToDecode(self, s):
 
-        return co.decode(s)
+        try:
+            return co.decode(s)
+        except Exception:
+            return u"### 解码错误！ ###"
 
 
     @property
