@@ -16,12 +16,12 @@ class Hosts(object):
 
     flag = "#@SwitchHost!"
 
-    def __init__(self, path, is_online=False, is_origin=False, title=None, url=None):
+    def __init__(self, path, is_origin=False, title=None, url=None):
 
         self.path = path
-        self.is_online = is_online
         self.is_origin = is_origin
         self.url = url
+        self.is_online = True if url else False
         self.last_fetch_dt = None
         self.__title = title
         self.__content = None
@@ -43,24 +43,34 @@ class Hosts(object):
 
     def getContentFromUrl(self):
 
+        co.log("fetch '%s'.." % self.url)
+        cnt = ""
         if co.httpExists(self.url):
+
             try:
-                cnt = urllib.urlopen(self.url)
+                cnt = urllib.urlopen(self.url).read()
             except Exception:
                 co.debugErr()
-                return
+                return ""
 
-            # todo cnt 解码...
-
-            self.content = cnt
             self.last_fetch_dt = datetime.datetime.now()
 
+        return cnt
 
-    def getContent(self):
+
+    def getContentOnce(self):
+
+        if self.is_online and not self.last_fetch_dt:
+            self.getContent(force=True)
+
+
+    def getContent(self, force=False):
 
         c = ""
         if self.is_online:
-            self.getContentFromUrl()
+
+            if force:
+                c = self.getContentFromUrl()
 
         elif os.path.isfile(self.path):
             c = open(self.path, "rb").read().strip()
@@ -99,11 +109,14 @@ class Hosts(object):
             return
 
         if cfg.get("title"):
-            self.title = cfg["title"]
+            if not self.title or not self.is_online:
+                self.title = cfg["title"]
 
         if cfg.get("url"):
-            self.url = cfg["url"]
-            self.is_online = True
+            if not self.is_online:
+                self.url = cfg["url"]
+                self.is_online = True
+                self.getContent()
 
 
     @property
