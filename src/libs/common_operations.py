@@ -125,45 +125,6 @@ def notify(frame, msg="", title=u"消息"):
     frame.SetFocus()
 
 
-def switchHost(obj, fn):
-    u"""切换 hosts 为 fn 的内容"""
-
-    from Hosts import Hosts
-
-    if not os.path.isfile(fn):
-        wx.MessageBox(u"hosts 文件 '%s' 不存在！" % fn, "Error!")
-
-    ohosts = Hosts(path=fn)
-
-    sys_hosts_fn = getSysHostsPath()
-
-    try:
-        a = open(fn, "rb").read().split("\n")
-        a = [ln.rstrip() for ln in a]
-        if sys_hosts_fn:
-            open(sys_hosts_fn, "wb").write(os.linesep.join(a))
-        else:
-            wx.MessageBox(u"无效的系统 hosts 路径！")
-
-        obj.current_hosts = fn
-        title = ohosts.getTitle()
-
-        obj.SetIcon(GetMondrianIcon(), "Hosts: %s" % title)
-        notify(obj.frame, u"Hosts 已切换为 %s。" % title)
-
-        ohosts = obj.frame.getOHostsFromFn(fn)
-        obj.SetIcon(GetMondrianIcon(ohosts.icon_idx), u"当前 hosts 方案：%s" % ohosts.getTitle())
-        obj.frame.SetIcon(GetMondrianIcon(ohosts.icon_idx))
-        obj.frame.current_use_hosts_index = ohosts.index
-
-
-    except Exception:
-        err_msg = traceback.format_exc()
-        if "Permission denied" in err_msg:
-            err_msg = u"权限不足！"
-        wx.MessageBox(err_msg, u"hosts 未能成功切换！")
-
-
 def encode(s):
 
 #    print("--")
@@ -183,7 +144,11 @@ def decode(s):
 #        print(traceback.format_exc())
         pass
 
-    encoding = cd.get("encoding") if cd.get("confidence", 0) > 0.65 else None
+    encoding = cd.get("encoding", "") if cd.get("confidence", 0) > 0.65 else ""
+
+    if encoding and encoding.upper() in ("GB2312", "GBK"):
+        encoding = "GB18030"
+
     if not encoding:
         encoding = "GB18030" if os.name == "nt" else "UTF-8"
 #    print s, cd, encoding, s.decode(encoding)
