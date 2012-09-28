@@ -68,7 +68,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
         self.Bind(wx.EVT_BUTTON, self.OnApply, id=wx.ID_APPLY)
         self.Bind(wx.EVT_BUTTON, self.OnDel, id=wx.ID_DELETE)
-        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeClick, self.m_tree)
+        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeSelectionChange, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeRClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
         self.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.OnRenameEnd, self.m_tree)
@@ -190,6 +190,7 @@ class MainFrame(ui.Frame):
 
         self.is_switching_text = True
         self.m_textCtrl_content.SetValue(hosts.content)
+        self.m_textCtrl_content.Enable(not hosts.is_online)
         self.is_switching_text = False
 
         if self.current_showing_hosts:
@@ -471,17 +472,31 @@ class MainFrame(ui.Frame):
         dlg.Destroy()
 
 
-    def OnTreeClick(self, event):
+    def OnTreeSelectionChange(self, event):
 
         hosts = self.getHostsFromTreeByEvent(event)
+
+        if not hosts or (hosts not in self.hostses and hosts not in self.origin_hostses):
+            return event.Veto()
+
         if hosts and hosts != self.current_showing_hosts:
             self.showHosts(hosts)
 
 
     def OnTreeRClick(self, event):
 
-        self.OnTreeClick(event)
-        self.m_tree.PopupMenu(self.hosts_item_menu, event.GetPoint())
+        hosts = self.getHostsFromTreeByEvent(event)
+        if hosts:
+            self.OnTreeSelectionChange(event)
+
+            is_rename_able = hosts in self.hostses
+            is_edit_able = hosts in self.hostses
+            is_del_able = hosts in self.hostses
+            self.hosts_item_menu.Enable(self.ID_RENAME, is_rename_able)
+            self.hosts_item_menu.Enable(wx.ID_EDIT, is_edit_able)
+            self.hosts_item_menu.Enable(wx.ID_DELETE, is_del_able)
+
+            self.m_tree.PopupMenu(self.hosts_item_menu, event.GetPoint())
 
 
     def OnTreeActive(self, event):
@@ -517,6 +532,10 @@ class MainFrame(ui.Frame):
 
         hosts = self.current_showing_hosts
         if not hosts:
+            return
+
+        if hosts in self.origin_hostses:
+            wx.MessageBox(u"初始 hosts 不能改名！")
             return
 
         self.m_tree.EditLabel(hosts.tree_item_id)

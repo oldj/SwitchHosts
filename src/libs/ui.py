@@ -58,6 +58,9 @@ class Frame(wx.Frame):
         self.m_tree_origin = self.m_tree.AppendItem(self.m_tree_root, u"初始方案")
         self.m_tree_local = self.m_tree.AppendItem(self.m_tree_root, u"本地方案")
         self.m_tree_online = self.m_tree.AppendItem(self.m_tree_root, u"在线方案")
+        self.m_tree.SetItemTextColour(self.m_tree_root, "#999999")
+        self.m_tree.SetItemTextColour(self.m_tree_local, "#999999")
+        self.m_tree.SetItemTextColour(self.m_tree_online, "#999999")
         self.m_tree.ExpandAll()
         bSizer5.Add(self.m_tree, 0, wx.ALL | wx.EXPAND, 5)
 
