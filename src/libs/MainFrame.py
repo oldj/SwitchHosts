@@ -98,6 +98,8 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnRename, id=self.ID_RENAME)
         self.Bind(wx.EVT_MENU, self.OnEdit, id=wx.ID_EDIT)
         self.Bind(wx.EVT_MENU, self.OnRefresh, id=wx.ID_REFRESH)
+        self.Bind(wx.EVT_MENU, self.OnExport, self.m_menuItem_export)
+        self.Bind(wx.EVT_MENU, self.OnImport, self.m_menuItem_import)
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
         self.Bind(wx.EVT_BUTTON, self.OnApply, id=wx.ID_APPLY)
         self.Bind(wx.EVT_BUTTON, self.OnDel, id=wx.ID_DELETE)
@@ -189,22 +191,22 @@ class MainFrame(ui.Frame):
         fns = glob.glob(os.path.join(self.hosts_path, "*.hosts"))
         fns = [os.path.split(fn)[1] for fn in fns]
 
-        cfg_hosts = self.configs.get("hosts", [])
+        cfg_hostses = self.configs.get("hostses", [])
         # 移除不存在的 hosts
         tmp_hosts = []
-        for fn in cfg_hosts:
+        for fn in cfg_hostses:
             if fn in fns:
                 tmp_hosts.append(fn)
-        cfg_hosts = tmp_hosts
+        cfg_hostses = tmp_hosts
 
         # 添加新的 hosts
         for fn in fns:
-            if fn not in cfg_hosts:
-                cfg_hosts.append(fn)
-        self.configs["hosts"] = cfg_hosts
+            if fn not in cfg_hostses:
+                cfg_hostses.append(fn)
+        self.configs["hostses"] = cfg_hostses
         self.saveConfigs()
 
-        for fn in self.configs["hosts"]:
+        for fn in self.configs["hostses"]:
             path = os.path.join(self.hosts_path, fn)
             hosts = Hosts(path)
             if hosts.content:
@@ -385,7 +387,10 @@ class MainFrame(ui.Frame):
         )
         ret_code = dlg.ShowModal()
         if ret_code != wx.ID_YES:
+            dlg.Destroy()
             return False
+
+        dlg.Destroy()
 
         try:
             hosts.remove()
@@ -403,6 +408,35 @@ class MainFrame(ui.Frame):
             cfg_hostses.remove(hosts.title)
 
         return True
+
+
+    def export(self, path):
+        u"""将当前所有设置以及方案导出为一个文件"""
+
+        data = {
+            "configs": self.configs,
+        }
+        hostses = []
+        for hosts in self.hostses:
+            hostses.append({
+                "filename": hosts.filename,
+                "content": hosts.full_content,
+            })
+
+        data["hostses"] = hostses
+
+        try:
+            open(path, "w").write(json.dumps(data))
+        except Exception:
+            wx.MessageBox(u"导出失败！\n\n%s" % traceback.format_exc())
+            return
+
+        wx.MessageBox(u"导出完成！")
+
+
+
+    def importHosts(self, content):
+        u"""导入"""
 
 
     def notify(self, msg="", title=u"消息"):
@@ -547,7 +581,10 @@ class MainFrame(ui.Frame):
                 dlg.m_textCtrl_url.Enable(True)
 
         if dlg.ShowModal() != wx.ID_OK:
+            dlg.Destroy()
             return
+
+        dlg.Destroy()
 
         is_online = dlg.m_radioBtn_online.GetValue()
         title = dlg.m_textCtrl_title.GetValue().strip()
@@ -787,3 +824,17 @@ class MainFrame(ui.Frame):
         hosts = self.current_showing_hosts
         self.getHostsContent(hosts)
 
+
+    def OnExport(self, event):
+
+        wildcard = u"SwicthHosts! 档案 (*.swh)|*.swh"
+        dlg = wx.FileDialog(self, u"导出为...", os.getcwd(), "hosts.swh", wildcard, wx.SAVE)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            self.export(dlg.GetPath())
+
+        dlg.Destroy()
+
+
+    def OnImport(self, event):
+        pass
