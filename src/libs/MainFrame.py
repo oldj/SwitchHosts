@@ -840,6 +840,10 @@ class MainFrame(ui.Frame):
             self.m_tree.PopupMenu(self.hosts_item_menu, event.GetPoint())
 
 
+    def OnTreeMenu(self, event):
+        co.log("tree menu...")
+
+
     def OnTreeActive(self, event):
 
         hosts = self.getHostsFromTreeByEvent(event)
