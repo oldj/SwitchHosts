@@ -336,3 +336,75 @@ class Dlg_addHosts(wx.Dialog):
 #        print("online!")
         self.m_textCtrl_url.Enabled = True
 
+
+class Dlg_Import(wx.Dialog):
+
+    def __init__( self, parent ):
+
+        wx.Dialog.__init__(self, parent, id=wx.ID_ANY, title=wx.EmptyString, pos=wx.DefaultPosition,
+            size=wx.Size(400, 200), style=wx.DEFAULT_DIALOG_STYLE)
+
+        self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
+
+        bSizer6 = wx.BoxSizer(wx.VERTICAL)
+
+        self.m_notebook = wx.Notebook(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_panel_local = wx.Panel(self.m_notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        bSizer8 = wx.BoxSizer(wx.VERTICAL)
+
+        self.m_staticText4 = wx.StaticText(self.m_panel_local, wx.ID_ANY, u"请选择档案文件：", wx.DefaultPosition,
+            wx.DefaultSize, 0)
+        self.m_staticText4.Wrap(-1)
+        bSizer8.Add(self.m_staticText4, 0, wx.ALL, 5)
+
+        self.m_filePicker = wx.FilePickerCtrl(self.m_panel_local, wx.ID_ANY, wx.EmptyString, u"Select a file", u"*.*",
+            wx.DefaultPosition, wx.Size(180, -1), wx.FLP_DEFAULT_STYLE)
+        bSizer8.Add(self.m_filePicker, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL | wx.EXPAND, 5)
+
+        self.m_panel_local.SetSizer(bSizer8)
+        self.m_panel_local.Layout()
+        bSizer8.Fit(self.m_panel_local)
+        self.m_notebook.AddPage(self.m_panel_local, u"本地档案", False)
+        self.m_panel_online = wx.Panel(self.m_notebook, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
+            wx.TAB_TRAVERSAL)
+        bSizer9 = wx.BoxSizer(wx.VERTICAL)
+
+        self.m_staticText41 = wx.StaticText(self.m_panel_online, wx.ID_ANY, u"请输入档案URL：", wx.DefaultPosition,
+            wx.DefaultSize, 0)
+        self.m_staticText41.Wrap(-1)
+        bSizer9.Add(self.m_staticText41, 0, wx.ALL, 5)
+
+        self.m_textCtrl_url = wx.TextCtrl(self.m_panel_online, wx.ID_ANY, u"http://", wx.DefaultPosition, wx.DefaultSize
+            , 0)
+        bSizer9.Add(self.m_textCtrl_url, 0, wx.ALL | wx.EXPAND, 5)
+
+        self.m_panel_online.SetSizer(bSizer9)
+        self.m_panel_online.Layout()
+        bSizer9.Fit(self.m_panel_online)
+        self.m_notebook.AddPage(self.m_panel_online, u"在线档案", False)
+
+        bSizer6.Add(self.m_notebook, 4, wx.EXPAND | wx.ALL, 5)
+
+        self.m_panel2 = wx.Panel(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(-1, 60), wx.TAB_TRAVERSAL)
+        bSizer7 = wx.BoxSizer(wx.VERTICAL)
+
+        m_sdbSizer3 = wx.StdDialogButtonSizer()
+        self.m_sdbSizer3OK = wx.Button(self.m_panel2, wx.ID_OK)
+        m_sdbSizer3.AddButton(self.m_sdbSizer3OK)
+        self.m_sdbSizer3Cancel = wx.Button(self.m_panel2, wx.ID_CANCEL)
+        m_sdbSizer3.AddButton(self.m_sdbSizer3Cancel)
+        m_sdbSizer3.Realize()
+        bSizer7.Add(m_sdbSizer3, 1, wx.EXPAND, 5)
+
+        self.m_panel2.SetSizer(bSizer7)
+        self.m_panel2.Layout()
+        bSizer6.Add(self.m_panel2, 1, wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(bSizer6)
+        self.Layout()
+
+        self.Centre(wx.BOTH)
+
+    def __del__( self ):
+        pass
+
