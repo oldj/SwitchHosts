@@ -134,6 +134,14 @@ class Hosts(object):
                 self.is_online = True
                 self.getContent()
 
+        if cfg.get("icon_idx") is not None:
+            icon_idx = cfg.get("icon_idx")
+            if type(icon_idx) not in (int, long) or \
+                icon_idx < 0 or icon_idx > len(co.ICONS):
+                icon_idx = 0
+
+            self.icon_idx = icon_idx
+
 
     @property
     def filename(self):
@@ -150,6 +158,7 @@ class Hosts(object):
             "%s %s" % (self.flag, json.dumps({
                 "title": self.title,
                 "url": self.url,
+                "icon_idx": self.icon_idx,
             })),
             self.content,
         ]

@@ -157,7 +157,7 @@ class MainFrame(ui.Frame):
         menu = wx.Menu()
 
         def _f(i):
-            return lambda e: self.setHostIcon(e, i)
+            return lambda e: self.setHostsIcon(e, i)
 
         icons_length = len(co.ICONS)
         for i in range(icons_length):
@@ -171,9 +171,15 @@ class MainFrame(ui.Frame):
         return menu
 
 
-    def setHostIcon(self, event=None, i=0):
+    def setHostsIcon(self, event=None, i=0):
 
-        pass
+        hosts = self.current_showing_hosts
+        if not hosts:
+            return
+
+        hosts.icon_idx = i
+        self.updateHostsIcon(hosts)
+        hosts.save()
 
 
     def scanSavedHosts(self):
@@ -330,12 +336,26 @@ class MainFrame(ui.Frame):
         else:
             list_hosts.append(hosts)
             hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
+            self.updateHostsIcon(hosts)
 
         self.m_tree.Expand(tree)
 
         if show_after_add:
 #            self.showHosts(hosts)
             self.m_tree.SelectItem(hosts.tree_item_id)
+
+
+    def updateHostsIcon(self, hosts):
+
+        icon_idx = hosts.icon_idx
+        if type(icon_idx) not in (int, long) or icon_idx < 0:
+            icon_idx = 0
+        elif icon_idx >= len(self.ico_colors_idx):
+            icon_idx = len(self.ico_colors_idx) - 1
+
+        self.m_tree.SetItemImage(
+            hosts.tree_item_id, self.ico_colors_idx[icon_idx], wx.TreeItemIcon_Normal
+        )
 
 
     def delHosts(self, hosts):

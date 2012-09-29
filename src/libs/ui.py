@@ -64,6 +64,27 @@ class Frame(wx.Frame):
         self.m_tree.ExpandAll()
         bSizer5.Add(self.m_tree, 0, wx.ALL | wx.EXPAND, 5)
 
+        self.image_list = wx.ImageList(16, 16)
+        self.ico_folder_idx = self.image_list.Add(
+            wx.ArtProvider.GetBitmap(wx.ART_FOLDER, wx.ART_OTHER, (16, 16))
+        )
+        self.ico_folder_open_idx = self.image_list.Add(
+            wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_OTHER, (16, 16))
+        )
+        self.ico_file_idx = self.image_list.Add(
+            wx.ArtProvider.GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, (16, 16))
+        )
+        self.ico_colors_idx = []
+        for i, icon in enumerate(co.ICONS):
+            self.ico_colors_idx.append(self.image_list.Add(co.GetMondrianBitmap(i)))
+
+        self.m_tree.AssignImageList(self.image_list)
+
+        for item_idx in (self.m_tree_root, self.m_tree_local, self.m_tree_online):
+            self.m_tree.SetItemImage(item_idx, self.ico_folder_idx, wx.TreeItemIcon_Normal)
+            self.m_tree.SetItemImage(item_idx, self.ico_folder_open_idx, wx.TreeItemIcon_Expanded)
+
+
         bSizer61 = wx.BoxSizer(wx.HORIZONTAL)
 
         self.m_btn_add = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ADD, co.GetMondrianBitmap(fn="add"), u"添加")
@@ -275,7 +296,7 @@ class Dlg_addHosts(wx.Dialog):
         m_sdbSizer1.AddButton(self.m_sdbSizer1OK)
         self.m_sdbSizer1Cancel = wx.Button(self, wx.ID_CANCEL)
         m_sdbSizer1.AddButton(self.m_sdbSizer1Cancel)
-        m_sdbSizer1.Realize();
+        m_sdbSizer1.Realize()
         bSizer9.Add(m_sdbSizer1, 1, wx.EXPAND, 5)
 
         self.SetSizer(bSizer9)
