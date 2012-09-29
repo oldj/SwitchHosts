@@ -97,4 +97,10 @@ class TaskBarIcon(wx.TaskBarIcon):
                 return
 
 
+    def updateIcon(self):
+
+        self.SetIcon(
+            co.GetMondrianIcon(self.main_frame.current_using_hosts.icon_idx),
+            self.main_frame.default_title
+        )
 
