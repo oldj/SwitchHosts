@@ -5,7 +5,6 @@
 # email: oldj.wu@gmail.com
 #
 
-import sys
 import wx
 import common_operations as co
 
@@ -82,7 +81,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         if self.main_frame.current_using_hosts ==  hosts:
             mitem.SetFont(self.font_bold)
 #        self.hosts[item_id] = title
-        hosts.taskbar_id = mitem
+        hosts.taskbar_id = item_id
 
         self.Bind(wx.EVT_MENU, self.switchHost, id=item_id)
 

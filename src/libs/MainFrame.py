@@ -18,6 +18,28 @@ from TaskbarIcon import TaskBarIcon
 from BackThreads import BackThreads
 import common_operations as co
 
+if os.name == "posix":
+    if sys.platform != "darwin":
+        # Linux
+        try:
+            import pynotify
+        except ImportError:
+            pynotify = None
+
+    else:
+        # Mac
+        import gntp.notifier
+
+        growl = gntp.notifier.GrowlNotifier(
+            applicationName="SwitchHosts!",
+            notifications=["New Updates", "New Messages"],
+            defaultNotifications=["New Messages"],
+            hostname = "127.0.0.1", # Defaults to localhost
+            # password = "" # Defaults to a blank password
+        )
+        growl.register()
+
+
 class MainFrame(ui.Frame):
 
     ID_RENAME = wx.NewId()
@@ -237,6 +259,7 @@ class MainFrame(ui.Frame):
 
         try:
             hosts.save(path=self.sys_hosts_path)
+            self.notify(msg=u"hosts 已切换为 %s 。" % hosts.title, title=u"hosts 切换成功")
 
         except Exception:
 
@@ -324,6 +347,52 @@ class MainFrame(ui.Frame):
             cfg_hostses.remove(hosts.title)
 
         return True
+
+
+    def notify(self, msg="", title=u"消息"):
+
+        def macNotify(msg, title):
+
+            growl.notify(
+                noteType="New Messages",
+                title=title,
+                description=msg,
+                sticky=False,
+                priority=1,
+            )
+
+
+        if os.name == "posix":
+
+            if sys.platform != "darwin":
+                # linux 系统
+                pynotify.Notification(title, msg).show()
+
+            else:
+                # Mac 系统
+                macNotify(msg, title)
+
+            return
+
+
+        try:
+            import ToasterBox as TB
+        except ImportError:
+            TB = None
+
+        sw, sh = wx.GetDisplaySize()
+        width, height = 210, 50
+        px = sw - 230
+        py = sh - 100
+
+        tb = TB.ToasterBox(self)
+        tb.SetPopupText(msg)
+        tb.SetPopupSize((width, height))
+        tb.SetPopupPosition((px, py))
+        tb.Play()
+
+        self.SetFocus()
+
 
 
     def loadConfigs(self):
