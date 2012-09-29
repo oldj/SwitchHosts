@@ -12,6 +12,7 @@ import simplejson as json
 import wx
 import ui
 import traceback
+import random
 import Queue
 from Hosts import Hosts
 from TaskbarIcon import TaskBarIcon
@@ -70,6 +71,8 @@ class MainFrame(ui.Frame):
         self.current_using_hosts = None
         self.current_showing_hosts = None
         self.current_tree_hosts = None
+
+        self.showing_rnd_id = random.random()
 
         self.origin_hostses = []
         self.hostses = []
@@ -231,7 +234,21 @@ class MainFrame(ui.Frame):
             self.useHosts(hosts)
 
 
+    def textStyle(self, old_content=None):
+        u"""更新文本区的样式"""
+
+        from highLight import highLight
+
+        co.log("styling...")
+
+        self.m_textCtrl_content.SetFont(self.font_mono)
+        highLight(self.m_textCtrl_content, old_content=old_content)
+
+
+
     def showHosts(self, hosts):
+
+        self.showing_rnd_id = random.random()
 
 #        hosts.getContentOnce()
         self.is_switching_text = True
@@ -244,6 +261,9 @@ class MainFrame(ui.Frame):
         if self.current_showing_hosts:
             self.m_tree.SetItemBackgroundColour(self.current_showing_hosts.tree_item_id, None)
         self.m_tree.SetItemBackgroundColour(hosts.tree_item_id, "#ccccff")
+
+#        self.task_qu.put(lambda : self.textStyle())
+        self.textStyle()
 
         self.current_showing_hosts = hosts
 
@@ -579,8 +599,10 @@ class MainFrame(ui.Frame):
         if self.is_switching_text:
             return
 
-        self.current_using_hosts.content = self.m_textCtrl_content.GetValue()
-        self.saveHosts(self.current_using_hosts)
+        self.current_showing_hosts.content = self.m_textCtrl_content.GetValue()
+        self.saveHosts(self.current_showing_hosts)
+
+        self.textStyle()
 
 
     def OnChkUpdate(self, event):
