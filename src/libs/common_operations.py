@@ -132,3 +132,38 @@ def httpExists(url):
     return found
 
 
+def compareVersion(v1, v2):
+    u"""比较两个版本的大小
+    版本的格式形如：0.1.5.3456
+
+    如果 v1 > v2，则返回 1
+    如果 v1 = v2，则返回 0
+    如果 v1 < v2，则返回 -1
+    """
+
+    a1 = v1.split(".")
+    a2 = v2.split(".")
+
+    try:
+        a1 = [int(i) for i in a1]
+        a2 = [int(i) for i in a2]
+    except Exception:
+        return 0
+
+    len1 = len(a1)
+    len2 = len(a2)
+    l = min(len1, len2)
+    for i in range(l):
+        if a1[i] > a2[i]:
+            return 1
+        elif a1[i] < a2[i]:
+            return -1
+
+    if len1 > len2:
+        return 1
+    elif len1 < len2:
+        return -1
+    else:
+        return 0
+
+
