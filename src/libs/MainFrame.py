@@ -20,6 +20,7 @@ from Hosts import Hosts
 from TaskbarIcon import TaskBarIcon
 from BackThreads import BackThreads
 import common_operations as co
+import lang
 
 if os.name == "posix":
     if sys.platform != "darwin":
@@ -236,7 +237,7 @@ class MainFrame(ui.Frame):
 
         path = self.sys_hosts_path
         if path:
-            hosts = Hosts(path=path, title="DEFAULT_hosts", is_origin=True)
+            hosts = Hosts(path=path, title=lang.trans("origin_hosts"), is_origin=True)
             self.origin_hostses = [hosts]
             self.addHosts(hosts)
 #            self.useHosts(hosts)
@@ -291,7 +292,7 @@ class MainFrame(ui.Frame):
 
         try:
             hosts.save(path=self.sys_hosts_path)
-            self.notify(msg=u"hosts 已切换为 %s 。" % hosts.title, title=u"hosts 切换成功")
+            self.notify(msg=u"hosts 已切换为『%s』。" % hosts.title, title=u"hosts 切换成功")
 
         except Exception:
 
@@ -648,10 +649,14 @@ class MainFrame(ui.Frame):
 
         else:
             cmp = co.compareVersion(self.version, self.latest_stable_version)
-            if cmp >= 0:
-                wx.MessageBox(u"当前已是最新版本！")
-            else:
-                wx.MessageBox(u"更新的稳定版 %s 已经发布！" % self.latest_stable_version)
+            try:
+                if cmp >= 0:
+                    wx.MessageBox(u"当前已是最新版本！")
+                else:
+                    wx.MessageBox(u"更新的稳定版 %s 已经发布！" % self.latest_stable_version)
+            except Exception:
+                co.debugErr()
+                pass
 
 
 
