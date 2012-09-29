@@ -6,7 +6,7 @@
 #
 
 import time
-import wx
+import random
 import threading
 import traceback
 
@@ -22,6 +22,8 @@ class BackThreads(threading.Thread):
 
 
     def run(self):
+
+        time.sleep(0.5 + random.random())
 
         while True:
             if self.time_to_quit.isSet():
