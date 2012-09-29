@@ -124,12 +124,14 @@ class Hosts(object):
         if type(cfg) != dict:
             return
 
-        if cfg.get("title"):
+        if self.is_origin:
+            pass
+        elif cfg.get("title"):
             if not self.title or not self.is_online:
                 self.title = cfg["title"]
 
         if cfg.get("url"):
-            if not self.is_online:
+            if not self.is_online and not self.is_origin:
                 self.url = cfg["url"]
                 self.is_online = True
                 self.getContent()

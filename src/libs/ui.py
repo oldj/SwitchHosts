@@ -27,6 +27,13 @@ class Frame(wx.Frame):
         self.m_menuItem_new = wx.MenuItem(self.m_menu1, wx.ID_NEW, u"新建(&N)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu1.AppendItem(self.m_menuItem_new)
         self.m_menu1.AppendSeparator()
+
+        self.m_menuItem_export = wx.MenuItem(self.m_menu1, wx.NewId(), u"导出(&E)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menu1.AppendItem(self.m_menuItem_export)
+        self.m_menuItem_import = wx.MenuItem(self.m_menu1, wx.NewId(), u"导入(&I)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menu1.AppendItem(self.m_menuItem_import)
+
+        self.m_menu1.AppendSeparator()
         self.m_menuItem_exit = wx.MenuItem(self.m_menu1, wx.ID_EXIT, u"退出(&X)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu1.AppendItem(self.m_menuItem_exit)
 
