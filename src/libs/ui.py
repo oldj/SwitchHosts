@@ -20,7 +20,8 @@ class Frame(wx.Frame):
 
         self.SetIcon(co.GetMondrianIcon())
         #        self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
+#        self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
+        self.SetSizeHintsSz(wx.Size(400, 300), wx.DefaultSize)
 
         self.m_menubar1 = wx.MenuBar(0)
         self.m_menu1 = wx.Menu()
@@ -56,12 +57,7 @@ class Frame(wx.Frame):
 
         bSizer5 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_list = wx.ListCtrl(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size(160, 320),
-                                  wx.LC_REPORT)
-        self.m_list.Hide()
-        bSizer5.Add(self.m_list, 0, wx.ALL | wx.EXPAND, 5)
-
-        self.m_tree = wx.TreeCtrl(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size(160, 320))
+        self.m_tree = wx.TreeCtrl(self.m_panel1, wx.ID_ANY, wx.DefaultPosition)
         self.m_tree_root = self.m_tree.AddRoot(u"hosts")
         self.m_tree_origin = self.m_tree.AppendItem(self.m_tree_root, lang.trans("origin_hosts"))
         self.m_tree_local = self.m_tree.AppendItem(self.m_tree_root, lang.trans("local_hosts"))
@@ -70,7 +66,7 @@ class Frame(wx.Frame):
         self.m_tree.SetItemTextColour(self.m_tree_local, "#999999")
         self.m_tree.SetItemTextColour(self.m_tree_online, "#999999")
         self.m_tree.ExpandAll()
-        bSizer5.Add(self.m_tree, 0, wx.ALL | wx.EXPAND, 5)
+        bSizer5.Add(self.m_tree, 1, wx.ALL | wx.EXPAND, 5)
 
         self.image_list = wx.ImageList(16, 16)
         self.ico_folder_idx = self.image_list.Add(
@@ -101,9 +97,9 @@ class Frame(wx.Frame):
         self.m_btn_del = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_DELETE, co.GetMondrianBitmap(fn="delete"), u"删除")
         bSizer61.Add(self.m_btn_del, 0, wx.ALL, 5)
 
-        bSizer5.Add(bSizer61, 1, wx.EXPAND, 5)
+        bSizer5.Add(bSizer61, 0, wx.EXPAND, 5)
 
-        bSizer4.Add(bSizer5, 0, wx.EXPAND, 5)
+        bSizer4.Add(bSizer5, 1, wx.EXPAND, 5)
 
         bSizer6 = wx.BoxSizer(wx.VERTICAL)
 
@@ -141,7 +137,7 @@ class Frame(wx.Frame):
 
         bSizer6.Add(bSizer7, 0, wx.EXPAND, 5)
 
-        bSizer4.Add(bSizer6, 1, wx.EXPAND, 5)
+        bSizer4.Add(bSizer6, 5, wx.EXPAND, 5)
 
         self.m_panel1.SetSizer(bSizer4)
         self.m_panel1.Layout()
