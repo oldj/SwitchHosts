@@ -98,13 +98,17 @@ class Frame(wx.Frame):
 
 #        self.m_btn_add = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ADD, co.GetMondrianBitmap(fn="add"), u"添加")
         self.m_btn_add = wx.BitmapButton(self.m_panel1, wx.ID_ADD,
-            wx.Bitmap(u"../../../EverBox/res/silk_icons/add.png", wx.BITMAP_TYPE_ANY), wx.DefaultPosition,
+            co.GetMondrianBitmap(fn="add"),
+#            wx.Bitmap(u"../../../EverBox/res/silk_icons/add.png", wx.BITMAP_TYPE_ANY),
+            wx.DefaultPosition,
             wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER)
         bSizer61.Add(self.m_btn_add, 0, wx.ALL, 5)
 
 #        self.m_btn_del = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_DELETE, co.GetMondrianBitmap(fn="delete"), u"删除")
         self.m_btn_del = wx.BitmapButton(self.m_panel1, wx.ID_DELETE,
-            wx.Bitmap(u"../../../EverBox/res/silk_icons/delete.png", wx.BITMAP_TYPE_ANY), wx.DefaultPosition,
+            co.GetMondrianBitmap(fn="delete"),
+#            wx.Bitmap(u"../../../EverBox/res/silk_icons/delete.png", wx.BITMAP_TYPE_ANY),
+            wx.DefaultPosition,
             wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER)
         bSizer61.Add(self.m_btn_del, 0, wx.ALL, 5)
 
@@ -140,7 +144,9 @@ class Frame(wx.Frame):
 #        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY, co.GetMondrianBitmap(fn="accept"), u"应用")
         #        self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
         self.m_btn_apply = wx.BitmapButton(self.m_panel1, wx.ID_APPLY,
-            wx.Bitmap(u"../../../EverBox/res/silk_icons/accept.png", wx.BITMAP_TYPE_ANY), wx.DefaultPosition,
+            co.GetMondrianBitmap(fn="accept"),
+#            wx.Bitmap(u"../../../EverBox/res/silk_icons/accept.png", wx.BITMAP_TYPE_ANY),
+            wx.DefaultPosition,
             wx.DefaultSize, wx.BU_AUTODRAW|wx.SIMPLE_BORDER)
         bSizer7.Add(self.m_btn_apply, 0, wx.ALL, 5)
 
