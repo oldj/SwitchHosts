@@ -7,6 +7,7 @@
 
 import wx
 import common_operations as co
+import lang
 
 class TaskBarIcon(wx.TaskBarIcon):
 
@@ -57,8 +58,7 @@ class TaskBarIcon(wx.TaskBarIcon):
         menu.Append(self.ID_MainFrame, u"SwitchHosts!")
         menu.AppendSeparator()
 
-        hostses = self.main_frame.origin_hostses + self.main_frame.hostses
-        for hosts in hostses:
+        for hosts in self.main_frame.all_hostses:
             if hosts:
                 self.addHosts(menu, hosts)
 
@@ -73,7 +73,8 @@ class TaskBarIcon(wx.TaskBarIcon):
         u"""在菜单项中添加一个 hosts"""
 
         item_id = wx.NewId()
-        mitem = wx.MenuItem(menu, item_id, hosts.title, kind=wx.ITEM_RADIO)
+        title = hosts.title if not hosts.is_origin else lang.trans("origin_hosts")
+        mitem = wx.MenuItem(menu, item_id, title, kind=wx.ITEM_RADIO)
         mitem.SetBitmap(co.GetMondrianBitmap(hosts.icon_idx))
         menu.AppendItem(mitem)
 

@@ -4,6 +4,7 @@ import os
 import wx, wx.html
 import wx.lib.buttons as buttons
 import common_operations as co
+import lang
 
 
 class Frame(wx.Frame):
@@ -55,9 +56,9 @@ class Frame(wx.Frame):
 
         self.m_tree = wx.TreeCtrl(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size(160, 320))
         self.m_tree_root = self.m_tree.AddRoot(u"hosts")
-        self.m_tree_origin = self.m_tree.AppendItem(self.m_tree_root, u"初始方案")
-        self.m_tree_local = self.m_tree.AppendItem(self.m_tree_root, u"本地方案")
-        self.m_tree_online = self.m_tree.AppendItem(self.m_tree_root, u"在线方案")
+        self.m_tree_origin = self.m_tree.AppendItem(self.m_tree_root, lang.trans("origin_hosts"))
+        self.m_tree_local = self.m_tree.AppendItem(self.m_tree_root, lang.trans("local_hosts"))
+        self.m_tree_online = self.m_tree.AppendItem(self.m_tree_root, lang.trans("online_hosts"))
         self.m_tree.SetItemTextColour(self.m_tree_root, "#999999")
         self.m_tree.SetItemTextColour(self.m_tree_local, "#999999")
         self.m_tree.SetItemTextColour(self.m_tree_online, "#999999")
