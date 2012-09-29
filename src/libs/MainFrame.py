@@ -542,7 +542,9 @@ class MainFrame(ui.Frame):
 
         hosts.is_loading = True
         self.task_qu.put(lambda : [
-            hosts.getContent(force=True), wx.CallAfter(self.tryToShowHosts, hosts)
+            hosts.getContent(force=True),
+            wx.CallAfter(self.tryToShowHosts, hosts),
+            wx.CallAfter(self.saveHosts, hosts),
         ])
         self.tryToShowHosts(hosts)
 
