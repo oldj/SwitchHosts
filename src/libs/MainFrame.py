@@ -265,7 +265,6 @@ class MainFrame(ui.Frame):
 
 #        hosts.getContentOnce()
         self.is_switching_text = True
-#        co.log(hosts.content)
         content = hosts.content if not hosts.is_loading else "loading..."
         self.m_textCtrl_content.SetValue(content)
         if hosts.is_online or hosts.is_loading:
@@ -455,7 +454,6 @@ class MainFrame(ui.Frame):
             wx.MessageBox(u"档案格式有误！", caption=u"导入失败")
             return
 
-        co.log(content)
         configs = data.get("configs")
         hosts_files = data.get("hosts_files")
         if type(configs) != dict or type(hosts_files) not in (list, tuple):
@@ -475,7 +473,6 @@ class MainFrame(ui.Frame):
 
         # 写入新 hosts 文件
         for hf in hosts_files:
-            co.log(hf)
             if type(hf) != dict or "filename" not in hf or "content" not in hf:
                 continue
 
@@ -726,10 +723,9 @@ class MainFrame(ui.Frame):
 
         item = event.GetItem()
         if item in (self.m_tree_online, self.m_tree_local, self.m_tree_root):
-            co.log("ignore")
+            pass
 
         elif self.current_using_hosts and item == self.current_using_hosts.tree_item_id:
-            co.log("is current hosts!")
             return self.current_using_hosts
 
         else:
@@ -788,8 +784,6 @@ class MainFrame(ui.Frame):
 
 
     def OnChkUpdate(self, event):
-
-        co.log("chk update...")
 
         self.task_qu.put(lambda : [
             self.getLatestStableVersion(alert=True),
@@ -919,7 +913,6 @@ class MainFrame(ui.Frame):
 
         dlg = ui.Dlg_Import(self)
         if dlg.ShowModal() == wx.ID_OK:
-            co.log(dlg.m_notebook.GetSelection())
             path = dlg.m_filePicker.GetPath()
             url = dlg.m_textCtrl_url.GetValue()
 
