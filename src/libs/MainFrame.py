@@ -69,6 +69,7 @@ class MainFrame(ui.Frame):
             self.hosts_path = os.path.join(self.working_path, "hosts")
         self.current_using_hosts = None
         self.current_showing_hosts = None
+        self.current_tree_hosts = None
 
         self.origin_hostses = []
         self.hostses = []
@@ -305,9 +306,6 @@ class MainFrame(ui.Frame):
         else:
             list_hosts.append(hosts)
             hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
-            self.task_qu.put(lambda : [
-                hosts.getContentOnce(), wx.CallAfter(self.tryToShowHosts, hosts)
-            ])
 
         self.m_tree.Expand(tree)
 
@@ -317,6 +315,9 @@ class MainFrame(ui.Frame):
 
 
     def delHosts(self, hosts):
+
+        if not hosts:
+            return False
 
         if hosts.is_origin:
             wx.MessageBox(u"初始 hosts 不能删除哦～")
@@ -520,6 +521,10 @@ class MainFrame(ui.Frame):
             hosts.content = u"# %s" % title
 
             self.addHosts(hosts, show_after_add=True)
+            self.task_qu.put(lambda : [
+                hosts.getContentOnce(), wx.CallAfter(self.tryToShowHosts, hosts)
+            ])
+
 
         else:
             hosts.is_online = is_online
@@ -587,6 +592,7 @@ class MainFrame(ui.Frame):
     def OnTreeSelectionChange(self, event):
 
         hosts = self.getHostsFromTreeByEvent(event)
+        self.current_tree_hosts = hosts
 
         if not hosts or (hosts not in self.hostses and hosts not in self.origin_hostses):
             return event.Veto()
@@ -626,7 +632,7 @@ class MainFrame(ui.Frame):
 
     def OnDel(self, event):
 
-        if self.delHosts(self.current_showing_hosts):
+        if self.delHosts(self.current_tree_hosts):
             self.current_showing_hosts = None
 
 
