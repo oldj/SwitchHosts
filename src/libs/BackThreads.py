@@ -29,9 +29,14 @@ class BackThreads(threading.Thread):
 
             if not self.task_qu.empty():
                 try:
-                    task = self.task_qu.get(block=False)
-                    if callable(task):
-                        task()
+                    tasks = self.task_qu.get(block=False)
+                    if callable(tasks):
+                        tasks = [tasks]
+
+                    if type(tasks) in (list, tuple):
+                        for task in tasks:
+                            if callable(task):
+                                task()
                 except Exception:
                     print(traceback.format_exc())
 

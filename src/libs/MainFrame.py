@@ -305,9 +305,9 @@ class MainFrame(ui.Frame):
         else:
             list_hosts.append(hosts)
             hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
-            self.task_qu.put(lambda : \
-                (hosts.getContentOnce() or True) and wx.CallAfter(self.tryToShowHosts, hosts)
-            )
+            self.task_qu.put(lambda : [
+                hosts.getContentOnce(), wx.CallAfter(self.tryToShowHosts, hosts)
+            ])
 
         self.m_tree.Expand(tree)
 
