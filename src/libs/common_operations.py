@@ -16,27 +16,6 @@ import httplib
 import urlparse
 
 
-if os.name == "posix":
-    if sys.platform != "darwin":
-        # Linux
-        try:
-            import pynotify
-        except ImportError:
-            pynotify = None
-
-    else:
-        # Mac
-        import gntp.notifier
-
-        growl = gntp.notifier.GrowlNotifier(
-            applicationName="SwitchHosts!",
-            notifications=["New Updates", "New Messages"],
-            defaultNotifications=["New Messages"],
-            hostname = "127.0.0.1", # Defaults to localhost
-            # password = "" # Defaults to a blank password
-        )
-        growl.register()
-
 from icons import ICONS, ICONS2, ICONS_ICO
 
 
@@ -77,52 +56,6 @@ def GetMondrianIcon(i=0, fn=None):
     icon.CopyFromBitmap(GetMondrianBitmap(i, fn))
     return icon
 
-
-def macNotify(msg, title):
-
-#    print("mac nofity!")
-
-    growl.notify(
-        noteType="New Messages",
-        title=title,
-        description=msg,
-        sticky=False,
-        priority=1,
-    )
-
-
-def notify(frame, msg="", title=u"消息"):
-
-    if os.name == "posix":
-
-        if sys.platform != "darwin":
-            # linux 系统
-            pynotify.Notification(title, msg).show()
-
-        else:
-            # Mac 系统
-            macNotify(msg, title)
-
-        return
-
-
-    try:
-        import ToasterBox as TB
-    except ImportError:
-        TB = None
-
-    sw, sh = wx.GetDisplaySize()
-    width, height = 210, 50
-    px = sw - 230
-    py = sh - 100
-
-    tb = TB.ToasterBox(frame)
-    tb.SetPopupText(msg)
-    tb.SetPopupSize((width, height))
-    tb.SetPopupPosition((px, py))
-    tb.Play()
-
-    frame.SetFocus()
 
 
 def encode(s):
