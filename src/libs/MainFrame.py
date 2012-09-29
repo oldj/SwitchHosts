@@ -239,7 +239,8 @@ class MainFrame(ui.Frame):
             hosts = Hosts(path=path, title="DEFAULT_hosts", is_origin=True)
             self.origin_hostses = [hosts]
             self.addHosts(hosts)
-            self.useHosts(hosts)
+#            self.useHosts(hosts)
+            self.highLightHosts(hosts)
 
 
     def textStyle(self, old_content=None):
@@ -307,6 +308,10 @@ class MainFrame(ui.Frame):
                 wx.MessageBox(msg)
                 return
 
+        self.highLightHosts(hosts)
+
+
+    def highLightHosts(self, hosts):
 
         self.m_tree.SelectItem(hosts.tree_item_id)
 
