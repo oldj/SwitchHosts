@@ -72,7 +72,7 @@ class MainFrame(ui.Frame):
 
         self.origin_hostses = []
         self.hostses = []
-        self.qu_hostses = Queue.Queue(4096)
+        self.task_qu = Queue.Queue(4096)
 
         self.init2()
         self.initBind()
@@ -117,7 +117,7 @@ class MainFrame(ui.Frame):
 
         self.back_threads = []
         for i in xrange(count):
-            t = BackThreads(main_frame=self)
+            t = BackThreads(task_qu=self.task_qu)
             t.start()
             self.back_threads.append(t)
 
@@ -305,7 +305,9 @@ class MainFrame(ui.Frame):
         else:
             list_hosts.append(hosts)
             hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
-            self.qu_hostses.put(hosts)
+            self.task_qu.put(lambda : \
+                (hosts.getContentOnce() or True) and wx.CallAfter(self.tryToShowHosts, hosts)
+            )
 
         self.m_tree.Expand(tree)
 

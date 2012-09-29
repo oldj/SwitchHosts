@@ -7,16 +7,16 @@
 
 import time
 import wx
-import Queue
 import threading
+import traceback
 
 class BackThreads(threading.Thread):
 
-    def __init__(self, main_frame, *kw, **kw2):
+    def __init__(self, task_qu, *kw, **kw2):
 
         super(BackThreads, self).__init__(*kw, **kw2)
 
-        self.main_frame = main_frame
+        self.task_qu = task_qu
         self.time_to_quit = threading.Event()
         self.time_to_quit.clear()
 
@@ -27,10 +27,14 @@ class BackThreads(threading.Thread):
             if self.time_to_quit.isSet():
                 break
 
-            if not self.main_frame.qu_hostses.empty():
-                hosts = self.main_frame.qu_hostses.get(block=False)
-                hosts.getContentOnce()
-                wx.CallAfter(self.main_frame.tryToShowHosts, hosts)
+            if not self.task_qu.empty():
+                try:
+                    task = self.task_qu.get(block=False)
+                    if callable(task):
+                        task()
+                except Exception:
+                    print(traceback.format_exc())
+
             time.sleep(0.1)
 
 
