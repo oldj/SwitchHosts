@@ -154,19 +154,24 @@ class Hosts(object):
         return fn
 
 
-    def save(self, path=None):
+    @property
+    def full_content(self):
 
         cnt_for_save = [
             "%s %s" % (self.flag, json.dumps({
                 "title": self.title,
                 "url": self.url,
                 "icon_idx": self.icon_idx,
-            })),
+                })),
             self.content,
-        ]
+            ]
 
-        cnt_for_save = "\n".join(cnt_for_save).encode("utf-8")
-        open(path or self.path, "w").write(cnt_for_save)
+        return "\n".join(cnt_for_save).encode("utf-8")
+
+
+    def save(self, path=None):
+
+        open(path or self.path, "w").write(self.full_content)
 
 
     def remove(self):
