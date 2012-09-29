@@ -57,7 +57,9 @@ class Frame(wx.Frame):
 
         bSizer5 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_tree = wx.TreeCtrl(self.m_panel1, wx.ID_ANY, wx.DefaultPosition)
+        self.m_tree = wx.TreeCtrl(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size(200, -1), style=wx.TR_DEFAULT_STYLE|wx.NO_BORDER)
+#        self.m_tree.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVEBORDER))
+        self.m_tree.SetBackgroundColour(wx.Colour(218, 223, 230))
         self.m_tree_root = self.m_tree.AddRoot(u"hosts")
         self.m_tree_origin = self.m_tree.AppendItem(self.m_tree_root, lang.trans("origin_hosts"))
         self.m_tree_local = self.m_tree.AppendItem(self.m_tree_root, lang.trans("local_hosts"))
@@ -66,7 +68,7 @@ class Frame(wx.Frame):
         self.m_tree.SetItemTextColour(self.m_tree_local, "#999999")
         self.m_tree.SetItemTextColour(self.m_tree_online, "#999999")
         self.m_tree.ExpandAll()
-        bSizer5.Add(self.m_tree, 1, wx.ALL | wx.EXPAND, 5)
+        bSizer5.Add(self.m_tree, 1, wx.ALL | wx.EXPAND, 0)
 
         self.image_list = wx.ImageList(16, 16)
         self.ico_folder_idx = self.image_list.Add(
@@ -88,26 +90,39 @@ class Frame(wx.Frame):
             self.m_tree.SetItemImage(item_idx, self.ico_folder_idx, wx.TreeItemIcon_Normal)
             self.m_tree.SetItemImage(item_idx, self.ico_folder_open_idx, wx.TreeItemIcon_Expanded)
 
+        self.m_staticline_left_bottom = wx.StaticLine(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
+            wx.LI_HORIZONTAL)
+        bSizer5.Add(self.m_staticline_left_bottom, 0, wx.EXPAND | wx.ALL, 0)
 
         bSizer61 = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.m_btn_add = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ADD, co.GetMondrianBitmap(fn="add"), u"添加")
+#        self.m_btn_add = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ADD, co.GetMondrianBitmap(fn="add"), u"添加")
+        self.m_btn_add = wx.BitmapButton(self.m_panel1, wx.ID_ADD,
+            wx.Bitmap(u"../../../EverBox/res/silk_icons/add.png", wx.BITMAP_TYPE_ANY), wx.DefaultPosition,
+            wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER)
         bSizer61.Add(self.m_btn_add, 0, wx.ALL, 5)
 
-        self.m_btn_del = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_DELETE, co.GetMondrianBitmap(fn="delete"), u"删除")
+#        self.m_btn_del = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_DELETE, co.GetMondrianBitmap(fn="delete"), u"删除")
+        self.m_btn_del = wx.BitmapButton(self.m_panel1, wx.ID_DELETE,
+            wx.Bitmap(u"../../../EverBox/res/silk_icons/delete.png", wx.BITMAP_TYPE_ANY), wx.DefaultPosition,
+            wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER)
         bSizer61.Add(self.m_btn_del, 0, wx.ALL, 5)
 
         bSizer5.Add(bSizer61, 0, wx.EXPAND, 5)
 
         bSizer4.Add(bSizer5, 1, wx.EXPAND, 5)
 
+        self.m_staticline_main = wx.StaticLine(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
+            wx.LI_VERTICAL)
+        bSizer4.Add(self.m_staticline_main, 0, wx.EXPAND | wx.ALL, 0)
+
         bSizer6 = wx.BoxSizer(wx.VERTICAL)
 
         self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition,
-                                              wx.DefaultSize,
-                                              wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB|wx.HSCROLL)
+              wx.DefaultSize,
+              wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB|wx.HSCROLL|wx.NO_BORDER)
         self.m_textCtrl_content.SetMaxLength(0)
-        bSizer6.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 5)
+        bSizer6.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 0)
 
         bSizer7 = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -122,8 +137,11 @@ class Frame(wx.Frame):
         bSizer71.Fit(self.m_panel3)
         bSizer7.Add(self.m_panel3, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY, co.GetMondrianBitmap(fn="accept"), u"应用")
+#        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY, co.GetMondrianBitmap(fn="accept"), u"应用")
         #        self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_btn_apply = wx.BitmapButton(self.m_panel1, wx.ID_APPLY,
+            wx.Bitmap(u"../../../EverBox/res/silk_icons/accept.png", wx.BITMAP_TYPE_ANY), wx.DefaultPosition,
+            wx.DefaultSize, wx.BU_AUTODRAW|wx.SIMPLE_BORDER)
         bSizer7.Add(self.m_btn_apply, 0, wx.ALL, 5)
 
         if cls_TaskBarIcon and os.name == "nt":
@@ -134,6 +152,10 @@ class Frame(wx.Frame):
             self.m_btn_exit = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_CLOSE, co.GetMondrianBitmap(fn="door"), u"隐藏")
             #            self.m_btn_exit = wx.Button(self.m_panel1, wx.ID_CLOSE, u"隐藏", wx.DefaultPosition, wx.DefaultSize, 0)
             bSizer7.Add(self.m_btn_exit, 0, wx.ALL, 5)
+
+        self.m_staticline_right_bottom = wx.StaticLine(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize,
+            wx.LI_HORIZONTAL)
+        bSizer6.Add(self.m_staticline_right_bottom, 0, wx.EXPAND | wx.ALL, 0)
 
         bSizer6.Add(bSizer7, 0, wx.EXPAND, 5)
 
