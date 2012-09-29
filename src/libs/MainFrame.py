@@ -91,6 +91,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnApply, id=wx.ID_APPLY)
         self.Bind(wx.EVT_MENU, self.OnRename, id=self.ID_RENAME)
         self.Bind(wx.EVT_MENU, self.OnEdit, id=wx.ID_EDIT)
+        self.Bind(wx.EVT_MENU, self.OnRefresh, id=wx.ID_REFRESH)
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
         self.Bind(wx.EVT_BUTTON, self.OnApply, id=wx.ID_APPLY)
         self.Bind(wx.EVT_BUTTON, self.OnDel, id=wx.ID_DELETE)
@@ -139,6 +140,7 @@ class MainFrame(ui.Frame):
         self.hosts_item_menu.AppendMenu(-1, u"图标", self.makeSubIconMenu())
 
         self.hosts_item_menu.AppendSeparator()
+        self.hosts_item_menu.Append(wx.ID_REFRESH, u"刷新")
         self.hosts_item_menu.Append(wx.ID_DELETE, u"删除")
 
 #        self.m_btn_apply.Disable()
@@ -510,6 +512,7 @@ class MainFrame(ui.Frame):
                 return
 
         if not hosts:
+            # 新建 hosts
             fn = self.makeNewHostsFileName()
             if not fn:
                 wx.MessageBox(u"hosts 文件数超出限制，无法再创建新 hosts 了！")
@@ -520,22 +523,31 @@ class MainFrame(ui.Frame):
             hosts = Hosts(path, title=title, url=url if is_online else None)
             hosts.content = u"# %s" % title
 
-            self.addHosts(hosts, show_after_add=True)
-            self.task_qu.put(lambda : [
-                hosts.getContentOnce(), wx.CallAfter(self.tryToShowHosts, hosts)
-            ])
+            if hosts.is_online:
+                self.getHostsContent(hosts)
 
+            self.addHosts(hosts, show_after_add=True)
 
         else:
+            # 修改 hosts
             hosts.is_online = is_online
             hosts.title = title
             hosts.url = url if is_online else None
-            self.refreshHosts(hosts)
+            self.renderHosts(hosts)
 
         self.saveHosts(hosts)
 
 
-    def refreshHosts(self, hosts):
+    def getHostsContent(self, hosts):
+
+        hosts.is_loading = True
+        self.task_qu.put(lambda : [
+            hosts.getContent(force=True), wx.CallAfter(self.tryToShowHosts, hosts)
+        ])
+        self.tryToShowHosts(hosts)
+
+
+    def renderHosts(self, hosts):
         u"""更新hosts的名称"""
 
         self.m_tree.SetItemText(hosts.tree_item_id, hosts.title)
@@ -610,9 +622,11 @@ class MainFrame(ui.Frame):
             is_rename_able = hosts in self.hostses
             is_edit_able = hosts in self.hostses
             is_del_able = hosts in self.hostses
+            is_refresh_able = hosts not in self.origin_hostses
             self.hosts_item_menu.Enable(self.ID_RENAME, is_rename_able)
             self.hosts_item_menu.Enable(wx.ID_EDIT, is_edit_able)
             self.hosts_item_menu.Enable(wx.ID_DELETE, is_del_able)
+            self.hosts_item_menu.Enable(wx.ID_REFRESH, is_refresh_able)
 
             self.m_tree.PopupMenu(self.hosts_item_menu, event.GetPoint())
 
@@ -672,4 +686,10 @@ class MainFrame(ui.Frame):
 
         else:
             event.Veto()
+
+
+    def OnRefresh(self, event):
+
+        hosts = self.current_showing_hosts
+        self.getHostsContent(hosts)
 
