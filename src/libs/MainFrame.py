@@ -63,26 +63,40 @@ class MainFrame(ui.Frame):
 
         self.taskbar_icon = TaskBarIcon(self)
         self.latest_stable_version = "0"
-        self.is_switching_text = False
         self.__sys_hosts_path = None
 
-        self.configs = {}
         if working_path:
             self.working_path = working_path
             self.configs_path = os.path.join(self.working_path, "configs.json")
             self.hosts_path = os.path.join(self.working_path, "hosts")
+        self.showing_rnd_id = random.random()
+
+        self.task_qu = Queue.Queue(4096)
+        self.startBackThreads(2)
+        self.makeHostsContextMenu()
+
+        self.init2()
+        self.initBind()
+
+
+    def init2(self):
+
+        self.is_switching_text = False
         self.current_using_hosts = None
         self.current_showing_hosts = None
         self.current_tree_hosts = None
 
-        self.showing_rnd_id = random.random()
-
         self.origin_hostses = []
         self.hostses = []
-        self.task_qu = Queue.Queue(4096)
 
-        self.init2()
-        self.initBind()
+        self.configs = {}
+        self.loadConfigs()
+
+        self.getSystemHosts()
+        self.scanSavedHosts()
+
+        if not os.path.isdir(self.hosts_path):
+            os.makedirs(self.hosts_path)
 
 
     def initBind(self):
@@ -108,19 +122,6 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
         self.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.OnRenameEnd, self.m_tree)
         self.Bind(wx.EVT_TEXT, self.OnHostsChange, self.m_textCtrl_content)
-
-
-    def init2(self):
-
-        self.loadConfigs()
-        self.startBackThreads(2)
-
-        self.getSystemHosts()
-        self.scanSavedHosts()
-        self.makeHostsContextMenu()
-
-        if not os.path.isdir(self.hosts_path):
-            os.makedirs(self.hosts_path)
 
 
     def startBackThreads(self, count=1):
@@ -267,7 +268,11 @@ class MainFrame(ui.Frame):
 #        co.log(hosts.content)
         content = hosts.content if not hosts.is_loading else "loading..."
         self.m_textCtrl_content.SetValue(content)
-        self.m_textCtrl_content.Enable(not hosts.is_online and not hosts.is_loading)
+        if hosts.is_online or hosts.is_loading:
+            enabled = False
+        else:
+            enabled = True
+        self.m_textCtrl_content.Enable(enabled)
         self.is_switching_text = False
 
         if self.current_showing_hosts:
@@ -294,7 +299,7 @@ class MainFrame(ui.Frame):
 
         try:
             hosts.save(path=self.sys_hosts_path)
-            self.notify(msg=u"hosts 已切换为『%s』。" % hosts.title, title=u"hosts 切换成功")
+            self.notify(msg=u"hosts 已切换为「%s」。" % hosts.title, title=u"hosts 切换成功")
 
         except Exception:
 
@@ -404,7 +409,7 @@ class MainFrame(ui.Frame):
         self.hostses.remove(hosts)
 
         cfg_hostses = self.configs.get("hostses")
-        if cfg_hostses:
+        if cfg_hostses and hosts.title in cfg_hostses:
             cfg_hostses.remove(hosts.title)
 
         return True
@@ -414,16 +419,17 @@ class MainFrame(ui.Frame):
         u"""将当前所有设置以及方案导出为一个文件"""
 
         data = {
+            "version": self.version,
             "configs": self.configs,
         }
-        hostses = []
+        hosts_files = []
         for hosts in self.hostses:
-            hostses.append({
+            hosts_files.append({
                 "filename": hosts.filename,
                 "content": hosts.full_content,
             })
 
-        data["hostses"] = hostses
+        data["hosts_files"] = hosts_files
 
         try:
             open(path, "w").write(json.dumps(data))
@@ -437,6 +443,74 @@ class MainFrame(ui.Frame):
 
     def importHosts(self, content):
         u"""导入"""
+
+        try:
+            data = json.loads(content)
+
+        except Exception:
+            wx.MessageBox(u"档案解析出错了！", caption=u"导入失败")
+            return
+
+        if type(data) != dict:
+            wx.MessageBox(u"档案格式有误！", caption=u"导入失败")
+            return
+
+        co.log(content)
+        configs = data.get("configs")
+        hosts_files = data.get("hosts_files")
+        if type(configs) != dict or type(hosts_files) not in (list, tuple):
+            wx.MessageBox(u"档案数据有误！", caption=u"导入失败")
+            return
+
+        # 删除现有 hosts 文件
+        current_files = glob.glob(os.path.join(self.hosts_path, "*.hosts"))
+        for fn in current_files:
+            try:
+                os.remove(fn)
+
+            except Exception:
+                wx.MessageBox(u"删除 '%s' 时失败！\n\n%s" % (fn, traceback.format_exc()),
+                    caption=u"导入失败")
+                return
+
+        # 写入新 hosts 文件
+        for hf in hosts_files:
+            co.log(hf)
+            if type(hf) != dict or "filename" not in hf or "content" not in hf:
+                continue
+
+            fn = hf["filename"].strip()
+            if not fn or not fn.lower().endswith(".hosts"):
+                continue
+
+            try:
+                open(os.path.join(self.hosts_path, fn), "w").write(
+                    hf["content"].strip().encode("utf-8"))
+
+            except Exception:
+                wx.MessageBox(u"写入 '%s' 时失败！\n\n%s" % (fn, traceback.format_exc()),
+                    caption=u"导入失败")
+                return
+
+        # 更新 configs
+        self.configs = {}
+        try:
+            open(self.configs_path, "w").write(json.dumps(configs).encode("utf-8"))
+        except Exception:
+            wx.MessageBox(u"写入 '%s' 时失败！\n\n%s" % (self.configs_path, traceback.format_exc()),
+                caption=u"导入失败")
+            return
+
+        self.clearTree()
+        self.init2()
+
+        wx.MessageBox(u"导入成功！")
+
+
+    def clearTree(self):
+
+        for hosts in self.all_hostses:
+            self.m_tree.Delete(hosts.tree_item_id)
 
 
     def notify(self, msg="", title=u"消息"):
@@ -484,6 +558,17 @@ class MainFrame(ui.Frame):
         self.SetFocus()
 
 
+    def updateConfigs(self, configs):
+
+        keys = ("hostses",)
+        for k in keys:
+            if k in configs:
+                self.configs[k] = configs[k]
+
+        # 校验配置有效性
+        if type(self.configs.get("hostses")) != list:
+            self.configs["hostses"] = []
+
 
     def loadConfigs(self):
 
@@ -498,14 +583,8 @@ class MainFrame(ui.Frame):
                 wx.MessageBox("配置信息格式有误！")
                 return
 
-            keys = ("hostses",)
-            for k in keys:
-                if k in configs:
-                    self.configs[k] = configs[k]
+            self.updateConfigs(configs)
 
-            # 校验配置有效性
-            if type(self.configs.get("hostses")) != list:
-                self.configs["hostses"] = []
 
         self.saveConfigs()
 
@@ -837,4 +916,33 @@ class MainFrame(ui.Frame):
 
 
     def OnImport(self, event):
-        pass
+
+        dlg = ui.Dlg_Import(self)
+        if dlg.ShowModal() == wx.ID_OK:
+            co.log(dlg.m_notebook.GetSelection())
+            path = dlg.m_filePicker.GetPath()
+            url = dlg.m_textCtrl_url.GetValue()
+
+            content = None
+            if dlg.m_notebook.GetSelection() != 1:
+                # 本地
+                if os.path.isfile(path):
+                    content = open(path).read()
+
+                else:
+                    wx.MessageBox(u"%s 不是有效的文件路径！" % path)
+
+            else:
+                # 在线
+                if co.httpExists(url):
+                    content = urllib.urlopen(url).read()
+
+                else:
+                    wx.MessageBox(u"URL %s 无法访问！" % url)
+
+            if content and wx.MessageBox(u"导入档案会替换现有设置及数据，确定要导入吗？",
+                    caption=u"警告",
+                    style=wx.OK | wx.CANCEL) == wx.OK:
+                self.importHosts(content)
+
+        dlg.Destroy()
