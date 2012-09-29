@@ -102,7 +102,8 @@ class Frame(wx.Frame):
 #            wx.Bitmap(u"../../../EverBox/res/silk_icons/add.png", wx.BITMAP_TYPE_ANY),
             wx.DefaultPosition,
             wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER)
-        bSizer61.Add(self.m_btn_add, 0, wx.ALL, 5)
+        self.m_btn_add.SetToolTipString(u"添加一个 hosts 方案")
+        bSizer61.Add(self.m_btn_add, 0, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, 5)
 
 #        self.m_btn_del = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_DELETE, co.GetMondrianBitmap(fn="delete"), u"删除")
         self.m_btn_del = wx.BitmapButton(self.m_panel1, wx.ID_DELETE,
@@ -110,7 +111,8 @@ class Frame(wx.Frame):
 #            wx.Bitmap(u"../../../EverBox/res/silk_icons/delete.png", wx.BITMAP_TYPE_ANY),
             wx.DefaultPosition,
             wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER)
-        bSizer61.Add(self.m_btn_del, 0, wx.ALL, 5)
+        self.m_btn_del.SetToolTipString(u"删除当前 hosts 方案")
+        bSizer61.Add(self.m_btn_del, 0, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.RIGHT, 5)
 
         bSizer5.Add(bSizer61, 0, wx.EXPAND, 5)
 
@@ -141,13 +143,16 @@ class Frame(wx.Frame):
         bSizer71.Fit(self.m_panel3)
         bSizer7.Add(self.m_panel3, 1, wx.EXPAND | wx.ALL, 5)
 
-#        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY, co.GetMondrianBitmap(fn="accept"), u"应用")
+        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY,
+            co.GetMondrianBitmap(fn="accept"), u"应用",
+            size=wx.Size(-1, 24),
+            style=wx.BU_AUTODRAW|wx.STATIC_BORDER)
         #        self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
-        self.m_btn_apply = wx.BitmapButton(self.m_panel1, wx.ID_APPLY,
-            co.GetMondrianBitmap(fn="accept"),
-#            wx.Bitmap(u"../../../EverBox/res/silk_icons/accept.png", wx.BITMAP_TYPE_ANY),
-            wx.DefaultPosition,
-            wx.DefaultSize, wx.BU_AUTODRAW|wx.SIMPLE_BORDER)
+#        self.m_btn_apply = wx.BitmapButton(self.m_panel1, wx.ID_APPLY,
+#            co.GetMondrianBitmap(fn="accept"),
+#            wx.DefaultPosition,
+#            wx.DefaultSize, wx.BU_AUTODRAW|wx.SIMPLE_BORDER)
+        self.m_btn_apply.SetToolTipString(u"应用当前 hosts 方案")
         bSizer7.Add(self.m_btn_apply, 0, wx.ALL, 5)
 
         if cls_TaskBarIcon and os.name == "nt":

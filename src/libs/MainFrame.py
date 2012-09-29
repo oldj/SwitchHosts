@@ -246,6 +246,8 @@ class MainFrame(ui.Frame):
 #            self.useHosts(hosts)
             self.highLightHosts(hosts)
 
+            self.m_btn_del.Enable(False)
+
 
     def textStyle(self, old_content=None):
         u"""更新文本区的样式"""
@@ -809,6 +811,9 @@ class MainFrame(ui.Frame):
 
         hosts = self.getHostsFromTreeByEvent(event)
         self.current_tree_hosts = hosts
+
+        is_delete_able = True if hosts and hosts in self.hostses else False
+        self.m_btn_del.Enable(is_delete_able)
 
         if not hosts or (hosts not in self.hostses and hosts not in self.origin_hostses):
             return event.Veto()
