@@ -11,6 +11,8 @@ import glob
 import simplejson as json
 import wx
 import ui
+import urllib
+import re
 import traceback
 import random
 import Queue
@@ -594,6 +596,37 @@ class MainFrame(ui.Frame):
         return None
 
 
+    def getLatestStableVersion(self, alert=False):
+
+        url = "https://github.com/oldj/SwitchHosts/blob/master/README.md"
+
+        ver = None
+        try:
+            c = urllib.urlopen(url).read()
+            v = re.search(r"\bLatest Stable:\s?(?P<version>[\d\.]+)\b", c)
+            if v:
+                ver = v.group("version")
+                self.latest_stable_version = ver
+                co.log("last_stable_version: %s" % ver)
+
+        except Exception:
+            pass
+
+        if not alert:
+            return
+
+        if not ver:
+            wx.MessageBox(u"未能取得最新版本号！")
+
+        else:
+            cmp = co.compareVersion(self.version, self.latest_stable_version)
+            if cmp >= 0:
+                wx.MessageBox(u"当前已是最新版本！")
+            else:
+                wx.MessageBox(u"更新的稳定版 %s 已经发布！" % self.latest_stable_version)
+
+
+
     def OnHostsChange(self, event):
 
         if self.is_switching_text:
@@ -608,6 +641,10 @@ class MainFrame(ui.Frame):
     def OnChkUpdate(self, event):
 
         co.log("chk update...")
+
+        self.task_qu.put(lambda : [
+            self.getLatestStableVersion(alert=True),
+        ])
 
 
     def OnExit(self, event):

@@ -172,13 +172,14 @@ class AboutBox(wx.Dialog):
                 style=wx.DEFAULT_DIALOG_STYLE|wx.THICK_FRAME|wx.TAB_TRAVERSAL
             )
 
-        update_version = u"正在检查新版本..."
-        if latest_stable_version:
-            cv = self.compareVersion(version, latest_stable_version)
+        update_version = u"欢迎使用！"
+        co.log([version, latest_stable_version])
+        if latest_stable_version and latest_stable_version != "0":
+            cv = co.compareVersion(version, latest_stable_version)
             if cv < 0:
                 update_version = u"更新的稳定版 v%s 已经发布！" % latest_stable_version
             else:
-                update_version = u"当前版本已是最新版。"
+                update_version = u"您正在使用最新稳定版本。"
             
 
         hwin = AboutHtml(self)
@@ -204,41 +205,6 @@ class AboutBox(wx.Dialog):
         self.SetClientSize(hwin.GetSize())
         self.CenterOnParent(wx.BOTH)
         self.SetFocus()
-
-
-    def compareVersion(self, v1, v2):
-        u"""比较两个版本的大小
-        版本的格式形如：0.1.5.3456
-
-        如果 v1 > v2，则返回 1
-        如果 v1 = v2，则返回 0
-        如果 v1 < v2，则返回 -1
-        """
-
-        a1 = v1.split(".")
-        a2 = v2.split(".")
-
-        try:
-            a1 = [int(i) for i in a1]
-            a2 = [int(i) for i in a2]
-        except Exception:
-            return 0
-
-        len1 = len(a1)
-        len2 = len(a2)
-        l = min(len1, len2)
-        for i in range(l):
-            if a1[i] > a2[i]:
-                return 1
-            elif a1[i] < a2[i]:
-                return -1
-
-        if len1 > len2:
-            return 1
-        elif len1 < len2:
-            return -1
-        else:
-            return 0
 
 
 class Dlg_addHosts(wx.Dialog):
