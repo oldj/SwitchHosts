@@ -99,20 +99,25 @@ class Frame(wx.Frame):
 #        self.m_btn_add = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ADD, co.GetMondrianBitmap(fn="add"), u"添加")
         self.m_btn_add = wx.BitmapButton(self.m_panel1, wx.ID_ADD,
             co.GetMondrianBitmap(fn="add"),
-#            wx.Bitmap(u"../../../EverBox/res/silk_icons/add.png", wx.BITMAP_TYPE_ANY),
             wx.DefaultPosition,
             wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER)
-        self.m_btn_add.SetToolTipString(u"添加一个 hosts 方案")
+        self.m_btn_add.SetToolTipString(u"添加")
         bSizer61.Add(self.m_btn_add, 0, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, 5)
+
+        self.m_btn_refresh = wx.BitmapButton(self.m_panel1, wx.ID_REFRESH,
+            co.GetMondrianBitmap(fn="arrow_refresh"),
+            wx.DefaultPosition,
+            wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER)
+        self.m_btn_add.SetToolTipString(u"刷新")
+        bSizer61.Add(self.m_btn_refresh, 0, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, 5)
 
 #        self.m_btn_del = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_DELETE, co.GetMondrianBitmap(fn="delete"), u"删除")
         self.m_btn_del = wx.BitmapButton(self.m_panel1, wx.ID_DELETE,
             co.GetMondrianBitmap(fn="delete"),
-#            wx.Bitmap(u"../../../EverBox/res/silk_icons/delete.png", wx.BITMAP_TYPE_ANY),
             wx.DefaultPosition,
             wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER)
-        self.m_btn_del.SetToolTipString(u"删除当前 hosts 方案")
-        bSizer61.Add(self.m_btn_del, 0, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.RIGHT, 5)
+        self.m_btn_del.SetToolTipString(u"删除")
+        bSizer61.Add(self.m_btn_del, 0, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, 5)
 
         bSizer5.Add(bSizer61, 0, wx.EXPAND, 5)
 
