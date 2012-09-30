@@ -130,10 +130,7 @@ class Frame(wx.Frame):
 
         bSizer6 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_textCtrl_content = wx.TextCtrl(self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition,
-              wx.DefaultSize,
-              wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB|wx.HSCROLL|wx.NO_BORDER)
-        self.m_textCtrl_content.SetMaxLength(0)
+        self.m_textCtrl_content = self.makeTextCtrl()
         bSizer6.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 0)
 
         bSizer7 = wx.BoxSizer(wx.HORIZONTAL)
@@ -200,6 +197,17 @@ class Frame(wx.Frame):
         dlg = wx.MessageDialog(None, msg, title, wx.OK | wx.ICON_WARNING)
         dlg.ShowModal()
         dlg.Destroy()
+
+
+    def makeTextCtrl(self):
+
+        txt_ctrl = wx.TextCtrl(
+            self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition,
+            wx.DefaultSize,
+            wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB|wx.HSCROLL|wx.NO_BORDER)
+        txt_ctrl.SetMaxLength(0)
+
+        return txt_ctrl
 
 
     def OnClose(self, event):

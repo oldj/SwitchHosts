@@ -130,7 +130,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeRClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
         self.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.OnRenameEnd, self.m_tree)
-        self.Bind(wx.EVT_TEXT, self.OnHostsChange, self.m_textCtrl_content)
+        self.Bind(wx.EVT_TEXT, self.OnHostsChange, id=self.ID_HOSTS_TEXT)
 
 
     def startBackThreads(self, count=1):
@@ -260,15 +260,17 @@ class MainFrame(ui.Frame):
     def textStyle(self, old_content=None):
         u"""更新文本区的样式"""
 
+#        self.is_for_styling = False
+#        return False
+
         from highLight import highLight
 
         if self.is_for_styling:
             co.log("styling...")
+            highLight(self.m_textCtrl_content, old_content=old_content, default_font=self.font_mono)
+            co.log("styled.")
 
-            self.m_textCtrl_content.SetFont(self.font_mono)
-            highLight(self.m_textCtrl_content, old_content=old_content)
-
-            self.is_for_styling = False
+        self.is_for_styling = False
 
 
 
@@ -277,15 +279,11 @@ class MainFrame(ui.Frame):
         self.showing_rnd_id = random.random()
 
 #        hosts.getContentOnce()
-        self.is_switching_text = True
-        self.is_for_styling = True
         content = hosts.content if not hosts.is_loading else "loading..."
+        self.is_for_styling = False
+        self.is_switching_text = True
         self.m_textCtrl_content.SetValue(content)
-        if hosts.is_online or hosts.is_loading:
-            enabled = False
-        else:
-            enabled = True
-        self.m_textCtrl_content.Enable(enabled)
+        self.m_textCtrl_content.Enable(self.getHostsAttr(hosts, "is_edit_able"))
         self.is_switching_text = False
 
         if self.current_showing_hosts:
@@ -293,6 +291,7 @@ class MainFrame(ui.Frame):
         self.m_tree.SetItemBackgroundColour(hosts.tree_item_id, "#ccccff")
 
 #        self.task_qu.put(lambda : self.textStyle())
+        self.is_for_styling = True
         self.textStyle()
 
         self.current_showing_hosts = hosts
@@ -833,7 +832,10 @@ class MainFrame(ui.Frame):
         attrs = {
             "is_refresh_able": hosts and hosts in self.all_hostses,
             "is_delete_able": hosts and hosts in self.hostses,
-            "is_edit_able": hosts and not hosts.is_online and not hosts.is_origin,
+            "is_edit_able": hosts and
+                            not hosts.is_online and
+                            not hosts.is_origin and
+                            not hosts.is_loading,
         }
         for k in attrs:
             attrs[k] = True if attrs[k] else False
@@ -850,13 +852,16 @@ class MainFrame(ui.Frame):
 
     def OnHostsChange(self, event):
 
-        if self.is_switching_text:
+        if self.is_switching_text or self.is_for_styling:
             return
 
         self.current_showing_hosts.content = self.m_textCtrl_content.GetValue()
         self.saveHosts(self.current_showing_hosts)
+        co.log("saved.")
 
+        self.is_for_styling = True
         self.textStyle()
+        self.is_for_styling = False
 
 
     def OnChkUpdate(self, event):
