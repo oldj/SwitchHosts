@@ -36,7 +36,7 @@ class Hosts(object):
     @property
     def title(self):
 
-        return self.__title or u"未命名"
+        return self.__title or self.filename or u"未命名"
 
 
     @title.setter
