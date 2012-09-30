@@ -324,6 +324,14 @@ class MainFrame(ui.Frame):
         self.showHosts(hosts)
         self.current_using_hosts = hosts
         self.taskbar_icon.updateIcon()
+        self.updateIcon()
+
+
+    def updateIcon(self):
+
+        co.log("update icon")
+        if self.current_using_hosts:
+            self.SetIcon(co.GetMondrianIcon(self.current_using_hosts.icon_idx))
 
 
     def addHosts(self, hosts, show_after_add=False):

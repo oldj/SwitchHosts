@@ -4,7 +4,6 @@ u"""
 基本操作
 """
 
-import os
 import traceback
 import datetime
 import wx
