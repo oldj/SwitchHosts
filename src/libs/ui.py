@@ -3,6 +3,7 @@
 import os
 import wx, wx.html
 import wx.lib.buttons as buttons
+import wx.stc as stc
 import common_operations as co
 import lang
 
@@ -130,8 +131,7 @@ class Frame(wx.Frame):
 
         bSizer6 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_textCtrl_content = self.makeTextCtrl()
-        bSizer6.Add(self.m_textCtrl_content, 1, wx.ALL | wx.EXPAND, 0)
+        self.m_textCtrl_content = self.makeTextCtrl(bSizer6)
 
         bSizer7 = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -199,13 +199,18 @@ class Frame(wx.Frame):
         dlg.Destroy()
 
 
-    def makeTextCtrl(self):
+    def makeTextCtrl(self, container):
 
-        txt_ctrl = wx.TextCtrl(
-            self.m_panel1, self.ID_HOSTS_TEXT, wx.EmptyString, wx.DefaultPosition,
-            wx.DefaultSize,
-            wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB|wx.HSCROLL|wx.NO_BORDER)
+        from HostsCtrl import HostsCtrl
+
+        txt_ctrl = HostsCtrl(
+            self.m_panel1, self.ID_HOSTS_TEXT, #wx.EmptyString,
+            pos=wx.DefaultPosition,
+            size=wx.DefaultSize,
+            style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB|wx.HSCROLL|wx.NO_BORDER)
         txt_ctrl.SetMaxLength(0)
+
+        container.Add(txt_ctrl, 1, wx.ALL | wx.EXPAND, 0)
 
         return txt_ctrl
 
@@ -450,4 +455,6 @@ class Dlg_Import(wx.Dialog):
 
     def __del__( self ):
         pass
+
+
 
