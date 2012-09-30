@@ -87,7 +87,7 @@ def decode(s):
         encoding = "GB18030"
 
     if not encoding:
-        encoding = "GB18030" if os.name == "nt" else "UTF-8"
+        encoding = "UTF-8"
 #    print s, cd, encoding, s.decode(encoding)
 
     return s.decode(encoding)

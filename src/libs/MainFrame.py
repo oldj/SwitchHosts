@@ -47,7 +47,7 @@ if os.name == "posix":
 
 class MainFrame(ui.Frame):
 
-    ID_RENAME = wx.NewId()
+#    ID_RENAME = wx.NewId()
 
     def __init__(self, mainjob,
             parent=None, id=wx.ID_ANY, title=None, pos=wx.DefaultPosition,
@@ -117,7 +117,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
         self.Bind(wx.EVT_MENU, self.OnDel, id=wx.ID_DELETE)
         self.Bind(wx.EVT_MENU, self.OnApply, id=wx.ID_APPLY)
-        self.Bind(wx.EVT_MENU, self.OnRename, id=self.ID_RENAME)
+#        self.Bind(wx.EVT_MENU, self.OnRename, id=self.ID_RENAME)
         self.Bind(wx.EVT_MENU, self.OnEdit, id=wx.ID_EDIT)
         self.Bind(wx.EVT_MENU, self.OnRefresh, id=wx.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.OnExport, self.m_menuItem_export)
@@ -154,7 +154,7 @@ class MainFrame(ui.Frame):
         self.hosts_item_menu = wx.Menu()
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
         #        self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
-        self.hosts_item_menu.Append(self.ID_RENAME, u"重命名")
+#        self.hosts_item_menu.Append(self.ID_RENAME, u"重命名")
         self.hosts_item_menu.Append(wx.ID_EDIT, u"详情")
         self.hosts_item_menu.AppendMenu(-1, u"图标", self.makeSubIconMenu())
 
@@ -890,7 +890,7 @@ class MainFrame(ui.Frame):
             is_edit_able = hosts in self.hostses
             is_del_able = hosts in self.hostses
             is_refresh_able = hosts not in self.origin_hostses
-            self.hosts_item_menu.Enable(self.ID_RENAME, is_rename_able)
+#            self.hosts_item_menu.Enable(self.ID_RENAME, is_rename_able)
             self.hosts_item_menu.Enable(wx.ID_EDIT, is_edit_able)
             self.hosts_item_menu.Enable(wx.ID_DELETE, is_del_able)
             self.hosts_item_menu.Enable(wx.ID_REFRESH, is_refresh_able)
