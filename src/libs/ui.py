@@ -148,15 +148,15 @@ class Frame(wx.Frame):
         bSizer71.Fit(self.m_panel3)
         bSizer7.Add(self.m_panel3, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY,
-            co.GetMondrianBitmap(fn="accept"), u"应用",
-            size=wx.Size(-1, 24),
-            style=wx.BU_AUTODRAW|wx.STATIC_BORDER)
+#        self.m_btn_apply = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_APPLY,
+#            co.GetMondrianBitmap(fn="accept"), u"应用",
+#            size=wx.Size(-1, 24),
+#            style=wx.BU_AUTODRAW|wx.STATIC_BORDER)
         #        self.m_btn_apply = wx.Button(self.m_panel1, wx.ID_APPLY, u"应用", wx.DefaultPosition, wx.DefaultSize, 0)
-#        self.m_btn_apply = wx.BitmapButton(self.m_panel1, wx.ID_APPLY,
-#            co.GetMondrianBitmap(fn="accept"),
-#            wx.DefaultPosition,
-#            wx.DefaultSize, wx.BU_AUTODRAW|wx.SIMPLE_BORDER)
+        self.m_btn_apply = wx.BitmapButton(self.m_panel1, wx.ID_APPLY,
+            co.GetMondrianBitmap(fn="accept"),
+            wx.DefaultPosition,
+            wx.Size(60, -1), wx.BU_AUTODRAW|wx.SIMPLE_BORDER)
         self.m_btn_apply.SetToolTipString(u"应用当前 hosts 方案")
         bSizer7.Add(self.m_btn_apply, 0, wx.ALL, 5)
 
