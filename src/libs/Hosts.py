@@ -8,6 +8,7 @@
 import os
 import simplejson as json
 import urllib
+import time
 import datetime
 import common_operations as co
 
@@ -24,6 +25,7 @@ class Hosts(object):
         self.is_online = True if url else False
         self.is_loading = False
         self.last_fetch_dt = None
+        self.last_save_time = None
         self.__title = title
         self.__content = None
         self.tree_item_id = None
@@ -123,7 +125,7 @@ class Hosts(object):
 
     @content.setter
     def content(self, value):
-        self.__content = value
+        self.__content = value.replace("\r", "")
 
 
     def parseConfigs(self, json_str=None):
@@ -184,7 +186,16 @@ class Hosts(object):
 
     def save(self, path=None):
 
+        if self.last_save_time:
+            time_delta = time.time() - self.last_save_time
+#            co.log(time_delta)
+            if time_delta < 0.01:
+                return False
+
         open(path or self.path, "w").write(self.full_content)
+        self.last_save_time = time.time()
+
+        return True
 
 
     def remove(self):

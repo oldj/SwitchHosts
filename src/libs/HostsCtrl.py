@@ -15,8 +15,8 @@ if wx.Platform == '__WXMSW__':
         'mono': 'Courier New',
         'helv': 'Courier New',
         'other': 'Courier New',
-        'size': 12,
-        'size2': 12,
+        'size': 10,
+        'size2': 10,
         }
 elif wx.Platform == '__WXMAC__':
     faces = {
