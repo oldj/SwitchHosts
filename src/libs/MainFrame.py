@@ -307,7 +307,7 @@ class MainFrame(ui.Frame):
                 msg = u"切换 hosts 失败！\n\n%s" % err
 
             if self.current_showing_hosts:
-                wx.MessageBox(msg)
+                wx.MessageBox(msg, caption=u"出错啦！")
                 return
 
         self.highLightHosts(hosts)
@@ -374,11 +374,11 @@ class MainFrame(ui.Frame):
             return False
 
         if hosts.is_origin:
-            wx.MessageBox(u"初始 hosts 不能删除哦～")
+            wx.MessageBox(u"初始 hosts 不能删除哦～", caption=u"出错啦！")
             return False
 
         if hosts == self.current_using_hosts:
-            wx.MessageBox(u"这个 hosts 方案正在使用，不能删除哦～")
+            wx.MessageBox(u"这个 hosts 方案正在使用，不能删除哦～", caption=u"出错啦！")
             return False
 
         dlg = wx.MessageDialog(None, u"确定要删除 hosts '%s'？" % hosts.title, u"删除 hosts",
@@ -396,7 +396,7 @@ class MainFrame(ui.Frame):
 
         except Exception:
             err = traceback.format_exc()
-            wx.MessageBox(u"出错啦！\n\n%s" % err)
+            wx.MessageBox(err, caption=u"出错啦！")
             return False
 
         self.m_tree.Delete(hosts.tree_item_id)
@@ -428,7 +428,7 @@ class MainFrame(ui.Frame):
         try:
             open(path, "w").write(json.dumps(data))
         except Exception:
-            wx.MessageBox(u"导出失败！\n\n%s" % traceback.format_exc())
+            wx.MessageBox(u"导出失败！\n\n%s" % traceback.format_exc(), caption=u"出错啦！")
             return
 
         wx.MessageBox(u"导出完成！")
@@ -579,11 +579,11 @@ class MainFrame(ui.Frame):
             try:
                 configs = json.loads(open(self.configs_path, "rb").read())
             except Exception:
-                wx.MessageBox("读取配置信息失败！")
+                wx.MessageBox("读取配置信息失败！", caption=u"出错啦！")
                 return
 
             if type(configs) != dict:
-                wx.MessageBox("配置信息格式有误！")
+                wx.MessageBox("配置信息格式有误！", caption=u"出错啦！")
                 return
 
             self.updateConfigs(configs)
@@ -596,7 +596,7 @@ class MainFrame(ui.Frame):
         try:
             json.dump(self.configs, open(self.configs_path, "w"))
         except Exception:
-            wx.MessageBox("保存配置信息失败！\n\n%s" % traceback.format_exc())
+            wx.MessageBox("保存配置信息失败！\n\n%s" % traceback.format_exc(), caption=u"出错啦！")
 
 
     def eachHosts(self, func):
@@ -643,7 +643,7 @@ class MainFrame(ui.Frame):
             else:
                 msg = u"保存 hosts 失败！\n\n%s" % err
 
-            wx.MessageBox(msg)
+            wx.MessageBox(msg, caption=u"出错啦！")
 
             return False
 
@@ -674,19 +674,19 @@ class MainFrame(ui.Frame):
         url = dlg.m_textCtrl_url.GetValue().strip()
 
         if not title:
-            wx.MessageBox(u"方案名不能为空！")
+            wx.MessageBox(u"方案名不能为空！", caption=u"出错啦！")
             return
 
         for h in self.hostses:
             if h != hosts and h.title == title:
-                wx.MessageBox(u"已经有名为 '%s' 的方案了！" % title)
+                wx.MessageBox(u"已经有名为 '%s' 的方案了！" % title, caption=u"出错啦！")
                 return
 
         if not hosts:
             # 新建 hosts
             fn = self.makeNewHostsFileName()
             if not fn:
-                wx.MessageBox(u"hosts 文件数超出限制，无法再创建新 hosts 了！")
+                wx.MessageBox(u"hosts 文件数超出限制，无法再创建新 hosts 了！", caption=u"出错啦！")
                 return
 
             path = os.path.join(self.hosts_path, fn)
@@ -794,7 +794,7 @@ class MainFrame(ui.Frame):
 
         def _msg():
             if not ver:
-                wx.MessageBox(u"未能取得最新版本号！")
+                wx.MessageBox(u"未能取得最新版本号！", caption=u"出错啦！")
 
             else:
                 cmp = co.compareVersion(self.version, self.latest_stable_version)
@@ -938,7 +938,7 @@ class MainFrame(ui.Frame):
             return
 
         if hosts in self.origin_hostses:
-            wx.MessageBox(u"初始 hosts 不能改名！")
+            wx.MessageBox(u"%s不能改名！" % lang.trans("origin_hosts"), caption=u"出错啦！")
             return
 
         self.m_tree.EditLabel(hosts.tree_item_id)
@@ -968,8 +968,9 @@ class MainFrame(ui.Frame):
     def OnExport(self, event):
 
         if wx.MessageBox(
-            u"您可以将现在的 hosts 档案导出并共享给其他 SwitchHosts! 用户，\n" +
-            u"注意，只有“本地档案”和“在线档案”中的 hosts 会被导出！",
+            u"您可以将现在的 hosts 档案导出并共享给其他 SwitchHosts! 用户。\n\n" +
+            u"注意，只有“%s”和“%s”中的 hosts 会被导出！" % (
+                lang.trans("local_hosts"), lang.trans("online_hosts")),
             caption=u"导出档案",
             style=wx.OK|wx.CANCEL,
         ) != wx.OK:
@@ -998,7 +999,7 @@ class MainFrame(ui.Frame):
                     content = open(path).read()
 
                 else:
-                    wx.MessageBox(u"%s 不是有效的文件路径！" % path)
+                    wx.MessageBox(u"%s 不是有效的文件路径！" % path, caption=u"出错啦！")
 
             else:
                 # 在线
@@ -1006,7 +1007,7 @@ class MainFrame(ui.Frame):
                     content = urllib.urlopen(url).read()
 
                 else:
-                    wx.MessageBox(u"URL %s 无法访问！" % url)
+                    wx.MessageBox(u"URL %s 无法访问！" % url, caption=u"出错啦！")
 
             if content and wx.MessageBox(u"导入档案会替换现有设置及数据，确定要导入吗？",
                     caption=u"警告",
