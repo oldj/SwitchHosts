@@ -263,11 +263,11 @@ class MainFrame(ui.Frame):
 #        self.is_for_styling = False
 #        return False
 
-        from highLight import highLight
+#        from highLight import highLight
 
         if self.is_for_styling:
             co.log("styling...")
-            highLight(self.m_textCtrl_content, old_content=old_content, default_font=self.font_mono)
+#            highLight(self.m_textCtrl_content, old_content=old_content, default_font=self.font_mono)
             co.log("styled.")
 
         self.is_for_styling = False
