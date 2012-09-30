@@ -25,7 +25,7 @@
 
 你可以直接下载源码到本地运行或编辑，或者在下面下载可执行版本：
 
- * [SwitchHosts! Windows 绿色版下载](http://www.everbox.com/f/QTrmjdqBCMXlmG4lipbtmam6Dk)
+ * [SwitchHosts! Windows 绿色版下载](https://github.com/oldj/SwitchHosts/downloads)
 
 
 
@@ -36,18 +36,22 @@
 ###Windows
 
 ![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/5.png?raw=true)
+
 *程序主界面*
 
 
 ![系统托盘菜单](https://github.com/oldj/SwitchHosts/blob/master/screenshots/2.png?raw=true)
+
 *系统托盘菜单*
 
 ###Mac
 
 ![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/3.png?raw=true)
+
 *程序主界面*
 
 ![系统托盘菜单](https://github.com/oldj/SwitchHosts/blob/master/screenshots/4.png?raw=true)
+
 *系统托盘菜单*
 
 ##更新历史：
