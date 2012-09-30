@@ -44,14 +44,16 @@ class Hosts(object):
         self.__title = value
 
 
-    def getContentFromUrl(self):
+    def getContentFromUrl(self, progress_dlg):
 
         co.log("fetch '%s'.." % self.url)
 
         if co.httpExists(self.url):
 
+            progress_dlg.Update(10),
             try:
                 cnt = urllib.urlopen(self.url).read()
+                progress_dlg.Update(60),
             except Exception:
                 co.debugErr()
                 return ""
@@ -70,14 +72,14 @@ class Hosts(object):
             self.getContent(force=True)
 
 
-    def getContent(self, force=False):
+    def getContent(self, force=False, progress_dlg=None):
 
         self.is_loading = True
         c = ""
         if self.is_online:
 
             if force:
-                c = self.getContentFromUrl()
+                c = self.getContentFromUrl(progress_dlg)
 
         elif os.path.isfile(self.path):
             c = open(self.path, "rb").read().strip()
