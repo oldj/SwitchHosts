@@ -522,6 +522,7 @@ class MainFrame(ui.Frame):
     def restart(self):
         u"""重启主界面程序"""
 
+#        self.mainjob.toRestart(None)
         self.mainjob.toRestart(self.taskbar_icon)
         self.stopBackThreads()
 #        self.taskbar_icon.Destroy()
@@ -729,12 +730,31 @@ class MainFrame(ui.Frame):
     def getHostsContent(self, hosts):
 
         hosts.is_loading = True
-        self.task_qu.put(lambda : [
-            hosts.getContent(force=True),
-            wx.CallAfter(self.tryToShowHosts, hosts),
-            wx.CallAfter(self.saveHosts, hosts),
-        ])
+
+        if hosts.is_online:
+            progress_dlg = wx.ProgressDialog(u"加载中", u"正在加载「%s」..." % hosts.title, 100,
+                style=wx.PD_AUTO_HIDE
+            )
+            self.task_qu.put(lambda : [
+                wx.CallAfter(progress_dlg.Update, 10),
+                hosts.getContent(force=True, progress_dlg=progress_dlg),
+                wx.CallAfter(progress_dlg.Update, 80),
+                wx.CallAfter(self.tryToShowHosts, hosts),
+                wx.CallAfter(progress_dlg.Update, 90),
+                wx.CallAfter(self.saveHosts, hosts),
+                wx.CallAfter(progress_dlg.Update, 100),
+    #            wx.CallAfter(progress_dlg.Destroy),
+            ])
+
+        else:
+            self.task_qu.put(lambda : [
+                hosts.getContent(force=True),
+                wx.CallAfter(self.tryToShowHosts, hosts),
+                wx.CallAfter(self.saveHosts, hosts),
+            ])
+
         self.tryToShowHosts(hosts)
+
 
 
     def renderHosts(self, hosts):
