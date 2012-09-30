@@ -120,7 +120,11 @@ class Hosts(object):
     @property
     def content(self):
 
-        return self.__content or ""
+        c = self.__content or ""
+        if c and not c.endswith("\n"):
+            # 自动给 hosts 内容最后一行添加一个换行
+            c = "%s\n" % c
+        return c
 
 
     @content.setter
