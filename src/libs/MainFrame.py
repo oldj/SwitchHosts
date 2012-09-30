@@ -85,6 +85,7 @@ class MainFrame(ui.Frame):
         self.current_using_hosts = None
         self.current_showing_hosts = None
         self.current_tree_hosts = None
+        self.is_for_styling = True
 
         self.origin_hostses = []
         self.hostses = []
@@ -254,10 +255,13 @@ class MainFrame(ui.Frame):
 
         from highLight import highLight
 
-        co.log("styling...")
+        if self.is_for_styling:
+            co.log("styling...")
 
-        self.m_textCtrl_content.SetFont(self.font_mono)
-        highLight(self.m_textCtrl_content, old_content=old_content)
+            self.m_textCtrl_content.SetFont(self.font_mono)
+            highLight(self.m_textCtrl_content, old_content=old_content)
+
+            self.is_for_styling = False
 
 
 
@@ -267,6 +271,7 @@ class MainFrame(ui.Frame):
 
 #        hosts.getContentOnce()
         self.is_switching_text = True
+        self.is_for_styling = True
         content = hosts.content if not hosts.is_loading else "loading..."
         self.m_textCtrl_content.SetValue(content)
         if hosts.is_online or hosts.is_loading:
@@ -887,7 +892,9 @@ class MainFrame(ui.Frame):
 
     def OnEdit(self, event):
 
+        self.is_for_styling = True
         self.showDetail(hosts=self.current_showing_hosts)
+        self.is_for_styling = False
 
 
     def OnRename(self, event):
