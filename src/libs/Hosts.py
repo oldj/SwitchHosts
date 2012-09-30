@@ -147,7 +147,7 @@ class Hosts(object):
             if not self.is_online and not self.is_origin:
                 self.url = cfg["url"]
                 self.is_online = True
-                self.getContent()
+#                self.getContent()
 
         if cfg.get("icon_idx") is not None:
             icon_idx = cfg.get("icon_idx")

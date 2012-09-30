@@ -5,8 +5,8 @@ u"""
 """
 
 import os
-import sys
 import traceback
+import datetime
 import wx
 import chardet
 import urllib
@@ -21,7 +21,7 @@ from icons import ICONS, ICONS2, ICONS_ICO
 
 def log(msg):
 
-    print(msg)
+    print(u"%s > %s" % (datetime.datetime.now().strftime("%H:%M:%S"), msg))
 
 
 def debugErr():
@@ -67,15 +67,19 @@ def encode(s):
 
 def decode(s):
 
+    s = s.strip()
     if not s:
         return ""
 
     cd = {}
-    try:
-        cd = chardet.detect(s)
-    except Exception:
-#        print(traceback.format_exc())
-        pass
+    sample = s[:4096]
+    if sample:
+        try:
+            cd = chardet.detect(sample)
+        except Exception:
+    #        print(traceback.format_exc())
+            pass
+#    log([sample, repr(cd)])
 
     encoding = cd.get("encoding", "") if cd.get("confidence", 0) > 0.65 else ""
 
