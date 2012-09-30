@@ -31,17 +31,24 @@
 
 ##程序截图：
 
-以下为本程序在 Windows 系统下的运行截图。
+以下为本程序的运行截图。
 
-![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/1.png?raw=true)
+###Windows
 
+![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/5.png?raw=true)
 *程序主界面*
 
 
 ![系统托盘菜单](https://github.com/oldj/SwitchHosts/blob/master/screenshots/2.png?raw=true)
-
 *系统托盘菜单*
 
+###Mac
+
+![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/3.png?raw=true)
+*程序主界面*
+
+![系统托盘菜单](https://github.com/oldj/SwitchHosts/blob/master/screenshots/4.png?raw=true)
+*系统托盘菜单*
 
 ##更新历史：
 
