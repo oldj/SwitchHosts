@@ -10,3 +10,5 @@ projectFilesBackup
 *.hosts
 
 src/configs.json
+
+*.swh
