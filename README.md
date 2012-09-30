@@ -64,6 +64,6 @@
 
 ##版权及致谢：
 
- 本程序的 Windows 及 Mac 版中，使用了基于 [wxWidgets License](http://www.wxwindows.org/about/newlicen.htm) 发行的 [ToasterBox](http://xoomer.virgilio.it/infinity77/main/ToasterBox.html) 作为浮出提示解决方案，在此对作者的工作表示感谢！
+ 本程序的 Windows 版和 Mac 分别使用了 [ToasterBox](http://xoomer.virgilio.it/infinity77/main/ToasterBox.html) 和 [gntp](https://github.com/kfdm/gntp) 作为浮出提示解决方案，在此对作者的工作表示感谢！
 
  本程序完全免费，并基于 LGPL 协议开源。
