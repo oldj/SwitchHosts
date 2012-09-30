@@ -816,7 +816,7 @@ class MainFrame(ui.Frame):
             "is_delete_able": hosts and hosts in self.hostses,
             "is_edit_able": hosts and
                             not hosts.is_online and
-                            not hosts.is_origin and
+#                            not hosts.is_origin and
                             not hosts.is_loading,
         }
         for k in attrs:
