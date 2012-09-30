@@ -117,6 +117,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
         self.Bind(wx.EVT_BUTTON, self.OnApply, id=wx.ID_APPLY)
         self.Bind(wx.EVT_BUTTON, self.OnDel, id=wx.ID_DELETE)
+        self.Bind(wx.EVT_BUTTON, self.OnRefresh, id=wx.ID_REFRESH)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeSelectionChange, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeRClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
@@ -245,8 +246,7 @@ class MainFrame(ui.Frame):
             self.addHosts(hosts)
 #            self.useHosts(hosts)
             self.highLightHosts(hosts)
-
-            self.m_btn_del.Enable(False)
+            self.updateBtnStatus(hosts)
 
 
     def textStyle(self, old_content=None):
@@ -773,6 +773,25 @@ class MainFrame(ui.Frame):
                 pass
 
 
+    def getHostsAttr(self, hosts, key=None):
+
+        attrs = {
+            "is_refresh_able": hosts and hosts in self.all_hostses,
+            "is_delete_able": hosts and hosts in self.hostses,
+            "is_edit_able": hosts and not hosts.is_online and not hosts.is_origin,
+        }
+        for k in attrs:
+            attrs[k] = True if attrs[k] else False
+
+        return attrs.get(key, False) if key else attrs
+
+
+    def updateBtnStatus(self, hosts):
+
+        hosts_attrs = self.getHostsAttr(hosts)
+        self.m_btn_refresh.Enable(hosts_attrs["is_refresh_able"])
+        self.m_btn_del.Enable(hosts_attrs["is_delete_able"])
+
 
     def OnHostsChange(self, event):
 
@@ -811,9 +830,7 @@ class MainFrame(ui.Frame):
 
         hosts = self.getHostsFromTreeByEvent(event)
         self.current_tree_hosts = hosts
-
-        is_delete_able = True if hosts and hosts in self.hostses else False
-        self.m_btn_del.Enable(is_delete_able)
+        self.updateBtnStatus(hosts)
 
         if not hosts or (hosts not in self.hostses and hosts not in self.origin_hostses):
             return event.Veto()
