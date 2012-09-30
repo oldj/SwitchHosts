@@ -629,7 +629,8 @@ class MainFrame(ui.Frame):
     def saveHosts(self, hosts):
 
         try:
-            hosts.save()
+            if hosts.save():
+                co.log("saved.")
             return True
 
         except Exception:
@@ -838,7 +839,6 @@ class MainFrame(ui.Frame):
 
         self.current_showing_hosts.content = self.m_textCtrl_content.GetValue()
         self.saveHosts(self.current_showing_hosts)
-        co.log("saved.")
 
 
     def OnChkUpdate(self, event):
