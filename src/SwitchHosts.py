@@ -6,6 +6,7 @@
 #
 
 import os
+import time
 import wx
 from libs.MainFrame import MainFrame
 
@@ -15,19 +16,40 @@ class SwitchHosts(object):
 
     def __init__(self):
 
-        pwd = os.path.abspath(os.path.split(__file__)[0])
-        self.app = wx.App()
-        self.frame = MainFrame(size=(640, 480),
-            version=self.VERSION,
-            working_path=pwd,
-        )
+        self.pwd = os.path.abspath(os.path.split(__file__)[0])
+        self.restart = False
+        self.taskbar_icon = None
 
 
     def run(self):
 
-        self.frame.Centre()
-        self.frame.Show()
-        self.app.MainLoop()
+        app = wx.App()
+
+        while True:
+
+            frame = MainFrame(
+                mainjob=self,
+                size=(640, 480),
+                version=self.VERSION,
+                working_path=self.pwd,
+                taskbar_icon=self.taskbar_icon,
+            )
+            self.restart = False
+            self.taskbar_icon = None
+
+            frame.Centre()
+            frame.Show()
+            app.MainLoop()
+
+            time.sleep(0.1)
+            if not self.restart:
+                break
+
+
+    def toRestart(self, taskbar_icon):
+
+        self.restart = True
+        self.taskbar_icon = taskbar_icon
 
 
 def main():

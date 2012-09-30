@@ -19,15 +19,20 @@ class TaskBarIcon(wx.TaskBarIcon):
 
         wx.TaskBarIcon.__init__(self)
         #        super(wx.TaskBarIcon, self).__init__()
-        self.main_frame = main_frame
-        self.SetIcon(co.GetMondrianIcon(), self.main_frame.default_title)
+        self.setMainFrame(main_frame)
         self.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarLeftDClick)
-        self.Bind(wx.EVT_MENU, self.main_frame.OnAbout, id=self.ID_About)
         self.Bind(wx.EVT_MENU, self.OnExit, id=self.ID_Exit)
         self.Bind(wx.EVT_MENU, self.OnMainFrame, id=self.ID_MainFrame)
 
         self.font_bold = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
         self.font_bold.SetWeight(wx.BOLD)
+
+
+    def setMainFrame(self, main_frame):
+
+        self.main_frame = main_frame
+        self.SetIcon(co.GetMondrianIcon(), self.main_frame.default_title)
+        self.Bind(wx.EVT_MENU, self.main_frame.OnAbout, id=self.ID_About)
 
 
     def OnTaskBarLeftDClick(self, event):

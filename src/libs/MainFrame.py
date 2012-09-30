@@ -48,20 +48,27 @@ class MainFrame(ui.Frame):
 
     ID_RENAME = wx.NewId()
 
-    def __init__(self,
+    def __init__(self, mainjob,
             parent=None, id=wx.ID_ANY, title=None, pos=wx.DefaultPosition,
-            size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
+            size=wx.DefaultSize,
+            style=wx.DEFAULT_FRAME_STYLE,
             version=None, working_path=None,
+            taskbar_icon=None,
     ):
         u""""""
 
+        self.mainjob = mainjob
         self.version = version
         self.default_title = "SwitchHosts! %s" % version
 
         ui.Frame.__init__(self, parent, id,
             title or self.default_title, pos, size, style)
 
-        self.taskbar_icon = TaskBarIcon(self)
+
+        self.taskbar_icon = taskbar_icon or TaskBarIcon(self)
+        if taskbar_icon:
+            self.taskbar_icon.setMainFrame(self)
+
         self.latest_stable_version = "0"
         self.__sys_hosts_path = None
 
@@ -69,7 +76,6 @@ class MainFrame(ui.Frame):
             self.working_path = working_path
             self.configs_path = os.path.join(self.working_path, "configs.json")
             self.hosts_path = os.path.join(self.working_path, "hosts")
-        self.showing_rnd_id = random.random()
 
         self.task_qu = Queue.Queue(4096)
         self.startBackThreads(2)
@@ -81,6 +87,7 @@ class MainFrame(ui.Frame):
 
     def init2(self):
 
+        self.showing_rnd_id = random.random()
         self.is_switching_text = False
         self.current_using_hosts = None
         self.current_showing_hosts = None
@@ -497,7 +504,7 @@ class MainFrame(ui.Frame):
                 return
 
         # 更新 configs
-        self.configs = {}
+#        self.configs = {}
         try:
             open(self.configs_path, "w").write(json.dumps(configs).encode("utf-8"))
         except Exception:
@@ -505,10 +512,20 @@ class MainFrame(ui.Frame):
                 caption=u"导入失败")
             return
 
-        self.clearTree()
-        self.init2()
+#        self.clearTree()
+#        self.init2()
 
         wx.MessageBox(u"导入成功！")
+        self.restart()
+
+
+    def restart(self):
+        u"""重启主界面程序"""
+
+        self.mainjob.toRestart(self.taskbar_icon)
+        self.stopBackThreads()
+#        self.taskbar_icon.Destroy()
+        self.Destroy()
 
 
     def clearTree(self):

@@ -13,7 +13,8 @@ class Frame(wx.Frame):
 
     def __init__(self,
                  parent=None, id=wx.ID_ANY, title="SwitchHost!", pos=wx.DefaultPosition,
-                 size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE,
+                 size=wx.DefaultSize,
+                 style=wx.DEFAULT_FRAME_STYLE,
                  cls_TaskBarIcon=None
     ):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
