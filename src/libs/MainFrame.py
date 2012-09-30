@@ -874,6 +874,9 @@ class MainFrame(ui.Frame):
             return event.Veto()
 
         if hosts and hosts != self.current_showing_hosts:
+            if hosts.is_origin:
+                # 重新读取系统 hosts 值
+                hosts.getContent()
             self.showHosts(hosts)
 
 

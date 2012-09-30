@@ -7,7 +7,7 @@
 
 
 lang = {
-    "origin_hosts": u"初始方案",
+    "origin_hosts": u"当前系统 hosts",
     "online_hosts": u"在线方案",
     "local_hosts": u"本地方案",
 }
