@@ -323,7 +323,6 @@ class MainFrame(ui.Frame):
 
         self.showHosts(hosts)
         self.current_using_hosts = hosts
-        self.taskbar_icon.updateIcon()
         self.updateIcon()
 
 
@@ -332,6 +331,7 @@ class MainFrame(ui.Frame):
         co.log("update icon")
         if self.current_using_hosts:
             self.SetIcon(co.GetMondrianIcon(self.current_using_hosts.icon_idx))
+            self.taskbar_icon.updateIcon()
 
 
     def addHosts(self, hosts, show_after_add=False):
@@ -373,7 +373,7 @@ class MainFrame(ui.Frame):
             hosts.tree_item_id, self.ico_colors_idx[icon_idx], wx.TreeItemIcon_Normal
         )
         if hosts == self.current_using_hosts:
-            self.taskbar_icon.updateIcon()
+            self.updateIcon()
 
 
     def delHosts(self, hosts):
