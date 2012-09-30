@@ -10,6 +10,7 @@ import sys
 import glob
 import simplejson as json
 import wx
+from wx import stc
 import ui
 import urllib
 import re
@@ -92,7 +93,6 @@ class MainFrame(ui.Frame):
         self.current_using_hosts = None
         self.current_showing_hosts = None
         self.current_tree_hosts = None
-        self.is_for_styling = True
 
         self.origin_hostses = []
         self.hostses = []
@@ -130,7 +130,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeRClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
         self.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.OnRenameEnd, self.m_tree)
-        self.Bind(wx.EVT_TEXT, self.OnHostsChange, id=self.ID_HOSTS_TEXT)
+        self.Bind(stc.EVT_STC_CHANGE, self.OnHostsChange, id=self.ID_HOSTS_TEXT)
 
 
     def startBackThreads(self, count=1):
@@ -257,30 +257,12 @@ class MainFrame(ui.Frame):
             self.updateBtnStatus(hosts)
 
 
-    def textStyle(self, old_content=None):
-        u"""更新文本区的样式"""
-
-#        self.is_for_styling = False
-#        return False
-
-#        from highLight import highLight
-
-        if self.is_for_styling:
-            co.log("styling...")
-#            highLight(self.m_textCtrl_content, old_content=old_content, default_font=self.font_mono)
-            co.log("styled.")
-
-        self.is_for_styling = False
-
-
-
     def showHosts(self, hosts):
 
         self.showing_rnd_id = random.random()
 
 #        hosts.getContentOnce()
         content = hosts.content if not hosts.is_loading else "loading..."
-        self.is_for_styling = False
         self.is_switching_text = True
         self.m_textCtrl_content.SetValue(content)
         self.m_textCtrl_content.Enable(self.getHostsAttr(hosts, "is_edit_able"))
@@ -291,8 +273,6 @@ class MainFrame(ui.Frame):
         self.m_tree.SetItemBackgroundColour(hosts.tree_item_id, "#ccccff")
 
 #        self.task_qu.put(lambda : self.textStyle())
-        self.is_for_styling = True
-        self.textStyle()
 
         self.current_showing_hosts = hosts
 
@@ -852,16 +832,12 @@ class MainFrame(ui.Frame):
 
     def OnHostsChange(self, event):
 
-        if self.is_switching_text or self.is_for_styling:
+        if self.is_switching_text:
             return
 
         self.current_showing_hosts.content = self.m_textCtrl_content.GetValue()
         self.saveHosts(self.current_showing_hosts)
         co.log("saved.")
-
-        self.is_for_styling = True
-        self.textStyle()
-        self.is_for_styling = False
 
 
     def OnChkUpdate(self, event):
@@ -947,9 +923,7 @@ class MainFrame(ui.Frame):
 
     def OnEdit(self, event):
 
-        self.is_for_styling = True
         self.showDetail(hosts=self.current_showing_hosts)
-        self.is_for_styling = False
 
 
     def OnRename(self, event):
