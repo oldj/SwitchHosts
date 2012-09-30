@@ -23,10 +23,9 @@ class SwitchHosts(object):
 
     def run(self):
 
-        app = wx.App()
-
         while True:
 
+            app = wx.App()
             frame = MainFrame(
                 mainjob=self,
                 size=(640, 480),
@@ -40,6 +39,7 @@ class SwitchHosts(object):
             frame.Centre()
             frame.Show()
             app.MainLoop()
+            app.Destroy()
 
             time.sleep(0.1)
             if not self.restart:
