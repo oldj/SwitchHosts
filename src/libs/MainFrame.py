@@ -732,7 +732,8 @@ class MainFrame(ui.Frame):
         hosts.is_loading = True
 
         if hosts.is_online:
-            progress_dlg = wx.ProgressDialog(u"加载中", u"正在加载「%s」..." % hosts.title, 100,
+            progress_dlg = wx.ProgressDialog(u"加载中",
+                u"正在加载「%s」...\nURL: %s" % (hosts.title, hosts.url), 100,
                 style=wx.PD_AUTO_HIDE
             )
             self.task_qu.put(lambda : [
@@ -785,9 +786,15 @@ class MainFrame(ui.Frame):
 
         url = "https://github.com/oldj/SwitchHosts/blob/master/README.md"
 
+#        progress_dlg = wx.ProgressDialog(u"检查更新",
+#            u"正在检查最新版本...", 100,
+#            style=wx.PD_AUTO_HIDE
+#        )
+#        wx.CallAfter(progress_dlg.Update, 10)
         ver = None
         try:
             c = urllib.urlopen(url).read()
+#            wx.CallAfter(progress_dlg.Update, 50)
             v = re.search(r"\bLatest Stable:\s?(?P<version>[\d\.]+)\b", c)
             if v:
                 ver = v.group("version")
@@ -797,22 +804,28 @@ class MainFrame(ui.Frame):
         except Exception:
             pass
 
+#        wx.CallAfter(progress_dlg.Update, 100)
+#        progress_dlg.Destroy()
+
         if not alert:
             return
 
-        if not ver:
-            wx.MessageBox(u"未能取得最新版本号！")
+        def _msg():
+            if not ver:
+                wx.MessageBox(u"未能取得最新版本号！")
 
-        else:
-            cmp = co.compareVersion(self.version, self.latest_stable_version)
-            try:
-                if cmp >= 0:
-                    wx.MessageBox(u"当前已是最新版本！")
-                else:
-                    wx.MessageBox(u"更新的稳定版 %s 已经发布！" % self.latest_stable_version)
-            except Exception:
-                co.debugErr()
-                pass
+            else:
+                cmp = co.compareVersion(self.version, self.latest_stable_version)
+                try:
+                    if cmp >= 0:
+                        wx.MessageBox(u"当前已是最新版本！")
+                    else:
+                        wx.MessageBox(u"更新的稳定版 %s 已经发布！" % self.latest_stable_version)
+                except Exception:
+                    co.debugErr()
+                    pass
+
+        wx.CallAfter(_msg)
 
 
     def getHostsAttr(self, hosts, key=None):
