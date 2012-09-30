@@ -302,11 +302,11 @@ class Dlg_addHosts(wx.Dialog):
 
         bSizer231 = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.m_radioBtn_local = wx.RadioButton(self.m_panel9, wx.ID_ANY, u"本地方案", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.m_radioBtn_local = wx.RadioButton(self.m_panel9, wx.ID_ANY, lang.trans("local_hosts"), wx.DefaultPosition, wx.DefaultSize, 0)
         self.m_radioBtn_local.SetValue(True)
         bSizer231.Add(self.m_radioBtn_local, 0, wx.ALL, 5)
 
-        self.m_radioBtn_online = wx.RadioButton(self.m_panel9, wx.ID_ANY, u"在线方案", wx.DefaultPosition, wx.DefaultSize,
+        self.m_radioBtn_online = wx.RadioButton(self.m_panel9, wx.ID_ANY, lang.trans("online_hosts"), wx.DefaultPosition, wx.DefaultSize,
             0)
         bSizer231.Add(self.m_radioBtn_online, 0, wx.ALL, 5)
 
