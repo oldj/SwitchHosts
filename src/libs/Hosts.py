@@ -52,7 +52,18 @@ class Hosts(object):
 
             progress_dlg.Update(10),
             try:
-                cnt = urllib.urlopen(self.url).read()
+                cnt = []
+                up = 10
+                url_o = urllib.urlopen(self.url)
+                while True:
+                    c = url_o.read(1024)
+                    if not c:
+                        break
+                    cnt.append(c)
+                    up += 1
+                    if up < 60:
+                        progress_dlg.Update(up),
+                cnt = "".join(cnt)
                 progress_dlg.Update(60),
             except Exception:
                 co.debugErr()
