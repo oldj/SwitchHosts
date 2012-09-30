@@ -10,29 +10,32 @@ from wx import stc
 import keyword
 
 if wx.Platform == '__WXMSW__':
-    faces = { 'times': 'Times New Roman',
-              'mono' : 'Courier New',
-              'helv' : 'Arial',
-              'other': 'Courier New',
-              'size' : 9,
-              'size2': 7,
-              }
+    faces = {
+        'times': 'Times New Roman',
+        'mono': 'Courier New',
+        'helv': 'Courier New',
+        'other': 'Courier New',
+        'size': 12,
+        'size2': 12,
+        }
 elif wx.Platform == '__WXMAC__':
-    faces = { 'times': 'Times New Roman',
-              'mono' : 'Courier New',
-              'helv' : 'Arial',
-              'other': 'Comic Sans MS',
-              'size' : 12,
-              'size2': 10,
-              }
+    faces = {
+        'times': 'Times New Roman',
+        'mono': 'Monaco',
+        'helv': 'Monaco',
+        'other': 'Monaco',
+        'size': 12,
+        'size2': 12,
+        }
 else:
-    faces = { 'times': 'Times',
-              'mono' : 'Courier',
-              'helv' : 'Helvetica',
-              'other': 'new century schoolbook',
-              'size' : 12,
-              'size2': 10,
-              }
+    faces = {
+        'times': 'Times',
+        'mono': 'Courier New',
+        'helv': 'Helvetica',
+        'other': 'Courier New',
+        'size': 12,
+        'size2': 12,
+        }
 
 
 class HostsCtrl(stc.StyledTextCtrl):
@@ -56,19 +59,15 @@ class HostsCtrl(stc.StyledTextCtrl):
         self.SetMarginWidth(2, 5)
         self.SetScrollWidth(800)
 
-        # Make some styles,  The lexer defines what each style is used for, we
-        # just have to define what each style looks like.  This set is adapted from
-        # Scintilla sample property files.
-
         # Global default styles for all languages
-        self.StyleSetSpec(stc.STC_STYLE_DEFAULT,     "face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % faces)
         self.StyleClearAll()  # Reset all to be like the default
 
         # Global default styles for all languages
-        self.StyleSetSpec(stc.STC_STYLE_DEFAULT,     "face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % faces)
         self.StyleSetSpec(stc.STC_STYLE_CONTROLCHAR, "face:%(other)s" % faces)
-        self.StyleSetSpec(stc.STC_STYLE_BRACELIGHT,  "fore:#FFFFFF,back:#0000FF,bold")
-        self.StyleSetSpec(stc.STC_STYLE_BRACEBAD,    "fore:#000000,back:#FF0000,bold")
+        self.StyleSetSpec(stc.STC_STYLE_BRACELIGHT, "fore:#FFFFFF,back:#0000FF,bold")
+        self.StyleSetSpec(stc.STC_STYLE_BRACEBAD, "fore:#000000,back:#FF0000,bold")
 
         # Python styles
         # Default
@@ -108,7 +107,8 @@ class HostsCtrl(stc.StyledTextCtrl):
     #        if wx.USE_UNICODE:
     #            value = value.decode('utf-8')
 
-#        self.SetReadOnly(False)
+    #        self.SetReadOnly(False)
         self.SetText(value)
-#        self.SetReadOnly(True)
+
+        #        self.SetReadOnly(True)
 
