@@ -521,10 +521,10 @@ class MainFrame(ui.Frame):
     def restart(self):
         u"""重启主界面程序"""
 
-#        self.mainjob.toRestart(None)
-        self.mainjob.toRestart(self.taskbar_icon)
+        self.mainjob.toRestart(None)
+#        self.mainjob.toRestart(self.taskbar_icon)
         self.stopBackThreads()
-#        self.taskbar_icon.Destroy()
+        self.taskbar_icon.Destroy()
         self.Destroy()
 
 
