@@ -3,7 +3,6 @@
 import os
 import wx, wx.html
 import wx.lib.buttons as buttons
-import wx.stc as stc
 import common_operations as co
 import lang
 
@@ -47,6 +46,8 @@ class Frame(wx.Frame):
         self.m_menu2.AppendItem(self.m_menuItem_about)
         self.m_menuItem_chkUpdate = wx.MenuItem(self.m_menu2, wx.ID_ANY, u"检查更新(&U)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu2.AppendItem(self.m_menuItem_chkUpdate)
+        self.m_menuItem_donate = wx.MenuItem(self.m_menu2, wx.ID_ANY, u"捐赠(&D)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menu2.AppendItem(self.m_menuItem_donate)
 
         self.m_menubar1.Append(self.m_menu2, u"帮助(&H)")
 
@@ -269,14 +270,16 @@ class AboutBox(wx.Dialog):
             </p>
             <p>
                 源码：<a href="https://github.com/oldj/SwitchHosts">https://github.com/oldj/SwitchHosts</a><br />
-                作者：<a href="http://oldj.net">oldj</a>
+                作者：<a href="http://oldj.net">oldj</a><br />
+                <br />
+                本程序完全免费，如果您觉得它还不错，欢迎<a href="https://me.alipay.com/oldj">捐赠</a>支持作者，谢谢！<br />
             </p>
         """ % {
             "version": version,
             "update_version": update_version,
         })
 
-        btn = hwin.FindWindowById(wx.ID_OK)
+        hwin.FindWindowById(wx.ID_OK)
         irep = hwin.GetInternalRepresentation()
         hwin.SetSize((irep.GetWidth() + 25, irep.GetHeight() + 30))
         self.SetClientSize(hwin.GetSize())

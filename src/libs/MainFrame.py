@@ -122,6 +122,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnRefresh, id=wx.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.OnExport, self.m_menuItem_export)
         self.Bind(wx.EVT_MENU, self.OnImport, self.m_menuItem_import)
+        self.Bind(wx.EVT_MENU, self.OnDonate, self.m_menuItem_donate)
         self.Bind(wx.EVT_BUTTON, self.OnNew, self.m_btn_add)
         self.Bind(wx.EVT_BUTTON, self.OnApply, id=wx.ID_APPLY)
         self.Bind(wx.EVT_BUTTON, self.OnDel, id=wx.ID_DELETE)
@@ -1010,3 +1011,9 @@ class MainFrame(ui.Frame):
                 self.importHosts(content)
 
         dlg.Destroy()
+
+
+    def OnDonate(self, event):
+
+        wx.LaunchDefaultBrowser("https://me.alipay.com/oldj")
+
