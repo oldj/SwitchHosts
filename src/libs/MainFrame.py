@@ -264,8 +264,9 @@ class MainFrame(ui.Frame):
 #        hosts.getContentOnce()
         content = hosts.content if not hosts.is_loading else "loading..."
         self.is_switching_text = True
+        self.m_textCtrl_content.SetReadOnly(False)
         self.m_textCtrl_content.SetValue(content)
-        self.m_textCtrl_content.Enable(self.getHostsAttr(hosts, "is_edit_able"))
+        self.m_textCtrl_content.SetReadOnly(not self.getHostsAttr(hosts, "is_edit_able"))
         self.is_switching_text = False
 
         if self.current_showing_hosts:
