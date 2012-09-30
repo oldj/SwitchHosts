@@ -963,6 +963,14 @@ class MainFrame(ui.Frame):
 
     def OnExport(self, event):
 
+        if wx.MessageBox(
+            u"您可以将现在的 hosts 档案导出并共享给其他 SwitchHosts! 用户，\n" +
+            u"注意，只有“本地档案”和“在线档案”中的 hosts 会被导出！",
+            caption=u"导出档案",
+            style=wx.OK|wx.CANCEL,
+        ) != wx.OK:
+            return
+
         wildcard = u"SwicthHosts! 档案 (*.swh)|*.swh"
         dlg = wx.FileDialog(self, u"导出为...", os.getcwd(), "hosts.swh", wildcard, wx.SAVE)
 
