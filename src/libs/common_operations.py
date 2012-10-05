@@ -170,3 +170,11 @@ def compareVersion(v1, v2):
         return 0
 
 
+def getLocalEncoding():
+    u"""取得本地编码"""
+
+    import locale
+    import codecs
+#    print locale.getpreferredencoding()
+
+    return codecs.lookup(locale.getpreferredencoding()).name

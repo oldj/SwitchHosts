@@ -72,8 +72,10 @@ class MainFrame(ui.Frame):
 
         self.latest_stable_version = "0"
         self.__sys_hosts_path = None
+        self.local_encoding = co.getLocalEncoding()
 
         if working_path:
+            working_path = working_path.decode(self.local_encoding)
             self.working_path = working_path
             self.configs_path = os.path.join(self.working_path, "configs.json")
             self.hosts_path = os.path.join(self.working_path, "hosts")
@@ -434,7 +436,7 @@ class MainFrame(ui.Frame):
         data["hosts_files"] = hosts_files
 
         try:
-            open(path, "w").write(json.dumps(data))
+            self.writeFile(path, json.dumps(data))
         except Exception:
             wx.MessageBox(u"导出失败！\n\n%s" % traceback.format_exc(), caption=u"出错啦！")
             return
@@ -484,8 +486,7 @@ class MainFrame(ui.Frame):
                 continue
 
             try:
-                open(os.path.join(self.hosts_path, fn), "w").write(
-                    hf["content"].strip().encode("utf-8"))
+                self.writeFile(os.path.join(self.hosts_path, fn), hf["content"].strip().encode("utf-8"))
 
             except Exception:
                 wx.MessageBox(u"写入 '%s' 时失败！\n\n%s" % (fn, traceback.format_exc()),
@@ -495,7 +496,7 @@ class MainFrame(ui.Frame):
         # 更新 configs
 #        self.configs = {}
         try:
-            open(self.configs_path, "w").write(json.dumps(configs).encode("utf-8"))
+            self.writeFile(self.configs_path, json.dumps(configs).encode("utf-8"))
         except Exception:
             wx.MessageBox(u"写入 '%s' 时失败！\n\n%s" % (self.configs_path, traceback.format_exc()),
                 caption=u"导入失败")
@@ -602,7 +603,7 @@ class MainFrame(ui.Frame):
 
     def saveConfigs(self):
         try:
-            json.dump(self.configs, open(self.configs_path, "w"))
+            self.writeFile(self.configs_path, json.dumps(self.configs))
         except Exception:
             wx.MessageBox("保存配置信息失败！\n\n%s" % traceback.format_exc(), caption=u"出错啦！")
 
@@ -839,6 +840,16 @@ class MainFrame(ui.Frame):
         hosts_attrs = self.getHostsAttr(hosts)
         self.m_btn_refresh.Enable(hosts_attrs["is_refresh_able"])
         self.m_btn_del.Enable(hosts_attrs["is_delete_able"])
+
+
+    def writeFile(self, path, content, mode="w"):
+
+        try:
+            path = path.encode(self.local_encoding)
+        except Exception:
+            co.debugErr()
+
+        open(path, mode).write(content)
 
 
     def OnHostsChange(self, event):
