@@ -74,6 +74,11 @@
  - 增加快捷键
 
 
+##已知问题
+
+ - Hosts 编辑器中输入法有问题。
+
+
 ##版权及致谢：
 
  本程序的 Windows 版和 Mac 分别使用了 [ToasterBox](http://xoomer.virgilio.it/infinity77/main/ToasterBox.html) 和 [gntp](https://github.com/kfdm/gntp) 作为浮出提示解决方案，在此对作者的工作表示感谢！
