@@ -196,7 +196,13 @@ class Hosts(object):
             if time_delta < 0.01:
                 return False
 
-        open(path or self.path, "w").write(self.full_content)
+        path = path or self.path
+        try:
+            path = path.encode(co.getLocalEncoding())
+        except Exception:
+            pass
+
+        open(path, "w").write(self.full_content)
         self.last_save_time = time.time()
 
         return True
