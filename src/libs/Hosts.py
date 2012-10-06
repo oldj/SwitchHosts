@@ -99,7 +99,7 @@ class Hosts(object):
 
         if c:
             c = self.tryToDecode(c)
-            a = c.split("\n")
+            a = c.replace("\r", "").split("\n")
             if a[0].startswith(self.flag):
                 # 首行是配置信息
                 self.parseConfigs(a[0][len(self.flag):])
@@ -137,6 +137,7 @@ class Hosts(object):
         try:
             cfg = json.loads(json_str)
         except Exception:
+            co.log(json_str)
             co.debugErr()
             return
 
@@ -182,10 +183,9 @@ class Hosts(object):
                 "url": self.url,
                 "icon_idx": self.icon_idx,
                 })),
-            self.content,
-            ]
+            ] + self.content.split("\n")
 
-        return "\n".join(cnt_for_save).encode("utf-8")
+        return os.linesep.join(cnt_for_save).encode("utf-8")
 
 
     def save(self, path=None):
