@@ -42,7 +42,11 @@ if os.name == "posix":
             hostname = "127.0.0.1", # Defaults to localhost
             # password = "" # Defaults to a blank password
         )
-        growl.register()
+        try:
+            growl.register()
+            has_growl = True
+        except Exception:
+            has_growl = False
 
 
 class MainFrame(ui.Frame):
@@ -530,15 +534,18 @@ class MainFrame(ui.Frame):
 
     def notify(self, msg="", title=u"消息"):
 
-        def macNotify(msg, title):
+        def macGrowlNotify(msg, title):
 
-            growl.notify(
-                noteType="New Messages",
-                title=title,
-                description=msg,
-                sticky=False,
-                priority=1,
-            )
+            try:
+                growl.notify(
+                    noteType="New Messages",
+                    title=title,
+                    description=msg,
+                    sticky=False,
+                    priority=1,
+                )
+            except Exception:
+                pass
 
 
         if os.name == "posix":
@@ -549,10 +556,10 @@ class MainFrame(ui.Frame):
 
             else:
                 # Mac 系统
-                macNotify(msg, title)
+                if has_growl:
+                    macGrowlNotify(msg, title)
 
             return
-
 
         try:
             import ToasterBox as TB
