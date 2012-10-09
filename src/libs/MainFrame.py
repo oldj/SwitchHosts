@@ -1109,8 +1109,10 @@ class MainFrame(ui.Frame):
                     source_hosts.title
                 )
             source_hosts.tree_item_id = add_item
-            self.updateHostsTitle(source_hosts)
+#            self.updateHostsTitle(source_hosts)
             self.updateHostsIcon(source_hosts)
+            if source_hosts == self.current_using_hosts:
+                self.highLightHosts(source_hosts)
             self.hostses.remove(source_hosts)
             self.hostses.insert(self.hostses.index(target_hosts), source_hosts)
 
