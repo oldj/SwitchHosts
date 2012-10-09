@@ -12,7 +12,7 @@ class Frame(wx.Frame):
     ID_HOSTS_TEXT = wx.NewId()
 
     def __init__(self,
-                 parent=None, id=wx.ID_ANY, title="SwitchHost!", pos=wx.DefaultPosition,
+                 parent=None, id=wx.ID_ANY, title="SwitchHosts!", pos=wx.DefaultPosition,
                  size=wx.DefaultSize,
                  style=wx.DEFAULT_FRAME_STYLE,
                  cls_TaskBarIcon=None
@@ -265,7 +265,7 @@ class AboutBox(wx.Dialog):
 
         hwin = AboutHtml(self)
         hwin.SetPage(u"""
-            <font size="9" color="#44474D"><b>SwitchHost!</b></font><br />
+            <font size="9" color="#44474D"><b>SwitchHosts!</b></font><br />
             <font size="3" color="#44474D">%(version)s</font><br /><br />
             <font size="3" color="#909090"><i>%(update_version)s</i></font><br />
             <p>

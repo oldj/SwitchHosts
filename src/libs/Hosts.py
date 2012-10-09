@@ -15,7 +15,8 @@ import common_operations as co
 
 class Hosts(object):
 
-    flag = "#@SwitchHost!"
+    flag = "#@SwitchHosts!"
+    old_flag = "#@SwitchHost!"
 
     def __init__(self, path, is_origin=False, title=None, url=None):
 
@@ -103,6 +104,11 @@ class Hosts(object):
             if a[0].startswith(self.flag):
                 # 首行是配置信息
                 self.parseConfigs(a[0][len(self.flag):])
+                c = "\n".join(a[1:])
+            elif a[0].startswith(self.old_flag):
+                # 兼容老的格式
+                # 首行是配置信息
+                self.parseConfigs(a[0][len(self.old_flag):])
                 c = "\n".join(a[1:])
 
         self.content = c
