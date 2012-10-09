@@ -89,10 +89,10 @@ class TaskBarIcon(wx.TaskBarIcon):
 #        self.hosts[item_id] = title
         hosts.taskbar_id = item_id
 
-        self.Bind(wx.EVT_MENU, self.switchHost, id=item_id)
+        self.Bind(wx.EVT_MENU, self.switchHosts, id=item_id)
 
 
-    def switchHost(self, event):
+    def switchHosts(self, event):
 
         item_id = event.GetId()
         for hosts in self.main_frame.all_hostses:
