@@ -60,7 +60,10 @@ class Frame(wx.Frame):
 
         bSizer5 = wx.BoxSizer(wx.VERTICAL)
 
-        self.m_tree = wx.TreeCtrl(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size(200, -1), style=wx.TR_DEFAULT_STYLE|wx.NO_BORDER)
+        self.m_tree = wx.TreeCtrl(self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size(200, -1),
+            style=wx.TR_DEFAULT_STYLE|wx.NO_BORDER|wx.TR_NO_LINES\
+                |wx.TR_FULL_ROW_HIGHLIGHT#|wx.TR_HIDE_ROOT
+        )
 #        self.m_tree.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVEBORDER))
         self.m_tree.SetBackgroundColour(wx.Colour(218, 223, 230))
         self.m_tree_root = self.m_tree.AddRoot(u"hosts")
