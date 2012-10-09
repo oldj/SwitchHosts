@@ -716,7 +716,7 @@ class MainFrame(ui.Frame):
             hosts.is_online = is_online
             hosts.title = title
             hosts.url = url if is_online else None
-            self.renderHosts(hosts)
+            self.updateHostsTitle(hosts)
 
         self.saveHosts(hosts)
 
@@ -752,7 +752,7 @@ class MainFrame(ui.Frame):
 
 
 
-    def renderHosts(self, hosts):
+    def updateHostsTitle(self, hosts):
         u"""更新hosts的名称"""
 
         self.m_tree.SetItemText(hosts.tree_item_id, hosts.title)
@@ -1062,7 +1062,6 @@ class MainFrame(ui.Frame):
 
     def _drag_OnMotion(self, event):
 
-        co.log("motion..")
         event.Skip()
 
 
@@ -1110,7 +1109,7 @@ class MainFrame(ui.Frame):
                     source_hosts.title
                 )
             source_hosts.tree_item_id = add_item
-            self.renderHosts(source_hosts) # todo rename renderHosts
+            self.updateHostsTitle(source_hosts)
             self.updateHostsIcon(source_hosts)
             self.hostses.remove(source_hosts)
             self.hostses.insert(self.hostses.index(target_hosts), source_hosts)
