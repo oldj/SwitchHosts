@@ -95,6 +95,7 @@ class MainFrame(ui.Frame):
         self.current_using_hosts = None
         self.current_showing_hosts = None
         self.current_tree_hosts = None
+        self.current_dragging_hosts = None
 
         self.origin_hostses = []
         self.hostses = []
@@ -133,6 +134,8 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeRClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
         self.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.OnRenameEnd, self.m_tree)
+        self.Bind(wx.EVT_TREE_BEGIN_DRAG, self.OnTreeBeginDrag, self.m_tree)
+        self.Bind(wx.EVT_TREE_END_DRAG, self.OnTreeEndDrag, self.m_tree)
         self.Bind(stc.EVT_STC_CHANGE, self.OnHostsChange, id=self.ID_HOSTS_TEXT)
 
 
@@ -765,8 +768,7 @@ class MainFrame(ui.Frame):
             return self.current_using_hosts
 
         else:
-            hostses = self.origin_hostses + self.hostses
-            for hosts in hostses:
+            for hosts in self.all_hostses:
                 if item == hosts.tree_item_id:
                     return hosts
 
@@ -1039,4 +1041,95 @@ class MainFrame(ui.Frame):
     def OnDonate(self, event):
 
         wx.LaunchDefaultBrowser("https://me.alipay.com/oldj")
+
+
+    def OnTreeBeginDrag(self, event):
+
+        item = event.GetItem()
+        hosts = self.getHostsFromTreeByEvent(event)
+        if not hosts or hosts in self.origin_hostses:
+            event.Veto()
+            return
+
+        co.log("drag start..")
+        self.current_dragging_hosts = hosts
+        self.__dragging_item = item
+
+        event.Allow()
+        self.m_tree.Bind(wx.EVT_MOTION, self._drag_OnMotion)
+        self.m_tree.Bind(wx.EVT_LEFT_UP, self._drag_OnMouseLeftUp)
+
+
+    def _drag_OnMotion(self, event):
+
+        co.log("motion..")
+        event.Skip()
+
+
+    def _drag_OnMouseLeftUp(self, event):
+
+        co.log("mouse left up..")
+        self.m_tree.Unbind(wx.EVT_MOTION)
+        self.m_tree.Unbind(wx.EVT_LEFT_UP)
+        event.Skip()
+
+
+    def OnTreeEndDrag(self, event):
+
+        co.log("drag end..")
+
+        target_item = event.GetItem()
+        target_hosts = self.getHostsFromTreeByEvent(event)
+        source_item = self.__dragging_item
+        source_hosts = self.current_dragging_hosts
+
+        self.__dragging_item = None
+        self.current_dragging_hosts = None
+#        co.log(target_hosts.title)
+
+        def getHostsIdx(hosts):
+
+            idx = 0
+            for h in self.hostses:
+                if h == hosts:
+                    break
+
+                if h.is_online == hosts.is_online:
+                    idx += 1
+
+            return idx
+
+
+        is_dragged = False
+
+        if target_hosts and target_hosts != source_hosts and \
+           source_hosts.is_online == target_hosts.is_online:
+            # 拖到目标 hosts 上了
+            parent = self.m_tree.GetItemParent(target_item)
+            add_item = self.m_tree.InsertItemBefore(parent, getHostsIdx(target_hosts),
+                    source_hosts.title
+                )
+            source_hosts.tree_item_id = add_item
+            self.renderHosts(source_hosts) # todo rename renderHosts
+            self.updateHostsIcon(source_hosts)
+            self.hostses.remove(source_hosts)
+            self.hostses.insert(self.hostses.index(target_hosts), source_hosts)
+
+            is_dragged = True
+
+        elif target_item == self.m_tree_local and not source_hosts.is_online:
+            # 拖到本地树上了
+            pass
+
+        elif target_item == self.m_tree_online and source_hosts.is_online:
+            # 拖到在线树上了
+            pass
+
+        if is_dragged:
+            self.updateConfigs({
+                "hostses": [hosts.filename for hosts in self.hostses],
+            })
+            self.saveConfigs()
+            self.m_tree.Delete(source_item)
+            self.m_tree.SelectItem(source_hosts.tree_item_id)
 
