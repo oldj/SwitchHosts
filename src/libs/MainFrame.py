@@ -1112,10 +1112,10 @@ class MainFrame(ui.Frame):
            source_hosts.is_online == target_hosts.is_online:
             # 拖到目标 hosts 上了
             parent = self.m_tree.GetItemParent(target_item)
-            add_item = self.m_tree.InsertItemBefore(parent, getHostsIdx(target_hosts),
+            added_item_id = self.m_tree.InsertItemBefore(parent, getHostsIdx(target_hosts),
                     source_hosts.title
                 )
-            source_hosts.tree_item_id = add_item
+            source_hosts.tree_item_id = added_item_id
 #            self.updateHostsTitle(source_hosts)
             self.updateHostsIcon(source_hosts)
             if source_hosts == self.current_using_hosts:
