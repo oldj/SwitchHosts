@@ -10,9 +10,9 @@ import time
 import wx
 from libs.MainFrame import MainFrame
 
-class SwitchHosts(object):
+class SwitchHostsApp(object):
 
-    VERSION = "0.2.1.1775"
+    VERSION = "0.2.1.1776"
 
     def __init__(self):
 
@@ -54,7 +54,7 @@ class SwitchHosts(object):
 
 def main():
 
-    sh = SwitchHosts()
+    sh = SwitchHostsApp()
     sh.run()
 
 
