@@ -320,16 +320,31 @@ class MainFrame(ui.Frame):
                 wx.MessageBox(msg, caption=u"出错啦！")
                 return
 
-        # 尝试更新 DNS 缓存
+        self.tryToFlushDNS()
+        self.highLightHosts(hosts)
+
+
+    def tryToFlushDNS(self):
+        u"""尝试更新 DNS 缓存
+        @see http://cnzhx.net/blog/how-to-flush-dns-cache-in-linux-windows-mac/
+        """
+
         try:
             if self.sys_type == "mac":
                 cmd = "dscacheutil -flushcache"
                 os.popen(cmd)
 
+            elif self.sys_type == "win":
+                cmd = "ipconfig /flushdns"
+                os.popen(cmd)
+
+            elif self.sys_type == "linux":
+                cmd = "/etc/init.d/nscd restart"
+                os.popen(cmd)
+
         except Exception:
             pass
 
-        self.highLightHosts(hosts)
 
 
     def highLightHosts(self, hosts):
