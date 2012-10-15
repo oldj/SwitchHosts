@@ -23,30 +23,30 @@ from BackThreads import BackThreads
 import common_operations as co
 import lang
 
-if os.name == "posix":
-    if sys.platform != "darwin":
-        # Linux
-        try:
-            import pynotify
-        except ImportError:
-            pynotify = None
+sys_type = co.getSystemType()
 
-    else:
-        # Mac
-        import gntp.notifier
+if sys_type == "linux":
+    # Linux
+    try:
+        import pynotify
+    except ImportError:
+        pynotify = None
+elif sys_type == "mac":
+    # Mac
+    import gntp.notifier
 
-        growl = gntp.notifier.GrowlNotifier(
-            applicationName="SwitchHosts!",
-            notifications=["New Updates", "New Messages"],
-            defaultNotifications=["New Messages"],
-            hostname = "127.0.0.1", # Defaults to localhost
-            # password = "" # Defaults to a blank password
-        )
-        try:
-            growl.register()
-            has_growl = True
-        except Exception:
-            has_growl = False
+    growl = gntp.notifier.GrowlNotifier(
+        applicationName="SwitchHosts!",
+        notifications=["New Updates", "New Messages"],
+        defaultNotifications=["New Messages"],
+        hostname = "127.0.0.1", # Defaults to localhost
+        # password = "" # Defaults to a blank password
+    )
+    try:
+        growl.register()
+        has_growl = True
+    except Exception:
+        has_growl = False
 
 
 class MainFrame(ui.Frame):
@@ -77,6 +77,7 @@ class MainFrame(ui.Frame):
         self.latest_stable_version = "0"
         self.__sys_hosts_path = None
         self.local_encoding = co.getLocalEncoding()
+        self.sys_type = co.getSystemType()
 
         if working_path:
             working_path = working_path.decode(self.local_encoding)
@@ -319,6 +320,15 @@ class MainFrame(ui.Frame):
                 wx.MessageBox(msg, caption=u"出错啦！")
                 return
 
+        # 尝试更新 DNS 缓存
+        try:
+            if self.sys_type == "mac":
+                cmd = "dscacheutil -flushcache"
+                os.popen(cmd)
+
+        except Exception:
+            pass
+
         self.highLightHosts(hosts)
 
 
@@ -548,34 +558,32 @@ class MainFrame(ui.Frame):
                 pass
 
 
-        if os.name == "posix":
+        if self.sys_type == "mac":
+            # Mac 系统
+            if has_growl:
+                macGrowlNotify(msg, title)
 
-            if sys.platform != "darwin":
-                # linux 系统
-                pynotify.Notification(title, msg).show()
+        elif self.sys_type == "linux":
+            # linux 系统
+            pynotify.Notification(title, msg).show()
 
-            else:
-                # Mac 系统
-                if has_growl:
-                    macGrowlNotify(msg, title)
+        else:
 
-            return
+            try:
+                import ToasterBox as TB
+            except ImportError:
+                TB = None
 
-        try:
-            import ToasterBox as TB
-        except ImportError:
-            TB = None
+            sw, sh = wx.GetDisplaySize()
+            width, height = 210, 50
+            px = sw - 230
+            py = sh - 100
 
-        sw, sh = wx.GetDisplaySize()
-        width, height = 210, 50
-        px = sw - 230
-        py = sh - 100
-
-        tb = TB.ToasterBox(self)
-        tb.SetPopupText(msg)
-        tb.SetPopupSize((width, height))
-        tb.SetPopupPosition((px, py))
-        tb.Play()
+            tb = TB.ToasterBox(self)
+            tb.SetPopupText(msg)
+            tb.SetPopupSize((width, height))
+            tb.SetPopupPosition((px, py))
+            tb.Play()
 
         self.SetFocus()
 
