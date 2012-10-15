@@ -4,6 +4,8 @@ u"""
 基本操作
 """
 
+import os
+import sys
 import traceback
 import datetime
 import wx
@@ -178,3 +180,30 @@ def getLocalEncoding():
 #    print locale.getpreferredencoding()
 
     return codecs.lookup(locale.getpreferredencoding()).name
+
+
+def getSystemType():
+    u"""取得系统类型
+        win
+        linux
+        mac
+    """
+
+    os_name = os.name
+
+    if os_name == "posix":
+
+        if sys.platform != "darwin":
+            # linux 系统
+            return "linux"
+
+        else:
+            # Mac 系统
+            return "mac"
+
+    elif os_name == "nt":
+        return "win"
+
+    return "unknow"
+
+
