@@ -53,7 +53,8 @@ class Hosts(object):
 
         if co.httpExists(self.url):
 
-            progress_dlg.Update(10),
+            if progress_dlg:
+                progress_dlg.Update(10),
             try:
                 cnt = []
                 up = 10
@@ -65,9 +66,11 @@ class Hosts(object):
                     cnt.append(c)
                     up += 1
                     if up < 60:
-                        progress_dlg.Update(up),
+                        if progress_dlg:
+                            progress_dlg.Update(up),
                 cnt = "".join(cnt)
-                progress_dlg.Update(60),
+                if progress_dlg:
+                    progress_dlg.Update(60),
             except Exception:
                 co.debugErr()
                 return ""
