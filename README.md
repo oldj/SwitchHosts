@@ -25,7 +25,7 @@
 
 你可以直接下载源码到本地运行或编辑，或者在下面下载可执行版本：
 
- * [SwitchHosts! Windows 绿色版下载](https://github.com/downloads/oldj/SwitchHosts/SwitchHosts_v0.2.0.1772.zip)
+ * [SwitchHosts! Windows 绿色版下载](https://github.com/downloads/oldj/SwitchHosts/SwitchHosts_v0.2.1.1779.zip)
  * [所有下载](https://github.com/oldj/SwitchHosts/downloads)
 
 
