@@ -136,6 +136,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_BUTTON, self.OnApply, id=wx.ID_APPLY)
         self.Bind(wx.EVT_BUTTON, self.OnDel, id=wx.ID_DELETE)
         self.Bind(wx.EVT_BUTTON, self.OnRefresh, id=wx.ID_REFRESH)
+        self.Bind(wx.EVT_BUTTON, self.OnEdit, id=wx.ID_EDIT)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeSelectionChange, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.OnTreeRClick, self.m_tree)
         self.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.OnTreeActive, self.m_tree)
@@ -164,9 +165,8 @@ class MainFrame(ui.Frame):
 
         self.hosts_item_menu = wx.Menu()
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
-        #        self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
 #        self.hosts_item_menu.Append(self.ID_RENAME, u"重命名")
-        self.hosts_item_menu.Append(wx.ID_EDIT, u"详情")
+        self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
         self.hosts_item_menu.AppendMenu(-1, u"图标", self.makeSubIconMenu())
 
         self.hosts_item_menu.AppendSeparator()
@@ -866,7 +866,8 @@ class MainFrame(ui.Frame):
             "is_refresh_able": hosts and hosts in self.all_hostses,
             "is_delete_able": hosts and hosts in self.hostses,
             "is_edit_able": hosts and
-                            not hosts.is_online and
+                            hosts in self.hostses and
+#                            not hosts.is_online and
 #                            not hosts.is_origin and
                             not hosts.is_loading,
         }
@@ -881,6 +882,7 @@ class MainFrame(ui.Frame):
         hosts_attrs = self.getHostsAttr(hosts)
         self.m_btn_refresh.Enable(hosts_attrs["is_refresh_able"])
         self.m_btn_del.Enable(hosts_attrs["is_delete_able"])
+        self.m_btn_edit.Enable(hosts_attrs["is_edit_able"])
 
 
     def writeFile(self, path, content, mode="w"):
