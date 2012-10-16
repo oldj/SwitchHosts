@@ -768,7 +768,8 @@ class MainFrame(ui.Frame):
                 wx.CallAfter(progress_dlg.Update, 90),
                 wx.CallAfter(self.saveHosts, hosts),
                 wx.CallAfter(progress_dlg.Update, 100),
-    #            wx.CallAfter(progress_dlg.Destroy),
+                wx.CallAfter(lambda : progress_dlg.Destroy() and self.SetFocus()),
+#                wx.CallAfter(self.SetFocus),
             ])
 
         else:

@@ -12,7 +12,7 @@ from libs.MainFrame import MainFrame
 
 class SwitchHostsApp(object):
 
-    VERSION = "0.2.1.1778"
+    VERSION = "0.2.1.1779"
 
     def __init__(self):
 
