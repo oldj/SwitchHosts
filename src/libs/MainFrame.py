@@ -101,6 +101,7 @@ class MainFrame(ui.Frame):
         self.current_showing_hosts = None
         self.current_tree_hosts = None
         self.current_dragging_hosts = None
+        self.current_tree_item = None # 当前选中的树无素
 
         self.origin_hostses = []
         self.hostses = []
@@ -690,7 +691,8 @@ class MainFrame(ui.Frame):
             return False
 
 
-    def showDetail(self, hosts=None):
+    def showDetailEditor(self, hosts=None, default_is_online=False):
+        u"""显示详情编辑窗口"""
 
         dlg = ui.Dlg_addHosts(self)
 
@@ -704,6 +706,10 @@ class MainFrame(ui.Frame):
             if hosts.url:
                 dlg.m_textCtrl_url.SetValue(hosts.url)
                 dlg.m_textCtrl_url.Enable(True)
+
+        else:
+            dlg.m_radioBtn_local.SetValue(not default_is_online)
+            dlg.m_radioBtn_online.SetValue(default_is_online)
 
         if dlg.ShowModal() != wx.ID_OK:
             dlg.Destroy()
@@ -792,6 +798,8 @@ class MainFrame(ui.Frame):
     def getHostsFromTreeByEvent(self, event):
 
         item = event.GetItem()
+        self.current_tree_item = item
+
         if item in (self.m_tree_online, self.m_tree_local, self.m_tree_root):
             pass
 
@@ -975,12 +983,17 @@ class MainFrame(ui.Frame):
 
     def OnNew(self, event):
 
-        self.showDetail()
+        is_online = False
+        hosts = self.current_showing_hosts
+        if hosts.is_online or self.current_tree_item == self.m_tree_online:
+            is_online = True
+
+        self.showDetailEditor(default_is_online=is_online)
 
 
     def OnEdit(self, event):
 
-        self.showDetail(hosts=self.current_showing_hosts)
+        self.showDetailEditor(hosts=self.current_showing_hosts)
 
 
     def OnRename(self, event):
