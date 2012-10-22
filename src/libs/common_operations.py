@@ -78,11 +78,11 @@ def decode(s):
         try:
             cd = chardet.detect(sample)
         except Exception:
-    #        print(traceback.format_exc())
+#            print(traceback.format_exc())
             pass
 #    log([sample, repr(cd)])
 
-    encoding = cd.get("encoding", "") if cd.get("confidence", 0) > 0.65 else ""
+    encoding = cd.get("encoding", "") if cd.get("confidence", 0) > 0.9 else ""
 
     if encoding and encoding.upper() in ("GB2312", "GBK"):
         encoding = "GB18030"
@@ -91,7 +91,12 @@ def decode(s):
         encoding = "UTF-8"
 #    print s, cd, encoding, s.decode(encoding)
 
-    return s.decode(encoding)
+    try:
+        s = s.decode(encoding)
+    except Exception:
+        pass
+
+    return s
 
 
 def checkLatestStableVersion(obj):
@@ -179,7 +184,7 @@ def getLocalEncoding():
     import codecs
 #    print locale.getpreferredencoding()
 
-    return codecs.lookup(locale.getpreferredencoding()).name
+    return "%s" % codecs.lookup(locale.getpreferredencoding()).name
 
 
 def getSystemType():
