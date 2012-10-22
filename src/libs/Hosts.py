@@ -202,14 +202,12 @@ class Hosts(object):
         if self.last_save_time:
             time_delta = time.time() - self.last_save_time
 #            co.log(time_delta)
-            if time_delta < 0.01:
-                return False
+            if time_delta < 0.001:
+                pass
+#                return False
 
         path = path or self.path
-        try:
-            path = path.encode(co.getLocalEncoding())
-        except Exception:
-            pass
+        path = path.encode(co.getLocalEncoding())
 
         open(path, "w").write(self.full_content)
         self.last_save_time = time.time()
