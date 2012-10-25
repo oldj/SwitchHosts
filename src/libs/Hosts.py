@@ -18,10 +18,11 @@ class Hosts(object):
     flag = "#@SwitchHosts!"
     old_flag = "#@SwitchHost!"
 
-    def __init__(self, path, is_origin=False, title=None, url=None):
+    def __init__(self, path, is_origin=False, title=None, url=None, is_common=False):
 
         self.path = path
         self.is_origin = is_origin
+        self.is_common = is_common
         self.url = url
         self.is_online = True if url else False
         self.is_loading = False
@@ -197,7 +198,7 @@ class Hosts(object):
         return os.linesep.join(cnt_for_save).encode("utf-8")
 
 
-    def save(self, path=None):
+    def save(self, path=None, common=None):
 
         if self.last_save_time:
             time_delta = time.time() - self.last_save_time
@@ -209,7 +210,10 @@ class Hosts(object):
         path = path or self.path
         path = path.encode(co.getLocalEncoding())
 
-        open(path, "w").write(self.full_content)
+        specific_content = self.full_content
+        if common:
+            specific_content = common.full_content + specific_content
+        open(path, "w").write(specific_content)
         self.last_save_time = time.time()
 
         return True

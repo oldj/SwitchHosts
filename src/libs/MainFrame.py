@@ -109,6 +109,17 @@ class MainFrame(ui.Frame):
         self.configs = {}
         self.loadConfigs()
 
+        common_host_file_path = os.path.join(self.working_path, 'COMMON.hosts')
+        if not os.path.isfile(common_host_file_path):
+            common_file = open(common_host_file_path, 'w+')
+            common_file.write("# common")
+            common_file.close()
+
+        hosts = Hosts(path=common_host_file_path, is_common=True)
+        if hosts.content:
+            pass
+        self.addHosts(hosts)
+
         self.getSystemHosts()
         self.scanSavedHosts()
 
@@ -303,7 +314,11 @@ class MainFrame(ui.Frame):
             return
 
         try:
-            hosts.save(path=self.sys_hosts_path)
+            for h in self.hostses:
+                if h.is_common:
+                    break
+
+            hosts.save(path=self.sys_hosts_path, common=h)
             self.notify(msg=u"hosts 已切换为「%s」。" % hosts.title, title=u"hosts 切换成功")
 
         except Exception:
@@ -377,13 +392,18 @@ class MainFrame(ui.Frame):
         elif hosts.is_online:
             tree = self.m_tree_online
             list_hosts = self.hostses
+        elif hosts.is_common:
+            tree = self.m_tree_common
+            list_hosts = self.hostses
         else:
             tree = self.m_tree_local
             list_hosts = self.hostses
 
         if hosts.is_origin:
             hosts.tree_item_id = self.m_tree_origin
-
+        elif hosts.is_common:
+            hosts.tree_item_id = self.m_tree_common
+            list_hosts.append(hosts)
         else:
             list_hosts.append(hosts)
             hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
@@ -927,6 +947,7 @@ class MainFrame(ui.Frame):
 
 
     def OnTreeSelectionChange(self, event):
+        u"""当点击左边树状结构的节点的时候触发"""
 
         hosts = self.getHostsFromTreeByEvent(event)
         self.current_tree_hosts = hosts
@@ -965,14 +986,20 @@ class MainFrame(ui.Frame):
 
 
     def OnTreeActive(self, event):
+        u"""双击树的节点时候触发"""
 
         hosts = self.getHostsFromTreeByEvent(event)
+        if hosts.is_common:
+            return
         if hosts:
             self.useHosts(hosts)
 
 
     def OnApply(self, event):
+        u"""点击切换Hosts时候，触发该函数"""
 
+        if self.current_showing_hosts and self.current_showing_hosts.is_common:
+            return
         if self.current_showing_hosts:
             self.useHosts(self.current_showing_hosts)
 
