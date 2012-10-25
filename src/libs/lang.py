@@ -7,6 +7,7 @@
 
 
 lang = {
+    "common_hosts": u"公用hosts",
     "origin_hosts": u"当前系统 hosts",
     "online_hosts": u"在线方案",
     "local_hosts": u"本地方案",
