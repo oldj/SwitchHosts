@@ -12,6 +12,7 @@
 
 ##功能特性：
 
+ * 支持Common Host文件，切换到任意环境都将生效的host --- charlestang
  * 快速切换 hosts
  * 跨平台（基于 wxPython）
  * hosts 文件语法高亮
@@ -27,7 +28,7 @@
 
  * [SwitchHosts! Windows 绿色版下载](https://github.com/downloads/oldj/SwitchHosts/SwitchHosts_v0.2.1.1780.zip)
  * [所有下载](https://github.com/oldj/SwitchHosts/downloads)
-
+ * [SwitchHosts! 支持Common Host版本 绿色版下载](https://github.com/downloads/charlestang/SwitchHosts/SwitchHosts.zip)
 
 
 ##程序截图：
