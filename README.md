@@ -82,6 +82,26 @@
  - Hosts 编辑器中输入法有问题。
 
 
+##打包方法
+
+ 您可以使用 [py2exe](http://www.py2exe.org/)（Windows 平台）或 [pyInstaller](http://www.pyinstaller.org/)（Windows/Linux/Mac 平台）将本项目打包制作成可执行文件。推荐使用 *pyInstaller*，因为它在各大主流系统中都可使用。另外，感谢网友_Yan Jian_的提醒，如果使用 py2exe 打包，则需要先将源码中的 `__file__` 替换为 `.`。
+ 
+ ###使用 pyInstaller 打包
+ 
+使用 pyInstaller 打包本程序非常简单，大致需要以下步骤：
+
+ - 去 [pyInstaller](http://www.pyinstaller.org/) 官方主页下载最新版本的 pyIntaller，比如目前为 2.0 版
+ - 将下载的 pyInstaller 解压，比如解压至 `D:\tools\pyinstaller-2.0` 目录
+ - 打开 CMD 终端，转到 pyInstaller 所在目录，输入打包命令
+ 
+ 如果你的源码位于目录`D:\studio\SwitchHosts`，则打包命令形如：
+ 
+     D:\tools\pyinstaller-2.0> pyinstaller.py -w -F --icon=D:\studio\SwitchHosts\ui\img\icon_0.ico --name=SwitchHosts --out=D:\studio\SwitchHosts\dist D:\studio\SwitchHosts\src\SwitchHosts.py
+ 
+ 执行完成之后，即可在`D:\studio\SwitchHosts\dist`目录下看到打包成功的可执行文件。
+ 
+
+
 ##版权及致谢：
 
  本程序的 Windows 版和 Mac 分别使用了 [ToasterBox](http://xoomer.virgilio.it/infinity77/main/ToasterBox.html) 和 [gntp](https://github.com/kfdm/gntp) 作为浮出提示解决方案，在此对作者的工作表示感谢！
