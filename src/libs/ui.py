@@ -20,8 +20,6 @@ class Frame(wx.Frame):
         wx.Frame.__init__(self, parent, id, title, pos, size, style)
 
         self.SetIcon(co.GetMondrianIcon())
-        #        self.Bind(wx.EVT_CLOSE, self.OnClose)
-#        self.SetSizeHintsSz(wx.DefaultSize, wx.DefaultSize)
         self.SetSizeHintsSz(wx.Size(400, 300), wx.DefaultSize)
 
         self.m_menubar1 = wx.MenuBar(0)
@@ -64,7 +62,7 @@ class Frame(wx.Frame):
             style=wx.TR_DEFAULT_STYLE|wx.NO_BORDER|wx.TR_NO_LINES\
                 |wx.TR_FULL_ROW_HIGHLIGHT#|wx.TR_HIDE_ROOT
         )
-#        self.m_tree.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_ACTIVEBORDER))
+
         self.m_tree.SetBackgroundColour(wx.Colour(218, 223, 230))
         self.m_tree_root = self.m_tree.AddRoot(u"hosts")
         self.m_tree_common = self.m_tree.AppendItem(self.m_tree_root, lang.trans("common_hosts"))
@@ -104,7 +102,6 @@ class Frame(wx.Frame):
 
         bSizer61 = wx.BoxSizer(wx.HORIZONTAL)
 
-#        self.m_btn_add = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_ADD, co.GetMondrianBitmap(fn="add"), u"添加")
         self.m_btn_add = wx.BitmapButton(self.m_panel1, wx.ID_ADD,
             co.GetMondrianBitmap(fn="add"),
             wx.DefaultPosition,
@@ -126,7 +123,6 @@ class Frame(wx.Frame):
         self.m_btn_add.SetToolTipString(u"编辑")
         bSizer61.Add(self.m_btn_edit, 0, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, 5)
 
-#        self.m_btn_del = buttons.GenBitmapTextButton(self.m_panel1, wx.ID_DELETE, co.GetMondrianBitmap(fn="delete"), u"删除")
         self.m_btn_del = wx.BitmapButton(self.m_panel1, wx.ID_DELETE,
             co.GetMondrianBitmap(fn="delete"),
             wx.DefaultPosition,
