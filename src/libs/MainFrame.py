@@ -879,11 +879,8 @@ class MainFrame(ui.Frame):
         attrs = {
             "is_refresh_able": hosts and hosts in self.all_hostses,
             "is_delete_able": hosts and hosts in self.hostses,
-            "is_edit_able": hosts and
-                            hosts in self.hostses and
-#                            not hosts.is_online and
-#                            not hosts.is_origin and
-                            not hosts.is_loading,
+            "is_edit_able": hosts and not hosts.is_loading and
+                            (hosts in self.hostses or hosts in self.common_hostses),
         }
         for k in attrs:
             attrs[k] = True if attrs[k] else False
@@ -1152,7 +1149,6 @@ class MainFrame(ui.Frame):
 
         self.__dragging_item = None
         self.current_dragging_hosts = None
-#        co.log(target_hosts.title)
 
         def getHostsIdx(hosts):
 
