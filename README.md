@@ -28,7 +28,7 @@
 
  * [SwitchHosts! Windows 绿色版下载](https://github.com/downloads/oldj/SwitchHosts/SwitchHosts_v0.2.1.1780.zip)
  * [所有下载](https://github.com/oldj/SwitchHosts/downloads)
- * [SwitchHosts! 支持Common Host版本 绿色版下载](https://github.com/downloads/charlestang/SwitchHosts/SwitchHosts.zip)
+ * [SwitchHosts! 支持Common Host版本 绿色版下载](https://github.com/downloads/charlestang/SwitchHosts/SwitchHosts-4c2286.zip)
 
 
 ##程序截图：
@@ -58,6 +58,7 @@
 
 ##更新历史：
 
+ - 2012-11-09 简单优化：Common Host不允许删除，不允许“切换到”，将右键菜单相关条目禁用，允许更换图标颜色。修复新增再线方案时，url框默认禁用的小bug。 
  - 2012-10-09 增加 hosts 方案拖拽排序功能。
  - 2012-10-05 修复在中文目录下程序无法正常启动的问题。
  - 2012-09-30 初步完成 0.2.0 版。
