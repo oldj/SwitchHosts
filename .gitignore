@@ -9,6 +9,7 @@ projectFilesBackup
 
 *.hosts
 
+src/hosts
 src/configs.json
 
 *.swh

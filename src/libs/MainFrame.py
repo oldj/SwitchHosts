@@ -4,6 +4,8 @@
 # blog: http://oldj.net
 # email: oldj.wu@gmail.com
 #
+# update by allenm 2012-11-15 添加一直生效 hosts 功能
+#
 
 import os
 import sys
@@ -104,12 +106,14 @@ class MainFrame(ui.Frame):
         self.current_tree_item = None # 当前选中的树无素
 
         self.origin_hostses = []
+        self.forever_hostses = []
         self.hostses = []
 
         self.configs = {}
         self.loadConfigs()
 
         self.getSystemHosts()
+        self.getForeverHosts()  # 获取永久生效的 hosts
         self.scanSavedHosts()
 
         if not os.path.isdir(self.hosts_path):
@@ -206,6 +210,20 @@ class MainFrame(ui.Frame):
         self.updateHostsIcon(hosts)
         hosts.save()
 
+    def getForeverHosts(self):
+        u"""获取永久生效的hosts"""
+        path = os.path.join( self.hosts_path , 'hosts.forever' )
+        hosts = Hosts( path=path, title=lang.trans("forever_hosts"), is_forever=True)
+        if not os.path.isfile( path ):
+            title = lang.trans("forever_hosts")
+            hosts = Hosts( path=path, title=title, is_forever=True)
+            hosts.content = u"# %s" % title
+            self.saveHosts( hosts )
+        self.forever_hostses = [ hosts ]
+        self.addHosts( hosts )
+
+
+
 
     def scanSavedHosts(self):
         u"""扫描目前保存的各个hosts"""
@@ -298,12 +316,16 @@ class MainFrame(ui.Frame):
 
     def useHosts(self, hosts):
 
+        if hosts.is_forever:
+            return
+
         if hosts.is_loading:
             wx.MessageBox(u"当前 hosts 内容正在下载中，请稍后再试...")
             return
 
         try:
-            hosts.save(path=self.sys_hosts_path)
+            forever_hosts = self.forever_hostses[0]
+            hosts.save(path=self.sys_hosts_path, extraContent="\n"*2 + forever_hosts.content)
             self.notify(msg=u"hosts 已切换为「%s」。" % hosts.title, title=u"hosts 切换成功")
 
         except Exception:
@@ -374,6 +396,9 @@ class MainFrame(ui.Frame):
         if hosts.is_origin:
             tree = self.m_tree_origin
             list_hosts = self.origin_hostses
+        elif hosts.is_forever:
+            tree = self.m_tree_forever
+            list_hosts = self.forever_hostses
         elif hosts.is_online:
             tree = self.m_tree_online
             list_hosts = self.hostses
@@ -383,6 +408,8 @@ class MainFrame(ui.Frame):
 
         if hosts.is_origin:
             hosts.tree_item_id = self.m_tree_origin
+        elif hosts.is_forever:
+            hosts.tree_item_id = self.m_tree_forever
 
         else:
             list_hosts.append(hosts)
@@ -651,7 +678,7 @@ class MainFrame(ui.Frame):
     @property
     def all_hostses(self):
 
-        return self.origin_hostses + self.hostses
+        return self.origin_hostses + self.forever_hostses + self.hostses
 
 
     def makeNewHostsFileName(self):
@@ -866,7 +893,7 @@ class MainFrame(ui.Frame):
             "is_refresh_able": hosts and hosts in self.all_hostses,
             "is_delete_able": hosts and hosts in self.hostses,
             "is_edit_able": hosts and
-                            hosts in self.hostses and
+                            hosts in ( self.hostses + self.forever_hostses) and
 #                            not hosts.is_online and
 #                            not hosts.is_origin and
                             not hosts.is_loading,
@@ -932,7 +959,7 @@ class MainFrame(ui.Frame):
         self.current_tree_hosts = hosts
         self.updateBtnStatus(hosts)
 
-        if not hosts or (hosts not in self.hostses and hosts not in self.origin_hostses):
+        if not hosts or (hosts not in self.all_hostses ):
             return event.Veto()
 
         if hosts and hosts != self.current_showing_hosts:
