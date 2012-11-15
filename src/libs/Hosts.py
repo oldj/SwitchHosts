@@ -4,6 +4,8 @@
 # blog: http://oldj.net
 # email: oldj.wu@gmail.com
 #
+# update by allenm 2012-11-15 添加一直生效 hosts 功能
+#
 
 import os
 import simplejson as json
@@ -18,10 +20,11 @@ class Hosts(object):
     flag = "#@SwitchHosts!"
     old_flag = "#@SwitchHost!"
 
-    def __init__(self, path, is_origin=False, title=None, url=None):
+    def __init__(self, path, is_origin=False, is_forever=False, title=None, url=None):
 
         self.path = path
         self.is_origin = is_origin
+        self.is_forever = is_forever
         self.url = url
         self.is_online = True if url else False
         self.is_loading = False
@@ -153,7 +156,7 @@ class Hosts(object):
         if type(cfg) != dict:
             return
 
-        if self.is_origin:
+        if self.is_origin or self.is_forever:
             pass
         elif cfg.get("title"):
             if not self.title or not self.is_online:
@@ -197,7 +200,7 @@ class Hosts(object):
         return os.linesep.join(cnt_for_save).encode("utf-8")
 
 
-    def save(self, path=None):
+    def save(self, path=None, extraContent=""):
 
         if self.last_save_time:
             time_delta = time.time() - self.last_save_time
@@ -209,10 +212,14 @@ class Hosts(object):
         path = path or self.path
         path = path.encode(co.getLocalEncoding())
 
-        open(path, "w").write(self.full_content)
+        open(path, "w").write( self.full_content + self.encodeText(extraContent) )
         self.last_save_time = time.time()
 
         return True
+
+    def encodeText(self, text):
+
+        return os.linesep.join( text.split("\n") ).encode("utf-8")
 
 
     def remove(self):

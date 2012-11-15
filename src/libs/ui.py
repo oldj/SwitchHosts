@@ -68,6 +68,7 @@ class Frame(wx.Frame):
         self.m_tree.SetBackgroundColour(wx.Colour(218, 223, 230))
         self.m_tree_root = self.m_tree.AddRoot(u"hosts")
         self.m_tree_origin = self.m_tree.AppendItem(self.m_tree_root, lang.trans("origin_hosts"))
+        self.m_tree_forever = self.m_tree.AppendItem( self.m_tree_root , lang.trans("forever_hosts"))
         self.m_tree_local = self.m_tree.AppendItem(self.m_tree_root, lang.trans("local_hosts"))
         self.m_tree_online = self.m_tree.AppendItem(self.m_tree_root, lang.trans("online_hosts"))
         self.m_tree.SetItemTextColour(self.m_tree_root, "#999999")
