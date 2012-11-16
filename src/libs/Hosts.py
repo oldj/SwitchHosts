@@ -95,7 +95,6 @@ class Hosts(object):
         self.is_loading = True
         c = ""
         if self.is_online:
-
             if force:
                 c = self.getContentFromUrl(progress_dlg)
 
@@ -187,16 +186,17 @@ class Hosts(object):
     @property
     def full_content(self):
 
-        cnt_for_save = [
-            "%s %s" % (self.flag, json.dumps({
-                "title": self.title,
-                "url": self.url,
-                "icon_idx": self.icon_idx,
-                })),
-            ] + self.content.split("\n")
-
+        cnt_for_save = [self.configLine()] + self.content.split("\n")
         return os.linesep.join(cnt_for_save).encode("utf-8")
 
+    def configLine(self):
+        u"""生成配置信息的注释行"""
+
+        return "%s %s" % (self.flag, json.dumps({
+                                "title": self.title,
+                                "url": self.url,
+                                "icon_idx": self.icon_idx,
+                                }))
 
     def contentWithCommon(self, common=None):
         u"""返回添加了公共内容的hosts"""
@@ -205,6 +205,7 @@ class Hosts(object):
             return self.full_content
 
         return os.linesep.join([
+            self.configLine(),
             common.content,
             "# %s" % ("-" * 50),
             self.content
@@ -216,15 +217,13 @@ class Hosts(object):
 
         if self.last_save_time:
             time_delta = time.time() - self.last_save_time
-#            co.log(time_delta)
             if time_delta < 0.001:
                 pass
-#                return False
 
         path = path or self.path
         path = path.encode(co.getLocalEncoding())
-
         open(path, "w").write(self.contentWithCommon(common))
+
         self.last_save_time = time.time()
 
         return True
@@ -234,4 +233,3 @@ class Hosts(object):
 
         if os.path.isfile(self.path):
             os.remove(self.path)
-

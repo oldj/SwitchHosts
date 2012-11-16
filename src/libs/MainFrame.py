@@ -360,6 +360,7 @@ class MainFrame(ui.Frame):
 
 
     def highLightHosts(self, hosts):
+        u"""将切换的host文件高亮显示"""
 
         self.m_tree.SelectItem(hosts.tree_item_id)
 
@@ -957,6 +958,9 @@ class MainFrame(ui.Frame):
         u"""当点击左边树状结构的节点的时候触发"""
 
         hosts = self.getHostsFromTreeByEvent(event)
+
+        if not hosts:
+            return
         self.current_tree_hosts = hosts
         self.updateBtnStatus(hosts)
 
@@ -1204,4 +1208,3 @@ class MainFrame(ui.Frame):
             self.saveConfigs()
             self.m_tree.Delete(source_item)
             self.m_tree.SelectItem(source_hosts.tree_item_id)
-
