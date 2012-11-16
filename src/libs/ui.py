@@ -280,7 +280,10 @@ class AboutBox(wx.Dialog):
                 源码：<a href="https://github.com/oldj/SwitchHosts">https://github.com/oldj/SwitchHosts</a><br />
                 作者：<a href="http://oldj.net">oldj</a><br />
                 <br />
-                本程序完全免费，如果您觉得它还不错，欢迎<a href="https://me.alipay.com/oldj">捐赠</a>支持作者，谢谢！<br />
+                以下网友对本软件也有贡献：<br />
+                @charlestang ，@allenm<br />
+                <br />
+                <font color="#909090">本程序完全免费，如果您觉得它还不错，欢迎<a href="https://me.alipay.com/oldj">捐赠</a>支持作者，谢谢！</font>
             </p>
         """ % {
             "version": version,
