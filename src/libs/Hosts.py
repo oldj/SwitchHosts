@@ -198,6 +198,20 @@ class Hosts(object):
         return os.linesep.join(cnt_for_save).encode("utf-8")
 
 
+    def contentWithCommon(self, common=None):
+        u"""返回添加了公共内容的hosts"""
+
+        if not common:
+            return self.full_content
+
+        return os.linesep.join([
+            common.content,
+            "# %s" % ("-" * 50),
+            self.content
+        ]).encode("utf-8")
+
+
+
     def save(self, path=None, common=None):
 
         if self.last_save_time:
@@ -210,10 +224,7 @@ class Hosts(object):
         path = path or self.path
         path = path.encode(co.getLocalEncoding())
 
-        specific_content = self.full_content
-        if common:
-            specific_content = common.full_content + specific_content
-        open(path, "w").write(specific_content)
+        open(path, "w").write(self.contentWithCommon(common))
         self.last_save_time = time.time()
 
         return True

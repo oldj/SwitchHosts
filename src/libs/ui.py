@@ -116,12 +116,12 @@ class Frame(wx.Frame):
         self.m_btn_add.SetToolTipString(u"刷新")
         bSizer61.Add(self.m_btn_refresh, 0, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, 5)
 
-        self.m_btn_edit = wx.BitmapButton(self.m_panel1, wx.ID_EDIT,
+        self.m_btn_edit_info = wx.BitmapButton(self.m_panel1, wx.ID_EDIT,
             co.GetMondrianBitmap(fn="pencil"),
             wx.DefaultPosition,
             wx.DefaultSize, wx.BU_AUTODRAW|wx.NO_BORDER)
         self.m_btn_add.SetToolTipString(u"编辑")
-        bSizer61.Add(self.m_btn_edit, 0, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, 5)
+        bSizer61.Add(self.m_btn_edit_info, 0, wx.EXPAND|wx.TOP|wx.BOTTOM|wx.LEFT, 5)
 
         self.m_btn_del = wx.BitmapButton(self.m_panel1, wx.ID_DELETE,
             co.GetMondrianBitmap(fn="delete"),
