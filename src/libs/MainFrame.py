@@ -315,6 +315,8 @@ class MainFrame(ui.Frame):
                 common_hosts = None
 
             hosts.save(path=self.sys_hosts_path, common=common_hosts)
+            if len(self.origin_hostses) > 0:
+                self.origin_hostses[0].icon_idx = hosts.icon_idx
             self.notify(msg=u"hosts 已切换为「%s」。" % hosts.title, title=u"hosts 切换成功")
 
         except Exception:
@@ -377,6 +379,8 @@ class MainFrame(ui.Frame):
 
         co.log("update icon")
         if self.current_using_hosts:
+            if len(self.origin_hostses) > 0:
+                self.updateHostsIcon(self.origin_hostses[0])
             self.SetIcon(co.GetMondrianIcon(self.current_using_hosts.icon_idx))
             self.taskbar_icon.updateIcon()
 
@@ -423,8 +427,8 @@ class MainFrame(ui.Frame):
         self.m_tree.SetItemImage(
             hosts.tree_item_id, self.ico_colors_idx[icon_idx], wx.TreeItemIcon_Normal
         )
-        if hosts == self.current_using_hosts:
-            self.updateIcon()
+#        if hosts == self.current_using_hosts:
+#            self.updateIcon()
 
 
     def delHosts(self, hosts):
