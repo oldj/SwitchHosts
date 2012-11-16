@@ -1119,7 +1119,7 @@ class MainFrame(ui.Frame):
 
         item = event.GetItem()
         hosts = self.getHostsFromTreeByEvent(event)
-        if not hosts or hosts in self.origin_hostses:
+        if not hosts or hosts.is_origin or hosts.is_common:
             event.Veto()
             return
 
