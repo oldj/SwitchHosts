@@ -104,13 +104,14 @@ class MainFrame(ui.Frame):
         self.origin_hostses = []
         self.common_hostses = []
         self.hostses = []
+        self.fn_common_hosts = "COMMON.hosts"
 
         self.configs = {}
         self.loadConfigs()
 
-        common_host_file_path = os.path.join(self.working_path, 'COMMON.hosts')
+        common_host_file_path = os.path.join(self.hosts_path, self.fn_common_hosts)
         if not os.path.isfile(common_host_file_path):
-            common_file = open(common_host_file_path, 'w+')
+            common_file = open(common_host_file_path, "w+")
             common_file.write("# common")
             common_file.close()
 
@@ -218,6 +219,8 @@ class MainFrame(ui.Frame):
 
         fns = glob.glob(os.path.join(self.hosts_path, "*.hosts"))
         fns = [os.path.split(fn)[1] for fn in fns]
+        if self.fn_common_hosts in fns:
+            fns.remove(self.fn_common_hosts)
 
         cfg_hostses = self.configs.get("hostses", [])
         # 移除不存在的 hosts
@@ -900,6 +903,7 @@ class MainFrame(ui.Frame):
         self.m_btn_refresh.Enable(hosts_attrs["is_refresh_able"])
         self.m_btn_del.Enable(hosts_attrs["is_delete_able"])
         self.m_btn_edit_info.Enable(hosts_attrs["is_info_edit_able"])
+        self.m_btn_apply.Enable(hosts_attrs["is_apply_able"])
 
         # 更新右键菜单项状态
         self.hosts_item_menu.Enable(wx.ID_EDIT, hosts_attrs["is_info_edit_able"])
