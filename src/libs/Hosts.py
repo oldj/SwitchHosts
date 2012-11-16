@@ -95,7 +95,6 @@ class Hosts(object):
         self.is_loading = True
         c = ""
         if self.is_online:
-
             if force:
                 c = self.getContentFromUrl(progress_dlg)
 
@@ -202,17 +201,18 @@ class Hosts(object):
 
         if self.last_save_time:
             time_delta = time.time() - self.last_save_time
-#            co.log(time_delta)
             if time_delta < 0.001:
                 pass
-#                return False
 
         path = path or self.path
         path = path.encode(co.getLocalEncoding())
 
         specific_content = self.full_content
         if common:
-            specific_content = common.full_content + specific_content
+            contents = specific_content.split(os.linesep, 1)  #第一行是配置，提取出来
+            specific_content = contents[0] + os.linesep + \
+                               os.linesep.join(common.content.split("\n")).encode("utf-8") + \
+                               os.linesep + contents[1]
         open(path, "w").write(specific_content)
         self.last_save_time = time.time()
 
