@@ -51,8 +51,6 @@ elif sys_type == "mac":
 
 class MainFrame(ui.Frame):
 
-#    ID_RENAME = wx.NewId()
-
     def __init__(self, mainjob,
             parent=None, id=wx.ID_ANY, title=None, pos=wx.DefaultPosition,
             size=wx.DefaultSize,
@@ -104,10 +102,20 @@ class MainFrame(ui.Frame):
         self.current_tree_item = None # 当前选中的树无素
 
         self.origin_hostses = []
+        self.common_hostses = []
         self.hostses = []
 
         self.configs = {}
         self.loadConfigs()
+
+        common_host_file_path = os.path.join(self.working_path, 'COMMON.hosts')
+        if not os.path.isfile(common_host_file_path):
+            common_file = open(common_host_file_path, 'w+')
+            common_file.write("# common")
+            common_file.close()
+
+        hosts = Hosts(path=common_host_file_path, is_common=True)
+        self.addHosts(hosts)
 
         self.getSystemHosts()
         self.scanSavedHosts()
@@ -126,7 +134,6 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
         self.Bind(wx.EVT_MENU, self.OnDel, id=wx.ID_DELETE)
         self.Bind(wx.EVT_MENU, self.OnApply, id=wx.ID_APPLY)
-#        self.Bind(wx.EVT_MENU, self.OnRename, id=self.ID_RENAME)
         self.Bind(wx.EVT_MENU, self.OnEdit, id=wx.ID_EDIT)
         self.Bind(wx.EVT_MENU, self.OnRefresh, id=wx.ID_REFRESH)
         self.Bind(wx.EVT_MENU, self.OnExport, self.m_menuItem_export)
@@ -165,7 +172,6 @@ class MainFrame(ui.Frame):
 
         self.hosts_item_menu = wx.Menu()
         self.hosts_item_menu.Append(wx.ID_APPLY, u"切换到当前hosts")
-#        self.hosts_item_menu.Append(self.ID_RENAME, u"重命名")
         self.hosts_item_menu.Append(wx.ID_EDIT, u"编辑")
         self.hosts_item_menu.AppendMenu(-1, u"图标", self.makeSubIconMenu())
 
@@ -173,7 +179,6 @@ class MainFrame(ui.Frame):
         self.hosts_item_menu.Append(wx.ID_REFRESH, u"刷新")
         self.hosts_item_menu.Append(wx.ID_DELETE, u"删除")
 
-#        self.m_btn_apply.Disable()
 
 
     def makeSubIconMenu(self):
@@ -197,6 +202,7 @@ class MainFrame(ui.Frame):
 
 
     def setHostsIcon(self, event=None, i=0):
+        u"""图标子菜单，点击动作的响应函数"""
 
         hosts = self.current_showing_hosts
         if not hosts:
@@ -264,7 +270,6 @@ class MainFrame(ui.Frame):
             hosts = Hosts(path=path, title=lang.trans("origin_hosts"), is_origin=True)
             self.origin_hostses = [hosts]
             self.addHosts(hosts)
-#            self.useHosts(hosts)
             self.highLightHosts(hosts)
             self.updateBtnStatus(hosts)
 
@@ -273,7 +278,6 @@ class MainFrame(ui.Frame):
 
         self.showing_rnd_id = random.random()
 
-#        hosts.getContentOnce()
         content = hosts.content if not hosts.is_loading else "loading..."
         self.is_switching_text = True
         self.m_textCtrl_content.SetReadOnly(False)
@@ -284,8 +288,6 @@ class MainFrame(ui.Frame):
         if self.current_showing_hosts:
             self.m_tree.SetItemBackgroundColour(self.current_showing_hosts.tree_item_id, None)
         self.m_tree.SetItemBackgroundColour(hosts.tree_item_id, "#ccccff")
-
-#        self.task_qu.put(lambda : self.textStyle())
 
         self.current_showing_hosts = hosts
 
@@ -303,7 +305,11 @@ class MainFrame(ui.Frame):
             return
 
         try:
-            hosts.save(path=self.sys_hosts_path)
+            for h in self.common_hostses:
+                if h.is_common:
+                    break
+
+            hosts.save(path=self.sys_hosts_path, common=h)
             self.notify(msg=u"hosts 已切换为「%s」。" % hosts.title, title=u"hosts 切换成功")
 
         except Exception:
@@ -377,13 +383,18 @@ class MainFrame(ui.Frame):
         elif hosts.is_online:
             tree = self.m_tree_online
             list_hosts = self.hostses
+        elif hosts.is_common:
+            tree = self.m_tree_common
+            list_hosts = self.common_hostses
         else:
             tree = self.m_tree_local
             list_hosts = self.hostses
 
         if hosts.is_origin:
             hosts.tree_item_id = self.m_tree_origin
-
+        elif hosts.is_common:
+            hosts.tree_item_id = self.m_tree_common
+            list_hosts.append(hosts)
         else:
             list_hosts.append(hosts)
             hosts.tree_item_id = self.m_tree.AppendItem(tree, hosts.title)
@@ -392,7 +403,6 @@ class MainFrame(ui.Frame):
         self.m_tree.Expand(tree)
 
         if show_after_add:
-#            self.showHosts(hosts)
             self.m_tree.SelectItem(hosts.tree_item_id)
 
 
@@ -710,6 +720,7 @@ class MainFrame(ui.Frame):
         else:
             dlg.m_radioBtn_local.SetValue(not default_is_online)
             dlg.m_radioBtn_online.SetValue(default_is_online)
+            dlg.m_textCtrl_url.Enabled = default_is_online
 
         if dlg.ShowModal() != wx.ID_OK:
             dlg.Destroy()
@@ -810,6 +821,9 @@ class MainFrame(ui.Frame):
             for hosts in self.all_hostses:
                 if item == hosts.tree_item_id:
                     return hosts
+            for hosts in self.common_hostses:
+                if item == hosts.tree_item_id:
+                    return hosts
 
         return None
 
@@ -865,11 +879,8 @@ class MainFrame(ui.Frame):
         attrs = {
             "is_refresh_able": hosts and hosts in self.all_hostses,
             "is_delete_able": hosts and hosts in self.hostses,
-            "is_edit_able": hosts and
-                            hosts in self.hostses and
-#                            not hosts.is_online and
-#                            not hosts.is_origin and
-                            not hosts.is_loading,
+            "is_edit_able": hosts and not hosts.is_loading and
+                            (hosts in self.hostses or hosts in self.common_hostses),
         }
         for k in attrs:
             attrs[k] = True if attrs[k] else False
@@ -927,12 +938,13 @@ class MainFrame(ui.Frame):
 
 
     def OnTreeSelectionChange(self, event):
+        u"""当点击左边树状结构的节点的时候触发"""
 
         hosts = self.getHostsFromTreeByEvent(event)
         self.current_tree_hosts = hosts
         self.updateBtnStatus(hosts)
 
-        if not hosts or (hosts not in self.hostses and hosts not in self.origin_hostses):
+        if not hosts or (hosts not in self.hostses and hosts not in self.origin_hostses and hosts not in self.common_hostses):
             return event.Veto()
 
         if hosts and hosts != self.current_showing_hosts:
@@ -943,19 +955,20 @@ class MainFrame(ui.Frame):
 
 
     def OnTreeRClick(self, event):
+        u"""在树节点上单击右键，展示右键菜单"""
 
         hosts = self.getHostsFromTreeByEvent(event)
         if hosts:
             self.OnTreeSelectionChange(event)
 
-            is_rename_able = hosts in self.hostses
-            is_edit_able = hosts in self.hostses
+            is_edit_able = hosts in self.hostses or hosts.is_common
             is_del_able = hosts in self.hostses
             is_refresh_able = hosts not in self.origin_hostses
-#            self.hosts_item_menu.Enable(self.ID_RENAME, is_rename_able)
+            is_switchable = not hosts.is_common
             self.hosts_item_menu.Enable(wx.ID_EDIT, is_edit_able)
             self.hosts_item_menu.Enable(wx.ID_DELETE, is_del_able)
             self.hosts_item_menu.Enable(wx.ID_REFRESH, is_refresh_able)
+            self.hosts_item_menu.Enable(wx.ID_APPLY, is_switchable)
 
             self.m_tree.PopupMenu(self.hosts_item_menu, event.GetPoint())
 
@@ -965,14 +978,20 @@ class MainFrame(ui.Frame):
 
 
     def OnTreeActive(self, event):
+        u"""双击树的节点时候触发"""
 
         hosts = self.getHostsFromTreeByEvent(event)
+        if hosts.is_common:
+            return
         if hosts:
             self.useHosts(hosts)
 
 
     def OnApply(self, event):
+        u"""点击切换Hosts时候，触发该函数"""
 
+        if self.current_showing_hosts and self.current_showing_hosts.is_common:
+            return
         if self.current_showing_hosts:
             self.useHosts(self.current_showing_hosts)
 
@@ -1130,7 +1149,6 @@ class MainFrame(ui.Frame):
 
         self.__dragging_item = None
         self.current_dragging_hosts = None
-#        co.log(target_hosts.title)
 
         def getHostsIdx(hosts):
 
