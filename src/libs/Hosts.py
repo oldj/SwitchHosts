@@ -186,15 +186,31 @@ class Hosts(object):
     @property
     def full_content(self):
 
-        cnt_for_save = [
-            "%s %s" % (self.flag, json.dumps({
-                "title": self.title,
-                "url": self.url,
-                "icon_idx": self.icon_idx,
-                })),
-            ] + self.content.split("\n")
-
+        cnt_for_save = [self.configLine()] + self.content.split("\n")
         return os.linesep.join(cnt_for_save).encode("utf-8")
+
+    def configLine(self):
+        u"""生成配置信息的注释行"""
+
+        return "%s %s" % (self.flag, json.dumps({
+                                "title": self.title,
+                                "url": self.url,
+                                "icon_idx": self.icon_idx,
+                                }))
+
+    def contentWithCommon(self, common=None):
+        u"""返回添加了公共内容的hosts"""
+
+        if not common:
+            return self.full_content
+
+        return os.linesep.join([
+            self.configLine(),
+            common.content,
+            "# %s" % ("-" * 50),
+            self.content
+        ]).encode("utf-8")
+
 
 
     def save(self, path=None, common=None):
@@ -206,14 +222,8 @@ class Hosts(object):
 
         path = path or self.path
         path = path.encode(co.getLocalEncoding())
+        open(path, "w").write(self.contentWithCommon(common))
 
-        specific_content = self.full_content
-        if common:
-            contents = specific_content.split(os.linesep, 1)  #第一行是配置，提取出来
-            specific_content = contents[0] + os.linesep + \
-                               os.linesep.join(common.content.split("\n")).encode("utf-8") + \
-                               os.linesep + contents[1]
-        open(path, "w").write(specific_content)
         self.last_save_time = time.time()
 
         return True

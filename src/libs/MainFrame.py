@@ -248,7 +248,7 @@ class MainFrame(ui.Frame):
 
     @property
     def sys_hosts_path(self):
-        u"""取得系统 host 文件的路径"""
+        u"""取得系统 hosts 文件的路径"""
 
         if not self.__sys_hosts_path:
 
@@ -282,7 +282,7 @@ class MainFrame(ui.Frame):
         self.is_switching_text = True
         self.m_textCtrl_content.SetReadOnly(False)
         self.m_textCtrl_content.SetValue(content)
-        self.m_textCtrl_content.SetReadOnly(not self.getHostsAttr(hosts, "is_edit_able"))
+        self.m_textCtrl_content.SetReadOnly(not self.getHostsAttr(hosts, "is_content_edit_able"))
         self.is_switching_text = False
 
         if self.current_showing_hosts:
@@ -305,11 +305,13 @@ class MainFrame(ui.Frame):
             return
 
         try:
-            for h in self.common_hostses:
-                if h.is_common:
+            for common_hosts in self.common_hostses:
+                if common_hosts.is_common:
                     break
+            else:
+                common_hosts = None
 
-            hosts.save(path=self.sys_hosts_path, common=h)
+            hosts.save(path=self.sys_hosts_path, common=common_hosts)
             self.notify(msg=u"hosts 已切换为「%s」。" % hosts.title, title=u"hosts 切换成功")
 
         except Exception:
@@ -877,10 +879,12 @@ class MainFrame(ui.Frame):
     def getHostsAttr(self, hosts, key=None):
 
         attrs = {
-            "is_refresh_able": hosts and hosts in self.all_hostses,
+            "is_refresh_able": hosts and hosts in self.all_hostses or hosts in self.common_hostses,
             "is_delete_able": hosts and hosts in self.hostses,
-            "is_edit_able": hosts and not hosts.is_loading and
+            "is_info_edit_able": hosts and not hosts.is_loading and hosts in self.hostses,
+            "is_content_edit_able": hosts and not hosts.is_loading and
                             (hosts in self.hostses or hosts in self.common_hostses),
+            "is_apply_able": not hosts.is_common and not hosts.is_origin,
         }
         for k in attrs:
             attrs[k] = True if attrs[k] else False
@@ -891,9 +895,17 @@ class MainFrame(ui.Frame):
     def updateBtnStatus(self, hosts):
 
         hosts_attrs = self.getHostsAttr(hosts)
+
+        # 更新下方按钮状态
         self.m_btn_refresh.Enable(hosts_attrs["is_refresh_able"])
         self.m_btn_del.Enable(hosts_attrs["is_delete_able"])
-        self.m_btn_edit.Enable(hosts_attrs["is_edit_able"])
+        self.m_btn_edit_info.Enable(hosts_attrs["is_info_edit_able"])
+
+        # 更新右键菜单项状态
+        self.hosts_item_menu.Enable(wx.ID_EDIT, hosts_attrs["is_info_edit_able"])
+        self.hosts_item_menu.Enable(wx.ID_DELETE, hosts_attrs["is_delete_able"])
+        self.hosts_item_menu.Enable(wx.ID_REFRESH, hosts_attrs["is_refresh_able"])
+        self.hosts_item_menu.Enable(wx.ID_APPLY, hosts_attrs["is_apply_able"])
 
 
     def writeFile(self, path, content, mode="w"):
@@ -961,15 +973,6 @@ class MainFrame(ui.Frame):
         if hosts:
             self.OnTreeSelectionChange(event)
 
-            is_edit_able = hosts in self.hostses or hosts.is_common
-            is_del_able = hosts in self.hostses
-            is_refresh_able = hosts not in self.origin_hostses
-            is_switchable = not hosts.is_common
-            self.hosts_item_menu.Enable(wx.ID_EDIT, is_edit_able)
-            self.hosts_item_menu.Enable(wx.ID_DELETE, is_del_able)
-            self.hosts_item_menu.Enable(wx.ID_REFRESH, is_refresh_able)
-            self.hosts_item_menu.Enable(wx.ID_APPLY, is_switchable)
-
             self.m_tree.PopupMenu(self.hosts_item_menu, event.GetPoint())
 
 
@@ -981,9 +984,9 @@ class MainFrame(ui.Frame):
         u"""双击树的节点时候触发"""
 
         hosts = self.getHostsFromTreeByEvent(event)
-        if hosts.is_common:
-            return
         if hosts:
+            if hosts.is_common or hosts.is_origin:
+                return
             self.useHosts(hosts)
 
 
