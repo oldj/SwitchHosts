@@ -70,7 +70,7 @@ class Frame(wx.Frame):
         self.m_tree_local = self.m_tree.AppendItem(self.m_tree_root, lang.trans("local_hosts"))
         self.m_tree_online = self.m_tree.AppendItem(self.m_tree_root, lang.trans("online_hosts"))
         self.m_tree.SetItemTextColour(self.m_tree_root, "#999999")
-        self.m_tree.SetItemTextColour(self.m_tree_common, "#999999")
+        self.m_tree.SetItemTextColour(self.m_tree_common, "#3333ff")
         self.m_tree.SetItemTextColour(self.m_tree_local, "#999999")
         self.m_tree.SetItemTextColour(self.m_tree_online, "#999999")
         self.m_tree.ExpandAll()
