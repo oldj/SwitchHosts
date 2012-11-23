@@ -28,7 +28,6 @@
 
  * [SwitchHosts! Windows 绿色版下载](https://github.com/downloads/oldj/SwitchHosts/SwitchHosts_v0.2.2.1785.zip)
  * [所有下载](https://github.com/oldj/SwitchHosts/downloads)
- * [SwitchHosts! 支持Common Host版本 绿色版下载](https://github.com/downloads/charlestang/SwitchHosts/SwitchHosts-6794add.zip)
 
 
 ##程序截图：
