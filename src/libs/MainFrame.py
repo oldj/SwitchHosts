@@ -82,6 +82,8 @@ class MainFrame(ui.Frame):
             self.working_path = working_path
             self.configs_path = os.path.join(self.working_path, "configs.json")
             self.hosts_path = os.path.join(self.working_path, "hosts")
+            if not os.path.isdir(self.hosts_path):
+                os.makedirs(self.hosts_path)
 
         self.task_qu = Queue.Queue(4096)
         self.startBackThreads(2)
@@ -111,7 +113,7 @@ class MainFrame(ui.Frame):
 
         common_host_file_path = os.path.join(self.hosts_path, self.fn_common_hosts)
         if not os.path.isfile(common_host_file_path):
-            common_file = open(common_host_file_path, "w+")
+            common_file = open(common_host_file_path, "w")
             common_file.write("# common")
             common_file.close()
 
@@ -1212,3 +1214,8 @@ class MainFrame(ui.Frame):
             self.saveConfigs()
             self.m_tree.Delete(source_item)
             self.m_tree.SelectItem(source_hosts.tree_item_id)
+
+
+    def MacReopenApp(self):
+        """Called when the doc icon is clicked, and ???"""
+        self.GetTopWindow().Raise()
