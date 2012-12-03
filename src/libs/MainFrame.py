@@ -784,6 +784,14 @@ class MainFrame(ui.Frame):
 
         hosts.is_loading = True
 
+        def tryToDestroy(obj):
+            # mac 下，progress_dlg 销毁时总是会异常退出...
+            if sys_type != "mac":
+                try:
+                    obj.Destroy()
+                except Exception:
+                    print(traceback.format_exc())
+
         if hosts.is_online:
             progress_dlg = wx.ProgressDialog(u"加载中",
                 u"正在加载「%s」...\nURL: %s" % (hosts.title, hosts.url), 100,
@@ -797,8 +805,9 @@ class MainFrame(ui.Frame):
                 wx.CallAfter(progress_dlg.Update, 90),
                 wx.CallAfter(self.saveHosts, hosts),
                 wx.CallAfter(progress_dlg.Update, 100),
-                wx.CallAfter(lambda : progress_dlg.Destroy() and self.SetFocus()),
-#                wx.CallAfter(self.SetFocus),
+#                wx.CallAfter(lambda : progress_dlg.Destroy() and self.SetFocus()),
+                wx.CallAfter(lambda : tryToDestroy(progress_dlg)),
+                wx.CallAfter(self.SetFocus),
             ])
 
         else:
