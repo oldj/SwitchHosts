@@ -1225,6 +1225,8 @@ class MainFrame(ui.Frame):
             self.m_tree.SelectItem(source_hosts.tree_item_id)
 
 
-    def MacReopenApp(self):
+    def OnActiveApp(self, event):
         """Called when the doc icon is clicked, and ???"""
-        self.GetTopWindow().Raise()
+        print "---"
+#        self.GetTopWindow().Raise()
+        self.Raise()
