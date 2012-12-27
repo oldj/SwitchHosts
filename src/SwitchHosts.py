@@ -37,11 +37,11 @@ class SwitchHostsApp(object):
 
             app = wx.App()
 
-            name = app.GetAppName() + "-" + wx.GetUserId()
-            single_instance_checker = wx.SingleInstanceChecker(name)
-            print(dir(single_instance_checker))
+            name = "%s-%s" % (app.GetAppName(), wx.GetUserId())
+            single_instance_checker = wx.SingleInstanceChecker(name, self.working_path)
             if single_instance_checker.IsAnotherRunning():
                 wx.MessageBox(u"SwitchHosts! 已经在运行了！")
+                open(os.path.join(self.working_path, ".active"), "w").write("1")
                 return
 
             frame = MainFrame(
