@@ -62,7 +62,7 @@ class MainFrame(ui.Frame):
 
         self.mainjob = mainjob
         self.version = version
-        self.default_title = "SwitchHosts! %s" % version
+        self.default_title = "SwitchHosts!"
 
         ui.Frame.__init__(self, parent, id,
             title or self.default_title, pos, size, style)
