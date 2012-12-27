@@ -36,6 +36,14 @@ class SwitchHostsApp(object):
         while True:
 
             app = wx.App()
+
+            name = app.GetAppName() + "-" + wx.GetUserId()
+            single_instance_checker = wx.SingleInstanceChecker(name)
+            print(dir(single_instance_checker))
+            if single_instance_checker.IsAnotherRunning():
+                wx.MessageBox(u"SwitchHosts! 已经在运行了！")
+                return
+
             frame = MainFrame(
                 mainjob=self,
                 size=(640, 480),
@@ -132,9 +140,8 @@ def isAppRunning():
 
 def main():
 
-    if not isAppRunning():
-        sh = SwitchHostsApp()
-        sh.run()
+    sh = SwitchHostsApp()
+    sh.run()
 
 
 if __name__ == "__main__":
