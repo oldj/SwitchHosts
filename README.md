@@ -99,10 +99,19 @@
 
 如果你的源码位于目录`D:\studio\SwitchHosts`，则打包命令形如：
  
-    D:\tools\pyinstaller-2.0> pyinstaller.py -w -F --icon=D:\studio\SwitchHosts\ui\img\icon_0.ico --name=SwitchHosts --out=D:\studio\SwitchHosts\dist D:\studio\SwitchHosts\src\SwitchHosts.py
+    D:\tools\pyinstaller-2.0> pyinstaller.py -w -F --icon=D:\studio\SwitchHosts\src\img\logo.ico --name=SwitchHosts --out=D:\studio\SwitchHosts\dist D:\studio\SwitchHosts\src\SwitchHosts.py
  
 执行完成之后，即可在`D:\studio\SwitchHosts\dist`目录下看到打包成功的可执行文件。
  
+
+###使用 py2app 打包
+
+Mac 下可以使用 py2app 将本程序打包为一个 APP，在终端中进入程序的`src`目录，运行以下命令：
+
+    $rm -rf dist build
+    $python setup.py py2app
+
+如果一切顺利，即可在当前目录下的`dist/`目录下看到打包完成的`SwitchHosts!.app`。
 
 
 ##版权及致谢：
