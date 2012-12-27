@@ -5,4 +5,4 @@
 # email: oldj.wu@gmail.com
 #
 
-VERSION = "0.2.2.1790"
+VERSION = "0.2.2.1791"

@@ -17,6 +17,7 @@ import re
 import traceback
 import random
 import Queue
+import time
 from Hosts import Hosts
 from TaskbarIcon import TaskBarIcon
 from BackThreads import BackThreads
@@ -85,12 +86,15 @@ class MainFrame(ui.Frame):
             if not os.path.isdir(self.hosts_path):
                 os.makedirs(self.hosts_path)
 
+        self.active_fn = os.path.join(self.working_path, ".active")
         self.task_qu = Queue.Queue(4096)
         self.startBackThreads(2)
         self.makeHostsContextMenu()
 
         self.init2()
         self.initBind()
+
+        self.task_qu.put(self.chkActive)
 
 
     def init2(self):
@@ -1230,3 +1234,20 @@ class MainFrame(ui.Frame):
         print "---"
 #        self.GetTopWindow().Raise()
         self.Raise()
+
+
+    def chkActive(self):
+        u"""循环查看工作目录下是否有 .active 文件，有则激活主窗口"""
+
+        if os.path.isfile(self.active_fn):
+            print("active..")
+            os.remove(self.active_fn)
+#            print(dir(self.mainjob.app))
+            self.Raise()
+            wx.TopLevelWindow.RequestUserAttention(self)
+#            self.mainjob.app.SetTopWindow(self)
+
+        time.sleep(0.5)
+#        wx.CallAfter(self.chkActive)
+        self.task_qu.put(self.chkActive)
+
