@@ -1,0 +1,16 @@
+.idea
+*.pyc
+*.swp
+src/build
+src/dist
+dist
+projectFilesBackup
+.DS_Store
+
+*.hosts
+
+src/configs.json
+
+*.swh
+
+*.iml
