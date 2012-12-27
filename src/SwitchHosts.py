@@ -33,19 +33,22 @@ class SwitchHostsApp(object):
 
     def run(self):
 
+        instance_name = None
+
         while True:
 
             app = wx.App()
 
-            name = "%s-%s" % (app.GetAppName(), wx.GetUserId())
-            single_instance_checker = wx.SingleInstanceChecker(name, self.working_path)
-            if single_instance_checker.IsAnotherRunning():
+            instance_name = "%s-%s" % (app.GetAppName(), wx.GetUserId())
+            instance_checker = wx.SingleInstanceChecker(instance_name, self.working_path)
+            if instance_checker.IsAnotherRunning():
                 wx.MessageBox(u"SwitchHosts! 已经在运行了！")
                 open(os.path.join(self.working_path, ".active"), "w").write("1")
                 return
 
             frame = MainFrame(
                 mainjob=self,
+                instance_name=instance_name,
                 size=(640, 480),
                 version=self.VERSION,
                 working_path=self.working_path,
@@ -66,6 +69,7 @@ class SwitchHostsApp(object):
             time.sleep(0.1)
             if not self.restart:
                 break
+
 
     def bindEvents(self):
         u"""绑定各种事件"""
