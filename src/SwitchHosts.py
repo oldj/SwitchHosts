@@ -112,32 +112,6 @@ class SwitchHostsApp(object):
         self.taskbar_icon = taskbar_icon
 
 
-def isAppRunning():
-    u"""实现Windows下单一实例"""
-
-    is_exist = False
-
-    if os.name != "nt":
-        return is_exist
-
-    import win32ui
-    import win32con
-
-    try:
-        win = win32ui.FindWindow(None, u"SwitchHosts!")
-        try:
-            if win:
-                win.ShowWindow(win32con.SW_SHOWNORMAL)
-                is_exist = True
-        except Exception:
-            pass
-
-    except Exception:
-        pass
-
-    return is_exist
-
-
 def main():
 
     sh = SwitchHostsApp()
