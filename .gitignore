@@ -12,3 +12,5 @@ projectFilesBackup
 src/configs.json
 
 *.swh
+
+*.iml
