@@ -1,4 +1,4 @@
-@import url(https://fonts.googleapis.com/css?family=Lato:300italic,700italic,300,700);
+/*@import url(https://fonts.googleapis.com/css?family=Lato:300italic,700italic,300,700);*/
 html {
   background: #6C7989;
   background: #6c7989 -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #6c7989), color-stop(100%, #434b55)) fixed;
@@ -19,7 +19,7 @@ body {
 }
 
 .wrapper {
-  width: 640px;
+  width: 760px;
   margin: 0 auto;
   background: #DEDEDE;
   -webkit-border-radius: 8px;
@@ -44,6 +44,10 @@ a {
 p {
   margin: 0 0 20px;
   padding: 0;
+}
+
+p.img {
+	text-align: center;
 }
 
 strong {
@@ -353,4 +357,16 @@ footer p + p {
   header p.view a small:before {
     content: 'at http://github.com/';
   }
+}
+
+#myCarousel .item {
+	height: 520px;
+	text-align: center;
+}
+#myCarousel .item img {
+	margin: 0 auto;
+}
+#download-wrapper {
+	padding: 40px 0;
+	text-align: center;
 }
