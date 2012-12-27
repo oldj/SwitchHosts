@@ -47,7 +47,7 @@
 
 ###Mac
 
-![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/3.png?raw=true)
+![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/6.png?raw=true)
 
 *程序主界面*
 
