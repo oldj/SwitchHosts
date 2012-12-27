@@ -52,7 +52,7 @@ elif sys_type == "mac":
 
 class MainFrame(ui.Frame):
 
-    def __init__(self, mainjob,
+    def __init__(self, mainjob, instance_name,
             parent=None, id=wx.ID_ANY, title=None, pos=wx.DefaultPosition,
             size=wx.DefaultSize,
             style=wx.DEFAULT_FRAME_STYLE,
@@ -62,6 +62,7 @@ class MainFrame(ui.Frame):
         u""""""
 
         self.mainjob = mainjob
+        self.instance_name = instance_name
         self.version = version
         self.default_title = "SwitchHosts! %s" % self.version
 
@@ -963,6 +964,13 @@ class MainFrame(ui.Frame):
         self.stopBackThreads()
         self.taskbar_icon.Destroy()
         self.Destroy()
+
+        # 退出时删除进程错文件
+        lock_fn = os.path.join(self.working_path, self.instance_name) \
+            if self.instance_name else None
+        if lock_fn and os.path.isfile(lock_fn):
+            os.remove(lock_fn)
+
         sys.exit()
 
 
