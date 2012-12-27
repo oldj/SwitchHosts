@@ -36,7 +36,7 @@
 
 ###Windows
 
-![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/5.png?raw=true)
+![程序主界面](https://github.com/oldj/SwitchHosts/blob/master/screenshots/7.png?raw=true)
 
 *程序主界面*
 
