@@ -42,6 +42,8 @@ class Frame(wx.Frame):
         self.m_menu2 = wx.Menu()
         self.m_menuItem_about = wx.MenuItem(self.m_menu2, wx.ID_ABOUT, u"关于(&A)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu2.AppendItem(self.m_menuItem_about)
+        self.m_menuItem_homepage = wx.MenuItem(self.m_menu2, wx.ID_ANY, u"主页(&H)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menu2.AppendItem(self.m_menuItem_homepage)
         self.m_menuItem_chkUpdate = wx.MenuItem(self.m_menu2, wx.ID_ANY, u"检查更新(&U)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu2.AppendItem(self.m_menuItem_chkUpdate)
         self.m_menuItem_donate = wx.MenuItem(self.m_menu2, wx.ID_ANY, u"捐赠(&D)", wx.EmptyString, wx.ITEM_NORMAL)
@@ -277,7 +279,8 @@ class AboutBox(wx.Dialog):
                 本程序用于在多个 hosts 之间快速切换。
             </p>
             <p>
-                源码：<a href="https://github.com/oldj/SwitchHosts">https://github.com/oldj/SwitchHosts</a><br />
+                主页：<a href="http://oldj.github.com/SwitchHosts/">http://oldj.github.com/SwitchHosts/</a><br />
+                <!--源码：<a href="https://github.com/oldj/SwitchHosts">https://github.com/oldj/SwitchHosts</a><br />-->
                 作者：<a href="http://oldj.net">oldj</a><br />
                 <br />
                 以下网友对本软件也有贡献：<br />
