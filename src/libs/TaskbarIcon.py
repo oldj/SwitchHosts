@@ -63,9 +63,22 @@ class TaskBarIcon(wx.TaskBarIcon):
         menu.Append(self.ID_MainFrame, u"SwitchHosts!")
         menu.AppendSeparator()
 
-        for hosts in self.main_frame.all_hostses:
-            if hosts:
-                self.addHosts(menu, hosts)
+        local_hostses = self.main_frame.local_hostses
+        online_hostses = self.main_frame.online_hostses
+
+        def addItems(name, hostses):
+            tmp_id = wx.NewId()
+            menu.Append(tmp_id, name)
+            menu.Enable(tmp_id, False)
+
+            for hosts in hostses:
+                if hosts:
+                    self.addHosts(menu, hosts)
+
+        if local_hostses:
+            addItems(u"本地方案", local_hostses)
+        if online_hostses:
+            addItems(u"在线方案", online_hostses)
 
         menu.AppendSeparator()
         menu.Append(self.ID_About, "About")
@@ -79,12 +92,13 @@ class TaskBarIcon(wx.TaskBarIcon):
 
         item_id = wx.NewId()
         title = hosts.title if not hosts.is_origin else lang.trans("origin_hosts")
-        mitem = wx.MenuItem(menu, item_id, title, kind=wx.ITEM_RADIO)
+        mitem = wx.MenuItem(menu, item_id, title, kind=wx.ITEM_CHECK)
         mitem.SetBitmap(co.GetMondrianBitmap(hosts.icon_idx))
         menu.AppendItem(mitem)
 
-        menu.Check(item_id, self.main_frame.current_using_hosts == hosts)
-        if self.main_frame.current_using_hosts ==  hosts:
+        is_using = self.main_frame.current_using_hosts == hosts
+        menu.Check(item_id, is_using)
+        if is_using:
             mitem.SetFont(self.font_bold)
 #        self.hosts[item_id] = title
         hosts.taskbar_id = item_id
