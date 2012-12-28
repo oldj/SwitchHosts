@@ -6,6 +6,6 @@
 $(document).ready(function () {
 
 	$('.carousel').carousel({
-		interval: 2000
+		interval: 5000
 	});
 });

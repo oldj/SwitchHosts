@@ -1,0 +1,80 @@
+body {
+	line-height: 20px;
+	font-size: 14px;
+}
+#header,
+#main,
+#footer {
+}
+#header .oj-content,
+#main .oj-content,
+#footer .oj-content {
+	width: 640px;
+	margin: 0 auto;
+}
+#header .oj-content {
+	width: 800px;
+}
+#header {
+}
+#header .logo {
+	text-align: center;
+	padding: 40px 0;
+}
+#header .description {
+	color: #999;
+	width: 480px;
+	margin: 0 auto 20px auto;
+	text-indent: 2em;
+}
+#main {
+	background: #e8e8e8;
+	padding: 20px 0;
+	box-shadow: 0 5px 10px #ccc inset;
+}
+
+#my-carousel {
+	height: 520px;
+}
+#my-carousel .item {
+	height: 520px;
+	text-align: center;
+}
+#my-carousel .item img {
+	margin: 0 auto;
+}
+
+#download-wrapper {
+	text-align: center;
+	padding: 20px 0 60px 0;
+}
+
+h3 {
+	font-size: 16px;
+}
+#features ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	height: 200px;
+}
+#features ul li {
+	list-style: none;
+	margin: 0 20px 0 0;
+	padding: 0;
+	float: left;
+}
+#features ul li img {
+	border: solid 1px #333;
+}
+#features ul li .intro {
+	line-height: 30px;
+}
+
+#footer {
+	padding: 20px 0;
+	color: #999;
+}
+#footer .source {
+	float: right;
+}
