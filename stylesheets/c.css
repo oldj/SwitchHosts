@@ -25,7 +25,7 @@ body {
 	color: #999;
 	width: 480px;
 	margin: 0 auto 20px auto;
-	text-indent: 2em;
+	/*text-indent: 2em;*/
 }
 #main {
 	background: #e8e8e8;
@@ -72,9 +72,13 @@ h3 {
 }
 
 #footer {
-	padding: 20px 0;
+	padding: 20px 0 80px 0;
 	color: #999;
 }
 #footer .source {
 	float: right;
+}
+.oj-block p {
+	margin: 0 0 0.5em 0;
+	padding: 0;
 }
