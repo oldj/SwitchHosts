@@ -682,6 +682,17 @@ class MainFrame(ui.Frame):
         return self.origin_hostses + self.hostses
 
 
+    @property
+    def local_hostses(self):
+
+        return [hosts for hosts in self.hostses if not hosts.is_online]
+
+    @property
+    def online_hostses(self):
+
+        return [hosts for hosts in self.hostses if hosts.is_online]
+
+
     def makeNewHostsFileName(self):
         u"""生成一个新的 hosts 文件名"""
 
