@@ -138,6 +138,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
+        self.Bind(wx.EVT_MENU, self.OnHomepage, self.m_menuItem_homepage)
         self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
         self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
         self.Bind(wx.EVT_MENU, self.OnDel, id=wx.ID_DELETE)
@@ -858,11 +859,6 @@ class MainFrame(ui.Frame):
 
         url = "https://github.com/oldj/SwitchHosts/blob/master/README.md"
 
-#        progress_dlg = wx.ProgressDialog(u"检查更新",
-#            u"正在检查最新版本...", 100,
-#            style=wx.PD_AUTO_HIDE
-#        )
-#        wx.CallAfter(progress_dlg.Update, 10)
         ver = None
         try:
             c = urllib.urlopen(url).read()
@@ -875,9 +871,6 @@ class MainFrame(ui.Frame):
 
         except Exception:
             pass
-
-#        wx.CallAfter(progress_dlg.Update, 100)
-#        progress_dlg.Destroy()
 
         if not alert:
             return
@@ -892,7 +885,12 @@ class MainFrame(ui.Frame):
                     if cmp >= 0:
                         wx.MessageBox(u"当前已是最新版本！")
                     else:
-                        wx.MessageBox(u"更新的稳定版 %s 已经发布！" % self.latest_stable_version)
+                        if wx.MessageBox(u"更新的稳定版 %s 已经发布，现在立刻查看吗？" % self.latest_stable_version,
+                            u"发现新版本！",
+                            wx.YES_NO | wx.ICON_INFORMATION
+                        ) == wx.YES:
+                            self.openHomepage()
+
                 except Exception:
                     co.debugErr()
                     pass
@@ -941,6 +939,17 @@ class MainFrame(ui.Frame):
             co.debugErr()
 
         open(path, mode).write(content)
+
+
+    def openHomepage(self):
+        u"""打开项目主页"""
+
+        homepage = "http://oldj.github.com/SwitchHosts/"
+        wx.LaunchDefaultBrowser(homepage)
+
+
+    def OnHomepage(self, event):
+        self.openHomepage()
 
 
     def OnHostsChange(self, event):
