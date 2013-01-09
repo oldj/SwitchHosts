@@ -25,6 +25,7 @@ class SwitchHostsApp(object):
         self.restart = False
         self.taskbar_icon = None
 
+        self.sys_type = sys_type
         if sys_type != "win":
             self.working_path = os.path.join(self.user_home, ".SwitchHosts")
         else:
@@ -96,7 +97,7 @@ class SwitchHostsApp(object):
         参见：http://wxpython-users.1045709.n5.nabble.com/OS-X-issue-raising-minimized-frame-td2371601.html
         """
 
-        if event.GetActive():
+        if self.sys_type == "mac" and event.GetActive():
             if self.frame.IsIconized():
                 self.frame.Iconize(False)
             if not self.frame.IsShown():
