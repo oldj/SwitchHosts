@@ -213,7 +213,10 @@ class Hosts(object):
 
 
 
-    def save(self, path=None, common=None):
+    def save(self, path=None, common=None, sudo_password=None):
+
+        from stat import ST_MODE
+        fn_stat = 744
 
         if self.last_save_time:
             time_delta = time.time() - self.last_save_time
@@ -222,7 +225,20 @@ class Hosts(object):
 
         path = path or self.path
         path = path.encode(co.getLocalEncoding())
+
+        if sudo_password:
+            # 先修改系统hosts文件的权限
+            fn_stat = oct(os.stat(path)[ST_MODE])[-3:]
+            cmd = "echo '%s' | sudo -S chmod %s %s" % (sudo_password, 766, path)
+            os.popen(cmd)
+
+        # 写系统hosts
         open(path, "w").write(self.contentWithCommon(common))
+
+        if sudo_password:
+            # 再将系统hosts文件的权限改回来
+            cmd = "echo '%s' | sudo -S chmod %s %s" % (sudo_password, fn_stat, path)
+            os.popen(cmd)
 
         self.last_save_time = time.time()
 

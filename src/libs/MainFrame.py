@@ -65,6 +65,7 @@ class MainFrame(ui.Frame):
         self.instance_name = instance_name
         self.version = version
         self.default_title = "SwitchHosts! %s" % self.version
+        self.sudo_password = ""
 
         ui.Frame.__init__(self, parent, id,
             title or self.default_title, pos, size, style)
@@ -309,23 +310,52 @@ class MainFrame(ui.Frame):
             self.showHosts(hosts)
 
 
+    def tryToSaveBySudoPassword(self, hosts, common_hosts):
+
+        if not self.sudo_password:
+            # 尝试获取sudo密码
+            pswd = None
+            dlg = wx.PasswordEntryDialog(None, u"请输入sudo密码：", u"需要管理员权限",
+                style=wx.OK|wx.CANCEL
+            )
+            if dlg.ShowModal() == wx.ID_OK:
+                pswd = dlg.GetValue().strip()
+
+            dlg.Destroy()
+
+            if not pswd:
+                return False
+
+            self.sudo_password = pswd
+
+        #尝试通过sudo密码保存
+        try:
+            hosts.save(path=self.sys_hosts_path, common=common_hosts,
+                sudo_password=self.sudo_password)
+            return True
+        except Exception:
+            print(traceback.format_exc())
+
+        return False
+
+
     def useHosts(self, hosts):
 
         if hosts.is_loading:
             wx.MessageBox(u"当前 hosts 内容正在下载中，请稍后再试...")
             return
 
+        msg = None
+        is_success = False
+        common_hosts = None
+
         try:
             for common_hosts in self.common_hostses:
                 if common_hosts.is_common:
                     break
-            else:
-                common_hosts = None
 
             hosts.save(path=self.sys_hosts_path, common=common_hosts)
-            if len(self.origin_hostses) > 0:
-                self.origin_hostses[0].icon_idx = hosts.icon_idx
-            self.notify(msg=u"hosts 已切换为「%s」。" % hosts.title, title=u"hosts 切换成功")
+            is_success = True
 
         except Exception:
 
@@ -333,17 +363,28 @@ class MainFrame(ui.Frame):
             co.log(err)
 
             if "Permission denied:" in err:
-                msg = u"切换 hosts 失败！\n没有修改 '%s' 的权限！" % self.sys_hosts_path
+                if sys_type in ("linux", "mac") and self.tryToSaveBySudoPassword(
+                    hosts, common_hosts
+                ):
+                    is_success = True
+                else:
+                    msg = u"切换 hosts 失败！\n没有修改 '%s' 的权限！" % self.sys_hosts_path
 
             else:
                 msg = u"切换 hosts 失败！\n\n%s" % err
 
-            if self.current_showing_hosts:
+            if msg and self.current_showing_hosts:
                 wx.MessageBox(msg, caption=u"出错啦！")
                 return
 
-        self.tryToFlushDNS()
-        self.highLightHosts(hosts)
+        if is_success:
+
+            if len(self.origin_hostses) > 0:
+                self.origin_hostses[0].icon_idx = hosts.icon_idx
+            self.notify(msg=u"hosts 已切换为「%s」。" % hosts.title, title=u"hosts 切换成功")
+
+            self.tryToFlushDNS()
+            self.highLightHosts(hosts)
 
 
     def tryToFlushDNS(self):
