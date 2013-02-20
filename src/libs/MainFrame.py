@@ -140,6 +140,7 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_MENU, self.OnExit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.OnAbout, id=wx.ID_ABOUT)
         self.Bind(wx.EVT_MENU, self.OnHomepage, self.m_menuItem_homepage)
+        self.Bind(wx.EVT_MENU, self.OnFeedback, self.m_menuItem_feedback)
         self.Bind(wx.EVT_MENU, self.OnChkUpdate, self.m_menuItem_chkUpdate)
         self.Bind(wx.EVT_MENU, self.OnNew, self.m_menuItem_new)
         self.Bind(wx.EVT_MENU, self.OnDel, id=wx.ID_DELETE)
@@ -996,12 +997,21 @@ class MainFrame(ui.Frame):
     def openHomepage(self):
         u"""打开项目主页"""
 
-        homepage = "http://oldj.github.com/SwitchHosts/"
-        wx.LaunchDefaultBrowser(homepage)
+        url= "http://oldj.github.com/SwitchHosts/"
+        wx.LaunchDefaultBrowser(url)
 
 
     def OnHomepage(self, event):
         self.openHomepage()
+
+    def openFeedbackPage(self):
+        u"""打开反馈主页"""
+
+        url = "https://github.com/oldj/SwitchHosts/issues?direction=desc&sort=created&state=open"
+        wx.LaunchDefaultBrowser(url)
+
+    def OnFeedback(self, event):
+        self.openFeedbackPage()
 
 
     def OnHostsChange(self, event):
