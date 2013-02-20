@@ -44,6 +44,8 @@ class Frame(wx.Frame):
         self.m_menu2.AppendItem(self.m_menuItem_about)
         self.m_menuItem_homepage = wx.MenuItem(self.m_menu2, wx.ID_ANY, u"主页(&H)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu2.AppendItem(self.m_menuItem_homepage)
+        self.m_menuItem_feedback = wx.MenuItem(self.m_menu2, wx.ID_ANY, u"反馈建议(&F)", wx.EmptyString, wx.ITEM_NORMAL)
+        self.m_menu2.AppendItem(self.m_menuItem_feedback)
         self.m_menuItem_chkUpdate = wx.MenuItem(self.m_menu2, wx.ID_ANY, u"检查更新(&U)", wx.EmptyString, wx.ITEM_NORMAL)
         self.m_menu2.AppendItem(self.m_menuItem_chkUpdate)
         self.m_menuItem_donate = wx.MenuItem(self.m_menu2, wx.ID_ANY, u"捐赠(&D)", wx.EmptyString, wx.ITEM_NORMAL)
@@ -284,7 +286,9 @@ class AboutBox(wx.Dialog):
                 作者：<a href="http://oldj.net">oldj</a><br />
                 <br />
                 以下网友对本软件也有贡献：<br />
-                @charlestang ，@allenm<br />
+                <a href="http://weibo.com/charlestang">@charlestang</a>,
+                <a href="http://weibo.com/allenm56">@allenm</a>,
+                <a href="http://www.weibo.com/emersonli">@emersonli</a> <br />
                 <br />
                 <font color="#909090">本程序完全免费，如果您觉得它还不错，欢迎<a href="https://me.alipay.com/oldj">捐赠</a>支持作者，谢谢！</font>
             </p>
