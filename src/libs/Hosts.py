@@ -232,13 +232,15 @@ class Hosts(object):
             cmd = "echo '%s' | sudo -S chmod %s %s" % (sudo_password, 766, path)
             os.popen(cmd)
 
-        # 写系统hosts
-        open(path, "w").write(self.contentWithCommon(common))
+        try:
+            # 写系统hosts
+            open(path, "w").write(self.contentWithCommon(common))
 
-        if sudo_password:
-            # 再将系统hosts文件的权限改回来
-            cmd = "echo '%s' | sudo -S chmod %s %s" % (sudo_password, fn_stat, path)
-            os.popen(cmd)
+        finally:
+            if sudo_password:
+                # 再将系统hosts文件的权限改回来
+                cmd = "echo '%s' | sudo -S chmod %s %s" % (sudo_password, fn_stat, path)
+                os.popen(cmd)
 
         self.last_save_time = time.time()
 
