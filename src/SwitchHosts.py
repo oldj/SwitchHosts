@@ -37,7 +37,7 @@ class SwitchHostsApp(object):
 
         while True:
 
-            app = wx.App()
+            app = wx.App(False)
 
             instance_name = "%s-%s" % (app.GetAppName(), wx.GetUserId())
             instance_checker = wx.SingleInstanceChecker(instance_name, self.working_path)
