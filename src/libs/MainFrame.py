@@ -23,6 +23,7 @@ from TaskbarIcon import TaskBarIcon
 from BackThreads import BackThreads
 import common_operations as co
 import lang
+import base64
 
 sys_type = co.getSystemType()
 
@@ -65,7 +66,6 @@ class MainFrame(ui.Frame):
         self.instance_name = instance_name
         self.version = version
         self.default_title = "SwitchHosts! %s" % self.version
-        self.sudo_password = ""
 
         ui.Frame.__init__(self, parent, id,
             title or self.default_title, pos, size, style)
@@ -84,9 +84,11 @@ class MainFrame(ui.Frame):
             self.working_path = working_path
             self.configs_path = os.path.join(self.working_path, "configs.json")
             self.hosts_path = os.path.join(self.working_path, "hosts")
+            self.passwd_path = os.path.join(self.working_path, "passwd")
             if not os.path.isdir(self.hosts_path):
                 os.makedirs(self.hosts_path)
 
+        self.sudo_password = self.getPassword()
         self.active_fn = os.path.join(self.working_path, ".active")
         self.task_qu = Queue.Queue(4096)
         self.startBackThreads(2)
@@ -311,6 +313,7 @@ class MainFrame(ui.Frame):
                 return False
 
             self.sudo_password = pswd
+            self.writeFile(self.passwd_path, base64.encodestring(pswd))
 
         #尝试通过sudo密码保存
         try:
@@ -1255,3 +1258,13 @@ class MainFrame(ui.Frame):
         time.sleep(0.5)
 #        wx.CallAfter(self.chkActive)
         self.task_qu.put(self.chkActive)
+
+    def getPassword(self):
+        try:
+            f = open(self.passwd_path) 
+            passwd = base64.decodestring(f.read())
+            f.close()
+            return passwd
+        except Exception:
+            return ""
+
