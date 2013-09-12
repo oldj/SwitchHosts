@@ -233,10 +233,13 @@ class Hosts(object):
 
         path = path or self.path
         path = path.encode(co.getLocalEncoding())
-        fn_stat = oct(os.stat(path)[ST_MODE])[-3:]
+        fn_stat = None
+        backup_name = None
 
-        backup_name = self.makeBackupHostsName(path)
-        self.tryToBackupOriginalHosts(path, backup_name, sudo_password)
+        if os.path.isfile(path):
+            fn_stat = oct(os.stat(path)[ST_MODE])[-3:]
+            backup_name = self.makeBackupHostsName(path)
+            self.tryToBackupOriginalHosts(path, backup_name, sudo_password)
 
         if sudo_password:
             # 先修改系统hosts文件的权限
@@ -250,7 +253,7 @@ class Hosts(object):
             open(path, "w").write(self.contentWithCommon(common))
 
         finally:
-            if sudo_password:
+            if sudo_password and fn_stat and backup_name:
                 # 再将系统hosts文件的权限改回来
                 cmd = [
                     "echo '%s' | sudo -S chmod %s %s" % (sudo_password, fn_stat, path),
