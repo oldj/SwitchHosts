@@ -1258,7 +1258,6 @@ class MainFrame(ui.Frame):
         time.sleep(0.5)
 #        wx.CallAfter(self.chkActive)
         self.task_qu.put(self.chkActive)
-<<<<<<< HEAD
 
     def getPassword(self):
         try:
@@ -1269,6 +1268,3 @@ class MainFrame(ui.Frame):
         except Exception:
             return ""
 
-
-=======
->>>>>>> 88d7e213ea823a15f41127351d9861cd8f3b4971
