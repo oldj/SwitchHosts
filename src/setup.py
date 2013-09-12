@@ -26,6 +26,7 @@ setup(
                 "CFBundleGetInfoString": "SwitchHosts! %s" % VERSION,
                 "CFBundleExecutable": "SwitchHosts!",
                 "CFBundleIdentifier": "net.oldj.switchhosts",
+                "LSUIElement": 1,
                 },
             },
         },
