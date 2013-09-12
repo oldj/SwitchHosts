@@ -23,6 +23,7 @@ from TaskbarIcon import TaskBarIcon
 from BackThreads import BackThreads
 import common_operations as co
 import lang
+import base64
 
 sys_type = co.getSystemType()
 
@@ -312,7 +313,7 @@ class MainFrame(ui.Frame):
                 return False
 
             self.sudo_password = pswd
-            self.writeFile(self.passwd_path, pswd)
+            self.writeFile(self.passwd_path, base64.encodestring(pswd))
 
         #尝试通过sudo密码保存
         try:
@@ -1261,7 +1262,7 @@ class MainFrame(ui.Frame):
     def getPassword(self):
         try:
             f = open(self.passwd_path) 
-            passwd = f.read().strip()
+            passwd = base64.decodestring(f.read())
             f.close()
             return passwd
         except Exception:
