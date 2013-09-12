@@ -36,17 +36,14 @@ class Hosts(object):
 
         self.getContent()
 
-
     @property
     def title(self):
 
         return self.__title or self.filename or u"未命名"
 
-
     @title.setter
     def title(self, value):
         self.__title = value
-
 
     def getContentFromUrl(self, progress_dlg):
 
@@ -83,12 +80,10 @@ class Hosts(object):
 
         return cnt
 
-
     def getContentOnce(self):
 
         if self.is_online and not self.last_fetch_dt:
             self.getContent(force=True)
-
 
     def getContent(self, force=False, progress_dlg=None):
 
@@ -117,14 +112,12 @@ class Hosts(object):
         self.content = c
         self.is_loading = False
 
-
     def tryToDecode(self, s):
 
         try:
             return co.decode(s)
         except Exception:
             return u"### 解码错误！###"
-
 
     @property
     def content(self):
@@ -135,11 +128,9 @@ class Hosts(object):
             c = "%s\n" % c
         return c
 
-
     @content.setter
     def content(self, value):
         self.__content = value.replace("\r", "")
-
 
     def parseConfigs(self, json_str=None):
 
@@ -173,7 +164,6 @@ class Hosts(object):
 
             self.icon_idx = icon_idx
 
-
     @property
     def filename(self):
 
@@ -181,7 +171,6 @@ class Hosts(object):
         fn = self.path.split(sep)[-1]
 
         return fn
-
 
     @property
     def full_content(self):
@@ -211,12 +200,31 @@ class Hosts(object):
             self.content
         ]).encode("utf-8")
 
+    def makeBackupHostsName(self, path):
 
+        return "%s.backup_switchhosts" % path
+
+    def tryToBackupOriginalHosts(self, path, backup_name, sudo_password=None):
+        u"""尝试备份原始 hosts"""
+
+        if os.path.isfile(backup_name) or not os.path.isfile(path):
+            return
+
+        if sudo_password:
+            # 新建备份文件
+            cmd = [
+                "echo '%s' | sudo -S touch %s" % (sudo_password, backup_name),
+                "echo '%s' | sudo -S chmod %s %s" % (sudo_password, 766, backup_name),
+            ]
+            os.popen(";".join(cmd))
+
+        # 尝试保存
+        open(backup_name, "w").write(open(path).read())
 
     def save(self, path=None, common=None, sudo_password=None):
 
         from stat import ST_MODE
-        fn_stat = 744
+        # fn_stat = 744
 
         if self.last_save_time:
             time_delta = time.time() - self.last_save_time
@@ -225,25 +233,37 @@ class Hosts(object):
 
         path = path or self.path
         path = path.encode(co.getLocalEncoding())
+        fn_stat = None
+        backup_name = None
+
+        if os.path.isfile(path):
+            fn_stat = oct(os.stat(path)[ST_MODE])[-3:]
+            backup_name = self.makeBackupHostsName(path)
+            self.tryToBackupOriginalHosts(path, backup_name, sudo_password)
 
         if sudo_password:
             # 先修改系统hosts文件的权限
-            fn_stat = oct(os.stat(path)[ST_MODE])[-3:]
-            cmd = "echo '%s' | sudo -S chmod %s %s" % (sudo_password, 766, path)
-            os.popen(cmd)
+            cmd = [
+                "echo '%s' | sudo -S chmod %s %s" % (sudo_password, 766, path),
+                ]
+            os.popen(";".join(cmd))
 
-        # 写系统hosts
-        open(path, "w").write(self.contentWithCommon(common))
+        try:
+            # 写系统hosts
+            open(path, "w").write(self.contentWithCommon(common))
 
-        if sudo_password:
-            # 再将系统hosts文件的权限改回来
-            cmd = "echo '%s' | sudo -S chmod %s %s" % (sudo_password, fn_stat, path)
-            os.popen(cmd)
+        finally:
+            if sudo_password and fn_stat and backup_name:
+                # 再将系统hosts文件的权限改回来
+                cmd = [
+                    "echo '%s' | sudo -S chmod %s %s" % (sudo_password, fn_stat, path),
+                    "echo '%s' | sudo -S chmod %s %s" % (sudo_password, fn_stat, backup_name),
+                ]
+                os.popen(";".join(cmd))
 
         self.last_save_time = time.time()
 
         return True
-
 
     def remove(self):
 

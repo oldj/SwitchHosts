@@ -12,8 +12,8 @@ import libs.common_operations as co
 from libs.MainFrame import MainFrame
 from libs.VERSION import VERSION as sVer
 
-class SwitchHostsApp(object):
 
+class SwitchHostsApp(object):
     VERSION = sVer
 
     def __init__(self):
@@ -31,14 +31,13 @@ class SwitchHostsApp(object):
         else:
             self.working_path = self.pwd
 
-
     def run(self):
 
-        instance_name = None
+        # instance_name = None
 
         while True:
 
-            app = wx.App()
+            app = wx.App(False)
 
             instance_name = "%s-%s" % (app.GetAppName(), wx.GetUserId())
             instance_checker = wx.SingleInstanceChecker(instance_name, self.working_path)
@@ -71,15 +70,13 @@ class SwitchHostsApp(object):
             if not self.restart:
                 break
 
-
     def bindEvents(self):
         u"""绑定各种事件"""
 
-#        self.app.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarActivate)
-#        self.app.Bind(wx.EVT_MENU, self.OnTaskBarActivate, id=self.TBMENU_RESTORE)
-#        self.app.Bind(wx.EVT_MENU, self.OnTaskBarClose, id=self.TBMENU_CLOSE)
+        # self.app.Bind(wx.EVT_TASKBAR_LEFT_DCLICK, self.OnTaskBarActivate)
+        # self.app.Bind(wx.EVT_MENU, self.OnTaskBarActivate, id=self.TBMENU_RESTORE)
+        # self.app.Bind(wx.EVT_MENU, self.OnTaskBarClose, id=self.TBMENU_CLOSE)
         self.app.Bind(wx.EVT_ACTIVATE_APP, self.OnActivate)
-
 
     def OnTaskBarActivate(self, event):
         u""""""
@@ -89,7 +86,6 @@ class SwitchHostsApp(object):
         if not self.frame.IsShown():
             self.frame.Show(True)
         self.frame.Raise()
-
 
     def OnActivate(self, event):
         u"""
@@ -105,11 +101,9 @@ class SwitchHostsApp(object):
             self.frame.Raise()
         event.Skip()
 
-
     def OnTaskBarClose(self, event):
         u""""""
         wx.CallAfter(self.frame.Close)
-
 
     def toRestart(self, taskbar_icon):
 
@@ -118,11 +112,9 @@ class SwitchHostsApp(object):
 
 
 def main():
-
     sh = SwitchHostsApp()
     sh.run()
 
 
 if __name__ == "__main__":
     main()
-

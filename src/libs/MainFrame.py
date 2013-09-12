@@ -41,8 +41,8 @@ elif sys_type == "mac":
         applicationName="SwitchHosts!",
         notifications=["New Updates", "New Messages"],
         defaultNotifications=["New Messages"],
-        hostname = "127.0.0.1", # Defaults to localhost
-        # password = "" # Defaults to a blank password
+        hostname="127.0.0.1",  # Defaults to localhost
+        # password="" # Defaults to a blank password
     )
     try:
         growl.register()
@@ -54,11 +54,11 @@ elif sys_type == "mac":
 class MainFrame(ui.Frame):
 
     def __init__(self, mainjob, instance_name,
-            parent=None, id=wx.ID_ANY, title=None, pos=wx.DefaultPosition,
-            size=wx.DefaultSize,
-            style=wx.DEFAULT_FRAME_STYLE,
-            version=None, working_path=None,
-            taskbar_icon=None,
+        parent=None, id=wx.ID_ANY, title=None, pos=wx.DefaultPosition,
+        size=wx.DefaultSize,
+        style=wx.DEFAULT_FRAME_STYLE,
+        version=None, working_path=None,
+        taskbar_icon=None,
     ):
         u""""""
 
@@ -69,7 +69,6 @@ class MainFrame(ui.Frame):
 
         ui.Frame.__init__(self, parent, id,
             title or self.default_title, pos, size, style)
-
 
         self.taskbar_icon = taskbar_icon or TaskBarIcon(self)
         if taskbar_icon:
@@ -100,7 +99,6 @@ class MainFrame(ui.Frame):
 
         self.task_qu.put(self.chkActive)
 
-
     def init2(self):
 
         self.showing_rnd_id = random.random()
@@ -109,7 +107,7 @@ class MainFrame(ui.Frame):
         self.current_showing_hosts = None
         self.current_tree_hosts = None
         self.current_dragging_hosts = None
-        self.current_tree_item = None # 当前选中的树无素
+        self.current_tree_item = None  # 当前选中的树无素
 
         self.origin_hostses = []
         self.common_hostses = []
@@ -133,7 +131,6 @@ class MainFrame(ui.Frame):
 
         if not os.path.isdir(self.hosts_path):
             os.makedirs(self.hosts_path)
-
 
     def initBind(self):
         u"""初始化时绑定事件"""
@@ -165,7 +162,6 @@ class MainFrame(ui.Frame):
         self.Bind(wx.EVT_TREE_END_DRAG, self.OnTreeEndDrag, self.m_tree)
         self.Bind(stc.EVT_STC_CHANGE, self.OnHostsChange, id=self.ID_HOSTS_TEXT)
 
-
     def startBackThreads(self, count=1):
 
         self.back_threads = []
@@ -174,12 +170,10 @@ class MainFrame(ui.Frame):
             t.start()
             self.back_threads.append(t)
 
-
     def stopBackThreads(self):
 
         for t in self.back_threads:
             t.stop()
-
 
     def makeHostsContextMenu(self):
 
@@ -191,8 +185,6 @@ class MainFrame(ui.Frame):
         self.hosts_item_menu.AppendSeparator()
         self.hosts_item_menu.Append(wx.ID_REFRESH, u"刷新")
         self.hosts_item_menu.Append(wx.ID_DELETE, u"删除")
-
-
 
     def makeSubIconMenu(self):
         u"""生成图标子菜单"""
@@ -213,7 +205,6 @@ class MainFrame(ui.Frame):
 
         return menu
 
-
     def setHostsIcon(self, event=None, i=0):
         u"""图标子菜单，点击动作的响应函数"""
 
@@ -224,7 +215,6 @@ class MainFrame(ui.Frame):
         hosts.icon_idx = i
         self.updateHostsIcon(hosts)
         hosts.save()
-
 
     def scanSavedHosts(self):
         u"""扫描目前保存的各个hosts"""
@@ -256,10 +246,8 @@ class MainFrame(ui.Frame):
                 pass
             self.addHosts(hosts)
 
-
     def setHostsDir(self):
         pass
-
 
     @property
     def sys_hosts_path(self):
@@ -276,8 +264,6 @@ class MainFrame(ui.Frame):
 
         return self.__sys_hosts_path
 
-
-
     def getSystemHosts(self):
 
         path = self.sys_hosts_path
@@ -287,7 +273,6 @@ class MainFrame(ui.Frame):
             self.addHosts(hosts)
             self.highLightHosts(hosts)
             self.updateBtnStatus(hosts)
-
 
     def showHosts(self, hosts):
 
@@ -306,12 +291,10 @@ class MainFrame(ui.Frame):
 
         self.current_showing_hosts = hosts
 
-
     def tryToShowHosts(self, hosts):
 
         if hosts == self.current_showing_hosts:
             self.showHosts(hosts)
-
 
     def tryToSaveBySudoPassword(self, hosts, common_hosts):
 
@@ -341,7 +324,6 @@ class MainFrame(ui.Frame):
             print(traceback.format_exc())
 
         return False
-
 
     def useHosts(self, hosts):
 
@@ -390,7 +372,6 @@ class MainFrame(ui.Frame):
             self.tryToFlushDNS()
             self.highLightHosts(hosts)
 
-
     def tryToFlushDNS(self):
         u"""尝试更新 DNS 缓存
         @see http://cnzhx.net/blog/how-to-flush-dns-cache-in-linux-windows-mac/
@@ -412,8 +393,6 @@ class MainFrame(ui.Frame):
         except Exception:
             pass
 
-
-
     def highLightHosts(self, hosts):
         u"""将切换的host文件高亮显示"""
 
@@ -427,7 +406,6 @@ class MainFrame(ui.Frame):
         self.current_using_hosts = hosts
         self.updateIcon()
 
-
     def updateIcon(self):
 
         co.log("update icon")
@@ -436,7 +414,6 @@ class MainFrame(ui.Frame):
                 self.updateHostsIcon(self.origin_hostses[0])
             self.SetIcon(co.GetMondrianIcon(self.current_using_hosts.icon_idx))
             self.taskbar_icon.updateIcon()
-
 
     def addHosts(self, hosts, show_after_add=False):
 
@@ -468,7 +445,6 @@ class MainFrame(ui.Frame):
         if show_after_add:
             self.m_tree.SelectItem(hosts.tree_item_id)
 
-
     def updateHostsIcon(self, hosts):
 
         icon_idx = hosts.icon_idx
@@ -482,7 +458,6 @@ class MainFrame(ui.Frame):
         )
 #        if hosts == self.current_using_hosts:
 #            self.updateIcon()
-
 
     def delHosts(self, hosts):
 
@@ -524,7 +499,6 @@ class MainFrame(ui.Frame):
 
         return True
 
-
     def export(self, path):
         u"""将当前所有设置以及方案导出为一个文件"""
 
@@ -548,8 +522,6 @@ class MainFrame(ui.Frame):
             return
 
         wx.MessageBox(u"导出完成！")
-
-
 
     def importHosts(self, content):
         u"""导入"""
@@ -614,7 +586,6 @@ class MainFrame(ui.Frame):
         wx.MessageBox(u"导入成功！")
         self.restart()
 
-
     def restart(self):
         u"""重启主界面程序"""
 
@@ -624,12 +595,10 @@ class MainFrame(ui.Frame):
         self.taskbar_icon.Destroy()
         self.Destroy()
 
-
     def clearTree(self):
 
         for hosts in self.all_hostses:
             self.m_tree.Delete(hosts.tree_item_id)
-
 
     def notify(self, msg="", title=u"消息"):
 
@@ -645,7 +614,6 @@ class MainFrame(ui.Frame):
                 )
             except Exception:
                 pass
-
 
         if self.sys_type == "mac":
             # Mac 系统
@@ -676,7 +644,6 @@ class MainFrame(ui.Frame):
 
         self.SetFocus()
 
-
     def updateConfigs(self, configs):
 
         keys = ("hostses",)
@@ -687,7 +654,6 @@ class MainFrame(ui.Frame):
         # 校验配置有效性
         if type(self.configs.get("hostses")) != list:
             self.configs["hostses"] = []
-
 
     def loadConfigs(self):
 
@@ -707,25 +673,21 @@ class MainFrame(ui.Frame):
 
         self.saveConfigs()
 
-
     def saveConfigs(self):
         try:
             self.writeFile(self.configs_path, json.dumps(self.configs))
         except Exception:
             wx.MessageBox("保存配置信息失败！\n\n%s" % traceback.format_exc(), caption=u"出错啦！")
 
-
     def eachHosts(self, func):
 
         for hosts in self.hostses:
             func(hosts)
 
-
     @property
     def all_hostses(self):
 
         return self.origin_hostses + self.hostses
-
 
     @property
     def local_hostses(self):
@@ -736,7 +698,6 @@ class MainFrame(ui.Frame):
     def online_hostses(self):
 
         return [hosts for hosts in self.hostses if hosts.is_online]
-
 
     def makeNewHostsFileName(self):
         u"""生成一个新的 hosts 文件名"""
@@ -752,7 +713,6 @@ class MainFrame(ui.Frame):
             return None
 
         return fn
-
 
     def saveHosts(self, hosts):
 
@@ -773,7 +733,6 @@ class MainFrame(ui.Frame):
             wx.MessageBox(msg, caption=u"出错啦！")
 
             return False
-
 
     def showDetailEditor(self, hosts=None, default_is_online=False):
         u"""显示详情编辑窗口"""
@@ -841,7 +800,6 @@ class MainFrame(ui.Frame):
 
         self.saveHosts(hosts)
 
-
     def getHostsContent(self, hosts):
 
         hosts.is_loading = True
@@ -881,13 +839,10 @@ class MainFrame(ui.Frame):
 
         self.tryToShowHosts(hosts)
 
-
-
     def updateHostsTitle(self, hosts):
         u"""更新hosts的名称"""
 
         self.m_tree.SetItemText(hosts.tree_item_id, hosts.title)
-
 
     def getHostsFromTreeByEvent(self, event):
 
@@ -909,7 +864,6 @@ class MainFrame(ui.Frame):
                     return hosts
 
         return None
-
 
     def getLatestStableVersion(self, alert=False):
 
@@ -936,12 +890,13 @@ class MainFrame(ui.Frame):
                 wx.MessageBox(u"未能取得最新版本号！", caption=u"出错啦！")
 
             else:
-                cmp = co.compareVersion(self.version, self.latest_stable_version)
+                cmpv = co.compareVersion(self.version, self.latest_stable_version)
                 try:
-                    if cmp >= 0:
+                    if cmpv >= 0:
                         wx.MessageBox(u"当前已是最新版本！")
                     else:
-                        if wx.MessageBox(u"更新的稳定版 %s 已经发布，现在立刻查看吗？" % self.latest_stable_version,
+                        if wx.MessageBox(
+                            u"更新的稳定版 %s 已经发布，现在立刻查看吗？" % self.latest_stable_version,
                             u"发现新版本！",
                             wx.YES_NO | wx.ICON_INFORMATION
                         ) == wx.YES:
@@ -953,7 +908,6 @@ class MainFrame(ui.Frame):
 
         wx.CallAfter(_msg)
 
-
     def getHostsAttr(self, hosts, key=None):
 
         attrs = {
@@ -961,14 +915,13 @@ class MainFrame(ui.Frame):
             "is_delete_able": hosts and hosts in self.hostses,
             "is_info_edit_able": hosts and not hosts.is_loading and hosts in self.hostses,
             "is_content_edit_able": hosts and not hosts.is_loading and
-                            (hosts in self.hostses or hosts in self.common_hostses),
+                (hosts in self.hostses or hosts in self.common_hostses),
             "is_apply_able": not hosts.is_common and not hosts.is_origin,
         }
         for k in attrs:
             attrs[k] = True if attrs[k] else False
 
         return attrs.get(key, False) if key else attrs
-
 
     def updateBtnStatus(self, hosts):
 
@@ -986,7 +939,6 @@ class MainFrame(ui.Frame):
         self.hosts_item_menu.Enable(wx.ID_REFRESH, hosts_attrs["is_refresh_able"])
         self.hosts_item_menu.Enable(wx.ID_APPLY, hosts_attrs["is_apply_able"])
 
-
     def writeFile(self, path, content, mode="w"):
 
         try:
@@ -996,13 +948,11 @@ class MainFrame(ui.Frame):
 
         open(path, mode).write(content)
 
-
     def openHomepage(self):
         u"""打开项目主页"""
 
         url= "http://oldj.github.com/SwitchHosts/"
         wx.LaunchDefaultBrowser(url)
-
 
     def OnHomepage(self, event):
         self.openHomepage()
@@ -1016,7 +966,6 @@ class MainFrame(ui.Frame):
     def OnFeedback(self, event):
         self.openFeedbackPage()
 
-
     def OnHostsChange(self, event):
 
         if self.is_switching_text:
@@ -1025,13 +974,11 @@ class MainFrame(ui.Frame):
         self.current_showing_hosts.content = self.m_textCtrl_content.GetValue()
         self.saveHosts(self.current_showing_hosts)
 
-
     def OnChkUpdate(self, event):
 
         self.task_qu.put(lambda : [
             self.getLatestStableVersion(alert=True),
         ])
-
 
     def OnExit(self, event):
 
@@ -1047,13 +994,11 @@ class MainFrame(ui.Frame):
 
         sys.exit()
 
-
     def OnAbout(self, event):
 
         dlg = ui.AboutBox(version=self.version, latest_stable_version=self.latest_stable_version)
         dlg.ShowModal()
         dlg.Destroy()
-
 
     def OnTreeSelectionChange(self, event):
         u"""当点击左边树状结构的节点的时候触发"""
@@ -1074,7 +1019,6 @@ class MainFrame(ui.Frame):
                 hosts.getContent()
             self.showHosts(hosts)
 
-
     def OnTreeRClick(self, event):
         u"""在树节点上单击右键，展示右键菜单"""
 
@@ -1084,10 +1028,8 @@ class MainFrame(ui.Frame):
 
             self.m_tree.PopupMenu(self.hosts_item_menu, event.GetPoint())
 
-
     def OnTreeMenu(self, event):
         co.log("tree menu...")
-
 
     def OnTreeActive(self, event):
         u"""双击树的节点时候触发"""
@@ -1098,7 +1040,6 @@ class MainFrame(ui.Frame):
                 return
             self.useHosts(hosts)
 
-
     def OnApply(self, event):
         u"""点击切换Hosts时候，触发该函数"""
 
@@ -1107,12 +1048,10 @@ class MainFrame(ui.Frame):
         if self.current_showing_hosts:
             self.useHosts(self.current_showing_hosts)
 
-
     def OnDel(self, event):
 
         if self.delHosts(self.current_tree_hosts):
             self.current_showing_hosts = None
-
 
     def OnNew(self, event):
 
@@ -1123,11 +1062,9 @@ class MainFrame(ui.Frame):
 
         self.showDetailEditor(default_is_online=is_online)
 
-
     def OnEdit(self, event):
 
         self.showDetailEditor(hosts=self.current_showing_hosts)
-
 
     def OnRename(self, event):
 
@@ -1140,7 +1077,6 @@ class MainFrame(ui.Frame):
             return
 
         self.m_tree.EditLabel(hosts.tree_item_id)
-
 
     def OnRenameEnd(self, event):
 
@@ -1156,12 +1092,10 @@ class MainFrame(ui.Frame):
         else:
             event.Veto()
 
-
     def OnRefresh(self, event):
 
         hosts = self.current_showing_hosts
         self.getHostsContent(hosts)
-
 
     def OnExport(self, event):
 
@@ -1170,7 +1104,7 @@ class MainFrame(ui.Frame):
             u"注意，只有“%s”和“%s”中的 hosts 会被导出！" % (
                 lang.trans("local_hosts"), lang.trans("online_hosts")),
             caption=u"导出档案",
-            style=wx.OK|wx.CANCEL,
+            style=wx.OK | wx.CANCEL,
         ) != wx.OK:
             return
 
@@ -1181,7 +1115,6 @@ class MainFrame(ui.Frame):
             self.export(dlg.GetPath())
 
         dlg.Destroy()
-
 
     def OnImport(self, event):
 
@@ -1214,11 +1147,9 @@ class MainFrame(ui.Frame):
 
         dlg.Destroy()
 
-
     def OnDonate(self, event):
 
         wx.LaunchDefaultBrowser("https://me.alipay.com/oldj")
-
 
     def OnTreeBeginDrag(self, event):
 
@@ -1236,11 +1167,9 @@ class MainFrame(ui.Frame):
         self.m_tree.Bind(wx.EVT_MOTION, self._drag_OnMotion)
         self.m_tree.Bind(wx.EVT_LEFT_UP, self._drag_OnMouseLeftUp)
 
-
     def _drag_OnMotion(self, event):
 
         event.Skip()
-
 
     def _drag_OnMouseLeftUp(self, event):
 
@@ -1248,7 +1177,6 @@ class MainFrame(ui.Frame):
         self.m_tree.Unbind(wx.EVT_MOTION)
         self.m_tree.Unbind(wx.EVT_LEFT_UP)
         event.Skip()
-
 
     def OnTreeEndDrag(self, event):
 
@@ -1310,13 +1238,11 @@ class MainFrame(ui.Frame):
             self.m_tree.Delete(source_item)
             self.m_tree.SelectItem(source_hosts.tree_item_id)
 
-
     def OnActiveApp(self, event):
         """Called when the doc icon is clicked, and ???"""
-        print "---"
+        print("---")
 #        self.GetTopWindow().Raise()
         self.Raise()
-
 
     def chkActive(self):
         u"""循环查看工作目录下是否有 .active 文件，有则激活主窗口"""
@@ -1332,6 +1258,7 @@ class MainFrame(ui.Frame):
         time.sleep(0.5)
 #        wx.CallAfter(self.chkActive)
         self.task_qu.put(self.chkActive)
+<<<<<<< HEAD
 
     def getPassword(self):
         try:
@@ -1343,3 +1270,5 @@ class MainFrame(ui.Frame):
             return ""
 
 
+=======
+>>>>>>> 88d7e213ea823a15f41127351d9861cd8f3b4971

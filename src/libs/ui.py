@@ -281,7 +281,7 @@ class AboutBox(wx.Dialog):
                 本程序用于在多个 hosts 之间快速切换。
             </p>
             <p>
-                主页：<a href="http://oldj.github.com/SwitchHosts/">http://oldj.github.com/SwitchHosts/</a><br />
+                主页：<a href="http://oldj.github.io/SwitchHosts/">http://oldj.github.io/SwitchHosts/</a><br />
                 <!--源码：<a href="https://github.com/oldj/SwitchHosts">https://github.com/oldj/SwitchHosts</a><br />-->
                 作者：<a href="http://oldj.net">oldj</a><br />
                 <br />
