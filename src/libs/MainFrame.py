@@ -254,7 +254,8 @@ class MainFrame(ui.Frame):
         if not self.__sys_hosts_path:
 
             if os.name == "nt":
-                path = "C:\\Windows\\System32\\drivers\\etc\\hosts"
+                systemroot = os.environ.get("SYSTEMROOT", "C:\\Windows")
+                path = "%s\\System32\\drivers\\etc\\hosts" % systemroot
             else:
                 path = "/etc/hosts"
 
