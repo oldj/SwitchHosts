@@ -14,3 +14,5 @@ src/configs.json
 *.swh
 
 *.iml
+
+*.egg
