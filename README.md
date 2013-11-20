@@ -5,7 +5,7 @@
  * Blog: http://oldj.net/
  * Source: https://github.com/oldj/SwitchHosts
  * Homepage: http://oldj.github.com/SwitchHosts/
- * Latest Stable: 0.2.2.1797
+ * Latest Stable: 0.2.2.1801
 
 
 这是一个用于快速切换 hosts 文件的小程序，基于 Python 和 wxPython 开发。
