@@ -984,7 +984,7 @@ class MainFrame(ui.Frame):
         self.taskbar_icon.Destroy()
         self.Destroy()
 
-        # 退出时删除进程错文件
+        # 退出时删除进程锁文件
         lock_fn = os.path.join(self.working_path, self.instance_name) \
             if self.instance_name else None
         if lock_fn and os.path.isfile(lock_fn):

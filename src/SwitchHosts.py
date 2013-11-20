@@ -42,9 +42,18 @@ class SwitchHostsApp(object):
             instance_name = "%s-%s" % (app.GetAppName(), wx.GetUserId())
             instance_checker = wx.SingleInstanceChecker(instance_name, self.working_path)
             if instance_checker.IsAnotherRunning():
-                wx.MessageBox(u"SwitchHosts! 已经在运行了！")
-                open(os.path.join(self.working_path, ".active"), "w").write("1")
-                return
+                dlg = wx.MessageDialog(
+                    None,
+                    u"SwitchHosts! 已经在运行了或上次没有正常退出，要重新打开吗？",
+                    u"SwitchHosts!",
+                    wx.YES_NO | wx.ICON_QUESTION
+                )
+                ret_code = dlg.ShowModal()
+                if ret_code != wx.ID_YES:
+                    dlg.Destroy()
+                    return
+
+                dlg.Destroy()
 
             frame = MainFrame(
                 mainjob=self,
