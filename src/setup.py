@@ -22,7 +22,7 @@ setup(
             "resources": [],
             "plist": {
                 "CFBundleName": "SwitchHosts!",
-                "CFBundleShortVersionString": VERSION, # must be in X.X.X format
+                "CFBundleShortVersionString": VERSION,  # must be in X.X.X format
                 "CFBundleGetInfoString": "SwitchHosts! %s" % VERSION,
                 "CFBundleExecutable": "SwitchHosts!",
                 "CFBundleIdentifier": "net.oldj.switchhosts",
