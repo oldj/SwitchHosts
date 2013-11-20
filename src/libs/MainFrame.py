@@ -66,6 +66,7 @@ class MainFrame(ui.Frame):
         self.version = version
         self.default_title = "SwitchHosts! %s" % self.version
         self.sudo_password = ""
+        self.is_running = True
 
         ui.Frame.__init__(self, parent, id,
             title or self.default_title, pos, size, style)
@@ -95,7 +96,7 @@ class MainFrame(ui.Frame):
         self.init2()
         self.initBind()
 
-        self.task_qu.put(self.chkActive)
+        # self.task_qu.put(self.chkActive)
 
     def init2(self):
 
@@ -980,6 +981,7 @@ class MainFrame(ui.Frame):
 
     def OnExit(self, event):
 
+        self.is_running = False
         self.stopBackThreads()
         self.taskbar_icon.Destroy()
         self.Destroy()
@@ -990,7 +992,7 @@ class MainFrame(ui.Frame):
         if lock_fn and os.path.isfile(lock_fn):
             os.remove(lock_fn)
 
-        sys.exit()
+        # sys.exit()
 
     def OnAbout(self, event):
 
@@ -1245,7 +1247,7 @@ class MainFrame(ui.Frame):
     def chkActive(self):
         u"""循环查看工作目录下是否有 .active 文件，有则激活主窗口"""
 
-        if os.path.isfile(self.active_fn):
+        if self.is_running and os.path.isfile(self.active_fn):
             print("active..")
             os.remove(self.active_fn)
 #            print(dir(self.mainjob.app))
@@ -1255,4 +1257,5 @@ class MainFrame(ui.Frame):
 
         time.sleep(0.5)
 #        wx.CallAfter(self.chkActive)
-        self.task_qu.put(self.chkActive)
+        if self.is_running:
+            self.task_qu.put(self.chkActive)
