@@ -950,7 +950,7 @@ class MainFrame(ui.Frame):
     def openHomepage(self):
         u"""打开项目主页"""
 
-        url= "http://oldj.github.com/SwitchHosts/"
+        url= "http://oldj.github.io/SwitchHosts/"
         wx.LaunchDefaultBrowser(url)
 
     def OnHomepage(self, event):
