@@ -221,7 +221,7 @@ class Frame(wx.Frame):
             pos=wx.DefaultPosition,
             size=wx.DefaultSize,
             style=wx.TE_MULTILINE|wx.TE_RICH2|wx.TE_PROCESS_TAB|wx.HSCROLL|wx.NO_BORDER)
-        txt_ctrl.SetMaxLength(0)
+        txt_ctrl.AutoCompSetMaxWidth(0)
 
         container.Add(txt_ctrl, 1, wx.ALL | wx.EXPAND, 0)
 

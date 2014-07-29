@@ -92,22 +92,20 @@ class TaskBarIcon(wx.TaskBarIcon):
 
         item_id = wx.NewId()
         title = hosts.title if not hosts.is_origin else lang.trans("origin_hosts")
-        mitem = wx.MenuItem(menu, item_id, title, kind=wx.ITEM_CHECK)
+        mitem = wx.MenuItem(menu, item_id, title)
         mitem.SetBitmap(co.GetMondrianBitmap(hosts.icon_idx))
-        menu.AppendItem(mitem)
 
         is_using = self.main_frame.current_using_hosts == hosts
-        menu.Check(item_id, is_using)
         if is_using:
             mitem.SetFont(self.font_bold)
 #        self.hosts[item_id] = title
         hosts.taskbar_id = item_id
-
+	menu.AppendItem(mitem)
         self.Bind(wx.EVT_MENU, self.switchHosts, id=item_id)
 
 
-    def switchHosts(self, event):
 
+    def switchHosts(self, event):
         item_id = event.GetId()
         for hosts in self.main_frame.all_hostses:
             if hosts.taskbar_id == item_id:

@@ -30,6 +30,7 @@ if sys_type == "linux":
     # Linux
     try:
         import pynotify
+	pynotify.init("SwitchHosts!")
     except ImportError:
         pynotify = None
 elif sys_type == "mac":
@@ -386,7 +387,7 @@ class MainFrame(ui.Frame):
                 os.popen(cmd)
 
             elif self.sys_type == "linux":
-                cmd = "/etc/init.d/nscd restart"
+                cmd = "service nscd restart"
                 os.popen(cmd)
 
         except Exception:
@@ -970,7 +971,7 @@ class MainFrame(ui.Frame):
         if self.is_switching_text:
             return
 
-        self.current_showing_hosts.content = self.m_textCtrl_content.GetValue()
+        self.current_showing_hosts.content = self.m_textCtrl_content.GetText().strip()
         self.saveHosts(self.current_showing_hosts)
 
     def OnChkUpdate(self, event):
