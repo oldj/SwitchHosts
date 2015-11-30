@@ -21,6 +21,8 @@ const languages = {
         , confirm_del: 'Are you sure you want to delete this host?'
         , tmp_clean: 'Temporarily turn off all rules.'
         , tmp_recover: 'Recover rules.'
+        , new_version_available: 'New version available, download now?'
+        , is_updated: 'You already have the latest version of SwitchHosts! installed.'
     },
     'cn': {
         add: '添加'
@@ -37,6 +39,8 @@ const languages = {
         , confirm_del: '确定要删除此 host 吗？'
         , tmp_clean: '临时去掉所有绑定'
         , tmp_recover: '恢复绑定'
+        , new_version_available: '检测到新版本，是否要下载？'
+        , is_updated: '当前版本是最新版本。'
     }
 };
 

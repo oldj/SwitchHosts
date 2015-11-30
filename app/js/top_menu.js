@@ -1,9 +1,10 @@
 /**
  * @author oldj
+ * @blog http://oldj.net
  */
 
 
-var template = [
+let template = [
     {
         label: "SwitchHosts!",
         submenu: [
