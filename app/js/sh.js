@@ -5,7 +5,7 @@
 
 "use strict";
 
-const VERSION = '0.3.0';
+const config = require('../config');
 const $ = require('jquery');
 const Vue = require('vue');
 //Vue.config.debug = true;
@@ -22,7 +22,7 @@ const app = new Vue({
     data: {
         lang: lang,
         hosts: cf.getData({
-            VERSION: VERSION
+            VERSION: config.VERSION
         }),
         is_prompt_show: false,
         is_edit_show: false,

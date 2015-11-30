@@ -1,41 +1,47 @@
 /**
- * author: oldj
- * blog: http://oldj.net
+ * @author oldj
+ * @blog http://oldj.net
  */
 
-var app = require("app");  // Module to control application life.
-var BrowserWindow = require("browser-window");  // Module to create native browser window.
-var Menu = require("menu");
-var Tray = require("tray");
+'use strict';
 
-//var is_debug = true;
-var is_debug = false;
+const config = require('./config');
+
+const app = require('app');  // Module to control application life.
+const BrowserWindow = require('browser-window');  // Module to create native browser window.
+const http = require('http');
+const Menu = require('menu');
+//const Tray = require('tray');
+
+//let is_debug = true;
+let is_debug = false;
+
 
 // Report crashes to our server.
-require("crash-reporter").start();
+require('crash-reporter').start();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the javascript object is GCed.
-var mainWindow = null;
-var force_quit = false;
+let mainWindow = null;
+let force_quit = false;
 
 // Quit when all windows are closed.
-app.on("window-all-closed", function () {
-    if (process.platform != "darwin") {
+app.on('window-all-closed', function () {
+    if (process.platform != 'darwin') {
         app.quit();
     }
 });
 
-var appIcon = null;
+let appIcon = null;
 
 // This method will be called when atom-shell has done everything
 // initialization and ready for creating browser windows.
-app.on("ready", function () {
+app.on('ready', function () {
     // Create the browser window.
     mainWindow = new BrowserWindow({width: 800, height: 600});
 
     // and load the index.html of the app.
-    mainWindow.loadURL("file://" + __dirname + "/index.html");
+    mainWindow.loadURL('file://' + __dirname + '/index.html');
 
     if (is_debug) {
         mainWindow.toggleDevTools();
@@ -60,7 +66,7 @@ app.on("ready", function () {
     // Remove mainWindow.on('closed'), as it is redundant
     /*
      // Emitted when the window is closed.
-     mainWindow.on("closed", function () {
+     mainWindow.on('closed', function () {
      // Dereference the window object, usually you would store windows
      // in an array if your app supports multi windows, this is the time
      // when you should delete the corresponding element.
@@ -73,11 +79,11 @@ app.on("ready", function () {
     });
 
     /*
-     //console.log("file://" + __dirname + "/images/t.png");
+     //console.log('file://' + __dirname + '/images/t.png');
      // @see https://github.com/atom/electron/blob/master/docs/api/tray.md
-     appIcon = new Tray(__dirname + "/images/t.png");
-     //appIcon = new Tray("/Users/wu/studio/owl/sh3/app/images/t.png");
-     var contextMenu = Menu.buildFromTemplate([
+     appIcon = new Tray(__dirname + '/images/t.png');
+     //appIcon = new Tray('/Users/wu/studio/owl/sh3/app/images/t.png');
+     let contextMenu = Menu.buildFromTemplate([
      {label: 'Item1', type: 'radio'},
      {label: 'Item2', type: 'radio'},
      {label: 'Item3', type: 'radio', checked: true},
@@ -87,7 +93,7 @@ app.on("ready", function () {
      appIcon.setContextMenu(contextMenu);
      */
 
-    var template = [{
+    let template = [{
         label: 'Edit',
         submenu: [{
             label: 'Undo',
@@ -166,7 +172,7 @@ app.on("ready", function () {
         submenu: [{
             label: 'Homepage',
             click: function () {
-                require('electron').shell.openExternal('http://oldj.github.io/SwitchHosts/')
+                require('electron').shell.openExternal(config.url_homepage);
             }
         }]
     }];
@@ -183,51 +189,46 @@ app.on("ready", function () {
     }
 
     if (process.platform == 'darwin') {
-        var name = require('electron').app.getName();
+        let name = require('electron').app.getName();
         template.unshift({
             label: name,
-            submenu: [
-                {
-                    label: 'About ' + name,
-                    role: 'about'
-                },
-                {
-                    type: 'separator'
-                },
-                //{
-                //    label: 'Services',
-                //    role: 'services',
-                //    submenu: []
-                //},
-                //{
-                //    type: 'separator'
-                //},
-                {
-                    label: 'Hide ' + name,
-                    accelerator: 'Command+H',
-                    role: 'hide'
-                },
-                {
-                    label: 'Hide Others',
-                    accelerator: 'Command+Shift+H',
-                    role: 'hideothers'
-                },
-                {
-                    label: 'Show All',
-                    role: 'unhide'
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    label: 'Quit',
-                    accelerator: 'Command+Q',
-                    click: function () {
-                        force_quit = true;
-                        app.quit();
-                    }
+            submenu: [{
+                label: 'About ' + name,
+                role: 'about'
+            }, {
+                label: 'Check for Updates...',
+                click: function () {
+                    require('./js/chk').chkUpdate(config.VERSION, mainWindow);
                 }
-            ]
+            }, {
+                type: 'separator'
+            }, {
+                label: 'Services',
+                role: 'services',
+                submenu: []
+            }, {
+                type: 'separator'
+            }, {
+                label: 'Hide ' + name,
+                accelerator: 'Command+H',
+                role: 'hide'
+            }, {
+                label: 'Hide Others',
+                accelerator: 'Command+Shift+H',
+                role: 'hideothers'
+            }, {
+                label: 'Show All',
+                role: 'unhide'
+            }, {
+                type: 'separator'
+            }, {
+                label: 'Quit',
+                accelerator: 'Command+Q',
+                click: function () {
+                    force_quit = true;
+                    app.quit();
+                }
+            }]
         });
         // Window menu.
         template[3].submenu.push(
@@ -241,6 +242,6 @@ app.on("ready", function () {
         );
     }
 
-    var menu = Menu.buildFromTemplate(template);
+    let menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
 });
