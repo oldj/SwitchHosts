@@ -109,16 +109,14 @@ function saveHost(content, sudo_pswd, callback) {
         exec(cmd, function (err, stdout, stderr) {
             if (!err) {
                 fs.writeFile(sys_host_path, content, 'utf-8', function (err) {
-                    if (err) {
-                        callback(err);
-                        return;
-                    }
-
                     // change the host file's permission back
                     cmd = `echo '${sudo_pswd}' | sudo -S chmod 644 ${sys_host_path}`;
                     exec(cmd, function (err) {
-                        callback(err);
+                        //callback(err);
+                        err && console.log(err);
                     });
+
+                    callback(err);
                 });
             } else {
                 callback(err);
@@ -129,7 +127,6 @@ function saveHost(content, sudo_pswd, callback) {
         fs.writeFile(sys_host_path, content, 'utf-8', function (err) {
             callback(err);
         });
-
     }
 
 }

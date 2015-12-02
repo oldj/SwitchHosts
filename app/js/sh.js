@@ -186,7 +186,6 @@ const app = new Vue({
 
             let s_hosts = on_hosts.join('\n\n# --------------------\n\n');
             s_hosts = `# SwitchHosts!\n${s_hosts}`;
-            //console.log(s_hosts);
             cf.saveHost(s_hosts, this.sudo_pswd, (err) => {
                 if (err) {
                     console.log(err);
@@ -216,9 +215,9 @@ const app = new Vue({
             setTimeout(() => $('#ipt-pswd').focus(), 100);
         },
         chkPswd: function () {
-            this.switchHost(this._to_switch_host);
+            //this.switchHost(this._to_switch_host);
             this.closePrompt();
-            this._to_switch_host = null;
+            //this._to_switch_host = null;
 
             let f;
             while (f = this.on_after_permission.shift()) {
@@ -297,7 +296,6 @@ $(document).ready(function () {
 
         let info = cm.lineInfo(n);
         //cm.setGutterMarker(n, "breakpoints", info.gutterMarkers ? null : makeMarker());
-        //console.log(info);
         let ln = info.text;
         if (/^\s*$/.test(ln)) return;
 
