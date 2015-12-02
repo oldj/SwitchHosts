@@ -48,7 +48,7 @@
 	</div>
 
 	<div id="body">
-		<div class="code">
+		<div class="code" :class="{readonly:current_host.is_editable===false}">
 			<textarea id="host-code" v-model="current_host.content" @input="updateHost(current_host)"></textarea>
 		</div>
 	</div>

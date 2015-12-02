@@ -235,3 +235,6 @@ a:hover {
   border-right: none;
   padding-right: 6px;
 }
+.readonly .CodeMirror .CodeMirror-cursors {
+  display: none;
+}
