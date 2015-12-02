@@ -13,8 +13,8 @@ const http = require('http');
 const Menu = require('menu');
 //const Tray = require('tray');
 
-//let is_debug = true;
-let is_debug = false;
+let is_debug = true;
+//let is_debug = false;
 
 
 // Report crashes to our server.
