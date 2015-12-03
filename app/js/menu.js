@@ -6,8 +6,9 @@
 "use strict";
 
 const Menu = require('menu');
+const config = require('../config');
 
-function makeMenu(app) {
+function makeMenu(app, mainWindow) {
 
     let template = [{
         label: 'Edit',
@@ -119,7 +120,7 @@ function makeMenu(app) {
             }, {
                 label: 'Check for Updates...',
                 click: function () {
-                    require('./js/chk').chkUpdate(config.VERSION, mainWindow);
+                    require('./chk').chkUpdate(config.VERSION, mainWindow);
                 }
             }, {
                 type: 'separator'

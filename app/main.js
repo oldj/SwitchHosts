@@ -73,6 +73,6 @@ app.on('ready', function () {
         mainWindow.show();
     });
 
-    require('./js/menu').makeMenu(app);
+    require('./js/menu').makeMenu(app, mainWindow);
     require('./js/tray').makeTray(app);
 });
