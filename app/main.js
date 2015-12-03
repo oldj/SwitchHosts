@@ -11,6 +11,7 @@ const app = require('app');  // Module to control application life.
 const BrowserWindow = require('browser-window');  // Module to create native browser window.
 const http = require('http');
 
+//app.__is_debug = true;
 app.__is_debug = false;
 
 

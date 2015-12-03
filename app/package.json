@@ -11,6 +11,7 @@
   "dependencies": {
     "codemirror": "~5.9.0",
     "jquery": "~2.1.4",
+    "mkdirp": "~0.5.1",
     "vue": "~1.0.10",
     "vue-dnd": "^0.1.1"
   },
