@@ -174,6 +174,11 @@ app.on('ready', function () {
             click: function () {
                 require('electron').shell.openExternal(config.url_homepage);
             }
+        }, {
+            label: 'Feedback',
+            click: function () {
+                require('electron').shell.openExternal(config.url_feedback);
+            }
         }]
     }];
 
