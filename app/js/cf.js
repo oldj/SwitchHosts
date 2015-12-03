@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const exec = require('child_process').exec;
+const mkdirp = require('mkdirp');
 
 let sys_host_path;
 
@@ -20,6 +21,9 @@ if (process == 'win32') {
 
 const work_path = path.join(getUserHome(), '.SwitchHosts');
 const data_path = path.join(work_path, 'data.json');
+mkdirp(work_path, function (err) {
+    err && console.log(err);
+});
 
 function copyObj(o) {
     let k;
@@ -56,13 +60,28 @@ function getUserHome() {
     return process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE || '';
 }
 
+function makeBackupHosts() {
+    return {
+        title: 'backup',
+        on: true,
+        content: getSysHosts()
+    }
+}
+
 function getData(config) {
     let s;
     config = copyObj(config || {});
+
+    let default_hosts = {
+        title: 'My Hosts',
+        on: false,
+        content: '# My Hosts\n'
+    };
+
     if (!fs.existsSync(data_path)) {
         return mixObj(config, {
             sys: getSysHosts(),
-            list: []
+            list: [default_hosts, makeBackupHosts()]
         });
     } else {
         s = fs.readFileSync(data_path, 'utf-8');
@@ -73,7 +92,7 @@ function getData(config) {
         s = mixObj(config, s);
         if (typeof s == 'object') {
             s.sys = getSysHosts();
-            s.list = s.list || [];
+            s.list = s.list || [default_hosts, makeBackupHosts()];
             s.list.map(function (item) {
                 // set default value
                 item.title = item.title || '';
@@ -101,7 +120,6 @@ function saveData(data) {
 function saveHost(content, sudo_pswd, callback) {
     let cmd;
     //console.log(fs.statSync(sys_host_path));
-    // todo backup old hosts
 
     if (sudo_pswd) {
         // try to change the host file's permission
