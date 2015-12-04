@@ -22,7 +22,8 @@
                 var token_name;
                 if (c == '#') {
                     token_name = 'comment';
-                } else if (!stream.string.match(/^\s*[\d\.]+\s+\w/)) {
+                //} else if (!stream.string.match(/^\s*[\d\.]+\s+\w/i)) {
+                } else if (!stream.string.match(/^\s*([\d\.]+|[\da-f:\.%lo]+)\s+\w/i)) {
                     token_name = 'error';
                 } else {
                     token_name = stream.skipToEnd();
