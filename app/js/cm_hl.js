@@ -10,7 +10,7 @@
 
         return {
             token: function(stream) {
-                var tw_pos = stream.string.search(/[\t ]+?$/);
+                let tw_pos = stream.string.search(/[\t ]+?$/);
 
                 //if (!stream.sol() || tw_pos === 0) {
                 //    stream.skipToEnd();
@@ -18,8 +18,8 @@
                 //}
                 //console.log(stream.string);
 
-                var c = stream.peek();
-                var token_name;
+                let c = stream.peek();
+                let token_name;
                 if (c == '#') {
                     token_name = 'comment';
                 //} else if (!stream.string.match(/^\s*[\d\.]+\s+\w/i)) {
@@ -29,7 +29,7 @@
                     token_name = stream.skipToEnd();
                 }
 
-                //var ip = stream.string.match(/^[\d\.]+\s/);
+                //let ip = stream.string.match(/^[\d\.]+\s/);
                 //if (ip) {
                 //    token_name = 'positive';
                 //    stream.pos = ip[0].length - 1;

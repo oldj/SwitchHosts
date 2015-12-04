@@ -8,6 +8,8 @@
 const Menu = require('menu');
 const config = require('../config');
 
+const is_mac = process.platform == 'darwin';
+
 function makeMenu(app, mainWindow) {
 
     let template = [{
@@ -44,7 +46,7 @@ function makeMenu(app, mainWindow) {
         submenu: [{
             label: 'Toggle Full Screen',
             accelerator: (function () {
-                if (process.platform == 'darwin') {
+                if (is_mac) {
                     return 'Ctrl+Command+F';
                 } else {
                     return 'F11';
@@ -59,7 +61,7 @@ function makeMenu(app, mainWindow) {
             //{
             //    label: 'Toggle Developer Tools',
             //    accelerator: (function () {
-            //        if (process.platform == 'darwin') {
+            //        if (is_mac) {
             //            return 'Alt+Command+I';
             //        } else {
             //            return 'Ctrl+Shift+I';
@@ -110,12 +112,12 @@ function makeMenu(app, mainWindow) {
         });
     }
 
-    if (process.platform == 'darwin') {
-        let name = require('electron').app.getName();
+    let app_name = require('electron').app.getName();
+    if (is_mac) {
         template.unshift({
-            label: name,
+            label: app_name,
             submenu: [{
-                label: 'About ' + name,
+                label: 'About ' + app_name,
                 role: 'about'
             }, {
                 label: 'Check for Updates...',
@@ -131,7 +133,7 @@ function makeMenu(app, mainWindow) {
             }, {
                 type: 'separator'
             }, {
-                label: 'Hide ' + name,
+                label: 'Hide ' + app_name,
                 accelerator: 'Command+H',
                 role: 'hide'
             }, {
@@ -162,6 +164,32 @@ function makeMenu(app, mainWindow) {
                 role: 'front'
             }
         );
+
+    } else {
+        // windows / linux
+
+        template.unshift({
+            label: 'File',
+            submenu: [{
+                //label: 'About ' + app_name,
+                //role: 'about'
+            //}, {
+                label: 'Check for Updates...',
+                click: function () {
+                    require('./chk').chkUpdate(config.VERSION, mainWindow);
+                }
+            }, {
+                type: 'separator'
+            }, {
+                label: 'Quit',
+                //accelerator: 'Command+Q',
+                click: function () {
+                    app.__force_quit = true;
+                    app.quit();
+                }
+            }]
+        });
+
     }
 
     let menu = Menu.buildFromTemplate(template);
