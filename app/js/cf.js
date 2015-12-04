@@ -9,18 +9,20 @@ const fs = require('fs');
 const path = require('path');
 const exec = require('child_process').exec;
 const mkdirp = require('mkdirp');
+const is_win = process.platform == 'win32';
 
 let sys_host_path;
 
-if (process == 'win32') {
+if (is_win) {
     // todo windows 有可能不在 C 盘，需要先取得当前系统安装盘
-    sys_host_path = 'c:\\windows\\system32\\driv'; // todo 补全路径
+    sys_host_path = 'C:\\Windows\\System32\\drivers\\etc\\hosts';
 } else {
     sys_host_path = '/etc/hosts';
 }
 
-const work_path = path.join(getUserHome(), '.SwitchHosts');
+const work_path = getDataHome();
 const data_path = path.join(work_path, 'data.json');
+console.log('work_path:', work_path);
 mkdirp(work_path, function (err) {
     err && console.log(err);
 });
@@ -51,13 +53,24 @@ function getSysHosts() {
     try {
         s = fs.readFileSync(sys_host_path, 'utf-8');
     } catch (e) {
+        console.log(sys_host_path);
         alert(e.message);
     }
     return s;
 }
 
-function getUserHome() {
-    return process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE || '';
+function getDataHome() {
+    let data_path;
+    let folder = 'SwitchHosts';
+    if (is_win) {
+        data_path = process.env.LOCALAPPDATA || process.env.APPDATA || process.env.USERPROFILE;
+    } else {
+        data_path = process.env.HOME || process.env.HOMEPATH;
+        folder = '.' + folder;
+    }
+    data_path = data_path || process.cwd() || '';
+
+    return path.join(data_path, folder);
 }
 
 function makeBackupHosts() {
