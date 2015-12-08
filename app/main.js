@@ -37,12 +37,14 @@ app.on('ready', function () {
 
     // and load the index.html of the app.
     mainWindow.loadURL('file://' + __dirname + '/index.html');
+    //app.dock.hide();
 
     if (app.__is_debug) {
         mainWindow.toggleDevTools();
     }
 
     mainWindow.on('close', function (e) {
+        console.log('close');
         if (!app.__force_quit) {
             e.preventDefault();
             mainWindow.hide();
@@ -51,11 +53,9 @@ app.on('ready', function () {
 
     // You can use 'before-quit' instead of (or with) the close event
     app.on('before-quit', function (e) {
+        console.log('before-quit');
         // Handle menu-item or keyboard shortcut quit here
-        if (!app.__force_quit) {
-            e.preventDefault();
-            mainWindow.hide();
-        }
+        app.__force_quit = true;
     });
 
     // Remove mainWindow.on('closed'), as it is redundant
