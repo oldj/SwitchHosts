@@ -15,6 +15,7 @@ const CodeMirror = require('codemirror');
 require('./cm_hl');
 const cf = require('./cf');
 const lang = require('./lang').getLang(navigator.language);
+const is_win = process.platform == 'win32';
 let my_codemirror;
 
 const app = new Vue({
@@ -189,14 +190,22 @@ const app = new Vue({
             cf.saveHost(s_hosts, this.sudo_pswd, (err) => {
                 if (err) {
                     console.log(err);
-                    if (err.message.indexOf('EACCES') > -1 || err.message.indexOf('permission denied') > -1) {
-                        // get permission
-                        this.askForPermission(() => {
-                            this.caculateHosts(host, callback)
-                        });
-                    } else if (err.message.indexOf('Command failed') > -1) {
-                        // todo show inform
-                        this.sudo_pswd = '';
+                    if (!is_win) {
+                        // mac & linux
+                        if (err.message.indexOf('EACCES') > -1 || err.message.indexOf('permission denied') > -1) {
+                            // get permission
+                            this.askForPermission(() => {
+                                this.caculateHosts(host, callback)
+                            });
+                        } else if (err.message.indexOf('Command failed') > -1) {
+                            // todo show inform
+                            this.sudo_pswd = '';
+                        } else {
+                            alert(err);
+                        }
+                    } else {
+                        // windows
+                        alert(err);
                     }
                     return;
                 }
