@@ -40,8 +40,8 @@
 					<a href="#" @click="add()" title="{{ lang.add_host }}"><i class="iconfont icon-add-s"></i></a>
 				</li>
 				<li class="right">
-					<a href="#" @click="tmpClean()" v-if="could_tmp_clean_on" title="{{ lang.tmp_clean }}"><i class="iconfont icon-switchon"></i></a>
-					<a href="#" @click="tmpRecover()" v-if="!could_tmp_clean_on" title="{{ lang.tmp_recover }}"><i class="iconfont icon-switchoff"></i></a>
+					<a href="#" @click="tmpClean()" v-cloak v-if="could_tmp_clean_on" title="{{ lang.tmp_clean }}"><i class="iconfont icon-switchon"></i></a>
+					<a href="#" @click="tmpRecover()" v-cloak v-if="!could_tmp_clean_on" title="{{ lang.tmp_recover }}"><i class="iconfont icon-switchoff"></i></a>
 				</li>
 			</ul>
 		</div>
