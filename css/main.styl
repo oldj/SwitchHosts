@@ -1,0 +1,133 @@
+color_grey=#c9c9c9
+color_hl=#4A90E2
+page_width=800
+width_feature=258
+
+html, body
+  font-size 12px
+  line-height 20px
+  margin 0
+  padding 0
+  background #fff
+  font-family: Verdana, "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+
+p
+  margin 0
+  padding 0
+
+a
+  text-decoration none
+  color color_hl
+
+a:hover
+  color color_hl * 1.2
+
+#wrapper
+  margin 0 auto
+
+#head
+  text-align center
+  padding 72px 0 42px 0
+
+  #logo
+    img
+      width 366px
+
+  #intro
+    margin-top 16px
+    color #999
+
+#capture
+  height 240px
+  overflow hidden
+  text-align center
+
+  img
+    width 802px
+
+#detail
+  background #f5f5f5
+  box-shadow inset 0 1px 2px 0 #9B9B9B
+  padding 60px 0 96px 0
+
+  #download, #features
+    width 800px
+    margin 0 auto
+
+  #download
+    text-align center
+
+  #btn-download
+    display inline-block
+    width 192px
+    height 48px
+    line-height @height
+    text-align center
+    background color_hl
+    color #fff
+    font-size 18px
+
+  #alternative-download
+    color color_grey
+    margin 10px 0
+
+    a
+      color color_grey
+    a:hover
+      color color_hl
+
+#features
+  padding-top 120px
+
+  h2
+    font-size 18px
+    margin 0
+    padding 0
+    line-height 30px
+
+    span
+      color color_grey
+      padding-left 0.5em
+      font-weight normal
+
+
+  ul
+    m=(page_width - width_feature * 3) / 4
+    list-style none
+    height 180px
+    width (page_width + m * 2) px
+    padding 0
+    margin 32px 0 0 ((- m) px)
+
+    li
+      float left
+      padding 0
+      //width 33.3%
+      width width_feature px
+      margin 0 (m px)
+      overflow hidden
+      text-align center
+
+      img
+        width width_feature px
+
+      p
+        text-align center
+
+      p.en
+        color color_grey
+
+
+#foot
+  padding 42px 0
+  text-align center
+
+  p.copyright
+    color color_grey
+
+    a
+      color color_grey
+      font-weight bold
+
+    a:hover
+      color color_hl

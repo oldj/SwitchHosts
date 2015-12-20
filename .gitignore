@@ -14,3 +14,4 @@ src/configs.json
 *.swh
 
 *.iml
+node_modules

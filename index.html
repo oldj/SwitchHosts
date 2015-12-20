@@ -1,107 +1,67 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-	<meta charset="utf-8">
-	<title>SwitchHosts! by oldj</title>
-
-	<link rel="stylesheet" href="stylesheets/bootstrap.css">
-	<link rel="stylesheet" href="stylesheets/c.css">
-	<script src="javascripts/jquery.js"></script>
-	<script src="javascripts/bootstrap.js"></script>
-	<script src="javascripts/c.js"></script>
-	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-
-	<script type="text/javascript">
-		var _gaq = _gaq || [];
-		_gaq.push(['_setAccount', 'UA-307069-20']);
-		_gaq.push(['_trackPageview']);
-
-		(function () {
-			var ga = document.createElement('script');
-			ga.type = 'text/javascript';
-			ga.async = true;
-			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-			var s = document.getElementsByTagName('script')[0];
-			s.parentNode.insertBefore(ga, s);
-		})();
-	</script>
+	<meta charset="UTF-8">
+	<title>SwitchHosts!</title>
+	<link rel="stylesheet" href="css/main.css">
 </head>
-
 <body>
 
-<div id="header">
-	<div class="oj-content">
-		<div class="logo"><img src="img/SwitchHosts-logo.png" alt="SwitchHosts!"></div>
-		<div class="description">
-			SwitchHosts! 是一个管理、切换多个 hosts 方案的工具。它是一个免费开源的软件，基于 wxPython 开发，可在 Windows/Linux/Mac 下运行。
+<div id="wrapper">
+	
+	<div id="head">
+		<div id="logo">
+			<img src="images/logo_with_title.png" alt="logo">
 		</div>
-
-		<div id="my-carousel" class="carousel slide">
-			<!-- Carousel items -->
-			<div class="carousel-inner">
-				<div class="active item">
-					<img src="https://github.com/oldj/SwitchHosts/blob/master/screenshots/7.png?raw=true" alt="截图"/>
-				</div>
-				<div class="item">
-					<img src="https://github.com/oldj/SwitchHosts/blob/master/screenshots/6.png?raw=true" alt="截图"/>
-				</div>
-			</div>
-			<!-- Carousel nav -->
-			<a class="carousel-control left" href="#my-carousel" data-slide="prev">&lsaquo;</a>
-			<a class="carousel-control right" href="#my-carousel" data-slide="next">&rsaquo;</a>
+		<div id="intro">
+			<p>SwitchHosts! 是一个管理、切换多个 hosts 方案的工具。</p>
+			<p>它是一个免费开源的软件。</p>
 		</div>
 	</div>
-</div>
-
-<div id="main">
-	<div class="oj-content">
-		<div id="download-wrapper">
-			<a class="btn btn-large btn-primary" href="http://pan.baidu.com/s/1inED1" target="_blank">下载 / Download</a>
-
-			<p class="for-ali">
-				也可以 <a href="http://yunpan.alibaba-inc.com/share/link/32V9kBgm" target="_blank">从阿里云盘下载</a>
+	
+	<div id="capture">
+		<img src="images/capture.png" alt="capture">
+	</div>
+	
+	<div id="detail">
+		<div id="download">
+			<a href="https://github.com/oldj/SwitchHosts/releases" target="_blank" id="btn-download">下载 / Download</a>
+			<p id="alternative-download">
+				其他下载地址：<a href="http://pan.baidu.com/s/1inED1" target="_blank">百度云盘</a>、<a href="http://yunpan.alibaba-inc.com/share/link/32V9kBgm" target="_blank">阿里云盘</a>
 			</p>
 		</div>
 
-		<div id="features" class="oj-block">
-			<h3>功能特性</h3>
+		<div id="features">
+			<h2>功能特性<span>Features</span></h2>
 
 			<ul>
 				<li>
-					<img src="img/feature_1.png" alt="">
-					<div class="intro">语法高亮</div>
+					<img src="images/feature_1.png" alt="feature 1">
+					<p>语法高亮</p>
+					<p class="en">syntax highlight</p>
 				</li>
 				<li>
-					<img src="img/feature_2.png" alt="">
-					<div class="intro">多个方案快速切换</div>
+					<img src="images/feature_2.png" alt="feature 2">
+					<p>方案允许多选</p>
+					<p class="en">multiple hosts</p>
 				</li>
 				<li>
-					<img src="img/feature_3.png" alt="">
-					<div class="intro">支持在线方案</div>
-				</li>
-				<li>
-					<img src="img/feature_4.png" alt="">
-					<div class="intro">系统托盘图标菜单</div>
+					<img src="images/feature_3.png" alt="feature 3">
+					<p>点击行号快速切换注释</p>
+					<p class="en">click line number to switch comment</p>
 				</li>
 			</ul>
 		</div>
-
-		<div class="oj-block">
-			<h3>使用说明</h3>
-
-			<p>本程序完全免费，欢迎下载使用！</p>
-
-			<p>使用过程中如果发现问题，欢迎<a href="https://github.com/oldj/SwitchHosts/issues">提交bug</a>，也欢迎 Fork <a href="https://github.com/oldj/SwitchHosts">本项目</a>并提交您的修改。</p>
-
-			<p>如果您觉得本软件对您有帮助，欢迎<a href="https://me.alipay.com/oldj">捐赠</a>支持作者，谢谢！</p>
-		</div>
 	</div>
-</div>
 
-<div id="footer">
-	<div class="oj-content">
-		<p class="source">在 GitHub 上查看本项目的<a href="https://github.com/oldj/SwitchHosts">源码</a></p>
-		<p>Project maintained by <a href="http://oldj.net">oldj</a></p>
+	<div id="foot">
+		<p>
+			<a href="https://github.com/oldj/SwitchHosts">Fork</a>
+			or
+			<a href="https://github.com/oldj/SwitchHosts/issues">Feedback</a>
+			on GitHub
+		</p>
+		<p class="copyright">Project maintained by <a href="http://oldj.net" target="_blank">oldj</a></p>
 	</div>
 </div>
 
