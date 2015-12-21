@@ -16,7 +16,7 @@
   "window": {
     "title": "SwitchHosts!",
     "width": 800,
-    "height": 600,
+    "height": 500,
     "position": "center",
     "min_width": 300,
     "min_height": 200,
