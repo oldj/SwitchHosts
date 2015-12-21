@@ -123,7 +123,6 @@ var app = new Vue({
             if (host && host != this.current_host) return;
             host = this.current_host;
             host.is_editable = (host.where != 'sys' && host.where != 'remote');
-            alert(host.is_editable);
 
             my_codemirror.getDoc().setValue(host.content || '');
             if (host.is_editable === false) {
