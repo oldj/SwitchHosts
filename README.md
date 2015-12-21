@@ -5,7 +5,6 @@
  - Blog: http://oldj.net/
  - Source: https://github.com/oldj/SwitchHosts
  - Homepage: https://oldj.github.io/SwitchHosts/
- - Latest Stable: 3.1.0
 
 
 这是一个用于快速切换 hosts 文件的小程序，基于 [MacGap](http://macgapproject.github.io) 开发，同时使用了 [Vue.js](http://vuejs.org/) 以及 [CodeMirror](http://codemirror.net/) 等框架/库。

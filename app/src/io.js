@@ -49,6 +49,8 @@ function makeBackupHosts() {
 }
 
 function tryToCreateWorkDir() {
+    if (MacGap.File.exists(work_path)) return;
+
     var cmd = 'mkdir -p \'' + work_path + '\'';
     var my_task = MacGap.Task.create('/bin/sh', function (result) {
         if (result.status == 0) {
@@ -149,9 +151,28 @@ function setData(data) {
     }
 }
 
+function getURL(url, data, success, fail) {
+    if (!data._r) {
+        data._r = Math.random();
+    }
+
+    $.ajax({
+        url: url,
+        data: data,
+        //async: false,
+        success: function (s) {
+            success && success(s);
+        },
+        error: function (e) {
+            fail && fail(e);
+        }
+    });
+}
+
 module.exports = {
     getSysHosts: getSysHosts,
     setSysHosts: setSysHosts,
     getData: getData,
-    setData: setData
+    setData: setData,
+    getURL: getURL
 };

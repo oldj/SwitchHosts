@@ -23,6 +23,10 @@ var languages = {
         , tmp_recover: 'Recover rules.'
         , new_version_available: 'New version available, download now?'
         , is_updated: 'You already have the latest version of SwitchHosts! installed.'
+        , where_local: 'local'
+        , where_remote: 'remote'
+        , url: 'URL'
+        , bad_url: 'URL is not valid.'
     },
     'cn': {
         add: '添加'
@@ -41,6 +45,10 @@ var languages = {
         , tmp_recover: '恢复绑定'
         , new_version_available: '检测到新版本，立刻下载？'
         , is_updated: '当前版本是最新版本。'
+        , where_local: '本地'
+        , where_remote: '远程'
+        , url: 'URL 地址'
+        , bad_url: 'URL 地址有误。'
     }
 };
 
