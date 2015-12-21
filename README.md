@@ -4,17 +4,16 @@
  - Email: oldj.wu@gmail.com
  - Blog: http://oldj.net/
  - Source: https://github.com/oldj/SwitchHosts
- - Homepage: http://oldj.github.com/SwitchHosts/
- - Latest Stable: 3.0.0
+ - Homepage: https://oldj.github.io/SwitchHosts/
+ - Latest Stable: 3.1.0
 
 
-这是一个用于快速切换 hosts 文件的小程序，基于 [Electron](http://electron.atom.io/) 开发，同时使用了 [Vue.js](http://vuejs.org/) 以及 [CodeMirror](http://codemirror.net/) 等框架/库。
+这是一个用于快速切换 hosts 文件的小程序，基于 [MacGap](http://macgapproject.github.io) 开发，同时使用了 [Vue.js](http://vuejs.org/) 以及 [CodeMirror](http://codemirror.net/) 等框架/库。
 
 
 ## 功能特性：
 
  - 快速切换 hosts
- - 跨平台
  - hosts 文件语法高亮
 
 
@@ -29,9 +28,13 @@
 
 ## 更新历史：
 
+### v3.1
+
+ - 2015-12-20 从 Electron 切换至 MacGap 。
+
 ### v3.0
     
- - 2015-11-30 完成 3.0 版基本功能
+ - 2015-11-30 完成 3.0 版基本功能。
  
 ### v2.0
  
@@ -57,9 +60,9 @@
 
 ## 打包方法
 
-请参考 Electron [官方文档](https://github.com/atom/electron/blob/master/docs/tutorial/application-packaging.md) 。
+请参考 [MacGap 文档](http://docs.macgap.com/)。
 
 
 ## 版权
 
-本程序完全免费，并基于 LGPL 协议开源。
+本程序完全免费，并基于 MIT 协议开源。
