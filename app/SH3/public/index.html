@@ -59,15 +59,34 @@
 
 		<div class="body">
 			<div class="ln">
+				<input type="radio" name="where" v-model="current_edit_host.where" value="local" id="radio-local">
+				<label for="radio-local">{{ lang.where_local }}</label>
+
+				<input type="radio" name="where" v-model="current_edit_host.where" value="remote" id="radio-remote">
+				<label for="radio-remote">{{ lang.where_remote }}</label>
+			</div>
+			<div class="ln">
 				<label for="ipt-host-title">{{ lang.host_title }}</label>
 				<input type="text" id="ipt-host-title" name="host_title"
 					   maxlength="24"
 					   v-model="current_edit_host.title"
 					   @input="chkHostTitle()"
 					   @keydown.13="toSave()"
+					   :class="{err:!!inform.title}"
 				>
-
-				<div class="inform">{{ current_edit_host.title_inform }}</div>
+				<div class="inform">{{ inform.title }}</div>
+			</div>
+			<div class="ln" v-if="current_edit_host.where=='remote'">
+				<label for="ipt-host-url">{{ lang.url }}</label>
+				<input type="text" id="ipt-host-url" name="host_title"
+					   placeholder="http://"
+					   maxlength="1024"
+					   v-model="current_edit_host.url"
+					   @input="chkHostUrl()"
+					   @keydown.13="toSave()"
+					   :class="{err:!!inform.url}"
+				>
+				<div class="inform">{{ inform.url }}</div>
 			</div>
 			<div class="ln" v-if="add_or_edit=='edit'">
 				<a href="#" class="delete-host" @click="delHost(current_edit_host)"><i class="iconfont icon-delete"></i> {{ lang.del_host }}</a>

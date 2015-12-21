@@ -12,6 +12,9 @@ button,
 input {
   font-family: Arial, Helvetica, sans-serif;
 }
+input.err {
+  border: solid 1px #f03;
+}
 a {
   text-decoration: none;
 }

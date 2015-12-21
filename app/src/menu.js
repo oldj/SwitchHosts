@@ -8,9 +8,10 @@
 var config = require('./config');
 
 function initMenu(app) {
+    var menu;
 
     // Help
-    var menu = MacGap.Menu.getItem('Help').submenu;
+    menu = MacGap.Menu.getItem('Help').submenu;
     menu.getItem('Feedback').callback = function () {
         MacGap.openURL(config.url_feedback);
     };
@@ -19,13 +20,13 @@ function initMenu(app) {
     };
 
     // SwitchHosts!
-    var menu = MacGap.Menu.getItem('SwitchHosts!').submenu;
+    menu = MacGap.Menu.getItem('SwitchHosts!').submenu;
     menu.getItem('Check for Updates...').callback = function () {
         require('./chk').chkUpdate(config.VERSION);
     };
 
     // File
-    var menu = MacGap.Menu.getItem('File').submenu;
+    menu = MacGap.Menu.getItem('File').submenu;
     menu.getItem('New').callback = function () {
         app.add();
     };

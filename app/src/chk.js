@@ -7,6 +7,7 @@
 
 var config = require('./config');
 var lang = require('./lang').getLang('en');
+var io = require('./io');
 
 function compareVersion(v1, v2) {
     if (v1 == v2) return 0;
@@ -33,32 +34,29 @@ function compareVersion(v1, v2) {
 }
 
 function chkUpdate(current_version) {
-    $.ajax({
-        url: config.url_chk_version,
-        data: {r: Math.random()},
-        success: function (s) {
-            var new_version = s.replace(/^\s+|\s+$/g, '');
-            if (compareVersion(current_version, new_version) < 0) {
-                // new version available
-                if (confirm(lang.new_version_available + '\n\nv: ' + new_version)) {
-                    MacGap.openURL(config.url_homepage);
-                }
-            } else {
-                MacGap.notify({
-                    type: 'sheet',
-                    title: 'You are up to date!',
-                    content: lang.is_updated
-                });
+    io.getURL(config.url_chk_version, {}, function (s) {
+        // success
+        var new_version = s.replace(/^\s+|\s+$/g, '');
+        if (compareVersion(current_version, new_version) < 0) {
+            // new version available
+            if (confirm(lang.new_version_available + '\n\nv: ' + new_version)) {
+                MacGap.openURL(config.url_homepage);
             }
-        },
-        error: function (e) {
-            //MacGap.notify({
-            //    type: 'sheet',
-            //    title: 'Error',
-            //    content: e.message || 'Network Error.'
-            //});
-            alert(e.message || 'Network Error.');
+        } else {
+            MacGap.notify({
+                type: 'sheet',
+                title: 'You are up to date!',
+                content: lang.is_updated
+            });
         }
+    }, function (e) {
+        // fail
+        //MacGap.notify({
+        //    type: 'sheet',
+        //    title: 'Error',
+        //    content: e.message || 'Network Error.'
+        //});
+        alert(e.message || 'Network Error.');
     });
 }
 

@@ -7,12 +7,11 @@
 
 var config = require('./config');
 //Vue.config.debug = true;
-
-
-Vue.use(require('./dnd'));
+Vue.use(require('./vue_dnd'));
 var CodeMirror = require('codemirror');
 require('codemirror/mode/shell/shell');
 require('./cm_hl');
+var util = require('./util');
 var io = require('./io');
 var lang = require('./lang').getLang(navigator.language);
 var my_codemirror;
@@ -30,7 +29,14 @@ var app = new Vue({
         current_host: {
             content: io.getSysHosts(),
             is_sys: true,
-            is_editable: false
+            on: true,
+            is_editable: false,
+            where: 'sys',
+            url: ''
+        },
+        inform: {
+            title: '',
+            url: ''
         },
         on_after_permission: [],
         could_tmp_clean_on: true,
@@ -39,15 +45,11 @@ var app = new Vue({
         sudo_pswd: ''
     },
     watch: {
-        'current_host': function (host) {
-            my_codemirror.getDoc().setValue(host.content || '');
-            if (host.is_editable === false) {
-                my_codemirror.setOption('readOnly', true);
-            } else {
-                my_codemirror.setOption('readOnly', false);
-            }
-
-            host._just_switch = 1;
+        'current_host': function () {
+            this.onCurrentHostChange();
+        },
+        'current_host.where': function () {
+            this.onCurrentHostChange();
         },
         'current_host.content': function () {
             var host = this.current_host;
@@ -65,7 +67,9 @@ var app = new Vue({
         add: function () {
             this.is_prompt_show = true;
             this.is_edit_show = true;
-            this.current_edit_host = {};
+            this.current_edit_host = {
+                where: 'local'
+            };
             this.add_or_edit = 'add';
             //this.chkHostTitle();
 
@@ -78,26 +82,89 @@ var app = new Vue({
             this.is_edit_show = true;
             this.current_edit_host = host;
             this.add_or_edit = 'edit';
+            host.where = host.where || 'local';
 
             setTimeout(function () {
                 $('#ipt-host-title').focus()
             }, 100);
         },
         chkHostTitle: function () {
-            var host_title = this.current_edit_host ?
-                this.current_edit_host.title.replace(/^\s+|\s+$/g, '') : '';
+            var host = this.current_edit_host;
+            var host_title = host ? util.trim(host.title) : '';
+            var el = $('#ipt-host-title');
             if (!host_title) {
-                this.current_edit_host.title_inform = this.lang.host_title_cant_be_empty;
-                $('#ipt-host-title').focus();
+                this.inform.title = this.lang.host_title_cant_be_empty;
+                el.focus();
                 return false;
             } else {
-                this.current_edit_host.title_inform = '';
-                this.host_title = host_title;
+                this.inform.title = '';
+                //this.host_title = host_title;
                 return true;
             }
         },
+        chkHostUrl: function () {
+            var host = this.current_edit_host;
+            if (host.where == 'local') {
+                return true;
+            }
+            var url = host.url = util.trim(host.url);
+            var el = $('#ipt-host-url');
+            if (!url || !/^https?:\/\/\w+/i.test(url)) {
+                this.inform.url = this.lang.bad_url;
+                el.focus();
+                return false;
+            } else {
+                this.inform.url = '';
+                return true;
+            }
+        },
+        onCurrentHostChange: function (host) {
+            // 内部改变，更新到 codeMirror
+            if (host && host != this.current_host) return;
+            host = this.current_host;
+            host.is_editable = (host.where != 'sys' && host.where != 'remote');
+            alert(host.is_editable);
+
+            my_codemirror.getDoc().setValue(host.content || '');
+            if (host.is_editable === false) {
+                my_codemirror.setOption('readOnly', true);
+            } else {
+                my_codemirror.setOption('readOnly', false);
+            }
+            host._just_switch = 1;
+        },
+        onCurrentHostBeChanged: function (v) {
+            // 外部改变，更新到内部
+            this.current_host.content = v;
+        },
+        getRemoteHost: function (host) {
+            if (host.where !== 'remote' || !host.url) return;
+            var tpl = [
+                '# REMOTE: ' + host.title,
+                '# URL: ' + host.url,
+                '# UPDATE: ' + util.now()
+            ];
+
+            host.content = '# loading...';
+            this.onCurrentHostChange(host);
+
+            var _this = this;
+            io.getURL(host.url, {}, function (s) {
+                // success
+                host.content = tpl.concat(['', s]).join('\n');
+                _this.onCurrentHostChange(host);
+                _this.doSave();
+            }, function (xhr, status) {
+                // fail
+                host.content = tpl.concat(['', 'FAIL to get!', status]).join('\n');
+                _this.onCurrentHostChange(host);
+                _this.doSave();
+            });
+
+            this.doSave();
+        },
         toSave: function () {
-            if (!this.chkHostTitle()) {
+            if (!this.chkHostTitle() || !this.chkHostUrl()) {
                 return;
             }
             var host;
@@ -105,18 +172,22 @@ var app = new Vue({
             //if (this.hosts.list.indexOf(this.current_edit_host) > -1) {
             if (this.add_or_edit == 'edit') {
                 // edit
+                this.getRemoteHost(this.current_edit_host);
             } else {
                 // add new
                 host = {
                     title: this.current_edit_host.title,
                     content: '# ' + this.current_edit_host.title,
-                    on: false
+                    on: false,
+                    where: this.current_edit_host.where,
+                    url: this.current_edit_host.url
                 };
                 this.hosts.list.push(host);
                 this.selectHost(host);
+                this.getRemoteHost(host);
             }
 
-            this.doSave(true);
+            this.doSave(1);
             this.closePrompt();
         },
         doSave: function (now) {
@@ -162,14 +233,15 @@ var app = new Vue({
                 _this._to_switch_host = null;
             });
         },
-        updateHost: function (host) {
+        updateHost: function () {
             this.doSave();
         },
         showSysHost: function () {
             this.current_host = {
                 content: io.getSysHosts(),
                 is_sys: true,
-                is_editable: false
+                is_editable: false,
+                where: 'sys'
             };
         },
         delHost: function (host) {
@@ -308,8 +380,8 @@ $(document).ready(function () {
         mode: 'host'
     });
 
-    my_codemirror.on('change', function (a, b) {
-        app.current_host.content = a.getDoc().getValue();
+    my_codemirror.on('change', function (a) {
+        app.onCurrentHostBeChanged(a.getDoc().getValue());
     });
 
     my_codemirror.on('gutterClick', function (cm, n) {
