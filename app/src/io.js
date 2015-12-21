@@ -8,6 +8,7 @@
 var sys_host_path = '/etc/hosts';
 var work_path = MacGap.homePath + '/.SwitchHosts';
 var data_path = work_path + '/data.json';
+var is_work_path_made;
 
 //function copyObj(o) {
 //    var k;
@@ -45,6 +46,19 @@ function makeBackupHosts() {
         on: true,
         content: getSysHosts()
     }
+}
+
+function tryToCreateWorkDir() {
+    var cmd = 'mkdir -p \'' + work_path + '\'';
+    var my_task = MacGap.Task.create('/bin/sh', function (result) {
+        if (result.status == 0) {
+            //MacGap.File.write(sys_host_path, val, 'string');
+        } else {
+            alert('Fail to create work directory!\n\npath: ' + work_path);
+        }
+    });
+    my_task['arguments'] = ['-c', cmd];
+    my_task.launch();
 }
 
 function getSysHosts() {
@@ -87,6 +101,11 @@ function setSysHosts(val, sudo_pswd, callback) {
 }
 
 function getData(config) {
+    if (!is_work_path_made) {
+        tryToCreateWorkDir();
+        is_work_path_made = true;
+    }
+
     var default_hosts = {
         title: 'My Hosts',
         on: false,
