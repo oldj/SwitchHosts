@@ -80,13 +80,21 @@ function setSysHosts(val, sudo_pswd, callback) {
     sudo_pswd = sudo_pswd || '';
     MacGap.File.write(tmp_f, val, 'string');
 
-    var cmd = [
-        'echo "' + sudo_pswd + '" | sudo -S chmod 777 ' + sys_host_path
-        , 'cat "' + tmp_f + '" > ' + sys_host_path
-        , 'echo "' + sudo_pswd + '" | sudo -S chmod 644 ' + sys_host_path
-        , 'rm -rf ' + tmp_f
-        //, 'rm -rf ' + cmd_f
-    ].join(' && ');
+    var cmd;
+    if (!sudo_pswd) {
+        cmd = [
+            'cat "' + tmp_f + '" > ' + sys_host_path
+            , 'rm -rf ' + tmp_f
+        ].join(' && ');
+    } else {
+        sudo_pswd = sudo_pswd.replace(/'/g, '\\x27');
+        cmd = [
+            'echo \'' + sudo_pswd + '\' | sudo -S chmod 777 ' + sys_host_path
+            , 'cat "' + tmp_f + '" > ' + sys_host_path
+            , 'echo \'' + sudo_pswd + '\' | sudo -S chmod 644 ' + sys_host_path
+            , 'rm -rf ' + tmp_f
+        ].join(' && ');
+    }
     //MacGap.File.write(cmd_f, cmd, 'string');
 
     var myTask = MacGap.Task.create('/bin/sh', function (result) {
@@ -169,10 +177,15 @@ function getURL(url, data, success, fail) {
     });
 }
 
+function openURL(url) {
+    MacGap.openURL(url);
+}
+
 module.exports = {
     getSysHosts: getSysHosts,
     setSysHosts: setSysHosts,
     getData: getData,
     setData: setData,
-    getURL: getURL
+    getURL: getURL,
+    openURL: openURL
 };

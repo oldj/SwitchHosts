@@ -40,7 +40,7 @@ function chkUpdate(current_version) {
         if (compareVersion(current_version, new_version) < 0) {
             // new version available
             if (confirm(lang.new_version_available + '\n\nv: ' + new_version)) {
-                MacGap.openURL(config.url_homepage);
+                io.openURL(config.url_homepage);
             }
         } else {
             MacGap.notify({
