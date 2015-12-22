@@ -8,13 +8,10 @@
 var config = require('./config');
 //Vue.config.debug = true;
 Vue.use(require('./vue_dnd'));
-var CodeMirror = require('codemirror');
-require('codemirror/mode/shell/shell');
-require('./cm_hl');
 var util = require('./util');
 var io = require('./io');
 var lang = require('./lang').getLang(navigator.language);
-var my_codemirror;
+var tray_obj;
 
 var app = new Vue({
     el: '#sh-app',
@@ -124,11 +121,11 @@ var app = new Vue({
             host = this.current_host;
             host.is_editable = (host.where != 'sys' && host.where != 'remote');
 
-            my_codemirror.getDoc().setValue(host.content || '');
+            this.codemirror.getDoc().setValue(host.content || '');
             if (host.is_editable === false) {
-                my_codemirror.setOption('readOnly', true);
+                this.codemirror.setOption('readOnly', true);
             } else {
-                my_codemirror.setOption('readOnly', false);
+                this.codemirror.setOption('readOnly', false);
             }
             host._just_switch = 1;
         },
@@ -193,7 +190,8 @@ var app = new Vue({
             clearTimeout(this._t_save);
             var _this = this;
             this._t_save = setTimeout(function () {
-                io.setData(_this.hosts)
+                io.setData(_this.hosts);
+                tray_obj && tray_obj.updateTrayMenu(_this.hosts);
             }, now ? 0 : 100);
         },
         closePrompt: function (action) {
@@ -359,48 +357,7 @@ var app = new Vue({
 });
 
 require('./menu').initMenu(app);
+tray_obj = require('./menu').initTray(app);
+tray_obj.updateTrayMenu(app.hosts);
 
-
-function resize() {
-    var wh = window.innerHeight;
-    var h = wh - $('#sys-list').height() - 20;
-    $('#custom-list').css('height', h);
-    my_codemirror.setSize('100%', wh);
-}
-
-
-$(document).ready(function () {
-    var el_textarea = $('#host-code');
-    //el_textarea.css('height', window.innerHeight - 8);
-
-    my_codemirror = CodeMirror.fromTextArea(el_textarea[0], {
-        lineNumbers: true,
-        readOnly: true,
-        mode: 'host'
-    });
-
-    my_codemirror.on('change', function (a) {
-        app.onCurrentHostBeChanged(a.getDoc().getValue());
-    });
-
-    my_codemirror.on('gutterClick', function (cm, n) {
-        if (app.current_host.is_editable === false) return;
-
-        var info = cm.lineInfo(n);
-        //cm.setGutterMarker(n, "breakpoints", info.gutterMarkers ? null : makeMarker());
-        var ln = info.text;
-        if (/^\s*$/.test(ln)) return;
-
-        var new_ln;
-        if (/^#/.test(ln)) {
-            new_ln = ln.replace(/^#\s*/, '');
-        } else {
-            new_ln = '# ' + ln;
-        }
-        my_codemirror.getDoc().replaceRange(new_ln, {line: info.line, ch: 0}, {line: info.line, ch: ln.length});
-        //app.caculateHosts();
-    });
-
-    resize();
-    $(window).resize(resize);
-});
+require('./ui').init(app);

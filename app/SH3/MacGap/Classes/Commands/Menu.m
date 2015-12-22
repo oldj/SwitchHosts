@@ -96,6 +96,8 @@ static char REPRESENTED_OBJECT;
     NSString* title = [props valueForKey: @"label"];
     NSString* cmds = [props valueForKey: @"keys"];
     NSNumber* index = [props valueForKey: @"index"];
+    NSNumber* on = [props valueForKey: @"on"];
+//    bool on = [props valueForKey: @"on"];
     NSString *key = nil;
     NSMenuItem *item = nil;
 
@@ -113,6 +115,10 @@ static char REPRESENTED_OBJECT;
     } else {
         item = [menu addItemWithTitle:title action:nil keyEquivalent:key ];
         
+    }
+//    NSLog(@"%@,%@",title, on);
+    if ([on intValue] == 1) {
+        [item setState:NSOnState];
     }
     
     NSUInteger modifiers = [Menu getModifiersFromString:cmds];
