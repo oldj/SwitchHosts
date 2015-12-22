@@ -298,6 +298,8 @@ var app = new Vue({
             setTimeout(function () {
                 $('#ipt-pswd').focus()
             }, 100);
+
+            MacGap.activate();
         },
         chkPswd: function () {
             //this.switchHost(this._to_switch_host);
