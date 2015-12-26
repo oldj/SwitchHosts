@@ -63,18 +63,32 @@ function initTray(app) {
 
         menu.addSeparator();
         var idx = (hosts && hosts.list ? hosts.list.length : 0) + 3;
+
+        menu.addItem({
+            label: 'Feedback',
+            keys: '',
+            index: idx++
+        }, function () {
+            agent.openURL(config.url_feedback);
+        });
+
         menu.addItem({
             label: lang.toggle_dock_icon,
             keys: '',
             index: idx++
         }, function () {
             toggleDockIcon();
+            setTimeout(function () {
+                tray.updateTrayMenu(hosts);
+            }, 100);
         });
+        menu.addSeparator();
+        idx++;
 
         menu.addItem({
             label: 'Quit',
             keys: 'cmd+q',
-            index: idx++
+            index: idx
         }, function () {
             MacGap.terminate();
         });
