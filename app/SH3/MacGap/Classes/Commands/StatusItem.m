@@ -59,8 +59,10 @@
     _statusItem.alternateImage = [[NSImage alloc] initWithContentsOfURL:altImgfileUrl];
     _statusItem.action = @selector(itemClicked:);
     _statusItem.target = self;
-    _statusItem.highlightMode = YES;
+//    _statusItem.highlightMode = YES;
+    _statusItem.image.template = YES;
 }
+
 
 - (void) setMenu:(JSValue*)aMenu
 {

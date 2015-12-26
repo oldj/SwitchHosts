@@ -13,26 +13,44 @@ function initTray(app) {
     tray.item = MacGap.StatusItem.create({
         //title: 'Title',
         //titleFontSize: 16,
-        image: 'public/images/tray_icon.pdf'
-        //alternateImage: 'public/images/tray_icon2.png'
+        image: 'public/images/icon_1.pdf'
+        //alternateImage: 'public/images/icon_2.pdf'
     }, function () {
         //alert('Item clicked');
     });
 
 
     tray.updateTrayMenu = function (hosts) {
-        var menu = MacGap.Menu.create('My Menu', 'statusbar');
+        var menu = MacGap.Menu.create('Tray Menu', 'statusbar');
         var keys = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+        menu.addItem({
+            label: 'SwitchHosts!',
+            keys: '',
+            index: 0
+        }, function () {
+            MacGap.activate();
+        });
+        menu.addSeparator();
 
         hosts && hosts.list && hosts.list.map(function (host, idx) {
             menu.addItem({
                 label: host.title,
-                keys: idx < keys.length ? 'Cmd + ' + keys.substr(idx, 1): '',
+                keys: idx < keys.length ? '' + keys.substr(idx, 1): '',
                 on: !!host.on,
-                index: idx
+                index: idx + 2
             }, function () {
                 app.switchHost(host);
             });
+        });
+
+        menu.addSeparator();
+        menu.addItem({
+            label: 'Quit',
+            keys: 'cmd+q',
+            index: (hosts && hosts.list ? hosts.list.length : 0) + 3
+        }, function () {
+            MacGap.terminate();
         });
 
         MacGap.StatusItem.menu = menu;
