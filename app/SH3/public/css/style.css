@@ -160,8 +160,10 @@ a:hover {
   margin-left: 1em;
   cursor: pointer;
   font-size: 14px;
+  color: #000;
 }
-.btn-default {
+#edit-form .foot button.btn-default,
+#pswd-form .foot button.btn-default {
   background: #09f;
   color: #fff;
 }

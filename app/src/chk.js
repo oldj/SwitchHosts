@@ -43,11 +43,7 @@ function chkUpdate(current_version) {
                 io.openURL(config.url_homepage);
             }
         } else {
-            MacGap.notify({
-                type: 'sheet',
-                title: 'You are up to date!',
-                content: lang.is_updated
-            });
+            agent.notify('sheet', lang.is_updated_title, lang.is_updated);
         }
     }, function (e) {
         // fail
