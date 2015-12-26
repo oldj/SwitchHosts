@@ -10,7 +10,9 @@
 var sys_host_path = '/etc/hosts';
 var work_path = MacGap.homePath + '/.SwitchHosts';
 var data_path = work_path + '/data.json';
+var preference_path = work_path + '/preference.json';
 var is_work_path_made;
+var _preference;
 
 //function copyObj(o) {
 //    var k;
@@ -161,6 +163,32 @@ function setData(data) {
     }
 }
 
+function getAllPreferences() {
+    if (!_preference) {
+        var c = MacGap.File.read(preference_path, 'string');
+        try {
+            c = JSON.parse(c);
+        } catch (e) {
+            c = {};
+        }
+        _preference = c;
+    }
+
+    return _preference;
+}
+
+function getPreference(key) {
+    var p = getAllPreferences();
+    return p[key];
+}
+
+function setPreference(key, value) {
+    var p = getAllPreferences();
+    p[key] = value;
+
+    MacGap.File.write(preference_path, JSON.stringify(p), 'string');
+}
+
 function getURL(url, data, success, fail) {
     if (!data._r) {
         data._r = Math.random();
@@ -202,6 +230,9 @@ module.exports = {
     setSysHosts: setSysHosts,
     getData: getData,
     setData: setData,
+    getAllPreferences: getAllPreferences,
+    getPreference: getPreference,
+    setPreference: setPreference,
     getURL: getURL,
     openURL: openURL,
     activate: activate,
