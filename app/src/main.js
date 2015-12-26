@@ -9,7 +9,7 @@ var config = require('./config');
 //Vue.config.debug = true;
 Vue.use(require('./vue_dnd'));
 var util = require('./util');
-var io = require('./io');
+var agent = require('./agent');
 var lang = require('./lang').getLang(navigator.language);
 var tray_obj;
 
@@ -17,14 +17,14 @@ var app = new Vue({
     el: '#sh-app',
     data: {
         lang: lang,
-        hosts: io.getData({
+        hosts: agent.getData({
             VERSION: config.VERSION
         }),
         is_prompt_show: false,
         is_edit_show: false,
         is_pswd_show: false,
         current_host: {
-            content: io.getSysHosts(),
+            content: agent.getSysHosts(),
             is_sys: true,
             on: true,
             is_editable: false,
@@ -64,6 +64,7 @@ var app = new Vue({
         add: function () {
             this.is_prompt_show = true;
             this.is_edit_show = true;
+            this.is_pswd_show = false;
             this.current_edit_host = {
                 where: 'local'
             };
@@ -145,7 +146,7 @@ var app = new Vue({
             this.onCurrentHostChange(host);
 
             var _this = this;
-            io.getURL(host.url, {}, function (s) {
+            agent.getURL(host.url, {}, function (s) {
                 // success
                 host.content = tpl.concat(['', s]).join('\n');
                 _this.onCurrentHostChange(host);
@@ -190,7 +191,7 @@ var app = new Vue({
             clearTimeout(this._t_save);
             var _this = this;
             this._t_save = setTimeout(function () {
-                io.setData(_this.hosts);
+                agent.setData(_this.hosts);
                 tray_obj && tray_obj.updateTrayMenu(_this.hosts);
             }, now ? 0 : 100);
         },
@@ -235,7 +236,7 @@ var app = new Vue({
         },
         showSysHost: function () {
             this.current_host = {
-                content: io.getSysHosts(),
+                content: agent.getSysHosts(),
                 is_sys: true,
                 is_editable: false,
                 where: 'sys'
@@ -266,7 +267,7 @@ var app = new Vue({
 
             var s_hosts = on_hosts.join('\n\n# --------------------\n\n');
             s_hosts = '# SwitchHosts!\n' + s_hosts;
-            io.setSysHosts(s_hosts, this.sudo_pswd, function (err) {
+            agent.setSysHosts(s_hosts, this.sudo_pswd, function (err) {
                 if (err) {
                     console.log(err);
                     // get permission
@@ -292,14 +293,14 @@ var app = new Vue({
         askForPermission: function (callback) {
             this.is_prompt_show = true;
             this.is_pswd_show = true;
+            this.is_edit_show = false;
             this.sudo_pswd = '';
             callback && this.on_after_permission.push(callback);
 
             setTimeout(function () {
                 $('#ipt-pswd').focus()
             }, 100);
-
-            MacGap.activate();
+            agent.activate();
         },
         chkPswd: function () {
             //this.switchHost(this._to_switch_host);

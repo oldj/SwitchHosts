@@ -1,6 +1,8 @@
 /**
  * @author oldj
  * @blog http://oldj.net
+ *
+ * 和系统、平台相关的方法
  */
 
 'use strict';
@@ -181,11 +183,27 @@ function openURL(url) {
     MacGap.openURL(url);
 }
 
+function activate() {
+    setTimeout(function () {
+        MacGap.activate();
+    }, 0);
+}
+
+function notify(type, title, content) {
+    MacGap.notify({
+        type: type,
+        title: title,
+        content: content
+    });
+}
+
 module.exports = {
     getSysHosts: getSysHosts,
     setSysHosts: setSysHosts,
     getData: getData,
     setData: setData,
     getURL: getURL,
-    openURL: openURL
+    openURL: openURL,
+    activate: activate,
+    notify: notify
 };
