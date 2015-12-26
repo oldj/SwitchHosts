@@ -14,6 +14,8 @@
 @property (readonly) NSString* badge;
 - (void) addBadge: (NSString*) badge;
 - (void) removeBadge;
+- (void) hideIcon;
+- (void) showIcon;
 @end
 
 @interface Dock : Command <DockExports>
