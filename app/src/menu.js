@@ -6,18 +6,21 @@
 'use strict';
 
 var config = require('./config');
+var agent = require('./agent');
 var lang = require('./lang').getLang(navigator.language);
 
-var is_dock_icon_show = true;
+var key_name = 'is_dock_icon_hidden';
+var is_dock_icon_hidden = agent.getPreference(key_name);
 
 function toggleDockIcon() {
-    if (is_dock_icon_show) {
-        MacGap.Dock.hideIcon();
-    } else {
+    if (is_dock_icon_hidden) {
         MacGap.Dock.showIcon();
         MacGap.activate();
+    } else {
+        MacGap.Dock.hideIcon();
     }
-    is_dock_icon_show = !is_dock_icon_show;
+    is_dock_icon_hidden = !is_dock_icon_hidden;
+    agent.setPreference(key_name, is_dock_icon_hidden);
 }
 
 function initTray(app) {
@@ -105,6 +108,11 @@ function initMenu(app) {
         app.add();
     };
 
+    if (is_dock_icon_hidden) {
+        MacGap.Dock.hideIcon();
+    } else {
+        MacGap.Dock.showIcon();
+    }
 }
 
 exports.initMenu = initMenu;
