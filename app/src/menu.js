@@ -7,6 +7,7 @@
 
 var config = require('./config');
 var agent = require('./agent');
+var ie = require('./ie');
 var lang = require('./lang').getLang(navigator.language);
 
 var key_name = 'is_dock_icon_hidden';
@@ -38,7 +39,7 @@ function initTray(app) {
 
     tray.updateTrayMenu = function (hosts) {
         var menu = MacGap.Menu.create('Tray Menu', 'statusbar');
-        var keys = '0123456789abcdefghijklmnopqrstuvwxyz';
+        var keys = '1234567890abcdefghijklmnopqrstuvwxyz';
 
         menu.addItem({
             label: 'SwitchHosts!',
@@ -52,7 +53,7 @@ function initTray(app) {
         hosts && hosts.list && hosts.list.map(function (host, idx) {
             menu.addItem({
                 label: host.title,
-                keys: idx < keys.length ? '' + keys.substr(idx, 1): '',
+                keys: idx < keys.length ? '' + keys.substr(idx, 1) : '',
                 on: !!host.on,
                 index: idx + 2
             }, function () {
@@ -106,6 +107,31 @@ function initMenu(app) {
     menu = MacGap.Menu.getItem('File').submenu;
     menu.getItem('New').callback = function () {
         app.add();
+    };
+    menu.getItem('Import').callback = function () {
+        MacGap.Dialog.openDialog({
+            files: true,
+            allowedTypes: ['json', 'txt'],
+            callback: function (path) {
+                ie.importFrom(app.hosts.list, path);
+                app.doSave(1);
+            }
+        });
+    };
+    menu.getItem('Export').callback = function () {
+        MacGap.Dialog.saveDialog({
+            title: 'Export hosts',
+            prompt: 'Export',
+            message: 'export hosts.',
+            filename: 'sh.json',
+            createDirs: true,
+            allowedTypes: ['json', 'txt'],
+            callback: function (p) {
+                // filename, directory, filePath
+                var fp = p.filePath;
+                ie.exportTo(app.hosts.list, fp);
+            }
+        });
     };
 
     if (is_dock_icon_hidden) {

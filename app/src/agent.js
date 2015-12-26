@@ -14,25 +14,6 @@ var preference_path = work_path + '/preference.json';
 var is_work_path_made;
 var _preference;
 
-//function copyObj(o) {
-//    var k;
-//    var o2 = {};
-//    for (k in o) {
-//        if (o.hasOwnProperty(k)) {
-//            o2[k] = o[k];
-//        }
-//    }
-//    return o2;
-//}
-//
-//function obj2str(o) {
-//    var s = [];
-//    var k;
-//    for (k in o) {
-//        s.push(k + '=' + o[k]);
-//    }
-//    return s.join('\n');
-//}
 
 function mixObj(a, b) {
     var k;
@@ -44,6 +25,18 @@ function mixObj(a, b) {
     return a;
 }
 
+function writeFile(path, content) {
+    MacGap.File.write(path, content, 'string');
+}
+
+function readFile(path) {
+    return MacGap.File.read(path, 'string');
+}
+
+function existPath(path) {
+    return MacGap.File.exists(path);
+}
+
 function makeBackupHosts() {
     return {
         title: 'backup',
@@ -53,7 +46,7 @@ function makeBackupHosts() {
 }
 
 function tryToCreateWorkDir() {
-    if (MacGap.File.exists(work_path)) return;
+    if (existPath(work_path)) return;
 
     var cmd = 'mkdir -p \'' + work_path + '\'';
     var my_task = MacGap.Task.create('/bin/sh', function (result) {
@@ -70,7 +63,7 @@ function tryToCreateWorkDir() {
 function getSysHosts() {
     var s;
     try {
-        s = MacGap.File.read(sys_host_path, 'string');
+        s = readFile(sys_host_path);
     } catch (e) {
         alert(e.message);
     }
@@ -82,7 +75,7 @@ function setSysHosts(val, sudo_pswd, callback) {
     //var cmd_f = work_path + '/cmd.sh';
 
     sudo_pswd = sudo_pswd || '';
-    MacGap.File.write(tmp_f, val, 'string');
+    writeFile(tmp_f, val);
 
     var cmd;
     if (!sudo_pswd) {
@@ -99,11 +92,9 @@ function setSysHosts(val, sudo_pswd, callback) {
             , 'rm -rf ' + tmp_f
         ].join(' && ');
     }
-    //MacGap.File.write(cmd_f, cmd, 'string');
 
     var myTask = MacGap.Task.create('/bin/sh', function (result) {
         if (result.status == 0) {
-            //MacGap.File.write(sys_host_path, val, 'string');
             callback && callback();
         } else {
             //alert('An error occurred!');
@@ -129,7 +120,7 @@ function getData(config) {
         sys: getSysHosts(),
         list: [default_hosts, makeBackupHosts()]
     };
-    if (!MacGap.File.exists(data_path)) {
+    if (!existPath(data_path)) {
         return default_vals;
     }
 
@@ -138,7 +129,7 @@ function getData(config) {
 
     var s;
     try {
-        s = MacGap.File.read(data_path, 'string');
+        s = readFile(data_path);
     } catch (e) {
         alert(e.message);
         return default_hosts;
@@ -157,7 +148,7 @@ function getData(config) {
 
 function setData(data) {
     try {
-        MacGap.File.write(data_path, JSON.stringify(data), 'string');
+        writeFile(data_path, JSON.stringify(data));
     } catch (e) {
         alert(e);
     }
@@ -165,7 +156,7 @@ function setData(data) {
 
 function getAllPreferences() {
     if (!_preference) {
-        var c = MacGap.File.read(preference_path, 'string');
+        var c = readFile(preference_path);
         try {
             c = JSON.parse(c);
         } catch (e) {
@@ -186,7 +177,7 @@ function setPreference(key, value) {
     var p = getAllPreferences();
     p[key] = value;
 
-    MacGap.File.write(preference_path, JSON.stringify(p), 'string');
+    writeFile(preference_path, JSON.stringify(p));
 }
 
 function getURL(url, data, success, fail) {
@@ -226,6 +217,9 @@ function notify(type, title, content) {
 }
 
 module.exports = {
+    readFile: readFile,
+    writeFile: writeFile,
+    existPath: existPath,
     getSysHosts: getSysHosts,
     setSysHosts: setSysHosts,
     getData: getData,

@@ -249,6 +249,7 @@ var app = new Vue({
 
             var i = this.hosts.list.indexOf(host);
             if (i > -1) {
+                //host.on = false;
                 this.hosts.list.splice(i, 1);
                 this.current_edit_host = {};
                 this.closePrompt();
