@@ -89,7 +89,8 @@ a:hover {
 }
 #features ul {
   list-style: none;
-  height: 180px;
+  height: 450px;
+  overflow: hidden;
   width: 813px;
   padding: 0;
   margin: 32px 0 0 -6.5px;
@@ -98,6 +99,7 @@ a:hover {
   float: left;
   padding: 0;
   width: 258px;
+  height: 240px;
   margin: 0 6.5px;
   overflow: hidden;
   text-align: center;
