@@ -1,10 +1,6 @@
 # SwitchHosts!
 
- - Author: oldj
- - Email: oldj.wu@gmail.com
- - Blog: http://oldj.net/
- - Source: https://github.com/oldj/SwitchHosts
- - Homepage: https://oldj.github.io/SwitchHosts/
+Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)
 
 
 这是一个用于快速切换 hosts 文件的小程序，基于 [MacGap](http://macgapproject.github.io) 开发，同时使用了 [Vue.js](http://vuejs.org/) 以及 [CodeMirror](http://codemirror.net/) 等框架/库。
@@ -36,6 +32,7 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下，其中 `~/.SwitchHo
 
 ### v3.1
 
+ - 2015-12-26 实现 Tray 菜单切换、Dock 图标隐藏、方案导入导出等功能
  - 2015-12-20 从 Electron 切换至 MacGap 。
 
 ### v3.0
