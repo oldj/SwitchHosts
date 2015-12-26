@@ -28,6 +28,9 @@ var languages = {
         , where_remote: 'remote'
         , url: 'URL'
         , bad_url: 'URL is not valid.'
+        , hide_dock_icon: 'Hide Dock Icon'
+        , show_dock_icon: 'Show Dock Icon'
+        , toggle_dock_icon: 'Toggle Dock Icon'
     },
     'cn': {
         add: '添加'
@@ -51,6 +54,9 @@ var languages = {
         , where_remote: '远程'
         , url: 'URL 地址'
         , bad_url: 'URL 地址有误。'
+        , hide_dock_icon: '隐藏 Dock 图标'
+        , show_dock_icon: '显示 Dock 图标'
+        , toggle_dock_icon: '显示/隐藏 Dock 图标'
     }
 };
 

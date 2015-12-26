@@ -6,6 +6,19 @@
 'use strict';
 
 var config = require('./config');
+var lang = require('./lang').getLang(navigator.language);
+
+var is_dock_icon_show = true;
+
+function toggleDockIcon() {
+    if (is_dock_icon_show) {
+        MacGap.Dock.hideIcon();
+    } else {
+        MacGap.Dock.showIcon();
+        MacGap.activate();
+    }
+    is_dock_icon_show = !is_dock_icon_show;
+}
 
 function initTray(app) {
     var tray = {};
@@ -45,10 +58,19 @@ function initTray(app) {
         });
 
         menu.addSeparator();
+        var idx = (hosts && hosts.list ? hosts.list.length : 0) + 3;
+        menu.addItem({
+            label: lang.toggle_dock_icon,
+            keys: '',
+            index: idx++
+        }, function () {
+            toggleDockIcon();
+        });
+
         menu.addItem({
             label: 'Quit',
             keys: 'cmd+q',
-            index: (hosts && hosts.list ? hosts.list.length : 0) + 3
+            index: idx++
         }, function () {
             MacGap.terminate();
         });

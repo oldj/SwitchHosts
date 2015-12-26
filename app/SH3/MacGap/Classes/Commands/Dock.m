@@ -12,22 +12,27 @@
 @implementation Dock
 
 
-- (JSValue*) badge
-{
+- (JSValue *)badge {
     NSDockTile *tile = [[NSApplication sharedApplication] dockTile];
-    return [JSValue valueWithObject:[tile badgeLabel] inContext: JSContext.currentContext];
+    return [JSValue valueWithObject:[tile badgeLabel] inContext:JSContext.currentContext];
 }
 
-- (void) addBadge: (NSString*) badge
-{
+- (void)addBadge:(NSString *)badge {
     NSDockTile *tile = [[NSApplication sharedApplication] dockTile];
     [tile setBadgeLabel:badge];
 }
 
-- (void) removeBadge
-{
+- (void)removeBadge {
     NSDockTile *tile = [[NSApplication sharedApplication] dockTile];
     [tile setBadgeLabel:nil];
+}
+
+- (void)hideIcon {
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+}
+
+- (void)showIcon {
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 }
 
 @end

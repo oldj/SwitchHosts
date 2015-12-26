@@ -14,6 +14,7 @@
 - (void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
     // Insert code here to initialize your application
+
 }
 
 -(BOOL)applicationShouldHandleReopen:(NSApplication*)application
