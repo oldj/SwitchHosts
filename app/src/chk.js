@@ -7,7 +7,7 @@
 
 var config = require('./config');
 var lang = require('./lang').getLang('en');
-var io = require('./io');
+var agent = require('./agent');
 
 function compareVersion(v1, v2) {
     if (v1 == v2) return 0;
@@ -34,13 +34,13 @@ function compareVersion(v1, v2) {
 }
 
 function chkUpdate(current_version) {
-    io.getURL(config.url_chk_version, {}, function (s) {
+    agent.getURL(config.url_chk_version, {}, function (s) {
         // success
         var new_version = s.replace(/^\s+|\s+$/g, '');
         if (compareVersion(current_version, new_version) < 0) {
             // new version available
             if (confirm(lang.new_version_available + '\n\nv: ' + new_version)) {
-                io.openURL(config.url_homepage);
+                agent.openURL(config.url_homepage);
             }
         } else {
             agent.notify('sheet', lang.is_updated_title, lang.is_updated);
