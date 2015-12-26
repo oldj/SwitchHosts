@@ -10,9 +10,9 @@
 var sys_host_path = '/etc/hosts';
 var work_path = MacGap.homePath + '/.SwitchHosts';
 var data_path = work_path + '/data.json';
-var preference_path = work_path + '/preference.json';
+var preference_path = work_path + '/preferences.json';
 var is_work_path_made;
-var _preference;
+var _preferences;
 
 
 function mixObj(a, b) {
@@ -155,17 +155,17 @@ function setData(data) {
 }
 
 function getAllPreferences() {
-    if (!_preference) {
+    if (!_preferences) {
         var c = readFile(preference_path);
         try {
             c = JSON.parse(c);
         } catch (e) {
             c = {};
         }
-        _preference = c;
+        _preferences = c;
     }
 
-    return _preference;
+    return _preferences;
 }
 
 function getPreference(key) {

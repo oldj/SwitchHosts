@@ -14,6 +14,8 @@
 
  - 快速切换 hosts
  - hosts 文件语法高亮
+ - 在线 hosts 方案
+ - 系统托盘图标
 
 
 ## 下载地址：
@@ -24,6 +26,11 @@
  - [SwitchHosts! 下载地址2](http://pan.baidu.com/share/link?shareid=150951&uk=3607385901)
 
 
+## 文件备份
+
+### Mac 用户
+
+SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下，其中 `~/.SwitchHosts/data.json` 是 hosts 数据文件，`~/.SwitchHosts/prefereces.json` 是配置信息。
 
 ## 更新历史：
 
