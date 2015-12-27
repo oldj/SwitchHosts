@@ -9,17 +9,19 @@ var CodeMirror = require('codemirror');
 require('codemirror/mode/shell/shell');
 require('./cm_hl');
 
+var my_codemirror;
+
+function resize() {
+    var wh = window.innerHeight;
+    var oh = $('#left').find('.operations').height();
+    var h = wh - $('#sys-list').height() - oh;
+    $('#custom-list').css('height', h);
+    my_codemirror && my_codemirror.setSize('100%', wh);
+}
 
 function init(app) {
 
-    var my_codemirror;
 
-    function resize() {
-        var wh = window.innerHeight;
-        var h = wh - $('#sys-list').height() - 20;
-        $('#custom-list').css('height', h);
-        my_codemirror.setSize('100%', wh);
-    }
 
     $(document).ready(function () {
         var el_textarea = $('#host-code');
@@ -60,3 +62,4 @@ function init(app) {
 }
 
 exports.init = init;
+exports.resize = resize;

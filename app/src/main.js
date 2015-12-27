@@ -23,6 +23,8 @@ var app = new Vue({
         is_prompt_show: false,
         is_edit_show: false,
         is_pswd_show: false,
+        is_search_bar_show: false,
+        search_keyword: '',
         current_host: {
             content: agent.getSysHosts(),
             is_sys: true,
@@ -353,6 +355,30 @@ var app = new Vue({
         remove: function (from, tag, data) {
             from.splice(data.index, 1);
         },
+
+        toggleSearch: function () {
+            var el_bar = $("#search-bar");
+            this.is_search_bar_show = !this.is_search_bar_show;
+            if (this.is_search_bar_show) {
+                setTimeout(function () {
+                    ui.resize();
+                    el_bar.find('input').focus();
+                }, 100);
+            } else {
+                this.search_keyword = '';
+                setTimeout(function () {
+                    ui.resize();
+                }, 100);
+            }
+        },
+
+        mySearch: function (item) {
+            if (!this.search_keyword) return true;
+
+            return item.title.indexOf(this.search_keyword) > -1 ||
+                item.content.indexOf(this.search_keyword) > -1;
+        },
+
         log: function (obj) {
             console.log(obj);
             return 1;
@@ -360,8 +386,10 @@ var app = new Vue({
     }
 });
 
+
 require('./menu').initMenu(app);
 tray_obj = require('./menu').initTray(app);
 tray_obj.updateTrayMenu(app.hosts);
 
-require('./ui').init(app);
+var ui = require('./ui');
+ui.init(app);

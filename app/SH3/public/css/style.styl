@@ -61,13 +61,15 @@ unselectable()
     left 0
     bottom 0
     width left_width px
-    hegith 20px
+    //hegith 20px
     //border-top solid 1px (bg_left * 0.9)
+    background bg_left
 
     ul
       list-style none
       margin 0
       padding 0 18px 0 10px
+      line-height 24px
 
       li
         float left
@@ -91,6 +93,30 @@ unselectable()
     //a
     //  color #fff
 
+  #search-bar
+    //display none
+    height 30px
+    line-height @height
+    background bg_left * 1.2
+    padding 0 18px 0 18px
+    //border-top solid 1px (bg_left * 0.9)
+    box-shadow 0 -1px 0 1px (bg_left * 0.95)
+
+    input
+      width 100%
+      height 24px
+      padding 0
+      background transparent
+      border none
+      outline none
+      color #fff
+      font-family Menlo
+
+  #btn-toggle-search
+    padding 0 4px
+    margin-right 10px
+  #btn-toggle-search.active
+    background bg_left * 1.2
 
 #body
   position fixed

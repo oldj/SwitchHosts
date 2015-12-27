@@ -9,6 +9,7 @@ var config = require('./config');
 var agent = require('./agent');
 var ie = require('./ie');
 var lang = require('./lang').getLang(navigator.language);
+var ui = require('./ui');
 
 var key_name = 'is_dock_icon_hidden';
 var is_dock_icon_hidden = agent.getPreference(key_name);
@@ -146,6 +147,15 @@ function initMenu(app) {
                 ie.exportTo(app.hosts.list, fp);
             }
         });
+    };
+
+    // Edit
+    menu = MacGap.Menu.getItem('Edit').submenu;
+    menu.getItem('Find').callback = function () {
+        app.toggleSearch();
+        setTimeout(function () {
+            ui.resize();
+        }, 100);
     };
 
     if (is_dock_icon_hidden) {
