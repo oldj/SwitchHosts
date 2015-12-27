@@ -47,12 +47,13 @@ a:hover {
   left: 0;
   bottom: 0;
   width: 240px;
-  hegith: 20px;
+  background: #373d47;
 }
 #left .operations ul {
   list-style: none;
   margin: 0;
   padding: 0 18px 0 10px;
+  line-height: 24px;
 }
 #left .operations ul li {
   float: left;
@@ -70,6 +71,30 @@ a:hover {
 }
 #left .operations ul li.right {
   float: right;
+}
+#search-bar {
+  height: 30px;
+  line-height: 30px;
+  background: #424955;
+  padding: 0 18px 0 18px;
+  box-shadow: 0 -1px 0 1px #343a43;
+}
+#search-bar input {
+  width: 100%;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-family: Menlo;
+}
+#btn-toggle-search {
+  padding: 0 4px;
+  margin-right: 10px;
+}
+#btn-toggle-search.active {
+  background: #424955;
 }
 #body {
   position: fixed;

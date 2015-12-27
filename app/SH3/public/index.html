@@ -21,7 +21,7 @@
 			</ul>
 			<ul id="custom-list">
 				<li v-cloak
-					v-for="host in hosts.list"
+					v-for="host in hosts.list | filterBy mySearch"
 					@click="selectHost(host)"
 					v-draggable="{index: $index, dragged: 'dragged'}"
 					v-dropzone="sort(hosts.list, $index, $droptag, $dropdata)"
@@ -35,6 +35,9 @@
 			</ul>
 		</div>
 		<div class="operations">
+			<div id="search-bar" v-show="is_search_bar_show" v-cloak>
+				<input type="text" v-model="search_keyword" placeholder="keyword" maxlength="256">
+			</div>
 			<ul>
 				<li>
 					<a href="#" @click="add()" title="{{ lang.add_host }}"><i class="iconfont icon-add-s"></i></a>
@@ -42,6 +45,9 @@
 				<li class="right">
 					<a href="#" @click="tmpClean()" v-cloak v-if="could_tmp_clean_on" title="{{ lang.tmp_clean }}"><i class="iconfont icon-switchon"></i></a>
 					<a href="#" @click="tmpRecover()" v-cloak v-if="!could_tmp_clean_on" title="{{ lang.tmp_recover }}"><i class="iconfont icon-switchoff"></i></a>
+				</li>
+				<li class="right">
+					<a href="#" id="btn-toggle-search" @click="toggleSearch()" :class="{active:is_search_bar_show}"><i class="iconfont icon-search"></i></a>
 				</li>
 			</ul>
 		</div>
