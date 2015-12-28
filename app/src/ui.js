@@ -21,8 +21,6 @@ function resize() {
 
 function init(app) {
 
-
-
     $(document).ready(function () {
         var el_textarea = $('#host-code');
         //el_textarea.css('height', window.innerHeight - 8);

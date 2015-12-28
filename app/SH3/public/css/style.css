@@ -261,6 +261,10 @@ a:hover {
 .cm-s-default .cm-comment {
   color: #090;
 }
+.cm-s-default .cm-ip {
+  color: #00c;
+  font-weight: bold;
+}
 .CodeMirror-gutters {
   border-right: none;
   padding-right: 6px;
