@@ -155,6 +155,7 @@ function initMenu(app) {
         app.toggleSearch();
         setTimeout(function () {
             ui.resize();
+            $('#search-bar').find('input').focus();
         }, 100);
     };
 
