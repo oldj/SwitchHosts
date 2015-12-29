@@ -29,7 +29,6 @@
             if (!stream.string.match(/^\s*([\d\.]+|[\da-f:\.%lo]+)\s+\w/i)) {
                 return 'error';
             }
-
             if (sol && ch.match(/[\w\.:%]/)) {
                 stream.eatWhile(/[\w\.:%]/);
                 return 'ip';
