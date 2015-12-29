@@ -78,6 +78,7 @@ function setSysHosts(val, sudo_pswd, callback) {
     writeFile(tmp_f, val);
 
     var cmd;
+    //var cmd2;
     if (!sudo_pswd) {
         cmd = [
             'cat "' + tmp_f + '" > ' + sys_host_path
@@ -91,18 +92,30 @@ function setSysHosts(val, sudo_pswd, callback) {
             , 'echo \'' + sudo_pswd + '\' | sudo -S chmod 644 ' + sys_host_path
             , 'rm -rf ' + tmp_f
         ].join(' && ');
+
+        //cmd2 = [
+        //    'echo \'' + sudo_pswd + '\' | sudo -S launchctl unload -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+        //    , 'echo \'' + sudo_pswd + '\' | sudo -S launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+        //    , 'echo \'' + sudo_pswd + '\' | sudo -S launchctl unload -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+        //    , 'echo \'' + sudo_pswd + '\' | sudo -S launchctl load -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+        //].join(' ; ');
+        //cmd = cmd + ';' + cmd2;
+        //cmd = "$'" + cmd.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
     }
 
-    var myTask = MacGap.Task.create('/bin/sh', function (result) {
+    var task = MacGap.Task.create('/bin/sh', function (result) {
         if (result.status == 0) {
+            setTimeout(function () {
+                afterSetHosts(sudo_pswd);
+            }, 10);
             callback && callback();
         } else {
             //alert('An error occurred!');
             callback && callback(result);
         }
     });
-    myTask['arguments'] = ['-c', cmd];
-    myTask.launch();
+    task['arguments'] = ['-c', cmd];
+    task.launch();
 }
 
 function getData(config) {
@@ -214,6 +227,51 @@ function notify(type, title, content) {
         title: title,
         content: content
     });
+}
+
+function afterSetHosts(sudo_pswd, callback) {
+    // sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist
+    // sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist
+    // sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist
+    // sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist
+
+    if (!sudo_pswd) {
+        callback && callback();
+        return;
+    }
+
+    var cmd;
+    //sudo_pswd = sudo_pswd.replace(/'/g, '\\x27');
+    cmd = [
+        //'echo \'' + sudo_pswd + '\' | sudo -S launchctl unload -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+        //, 'echo \'' + sudo_pswd + '\' | sudo -S launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+        //, 'echo \'' + sudo_pswd + '\' | sudo -S launchctl unload -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+        //, 'echo \'' + sudo_pswd + '\' | sudo -S launchctl load -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+        'sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+        , 'sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+        , 'sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+        , 'sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+    ].join('\n');
+    //cmd = "$'" + cmd.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+    //alert(cmd);
+    var path = work_path + '/_restart_mDNSResponder.sh';
+    MacGap.File.write(path, cmd, 'string');
+
+    var task = MacGap.Task.create('/bin/sh', function (result) {
+        if (result.status == 0) {
+            callback && callback();
+        } else {
+            callback && callback(result);
+        }
+    });
+
+    cmd = [
+        '/bin/sh ' + path
+        , 'rm -rf \'' + path + '\''
+    ].join(';');
+    task['arguments'] = ['-c', cmd];
+    //task['arguments'] = [path];
+    task.launch();
 }
 
 module.exports = {

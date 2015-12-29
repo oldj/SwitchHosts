@@ -19,7 +19,8 @@ bbb #bbb
 127.0.0.1 localhost
 255.255.255.255 broadcasthost
 ::1 localhost
-fe80::1%lo0 localhost
+fe80::1%lo0 localhost k1
+	k2
 
 </textarea>
 
@@ -76,11 +77,13 @@ fe80::1%lo0 localhost
 	})
 	;
 
-	my_codemirror = CodeMirror.fromTextArea(document.getElementById('t'), {
+	cm = CodeMirror.fromTextArea(document.getElementById('t'), {
 		lineNumbers: true,
-		readOnly: true,
+//		readOnly: true,
 		mode: 'host'
 	});
+
+	cm.setOption("hintOptions", { "keywords" : ["k1", "k2"] });
 </script>
 </body>
 </html>
