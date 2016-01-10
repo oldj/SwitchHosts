@@ -16,7 +16,8 @@ var exportable_keys = {
     title: 10,
     content: 10,
     where: 1,
-    url: 1
+    url: 1,
+    refresh_interval: 1
 };
 
 var import_default = {
@@ -24,7 +25,8 @@ var import_default = {
     content: '',
     on: false,
     where: 'local',
-    url: ''
+    url: '',
+    refresh_interval: 0
 };
 
 /**
