@@ -177,5 +177,8 @@
     return [NSNumber numberWithDouble:timeSinceLastEvent];
 }
 
+- (void)log:(NSString *)msg {
+    NSLog(@"%@", msg);
+}
 
 @end

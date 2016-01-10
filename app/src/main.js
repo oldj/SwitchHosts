@@ -10,6 +10,7 @@ var config = require('./config');
 Vue.use(require('./vue_dnd'));
 var util = require('./util');
 var agent = require('./agent');
+var refresh = require('./refresh');
 var lang = require('./lang').getLang(navigator.language);
 var tray_obj;
 
@@ -31,8 +32,17 @@ var app = new Vue({
             on: true,
             is_editable: false,
             where: 'sys',
-            url: ''
+            url: '',
+            refresh_interval: 24,
+            last_refresh: null
         },
+        refresh_options: [
+            [0, lang.never],
+            //[0.005, '0.005 ' + lang.hour],
+            [1, '1 ' + lang.hour],
+            [24, '1 ' + lang.day],
+            [24 * 7, '7 ' + lang.days]
+        ],
         inform: {
             title: '',
             url: ''
@@ -139,30 +149,7 @@ var app = new Vue({
             this.current_host.content = v;
         },
         getRemoteHost: function (host) {
-            if (host.where !== 'remote' || !host.url) return;
-            var tpl = [
-                '# REMOTE: ' + host.title,
-                '# URL: ' + host.url,
-                '# UPDATE: ' + util.now()
-            ];
-
-            host.content = '# loading...';
-            this.onCurrentHostChange(host);
-
-            var _this = this;
-            agent.getURL(host.url, {}, function (s) {
-                // success
-                host.content = tpl.concat(['', s]).join('\n');
-                _this.onCurrentHostChange(host);
-                _this.doSave();
-            }, function (xhr, status) {
-                // fail
-                host.content = tpl.concat(['', 'FAIL to get!', status]).join('\n');
-                _this.onCurrentHostChange(host);
-                _this.doSave();
-            });
-
-            this.doSave();
+            refresh.getRemoteHost(this, host);
         },
         toSave: function () {
             if (!this.chkHostTitle() || !this.chkHostUrl()) {
@@ -182,7 +169,9 @@ var app = new Vue({
                     content: '# ' + this.current_edit_host.title,
                     on: false,
                     where: this.current_edit_host.where,
-                    url: this.current_edit_host.url
+                    url: this.current_edit_host.url,
+                    refresh_interval: this.current_edit_host.refresh_interval,
+                    last_refresh: null
                 };
                 this.hosts.list.push(host);
                 this.selectHost(host);
@@ -382,8 +371,19 @@ var app = new Vue({
                 item.content.indexOf(this.search_keyword) > -1;
         },
 
+        checkRefresh: function () {
+            var _this = this;
+            var t = 60 * 5 * 1000;
+            //var t = 1000;
+            refresh.checkRefresh(this);
+
+            setTimeout(function () {
+                _this.checkRefresh();
+            }, t);
+        },
+
         log: function (obj) {
-            console.log(obj);
+            agent.log(obj);
             return 1;
         }
     }
@@ -396,3 +396,7 @@ tray_obj.updateTrayMenu(app.hosts);
 
 var ui = require('./ui');
 ui.init(app);
+
+setTimeout(function () {
+    app.checkRefresh();
+}, 1000);
