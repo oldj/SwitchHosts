@@ -10,6 +10,7 @@ var config = require('./config');
 Vue.use(require('./vue_dnd'));
 var util = require('./util');
 var agent = require('./agent');
+var refresh = require('./refresh');
 var lang = require('./lang').getLang(navigator.language);
 var tray_obj;
 
@@ -148,30 +149,7 @@ var app = new Vue({
             this.current_host.content = v;
         },
         getRemoteHost: function (host) {
-            if (host.where !== 'remote' || !host.url) return;
-            var tpl = [
-                '# REMOTE: ' + host.title,
-                '# URL: ' + host.url,
-                '# UPDATE: ' + util.now()
-            ];
-
-            host.content = '# loading...';
-            this.onCurrentHostChange(host);
-
-            var _this = this;
-            agent.getURL(host.url, {}, function (s) {
-                // success
-                host.content = tpl.concat(['', s]).join('\n');
-                _this.onCurrentHostChange(host);
-                _this.doSave();
-            }, function (xhr, status) {
-                // fail
-                host.content = tpl.concat(['', 'FAIL to get!', status]).join('\n');
-                _this.onCurrentHostChange(host);
-                _this.doSave();
-            });
-
-            this.doSave();
+            refresh.getRemoteHost(this, host);
         },
         toSave: function () {
             if (!this.chkHostTitle() || !this.chkHostUrl()) {
@@ -395,11 +373,13 @@ var app = new Vue({
 
         checkRefresh: function () {
             var _this = this;
-            require('./refresh').checkRefresh(this);
+            var t = 60 * 5 * 1000;
+            //var t = 1000;
+            refresh.checkRefresh(this);
 
             setTimeout(function () {
                 _this.checkRefresh();
-            }, 60 * 5 * 1000);
+            }, t);
         },
 
         log: function (obj) {
