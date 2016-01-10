@@ -23,6 +23,7 @@
 JSExportAs(setUserAgent, - (void) setCustomUserAgent:(NSString *)userAgentString);
 - (void) openURL:(NSString*)url;
 - (void) launch:(NSString *)name;
+- (void) log:(NSString *)msg;
 @property (readonly) NSNumber* idleTime;
 @property (readonly) NSString* applicationPath;
 @property (readonly) NSString* resourcePath;
