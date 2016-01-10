@@ -36,17 +36,37 @@ function checkRefresh(app) {
     });
 
     to_refresh_list.map(function (host) {
-        agent.getURL(host.url, {}, function (c) {
-            host.content = c;
-            host.last_refresh = moment().format('YYYY-MM-DD HH:mm:ss');
-
-            app.onCurrentHostChange(host);
-            app.doSave();
-        });
+        getRemoteHost(app, host);
     });
 }
 exports.checkRefresh = checkRefresh;
 
-function getRemoteHosts(app, host) {
+function getRemoteHost(app, host) {
+    if (host.where !== 'remote' || !host.url) return;
+    var tpl = [
+        '# REMOTE: ' + host.title,
+        '# URL: ' + host.url
+    ];
 
+    host.content = '# loading...';
+    app.onCurrentHostChange(host);
+
+    agent.getURL(host.url, {}, function (s) {
+        // success
+        var now = moment().format('YYYY-MM-DD HH:mm:ss');
+        host.content = tpl.concat(['# UPDATE: ' + now, '', s]).join('\n');
+        host.last_refresh = now;
+        app.onCurrentHostChange(host);
+        app.doSave();
+    }, function (xhr, status) {
+        // fail
+        var now = moment().format('YYYY-MM-DD HH:mm:ss');
+        host.content = tpl.concat(['# UPDATE: ' + now, '', 'FAIL to get!', status]).join('\n');
+        host.last_refresh = now;
+        app.onCurrentHostChange(host);
+        app.doSave();
+    });
+
+    app.doSave();
 }
+exports.getRemoteHost = getRemoteHost;
