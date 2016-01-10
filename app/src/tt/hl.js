@@ -15,26 +15,35 @@
 })(function (CodeMirror) {
     "use strict";
 
+    var keyword = 'k';
+
     CodeMirror.defineMode('host', function () {
         function tokenBase(stream) {
             if (stream.eatSpace()) return null;
 
             var sol = stream.sol();
             var ch = stream.next();
+            var styles = [];
 
+            if (stream.match(keyword)) {
+                console.log('match');
+                //stream.eat(keyword);
+                styles.push('hl');
+                stream.skipTo(0);
+            }
             if (ch === '#') {
                 stream.skipToEnd();
-                return 'comment';
-            }
-            if (!stream.string.match(/^\s*([\d\.]+|[\da-f:\.%lo]+)\s+\w/i)) {
-                return 'error';
-            }
-            if (sol && ch.match(/[\w\.:%]/)) {
+                styles.push('comment');
+            } else if (!stream.string.match(/^\s*([\d\.]+|[\da-f:\.%lo]+)\s+\w/i)) {
+                styles.push('error');
+            } else if (sol && ch.match(/[\w\.:%]/)) {
                 stream.eatWhile(/[\w\.:%]/);
-                return 'ip';
+                styles.push('ip');
             }
 
-            return null;
+            stream.next();
+
+            return styles.length > 0 ? styles.join(' ') : null;
         }
 
         function tokenize(stream, state) {
@@ -52,6 +61,7 @@
         };
     });
 
-    CodeMirror.defineMIME('text/x-sh', 'shell');
+
+    //CodeMirror.defineMIME('text/x-sh', 'shell');
 
 });

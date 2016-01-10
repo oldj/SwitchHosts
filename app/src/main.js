@@ -80,9 +80,11 @@ var app = new Vue({
         edit: function (host) {
             this.is_prompt_show = true;
             this.is_edit_show = true;
-            this.current_edit_host = host;
-            this.add_or_edit = 'edit';
+
             host.where = host.where || 'local';
+            this._current_edit_host = host;
+            this.current_edit_host = util.copyObj(host, true);
+            this.add_or_edit = 'edit';
 
             setTimeout(function () {
                 $('#ipt-host-title').focus()
@@ -171,6 +173,7 @@ var app = new Vue({
             //if (this.hosts.list.indexOf(this.current_edit_host) > -1) {
             if (this.add_or_edit == 'edit') {
                 // edit
+                util.updateObj(this._current_edit_host, this.current_edit_host);
                 this.getRemoteHost(this.current_edit_host);
             } else {
                 // add new
