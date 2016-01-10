@@ -164,6 +164,10 @@ a:hover {
 #pswd-form .body .ln input[type=password] {
   letter-spacing: 8px;
 }
+#edit-form .body .ln .info,
+#pswd-form .body .ln .info {
+  color: #aaa;
+}
 #edit-form .body .ln .inform,
 #pswd-form .body .ln .inform {
   color: #f03;

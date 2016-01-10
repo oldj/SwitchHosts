@@ -31,8 +31,16 @@ var app = new Vue({
             on: true,
             is_editable: false,
             where: 'sys',
-            url: ''
+            url: '',
+            refresh_interval: 24,
+            last_refresh: null
         },
+        refresh_options: [
+            [0, lang.never],
+            [1, '1 ' + lang.hour],
+            [24, '1 ' + lang.day],
+            [24 * 7, '7 ' + lang.days]
+        ],
         inform: {
             title: '',
             url: ''
@@ -182,7 +190,9 @@ var app = new Vue({
                     content: '# ' + this.current_edit_host.title,
                     on: false,
                     where: this.current_edit_host.where,
-                    url: this.current_edit_host.url
+                    url: this.current_edit_host.url,
+                    refresh_interval: this.current_edit_host.refresh_interval,
+                    last_refresh: null
                 };
                 this.hosts.list.push(host);
                 this.selectHost(host);
