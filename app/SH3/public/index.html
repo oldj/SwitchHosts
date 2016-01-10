@@ -27,7 +27,8 @@
 					v-dropzone="sort(hosts.list, $index, $droptag, $dropdata)"
 					:class="{selected:host==current_host}">
 					<!--<i class="switch" @click="switchHost(host)" :class="{'on':host.on}"></i>-->
-					<i class="iconfont switch" @click="switchHost(host)" :class="{'icon-on':host.on, 'icon-off':!host.on}"></i>
+					<i class="iconfont switch" @click="switchHost(host)"
+					   :class="{'icon-on':host.on, 'icon-off':!host.on}"></i>
 					<i class="iconfont icon-doc i-h"></i>
 					<span class="title">{{ host.title }}</span>
 					<i class="iconfont icon-edit btn-edit" @click="edit(host)"></i>
@@ -43,11 +44,14 @@
 					<a href="#" @click="add()" title="{{ lang.add_host }}"><i class="iconfont icon-add-s"></i></a>
 				</li>
 				<li class="right">
-					<a href="#" @click="tmpClean()" v-cloak v-if="could_tmp_clean_on" title="{{ lang.tmp_clean }}"><i class="iconfont icon-switchon"></i></a>
-					<a href="#" @click="tmpRecover()" v-cloak v-if="!could_tmp_clean_on" title="{{ lang.tmp_recover }}"><i class="iconfont icon-switchoff"></i></a>
+					<a href="#" @click="tmpClean()" v-cloak v-if="could_tmp_clean_on" title="{{ lang.tmp_clean }}"><i
+							class="iconfont icon-switchon"></i></a>
+					<a href="#" @click="tmpRecover()" v-cloak v-if="!could_tmp_clean_on" title="{{ lang.tmp_recover }}"><i
+							class="iconfont icon-switchoff"></i></a>
 				</li>
 				<li class="right">
-					<a href="#" id="btn-toggle-search" @click="toggleSearch()" :class="{active:is_search_bar_show}"><i class="iconfont icon-search"></i></a>
+					<a href="#" id="btn-toggle-search" @click="toggleSearch()" :class="{active:is_search_bar_show}"><i
+							class="iconfont icon-search"></i></a>
 				</li>
 			</ul>
 		</div>
@@ -84,7 +88,7 @@
 			</div>
 			<div class="ln" v-if="current_edit_host.where=='remote'">
 				<label for="ipt-host-url">{{ lang.url }}</label>
-				<input type="text" id="ipt-host-url" name="host_title"
+				<input type="text" id="ipt-host-url" name="host_url"
 					   placeholder="http://"
 					   maxlength="1024"
 					   v-model="current_edit_host.url"
@@ -94,8 +98,18 @@
 				>
 				<div class="inform">{{ inform.url }}</div>
 			</div>
+			<div class="ln" v-if="current_edit_host.where=='remote'">
+				<label for="ipt-refresh-interval">{{ lang.auto_refresh }}</label>
+				<select name="host_refresh_interval" id="ipt-refresh-interval" v-model="current_edit_host.refresh_interval">
+					<option value="{{ opt[0] }}" v-for="opt in refresh_options">{{ opt[1] }}</option>
+				</select>
+				<span class="info">
+					{{ lang.last_refresh }}: {{ _current_edit_host.last_refresh || 'N/A' }}
+				</span>
+			</div>
 			<div class="ln" v-if="add_or_edit=='edit'">
-				<a href="#" class="delete-host" @click="delHost(current_edit_host)"><i class="iconfont icon-delete"></i> {{ lang.del_host }}</a>
+				<a href="#" class="delete-host" @click="delHost(current_edit_host)"><i class="iconfont icon-delete"></i>
+					{{ lang.del_host }}</a>
 			</div>
 		</div>
 		<div class="foot">

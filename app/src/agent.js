@@ -194,6 +194,7 @@ function setPreference(key, value) {
 }
 
 function getURL(url, data, success, fail) {
+    data = data || {};
     if (!data._r) {
         data._r = Math.random();
     }
@@ -274,7 +275,13 @@ function afterSetHosts(sudo_pswd, callback) {
     task.launch();
 }
 
+function log(msg) {
+    console.log(msg);
+    MacGap.log(msg.toString());
+}
+
 module.exports = {
+    log: log,
     readFile: readFile,
     writeFile: writeFile,
     existPath: existPath,
