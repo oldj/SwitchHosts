@@ -130,7 +130,7 @@ a:hover {
   left: 50%;
   background: #fff;
   z-index: 100;
-  width: 400px;
+  width: 420px;
   margin-left: -200px;
 }
 #edit-form h2,
@@ -156,7 +156,7 @@ a:hover {
 #pswd-form .body .ln input[type=text],
 #edit-form .body .ln input[type=password],
 #pswd-form .body .ln input[type=password] {
-  width: 200px;
+  width: 240px;
   padding: 6px 10px;
   outline: none;
 }

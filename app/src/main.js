@@ -37,6 +37,7 @@ var app = new Vue({
         },
         refresh_options: [
             [0, lang.never],
+            //[0.005, '0.005 ' + lang.hour],
             [1, '1 ' + lang.hour],
             [24, '1 ' + lang.day],
             [24 * 7, '7 ' + lang.days]
@@ -392,8 +393,17 @@ var app = new Vue({
                 item.content.indexOf(this.search_keyword) > -1;
         },
 
+        checkRefresh: function () {
+            var _this = this;
+            require('./refresh').checkRefresh(this);
+
+            setTimeout(function () {
+                _this.checkRefresh();
+            }, 60 * 5 * 1000);
+        },
+
         log: function (obj) {
-            console.log(obj);
+            agent.log(obj);
             return 1;
         }
     }
@@ -406,3 +416,7 @@ tray_obj.updateTrayMenu(app.hosts);
 
 var ui = require('./ui');
 ui.init(app);
+
+setTimeout(function () {
+    app.checkRefresh();
+}, 1000);
