@@ -10,61 +10,82 @@
 <body>
 
 <div id="wrapper">
-	
+	<div id="lang">
+		<ul>
+			<li><a href="#cn" id="lang-cn" title="简体中文">cn</a></li>
+			<li><a href="#en" id="lang-en" title="English">en</a></li>
+		</ul>
+	</div>
+
 	<div id="head">
 		<div id="logo">
 			<img src="images/logo_with_title.png" alt="logo">
 		</div>
 		<div id="intro">
-			<p>SwitchHosts! 是一个管理、切换多个 hosts 方案的工具。</p>
-			<p>它是一个免费开源软件。</p>
+			<p class="lang-cn">SwitchHosts! 是一个管理、切换多个 hosts 方案的工具。</p>
+			<p class="lang-cn">它是一个免费开源软件。</p>
+
+			<p class="lang-en">SwitchHosts! is an App for hosts management & switch.</p>
+			<p class="lang-en">It is a free and opensource software.</p>
 		</div>
 	</div>
-	
+
 	<div id="capture">
 		<img src="images/capture.png" alt="capture">
 	</div>
-	
+
 	<div id="detail">
 		<div id="download">
-			<a href="https://github.com/oldj/SwitchHosts/releases" target="_blank" id="btn-download">下载 / Download</a>
+			<a href="https://github.com/oldj/SwitchHosts/releases" target="_blank" id="btn-download">
+				<span class="lang-cn">下载</span>
+				<span class="lang-en">Download</span>
+			</a>
 			<p id="alternative-download">
-				其他下载地址：<a href="http://pan.baidu.com/s/1inED1" target="_blank">百度云盘</a>、<a href="http://yunpan.alibaba-inc.com/share/link/32V9kBgm" target="_blank">阿里云盘</a>
+				<span class="lang-cn">其他下载地址：</span>
+				<span class="lang-en">Alternative download: </span>
+				<a href="http://pan.baidu.com/s/1inED1" target="_blank">
+					<span class="lang-cn">百度云盘</span>
+					<span class="lang-en">Biadu Yun</span>
+				</a>、
+				<a href="http://yunpan.alibaba-inc.com/share/link/32V9kBgm" target="_blank">
+					<span class="lang-cn">阿里云盘</span>
+					<span class="lang-en">Ali Yunpan</span>
+				</a>
 			</p>
 		</div>
 
 		<div id="features">
-			<h2>功能特性<span>Features</span></h2>
+			<h2><span class="lang-cn">功能特性</span><span class="lang-en">Features</span></h2>
 
 			<ul>
 				<li>
 					<img src="images/feature_1.png" alt="feature 1">
-					<p>语法高亮</p>
+					<p class="lang-cn">语法高亮</p>
 					<p class="en">syntax highlight</p>
 				</li>
 				<li>
 					<img src="images/feature_2.png" alt="feature 2">
-					<p>方案允许多选</p>
+					<p class="lang-cn">方案允许多选</p>
 					<p class="en">multiple hosts</p>
 				</li>
 				<li>
 					<img src="images/feature_3.png" alt="feature 3">
-					<p>点击行号快速切换注释</p>
+					<p class="lang-cn">点击行号快速切换注释</p>
 					<p class="en">click line number to switch comment</p>
 				</li>
 				<li>
 					<img src="images/feature_4.png" alt="feature 4">
-					<p>系统菜单栏快速切换</p>
+					<p class="lang-cn">系统菜单栏快速切换</p>
 					<p class="en">quick switch in status menu</p>
 				</li>
 				<li>
 					<img src="images/feature_5.png" alt="feature 5">
-					<p>本地/远程方案</p>
+					<p class="lang-cn">本地/远程方案</p>
 					<p class="en">local/remote hosts support</p>
 				</li>
 				<li>
 					<img src="images/feature_6.png" alt="feature 6">
-					<p>方案导入/导出</p>
+					<p class="lang-cn">方案导入/导出</p>
 					<p class="en">import/export your rules</p>
 				</li>
 			</ul>
@@ -82,6 +103,22 @@
 	</div>
 </div>
 
+<script>
+	(function () {
+		var el_wrapper = document.getElementById('wrapper');
+		document.getElementById('lang-cn').onclick = function () {
+			el_wrapper.className = 'lang-cn';
+		};
+		document.getElementById('lang-en').onclick = function () {
+			el_wrapper.className = 'lang-en';
+		};
+
+		var h = (location.hash || '').replace(/#/, '');
+		if (h === 'cn' || h === 'en') {
+			el_wrapper.className = 'lang-' + h;
+		}
+	})();
+</script>
 <script type="text/javascript">
 	var _gaq = _gaq || [];
 	_gaq.push(['_setAccount', 'UA-307069-20']);

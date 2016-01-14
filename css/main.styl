@@ -25,6 +25,51 @@ a:hover
 
 #wrapper
   margin 0 auto
+  border-top solid 2px #666
+
+#wrapper .lang-en
+  display none
+#wrapper.lang-cn
+  p.lang-cn
+    display block
+  span.lang-cn
+    display inline
+  .lang-en
+    display none
+#wrapper.lang-en
+  .lang-cn
+    display none
+  p.lang-en
+    display block
+  span.lang-en
+    display inline
+
+#lang
+  width 800px
+  margin 0 auto
+
+  ul
+    float right
+    margin 0
+    padding 2px 10px 4px 10px
+    background #666
+    border-radius 0 0 4px 4px
+    list-style none
+
+  li
+    margin 0
+    float left
+    padding 0 5px
+    a
+      display block
+      width 24px
+      height 24px
+      text-indent -4em
+      overflow hidden
+      background transparent url(img/cn.png) no-repeat 50% 50%
+
+    a#lang-en
+      background-image url(img/us.png)
 
 #head
   text-align center
@@ -88,8 +133,8 @@ a:hover
     line-height 30px
 
     span
-      color color_grey
-      padding-left 0.5em
+      //color color_grey
+      //padding-left 0.5em
       font-weight normal
 
 
@@ -136,3 +181,14 @@ a:hover
 
     a:hover
       color color_hl
+
+@media only screen and (-Webkit-min-device-pixel-ratio: 1.5),
+only screen and (-moz-min-device-pixel-ratio: 1.5),
+only screen and (-o-min-device-pixel-ratio: 3/2),
+only screen and (min-device-pixel-ratio: 1.5)
+  #lang
+    ul li a
+      background-image url(img/cn@2x.png)
+      background-size 24px 24px
+    ul li a#lang-en
+      background-image url(img/us@2x.png)
