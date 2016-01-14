@@ -38,7 +38,8 @@ a:hover {
   text-align: center;
 }
 #capture img {
-  width: 802px;
+  width: 800px;
+  border: solid 1px #979797;
 }
 #detail {
   background: #f5f5f5;
@@ -106,6 +107,7 @@ a:hover {
 }
 #features ul li img {
   width: 258px;
+  height: 130px;
 }
 #features ul li p {
   text-align: center;
