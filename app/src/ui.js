@@ -7,7 +7,7 @@
 
 var CodeMirror = require('codemirror');
 require('codemirror/mode/shell/shell');
-require('./cm_hl');
+require('codemirror/addon/mode/overlay');
 
 var my_codemirror;
 
@@ -21,6 +21,8 @@ function resize() {
 
 function init(app) {
 
+    require('./cm_hl').init(app);
+
     $(document).ready(function () {
         var el_textarea = $('#host-code');
         //el_textarea.css('height', window.innerHeight - 8);
@@ -28,7 +30,7 @@ function init(app) {
         my_codemirror = CodeMirror.fromTextArea(el_textarea[0], {
             lineNumbers: true,
             readOnly: true,
-            mode: 'host'
+            mode: 'hl'
         });
         app.codemirror = my_codemirror;
 

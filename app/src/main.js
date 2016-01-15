@@ -70,6 +70,11 @@ var app = new Vue({
             if (host.on) {
                 this.caculateHosts(host);
             }
+        },
+        'search_keyword': function () {
+            this.log('refresh2');
+            //this.codemirror.refresh();
+            this.onCurrentHostChange();
         }
     },
     methods: {
@@ -365,6 +370,7 @@ var app = new Vue({
         },
 
         mySearch: function (item) {
+            this.search_regexp = null;
             var kw = this.search_keyword;
             if (!kw) return true;
 
@@ -393,6 +399,7 @@ var app = new Vue({
                 } catch (e) {}
             }
             if (r && r.test(item.content)) {
+                this.search_regexp = r;
                 return true;
             }
 
