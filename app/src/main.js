@@ -365,10 +365,24 @@ var app = new Vue({
         },
 
         mySearch: function (item) {
-            if (!this.search_keyword) return true;
+            var kw = this.search_keyword;
+            if (!kw) return true;
 
-            return item.title.indexOf(this.search_keyword) > -1 ||
-                item.content.indexOf(this.search_keyword) > -1;
+            if (item.title.indexOf(kw) > -1 ||
+                item.content.indexOf(kw) > -1) {
+                return true;
+            }
+
+            // 模糊搜索
+            var r;
+            if (kw.indexOf('*') > -1) {
+                r = new RegExp(kw.replace(/\*/g, '.*'));
+                if (r.test(item.content)) {
+                    return true;
+                }
+            }
+
+            return false;
         },
 
         checkRefresh: function () {
