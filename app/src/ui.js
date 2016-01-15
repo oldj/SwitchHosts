@@ -7,7 +7,7 @@
 
 var CodeMirror = require('codemirror');
 require('codemirror/mode/shell/shell');
-require('./cm_hl');
+//require('codemirror/addon/mode/overlay');
 
 var my_codemirror;
 
@@ -20,6 +20,8 @@ function resize() {
 }
 
 function init(app) {
+
+    require('./cm_hl').init(app);
 
     $(document).ready(function () {
         var el_textarea = $('#host-code');

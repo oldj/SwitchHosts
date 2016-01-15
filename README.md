@@ -32,6 +32,7 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下，其中 `~/.SwitchHo
 
 ### v3.1
 
+ - 2016-01-15 搜索时增加模糊搜索支持（eg. `go*le` matches `google`）及正则支持（eg. `/go.*le` matches `google`）
  - 2016-01-10 远程方案可以设置自动更新时间。
  - 2015-12-26 实现 Tray 菜单切换、Dock 图标隐藏、方案导入导出等功能。
  - 2015-12-20 从 Electron 切换至 MacGap 。
