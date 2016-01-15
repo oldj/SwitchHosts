@@ -16,6 +16,11 @@ exports.init = function (app) {
                 var ch = stream.next();
 
                 var s = stream.string;
+                var kw = app.search_keyword;
+                var r = app.search_regexp;
+                if ((kw && s.indexOf(kw) > -1) || (r && s.match(r))) {
+                    return 'hl';
+                }
 
                 if (ch === '#') {
                     stream.skipToEnd();
@@ -46,22 +51,6 @@ exports.init = function (app) {
                 },
                 lineComment: '#'
             };
-        });
-
-        CodeMirror.defineMode('hl', function (config, parserConfig) {
-            var searchOverlay = {
-                token: function (stream, state) {
-                    var kw = app.search_keyword;
-                    if (kw && stream.match(kw)) {
-                        return 'hl';
-                    }
-
-                    while (stream.next() != null && !stream.match(kw, false)) {
-                    }
-                    return null;
-                }
-            };
-            return CodeMirror.overlayMode(CodeMirror.getMode(config, parserConfig.backdrop || 'host'), searchOverlay);
         });
 
         //CodeMirror.defineMIME('text/x-host', 'host');
