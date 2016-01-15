@@ -72,7 +72,33 @@ var app = new Vue({
             }
         },
         'search_keyword': function () {
-            this.log('refresh2');
+            this.log('refresh3');
+            var kw = this.search_keyword;
+            this.search_regexp = null;
+
+            // 模糊搜索
+            var r;
+            var m;
+            var flag = [];
+            if ((m = kw.match(/^\/([^\/]+)\/?(\w*)$/))) {
+                if (m[2].indexOf('i') > -1) {
+                    flag.push('i');
+                }
+                if (m[2].indexOf('g') > -1) {
+                    flag.push('g');
+                }
+                try {
+                    r = new RegExp(m[1], flag.join(''));
+                } catch (e) {}
+            } else if (kw.indexOf('*') > -1) {
+                try {
+                    r = new RegExp(kw.replace(/\*/g, '.*'), 'ig');
+                } catch (e) {}
+            }
+            this.search_regexp = r;
+            this.log('kw: ' + kw);
+            this.log('r: ' + r);
+
             //this.codemirror.refresh();
             this.onCurrentHostChange();
         }
@@ -370,36 +396,16 @@ var app = new Vue({
         },
 
         mySearch: function (item) {
-            this.search_regexp = null;
             var kw = this.search_keyword;
+            var r = this.search_regexp;
             if (!kw) return true;
 
-            if (item.title.indexOf(kw) > -1 ||
-                item.content.indexOf(kw) > -1) {
+            if (item.title.indexOf(kw) > -1 || item.content.indexOf(kw) > -1) {
                 return true;
             }
 
             // 模糊搜索
-            var r;
-            var m;
-            var flag = [];
-            if ((m = kw.match(/^\/(.+?)\/?(\w*)$/))) {
-                if (m[2].indexOf('i') > -1) {
-                    flag.push('i');
-                }
-                if (m[2].indexOf('g') > -1) {
-                    flag.push('g');
-                }
-                try {
-                    r = new RegExp(m[1], flag.join(''));
-                } catch (e) {}
-            } else if (kw.indexOf('*') > -1) {
-                try {
-                    r = new RegExp(kw.replace(/\*/g, '.*'), 'ig');
-                } catch (e) {}
-            }
             if (r && r.test(item.content)) {
-                this.search_regexp = r;
                 return true;
             }
 

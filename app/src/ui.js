@@ -7,7 +7,7 @@
 
 var CodeMirror = require('codemirror');
 require('codemirror/mode/shell/shell');
-require('codemirror/addon/mode/overlay');
+//require('codemirror/addon/mode/overlay');
 
 var my_codemirror;
 
@@ -30,7 +30,7 @@ function init(app) {
         my_codemirror = CodeMirror.fromTextArea(el_textarea[0], {
             lineNumbers: true,
             readOnly: true,
-            mode: 'hl'
+            mode: 'host'
         });
         app.codemirror = my_codemirror;
 
