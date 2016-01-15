@@ -12,6 +12,7 @@ var util = require('./util');
 var agent = require('./agent');
 var refresh = require('./refresh');
 var lang = require('./lang').getLang(navigator.language);
+var stat = require('./stat');
 var tray_obj;
 
 var app = new Vue({
@@ -255,6 +256,8 @@ var app = new Vue({
                 }
                 _this._to_switch_host = null;
             });
+
+            stat.record('switch');
         },
         updateHost: function () {
             this.doSave();
@@ -441,3 +444,5 @@ ui.init(app);
 setTimeout(function () {
     app.checkRefresh();
 }, 1000);
+
+stat.record('launch');
