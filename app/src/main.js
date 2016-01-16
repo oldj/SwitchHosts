@@ -90,11 +90,13 @@ var app = new Vue({
                 }
                 try {
                     r = new RegExp(m[1], flag.join(''));
-                } catch (e) {}
+                } catch (e) {
+                }
             } else if (kw.indexOf('*') > -1) {
                 try {
                     r = new RegExp(kw.replace(/\*/g, '.*'), 'ig');
-                } catch (e) {}
+                } catch (e) {
+                }
             }
             this.search_regexp = r;
 
@@ -193,7 +195,7 @@ var app = new Vue({
             //if (this.hosts.list.indexOf(this.current_edit_host) > -1) {
             if (this.add_or_edit == 'edit') {
                 // edit
-                //util.updateObj(this._current_edit_host, this.current_edit_host);
+                util.updateObj(this.current_host, this.current_edit_host);
                 this.getRemoteHost(this.current_edit_host);
             } else {
                 // add new
@@ -384,12 +386,22 @@ var app = new Vue({
         },
 
         toggleSearch: function () {
-            var el_bar = $("#search-bar");
+            var el_bar = $('#search-bar');
+            var ipt = el_bar.find('input');
+
+            if (this.is_search_bar_show && !ipt.is(':focus')) {
+                setTimeout(function () {
+                    ui.resize();
+                    ipt.focus();
+                }, 100);
+                return;
+            }
+
             this.is_search_bar_show = !this.is_search_bar_show;
             if (this.is_search_bar_show) {
                 setTimeout(function () {
                     ui.resize();
-                    el_bar.find('input').focus();
+                    ipt.focus();
                 }, 100);
             } else {
                 this.search_keyword = '';
@@ -425,6 +437,18 @@ var app = new Vue({
             setTimeout(function () {
                 _this.checkRefresh();
             }, t);
+        },
+
+        onESC: function () {
+            this.is_edit_show = false;
+            this.is_pswd_show = false;
+            this.is_prompt_show = false;
+            if (this.is_search_bar_show) {
+                this.is_search_bar_show = false;
+                setTimeout(function () {
+                    ui.resize();
+                }, 100);
+            }
         },
 
         log: function (obj) {
