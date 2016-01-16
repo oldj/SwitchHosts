@@ -59,11 +59,10 @@ function getRemoteHost(app, host) {
         app.onCurrentHostChange(host);
         app.doSave();
 
-        app.hosts.list.map(function (h) {
-            if (h === host) {
-                app.log('===');
-            }
-        });
+        if (app.current_host == host) {
+            app.current_edit_host.content = host.content;
+            app.current_edit_host.last_refresh = host.last_refresh;
+        }
 
         if (host.on) {
             setTimeout(function () {
