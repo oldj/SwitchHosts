@@ -104,12 +104,18 @@
 					<option value="{{ opt[0] }}" v-for="opt in refresh_options">{{ opt[1] }}</option>
 				</select>
 				<span class="info">
-					{{ lang.last_refresh }}: {{ _current_edit_host.last_refresh || 'N/A' }}
+					{{ lang.last_refresh }}: {{ current_host.last_refresh || 'N/A' }}
 				</span>
 			</div>
-			<div class="ln" v-if="add_or_edit=='edit'">
-				<a href="#" class="delete-host" @click="delHost(current_edit_host)"><i class="iconfont icon-delete"></i>
-					{{ lang.del_host }}</a>
+			<div class="ln actions" v-if="add_or_edit=='edit'">
+				<a href="#" class="delete-host" @click="delHost(current_edit_host)">
+					<i class="iconfont icon-delete"></i>
+					{{ lang.del_host }}
+				</a>
+				<a href="#" class="refresh-host" @click="refreshHost(current_host)" v-if="current_edit_host.where=='remote'">
+					<i class="iconfont icon-refresh"></i>
+					{{ lang.refresh }}
+				</a>
 			</div>
 		</div>
 		<div class="foot">
