@@ -56,6 +56,12 @@ function init(app) {
             //app.caculateHosts();
         });
 
+        $(document).keydown(function (e) {
+            if (e.which === 27) {
+                app.onESC();
+            }
+        });
+
         resize();
         $(window).resize(resize);
     });
