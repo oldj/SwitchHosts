@@ -58,6 +58,12 @@
 	</div>
 
 	<div id="body">
+		<div class="status">
+			<div class="icons">
+				<i class="iconfont icon-earth" v-if="current_host.where == 'remote'" title="{{ lang.remote_hosts }}"></i>
+				<i class="iconfont icon-lock2" v-if="current_host.is_editable == false" title="{{ lang.readonly }}"></i>
+			</div>
+		</div>
 		<div class="code" :class="{readonly:current_host.is_editable===false}">
 			<textarea id="host-code" v-model="current_host.content" @input="updateHost(current_host)"></textarea>
 		</div>

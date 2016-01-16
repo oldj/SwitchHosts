@@ -127,8 +127,21 @@ unselectable()
   bottom 0
   left (left_width + 1) px
 
-  .code
+  .status
+    position absolute
+    z-index 1000
+    top 0
+    right 0
 
+    .icons
+      opacity 0.5
+      padding 4px 10px
+      background #fff
+
+      i
+        padding-left 4px
+
+  .code
     textarea
       width 98%
       //height 60em
