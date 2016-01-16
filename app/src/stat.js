@@ -35,6 +35,10 @@ function send() {
     };
 }
 
+window.addEventListener('error', function (e) {
+    record('err');
+}, true);
+
 setInterval(function () {
     // 每一段时间自动打点
     record('tick');
