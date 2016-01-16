@@ -172,8 +172,18 @@ a:hover {
 #pswd-form .body .ln .inform {
   color: #f03;
 }
-#edit-form .body .ln .delete-host,
-#pswd-form .body .ln .delete-host {
+#edit-form .body .ln.actions a,
+#pswd-form .body .ln.actions a {
+  display: inline-block;
+  margin-right: 2em;
+  color: #212121;
+}
+#edit-form .body .ln.actions a:hover,
+#pswd-form .body .ln.actions a:hover {
+  color: #09f;
+}
+#edit-form .body .ln.actions a.delete-host,
+#pswd-form .body .ln.actions a.delete-host {
   color: #f03;
 }
 #edit-form .foot,

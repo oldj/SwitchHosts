@@ -50,7 +50,8 @@ var app = new Vue({
         },
         on_after_permission: [],
         could_tmp_clean_on: true,
-        current_edit_host: {},
+        //_current_edit_host: {}, // 指向当前 host 对象
+        current_edit_host: {}, // 当前 host 对象的一个深拷贝
         add_or_edit: '',
         sudo_pswd: ''
     },
@@ -73,7 +74,6 @@ var app = new Vue({
             }
         },
         'search_keyword': function () {
-            this.log('refresh3');
             var kw = this.search_keyword;
             this.search_regexp = null;
 
@@ -97,8 +97,6 @@ var app = new Vue({
                 } catch (e) {}
             }
             this.search_regexp = r;
-            this.log('kw: ' + kw);
-            this.log('r: ' + r);
 
             //this.codemirror.refresh();
             this.onCurrentHostChange();
@@ -124,7 +122,7 @@ var app = new Vue({
             this.is_edit_show = true;
 
             host.where = host.where || 'local';
-            this._current_edit_host = host;
+            //this._current_edit_host = host;
             this.current_edit_host = util.copyObj(host, true);
             this.add_or_edit = 'edit';
 
@@ -183,6 +181,9 @@ var app = new Vue({
         getRemoteHost: function (host) {
             refresh.getRemoteHost(this, host);
         },
+        refreshHost: function (host) {
+            this.getRemoteHost(host);
+        },
         toSave: function () {
             if (!this.chkHostTitle() || !this.chkHostUrl()) {
                 return;
@@ -192,7 +193,7 @@ var app = new Vue({
             //if (this.hosts.list.indexOf(this.current_edit_host) > -1) {
             if (this.add_or_edit == 'edit') {
                 // edit
-                util.updateObj(this._current_edit_host, this.current_edit_host);
+                //util.updateObj(this._current_edit_host, this.current_edit_host);
                 this.getRemoteHost(this.current_edit_host);
             } else {
                 // add new

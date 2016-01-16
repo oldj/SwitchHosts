@@ -52,11 +52,13 @@ gulp.task('zip', function () {
 });
 
 gulp.task('ver', function () {
+    var fn_config = './app/src/config.js';
     const config = require('./app/src/config');
 
     let c = fs.readFileSync(plist_fn, 'utf-8');
     let m;
     let v;
+    let v2;
 
     m = c.match(/CFBundleShortVersionString[^\d]*?([\d\.]+)/);
     if (!m) {
@@ -73,11 +75,16 @@ gulp.task('ver', function () {
         return;
     }
     v = parseInt(m[1]);
-    console.log(`version: ${v} -> ${v + 1}`);
-    c = c.replace(/(CFBundleVersion[^\d]*?)(\d+)/, `$1${v + 1}`);
+    v2 = v + 1;
+    console.log(`version: ${v} -> ${v2}`);
+    c = c.replace(/(CFBundleVersion[^\d]*?)(\d+)/, `$1${v2}`);
 
     //console.log(c);
     fs.writeFileSync(plist_fn, c, 'utf-8');
+
+    c = fs.readFileSync(fn_config, 'utf-8');
+    c = c.replace(/(bundle_version:\s*)(\d+)/, `$1${v2}`);
+    fs.writeFileSync(fn_config, c, 'utf-8');
 });
 
 gulp.task('js', ['ver'], function () {

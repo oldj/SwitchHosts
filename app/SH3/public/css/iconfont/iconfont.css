@@ -19,9 +19,10 @@
 .icon-icon:before { content: "\e600"; }
 .icon-warnfill:before { content: "\e607"; }
 .icon-warn:before { content: "\e608"; }
-.icon-shuaxin1:before { content: "\e616"; }
+.icon-refresh:before { content: "\e616"; }
 .icon-ok:before { content: "\e604"; }
 .icon-h:before { content: "\e617"; }
+.icon-lock:before { content: "\e61d"; }
 .icon-off:before { content: "\e613"; }
 .icon-on:before { content: "\e614"; }
 .icon-search:before { content: "\e61c"; }
@@ -35,6 +36,7 @@
 .icon-add:before { content: "\e60c"; }
 .icon-folder:before { content: "\e618"; }
 .icon-files:before { content: "\e619"; }
+.icon-lock2:before { content: "\e61e"; }
 .icon-timescircle:before { content: "\e60e"; }
 .icon-earth:before { content: "\e61a"; }
 .icon-move:before { content: "\e60f"; }
