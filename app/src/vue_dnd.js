@@ -1,5 +1,11 @@
 'use strict';
 
+var app;
+
+exports.init = function (_app) {
+    app = _app;
+};
+
 exports.install = function (Vue, options) {
     var dropTo = '';
     var _ = Vue.util;
