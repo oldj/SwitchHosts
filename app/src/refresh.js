@@ -63,6 +63,9 @@ function getRemoteHost(app, host) {
         var now = moment().format('YYYY-MM-DD HH:mm:ss');
         host.content = tpl.concat(['# UPDATE: ' + now, '', 'FAIL to get!', status]).join('\n');
         host.last_refresh = now;
+        if (host == app.current_host) {
+            app.current_edit_host.last_refresh = now;
+        }
         app.onCurrentHostChange(host);
         app.doSave();
     });

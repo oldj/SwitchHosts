@@ -8,7 +8,8 @@
 var url = 'http://lab.oldj.net/s.gif';
 var queue = [];
 var session_id = (new Date()).getTime() + ':' + Math.random();
-var v = require('./config').VERSION;
+var config = require('./config');
+var v = [config.VERSION, config.bundle_version].join('.');
 
 function record(action) {
     queue.push(action);

@@ -39,7 +39,7 @@ var app = new Vue({
         },
         refresh_options: [
             [0, lang.never],
-            //[0.005, '0.005 ' + lang.hour],
+            [0.005, '0.005 ' + lang.hour],
             [1, '1 ' + lang.hour],
             [24, '1 ' + lang.day],
             [24 * 7, '7 ' + lang.days]
@@ -50,7 +50,8 @@ var app = new Vue({
         },
         on_after_permission: [],
         could_tmp_clean_on: true,
-        current_edit_host: {},
+        //_current_edit_host: {}, // 指向当前 host 对象
+        current_edit_host: {}, // 当前 host 对象的一个深拷贝
         add_or_edit: '',
         sudo_pswd: ''
     },
@@ -124,7 +125,8 @@ var app = new Vue({
             this.is_edit_show = true;
 
             host.where = host.where || 'local';
-            this._current_edit_host = host;
+            this.log('edit ' + host.title + ', ' + host.last_refresh);
+            //this._current_edit_host = host;
             this.current_edit_host = util.copyObj(host, true);
             this.add_or_edit = 'edit';
 
@@ -183,6 +185,9 @@ var app = new Vue({
         getRemoteHost: function (host) {
             refresh.getRemoteHost(this, host);
         },
+        refreshHost: function (host) {
+            this.getRemoteHost(host);
+        },
         toSave: function () {
             if (!this.chkHostTitle() || !this.chkHostUrl()) {
                 return;
@@ -192,7 +197,7 @@ var app = new Vue({
             //if (this.hosts.list.indexOf(this.current_edit_host) > -1) {
             if (this.add_or_edit == 'edit') {
                 // edit
-                util.updateObj(this._current_edit_host, this.current_edit_host);
+                //util.updateObj(this._current_edit_host, this.current_edit_host);
                 this.getRemoteHost(this.current_edit_host);
             } else {
                 // add new
@@ -417,8 +422,8 @@ var app = new Vue({
 
         checkRefresh: function () {
             var _this = this;
-            var t = 60 * 5 * 1000;
-            //var t = 1000;
+            //var t = 60 * 5 * 1000;
+            var t = 1000;
             refresh.checkRefresh(this);
 
             setTimeout(function () {
@@ -442,6 +447,7 @@ var ui = require('./ui');
 ui.init(app);
 
 setTimeout(function () {
+    app.log('ccc');
     app.checkRefresh();
 }, 1000);
 

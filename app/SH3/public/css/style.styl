@@ -4,6 +4,7 @@ bg_left=#373d47
 bd_color=bg_left
 bg_prompt=#f5f5f5
 left_width=240
+color_hover=#09f
 color_on=#af9
 color_off=font_color_left
 color_danger=#f03
@@ -194,8 +195,18 @@ unselectable()
       .inform
         color color_danger
 
-      .delete-host
+    .ln.actions
+      a
+        display inline-block
+        margin-right 2em
+        color font_color
+
+      a:hover
+        color color_hover
+
+      a.delete-host
         color color_danger
+
 
   .foot
     background bg_prompt
