@@ -39,7 +39,7 @@ var app = new Vue({
         },
         refresh_options: [
             [0, lang.never],
-            [0.005, '0.005 ' + lang.hour],
+            //[0.005, '0.005 ' + lang.hour],
             [1, '1 ' + lang.hour],
             [24, '1 ' + lang.day],
             [24 * 7, '7 ' + lang.days]
@@ -74,7 +74,6 @@ var app = new Vue({
             }
         },
         'search_keyword': function () {
-            this.log('refresh3');
             var kw = this.search_keyword;
             this.search_regexp = null;
 
@@ -98,8 +97,6 @@ var app = new Vue({
                 } catch (e) {}
             }
             this.search_regexp = r;
-            this.log('kw: ' + kw);
-            this.log('r: ' + r);
 
             //this.codemirror.refresh();
             this.onCurrentHostChange();
@@ -125,7 +122,6 @@ var app = new Vue({
             this.is_edit_show = true;
 
             host.where = host.where || 'local';
-            this.log('edit ' + host.title + ', ' + host.last_refresh);
             //this._current_edit_host = host;
             this.current_edit_host = util.copyObj(host, true);
             this.add_or_edit = 'edit';
@@ -422,8 +418,8 @@ var app = new Vue({
 
         checkRefresh: function () {
             var _this = this;
-            //var t = 60 * 5 * 1000;
-            var t = 1000;
+            var t = 60 * 5 * 1000;
+            //var t = 1000;
             refresh.checkRefresh(this);
 
             setTimeout(function () {
@@ -447,7 +443,6 @@ var ui = require('./ui');
 ui.init(app);
 
 setTimeout(function () {
-    app.log('ccc');
     app.checkRefresh();
 }, 1000);
 
