@@ -10,9 +10,10 @@ var queue = [];
 var session_id = (new Date()).getTime() + ':' + Math.random();
 var v = require('./config').VERSION;
 
-exports.record = function (action) {
+function record(action) {
     queue.push(action);
-};
+}
+exports.record = record;
 
 function send() {
     if (queue.length === 0) {
@@ -20,8 +21,8 @@ function send() {
     }
 
     var src = url + '?app=sh3&action=' + queue.splice(0).join(',')
-        + '&v=' + v
-        + '&sid=' + session_id
+        + '&v=' + encodeURIComponent(v)
+        + '&sid=' + encodeURIComponent(session_id)
         + '&_r=' + Math.random();
     var id = ('_rnd_img_' + Math.random()).replace('.', '');
     var img = new Image();
@@ -32,6 +33,11 @@ function send() {
         window[id] = null;
     };
 }
+
+setInterval(function () {
+    // 每一段时间自动打点
+    record('tick');
+}, 60 * 1000 * 42);
 
 setInterval(function () {
     send();
