@@ -58,6 +58,17 @@ function getRemoteHost(app, host) {
         host.last_refresh = now;
         app.onCurrentHostChange(host);
         app.doSave();
+
+        if (app.current_host == host) {
+            app.current_edit_host.content = host.content;
+            app.current_edit_host.last_refresh = host.last_refresh;
+        }
+
+        if (host.on) {
+            setTimeout(function () {
+                app.caculateHosts(host);
+            }, 100);
+        }
     }, function (xhr, status) {
         // fail
         var now = moment().format('YYYY-MM-DD HH:mm:ss');

@@ -7,7 +7,8 @@
 
 var config = require('./config');
 //Vue.config.debug = true;
-Vue.use(require('./vue_dnd'));
+var dnd = require('./vue_dnd');
+Vue.use(dnd);
 var util = require('./util');
 var agent = require('./agent');
 var refresh = require('./refresh');
@@ -39,7 +40,7 @@ var app = new Vue({
         },
         refresh_options: [
             [0, lang.never],
-            //[0.005, '0.005 ' + lang.hour],
+            //[0.001, 'for-test'],
             [1, '1 ' + lang.hour],
             [24, '1 ' + lang.day],
             [24 * 7, '7 ' + lang.days]
@@ -279,12 +280,20 @@ var app = new Vue({
             }
 
             var i = this.hosts.list.indexOf(host);
+            var next_host;
             if (i > -1) {
                 //host.on = false;
                 this.hosts.list.splice(i, 1);
                 this.current_edit_host = {};
                 this.closePrompt();
                 this.doSave();
+
+                next_host = this.hosts.list[i] || this.hosts.list[i - 1];
+                if (next_host) {
+                    this.selectHost(next_host);
+                } else {
+                    this.showSysHost();
+                }
             }
         },
         caculateHosts: function (host, callback) {
@@ -301,7 +310,7 @@ var app = new Vue({
             s_hosts = '# SwitchHosts!\n' + s_hosts;
             agent.setSysHosts(s_hosts, this.sudo_pswd, function (err) {
                 if (err) {
-                    console.log(err);
+                    //_this.log(err);
                     // get permission
                     _this.askForPermission(function () {
                         _this.caculateHosts(host, callback)
@@ -465,6 +474,7 @@ tray_obj.updateTrayMenu(app.hosts);
 
 var ui = require('./ui');
 ui.init(app);
+dnd.init(app);
 
 setTimeout(function () {
     app.checkRefresh();
