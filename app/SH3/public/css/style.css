@@ -104,6 +104,20 @@ a:hover {
   bottom: 0;
   left: 241px;
 }
+#body .status {
+  position: absolute;
+  z-index: 1000;
+  top: 0;
+  right: 0;
+}
+#body .status .icons {
+  opacity: 0.5;
+  padding: 4px 10px;
+  background: #fff;
+}
+#body .status .icons i {
+  padding-left: 4px;
+}
 #body .code textarea {
   width: 98%;
   line-height: 20px;
