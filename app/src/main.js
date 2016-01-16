@@ -7,7 +7,8 @@
 
 var config = require('./config');
 //Vue.config.debug = true;
-Vue.use(require('./vue_dnd'));
+var dnd = require('./vue_dnd');
+Vue.use(dnd);
 var util = require('./util');
 var agent = require('./agent');
 var refresh = require('./refresh');
@@ -220,7 +221,6 @@ var app = new Vue({
             clearTimeout(this._t_save);
             var _this = this;
             this._t_save = setTimeout(function () {
-                app.log('doSave setData');
                 agent.setData(_this.hosts);
                 tray_obj && tray_obj.updateTrayMenu(_this.hosts);
             }, now ? 0 : 100);
@@ -474,6 +474,7 @@ tray_obj.updateTrayMenu(app.hosts);
 
 var ui = require('./ui');
 ui.init(app);
+dnd.init(app);
 
 setTimeout(function () {
     app.checkRefresh();
