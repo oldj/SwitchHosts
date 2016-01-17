@@ -116,9 +116,16 @@
 		};
 
 		var h = (location.hash || '').replace(/#/, '');
-		if (h === 'cn' || h === 'en') {
-			el_wrapper.className = 'lang-' + h;
+		var nav_lang;
+		if (h != 'cn' && h != 'en') {
+			nav_lang = (navigator.browserLanguage ? navigator.browserLanguage : navigator.language) || '';
+			if (nav_lang.indexOf('zh') > 0) {
+				h = 'cn';
+			} else {
+				h = 'en';
+			}
 		}
+		el_wrapper.className = 'lang-' + h;
 	})();
 </script>
 <script type="text/javascript">
