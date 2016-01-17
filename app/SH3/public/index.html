@@ -114,11 +114,11 @@
 				</span>
 			</div>
 			<div class="ln actions" v-if="add_or_edit=='edit'">
-				<a href="#" class="delete-host" @click="delHost(current_host)">
+				<a href="#" class="delete-host" @click="delHosts(current_host)">
 					<i class="iconfont icon-delete"></i>
 					{{ lang.del_host }}
 				</a>
-				<a href="#" class="refresh-host" @click="refreshHost(current_host)" v-if="current_edit_host.where=='remote'">
+				<a href="#" class="refresh-host" @click="refreshHosts(current_host)" v-if="current_edit_host.where=='remote'">
 					<i class="iconfont icon-refresh"></i>
 					{{ lang.refresh }}
 				</a>

@@ -184,7 +184,7 @@ var app = new Vue({
         getRemoteHost: function (host) {
             refresh.getRemoteHost(this, host);
         },
-        refreshHost: function (host) {
+        refreshHosts: function (host) {
             this.getRemoteHost(host);
         },
         toSave: function () {
@@ -274,13 +274,46 @@ var app = new Vue({
                 where: 'sys'
             };
         },
-        delHost: function (host) {
+        getShowHosts: function () {
+            var list = [];
+            this.hosts.list.map(function (item) {
+                if (item._is_show) {
+                    list.push(item);
+                }
+            });
+
+            return list;
+        },
+        previouseHosts: function () {
+            var list = this.getShowHosts();
+            var i = list.indexOf(this.current_host);
+            if (this.current_host.is_sys) {
+                i = list.length;
+            }
+            var to_hosts = list[i - 1];
+            if (to_hosts) {
+                this.selectHost(to_hosts);
+            } else {
+                this.showSysHost();
+            }
+        },
+        nextHosts: function () {
+            var list = this.getShowHosts();
+            var i = list.indexOf(this.current_host);
+            var to_hosts = list[i + 1];
+            if (to_hosts) {
+                this.selectHost(to_hosts);
+            } else {
+                this.showSysHost();
+            }
+        },
+        delHosts: function (host) {
             if (!confirm(this.lang.confirm_del)) {
                 return;
             }
 
             var i = this.hosts.list.indexOf(host);
-            var next_host;
+            var next_hosts;
             if (i > -1) {
                 //host.on = false;
                 this.hosts.list.splice(i, 1);
@@ -288,9 +321,9 @@ var app = new Vue({
                 this.closePrompt();
                 this.doSave();
 
-                next_host = this.hosts.list[i] || this.hosts.list[i - 1];
-                if (next_host) {
-                    this.selectHost(next_host);
+                next_hosts = this.hosts.list[i] || this.hosts.list[i - 1];
+                if (next_hosts) {
+                    this.selectHost(next_hosts);
                 } else {
                     this.showSysHost();
                 }
@@ -423,6 +456,7 @@ var app = new Vue({
         mySearch: function (item) {
             var kw = this.search_keyword;
             var r = this.search_regexp;
+            item._is_show = true;
             if (!kw) return true;
 
             if (item.title.indexOf(kw) > -1 || item.content.indexOf(kw) > -1) {
@@ -434,6 +468,7 @@ var app = new Vue({
                 return true;
             }
 
+            item._is_show = false;
             return false;
         },
 
@@ -453,6 +488,7 @@ var app = new Vue({
             this.is_pswd_show = false;
             this.is_prompt_show = false;
             if (this.is_search_bar_show) {
+                this.search_keyword = '';
                 this.is_search_bar_show = false;
                 setTimeout(function () {
                     ui.resize();
