@@ -159,6 +159,20 @@ function initMenu(app) {
         }, 100);
     };
 
+    // View
+    menu = MacGap.Menu.getItem('View').submenu;
+    menu.getItem('Previous hosts').callback = function () {
+        setTimeout(function () {
+            app.previouseHosts();
+        }, 100);
+    };
+    menu.getItem('Next hosts').callback = function () {
+        setTimeout(function () {
+            app.nextHosts();
+        }, 100);
+    };
+
+    // Dock icon
     if (is_dock_icon_hidden) {
         MacGap.Dock.hideIcon();
     } else {

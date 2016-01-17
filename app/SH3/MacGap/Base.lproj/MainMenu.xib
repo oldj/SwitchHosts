@@ -159,6 +159,13 @@ CA
                                     <action selector="runToolbarCustomizationPalette:" target="-1" id="pQI-g3-MTW"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="7gu-tM-cp2"/>
+                            <menuItem title="Previous hosts" keyEquivalent="" id="8Pb-h9-Bzr">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Next hosts" keyEquivalent="" id="dGY-Ua-09q">
+                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                            </menuItem>
                         </items>
                     </menu>
                 </menuItem>

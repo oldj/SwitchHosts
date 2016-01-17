@@ -163,7 +163,7 @@ const app = new Vue({
                 is_editable: false
             };
         },
-        delHost: function (host) {
+        delHosts: function (host) {
             if (!confirm(this.lang.confirm_del)) {
                 return;
             }
