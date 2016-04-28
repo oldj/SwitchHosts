@@ -42,7 +42,7 @@ function makeBackupHosts() {
         title: 'backup',
         on: true,
         content: getSysHosts()
-    }
+    };
 }
 
 function tryToCreateWorkDir() {
@@ -276,7 +276,8 @@ function afterSetHosts(sudo_pswd, callback) {
 }
 
 function log(msg) {
-    console.log(msg);
+    /*eslint no-console: "error"*/
+    // console.log(msg);
     MacGap.log(msg.toString());
 }
 

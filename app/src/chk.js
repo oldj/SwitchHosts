@@ -3,7 +3,7 @@
  * @blog http://oldj.net
  */
 
-"use strict";
+'use strict';
 
 var config = require('./config');
 var lang = require('./lang').getLang('en');

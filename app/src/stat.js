@@ -35,7 +35,7 @@ function send() {
     };
 }
 
-window.addEventListener('error', function (e) {
+window.addEventListener('error', function () {
     record('err');
 }, true);
 
