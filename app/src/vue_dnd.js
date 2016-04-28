@@ -1,12 +1,12 @@
 'use strict';
 
-var app;
+// var app;
 
-exports.init = function (_app) {
-    app = _app;
+exports.init = function (/*_app*/) {
+    // app = _app;
 };
 
-exports.install = function (Vue, options) {
+exports.install = function (Vue/*, options*/) {
     var dropTo = '';
     var _ = Vue.util;
     Vue.directive('draggable', {
@@ -29,7 +29,7 @@ exports.install = function (Vue, options) {
             _.on(this.el, 'dragstart', this.dragstart);
             _.on(this.el, 'dragend', this.dragend);
         },
-        update: function (value, old) {
+        update: function (value/*, old*/) {
             this.data = value;
         },
         unbind: function () {
@@ -86,7 +86,7 @@ exports.install = function (Vue, options) {
             _.on(this.el, 'dragover', this.dragover);
             _.on(this.el, 'drop', this.drop);
         },
-        update: function (value, old) {
+        update: function (value/*, old*/) {
             var vm = this.vm;
             this.handler = function (tag, data) {
                 vm.$droptag = tag;

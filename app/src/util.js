@@ -14,7 +14,7 @@ function isArray(a) {
     if (typeof Array.isArray == 'function') {
         return Array.isArray(a);
     }
-    return Object.prototype.toString.call(o) === '[object Array]';
+    return Object.prototype.toString.call(a) === '[object Array]';
 }
 exports.isArray = isArray;
 

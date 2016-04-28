@@ -3,7 +3,9 @@
  * @blog http://oldj.net
  */
 
-"use strict";
+'use strict';
+
+/* global Vue */
 
 var config = require('./config');
 //Vue.config.debug = true;
@@ -75,6 +77,7 @@ var app = new Vue({
             }
         },
         'search_keyword': function () {
+            /* eslint no-empty: ["error", { "allowEmptyCatch": true }] */
             var kw = this.search_keyword;
             this.search_regexp = null;
 
@@ -117,7 +120,7 @@ var app = new Vue({
             //this.chkHostTitle();
 
             setTimeout(function () {
-                $('#ipt-host-title').focus()
+                $('#ipt-host-title').focus();
             }, 100);
         },
         edit: function (host) {
@@ -130,7 +133,7 @@ var app = new Vue({
             this.add_or_edit = 'edit';
 
             setTimeout(function () {
-                $('#ipt-host-title').focus()
+                $('#ipt-host-title').focus();
             }, 100);
         },
         chkHostTitle: function () {
@@ -346,7 +349,7 @@ var app = new Vue({
                     //_this.log(err);
                     // get permission
                     _this.askForPermission(function () {
-                        _this.caculateHosts(host, callback)
+                        _this.caculateHosts(host, callback);
                     });
                     return;
                 }
@@ -372,7 +375,7 @@ var app = new Vue({
             callback && this.on_after_permission.push(callback);
 
             setTimeout(function () {
-                $('#ipt-pswd').focus()
+                $('#ipt-pswd').focus();
             }, 100);
             agent.activate();
         },
@@ -381,8 +384,9 @@ var app = new Vue({
             this.closePrompt();
             //this._to_switch_host = null;
 
+            /*eslint no-cond-assign: "error"*/
             var f;
-            while (f = this.on_after_permission.shift()) {
+            while ((f = this.on_after_permission.shift())) {
                 f && f.call(this);
             }
         },
