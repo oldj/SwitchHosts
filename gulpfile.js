@@ -4,21 +4,25 @@
  */
 
 'use strict';
+/*eslint-disable no-console*/
 
 const fs = require('fs');
 const path = require('path');
 const gulp = require('gulp');
-const shell = require("gulp-shell");
-const gulpif = require("gulp-if");
-const uglify = require("gulp-uglify");
-const browserify = require("gulp-browserify");
-const stylus = require("gulp-stylus");
-const args = require("yargs").argv;
+const shell = require('gulp-shell');
+const gulpif = require('gulp-if');
+const uglify = require('gulp-uglify');
+const browserify = require('gulp-browserify');
+const header = require('gulp-header');
+// const stylus = require('gulp-stylus');
+const args = require('yargs').argv;
+const moment = require('moment');
 
 const IS_DEBUG = !!args.debug;
-console.log("IS_DEBUG: ", IS_DEBUG);
-console.log("--------------------");
-const TPL_FILE_INFO = "echo '> (DEBUG " + (IS_DEBUG ? "on" : "off") + ") <%= file.path %>'";
+
+console.log('IS_DEBUG: ', IS_DEBUG);
+console.log('--------------------');
+const TPL_FILE_INFO = 'echo \'> (DEBUG ' + (IS_DEBUG ? 'on' : 'off') + ') <%= file.path %>\'';
 
 const plist_fn = path.join(__dirname, 'app/SH3/MacGap/SwitchHosts!-Info.plist');
 
@@ -52,7 +56,7 @@ gulp.task('zip', function () {
 });
 
 gulp.task('ver', function () {
-    var fn_config = './app/src/config.js';
+    const fn_config = './app/src/config.js';
     const config = require('./app/src/config');
 
     let c = fs.readFileSync(plist_fn, 'utf-8');
@@ -88,6 +92,8 @@ gulp.task('ver', function () {
 });
 
 gulp.task('js', ['ver'], function () {
+    const config = require('./app/src/config');
+    
     gulp.src(['app/src/main.js'])
         .pipe(shell(TPL_FILE_INFO))
         //.pipe(sourcemaps.init())
@@ -100,6 +106,7 @@ gulp.task('js', ['ver'], function () {
                 drop_console: !IS_DEBUG
             }
         })))
+        .pipe(header(`/* ${moment().format('YYYY-MM-DD HH:mm:ss')} v${config.bundle_version} */\n`))
         .pipe(gulp.dest('app/SH3/public/js'))
     ;
 });

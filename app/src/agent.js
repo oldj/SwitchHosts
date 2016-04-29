@@ -252,6 +252,7 @@ function afterSetHosts(sudo_pswd, callback) {
         , 'sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
         , 'sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
         , 'sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+        , 'sudo killall -HUP mDNSResponder'
     ].join('\n');
     //cmd = "$'" + cmd.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
     //alert(cmd);
