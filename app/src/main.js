@@ -435,11 +435,8 @@ var app = new Vue({
             var el_bar = $('#search-bar');
             var ipt = el_bar.find('input');
 
-            if (this.is_search_bar_show && !ipt.is(':focus')) {
-                setTimeout(function () {
-                    ui.resize();
-                    ipt.focus();
-                }, 100);
+            if (this.is_search_bar_show) {
+                this.is_search_bar_show = false;
                 return;
             }
 
