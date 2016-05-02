@@ -18,7 +18,7 @@ var lang = require('./lang').getLang(navigator.language);
 var stat = require('./stat');
 var tray_obj;
 
-require('./component/listItem');
+require('./component/hostList');
 
 var app = new Vue({
     el: '#sh-app',
@@ -247,8 +247,9 @@ var app = new Vue({
         },
         selectHost: function (host) {
             this.current_host = host;
+            this.$broadcast('current-host-change', host);
         },
-        switchHost: function (host) {
+        toggleHost: function (host) {
             if (!host) return;
             this._to_switch_host = host;
             if (!host.is_sys) {
@@ -417,13 +418,6 @@ var app = new Vue({
             this.caculateHosts();
             this.doSave(1);
         },
-        sort: function (list, id, tag, data) {
-            var tmp = list[data.index];
-            list.splice(data.index, 1);
-            list.splice(id, 0, tmp);
-
-            this.doSave(1);
-        },
         move: function (from, to, id, tag, data) {
             var tmp = from[data.index];
             from.splice(data.index, 1);
@@ -457,6 +451,8 @@ var app = new Vue({
         },
 
         mySearch: function (item) {
+            if (!item) return false;
+            
             var kw = this.search_keyword;
             var r = this.search_regexp;
             item._is_show = true;
@@ -505,8 +501,17 @@ var app = new Vue({
         }
     },
     events: {
-        'apply-host': function (host) {
-            this.switchHost(host);
+        'select-host': function (host) {
+            this.selectHost(host);
+        },
+        'toggle-host': function (host) {
+            this.toggleHost(host);
+        },
+        'edit-host-info': function (host) {
+            this.edit(host);
+        },
+        'do-save': function (now) {
+            this.doSave(now);
         }
     }
 });
