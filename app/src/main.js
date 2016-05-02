@@ -18,6 +18,8 @@ var lang = require('./lang').getLang(navigator.language);
 var stat = require('./stat');
 var tray_obj;
 
+require('./component/listItem');
+
 var app = new Vue({
     el: '#sh-app',
     data: {
@@ -500,6 +502,11 @@ var app = new Vue({
         log: function (obj) {
             agent.log(obj);
             return 1;
+        }
+    },
+    events: {
+        'apply-host': function (host) {
+            this.switchHost(host);
         }
     }
 });
