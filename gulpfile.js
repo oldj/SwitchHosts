@@ -15,6 +15,7 @@ const uglify = require('gulp-uglify');
 const browserify = require('gulp-browserify');
 const header = require('gulp-header');
 // const stylus = require('gulp-stylus');
+const babel = require('gulp-babel');
 const args = require('yargs').argv;
 const moment = require('moment');
 
@@ -93,22 +94,29 @@ gulp.task('ver', function () {
 
 gulp.task('js', ['ver'], function () {
     const config = require('./app/src/config');
-    
-    gulp.src(['app/src/main.js'])
-        .pipe(shell(TPL_FILE_INFO))
-        //.pipe(sourcemaps.init())
-        .pipe(browserify({
-            debug: IS_DEBUG
+
+    let s = gulp.src(['app/src/**/*.js'])
+        .pipe(babel({
+            presets: ['es2015']
         }))
-        .pipe(gulpif(!IS_DEBUG, uglify({
-            output: output,
-            compress: {
-                drop_console: !IS_DEBUG
-            }
-        })))
-        .pipe(header(`/* ${moment().format('YYYY-MM-DD HH:mm:ss')} v${config.bundle_version} */\n`))
-        .pipe(gulp.dest('app/SH3/public/js'))
-    ;
+        .pipe(gulp.dest('tmp/'));
+
+    s.on('end', () => {
+        gulp.src(['tmp/main.js'])
+            .pipe(shell(TPL_FILE_INFO))
+            .pipe(browserify({
+                debug: IS_DEBUG
+            }))
+            .pipe(gulpif(!IS_DEBUG, uglify({
+                output: output,
+                compress: {
+                    drop_console: true
+                }
+            })))
+            .pipe(header(`/* ${moment().format('YYYY-MM-DD HH:mm:ss')} v${config.bundle_version} */\n`))
+            .pipe(gulp.dest('app/SH3/public/js'))
+        ;
+    });
 });
 
 gulp.task('default', function () {

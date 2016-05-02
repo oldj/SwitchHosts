@@ -19,6 +19,12 @@
 					<span class="title">{{ lang.sys_host_title }}</span>
 				</li>
 			</ul>
+			<ul>
+				<list-item
+						v-for="host in hosts.list | filterBy mySearch"
+						v-bind:host="host"
+				/>
+			</ul>
 			<ul id="custom-list">
 				<li v-cloak
 					v-for="host in hosts.list | filterBy mySearch"
@@ -152,6 +158,7 @@
 </div>
 <script src="js/jquery.min.js"></script>
 <script src="js/vue.min.js"></script>
+<script src="../../../tmp/g_test.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
