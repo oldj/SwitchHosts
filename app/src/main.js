@@ -8,6 +8,9 @@
 /* global Vue */
 
 var config = require('./config');
+// $-FOR-TEST
+require('./g_test');
+// $-END
 //Vue.config.debug = true;
 var dnd = require('./vue_dnd');
 Vue.use(dnd);
@@ -279,6 +282,7 @@ var app = new Vue({
                 is_editable: false,
                 where: 'sys'
             };
+            this.$broadcast('current-host-change', this.current_host);
         },
         getShowHosts: function () {
             var list = [];

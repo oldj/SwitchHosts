@@ -16,6 +16,7 @@ const browserify = require('gulp-browserify');
 const header = require('gulp-header');
 // const stylus = require('gulp-stylus');
 const babel = require('gulp-babel');
+const replace = require('gulp-replace-task');
 const args = require('yargs').argv;
 const moment = require('moment');
 
@@ -99,6 +100,12 @@ gulp.task('js', ['ver'], function () {
         .pipe(babel({
             presets: ['es2015']
         }))
+        .pipe(gulpif(!IS_DEBUG, replace({
+            patterns: [{
+                match: /\/\/\s*\$-FOR-TEST[\s\S]*?\/\/\s*\$-END/ig,
+                replacement: ''
+            }]
+        })))
         .pipe(gulp.dest('tmp/'));
 
     s.on('end', () => {
