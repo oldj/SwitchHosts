@@ -58,7 +58,7 @@ function initTray(app) {
                 on: !!host.on,
                 index: idx + 2
             }, function () {
-                app.switchHost(host);
+                app.toggleHost(host);
             });
         });
 
