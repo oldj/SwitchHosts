@@ -19,21 +19,7 @@
 					<span class="title">{{ lang.sys_host_title }}</span>
 				</li>
 			</ul>
-			<ul id="custom-list">
-				<li v-cloak
-					v-for="host in hosts.list | filterBy mySearch"
-					@click="selectHost(host)"
-					v-draggable="{index: $index, dragged: 'dragged'}"
-					v-dropzone="sort(hosts.list, $index, $droptag, $dropdata)"
-					:class="{selected:host==current_host}">
-					<!--<i class="switch" @click="switchHost(host)" :class="{'on':host.on}"></i>-->
-					<i class="iconfont switch" @click="switchHost(host)"
-					   :class="{'icon-on':host.on, 'icon-off':!host.on}"></i>
-					<i class="iconfont icon-doc i-h"></i>
-					<span class="title">{{ host.title }}</span>
-					<i class="iconfont icon-edit btn-edit" @click="edit(host)"></i>
-				</li>
-			</ul>
+			<host-list v-bind:host="host" v-bind:hosts="hosts"></host-list>
 		</div>
 		<div class="operations">
 			<div id="search-bar" v-show="is_search_bar_show" v-cloak>
@@ -60,7 +46,8 @@
 	<div id="body">
 		<div class="status">
 			<div class="icons">
-				<i class="iconfont icon-earth" v-if="current_host.where == 'remote'" title="{{ lang.remote_hosts }}"></i>
+				<i class="iconfont icon-earth" v-if="current_host.where == 'remote'"
+				   title="{{ lang.remote_hosts }}"></i>
 				<i class="iconfont icon-lock2" v-if="current_host.is_editable == false" title="{{ lang.readonly }}"></i>
 			</div>
 		</div>
@@ -106,7 +93,8 @@
 			</div>
 			<div class="ln" v-if="current_edit_host.where=='remote'">
 				<label for="ipt-refresh-interval">{{ lang.auto_refresh }}</label>
-				<select name="host_refresh_interval" id="ipt-refresh-interval" v-model="current_edit_host.refresh_interval">
+				<select name="host_refresh_interval" id="ipt-refresh-interval"
+						v-model="current_edit_host.refresh_interval">
 					<option value="{{ opt[0] }}" v-for="opt in refresh_options">{{ opt[1] }}</option>
 				</select>
 				<span class="info">
@@ -118,7 +106,8 @@
 					<i class="iconfont icon-delete"></i>
 					{{ lang.del_host }}
 				</a>
-				<a href="#" class="refresh-host" @click="refreshHosts(current_host)" v-if="current_edit_host.where=='remote'">
+				<a href="#" class="refresh-host" @click="refreshHosts(current_host)"
+				   v-if="current_edit_host.where=='remote'">
 					<i class="iconfont icon-refresh"></i>
 					{{ lang.refresh }}
 				</a>
