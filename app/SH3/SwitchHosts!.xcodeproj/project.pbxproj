@@ -38,7 +38,6 @@
 		22B1CF411937734B00D2C294 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 22B1CF251937734B00D2C294 /* InfoPlist.strings */; };
 		22B1CF421937734B00D2C294 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 22B1CF271937734B00D2C294 /* Images.xcassets */; };
 		22B1CF431937734B00D2C294 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 22B1CF281937734B00D2C294 /* main.m */; };
-		22B1CF441937734B00D2C294 /* SwitchHosts!-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 22B1CF291937734B00D2C294 /* SwitchHosts!-Info.plist */; };
 		22BE36ED193B7F8800D8199F /* Defaults.m in Sources */ = {isa = PBXBuildFile; fileRef = 22BE36EC193B7F8800D8199F /* Defaults.m */; };
 /* End PBXBuildFile section */
 
@@ -314,7 +313,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				22B1CF441937734B00D2C294 /* SwitchHosts!-Info.plist in Resources */,
 				2237E6EF192BAF85001E1393 /* public in Resources */,
 				22B1CF401937734B00D2C294 /* Credits.rtf in Resources */,
 				22B1CF421937734B00D2C294 /* Images.xcassets in Resources */,
