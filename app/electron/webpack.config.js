@@ -9,6 +9,7 @@ const path = require('path');
 
 module.exports = {
     entry: './src/entry.js',
+    devtool: 'source-map',
     output: {
         path: path.join(__dirname, 'build'),
         filename: 'bundle.js'
@@ -22,6 +23,9 @@ module.exports = {
                 test: /\.jsx?$/,
                 exclude: /node_modules/,
                 loaders: ['babel?presets[]=react,presets[]=es2015']
+            }, {
+                test: /\.less$/,
+                loaders: ['style', 'css', 'less']
             }
         ]//,
         // query: {
