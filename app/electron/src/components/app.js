@@ -6,14 +6,19 @@
 'use strict';
 
 import React from 'react';
-import Panel from './panel';
+import Panel from './panel/panel';
+import './app.less';
 
 export default class App extends React.Component {
+    constructor(props) {
+        super(props);
+        console.log(this.props.hosts);
+    }
+
     render() {
         return (
-            <div id="App">
-                app
-                <Panel/>
+            <div id="app">
+                <Panel hosts={this.props.hosts}/>
             </div>
         );
     }
