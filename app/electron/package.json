@@ -1,0 +1,38 @@
+{
+  "name": "SwitchHosts!",
+  "version": "3.2.0",
+  "description": "Switch hosts quickly!",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oldj/SwitchHosts.git"
+  },
+  "keywords": [
+    "SwitchHosts!",
+    "host"
+  ],
+  "author": "oldj",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/oldj/SwitchHosts/issues"
+  },
+  "homepage": "https://oldj.github.io/SwitchHosts/",
+  "dependencies": {
+    "react": "^15.3.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.13.2",
+    "babel-loader": "^6.2.4",
+    "babel-plugin-transform-runtime": "^6.12.0",
+    "babel-preset-es2015": "^6.13.2",
+    "babel-preset-react": "^6.11.1",
+    "electron-prebuilt": "^1.2.0",
+    "react": "^15.3.0",
+    "react-dom": "^15.3.0",
+    "slash": "^1.0.0",
+    "webpack": "^1.13.1"
+  }
+}
