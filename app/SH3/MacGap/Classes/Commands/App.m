@@ -59,7 +59,8 @@
 }
 
 - (void) activate {
-    [NSApp activateIgnoringOtherApps:YES];
+    [[NSRunningApplication currentApplication] activateWithOptions:(NSApplicationActivateAllWindows | NSApplicationActivateIgnoringOtherApps)];
+    [[NSApplication sharedApplication].windows.firstObject makeKeyAndOrderFront:nil];
 }
 
 - (void) hide {
