@@ -15,8 +15,6 @@ src/configs.json
 *.swh
 *.iml
 
-/node_modules
-tmp
 node_modules
 UserInterfaceState.xcuserstate
 xcdebugger
