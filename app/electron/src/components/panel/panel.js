@@ -12,9 +12,11 @@ import './panel.less';
 
 export default class Panel extends React.Component {
     render() {
+        let {current, hosts} = this.props;
+
         return (
             <div id="panel">
-                <List hosts={this.props.hosts}/>
+                <List hosts={hosts} current={current} setCurrent={this.props.setCurrent}/>
                 <Buttons/>
             </div>
         );
