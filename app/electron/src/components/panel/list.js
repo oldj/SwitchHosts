@@ -13,12 +13,29 @@ export default class List extends React.Component {
 
     constructor(props) {
         super(props);
+
+        this.state = {
+            current: this.props.current
+        };
+        console.log(this.props.current);
+    }
+
+    selectOne(host) {
+        this.setState({
+            current: host
+        });
+
+        this.props.setCurrent(host);
     }
 
     customItems() {
         return this.props.hosts.custom.map((item, idx) => {
             return (
-                <ListItem data={item} key={'host-' + idx}/>
+                <ListItem
+                    data={item}
+                    selectOne={this.selectOne.bind(this)}
+                    current={this.state.current}
+                    key={'host-' + idx}/>
             )
         });
     }
@@ -26,7 +43,11 @@ export default class List extends React.Component {
     render() {
         return (
             <div id="list">
-                <ListItem data={this.props.hosts.sys} sys="1"/>
+                <ListItem
+                    data={this.props.hosts.sys}
+                    selectOne={this.selectOne.bind(this)}
+                    current={this.state.current}
+                    sys="1"/>
                 {this.customItems()}
             </div>
         );
