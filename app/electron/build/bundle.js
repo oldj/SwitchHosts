@@ -21473,6 +21473,10 @@
 	
 	var _panel2 = _interopRequireDefault(_panel);
 	
+	var _content = __webpack_require__(200);
+	
+	var _content2 = _interopRequireDefault(_content);
+	
 	__webpack_require__(197);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -21489,16 +21493,29 @@
 	    function App(props) {
 	        _classCallCheck(this, App);
 	
-	        return _possibleConstructorReturn(this, Object.getPrototypeOf(App).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(App).call(this, props));
+	
+	        _this.state = {
+	            current: _this.props.hosts.sys
+	        };
+	        return _this;
 	    }
 	
 	    _createClass(App, [{
+	        key: 'setCurrent',
+	        value: function setCurrent(host) {
+	            this.setState({
+	                current: host
+	            });
+	        }
+	    }, {
 	        key: 'render',
 	        value: function render() {
 	            return _react2.default.createElement(
 	                'div',
 	                { id: 'app' },
-	                _react2.default.createElement(_panel2.default, { hosts: this.props.hosts })
+	                _react2.default.createElement(_panel2.default, { hosts: this.props.hosts, current: this.state.current, setCurrent: this.setCurrent.bind(this) }),
+	                _react2.default.createElement(_content2.default, { current: this.state.current })
 	            );
 	        }
 	    }]);
@@ -21559,10 +21576,15 @@
 	    _createClass(Panel, [{
 	        key: 'render',
 	        value: function render() {
+	            var _props = this.props;
+	            var current = _props.current;
+	            var hosts = _props.hosts;
+	
+	
 	            return _react2.default.createElement(
 	                'div',
 	                { id: 'panel' },
-	                _react2.default.createElement(_list2.default, { hosts: this.props.hosts }),
+	                _react2.default.createElement(_list2.default, { hosts: hosts, current: current, setCurrent: this.props.setCurrent }),
 	                _react2.default.createElement(_buttons2.default, null)
 	            );
 	        }
@@ -21645,8 +21667,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22018,14 +22040,35 @@
 	    function List(props) {
 	        _classCallCheck(this, List);
 	
-	        return _possibleConstructorReturn(this, Object.getPrototypeOf(List).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(List).call(this, props));
+	
+	        _this.state = {
+	            current: _this.props.current
+	        };
+	        console.log(_this.props.current);
+	        return _this;
 	    }
 	
 	    _createClass(List, [{
+	        key: 'selectOne',
+	        value: function selectOne(host) {
+	            this.setState({
+	                current: host
+	            });
+	
+	            this.props.setCurrent(host);
+	        }
+	    }, {
 	        key: 'customItems',
 	        value: function customItems() {
+	            var _this2 = this;
+	
 	            return this.props.hosts.custom.map(function (item, idx) {
-	                return _react2.default.createElement(_list_item2.default, { data: item, key: 'host-' + idx });
+	                return _react2.default.createElement(_list_item2.default, {
+	                    data: item,
+	                    selectOne: _this2.selectOne.bind(_this2),
+	                    current: _this2.state.current,
+	                    key: 'host-' + idx });
 	            });
 	        }
 	    }, {
@@ -22034,7 +22077,11 @@
 	            return _react2.default.createElement(
 	                'div',
 	                { id: 'list' },
-	                _react2.default.createElement(_list_item2.default, { data: this.props.hosts.sys, sys: '1' }),
+	                _react2.default.createElement(_list_item2.default, {
+	                    data: this.props.hosts.sys,
+	                    selectOne: this.selectOne.bind(this),
+	                    current: this.state.current,
+	                    sys: '1' }),
 	                this.customItems()
 	            );
 	        }
@@ -22089,6 +22136,9 @@
 	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ListItem).call(this, props));
 	
 	        _this.is_sys = !!_this.props.sys;
+	        _this.state = {
+	            is_selected: false
+	        };
 	        return _this;
 	    }
 	
@@ -22098,18 +22148,36 @@
 	            return this.is_sys ? 'System Hosts' : data.title || 'untitled';
 	        }
 	    }, {
+	        key: 'beSelected',
+	        value: function beSelected() {
+	            this.setState({
+	                is_selected: true
+	            });
+	
+	            this.props.selectOne(this.props.data);
+	        }
+	    }, {
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {}
+	    }, {
 	        key: 'render',
 	        value: function render() {
 	            var _props = this.props;
 	            var data = _props.data;
 	            var sys = _props.sys;
+	            var current = _props.current;
+	
+	            var is_selected = data == current;
 	
 	            return _react2.default.createElement(
 	                'div',
 	                { className: (0, _classnames2.default)({
 	                        'list-item': 1,
-	                        'sys-host': sys
-	                    }) },
+	                        'sys-host': sys,
+	                        'selected': is_selected
+	                    }),
+	                    onClick: this.beSelected.bind(this)
+	                },
 	                _react2.default.createElement('i', { className: (0, _classnames2.default)({
 	                        'iconfont': 1,
 	                        'icon-doc': !sys,
@@ -22199,8 +22267,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22218,7 +22286,7 @@
 	
 	
 	// module
-	exports.push([module.id, "", ""]);
+	exports.push([module.id, "#list .list-item {\n  padding: 6px 10px;\n  cursor: pointer;\n}\n#list .list-item.sys-host {\n  font-size: 14px;\n  padding: 8px 10px;\n}\n#list .list-item.selected {\n  background: #2d3138;\n}\n#list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 10px;\n}\n", ""]);
 	
 	// exports
 
@@ -22239,8 +22307,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22279,8 +22347,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22357,8 +22425,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less");
+			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22413,6 +22481,108 @@
 	        url: 'http://test.com/t.txt'
 	    }]
 	};
+
+/***/ },
+/* 200 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * @author oldj
+	 * @blog http://oldj.net
+	 */
+	
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(2);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	__webpack_require__(201);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var Content = function (_React$Component) {
+	    _inherits(Content, _React$Component);
+	
+	    function Content() {
+	        _classCallCheck(this, Content);
+	
+	        return _possibleConstructorReturn(this, Object.getPrototypeOf(Content).apply(this, arguments));
+	    }
+	
+	    _createClass(Content, [{
+	        key: 'onChange',
+	        value: function onChange() {}
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var current = this.props.current;
+	
+	
+	            return _react2.default.createElement(
+	                'div',
+	                { id: 'content' },
+	                _react2.default.createElement('textarea', { value: current.content, onChange: this.onChange.bind(this) })
+	            );
+	        }
+	    }]);
+	
+	    return Content;
+	}(_react2.default.Component);
+	
+	exports.default = Content;
+
+/***/ },
+/* 201 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	
+	// load the styles
+	var content = __webpack_require__(202);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(182)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 202 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(181)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, "#content {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 240px;\n}\n", ""]);
+	
+	// exports
+
 
 /***/ }
 /******/ ]);
