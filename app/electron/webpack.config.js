@@ -26,6 +26,9 @@ module.exports = {
             }, {
                 test: /\.less$/,
                 loaders: ['style', 'css', 'less']
+            }, {
+                test: /\.css$/,
+                loaders: ['style', 'css']
             },
             {
                 test: /\.(eot|woff|woff2|ttf|svg|png|jpg)$/,
@@ -33,7 +36,7 @@ module.exports = {
             }
         ]//,
         // query: {
-            // presets: ['es2015', 'stage-0', 'react']
+        // presets: ['es2015', 'stage-0', 'react']
         // }
     }
 };
