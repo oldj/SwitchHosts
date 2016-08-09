@@ -17,7 +17,6 @@ export default class List extends React.Component {
         this.state = {
             current: this.props.current
         };
-        console.log(this.props.current);
     }
 
     selectOne(host) {
