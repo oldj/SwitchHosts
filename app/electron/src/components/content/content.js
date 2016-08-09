@@ -20,7 +20,8 @@ export default class Content extends React.Component {
         };
     }
 
-    componentDidMount() {
+    setValue(v) {
+        this.props.setHostContent(v);
     }
 
     componentWillReceiveProps(next_props) {
@@ -34,7 +35,7 @@ export default class Content extends React.Component {
 
         return (
             <div id="sh-content">
-                <Editor code={this.state.code}/>
+                <Editor code={this.state.code} setValue={this.setValue.bind(this)}/>
             </div>
         );
     }
