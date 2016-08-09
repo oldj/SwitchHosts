@@ -1,6 +1,6 @@
 /**
  * editor
- * @author jizha.wyj (oldj)
+ * @author oldj
  * @blog http://oldj.net
  */
 
@@ -21,6 +21,10 @@ export default class Editor extends React.Component {
         modeHost({});
     }
 
+    setValue(v) {
+        this.props.setValue(v);
+    }
+
     componentDidMount() {
         // console.log(this.cnt_node, this.cnt_node.value);
         this.codemirror = CodeMirror.fromTextArea(this.cnt_node, {
@@ -30,6 +34,11 @@ export default class Editor extends React.Component {
         });
 
         this.codemirror.setSize('100%', '100%');
+
+        this.codemirror.on('change', (a) => {
+            let v = a.getDoc().getValue();
+            this.setValue(v);
+        });
     }
 
     componentWillReceiveProps(next_props) {
@@ -37,16 +46,12 @@ export default class Editor extends React.Component {
         this.codemirror.getDoc().setValue(next_props.code);
     }
 
-    onChange() {
-    }
-
     render() {
         return (
             <div id="sh-editor">
                 <textarea
                     ref={(c) => this.cnt_node = c}
-                    value={this.props.code || ''}
-                    onChange={this.onChange.bind(this)}
+                    defaultValue={this.props.code || ''}
                 />
             </div>
         );
