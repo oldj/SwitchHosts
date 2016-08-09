@@ -28,7 +28,7 @@ export default class List extends React.Component {
     }
 
     customItems() {
-        return this.props.hosts.custom.map((item, idx) => {
+        return this.props.hosts.list.map((item, idx) => {
             return (
                 <ListItem
                     data={item}
