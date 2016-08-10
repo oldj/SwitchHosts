@@ -11,7 +11,7 @@ import './buttons.less';
 export default class Buttons extends React.Component {
     render() {
         return (
-            <div id="buttons">
+            <div id="sh-buttons">
                 btn
             </div>
         );
