@@ -41,7 +41,7 @@ export default class List extends React.Component {
 
     render() {
         return (
-            <div id="list">
+            <div id="sh-list">
                 <ListItem
                     data={this.props.hosts.sys}
                     selectOne={this.selectOne.bind(this)}
