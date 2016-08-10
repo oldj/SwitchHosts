@@ -35,7 +35,10 @@ export default class Content extends React.Component {
 
         return (
             <div id="sh-content">
-                <Editor code={this.state.code} setValue={this.setValue.bind(this)}/>
+                <Editor
+                    code={this.state.code}
+                    readonly={this.props.readonly}
+                    setValue={this.setValue.bind(this)}/>
             </div>
         );
     }
