@@ -15,12 +15,15 @@ export default class ListItem extends React.Component {
 
         this.is_sys = !!this.props.sys;
         this.state = {
-            is_selected: false
+            is_selected: false,
+            on: this.props.data.on,
+            title: this.props.data.title
         };
+        console.log(this.props);
     }
 
-    getTitle(data) {
-        return this.is_sys ? 'System Hosts' : data.title || 'untitled';
+    getTitle() {
+        return this.is_sys ? 'System Hosts' : this.state.title || 'untitled';
     }
 
     beSelected() {
@@ -31,8 +34,10 @@ export default class ListItem extends React.Component {
         this.props.selectOne(this.props.data);
     }
 
-    componentDidMount() {
-
+    toggle() {
+        this.setState({
+            on: !this.state.on
+        });
     }
 
     render() {
@@ -47,12 +52,22 @@ export default class ListItem extends React.Component {
             })}
                  onClick={this.beSelected.bind(this)}
             >
+                { sys ? null :
+                    <i className={classnames({
+                        'on': 1
+                        , 'iconfont': 1
+                        , 'icon-on': this.state.on
+                        , 'icon-off': !this.state.on
+                    })}
+                       onClick={this.toggle.bind(this)}
+                    />
+                }
                 <i className={classnames({
                     'iconfont': 1
                     , 'icon-doc': !sys
                     , 'icon-sysserver': sys
                 })}/>
-                <span>{this.getTitle(data)}</span>
+                <span>{this.getTitle()}</span>
             </div>
         );
     }

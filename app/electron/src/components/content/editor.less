@@ -17,9 +17,15 @@
     border-right: none;
     padding-right: 6px;
   }
-  //.CodeMirror-linenumber
-  //  cursor pointer
-  .readonly .CodeMirror {
+
+  .CodeMirror-linenumber {
+    cursor: pointer;
+  }
+
+  &.readonly .CodeMirror {
+    .CodeMirror-linenumber {
+      cursor: default;
+    }
     .CodeMirror-cursors {
       display: none;
     }
