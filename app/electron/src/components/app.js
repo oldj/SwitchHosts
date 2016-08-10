@@ -23,7 +23,10 @@ export default class App extends React.Component {
         this.setState({
             current: host
         });
+    }
 
+    isReadOnly(host) {
+        return host.is_sys || host.where == 'remote';
     }
 
     setHostContent(v) {
@@ -34,10 +37,11 @@ export default class App extends React.Component {
     }
 
     render() {
+        let current = this.state.current;
         return (
             <div id="app">
-                <Panel hosts={this.props.hosts} current={this.state.current} setCurrent={this.setCurrent.bind(this)}/>
-                <Content current={this.state.current} setHostContent={this.setHostContent.bind(this)}/>
+                <Panel hosts={this.props.hosts} current={current} setCurrent={this.setCurrent.bind(this)}/>
+                <Content current={current} readonly={this.isReadOnly(current)} setHostContent={this.setHostContent.bind(this)}/>
             </div>
         );
     }

@@ -13,7 +13,7 @@ const util = require('./libs/util');
 const platform = process.platform;
 console.log('platform: ', platform);
 const sys_host_path = platform == 'win' ?
-    'C:\\WINDOWS\\system32\\drivers\\etc\\hosts' :
+    'C:\\WINDOWS\\system32\\drivers\\etc\\hosts' : // todo 处理系统没有安装在 C 盘的情况
     '/etc/hosts';
 const work_path = path.join(util.getUserHome(), '.SwitchHosts');
 const data_path = path.join(work_path, 'data.json');
@@ -64,7 +64,8 @@ module.exports = {
 
         return {
             sys: {
-                content: getSysHosts()
+                is_sys: true
+                , content: getSysHosts()
             },
             list: data.list.map((i) => {
                 return {

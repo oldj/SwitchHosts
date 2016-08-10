@@ -21507,6 +21507,11 @@
 	            });
 	        }
 	    }, {
+	        key: 'isReadOnly',
+	        value: function isReadOnly(host) {
+	            return host.is_sys || host.where == 'remote';
+	        }
+	    }, {
 	        key: 'setHostContent',
 	        value: function setHostContent(v) {
 	            if (this.state.current.content == v) return;
@@ -21517,11 +21522,12 @@
 	    }, {
 	        key: 'render',
 	        value: function render() {
+	            var current = this.state.current;
 	            return _react2.default.createElement(
 	                'div',
 	                { id: 'app' },
-	                _react2.default.createElement(_panel2.default, { hosts: this.props.hosts, current: this.state.current, setCurrent: this.setCurrent.bind(this) }),
-	                _react2.default.createElement(_content2.default, { current: this.state.current, setHostContent: this.setHostContent.bind(this) })
+	                _react2.default.createElement(_panel2.default, { hosts: this.props.hosts, current: current, setCurrent: this.setCurrent.bind(this) }),
+	                _react2.default.createElement(_content2.default, { current: current, readonly: this.isReadOnly(current), setHostContent: this.setHostContent.bind(this) })
 	            );
 	        }
 	    }]);
@@ -21673,8 +21679,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22142,15 +22148,18 @@
 	
 	        _this.is_sys = !!_this.props.sys;
 	        _this.state = {
-	            is_selected: false
+	            is_selected: false,
+	            on: _this.props.data.on,
+	            title: _this.props.data.title
 	        };
+	        console.log(_this.props);
 	        return _this;
 	    }
 	
 	    _createClass(ListItem, [{
 	        key: 'getTitle',
-	        value: function getTitle(data) {
-	            return this.is_sys ? 'System Hosts' : data.title || 'untitled';
+	        value: function getTitle() {
+	            return this.is_sys ? 'System Hosts' : this.state.title || 'untitled';
 	        }
 	    }, {
 	        key: 'beSelected',
@@ -22162,8 +22171,12 @@
 	            this.props.selectOne(this.props.data);
 	        }
 	    }, {
-	        key: 'componentDidMount',
-	        value: function componentDidMount() {}
+	        key: 'toggle',
+	        value: function toggle() {
+	            this.setState({
+	                on: !this.state.on
+	            });
+	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
@@ -22183,6 +22196,14 @@
 	                    }),
 	                    onClick: this.beSelected.bind(this)
 	                },
+	                sys ? null : _react2.default.createElement('i', { className: (0, _classnames2.default)({
+	                        'on': 1,
+	                        'iconfont': 1,
+	                        'icon-on': this.state.on,
+	                        'icon-off': !this.state.on
+	                    }),
+	                    onClick: this.toggle.bind(this)
+	                }),
 	                _react2.default.createElement('i', { className: (0, _classnames2.default)({
 	                        'iconfont': 1,
 	                        'icon-doc': !sys,
@@ -22191,7 +22212,7 @@
 	                _react2.default.createElement(
 	                    'span',
 	                    null,
-	                    this.getTitle(data)
+	                    this.getTitle()
 	                )
 	            );
 	        }
@@ -22272,8 +22293,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22291,7 +22312,7 @@
 	
 	
 	// module
-	exports.push([module.id, "#sh-list .list-item {\n  padding: 5px 10px 5px 15px;\n  cursor: pointer;\n}\n#sh-list .list-item.sys-host {\n  font-size: 14px;\n  padding: 8px 10px 8px 12px;\n}\n#sh-list .list-item.sys-host i {\n  width: 23px;\n}\n#sh-list .list-item.selected {\n  background: #2d3138;\n  color: #fff;\n}\n#sh-list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 5px;\n}\n", ""]);
+	exports.push([module.id, "#sh-list .list-item {\n  padding: 5px 10px 5px 15px;\n  cursor: pointer;\n}\n#sh-list .list-item.sys-host {\n  font-size: 14px;\n  padding: 8px 10px 8px 12px;\n}\n#sh-list .list-item.sys-host i {\n  width: 23px;\n}\n#sh-list .list-item.selected {\n  background: #2d3138;\n  color: #fff;\n}\n#sh-list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 5px;\n}\n#sh-list .list-item i.on {\n  float: right;\n  cursor: pointer;\n  line-height: 23px;\n}\n#sh-list .list-item i.on.icon-on {\n  color: #af9;\n}\n", ""]);
 	
 	// exports
 
@@ -22312,8 +22333,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22352,8 +22373,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22484,7 +22505,10 @@
 	            return _react2.default.createElement(
 	                'div',
 	                { id: 'sh-content' },
-	                _react2.default.createElement(_editor2.default, { code: this.state.code, setValue: this.setValue.bind(this) })
+	                _react2.default.createElement(_editor2.default, {
+	                    code: this.state.code,
+	                    readonly: this.props.readonly,
+	                    setValue: this.setValue.bind(this) })
 	            );
 	        }
 	    }]);
@@ -22519,6 +22543,10 @@
 	var _codemirror = __webpack_require__(199);
 	
 	var _codemirror2 = _interopRequireDefault(_codemirror);
+	
+	var _classnames = __webpack_require__(185);
+	
+	var _classnames2 = _interopRequireDefault(_classnames);
 	
 	var _cm_hl = __webpack_require__(200);
 	
@@ -22562,7 +22590,7 @@
 	            // console.log(this.cnt_node, this.cnt_node.value);
 	            this.codemirror = _codemirror2.default.fromTextArea(this.cnt_node, {
 	                lineNumbers: true,
-	                // readOnly: true,
+	                readOnly: true,
 	                mode: 'host'
 	            });
 	
@@ -22572,12 +22600,31 @@
 	                var v = a.getDoc().getValue();
 	                _this2.setValue(v);
 	            });
+	
+	            this.codemirror.on('gutterClick', function (cm, n) {
+	                if (_this2.props.readonly === true) return;
+	
+	                var info = cm.lineInfo(n);
+	                //cm.setGutterMarker(n, "breakpoints", info.gutterMarkers ? null : makeMarker());
+	                var ln = info.text;
+	                if (/^\s*$/.test(ln)) return;
+	
+	                var new_ln = void 0;
+	                if (/^#/.test(ln)) {
+	                    new_ln = ln.replace(/^#\s*/, '');
+	                } else {
+	                    new_ln = '# ' + ln;
+	                }
+	                _this2.codemirror.getDoc().replaceRange(new_ln, { line: info.line, ch: 0 }, { line: info.line, ch: ln.length });
+	                //app.caculateHosts();
+	            });
 	        }
 	    }, {
 	        key: 'componentWillReceiveProps',
 	        value: function componentWillReceiveProps(next_props) {
 	            // console.log(next_props);
 	            this.codemirror.getDoc().setValue(next_props.code);
+	            this.codemirror.setOption('readOnly', next_props.readonly);
 	        }
 	    }, {
 	        key: 'render',
@@ -22586,7 +22633,9 @@
 	
 	            return _react2.default.createElement(
 	                'div',
-	                { id: 'sh-editor' },
+	                { id: 'sh-editor', className: (0, _classnames2.default)({
+	                        readonly: this.props.readonly
+	                    }) },
 	                _react2.default.createElement('textarea', {
 	                    ref: function ref(c) {
 	                        return _this3.cnt_node = c;
@@ -31627,8 +31676,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../css-loader/index.js!./codemirror.css", function() {
-				var newContent = require("!!./../../css-loader/index.js!./codemirror.css");
+			module.hot.accept("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css", function() {
+				var newContent = require("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -31667,8 +31716,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -31686,7 +31735,7 @@
 	
 	
 	// module
-	exports.push([module.id, "#sh-editor {\n  height: 100%;\n  font-family: Menlo, \"Source Code Pro\", Monaco, \"Courier New\", sans-serif;\n}\n#sh-editor .cm-s-default .cm-comment {\n  color: #090;\n}\n#sh-editor .cm-s-default .cm-ip {\n  color: #00a;\n  font-weight: bold;\n}\n#sh-editor .cm-s-default .cm-hl {\n  background: #ff0;\n}\n#sh-editor .CodeMirror-gutters {\n  border-right: none;\n  padding-right: 6px;\n}\n#sh-editor .readonly .CodeMirror .CodeMirror-cursors {\n  display: none;\n}\n", ""]);
+	exports.push([module.id, "#sh-editor {\n  height: 100%;\n  font-family: Menlo, \"Source Code Pro\", Monaco, \"Courier New\", sans-serif;\n}\n#sh-editor .cm-s-default .cm-comment {\n  color: #090;\n}\n#sh-editor .cm-s-default .cm-ip {\n  color: #00a;\n  font-weight: bold;\n}\n#sh-editor .cm-s-default .cm-hl {\n  background: #ff0;\n}\n#sh-editor .CodeMirror-gutters {\n  border-right: none;\n  padding-right: 6px;\n}\n#sh-editor .CodeMirror-linenumber {\n  cursor: pointer;\n}\n#sh-editor.readonly .CodeMirror .CodeMirror-linenumber {\n  cursor: default;\n}\n#sh-editor.readonly .CodeMirror .CodeMirror-cursors {\n  display: none;\n}\n", ""]);
 	
 	// exports
 
@@ -31707,8 +31756,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -31747,8 +31796,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less");
+			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
