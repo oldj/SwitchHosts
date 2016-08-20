@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('./libs/util');
+var sudo = require('sudo-prompt');
 const platform = process.platform;
 console.log('platform: ', platform);
 const sys_host_path = platform == 'win' ?
@@ -47,9 +48,63 @@ function tryToCreateWorkDir() {
     }
 }
 
+function tryToApply(content, success) {
+    let tmp_fn = path.join(work_path, 'tmp.txt');
+    let cmd_fn = path.join(work_path, 'cmd.sh');
+    fs.writeFileSync(tmp_fn, content, 'utf-8');
+
+    let options = {
+        name: 'SwitchHosts'
+        //icns: '/Applications/Electron.app/Contents/Resources/Electron.icns', // (optional)
+    };
+    let cmd;
+    let cmd_lines = [];
+
+    if (platform === 'win32') {
+        // windows
+        cmd = '';
+
+    } else {
+        // unix like
+        cmd_lines = cmd_lines.concat([
+            `cat ${tmp_fn} > ${sys_host_path}`
+            , 'launchctl unload -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+            , 'launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+            , 'launchctl unload -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+            , 'launchctl load -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+            , 'killall -HUP mDNSResponder'
+        ]);
+
+        fs.writeFileSync(cmd_fn, cmd_lines.join('\n'), 'utf-8');
+        cmd = `/bin/sh ${cmd_fn}`;
+    }
+
+    sudo.exec(cmd, options, function(error, stdout, stderr) {
+        if (error) {
+            alert(error.message);
+            return;
+        }
+        console.log('stdout: ' + stdout);
+        console.log('stderr: ' + stderr);
+
+        if (typeof success === 'function') {
+            success();
+        }
+    });
+}
+
 
 // init
 tryToCreateWorkDir();
+
+SH_event.on('test', () => {
+    console.log('ttt');
+});
+
+SH_event.on('apply', (content, success) => {
+    console.log(content);
+    tryToApply(content, success);
+});
 
 module.exports = {
     getHosts: function () {
