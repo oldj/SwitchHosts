@@ -6,10 +6,12 @@
 'use strict';
 
 import React from 'react';
+import {connect} from 'react-redux';
+import {toggle} from '../../actions';
 import ListItem from './list_item';
 import './list.less';
 
-export default class List extends React.Component {
+class List extends React.Component {
 
     constructor(props) {
         super(props);
@@ -28,12 +30,15 @@ export default class List extends React.Component {
     }
 
     customItems() {
+        const {dispatch} = this.props;
+
         return this.props.hosts.list.map((item, idx) => {
             return (
                 <ListItem
                     data={item}
                     selectOne={this.selectOne.bind(this)}
                     current={this.state.current}
+                    onToggle={()=> dispatch(toggle(idx))}
                     key={'host-' + idx}/>
             )
         });
@@ -52,3 +57,5 @@ export default class List extends React.Component {
         );
     }
 }
+
+export default connect()(List);
