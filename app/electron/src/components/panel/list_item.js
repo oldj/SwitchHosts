@@ -34,10 +34,10 @@ export default class ListItem extends React.Component {
     }
 
     toggle() {
-        this.setState({
-            on: !this.state.on
+        this.props.onToggle(() => {
+            this.props.data.on = !this.props.data.on;
+            this.forceUpdate();
         });
-        this.props.data.on = !this.props.data.on;
     }
 
     render() {
