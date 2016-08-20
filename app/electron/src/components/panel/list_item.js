@@ -16,10 +16,9 @@ export default class ListItem extends React.Component {
         this.is_sys = !!this.props.sys;
         this.state = {
             is_selected: false,
-            on: this.props.data.on,
+            // on: this.props.data.on,
             title: this.props.data.title
         };
-        console.log(this.props);
     }
 
     getTitle() {
@@ -27,9 +26,9 @@ export default class ListItem extends React.Component {
     }
 
     beSelected() {
-        this.setState({
-            is_selected: true
-        });
+        // this.setState({
+        //     is_selected: true
+        // });
 
         this.props.selectOne(this.props.data);
     }
@@ -38,6 +37,7 @@ export default class ListItem extends React.Component {
         this.setState({
             on: !this.state.on
         });
+        this.props.data.on = !this.props.data.on;
     }
 
     render() {
@@ -56,8 +56,8 @@ export default class ListItem extends React.Component {
                     <i className={classnames({
                         'on': 1
                         , 'iconfont': 1
-                        , 'icon-on': this.state.on
-                        , 'icon-off': !this.state.on
+                        , 'icon-on': data.on
+                        , 'icon-off': !data.on
                     })}
                        onClick={this.toggle.bind(this)}
                     />

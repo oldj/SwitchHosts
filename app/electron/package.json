@@ -21,7 +21,12 @@
   },
   "homepage": "https://oldj.github.io/SwitchHosts/",
   "dependencies": {
-    "react": "^15.3.0"
+    "classnames": "^2.2.5",
+    "codemirror": "^5.17.0",
+    "react": "^15.3.0",
+    "react-dom": "^15.3.0",
+    "react-redux": "^4.4.5",
+    "redux": "^3.5.2"
   },
   "devDependencies": {
     "babel-core": "^6.13.2",
@@ -29,15 +34,11 @@
     "babel-plugin-transform-runtime": "^6.12.0",
     "babel-preset-es2015": "^6.13.2",
     "babel-preset-react": "^6.11.1",
-    "classnames": "^2.2.5",
-    "codemirror": "^5.17.0",
     "css-loader": "^0.23.1",
     "electron-prebuilt": "^1.2.0",
     "file-loader": "^0.9.0",
     "less": "^2.7.1",
     "less-loader": "^2.2.3",
-    "react": "^15.3.0",
-    "react-dom": "^15.3.0",
     "slash": "^1.0.0",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
