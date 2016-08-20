@@ -6,8 +6,6 @@
 'use strict';
 
 import React from 'react';
-import {connect} from 'react-redux';
-import {toggle} from '../../actions';
 import ListItem from './list_item';
 import './list.less';
 
@@ -21,6 +19,10 @@ class List extends React.Component {
         };
     }
 
+    apply(content, success) {
+        SH_event.emit('apply', content, success);
+    }
+
     selectOne(host) {
         this.setState({
             current: host
@@ -29,16 +31,33 @@ class List extends React.Component {
         this.props.setCurrent(host);
     }
 
-    customItems() {
-        const {dispatch} = this.props;
+    toggleOne(idx, success) {
+        let content = this.getOnContent(idx);
+        this.apply(content, success);
+    }
 
+    getOnItems(idx) {
+        return this.props.hosts.list.filter((item, _idx) => {
+            return (item.on && _idx != idx) || (!item.on && _idx == idx);
+        });
+    }
+
+    getOnContent(idx) {
+        let contents = this.getOnItems(idx).map((item) => {
+            return item.content || '';
+        });
+
+        return contents.join(`\n\n`);
+    }
+
+    customItems() {
         return this.props.hosts.list.map((item, idx) => {
             return (
                 <ListItem
                     data={item}
                     selectOne={this.selectOne.bind(this)}
                     current={this.state.current}
-                    onToggle={()=> dispatch(toggle(idx))}
+                    onToggle={(success)=> this.toggleOne(idx, success)}
                     key={'host-' + idx}/>
             )
         });
@@ -58,4 +77,4 @@ class List extends React.Component {
     }
 }
 
-export default connect()(List);
+export default List;
