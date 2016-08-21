@@ -53,7 +53,7 @@ var languages = {
         , host_title: 'host 方案名'
         , host_title_cant_be_empty: 'Host 方案名不能为空！'
         , sys_host_title: '系统 Hosts'
-        , input_sudo_pswd: '请输入您的开机密码'
+        , input_sudo_pswd: '请输入您的开机密码（sudo 密码）'
         , sudo_pswd: '密码'
         , del_host: '删除当前 host'
         , confirm_del: '确定要删除此 host 吗？'

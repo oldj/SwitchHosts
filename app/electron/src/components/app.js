@@ -22,7 +22,7 @@ class App extends React.Component {
 
     setCurrent(host) {
         this.setState({
-            current: host
+            current: host.is_sys ? SH_Agent.getSysHosts() : host
         });
     }
 
