@@ -18,6 +18,7 @@ const sys_host_path = platform == 'win' ?
 const work_path = path.join(util.getUserHome(), '.SwitchHosts');
 const data_path = path.join(work_path, 'data.json');
 const preference_path = path.join(work_path, 'preferences.json');
+const exec = require('child_process').exec;
 
 const lang = require('./lang');
 let sudo_pswd = '';
@@ -50,7 +51,21 @@ function tryToCreateWorkDir() {
     }
 }
 
-function apply_unix(tmp_fn, success) {
+function saveData(content) {
+
+    let txt = JSON.stringify({
+        list: content
+    });
+
+    fs.writeFile(data_path, txt, 'utf-8', (error) => {
+        if (error) {
+            alert(error.message);
+        }
+    });
+}
+
+
+function apply_UNIX(tmp_fn, success) {
     let cmd;
     if (!sudo_pswd) {
         cmd = [
@@ -66,8 +81,6 @@ function apply_unix(tmp_fn, success) {
             // , 'rm -rf ' + tmp_fn
         ].join(' && ');
     }
-
-    let exec = require('child_process').exec;
 
     exec(cmd, function(error, stdout, stderr) {
         // command output is in stdout
@@ -85,20 +98,59 @@ function apply_unix(tmp_fn, success) {
         }
 
         if (!error) {
-            success && success();
+            after_apply(success);
         }
     });
 }
 
+function _after_apply_unix(callback) {
+    let cmd_fn = path.join(work_path, '_restart_mDNSResponder.sh');
+
+    let cmd = [
+        'sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+        , 'sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+        , 'sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+        , 'sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
+        , 'sudo killall -HUP mDNSResponder'
+    ].join('\n');
+
+    fs.writeFileSync(cmd_fn, cmd, 'utf-8');
+
+    exec(`/bin/sh ${cmd_fn}`, function(error, stdout, stderr) {
+        // command output is in stdout
+        if (error) {
+            console.log(error);
+        }
+        console.log(stdout, stderr);
+
+        callback();
+    });
+}
+
+function after_apply(success) {
+    let callback = success || function () {};
+
+    if (!sudo_pswd) {
+        callback();
+        return;
+    }
+
+    if (platform === 'darwin') {
+        _after_apply_unix(callback);
+        return;
+    }
+
+    callback();
+}
+
 function tryToApply(content, success) {
     let tmp_fn = path.join(work_path, 'tmp.txt');
-    let cmd_fn = path.join(work_path, 'cmd.sh');
     if (content) {
         fs.writeFileSync(tmp_fn, content, 'utf-8');
     }
 
     if (platform !== 'win32') {
-        apply_unix(tmp_fn, success);
+        apply_UNIX(tmp_fn, success);
     }
 }
 
@@ -116,6 +168,10 @@ SH_event.on('apply', (content, success) => {
 
 SH_event.on('sudo_pswd', (pswd) => {
     sudo_pswd = pswd;
+});
+
+SH_event.on('save_data', (content) => {
+    saveData(content);
 });
 
 module.exports = {
