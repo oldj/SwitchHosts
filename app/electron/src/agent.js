@@ -12,13 +12,15 @@ const path = require('path');
 const util = require('./libs/util');
 var sudo = require('sudo-prompt');
 const platform = process.platform;
-console.log('platform: ', platform);
 const sys_host_path = platform == 'win' ?
     'C:\\WINDOWS\\system32\\drivers\\etc\\hosts' : // todo 处理系统没有安装在 C 盘的情况
     '/etc/hosts';
 const work_path = path.join(util.getUserHome(), '.SwitchHosts');
 const data_path = path.join(work_path, 'data.json');
 const preference_path = path.join(work_path, 'preferences.json');
+
+const lang = require('./lang');
+let sudo_pswd = '';
 
 
 function getSysHosts() {
@@ -48,49 +50,56 @@ function tryToCreateWorkDir() {
     }
 }
 
+function apply_unix(tmp_fn, success) {
+    let cmd;
+    if (!sudo_pswd) {
+        cmd = [
+            'cat "' + tmp_fn + '" > ' + sys_host_path
+            , 'rm -rf ' + tmp_fn
+        ].join(' && ');
+    } else {
+        sudo_pswd = sudo_pswd.replace(/'/g, '\\x27');
+        cmd = [
+            'echo \'' + sudo_pswd + '\' | sudo -S chmod 777 ' + sys_host_path
+            , 'cat "' + tmp_fn + '" > ' + sys_host_path
+            , 'echo \'' + sudo_pswd + '\' | sudo -S chmod 644 ' + sys_host_path
+            // , 'rm -rf ' + tmp_fn
+        ].join(' && ');
+    }
+
+    let exec = require('child_process').exec;
+
+    exec(cmd, function(error, stdout, stderr) {
+        // command output is in stdout
+        if (error) {
+            if (!sudo_pswd) {
+                // 尝试让用户输入管理密码
+                SH_event.emit('sudo_prompt', (pswd) => {
+                    sudo_pswd = pswd;
+                    tryToApply(null, success);
+                });
+            } else {
+                alert(stderr);
+            }
+            return;
+        }
+
+        if (!error) {
+            success && success();
+        }
+    });
+}
+
 function tryToApply(content, success) {
     let tmp_fn = path.join(work_path, 'tmp.txt');
     let cmd_fn = path.join(work_path, 'cmd.sh');
-    fs.writeFileSync(tmp_fn, content, 'utf-8');
-
-    let options = {
-        name: 'SwitchHosts'
-        //icns: '/Applications/Electron.app/Contents/Resources/Electron.icns', // (optional)
-    };
-    let cmd;
-    let cmd_lines = [];
-
-    if (platform === 'win32') {
-        // windows
-        cmd = '';
-
-    } else {
-        // unix like
-        cmd_lines = cmd_lines.concat([
-            `cat ${tmp_fn} > ${sys_host_path}`
-            , 'launchctl unload -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
-            , 'launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
-            , 'launchctl unload -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
-            , 'launchctl load -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
-            , 'killall -HUP mDNSResponder'
-        ]);
-
-        fs.writeFileSync(cmd_fn, cmd_lines.join('\n'), 'utf-8');
-        cmd = `/bin/sh ${cmd_fn}`;
+    if (content) {
+        fs.writeFileSync(tmp_fn, content, 'utf-8');
     }
 
-    sudo.exec(cmd, options, function(error, stdout, stderr) {
-        if (error) {
-            alert(error.message);
-            return;
-        }
-        console.log('stdout: ' + stdout);
-        console.log('stderr: ' + stderr);
-
-        if (typeof success === 'function') {
-            success();
-        }
-    });
+    if (platform !== 'win32') {
+        apply_unix(tmp_fn, success);
+    }
 }
 
 
@@ -102,8 +111,11 @@ SH_event.on('test', () => {
 });
 
 SH_event.on('apply', (content, success) => {
-    console.log(content);
     tryToApply(content, success);
+});
+
+SH_event.on('sudo_pswd', (pswd) => {
+    sudo_pswd = pswd;
 });
 
 module.exports = {
@@ -134,5 +146,12 @@ module.exports = {
                 }
             })
         };
-    }
+    },
+    getSysHosts: function () {
+        return {
+            is_sys: true
+            , content: getSysHosts()
+        }
+    },
+    lang: lang.getLang('cn')
 };

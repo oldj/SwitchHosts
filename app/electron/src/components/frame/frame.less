@@ -1,4 +1,7 @@
 .frame {
+  @bg: #f5f5f5;
+  @btn_default: #05a;
+
   position: fixed;
   top: 0;
   right: 0;
@@ -18,8 +21,67 @@
     margin: 0 auto;
     min-width: 300px;
     max-width: 600px;
-    min-height: 100px;
     background: #fff;
     box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);
+
+    .head {
+      padding: 20px;
+      font-size: 16px;
+      background: @bg;
+      //border-bottom: solid 1px #ccc;
+    }
+
+    .body {
+      padding: 30px 20px;
+
+      .ln {
+        line-height: 30px;
+
+        .title {
+          float: left;
+          width: 100px;
+        }
+        .cnt {
+        }
+      }
+
+      input {
+        padding: 6px 4px;
+      }
+
+      input[type=password] {
+        letter-spacing: 8px;
+        width: 240px;
+        outline: none;
+        padding: 6px 10px;
+      }
+    }
+
+    .foot {
+      padding: 20px;
+      background: @bg;
+      text-align: right;
+
+      .button {
+        display: inline-block;
+        background: #ccc;
+        padding: 8px 20px;
+        margin-left: 1em;
+        cursor: pointer;
+
+        &:hover {
+          background: #ddd;
+        }
+
+        &.btn-default {
+          background: @btn_default;
+          color: #fff;
+
+          &:hover {
+            background: @btn_default * 1.4;
+          }
+        }
+      }
+    }
   }
 }
