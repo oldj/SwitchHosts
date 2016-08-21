@@ -24,8 +24,7 @@
     "classnames": "^2.2.5",
     "codemirror": "^5.17.0",
     "react": "^15.3.0",
-    "react-dom": "^15.3.0",
-    "sudo-prompt": "^6.2.0"
+    "react-dom": "^15.3.0"
   },
   "devDependencies": {
     "babel-core": "^6.13.2",

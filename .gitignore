@@ -19,3 +19,5 @@ src/configs.json
 node_modules
 UserInterfaceState.xcuserstate
 xcdebugger
+npm-debug.log
+
