@@ -47,6 +47,8 @@ class List extends React.Component {
             return item.content || '';
         });
 
+        contents.unshift('# SwitchHosts!');
+
         return contents.join(`\n\n`);
     }
 
