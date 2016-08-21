@@ -18,7 +18,9 @@ export default class Content extends React.Component {
         this.state = {
             code: this.props.current.content || ''
         };
+        this._t = null;
     }
+
 
     setValue(v) {
         this.props.setHostContent(v);

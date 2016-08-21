@@ -30,11 +30,19 @@ class App extends React.Component {
         return host.is_sys || host.where == 'remote';
     }
 
+    toSave() {
+        clearTimeout(this._t);
+
+        this._t = setTimeout(() => {
+            SH_event.emit('change');
+        }, 1000);
+    }
+
     setHostContent(v) {
-        if (this.state.current.content == v) return;
+        if (this.state.current.content == v) return; // not changed
 
         this.state.current.content = v || '';
-        // todo save to the disk
+        this.toSave();
     }
 
     render() {
