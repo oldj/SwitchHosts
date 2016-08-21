@@ -127,9 +127,7 @@ function _after_apply_unix(callback) {
     });
 }
 
-function after_apply(success) {
-    let callback = success || function () {};
-
+function after_apply(callback) {
     if (!sudo_pswd) {
         callback();
         return;
@@ -151,6 +149,8 @@ function tryToApply(content, success) {
 
     if (platform !== 'win32') {
         apply_UNIX(tmp_fn, success);
+    } else {
+        // todo win32
     }
 }
 
@@ -163,6 +163,7 @@ SH_event.on('test', () => {
 });
 
 SH_event.on('apply', (content, success) => {
+    success = success || function () {};
     tryToApply(content, success);
 });
 
