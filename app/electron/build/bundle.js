@@ -22076,7 +22076,12 @@
 	    _createClass(List, [{
 	        key: 'apply',
 	        value: function apply(content, success) {
-	            SH_event.emit('apply', content, success);
+	            var _this2 = this;
+	
+	            SH_event.emit('apply', content, function () {
+	                success();
+	                SH_event.emit('save_data', _this2.props.hosts.list);
+	            });
 	        }
 	    }, {
 	        key: 'selectOne',
@@ -22114,15 +22119,15 @@
 	    }, {
 	        key: 'customItems',
 	        value: function customItems() {
-	            var _this2 = this;
+	            var _this3 = this;
 	
 	            return this.props.hosts.list.map(function (item, idx) {
 	                return _react2.default.createElement(_list_item2.default, {
 	                    data: item,
-	                    selectOne: _this2.selectOne.bind(_this2),
-	                    current: _this2.state.current,
+	                    selectOne: _this3.selectOne.bind(_this3),
+	                    current: _this3.state.current,
 	                    onToggle: function onToggle(success) {
-	                        return _this2.toggleOne(idx, success);
+	                        return _this3.toggleOne(idx, success);
 	                    },
 	                    key: 'host-' + idx });
 	            });
@@ -32169,7 +32174,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 0 auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 30px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 0 auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 30px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
 	
 	// exports
 

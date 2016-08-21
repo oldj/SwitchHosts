@@ -20,7 +20,10 @@ class List extends React.Component {
     }
 
     apply(content, success) {
-        SH_event.emit('apply', content, success);
+        SH_event.emit('apply', content, () => {
+            success();
+            SH_event.emit('save_data', this.props.hosts.list);
+        });
     }
 
     selectOne(host) {
