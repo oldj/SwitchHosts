@@ -21519,12 +21519,21 @@
 	            return host.is_sys || host.where == 'remote';
 	        }
 	    }, {
+	        key: 'toSave',
+	        value: function toSave() {
+	            clearTimeout(this._t);
+	
+	            this._t = setTimeout(function () {
+	                SH_event.emit('change');
+	            }, 1000);
+	        }
+	    }, {
 	        key: 'setHostContent',
 	        value: function setHostContent(v) {
-	            if (this.state.current.content == v) return;
+	            if (this.state.current.content == v) return; // not changed
 	
 	            this.state.current.content = v || '';
-	            // todo save to the disk
+	            this.toSave();
 	        }
 	    }, {
 	        key: 'render',
@@ -22070,6 +22079,18 @@
 	        _this.state = {
 	            current: _this.props.current
 	        };
+	        _this.last_content = '';
+	
+	        SH_event.on('change', function () {
+	            console.log(22);
+	            SH_event.emit('save_data', _this.props.hosts.list);
+	            var content = _this.getOnContent();
+	            if (content !== _this.last_content) {
+	                SH_event.emit('apply', content, function () {
+	                    _this.last_content = content;
+	                });
+	            }
+	        });
 	        return _this;
 	    }
 	
@@ -22079,6 +22100,7 @@
 	            var _this2 = this;
 	
 	            SH_event.emit('apply', content, function () {
+	                _this2.last_content = content;
 	                success();
 	                SH_event.emit('save_data', _this2.props.hosts.list);
 	            });
@@ -22100,14 +22122,18 @@
 	        }
 	    }, {
 	        key: 'getOnItems',
-	        value: function getOnItems(idx) {
+	        value: function getOnItems() {
+	            var idx = arguments.length <= 0 || arguments[0] === undefined ? -1 : arguments[0];
+	
 	            return this.props.hosts.list.filter(function (item, _idx) {
 	                return item.on && _idx != idx || !item.on && _idx == idx;
 	            });
 	        }
 	    }, {
 	        key: 'getOnContent',
-	        value: function getOnContent(idx) {
+	        value: function getOnContent() {
+	            var idx = arguments.length <= 0 || arguments[0] === undefined ? -1 : arguments[0];
+	
 	            var contents = this.getOnItems(idx).map(function (item) {
 	                return item.content || '';
 	            });
@@ -22534,6 +22560,7 @@
 	        _this.state = {
 	            code: _this.props.current.content || ''
 	        };
+	        _this._t = null;
 	        return _this;
 	    }
 	

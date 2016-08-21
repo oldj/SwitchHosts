@@ -17,10 +17,23 @@ class List extends React.Component {
         this.state = {
             current: this.props.current
         };
+        this.last_content = '';
+
+        SH_event.on('change', () => {
+            console.log(22);
+            SH_event.emit('save_data', this.props.hosts.list);
+            let content = this.getOnContent();
+            if (content !== this.last_content) {
+                SH_event.emit('apply', content, () => {
+                    this.last_content = content;
+                });
+            }
+        });
     }
 
     apply(content, success) {
         SH_event.emit('apply', content, () => {
+            this.last_content = content;
             success();
             SH_event.emit('save_data', this.props.hosts.list);
         });
@@ -39,13 +52,13 @@ class List extends React.Component {
         this.apply(content, success);
     }
 
-    getOnItems(idx) {
+    getOnItems(idx = -1) {
         return this.props.hosts.list.filter((item, _idx) => {
             return (item.on && _idx != idx) || (!item.on && _idx == idx);
         });
     }
 
-    getOnContent(idx) {
+    getOnContent(idx = -1) {
         let contents = this.getOnItems(idx).map((item) => {
             return item.content || '';
         });
