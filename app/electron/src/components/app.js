@@ -9,6 +9,7 @@ import React from 'react';
 import Panel from './panel/panel';
 import Content from './content/content';
 import SudoPrompt from './frame/sudo';
+import EditPrompt from './frame/edit';
 import './app.less';
 
 class App extends React.Component {
@@ -54,6 +55,7 @@ class App extends React.Component {
                          setHostContent={this.setHostContent.bind(this)}/>
                 <div className="frames">
                     <SudoPrompt/>
+                    <EditPrompt/>
                 </div>
             </div>
         );

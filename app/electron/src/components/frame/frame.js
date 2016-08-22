@@ -16,15 +16,6 @@ export default class Frame extends React.Component {
     componentDidMount() {
     }
 
-    componentWillReceiveProps(next_props) {
-        if (next_props.show) {
-            setTimeout(() => {
-                let el = this.refs.frame;
-                el && el.querySelector('input').focus();
-            }, 100);
-        }
-    }
-
     onOK() {
         this.props.onOK();
     }

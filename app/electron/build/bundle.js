@@ -21482,7 +21482,11 @@
 	
 	var _sudo2 = _interopRequireDefault(_sudo);
 	
-	__webpack_require__(214);
+	var _edit = __webpack_require__(214);
+	
+	var _edit2 = _interopRequireDefault(_edit);
+	
+	__webpack_require__(215);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -21548,7 +21552,8 @@
 	                _react2.default.createElement(
 	                    'div',
 	                    { className: 'frames' },
-	                    _react2.default.createElement(_sudo2.default, null)
+	                    _react2.default.createElement(_sudo2.default, null),
+	                    _react2.default.createElement(_edit2.default, null)
 	                )
 	            );
 	        }
@@ -31911,13 +31916,25 @@
 	    }
 	
 	    _createClass(SudoPrompt, [{
-	        key: 'componentDidMount',
-	        value: function componentDidMount() {
+	        key: 'componentWillReceiveProps',
+	        value: function componentWillReceiveProps(next_props) {
 	            var _this2 = this;
 	
+	            if (next_props.show) {
+	                setTimeout(function () {
+	                    var el = _this2.refs.frame;
+	                    el && el.querySelector('input').focus();
+	                }, 100);
+	            }
+	        }
+	    }, {
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {
+	            var _this3 = this;
+	
 	            SH_event.on('sudo_prompt', function (success) {
-	                _this2.setState({ show: true });
-	                _this2.onSuccess = success;
+	                _this3.setState({ show: true });
+	                _this3.onSuccess = success;
 	            });
 	        }
 	    }, {
@@ -31948,7 +31965,7 @@
 	    }, {
 	        key: 'body',
 	        value: function body() {
-	            var _this3 = this;
+	            var _this4 = this;
 	
 	            return _react2.default.createElement(
 	                'div',
@@ -31965,7 +31982,7 @@
 	                        'div',
 	                        { className: 'cnt' },
 	                        _react2.default.createElement('input', { type: 'password', ref: 'pswd', onKeyDown: function onKeyDown(e) {
-	                                return e.keyCode === 13 && _this3.onOK() || e.keyCode === 27 && _this3.onCancel();
+	                                return e.keyCode === 13 && _this4.onOK() || e.keyCode === 27 && _this4.onCancel();
 	                            } })
 	                    )
 	                )
@@ -31974,17 +31991,17 @@
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this4 = this;
+	            var _this5 = this;
 	
 	            return _react2.default.createElement(_frame2.default, {
 	                show: this.state.show,
 	                head: SH_Agent.lang.input_sudo_pswd,
 	                body: this.body(),
 	                onOK: function onOK() {
-	                    return _this4.onOK();
+	                    return _this5.onOK();
 	                },
 	                onCancel: function onCancel() {
-	                    return _this4.onCancel();
+	                    return _this5.onCancel();
 	                }
 	            });
 	        }
@@ -32038,18 +32055,6 @@
 	    _createClass(Frame, [{
 	        key: 'componentDidMount',
 	        value: function componentDidMount() {}
-	    }, {
-	        key: 'componentWillReceiveProps',
-	        value: function componentWillReceiveProps(next_props) {
-	            var _this2 = this;
-	
-	            if (next_props.show) {
-	                setTimeout(function () {
-	                    var el = _this2.refs.frame;
-	                    el && el.querySelector('input').focus();
-	                }, 100);
-	            }
-	        }
 	    }, {
 	        key: 'onOK',
 	        value: function onOK() {
@@ -32161,7 +32166,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 0 auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 30px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 0 auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
 	
 	// exports
 
@@ -32201,7 +32206,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 0 auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 30px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 0 auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
 	
 	// exports
 
@@ -32210,10 +32215,216 @@
 /* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/**
+	 * @author oldj
+	 * @blog http://oldj.net
+	 */
+	
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(3);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _frame = __webpack_require__(209);
+	
+	var _frame2 = _interopRequireDefault(_frame);
+	
+	__webpack_require__(217);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var EditPrompt = function (_React$Component) {
+	    _inherits(EditPrompt, _React$Component);
+	
+	    function EditPrompt(props) {
+	        _classCallCheck(this, EditPrompt);
+	
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(EditPrompt).call(this, props));
+	
+	        _this.state = {
+	            show: true,
+	            add: true,
+	            where: 'local',
+	            title: '',
+	            url: '',
+	            last_refresh: null,
+	            refresh_interval: 0
+	        };
+	        return _this;
+	    }
+	
+	    _createClass(EditPrompt, [{
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {}
+	    }, {
+	        key: 'onOK',
+	        value: function onOK() {}
+	    }, {
+	        key: 'onCancel',
+	        value: function onCancel() {
+	            this.setState({
+	                show: false
+	            });
+	        }
+	    }, {
+	        key: 'renderRemoteInputs',
+	        value: function renderRemoteInputs() {
+	            var _this2 = this;
+	
+	            if (this.state.where !== 'remote') return null;
+	
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'remote-ipts' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ln' },
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'title' },
+	                        SH_Agent.lang.url
+	                    ),
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'cnt' },
+	                        _react2.default.createElement('input', {
+	                            type: 'text',
+	                            ref: 'url',
+	                            value: this.state.url,
+	                            placeholder: 'http://',
+	                            onChange: function onChange(e) {
+	                                return _this2.setState({ url: e.target.value });
+	                            }
+	                        })
+	                    )
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ln' },
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'title' },
+	                        SH_Agent.lang.auto_refresh
+	                    ),
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'cnt' },
+	                        _react2.default.createElement('input', {
+	                            type: 'text',
+	                            ref: 'refresh_interval',
+	                            value: this.state.refresh_interval,
+	                            onChange: function onChange(e) {
+	                                return _this2.setState({ refresh_interval: e.target.value });
+	                            }
+	                        })
+	                    )
+	                )
+	            );
+	        }
+	    }, {
+	        key: 'body',
+	        value: function body() {
+	            var _this3 = this;
+	
+	            return _react2.default.createElement(
+	                'div',
+	                null,
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ln' },
+	                    _react2.default.createElement('input', { id: 'ipt-local', type: 'radio', name: 'where', value: 'local',
+	                        checked: this.state.where === 'local',
+	                        onChange: function onChange(e) {
+	                            return _this3.setState({ where: e.target.value });
+	                        }
+	                    }),
+	                    _react2.default.createElement(
+	                        'label',
+	                        { htmlFor: 'ipt-local' },
+	                        SH_Agent.lang.where_local
+	                    ),
+	                    _react2.default.createElement('input', { id: 'ipt-remote', type: 'radio', name: 'where', value: 'remote',
+	                        checked: this.state.where === 'remote',
+	                        onChange: function onChange(e) {
+	                            return _this3.setState({ where: e.target.value });
+	                        }
+	                    }),
+	                    _react2.default.createElement(
+	                        'label',
+	                        { htmlFor: 'ipt-remote' },
+	                        SH_Agent.lang.where_remote
+	                    )
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ln' },
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'title' },
+	                        SH_Agent.lang.host_title
+	                    ),
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'cnt' },
+	                        _react2.default.createElement('input', {
+	                            type: 'text',
+	                            ref: 'title',
+	                            name: 'text',
+	                            value: this.state.title,
+	                            onChange: function onChange(e) {
+	                                return _this3.setState({ title: e.target.value });
+	                            }
+	                        })
+	                    )
+	                ),
+	                this.renderRemoteInputs()
+	            );
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _this4 = this;
+	
+	            return _react2.default.createElement(_frame2.default, {
+	                show: this.state.show,
+	                head: SH_Agent.lang[this.state.add ? 'add_host' : 'edit_host'],
+	                body: this.body(),
+	                onOK: function onOK() {
+	                    return _this4.onOK();
+	                },
+	                onCancel: function onCancel() {
+	                    return _this4.onCancel();
+	                }
+	            });
+	        }
+	    }]);
+	
+	    return EditPrompt;
+	}(_react2.default.Component);
+	
+	exports.default = EditPrompt;
+
+/***/ },
+/* 215 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(215);
+	var content = __webpack_require__(216);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(183)(content, {});
@@ -32233,7 +32444,7 @@
 	}
 
 /***/ },
-/* 215 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(182)();
@@ -32242,6 +32453,46 @@
 	
 	// module
 	exports.push([module.id, "html,\nbody {\n  margin: 0;\n  padding: 0;\n  height: 100%;\n  font-size: 12px;\n  font-family: Arial, Helvetica, sans-serif;\n  color: #212121;\n  line-height: 20px;\n  background: #fff;\n}\n#app {\n  height: 100%;\n}\n", ""]);
+	
+	// exports
+
+
+/***/ },
+/* 217 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	
+	// load the styles
+	var content = __webpack_require__(218);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(183)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 218 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(182)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, ".frame label {\n  padding: 0 4em 0 0.5em;\n}\n", ""]);
 	
 	// exports
 
