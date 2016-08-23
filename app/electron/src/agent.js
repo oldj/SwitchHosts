@@ -10,7 +10,6 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('./libs/util');
-var sudo = require('sudo-prompt');
 const platform = process.platform;
 const sys_host_path = platform == 'win' ?
     'C:\\WINDOWS\\system32\\drivers\\etc\\hosts' : // todo 处理系统没有安装在 C 盘的情况
