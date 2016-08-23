@@ -27,7 +27,7 @@ class App extends React.Component {
         });
     }
 
-    isReadOnly(host) {
+    static isReadOnly(host) {
         return host.is_sys || host.where == 'remote';
     }
 
@@ -46,12 +46,15 @@ class App extends React.Component {
         this.toSave();
     }
 
+    componentDidMount() {
+    }
+
     render() {
         let current = this.state.current;
         return (
             <div id="app">
                 <Panel hosts={this.props.hosts} current={current} setCurrent={this.setCurrent.bind(this)}/>
-                <Content current={current} readonly={this.isReadOnly(current)}
+                <Content current={current} readonly={App.isReadOnly(current)}
                          setHostContent={this.setHostContent.bind(this)}/>
                 <div className="frames">
                     <SudoPrompt/>
