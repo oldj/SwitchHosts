@@ -20,19 +20,14 @@ export default class SudoPrompt extends React.Component {
         }
     }
 
-    componentWillReceiveProps(next_props) {
-        if (next_props.show) {
-            setTimeout(() => {
-                let el = this.refs.frame;
-                el && el.querySelector('input').focus();
-            }, 100);
-        }
-    }
-
     componentDidMount() {
         SH_event.on('sudo_prompt', (success) => {
             this.setState({show: true});
             this.onSuccess = success;
+            setTimeout(() => {
+                let el = this.refs.body;
+                el && el.querySelector('input').focus();
+            }, 100);
         });
     }
 
@@ -61,7 +56,7 @@ export default class SudoPrompt extends React.Component {
 
     body() {
         return (
-            <div>
+            <div ref="body">
                 <div className="ln">
                     <div className="title">{SH_Agent.lang.sudo_pswd}</div>
                     <div className="cnt">
