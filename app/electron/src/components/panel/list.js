@@ -17,10 +17,9 @@ class List extends React.Component {
         this.state = {
             current: this.props.current
         };
-        this.last_content = '';
+        this.last_content = this.props.hosts.sys.content;
 
         SH_event.on('change', () => {
-            console.log(22);
             SH_event.emit('save_data', this.props.hosts.list);
             let content = this.getOnContent();
             if (content !== this.last_content) {
@@ -78,6 +77,17 @@ class List extends React.Component {
                     onToggle={(success)=> this.toggleOne(idx, success)}
                     key={'host-' + idx}/>
             )
+        });
+    }
+
+    componentDidMount() {
+        SH_event.on('host_add', (data) => {
+            this.props.hosts.list.push(data);
+            // this.forceUpdate();
+            console.log(data);
+
+            this.selectOne(data);
+            SH_event.emit('change');
         });
     }
 

@@ -208,45 +208,17 @@
 	} ())
 	function runTimeout(fun) {
 	    if (cachedSetTimeout === setTimeout) {
-	        //normal enviroments in sane situations
 	        return setTimeout(fun, 0);
+	    } else {
+	        return cachedSetTimeout.call(null, fun, 0);
 	    }
-	    try {
-	        // when when somebody has screwed with setTimeout but no I.E. maddness
-	        return cachedSetTimeout(fun, 0);
-	    } catch(e){
-	        try {
-	            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-	            return cachedSetTimeout.call(null, fun, 0);
-	        } catch(e){
-	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-	            return cachedSetTimeout.call(this, fun, 0);
-	        }
-	    }
-	
-	
 	}
 	function runClearTimeout(marker) {
 	    if (cachedClearTimeout === clearTimeout) {
-	        //normal enviroments in sane situations
-	        return clearTimeout(marker);
+	        clearTimeout(marker);
+	    } else {
+	        cachedClearTimeout.call(null, marker);
 	    }
-	    try {
-	        // when when somebody has screwed with setTimeout but no I.E. maddness
-	        return cachedClearTimeout(marker);
-	    } catch (e){
-	        try {
-	            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-	            return cachedClearTimeout.call(null, marker);
-	        } catch (e){
-	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-	            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-	            return cachedClearTimeout.call(this, marker);
-	        }
-	    }
-	
-	
-	
 	}
 	var queue = [];
 	var draining = false;
@@ -21514,7 +21486,7 @@
 	
 	var _edit2 = _interopRequireDefault(_edit);
 	
-	__webpack_require__(217);
+	__webpack_require__(215);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -21546,11 +21518,6 @@
 	            });
 	        }
 	    }, {
-	        key: 'isReadOnly',
-	        value: function isReadOnly(host) {
-	            return host.is_sys || host.where == 'remote';
-	        }
-	    }, {
 	        key: 'toSave',
 	        value: function toSave() {
 	            clearTimeout(this._t);
@@ -21568,6 +21535,9 @@
 	            this.toSave();
 	        }
 	    }, {
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {}
+	    }, {
 	        key: 'render',
 	        value: function render() {
 	            var current = this.state.current;
@@ -21575,7 +21545,7 @@
 	                'div',
 	                { id: 'app' },
 	                _react2.default.createElement(_panel2.default, { hosts: this.props.hosts, current: current, setCurrent: this.setCurrent.bind(this) }),
-	                _react2.default.createElement(_content2.default, { current: current, readonly: this.isReadOnly(current),
+	                _react2.default.createElement(_content2.default, { current: current, readonly: App.isReadOnly(current),
 	                    setHostContent: this.setHostContent.bind(this) }),
 	                _react2.default.createElement(
 	                    'div',
@@ -21584,6 +21554,11 @@
 	                    _react2.default.createElement(_edit2.default, null)
 	                )
 	            );
+	        }
+	    }], [{
+	        key: 'isReadOnly',
+	        value: function isReadOnly(host) {
+	            return host.is_sys || host.where == 'remote';
 	        }
 	    }]);
 	
@@ -21703,12 +21678,33 @@
 	    }
 	
 	    _createClass(Buttons, [{
+	        key: 'btnAdd',
+	        value: function btnAdd() {
+	            SH_event.emit('add_host');
+	        }
+	    }, {
 	        key: 'render',
 	        value: function render() {
+	            var _this2 = this;
+	
 	            return _react2.default.createElement(
 	                'div',
 	                { id: 'sh-buttons' },
-	                'btn'
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'left' },
+	                    _react2.default.createElement(
+	                        'a',
+	                        {
+	                            className: 'btn-add',
+	                            href: '#',
+	                            onClick: function onClick() {
+	                                return _this2.btnAdd();
+	                            }
+	                        },
+	                        '+'
+	                    )
+	                )
 	            );
 	        }
 	    }]);
@@ -21734,8 +21730,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -21753,7 +21749,7 @@
 	
 	
 	// module
-	exports.push([module.id, "#sh-buttons {\n  position: absolute;\n  bottom: 0;\n  width: 100%;\n  height: 30px;\n  line-height: 30px;\n  background: #373d47;\n}\n", ""]);
+	exports.push([module.id, "#sh-buttons {\n  position: absolute;\n  bottom: 0;\n  width: 100%;\n  height: 30px;\n  line-height: 30px;\n  background: #373d47;\n}\n#sh-buttons .left {\n  float: left;\n  padding-left: 10px;\n}\n#sh-buttons .left .btn-add {\n  display: inline-block;\n  text-align: center;\n  width: 20px;\n  color: #979da7;\n  text-decoration: none;\n}\n#sh-buttons .left .btn-add:hover {\n  background: rgba(255, 255, 255, 0.1);\n}\n", ""]);
 	
 	// exports
 
@@ -22112,10 +22108,9 @@
 	        _this.state = {
 	            current: _this.props.current
 	        };
-	        _this.last_content = '';
+	        _this.last_content = _this.props.hosts.sys.content;
 	
 	        SH_event.on('change', function () {
-	            console.log(22);
 	            SH_event.emit('save_data', _this.props.hosts.list);
 	            var content = _this.getOnContent();
 	            if (content !== _this.last_content) {
@@ -22189,6 +22184,20 @@
 	                        return _this3.toggleOne(idx, success);
 	                    },
 	                    key: 'host-' + idx });
+	            });
+	        }
+	    }, {
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {
+	            var _this4 = this;
+	
+	            SH_event.on('host_add', function (data) {
+	                _this4.props.hosts.list.push(data);
+	                // this.forceUpdate();
+	                console.log(data);
+	
+	                _this4.selectOne(data);
+	                SH_event.emit('change');
 	            });
 	        }
 	    }, {
@@ -22404,8 +22413,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22423,7 +22432,7 @@
 	
 	
 	// module
-	exports.push([module.id, "#sh-list .list-item {\n  padding: 5px 10px 5px 15px;\n  cursor: pointer;\n}\n#sh-list .list-item.sys-host {\n  font-size: 14px;\n  padding: 8px 10px 8px 12px;\n}\n#sh-list .list-item.sys-host i {\n  width: 23px;\n}\n#sh-list .list-item.selected {\n  background: #2d3138;\n  color: #fff;\n}\n#sh-list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 5px;\n}\n#sh-list .list-item i.on {\n  float: right;\n  cursor: pointer;\n  line-height: 23px;\n}\n#sh-list .list-item i.on.icon-on {\n  color: #af9;\n}\n", ""]);
+	exports.push([module.id, "#sh-list .list-item {\n  padding: 7px 10px 7px 15px;\n  cursor: pointer;\n}\n#sh-list .list-item.sys-host {\n  font-size: 14px;\n  padding: 8px 10px 8px 12px;\n}\n#sh-list .list-item.sys-host i {\n  width: 23px;\n}\n#sh-list .list-item.selected {\n  background: #2d3138;\n}\n#sh-list .list-item.selected span {\n  color: #fff;\n}\n#sh-list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 5px;\n}\n#sh-list .list-item i.on {\n  float: right;\n  cursor: pointer;\n  line-height: 23px;\n}\n#sh-list .list-item i.on.icon-on {\n  color: #af9;\n}\n", ""]);
 	
 	// exports
 
@@ -22444,8 +22453,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22484,8 +22493,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -31788,8 +31797,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../css-loader/index.js!./codemirror.css", function() {
-				var newContent = require("!!./../../css-loader/index.js!./codemirror.css");
+			module.hot.accept("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css", function() {
+				var newContent = require("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -31828,8 +31837,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -31868,8 +31877,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -31944,25 +31953,17 @@
 	    }
 	
 	    _createClass(SudoPrompt, [{
-	        key: 'componentWillReceiveProps',
-	        value: function componentWillReceiveProps(next_props) {
-	            var _this2 = this;
-	
-	            if (next_props.show) {
-	                setTimeout(function () {
-	                    var el = _this2.refs.frame;
-	                    el && el.querySelector('input').focus();
-	                }, 100);
-	            }
-	        }
-	    }, {
 	        key: 'componentDidMount',
 	        value: function componentDidMount() {
-	            var _this3 = this;
+	            var _this2 = this;
 	
 	            SH_event.on('sudo_prompt', function (success) {
-	                _this3.setState({ show: true });
-	                _this3.onSuccess = success;
+	                _this2.setState({ show: true });
+	                _this2.onSuccess = success;
+	                setTimeout(function () {
+	                    var el = _this2.refs.body;
+	                    el && el.querySelector('input').focus();
+	                }, 100);
 	            });
 	        }
 	    }, {
@@ -31993,11 +31994,11 @@
 	    }, {
 	        key: 'body',
 	        value: function body() {
-	            var _this4 = this;
+	            var _this3 = this;
 	
 	            return _react2.default.createElement(
 	                'div',
-	                null,
+	                { ref: 'body' },
 	                _react2.default.createElement(
 	                    'div',
 	                    { className: 'ln' },
@@ -32010,7 +32011,7 @@
 	                        'div',
 	                        { className: 'cnt' },
 	                        _react2.default.createElement('input', { type: 'password', ref: 'pswd', onKeyDown: function onKeyDown(e) {
-	                                return e.keyCode === 13 && _this4.onOK() || e.keyCode === 27 && _this4.onCancel();
+	                                return e.keyCode === 13 && _this3.onOK() || e.keyCode === 27 && _this3.onCancel();
 	                            } })
 	                    )
 	                )
@@ -32019,17 +32020,17 @@
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this5 = this;
+	            var _this4 = this;
 	
 	            return _react2.default.createElement(_frame2.default, {
 	                show: this.state.show,
 	                head: SH_Agent.lang.input_sudo_pswd,
 	                body: this.body(),
 	                onOK: function onOK() {
-	                    return _this5.onOK();
+	                    return _this4.onOK();
 	                },
 	                onCancel: function onCancel() {
-	                    return _this5.onCancel();
+	                    return _this4.onCancel();
 	                }
 	            });
 	        }
@@ -32175,8 +32176,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32215,8 +32216,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32254,6 +32255,8 @@
 	    value: true
 	});
 	
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
 	var _react = __webpack_require__(3);
@@ -32264,7 +32267,7 @@
 	
 	var _frame2 = _interopRequireDefault(_frame);
 	
-	__webpack_require__(215);
+	__webpack_require__(217);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -32283,7 +32286,7 @@
 	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(EditPrompt).call(this, props));
 	
 	        _this.state = {
-	            show: true,
+	            show: false,
 	            add: true,
 	            where: 'local',
 	            title: '',
@@ -32295,11 +32298,66 @@
 	    }
 	
 	    _createClass(EditPrompt, [{
+	        key: 'tryToFocus',
+	        value: function tryToFocus() {
+	            var el = this.refs.body && this.refs.body.querySelector('input[type=text]');
+	            el && el.focus();
+	        }
+	    }, {
 	        key: 'componentDidMount',
-	        value: function componentDidMount() {}
+	        value: function componentDidMount() {
+	            var _this2 = this;
+	
+	            SH_event.on('add_host', function () {
+	                _this2.setState({
+	                    show: true,
+	                    add: true
+	                });
+	                setTimeout(function () {
+	                    _this2.tryToFocus();
+	                }, 100);
+	            });
+	
+	            SH_event.on('edit_host', function (host) {
+	                _this2.setState({
+	                    show: true,
+	                    add: false,
+	                    where: host.where || 'local',
+	                    title: host.title || '',
+	                    url: host.url || '',
+	                    last_refresh: host.last_refresh || null,
+	                    refresh_interval: host.refresh_interval || 0
+	                });
+	                setTimeout(function () {
+	                    _this2.tryToFocus();
+	                }, 100);
+	            });
+	        }
 	    }, {
 	        key: 'onOK',
-	        value: function onOK() {}
+	        value: function onOK() {
+	            this.setState({
+	                title: (this.state.title || '').replace(/^\s+|\s+$/g, ''),
+	                url: (this.state.url || '').replace(/^\s+|\s+$/g, '')
+	            });
+	
+	            if (this.state.title === '') {
+	                this.refs.title.focus();
+	                return false;
+	            }
+	            if (this.state.where === 'remote' && this.state.url === '') {
+	                this.refs.url.focus();
+	                return false;
+	            }
+	
+	            SH_event.emit('host_' + (this.state.add ? 'add' : 'edit'), Object.assign({
+	                content: '# ' + this.state.title
+	            }, this.state));
+	
+	            this.setState({
+	                show: false
+	            });
+	        }
 	    }, {
 	        key: 'onCancel',
 	        value: function onCancel() {
@@ -32310,7 +32368,7 @@
 	    }, {
 	        key: 'renderRemoteInputs',
 	        value: function renderRemoteInputs() {
-	            var _this2 = this;
+	            var _this3 = this;
 	
 	            if (this.state.where !== 'remote') return null;
 	
@@ -32334,7 +32392,7 @@
 	                            value: this.state.url,
 	                            placeholder: 'http://',
 	                            onChange: function onChange(e) {
-	                                return _this2.setState({ url: e.target.value });
+	                                return _this3.setState({ url: e.target.value });
 	                            }
 	                        })
 	                    )
@@ -32350,14 +32408,22 @@
 	                    _react2.default.createElement(
 	                        'div',
 	                        { className: 'cnt' },
-	                        _react2.default.createElement('input', {
-	                            type: 'text',
-	                            ref: 'refresh_interval',
-	                            value: this.state.refresh_interval,
-	                            onChange: function onChange(e) {
-	                                return _this2.setState({ refresh_interval: e.target.value });
-	                            }
-	                        })
+	                        _react2.default.createElement(
+	                            'select',
+	                            {
+	                                value: this.state.refresh_interval,
+	                                onChange: function onChange(e) {
+	                                    return _this3.setState({ refresh_interval: parseInt(e.target.value) || 0 });
+	                                }
+	                            },
+	                            EditPrompt.getRefreshOptions()
+	                        ),
+	                        _react2.default.createElement(
+	                            'span',
+	                            { className: 'last-refresh' },
+	                            SH_Agent.lang.last_refresh,
+	                            this.state.last_refresh || 'N/A'
+	                        )
 	                    )
 	                )
 	            );
@@ -32365,18 +32431,18 @@
 	    }, {
 	        key: 'body',
 	        value: function body() {
-	            var _this3 = this;
+	            var _this4 = this;
 	
 	            return _react2.default.createElement(
 	                'div',
-	                null,
+	                { ref: 'body' },
 	                _react2.default.createElement(
 	                    'div',
 	                    { className: 'ln' },
 	                    _react2.default.createElement('input', { id: 'ipt-local', type: 'radio', name: 'where', value: 'local',
 	                        checked: this.state.where === 'local',
 	                        onChange: function onChange(e) {
-	                            return _this3.setState({ where: e.target.value });
+	                            return _this4.setState({ where: e.target.value });
 	                        }
 	                    }),
 	                    _react2.default.createElement(
@@ -32387,7 +32453,7 @@
 	                    _react2.default.createElement('input', { id: 'ipt-remote', type: 'radio', name: 'where', value: 'remote',
 	                        checked: this.state.where === 'remote',
 	                        onChange: function onChange(e) {
-	                            return _this3.setState({ where: e.target.value });
+	                            return _this4.setState({ where: e.target.value });
 	                        }
 	                    }),
 	                    _react2.default.createElement(
@@ -32413,7 +32479,7 @@
 	                            name: 'text',
 	                            value: this.state.title,
 	                            onChange: function onChange(e) {
-	                                return _this3.setState({ title: e.target.value });
+	                                return _this4.setState({ title: e.target.value });
 	                            }
 	                        })
 	                    )
@@ -32424,18 +32490,35 @@
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this4 = this;
+	            var _this5 = this;
 	
 	            return _react2.default.createElement(_frame2.default, {
 	                show: this.state.show,
 	                head: SH_Agent.lang[this.state.add ? 'add_host' : 'edit_host'],
 	                body: this.body(),
 	                onOK: function onOK() {
-	                    return _this4.onOK();
+	                    return _this5.onOK();
 	                },
 	                onCancel: function onCancel() {
-	                    return _this4.onCancel();
+	                    return _this5.onCancel();
 	                }
+	            });
+	        }
+	    }], [{
+	        key: 'getRefreshOptions',
+	        value: function getRefreshOptions() {
+	            var k = [[0, '' + SH_Agent.lang.never], [1, '1 ' + SH_Agent.lang.hour], [24, '24 ' + SH_Agent.lang.hours], [168, '7 ' + SH_Agent.lang.days]];
+	            return k.map(function (_ref, idx) {
+	                var _ref2 = _slicedToArray(_ref, 2);
+	
+	                var v = _ref2[0];
+	                var n = _ref2[1];
+	
+	                return _react2.default.createElement(
+	                    'option',
+	                    { value: v, key: idx },
+	                    n
+	                );
 	            });
 	        }
 	    }]);
@@ -32461,8 +32544,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less");
+			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32480,7 +32563,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame label {\n  padding: 0 4em 0 0.5em;\n}\n", ""]);
+	exports.push([module.id, "html,\nbody {\n  margin: 0;\n  padding: 0;\n  height: 100%;\n  font-size: 12px;\n  font-family: Arial, Helvetica, sans-serif;\n  color: #212121;\n  line-height: 20px;\n  background: #fff;\n}\n#app {\n  height: 100%;\n}\n", ""]);
 	
 	// exports
 
@@ -32501,8 +32584,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32520,7 +32603,7 @@
 	
 	
 	// module
-	exports.push([module.id, "html,\nbody {\n  margin: 0;\n  padding: 0;\n  height: 100%;\n  font-size: 12px;\n  font-family: Arial, Helvetica, sans-serif;\n  color: #212121;\n  line-height: 20px;\n  background: #fff;\n}\n#app {\n  height: 100%;\n}\n", ""]);
+	exports.push([module.id, ".frame label {\n  padding: 0 4em 0 0.5em;\n}\n.frame .last-refresh {\n  padding-left: 1em;\n  color: #999;\n}\n", ""]);
 	
 	// exports
 
