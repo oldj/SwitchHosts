@@ -14,7 +14,7 @@ export default class EditPrompt extends React.Component {
         super(props);
 
         this.state = {
-            show: true,
+            show: false,
             add: true,
             where: 'local',
             title: '',
@@ -24,15 +24,79 @@ export default class EditPrompt extends React.Component {
         };
     }
 
+    tryToFocus() {
+        let el = this.refs.body && this.refs.body.querySelector('input[type=text]');
+        el && el.focus();
+    }
+
     componentDidMount() {
+        SH_event.on('add_host', () => {
+            this.setState({
+                show: true,
+                add: true
+            });
+            setTimeout(() => {
+                this.tryToFocus();
+            }, 100);
+        });
+
+        SH_event.on('edit_host', (host) => {
+            this.setState({
+                show: true,
+                add: false,
+                where: host.where || 'local',
+                title: host.title || '',
+                url: host.url || '',
+                last_refresh: host.last_refresh || null,
+                refresh_interval: host.refresh_interval || 0
+            });
+            setTimeout(() => {
+                this.tryToFocus();
+            }, 100);
+        });
     }
 
     onOK() {
+        this.setState({
+            title: (this.state.title || '').replace(/^\s+|\s+$/g, ''),
+            url: (this.state.url || '').replace(/^\s+|\s+$/g, '')
+        });
+
+        if (this.state.title === '') {
+            this.refs.title.focus();
+            return false;
+        }
+        if (this.state.where === 'remote' && this.state.url === '') {
+            this.refs.url.focus();
+            return false;
+        }
+
+        SH_event.emit('host_' + (this.state.add ? 'add' : 'edit'), Object.assign({
+            content: `# ${this.state.title}`
+        }, this.state));
+
+        this.setState({
+            show: false
+        });
     }
 
     onCancel() {
         this.setState({
             show: false
+        });
+    }
+
+    static getRefreshOptions() {
+        let k = [
+            [0, `${SH_Agent.lang.never}`],
+            [1, `1 ${SH_Agent.lang.hour}`],
+            [24, `24 ${SH_Agent.lang.hours}`],
+            [168, `7 ${SH_Agent.lang.days}`]
+        ];
+        return k.map(([v, n], idx) => {
+            return (
+                <option value={v} key={idx}>{n}</option>
+            );
         });
     }
 
@@ -56,12 +120,17 @@ export default class EditPrompt extends React.Component {
                 <div className="ln">
                     <div className="title">{SH_Agent.lang.auto_refresh}</div>
                     <div className="cnt">
-                        <input
-                            type="text"
-                            ref="refresh_interval"
+                        <select
                             value={this.state.refresh_interval}
-                            onChange={(e) => this.setState({refresh_interval: e.target.value})}
-                        />
+                            onChange={(e) => this.setState({refresh_interval: parseInt(e.target.value) || 0})}
+                        >
+                            {EditPrompt.getRefreshOptions()}
+                        </select>
+
+                        <span className="last-refresh">
+                            {SH_Agent.lang.last_refresh}
+                            {this.state.last_refresh || 'N/A'}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -70,7 +139,7 @@ export default class EditPrompt extends React.Component {
 
     body() {
         return (
-            <div>
+            <div ref="body">
                 <div className="ln">
                     <input id="ipt-local" type="radio" name="where" value="local"
                            checked={this.state.where === 'local'}
