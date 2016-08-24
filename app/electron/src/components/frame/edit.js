@@ -22,11 +22,23 @@ export default class EditPrompt extends React.Component {
             last_refresh: null,
             refresh_interval: 0
         };
+
+        this.current_host = null;
     }
 
     tryToFocus() {
         let el = this.refs.body && this.refs.body.querySelector('input[type=text]');
         el && el.focus();
+    }
+
+    clear() {
+        this.setState({
+            where: 'local',
+            title: '',
+            url: '',
+            last_refresh: null,
+            refresh_interval: 0
+        });
     }
 
     componentDidMount() {
@@ -41,6 +53,7 @@ export default class EditPrompt extends React.Component {
         });
 
         SH_event.on('edit_host', (host) => {
+            this.current_host = host;
             this.setState({
                 show: true,
                 add: false,
@@ -71,19 +84,32 @@ export default class EditPrompt extends React.Component {
             return false;
         }
 
-        SH_event.emit('host_' + (this.state.add ? 'add' : 'edit'), Object.assign({
+        let data = Object.assign({
             content: `# ${this.state.title}`
-        }, this.state));
+        }, this.state);
+        delete data['add'];
+        SH_event.emit('host_' + (this.state.add ? 'add' : 'edit') + 'ed', data);
 
         this.setState({
             show: false
         });
+        this.clear();
     }
 
     onCancel() {
         this.setState({
             show: false
         });
+        this.clear();
+    }
+
+    confirmDel() {
+        if (!confirm(SH_Agent.lang.confirm_del)) return;
+        SH_event.emit('del_host', this.current_host);
+        this.setState({
+            show: false
+        });
+        this.clear();
     }
 
     static getRefreshOptions() {
@@ -100,6 +126,23 @@ export default class EditPrompt extends React.Component {
         });
     }
 
+    getEditOperations() {
+        if (this.state.add) return null;
+
+        return (
+            <div>
+                <div className="ln">
+                    <a href="#" className="del"
+                       onClick={this.confirmDel.bind(this)}
+                    >
+                        <i className="iconfont icon-delete"/>
+                        <span>{SH_Agent.lang.del_host}</span>
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
     renderRemoteInputs() {
         if (this.state.where !== 'remote') return null;
 
@@ -114,6 +157,7 @@ export default class EditPrompt extends React.Component {
                             value={this.state.url}
                             placeholder="http://"
                             onChange={(e) => this.setState({url: e.target.value})}
+                            onKeyDown={(e)=>(e.keyCode === 13 && this.onOK()||e.keyCode===27 && this.onCancel())}
                         />
                     </div>
                 </div>
@@ -161,10 +205,12 @@ export default class EditPrompt extends React.Component {
                             name="text"
                             value={this.state.title}
                             onChange={(e) => this.setState({title: e.target.value})}
+                            onKeyDown={(e)=>(e.keyCode === 13 && this.onOK()||e.keyCode===27 && this.onCancel())}
                         />
                     </div>
                 </div>
                 {this.renderRemoteInputs()}
+                {this.getEditOperations()}
             </div>
         )
     }
