@@ -127,12 +127,41 @@ class List extends React.Component {
             return (
                 <ListItem
                     data={item}
+                    idx={idx}
                     selectOne={this.selectOne.bind(this)}
                     current={this.state.current}
                     onToggle={(success)=> this.toggleOne(idx, success)}
-                    key={'host-' + idx}/>
+                    key={'host-' + idx}
+                    dragOrder={(sidx, tidx) => this.dragOrder(sidx, tidx)}
+                />
             )
         });
+    }
+
+    dragOrder(source_idx, target_idx) {
+        let source = this.state.list[source_idx];
+        let target = this.state.list[target_idx];
+
+        let list = this.state.list.filter((item, idx) => idx != source_idx);
+        let new_target_idx = list.findIndex((item) => item == target);
+
+        let to_idx;
+        if (source_idx < target_idx) {
+            // append
+            to_idx = new_target_idx + 1;
+        } else {
+            // insert before
+            to_idx = new_target_idx;
+        }
+        list.splice(to_idx, 0, source);
+
+        this.setState({
+            list: list
+        });
+
+        setTimeout(() => {
+            SH_event.emit('change');
+        }, 100);
     }
 
     componentDidMount() {
