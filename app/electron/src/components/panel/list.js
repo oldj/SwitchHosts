@@ -48,6 +48,20 @@ class List extends React.Component {
             }, 100);
         });
 
+        SH_event.on('host_edited', (data, host) => {
+            let idx = this.state.list.findIndex((item) => item == host);
+            if (idx == -1) return;
+
+            this.setState({
+                list: update(this.state.list, {$splice: [[idx, 1, data]]})
+            });
+            this.selectOne(data);
+
+            setTimeout(() => {
+                SH_event.emit('change');
+            }, 100);
+        });
+
         SH_event.on('del_host', (host) => {
             let list = this.state.list;
             let idx_to_del = list.findIndex((item) => {
