@@ -43,6 +43,24 @@ export default class ListItem extends React.Component {
         });
     }
 
+    allowedDrop(e) {
+        e.preventDefault();
+    }
+
+    onDrop(e) {
+        if (this.props.sys) {
+            e.preventDefault();
+            return false;
+        }
+        let source_idx = parseInt(e.dataTransfer.getData('text'));
+
+        this.props.dragOrder(source_idx, this.props.idx);
+    }
+
+    onDrag(e) {
+        e.dataTransfer.setData('text', this.props.idx);
+    }
+
     render() {
         let {data, sys, current} = this.props;
         let is_selected = data == current;
@@ -54,6 +72,10 @@ export default class ListItem extends React.Component {
                 , 'selected': is_selected
             })}
                  onClick={this.beSelected.bind(this)}
+                 draggable={!sys}
+                 onDragStart={(e) => this.onDrag(e)}
+                 onDragOver={(e) => this.allowedDrop(e)}
+                 onDrop={(e) => this.onDrop(e)}
             >
                 { sys ? null :
                     (
