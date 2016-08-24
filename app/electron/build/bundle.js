@@ -22237,13 +22237,49 @@
 	            return this.state.list.map(function (item, idx) {
 	                return _react2.default.createElement(_list_item2.default, {
 	                    data: item,
+	                    idx: idx,
 	                    selectOne: _this3.selectOne.bind(_this3),
 	                    current: _this3.state.current,
 	                    onToggle: function onToggle(success) {
 	                        return _this3.toggleOne(idx, success);
 	                    },
-	                    key: 'host-' + idx });
+	                    key: 'host-' + idx,
+	                    dragOrder: function dragOrder(sidx, tidx) {
+	                        return _this3.dragOrder(sidx, tidx);
+	                    }
+	                });
 	            });
+	        }
+	    }, {
+	        key: 'dragOrder',
+	        value: function dragOrder(source_idx, target_idx) {
+	            var source = this.state.list[source_idx];
+	            var target = this.state.list[target_idx];
+	
+	            var list = this.state.list.filter(function (item, idx) {
+	                return idx != source_idx;
+	            });
+	            var new_target_idx = list.findIndex(function (item) {
+	                return item == target;
+	            });
+	
+	            var to_idx = void 0;
+	            if (source_idx < target_idx) {
+	                // append
+	                to_idx = new_target_idx + 1;
+	            } else {
+	                // insert before
+	                to_idx = new_target_idx;
+	            }
+	            list.splice(to_idx, 0, source);
+	
+	            this.setState({
+	                list: list
+	            });
+	
+	            setTimeout(function () {
+	                SH_event.emit('change');
+	            }, 100);
 	        }
 	    }, {
 	        key: 'componentDidMount',
@@ -22350,8 +22386,31 @@
 	            });
 	        }
 	    }, {
+	        key: 'allowedDrop',
+	        value: function allowedDrop(e) {
+	            e.preventDefault();
+	        }
+	    }, {
+	        key: 'onDrop',
+	        value: function onDrop(e) {
+	            if (this.props.sys) {
+	                e.preventDefault();
+	                return false;
+	            }
+	            var source_idx = parseInt(e.dataTransfer.getData('text'));
+	
+	            this.props.dragOrder(source_idx, this.props.idx);
+	        }
+	    }, {
+	        key: 'onDrag',
+	        value: function onDrag(e) {
+	            e.dataTransfer.setData('text', this.props.idx);
+	        }
+	    }, {
 	        key: 'render',
 	        value: function render() {
+	            var _this3 = this;
+	
 	            var _props = this.props;
 	            var data = _props.data;
 	            var sys = _props.sys;
@@ -22366,7 +22425,17 @@
 	                        'sys-host': sys,
 	                        'selected': is_selected
 	                    }),
-	                    onClick: this.beSelected.bind(this)
+	                    onClick: this.beSelected.bind(this),
+	                    draggable: !sys,
+	                    onDragStart: function onDragStart(e) {
+	                        return _this3.onDrag(e);
+	                    },
+	                    onDragOver: function onDragOver(e) {
+	                        return _this3.allowedDrop(e);
+	                    },
+	                    onDrop: function onDrop(e) {
+	                        return _this3.onDrop(e);
+	                    }
 	                },
 	                sys ? null : _react2.default.createElement(
 	                    'div',
