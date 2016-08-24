@@ -15,14 +15,13 @@ export default class ListItem extends React.Component {
 
         this.is_sys = !!this.props.sys;
         this.state = {
-            is_selected: false,
+            is_selected: false
             // on: this.props.data.on,
-            title: this.props.data.title
         };
     }
 
     getTitle() {
-        return this.is_sys ? 'System Hosts' : this.state.title || 'untitled';
+        return this.is_sys ? 'System Hosts' : this.props.data.title || 'untitled';
     }
 
     beSelected() {
@@ -31,6 +30,10 @@ export default class ListItem extends React.Component {
         // });
 
         this.props.selectOne(this.props.data);
+    }
+
+    toEdit() {
+        SH_event.emit('edit_host', this.props.data);
     }
 
     toggle() {
@@ -53,14 +56,22 @@ export default class ListItem extends React.Component {
                  onClick={this.beSelected.bind(this)}
             >
                 { sys ? null :
-                    <i className={classnames({
-                        'on': 1
-                        , 'iconfont': 1
-                        , 'icon-on': data.on
-                        , 'icon-off': !data.on
-                    })}
-                       onClick={this.toggle.bind(this)}
-                    />
+                    (
+                        <div>
+                            <i className={classnames({
+                                'switch': 1
+                                , 'iconfont': 1
+                                , 'icon-on': data.on
+                                , 'icon-off': !data.on
+                            })}
+                               onClick={this.toggle.bind(this)}
+                            />
+                            <i
+                                className="iconfont icon-edit"
+                                onClick={this.toEdit.bind(this)}
+                            />
+                        </div>
+                    )
                 }
                 <i className={classnames({
                     'iconfont': 1
