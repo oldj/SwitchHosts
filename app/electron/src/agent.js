@@ -19,6 +19,11 @@ const data_path = path.join(work_path, 'data.json');
 const preference_path = path.join(work_path, 'preferences.json');
 const exec = require('child_process').exec;
 
+const crypto = require('crypto');
+function md5 (text) {
+    return crypto.createHash('md5').update(text).digest('hex');
+}
+
 const lang = require('./lang');
 let sudo_pswd = '';
 
@@ -175,6 +180,7 @@ SH_event.on('save_data', (content) => {
 });
 
 module.exports = {
+    md5: md5,
     getHosts: function () {
         let data = null;
         try {
