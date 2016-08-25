@@ -21453,6 +21453,11 @@
 	            current: _this.props.hosts.sys
 	        };
 	
+	        // auto check refresh
+	        setTimeout(function () {
+	            _this.autoCheckRefresh();
+	        }, 1000 * 5);
+	
 	        SH_event.on('after_apply', function () {
 	            if (_this.state.current.is_sys) {
 	                // 重新读取
@@ -21461,10 +21466,26 @@
 	                });
 	            }
 	        });
+	
 	        return _this;
 	    }
 	
 	    _createClass(App, [{
+	        key: 'autoCheckRefresh',
+	        value: function autoCheckRefresh() {
+	            var _this2 = this;
+	
+	            this.props.hosts.list.map(function (host, idx) {
+	                setTimeout(function () {
+	                    SH_event.emit('check_host_refresh', host);
+	                }, 1000 * 5 * idx);
+	            });
+	
+	            setTimeout(function () {
+	                _this2.autoCheckRefresh();
+	            }, 1000 * 60 * 10);
+	        }
+	    }, {
 	        key: 'setCurrent',
 	        value: function setCurrent(host) {
 	            this.setState({
@@ -22195,9 +22216,10 @@
 	                _this.selectOne(data);
 	
 	                setTimeout(function () {
-	                    SH_event.emit('change');
+	                    SH_event.emit('change', true);
 	                    var el = _this.refs.items;
 	                    el.scrollTop = document.querySelector('.list-item.selected').offsetTop - el.offsetHeight + 50;
+	                    _this.checkUpdateHost(data);
 	                }, 100);
 	            });
 	        });
@@ -22210,12 +22232,14 @@
 	
 	            _this.setState({
 	                list: (0, _reactAddonsUpdate2.default)(_this.state.list, { $splice: [[idx, 1, data]] })
-	            });
-	            _this.selectOne(data);
+	            }, function () {
+	                _this.selectOne(data);
 	
-	            setTimeout(function () {
-	                SH_event.emit('change');
-	            }, 100);
+	                setTimeout(function () {
+	                    SH_event.emit('change', true);
+	                    _this.checkUpdateHost(data, true);
+	                }, 100);
+	            });
 	        });
 	
 	        SH_event.on('del_host', function (host) {
@@ -22258,10 +22282,33 @@
 	                SH_event.emit('change');
 	            });
 	        });
+	
+	        SH_event.on('loading', function (host, flag) {
+	            if (flag) return;
+	            if (host == _this.state.current) {
+	                setTimeout(function () {
+	                    _this.selectOne(host);
+	                }, 100);
+	            }
+	        });
 	        return _this;
 	    }
 	
+	    /**
+	     * 检查当前 host 是否需要从网络下载更新
+	     * @param host
+	     * @param force {Boolean} 如果为 true，则只要是 remote 且 refresh_interval != 0，则强制更新
+	     */
+	
+	
 	    _createClass(List, [{
+	        key: 'checkUpdateHost',
+	        value: function checkUpdateHost(host) {
+	            var force = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+	
+	            SH_event.emit('check_host_refresh', host, force);
+	        }
+	    }, {
 	        key: 'apply',
 	        value: function apply(content, success) {
 	            var _this2 = this;
@@ -22893,9 +22940,18 @@
 	
 	        _this.codemirror = null;
 	        _this.state = {
+	            is_loading: _this.props.current.is_loading,
 	            code: _this.props.current.content || ''
 	        };
 	        _this._t = null;
+	
+	        SH_event.on('loading', function (host, flag) {
+	            if (host === _this.props.current) {
+	                _this.setState({
+	                    is_loading: flag
+	                });
+	            }
+	        });
 	        return _this;
 	    }
 	
@@ -22908,6 +22964,7 @@
 	        key: 'componentWillReceiveProps',
 	        value: function componentWillReceiveProps(next_props) {
 	            this.setState({
+	                is_loading: next_props.current.is_loading,
 	                code: next_props.current.content || ''
 	            });
 	        }
@@ -22923,6 +22980,16 @@
 	                _react2.default.createElement(
 	                    'div',
 	                    { className: 'inform' },
+	                    _react2.default.createElement(
+	                        'span',
+	                        {
+	                            className: (0, _classnames2.default)({
+	                                loading: 1,
+	                                show: this.state.is_loading
+	                            })
+	                        },
+	                        'loading...'
+	                    ),
 	                    _react2.default.createElement('i', {
 	                        className: (0, _classnames2.default)({
 	                            show: current.where === 'remote',
@@ -32210,7 +32277,7 @@
 	
 	
 	// module
-	exports.push([module.id, "#sh-content {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 240px;\n  height: 100%;\n}\n#sh-content .inform {\n  position: absolute;\n  z-index: 100;\n  top: 0;\n  right: 0;\n  padding: 5px 10px;\n  opacity: 0.5;\n  background: #fff;\n}\n#sh-content .inform i {\n  display: none;\n  color: #666;\n  margin-left: 5px;\n}\n#sh-content .inform i.show {\n  display: inline-block;\n}\n", ""]);
+	exports.push([module.id, "#sh-content {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 240px;\n  height: 100%;\n}\n#sh-content .inform {\n  position: absolute;\n  z-index: 100;\n  top: 0;\n  right: 0;\n  padding: 5px 10px;\n  opacity: 0.5;\n  background: #fff;\n}\n#sh-content .inform i {\n  display: none;\n  color: #666;\n  margin-left: 5px;\n}\n#sh-content .inform i.show {\n  display: inline-block;\n}\n#sh-content .inform span {\n  display: none;\n}\n#sh-content .inform span.show {\n  display: inline-block;\n}\n", ""]);
 	
 	// exports
 
