@@ -19,6 +19,15 @@ class App extends React.Component {
         this.state = {
             current: this.props.hosts.sys
         };
+
+        SH_event.on('after_apply', () => {
+            if (this.state.current.is_sys) {
+                // 重新读取
+                this.setState({
+                    current: SH_Agent.getSysHosts()
+                });
+            }
+        });
     }
 
     setCurrent(host) {
