@@ -97,6 +97,7 @@ export default class ListItem extends React.Component {
                 }
                 <i className={classnames({
                     'iconfont': 1
+                    , 'item-icon': 1
                     , 'icon-doc': !sys
                     , 'icon-sysserver': sys
                 })}/>
