@@ -35,17 +35,16 @@ class List extends React.Component {
         SH_event.on('host_added', (data) => {
             this.setState({
                 list: update(this.state.list, {$push: [data]})
+            }, () => {
+                this.selectOne(data);
+
+                setTimeout(() => {
+                    SH_event.emit('change');
+                    let el = this.refs.items;
+                    el.scrollTop = document.querySelector('.list-item.selected').offsetTop - el.offsetHeight + 50;
+                }, 100);
             });
-            // this.state.list.push(data);
-            // this.forceUpdate();
 
-            this.selectOne(data);
-
-            setTimeout(() => {
-                SH_event.emit('change');
-                let el = document.querySelector('#sh-list');
-                el.scrollTop = document.querySelector('.list-item.selected').offsetTop - el.offsetHeight + 50;
-            }, 100);
         });
 
         SH_event.on('host_edited', (data, host) => {
@@ -192,7 +191,7 @@ class List extends React.Component {
                     selectOne={this.selectOne.bind(this)}
                     current={this.state.current}
                     sys="1"/>
-                <div className="custom-items">
+                <div ref="items" className="custom-items">
                     {this.customItems()}
                 </div>
             </div>

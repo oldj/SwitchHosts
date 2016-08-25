@@ -6,6 +6,8 @@
 'use strict';
 
 const path = require('path');
+const webpack = require('webpack');
+const uglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 
 module.exports = {
     entry: './src/ui.js',
@@ -38,5 +40,12 @@ module.exports = {
         // query: {
         // presets: ['es2015', 'stage-0', 'react']
         // }
-    }
+    },
+    plugins: [
+        // new uglifyJsPlugin({
+        //     compress: {
+        //         warnings: false
+        //     }
+        // })
+    ]
 };
