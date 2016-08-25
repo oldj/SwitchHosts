@@ -9,6 +9,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const request = require('request');
+const moment = require('moment');
 const util = require('./libs/util');
 const platform = process.platform;
 const sys_host_path = platform == 'win' ?
@@ -180,6 +182,39 @@ SH_event.on('sudo_pswd', (pswd) => {
 
 SH_event.on('save_data', (content) => {
     saveData(content);
+});
+
+SH_event.on('check_host_refresh', (host, force=false) => {
+    if (host.where !== 'remote' || !host.url || !host.refresh_interval) return;
+
+    let last_refresh = host.last_refresh;
+    let refresh_interval = parseInt(host.refresh_interval) || 0;
+    if (last_refresh && !force) {
+        last_refresh = new Date(last_refresh);
+        let delta = (new Date()).getTime() - (last_refresh.getTime() || 0) / (1000 * 3600);
+        if (delta < refresh_interval) {
+            return;
+        }
+    }
+
+    // refresh
+    console.log(`getting '${host.url}' ..`);
+    SH_event.emit('loading', host, true);
+    host.is_loading = true;
+    request(host.url, (err, res, body) => {
+        console.log(err, res.statusCode);
+        SH_event.emit('loading', host, false);
+        host.is_loading = false;
+        if (!err && res.statusCode === 200) {
+            // console.log(body);
+            host.content = body;
+            host.last_refresh = moment().format('YYYY-MM-DD HH:mm:ss');
+
+            SH_event.emit('change');
+        } else {
+            console.log(err, res.statusCode);
+        }
+    });
 });
 
 module.exports = {

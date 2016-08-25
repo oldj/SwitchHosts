@@ -39,9 +39,10 @@ class List extends React.Component {
                 this.selectOne(data);
 
                 setTimeout(() => {
-                    SH_event.emit('change');
+                    SH_event.emit('change', true);
                     let el = this.refs.items;
                     el.scrollTop = document.querySelector('.list-item.selected').offsetTop - el.offsetHeight + 50;
+                    this.checkUpdateHost(data);
                 }, 100);
             });
 
@@ -53,12 +54,14 @@ class List extends React.Component {
 
             this.setState({
                 list: update(this.state.list, {$splice: [[idx, 1, data]]})
-            });
-            this.selectOne(data);
+            }, () => {
+                this.selectOne(data);
 
-            setTimeout(() => {
-                SH_event.emit('change');
-            }, 100);
+                setTimeout(() => {
+                    SH_event.emit('change', true);
+                    this.checkUpdateHost(data, true);
+                }, 100);
+            });
         });
 
         SH_event.on('del_host', (host) => {
@@ -99,6 +102,24 @@ class List extends React.Component {
                 SH_event.emit('change');
             });
         });
+
+        SH_event.on('loading', (host, flag) => {
+            if (flag) return;
+            if (host == this.state.current) {
+                setTimeout(() => {
+                    this.selectOne(host);
+                }, 100);
+            }
+        });
+    }
+
+    /**
+     * 检查当前 host 是否需要从网络下载更新
+     * @param host
+     * @param force {Boolean} 如果为 true，则只要是 remote 且 refresh_interval != 0，则强制更新
+     */
+    checkUpdateHost(host, force=false) {
+        SH_event.emit('check_host_refresh', host, force);
     }
 
     apply(content, success) {
