@@ -83,6 +83,23 @@ class List extends React.Component {
                 SH_event.emit('change');
             }, 100);
         });
+
+        SH_event.on('get_on_hosts', (callback) => {
+            callback(this.getOnItems());
+        });
+
+        SH_event.on('top_toggle', (on, items) => {
+            this.setState({
+                list: this.state.list.map((item) => {
+                    if (items.findIndex((i) => i == item) > -1) {
+                        item.on = on;
+                    }
+                    return item;
+                })
+            }, () => {
+                SH_event.emit('change');
+            });
+        });
     }
 
     apply(content, success) {
