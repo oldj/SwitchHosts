@@ -132,6 +132,9 @@ function _after_apply_unix(callback) {
 }
 
 function after_apply(callback) {
+
+    SH_event.emit('after_apply');
+
     if (!sudo_pswd) {
         callback();
         return;
