@@ -24,6 +24,11 @@ export default class Buttons extends React.Component {
                         onClick={() => this.btnAdd()}
                     >+</a>
                 </div>
+
+                <div className="right">
+                    <i className="iconfont icon-search"/>
+                    <i className="iconfont icon-switchon"/>
+                </div>
             </div>
         );
     }
