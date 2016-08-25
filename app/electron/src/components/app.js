@@ -20,6 +20,11 @@ class App extends React.Component {
             current: this.props.hosts.sys
         };
 
+        // auto check refresh
+        setTimeout(() => {
+            this.autoCheckRefresh();
+        }, 1000 * 5);
+
         SH_event.on('after_apply', () => {
             if (this.state.current.is_sys) {
                 // 重新读取
@@ -28,6 +33,19 @@ class App extends React.Component {
                 });
             }
         });
+
+    }
+
+    autoCheckRefresh() {
+        this.props.hosts.list.map((host, idx) => {
+            setTimeout(() => {
+                SH_event.emit('check_host_refresh', host);
+            }, 1000 * 5 * idx);
+        });
+
+        setTimeout(() => {
+            this.autoCheckRefresh();
+        }, 1000 * 60 * 10);
     }
 
     setCurrent(host) {

@@ -17,9 +17,18 @@ export default class Content extends React.Component {
 
         this.codemirror = null;
         this.state = {
+            is_loading: this.props.current.is_loading,
             code: this.props.current.content || ''
         };
         this._t = null;
+
+        SH_event.on('loading', (host, flag) => {
+            if (host === this.props.current) {
+                this.setState({
+                    is_loading: flag
+                });
+            }
+        });
     }
 
 
@@ -29,6 +38,7 @@ export default class Content extends React.Component {
 
     componentWillReceiveProps(next_props) {
         this.setState({
+            is_loading: next_props.current.is_loading,
             code: next_props.current.content || ''
         });
     }
@@ -39,6 +49,12 @@ export default class Content extends React.Component {
         return (
             <div id="sh-content">
                 <div className="inform">
+                    <span
+                        className={classnames({
+                            loading: 1,
+                            show: this.state.is_loading
+                        })}
+                    >loading...</span>
                     <i
                         className={classnames({
                             show: current.where === 'remote',
