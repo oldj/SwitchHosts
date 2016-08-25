@@ -175,7 +175,9 @@ class List extends React.Component {
                     selectOne={this.selectOne.bind(this)}
                     current={this.state.current}
                     sys="1"/>
-                {this.customItems()}
+                <div className="custom-items">
+                    {this.customItems()}
+                </div>
             </div>
         );
     }
