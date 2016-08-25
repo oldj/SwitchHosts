@@ -37,10 +37,14 @@ export default class ListItem extends React.Component {
     }
 
     toggle() {
+        let on = !this.props.data.on;
+
         this.props.onToggle(() => {
-            this.props.data.on = !this.props.data.on;
+            this.props.data.on = on;
             this.forceUpdate();
         });
+
+        SH_event.emit('toggle_host', on);
     }
 
     allowedDrop(e) {
