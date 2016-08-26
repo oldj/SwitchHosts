@@ -9,6 +9,8 @@ const tray = require('./src/modules/tray');
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
+let contents;
+let is_tray_initialized;
 
 function createWindow() {
     // Create the browser window.
@@ -16,6 +18,7 @@ function createWindow() {
         width: 800, height: 500,
         minWidth: 400, minHeight: 250
     });
+    contents = mainWindow.webContents;
 
     // and load the index.html of the app.
     mainWindow.loadURL(`file://${__dirname}/index.html`);
@@ -29,15 +32,23 @@ function createWindow() {
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
         mainWindow = null;
+        contents = null;
     });
 
-    tray.makeTray();
+    contents.on('did-finish-load', () => {
+        if (!is_tray_initialized) {
+            tray.makeTray(app, contents);
+            is_tray_initialized = true;
+        }
+    });
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', () => {
+    createWindow();
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -48,11 +59,24 @@ app.on('window-all-closed', function () {
     }
 });
 
+app.on('show', function () {
+    if (mainWindow) {
+        if (mainWindow.isMinimized()) {
+            mainWindow.restore();
+        }
+        mainWindow.show();
+    } else {
+        createWindow();
+    }
+});
+
 app.on('activate', function () {
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (mainWindow === null) {
         createWindow();
+    } else if (mainWindow.isMinimized()) {
+        mainWindow.restore();
     }
 });
 
