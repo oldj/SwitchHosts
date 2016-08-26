@@ -3,8 +3,20 @@
 'use strict';
 
 import CodeMirror from 'codemirror';
+import {kw2re} from '../../libs/kw';
 
-export default function (app) {
+export default function () {
+
+    const state = {
+        search_kw: '',
+        search_re: null,
+    };
+
+    SH_event.on('search', (kw) => {
+        state.search_kw = kw;
+        state.search_re = kw ? kw2re(kw) : null
+    });
+
 
     CodeMirror.defineMode('host', function () {
         function tokenBase(stream) {
@@ -14,8 +26,8 @@ export default function (app) {
             var ch = stream.next();
 
             var s = stream.string;
-            var kw = app.search_keyword;
-            var r = app.search_regexp;
+            var kw = state.search_kw;
+            var r = state.search_re;
             if ((kw && s.indexOf(kw) > -1) || (r && s.match(r))) {
                 return 'hl';
             }

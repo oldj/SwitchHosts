@@ -208,17 +208,45 @@
 	} ())
 	function runTimeout(fun) {
 	    if (cachedSetTimeout === setTimeout) {
+	        //normal enviroments in sane situations
 	        return setTimeout(fun, 0);
-	    } else {
-	        return cachedSetTimeout.call(null, fun, 0);
 	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedSetTimeout(fun, 0);
+	    } catch(e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+	            return cachedSetTimeout.call(null, fun, 0);
+	        } catch(e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+	            return cachedSetTimeout.call(this, fun, 0);
+	        }
+	    }
+	
+	
 	}
 	function runClearTimeout(marker) {
 	    if (cachedClearTimeout === clearTimeout) {
-	        clearTimeout(marker);
-	    } else {
-	        cachedClearTimeout.call(null, marker);
+	        //normal enviroments in sane situations
+	        return clearTimeout(marker);
 	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedClearTimeout(marker);
+	    } catch (e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+	            return cachedClearTimeout.call(null, marker);
+	        } catch (e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+	            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+	            return cachedClearTimeout.call(this, marker);
+	        }
+	    }
+	
+	
+	
 	}
 	var queue = [];
 	var draining = false;
@@ -21567,6 +21595,10 @@
 	
 	var _buttons2 = _interopRequireDefault(_buttons);
 	
+	var _searchbar = __webpack_require__(218);
+	
+	var _searchbar2 = _interopRequireDefault(_searchbar);
+	
 	var _list = __webpack_require__(182);
 	
 	var _list2 = _interopRequireDefault(_list);
@@ -21602,6 +21634,7 @@
 	                'div',
 	                { id: 'panel' },
 	                _react2.default.createElement(_list2.default, { hosts: hosts, current: current, setCurrent: this.props.setCurrent }),
+	                _react2.default.createElement(_searchbar2.default, null),
 	                _react2.default.createElement(_buttons2.default, null)
 	            );
 	        }
@@ -21656,7 +21689,8 @@
 	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Buttons).call(this, props));
 	
 	        _this.state = {
-	            top_toggle_on: true
+	            top_toggle_on: true,
+	            search_on: false
 	        };
 	
 	        _this.on_items = null;
@@ -21693,9 +21727,20 @@
 	            });
 	        }
 	    }, {
+	        key: 'btnSearch',
+	        value: function btnSearch() {
+	            var _this3 = this;
+	
+	            this.setState({
+	                search_on: !this.state.search_on
+	            }, function () {
+	                SH_event.emit(_this3.state.search_on ? 'search_on' : 'search_off');
+	            });
+	        }
+	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this3 = this;
+	            var _this4 = this;
 	
 	            return _react2.default.createElement(
 	                'div',
@@ -21718,7 +21763,16 @@
 	                _react2.default.createElement(
 	                    'div',
 	                    { className: 'right' },
-	                    _react2.default.createElement('i', { className: 'iconfont icon-search' }),
+	                    _react2.default.createElement('i', {
+	                        className: (0, _classnames2.default)({
+	                            iconfont: 1,
+	                            'icon-search': 1,
+	                            'on': this.state.search_on
+	                        }),
+	                        onClick: function onClick() {
+	                            return _this4.btnSearch();
+	                        }
+	                    }),
 	                    _react2.default.createElement('i', {
 	                        className: (0, _classnames2.default)({
 	                            iconfont: 1,
@@ -21726,7 +21780,7 @@
 	                            'icon-switchoff': !this.state.top_toggle_on
 	                        }),
 	                        onClick: function onClick() {
-	                            return _this3.btnToggle();
+	                            return _this4.btnToggle();
 	                        }
 	                    })
 	                )
@@ -21814,8 +21868,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -21833,7 +21887,7 @@
 	
 	
 	// module
-	exports.push([module.id, "#sh-buttons {\n  position: absolute;\n  bottom: 0;\n  width: 240px;\n  height: 30px;\n  line-height: 30px;\n  background: #373d47;\n}\n#sh-buttons .left {\n  float: left;\n  padding-left: 10px;\n}\n#sh-buttons .left .btn-add {\n  display: inline-block;\n  text-align: center;\n  width: 20px;\n  color: #979da7;\n  text-decoration: none;\n}\n#sh-buttons .left .btn-add:hover {\n  background: rgba(255, 255, 255, 0.1);\n}\n#sh-buttons .right {\n  float: right;\n  padding-right: 17px;\n  height: 30px;\n}\n#sh-buttons .right i {\n  display: inline-block;\n  margin-left: 20px;\n  cursor: pointer;\n}\n#sh-buttons .right i.icon-switchoff {\n  position: relative;\n  top: -1px;\n}\n", ""]);
+	exports.push([module.id, "#sh-buttons {\n  position: absolute;\n  bottom: 0;\n  width: 240px;\n  height: 30px;\n  line-height: 30px;\n  background: #373d47;\n}\n#sh-buttons .left {\n  float: left;\n  padding-left: 10px;\n}\n#sh-buttons .left .btn-add {\n  display: inline-block;\n  text-align: center;\n  width: 20px;\n  color: #979da7;\n  text-decoration: none;\n}\n#sh-buttons .left .btn-add:hover {\n  background: rgba(255, 255, 255, 0.1);\n}\n#sh-buttons .right {\n  float: right;\n  padding-right: 17px;\n  height: 30px;\n}\n#sh-buttons .right i {\n  display: inline-block;\n  margin-left: 10px;\n  cursor: pointer;\n}\n#sh-buttons .right i.icon-switchoff {\n  position: relative;\n  top: -1px;\n}\n#sh-buttons .right i.icon-search {\n  padding: 0 8px;\n}\n#sh-buttons .right i.icon-search.on {\n  background: #3d434e;\n}\n", ""]);
 	
 	// exports
 
@@ -22461,6 +22515,8 @@
 	
 	var _classnames2 = _interopRequireDefault(_classnames);
 	
+	var _kw = __webpack_require__(221);
+	
 	__webpack_require__(184);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -22481,9 +22537,17 @@
 	
 	        _this.is_sys = !!_this.props.sys;
 	        _this.state = {
-	            is_selected: false
-	            // on: this.props.data.on,
+	            is_selected: false,
+	            search_kw: '',
+	            search_re: null
 	        };
+	
+	        SH_event.on('search', function (kw) {
+	            _this.setState({
+	                search_kw: kw,
+	                search_re: kw ? (0, _kw.kw2re)(kw) : null
+	            });
+	        });
 	        return _this;
 	    }
 	
@@ -22542,6 +22606,25 @@
 	            e.dataTransfer.setData('text', this.props.idx);
 	        }
 	    }, {
+	        key: 'isMatched',
+	        value: function isMatched() {
+	            if (this.props.sys) return true;
+	            var kw = this.state.search_kw;
+	            var re = this.state.search_re;
+	            if (!kw) return true;
+	
+	            var _props$data = this.props.data;
+	            var title = _props$data.title;
+	            var content = _props$data.content;
+	
+	
+	            if (re) {
+	                return re.test(title) || re.test(content);
+	            } else {
+	                return title.indexOf(kw) > -1 || content.indexOf(kw) > -1;
+	            }
+	        }
+	    }, {
 	        key: 'render',
 	        value: function render() {
 	            var _this3 = this;
@@ -22557,6 +22640,7 @@
 	                'div',
 	                { className: (0, _classnames2.default)({
 	                        'list-item': 1,
+	                        'hidden': !this.isMatched(),
 	                        'sys-host': sys,
 	                        'selected': is_selected
 	                    }),
@@ -22624,8 +22708,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22643,7 +22727,7 @@
 	
 	
 	// module
-	exports.push([module.id, "#sh-list .list-item {\n  padding: 7px 10px 7px 15px;\n  cursor: pointer;\n}\n#sh-list .list-item.sys-host {\n  font-size: 14px;\n  padding: 8px 10px 8px 12px;\n}\n#sh-list .list-item.sys-host i {\n  width: 23px;\n}\n#sh-list .list-item.selected {\n  background: #2d3138;\n}\n#sh-list .list-item.selected span {\n  color: #fff;\n}\n#sh-list .list-item.selected i.item-icon {\n  color: #fff;\n}\n#sh-list .list-item.selected:hover i.icon-edit {\n  display: block;\n  color: #fff;\n}\n#sh-list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 5px;\n}\n#sh-list .list-item i.switch {\n  float: right;\n  cursor: pointer;\n  line-height: 23px;\n}\n#sh-list .list-item i.switch.icon-on {\n  color: #af9;\n}\n#sh-list .list-item i.icon-edit {\n  float: right;\n  display: none;\n}\n", ""]);
+	exports.push([module.id, "#sh-list .list-item {\n  padding: 7px 10px 7px 15px;\n  cursor: pointer;\n}\n#sh-list .list-item.hidden {\n  display: none;\n}\n#sh-list .list-item.sys-host {\n  font-size: 14px;\n  padding: 8px 10px 8px 12px;\n}\n#sh-list .list-item.sys-host i {\n  width: 23px;\n}\n#sh-list .list-item.selected {\n  background: #2d3138;\n}\n#sh-list .list-item.selected span {\n  color: #fff;\n}\n#sh-list .list-item.selected i.item-icon {\n  color: #fff;\n}\n#sh-list .list-item.selected:hover i.icon-edit {\n  display: block;\n  color: #fff;\n}\n#sh-list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 5px;\n}\n#sh-list .list-item i.switch {\n  float: right;\n  cursor: pointer;\n  line-height: 23px;\n}\n#sh-list .list-item i.switch.icon-on {\n  color: #af9;\n}\n#sh-list .list-item i.icon-edit {\n  float: right;\n  display: none;\n}\n", ""]);
 	
 	// exports
 
@@ -22789,8 +22873,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22829,8 +22913,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23075,7 +23159,8 @@
 	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Editor).call(this, props));
 	
 	        _this.codemirror = null;
-	        (0, _cm_hl2.default)({});
+	
+	        (0, _cm_hl2.default)(_this.state);
 	        return _this;
 	    }
 	
@@ -32106,7 +32191,17 @@
 	    value: true
 	});
 	
-	exports.default = function (app) {
+	exports.default = function () {
+	
+	    var state = {
+	        search_kw: '',
+	        search_re: null
+	    };
+	
+	    SH_event.on('search', function (kw) {
+	        state.search_kw = kw;
+	        state.search_re = kw ? (0, _kw.kw2re)(kw) : null;
+	    });
 	
 	    _codemirror2.default.defineMode('host', function () {
 	        function tokenBase(stream) {
@@ -32116,8 +32211,8 @@
 	            var ch = stream.next();
 	
 	            var s = stream.string;
-	            var kw = app.search_keyword;
-	            var r = app.search_regexp;
+	            var kw = state.search_kw;
+	            var r = state.search_re;
 	            if (kw && s.indexOf(kw) > -1 || r && s.match(r)) {
 	                return 'hl';
 	            }
@@ -32159,7 +32254,9 @@
 	var _codemirror = __webpack_require__(199);
 	
 	var _codemirror2 = _interopRequireDefault(_codemirror);
-
+	
+	var _kw = __webpack_require__(221);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /***/ },
@@ -32178,8 +32275,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css", function() {
-				var newContent = require("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css");
+			module.hot.accept("!!./../../css-loader/index.js!./codemirror.css", function() {
+				var newContent = require("!!./../../css-loader/index.js!./codemirror.css");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32218,8 +32315,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32258,8 +32355,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32561,8 +32658,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32601,8 +32698,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32990,8 +33087,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33030,8 +33127,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33053,6 +33150,199 @@
 	
 	// exports
 
+
+/***/ },
+/* 218 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * @author oldj
+	 * @blog http://oldj.net
+	 */
+	
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(3);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _classnames = __webpack_require__(177);
+	
+	var _classnames2 = _interopRequireDefault(_classnames);
+	
+	__webpack_require__(219);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var SearchBar = function (_React$Component) {
+	    _inherits(SearchBar, _React$Component);
+	
+	    function SearchBar(props) {
+	        _classCallCheck(this, SearchBar);
+	
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(SearchBar).call(this, props));
+	
+	        _this.state = {
+	            show: true,
+	            keyword: ''
+	        };
+	
+	        _this._t = null;
+	
+	        SH_event.on('search_on', function () {
+	            _this.setState({
+	                show: true
+	            }, function () {
+	                setTimeout(function () {
+	                    _this.refs.keyword.focus();
+	                }, 100);
+	            });
+	        });
+	
+	        SH_event.on('search_off', function () {
+	            _this.clearSearch();
+	        });
+	        return _this;
+	    }
+	
+	    _createClass(SearchBar, [{
+	        key: 'clearSearch',
+	        value: function clearSearch() {
+	            this.setState({
+	                show: false,
+	                keyword: ''
+	            });
+	            SH_event.emit('search', '');
+	        }
+	    }, {
+	        key: 'doSearch',
+	        value: function doSearch(kw) {
+	            this.setState({
+	                keyword: kw
+	            });
+	
+	            clearTimeout(this._t);
+	            this._t = setTimeout(function () {
+	                SH_event.emit('search', kw);
+	            }, 300);
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _this2 = this;
+	
+	            if (!this.state.show) {
+	                return null;
+	            }
+	            return _react2.default.createElement(
+	                'div',
+	                { id: 'sh-searchbar' },
+	                _react2.default.createElement('input', {
+	                    ref: 'keyword',
+	                    type: 'text',
+	                    placeholder: 'keyword',
+	                    value: this.state.keyword,
+	                    onChange: function onChange(e) {
+	                        return _this2.doSearch(e.target.value);
+	                    }
+	                })
+	            );
+	        }
+	    }]);
+	
+	    return SearchBar;
+	}(_react2.default.Component);
+	
+	exports.default = SearchBar;
+
+/***/ },
+/* 219 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	
+	// load the styles
+	var content = __webpack_require__(220);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(181)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 220 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(180)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, "#sh-searchbar {\n  position: fixed;\n  width: 240px;\n  left: 0;\n  bottom: 30px;\n  background: #3d434e;\n  padding: 6px 20px 5px 18px;\n  border-top: solid 1px #323740;\n}\n#sh-searchbar input {\n  background: transparent;\n  border: 0;\n  outline: 0;\n  color: #fff;\n  font-size: 13px;\n}\n", ""]);
+	
+	// exports
+
+
+/***/ },
+/* 221 */
+/***/ function(module, exports) {
+
+	/**
+	 * kw
+	 * @author oldj
+	 * @blog http://oldj.net
+	 */
+	
+	'use strict';
+	
+	exports.kw2re = function (kw) {
+	    // 模糊搜索
+	    var r = void 0;
+	    var m = void 0;
+	    var flag = [];
+	
+	    if (m = kw.match(/^\/([^\/]+)\/?(\w*)$/)) {
+	        if (m[2].indexOf('i') > -1) {
+	            flag.push('i');
+	        }
+	        if (m[2].indexOf('g') > -1) {
+	            flag.push('g');
+	        }
+	        try {
+	            r = new RegExp(m[1], flag.join(''));
+	        } catch (e) {}
+	    } else if (kw.indexOf('*') > -1) {
+	        try {
+	            r = new RegExp(kw.replace(/\*/g, '.*'), 'ig');
+	        } catch (e) {}
+	    }
+	
+	    return r;
+	};
 
 /***/ }
 /******/ ]);
