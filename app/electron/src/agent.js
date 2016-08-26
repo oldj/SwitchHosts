@@ -13,12 +13,13 @@ const request = require('request');
 const moment = require('moment');
 const util = require('./libs/util');
 const platform = process.platform;
-const sys_host_path = platform == 'win' ?
-    'C:\\WINDOWS\\system32\\drivers\\etc\\hosts' : // todo 处理系统没有安装在 C 盘的情况
-    '/etc/hosts';
-const work_path = path.join(util.getUserHome(), '.SwitchHosts');
-const data_path = path.join(work_path, 'data.json');
-const preference_path = path.join(work_path, 'preferences.json');
+
+const paths = require('./libs/paths');
+const sys_host_path = paths.sys_host_path;
+const work_path = paths.work_path;
+const data_path = paths.data_path;
+const preference_path = paths.preference_path;
+
 const exec = require('child_process').exec;
 
 const crypto = require('crypto');
@@ -182,6 +183,7 @@ SH_event.on('sudo_pswd', (pswd) => {
 
 SH_event.on('save_data', (content) => {
     saveData(content);
+    ipcRenderer.send('send_host_list', content);
 });
 
 SH_event.on('check_host_refresh', (host, force=false) => {
