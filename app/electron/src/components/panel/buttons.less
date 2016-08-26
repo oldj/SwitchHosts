@@ -34,12 +34,19 @@
 
     i {
       display: inline-block;
-      margin-left: 20px;
+      margin-left: 10px;
       cursor: pointer;
 
       &.icon-switchoff {
         position: relative;
         top: -1px;
+      }
+
+      &.icon-search {
+        padding: 0 8px;
+        &.on {
+          background: @bg_left_search;
+        }
       }
     }
   }
