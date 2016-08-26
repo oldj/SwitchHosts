@@ -79,7 +79,7 @@ export default class ListItem extends React.Component {
         if (this.props.sys) return true;
         let kw = this.state.search_kw;
         let re = this.state.search_re;
-        if (!kw) return true;
+        if (!kw || kw === '/') return true;
 
         let {title, content} = this.props.data;
 

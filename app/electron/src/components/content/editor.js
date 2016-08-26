@@ -10,6 +10,7 @@ import React from 'react';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
 import modeHost from './cm_hl';
+import m_kw from '../../libs/kw';
 import '../../../node_modules/codemirror/lib/codemirror.css';
 import './editor.less'
 
@@ -20,7 +21,29 @@ export default class Editor extends React.Component {
 
         this.codemirror = null;
 
-        modeHost(this.state);
+        modeHost();
+
+        this.marks = [];
+        this.kw = '';
+
+        SH_event.on('search', (kw) => {
+            this.kw = kw;
+            this.highlightKeyword();
+        });
+    }
+
+    highlightKeyword() {
+        while (this.marks.length > 0) {
+            this.marks.shift().clear();
+        }
+
+        let code = this.props.code;
+        let pos = m_kw.findPositions(this.kw, code) || [];
+        // this.codemirror.markText({line: 6, ch: 16}, {line: 6, ch: 22}, {className: 'cm-hl'});
+
+        pos.map((p) => {
+            this.marks.push(this.codemirror.markText(p[0], p[1], {className: 'cm-hl'}));
+        });
     }
 
     setValue(v) {
@@ -65,6 +88,9 @@ export default class Editor extends React.Component {
         // console.log(next_props);
         this.codemirror.getDoc().setValue(next_props.code);
         this.codemirror.setOption('readOnly', next_props.readonly);
+        setTimeout(() => {
+            this.highlightKeyword();
+        }, 100);
     }
 
     render() {
