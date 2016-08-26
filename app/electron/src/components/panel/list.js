@@ -74,20 +74,29 @@ class List extends React.Component {
             this.setState({
                 list: update(this.state.list, {$splice: [[idx_to_del, 1]]})
                 // list: this.state.list.filter((item, idx) => idx != idx_to_del)
+            }, () => {
+                setTimeout(() => {
+                    let list = this.state.list;
+                    let next_host = list[idx_to_del] || list[list.length - 1] || this.props.hosts.sys;
+                    if (next_host) {
+                        this.selectOne(next_host);
+                    }
+                    SH_event.emit('change');
+                }, 100);
             });
-
-            setTimeout(() => {
-                let list = this.state.list;
-                let next_host = list[idx_to_del] || list[list.length - 1] || this.props.hosts.sys;
-                if (next_host) {
-                    this.selectOne(next_host);
-                }
-                SH_event.emit('change');
-            }, 100);
         });
 
         SH_event.on('get_on_hosts', (callback) => {
             callback(this.getOnItems());
+        });
+
+        ipcRenderer.on('get_host_list', () => {
+            ipcRenderer.send('send_host_list', this.state.list);
+        });
+
+        ipcRenderer.on('tray_toggle_host', (idx) => {
+            // ipcRenderer.send('send_host_list', this.state.list);
+            this.toggleOne(idx); // todo ..
         });
 
         SH_event.on('top_toggle', (on, items) => {
@@ -140,7 +149,7 @@ class List extends React.Component {
 
     toggleOne(idx, success) {
         let content = this.getOnContent(idx);
-        this.apply(content, success);
+        this.apply(content, success || function () {});
     }
 
     getOnItems(idx = -1) {
