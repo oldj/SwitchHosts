@@ -15,7 +15,7 @@ export default class SearchBar extends React.Component {
         super(props);
 
         this.state = {
-            show: true,
+            show: false,
             keyword: ''
         };
 
