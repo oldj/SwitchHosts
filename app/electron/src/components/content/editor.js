@@ -19,7 +19,8 @@ export default class Editor extends React.Component {
         super(props);
 
         this.codemirror = null;
-        modeHost({});
+
+        modeHost(this.state);
     }
 
     setValue(v) {

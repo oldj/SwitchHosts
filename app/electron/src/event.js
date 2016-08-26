@@ -7,4 +7,7 @@
 
 const EventEmitter = require('events');
 
-exports.event = new EventEmitter();
+let event = new EventEmitter();
+event.setMaxListeners(20);
+
+exports.event = event;

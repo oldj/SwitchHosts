@@ -15,7 +15,8 @@ export default class Buttons extends React.Component {
         super(props);
 
         this.state = {
-            top_toggle_on: true
+            top_toggle_on: true,
+            search_on: false
         };
 
         this.on_items = null;
@@ -51,6 +52,14 @@ export default class Buttons extends React.Component {
         });
     }
 
+    btnSearch() {
+        this.setState({
+            search_on: !this.state.search_on
+        }, () => {
+            SH_event.emit(this.state.search_on ? 'search_on' : 'search_off');
+        });
+    }
+
     render() {
         return (
             <div id="sh-buttons">
@@ -63,7 +72,14 @@ export default class Buttons extends React.Component {
                 </div>
 
                 <div className="right">
-                    <i className="iconfont icon-search"/>
+                    <i
+                        className={classnames({
+                            iconfont: 1,
+                            'icon-search': 1,
+                            'on': this.state.search_on
+                        })}
+                        onClick={() => this.btnSearch()}
+                    />
                     <i
                         className={classnames({
                             iconfont: 1,

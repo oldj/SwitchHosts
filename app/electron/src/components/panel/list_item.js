@@ -7,6 +7,7 @@
 
 import React from 'react';
 import classnames from 'classnames';
+import {kw2re} from '../../libs/kw';
 import './list_item.less';
 
 export default class ListItem extends React.Component {
@@ -15,9 +16,18 @@ export default class ListItem extends React.Component {
 
         this.is_sys = !!this.props.sys;
         this.state = {
-            is_selected: false
+            is_selected: false,
+            search_kw: '',
+            search_re: null,
             // on: this.props.data.on,
         };
+
+        SH_event.on('search', (kw) => {
+            this.setState({
+                search_kw: kw,
+                search_re: kw ? kw2re(kw) : null
+            });
+        });
     }
 
     getTitle() {
@@ -65,6 +75,21 @@ export default class ListItem extends React.Component {
         e.dataTransfer.setData('text', this.props.idx);
     }
 
+    isMatched() {
+        if (this.props.sys) return true;
+        let kw = this.state.search_kw;
+        let re = this.state.search_re;
+        if (!kw) return true;
+
+        let {title, content} = this.props.data;
+
+        if (re) {
+            return re.test(title) || re.test(content);
+        } else {
+            return title.indexOf(kw) > -1 || content.indexOf(kw) > -1;
+        }
+    }
+
     render() {
         let {data, sys, current} = this.props;
         let is_selected = data == current;
@@ -72,6 +97,7 @@ export default class ListItem extends React.Component {
         return (
             <div className={classnames({
                 'list-item': 1
+                , 'hidden': !this.isMatched()
                 , 'sys-host': sys
                 , 'selected': is_selected
             })}
