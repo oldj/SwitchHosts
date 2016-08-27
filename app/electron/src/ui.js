@@ -11,6 +11,8 @@ import App from './components/app';
 
 let _data = SH_Agent.getHosts();
 
+ipcRenderer.setMaxListeners(20);
+
 ReactDom.render(
     <App hosts={_data}/>
     , document.getElementById('app')
