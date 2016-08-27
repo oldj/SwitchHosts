@@ -151,6 +151,20 @@ function after_apply(callback) {
     callback();
 }
 
+function apply_Win32(content, success) {
+    // todo 判断写入权限
+    try {
+        fs.writeFileSync(sys_host_path, content, 'utf-8');
+    } catch (e) {
+        console.log(e);
+        return;
+    }
+    success && success();
+
+    // todo 更新 DNS 缓存
+}
+
+
 function tryToApply(content, success) {
     let tmp_fn = path.join(work_path, 'tmp.txt');
     if (content) {
@@ -160,7 +174,7 @@ function tryToApply(content, success) {
     if (platform !== 'win32') {
         apply_UNIX(tmp_fn, success);
     } else {
-        // todo win32
+        apply_Win32(tmp_fn, success);
     }
 }
 
@@ -219,16 +233,38 @@ SH_event.on('check_host_refresh', (host, force=false) => {
     });
 });
 
+/**
+ * 如果本地没有 data 文件，认为是第一次运行
+ */
+function initGet() {
+    let dd = require('./libs/default_data');
+    let data = dd.make();
+
+    data.sys.content = getSysHosts();
+    data.list.push({
+        title: 'backup',
+        content: data.sys.content
+    });
+
+    return data;
+}
+
 module.exports = {
     md5: md5,
     getHosts: function () {
         let data = null;
+
+        if (!util.isFile(data_path)) {
+            return initGet();
+        }
+
         try {
             let cnt = fs.readFileSync(data_path, 'utf-8');
             data = JSON.parse(cnt);
         } catch (e) {
             console.log(e);
-            return data;
+            alert('bad data file.. :(');
+            return initGet();
         }
 
         return {
