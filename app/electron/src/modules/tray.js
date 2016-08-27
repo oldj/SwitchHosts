@@ -8,13 +8,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const {Menu, Tray} = require('electron');
-const {ipcMain} = require('electron');
+const {Menu, Tray, ipcMain, shell} = require('electron');
+const m_lang = require('../lang');
 
 let tray = null;
 
 function makeMenu(app, list, contents) {
     let menu = [];
+    let lang = m_lang.getLang('cn');
 
     menu.push({label: 'SwitchHosts!', type: 'normal', click: () => {
         app.emit('show');
@@ -35,9 +36,17 @@ function makeMenu(app, list, contents) {
     });
 
     menu.push({label: '-', type: 'separator'});
-    menu.push({label: 'Feedback', type: 'normal', click: () => {
+    menu.push({label: lang.feedback, type: 'normal', click: () => {
+        shell.openExternal('https://github.com/oldj/SwitchHosts/issues');
     }});
-    menu.push({label: 'Toggle', type: 'normal', click: () => {
+
+    menu.push({label: lang.toggle_dock_icon, type: 'normal', click: () => {
+        let is_dock_visible = app.dock.isVisible();
+        if (is_dock_visible) {
+            app.dock.hide();
+        } else {
+            app.dock.show();
+        }
     }});
     menu.push({label: '-', type: 'separator'});
     menu.push({label: 'Quit', type: 'normal', accelerator: 'CommandOrControl+Q', click: () => {
