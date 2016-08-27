@@ -48,6 +48,7 @@ export default class ListItem extends React.Component {
 
     toggle() {
         let on = !this.props.data.on;
+        console.log(55);
 
         this.props.onToggle(() => {
             this.props.data.on = on;
