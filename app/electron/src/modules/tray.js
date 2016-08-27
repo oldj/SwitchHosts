@@ -25,7 +25,7 @@ function makeMenu(app, list, contents) {
     list.map((item, idx) => {
         menu.push({
             label: item.title || 'untitled',
-            type: 'radio',
+            type: 'checkbox',
             checked: item.on,
             accelerator: ac[idx],
             click: () => {

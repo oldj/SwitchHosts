@@ -82,7 +82,7 @@ class List extends React.Component {
                         this.selectOne(next_host);
                     }
                     SH_event.emit('change');
-                }, 100);
+                    }, 100);
             });
         });
 
@@ -92,11 +92,6 @@ class List extends React.Component {
 
         ipcRenderer.on('get_host_list', () => {
             ipcRenderer.send('send_host_list', this.state.list);
-        });
-
-        ipcRenderer.on('tray_toggle_host', (idx) => {
-            // ipcRenderer.send('send_host_list', this.state.list);
-            this.toggleOne(idx); // todo ..
         });
 
         SH_event.on('top_toggle', (on, items) => {
@@ -133,7 +128,6 @@ class List extends React.Component {
 
     apply(content, success) {
         SH_event.emit('apply', content, () => {
-            console.log(136);
             this.last_content = content;
             success();
             SH_event.emit('save_data', this.state.list);

@@ -28,6 +28,15 @@ export default class ListItem extends React.Component {
                 search_re: kw ? kw2re(kw) : null
             });
         });
+
+        ipcRenderer.on('tray_toggle_host', (e, idx) => {
+            // ipcRenderer.send('send_host_list', this.state.list);
+            // this.toggleOne(idx);
+            if (idx === this.props.idx) {
+                this.toggle();
+            }
+        });
+
     }
 
     getTitle() {
@@ -48,7 +57,6 @@ export default class ListItem extends React.Component {
 
     toggle() {
         let on = !this.props.data.on;
-        console.log(55);
 
         this.props.onToggle(() => {
             this.props.data.on = on;
