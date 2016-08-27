@@ -8,7 +8,7 @@
 const path = require('path');
 const util = require('./util');
 const platform = process.platform;
-const sys_host_path = platform == 'win' ?
+const sys_host_path = platform == 'win32' ?
     'C:\\WINDOWS\\system32\\drivers\\etc\\hosts' : // todo 处理系统没有安装在 C 盘的情况
     '/etc/hosts';
 const work_path = path.join(util.getUserHome(), '.SwitchHosts');
