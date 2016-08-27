@@ -133,6 +133,7 @@ class List extends React.Component {
 
     apply(content, success) {
         SH_event.emit('apply', content, () => {
+            console.log(136);
             this.last_content = content;
             success();
             SH_event.emit('save_data', this.state.list);
