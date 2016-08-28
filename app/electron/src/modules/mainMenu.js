@@ -5,7 +5,9 @@
 
 'use strict';
 
-const {Menu, shell, ipcMain} = require('electron');
+const path = require('path');
+const paths = require('../libs/paths');
+const {Menu, shell, ipcMain, dialog} = require('electron');
 const m_lang = require('../lang');
 const pref = require('./../libs/pref');
 
@@ -28,13 +30,35 @@ exports.init = function (sys_lang = 'en') {
                     label: lang.import,
                     accelerator: 'Alt+CommandOrControl+I',
                     click: () => {
-                        console.log('import');
+                        dialog.showOpenDialog({
+                            title: lang.import,
+                            defaultPath: path.join(paths.home_path, 'sh.json'),
+                            filters: [
+                                {name: 'JSON', extensions: ['json']},
+                                {name: 'All Files', extensions: ['*']}
+                            ]
+                        }, (fns) => {
+                            if (fns && fns.length > 0) {
+                                ipcMain.emit('to_import', fns[0]);
+                            }
+                        });
                     }
                 }, {
                     label: lang.export,
                     accelerator: 'Alt+CommandOrControl+E',
                     click: () => {
-                        console.log('export');
+                        dialog.showSaveDialog({
+                            title: lang.export,
+                            defaultPath: path.join(paths.home_path, 'sh.json'),
+                            filters: [
+                                {name: 'JSON', extensions: ['json']},
+                                {name: 'All Files', extensions: ['*']}
+                            ]
+                        }, (fn) => {
+                            if (fn) {
+                                ipcMain.emit('to_export', fn);
+                            }
+                        });
                     }
                 }
             ]

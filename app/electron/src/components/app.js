@@ -16,8 +16,11 @@ class App extends React.Component {
     constructor(props) {
         super(props);
 
+        let _data = SH_Agent.getHosts();
+
         this.state = {
-            current: this.props.hosts.sys
+            hosts: _data,
+            current: _data.sys
         };
 
         // auto check refresh
@@ -34,10 +37,38 @@ class App extends React.Component {
             }
         });
 
+        ipcRenderer.on('to_import', (e, fn) => {
+            SH_Agent.readFile(fn, (err, cnt) => {
+                if (err) {
+                    alert(err.message || 'Import Error!');
+                    return;
+                }
+                let data;
+                try {
+                    data = JSON.parse(cnt);
+                } catch (e) {
+                    console.log(e);
+                    alert(e.message || 'Bad format, the import file should be a JSON file.');
+                    return;
+                }
+
+                if (!data.list || !Array.isArray(data.list)) {
+                    alert('Bad format, the data JSON should have a [list] field.');
+                    return;
+                }
+
+                this.setState({
+                    hosts: Object.assign({}, this.state.hosts, {list: data.list})
+                }, () => {
+                    SH_event.emit('imported');
+                });
+                console.log('imported.');
+            })
+        });
     }
 
     autoCheckRefresh() {
-        this.props.hosts.list.map((host, idx) => {
+        this.state.hosts.list.map((host, idx) => {
             setTimeout(() => {
                 SH_event.emit('check_host_refresh', host);
             }, 1000 * 5 * idx);
@@ -80,7 +111,7 @@ class App extends React.Component {
         let current = this.state.current;
         return (
             <div id="app">
-                <Panel hosts={this.props.hosts} current={current} setCurrent={this.setCurrent.bind(this)}/>
+                <Panel hosts={this.state.hosts} current={current} setCurrent={this.setCurrent.bind(this)}/>
                 <Content current={current} readonly={App.isReadOnly(current)}
                          setHostContent={this.setHostContent.bind(this)}/>
                 <div className="frames">

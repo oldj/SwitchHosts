@@ -308,5 +308,8 @@ module.exports = {
             , content: getSysHosts()
         }
     },
+    readFile: function (fn, callback) {
+        fs.readFile(fn, 'utf-8', callback);
+    },
     lang: lang.getLang(getUserLang())
 };
