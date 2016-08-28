@@ -1,3 +1,12 @@
+/**
+ * SwitchHosts!
+ *
+ * @author oldj
+ * @blog http://oldj.net
+ * @homepage https://oldj.github.io/SwitchHosts/
+ * @source https://github.com/oldj/SwitchHosts
+ */
+
 const electron = require('electron');
 // Module to control application life.
 const app = electron.app;
@@ -5,6 +14,7 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
 const tray = require('./src/modules/tray');
+let user_language = (app.getLocale() || '').split('-')[0].toLowerCase() || 'en';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -37,7 +47,7 @@ function createWindow() {
 
     contents.on('did-finish-load', () => {
         if (!is_tray_initialized) {
-            tray.makeTray(app, contents);
+            tray.makeTray(app, contents, user_language);
             is_tray_initialized = true;
         }
     });
@@ -48,6 +58,7 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
     createWindow();
+    require('./src/modules/mainMenu').init(user_language);
 });
 
 // Quit when all windows are closed.
@@ -80,5 +91,8 @@ app.on('activate', function () {
     }
 });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+electron.ipcMain.on('to_add_host', () => {
+    if (contents && contents.send) {
+        contents.send('to_add_host');
+    }
+});

@@ -29,6 +29,10 @@ export default class Buttons extends React.Component {
                 this.on_items = null;
             }
         });
+
+        ipcRenderer.on('to_add_host', () => {
+            SH_event.emit('add_host');
+        });
     }
 
     static btnAdd() {
