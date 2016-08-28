@@ -8,6 +8,7 @@
  */
 
 const electron = require('electron');
+const fs = require('fs');
 // Module to control application life.
 const app = electron.app;
 // Module to create native browser window.
@@ -94,5 +95,27 @@ app.on('activate', function () {
 electron.ipcMain.on('to_add_host', () => {
     if (contents && contents.send) {
         contents.send('to_add_host');
+    }
+});
+
+electron.ipcMain.on('to_export', (fn) => {
+    if (contents && contents.send) {
+        contents.send('get_export_data', fn);
+    }
+});
+
+electron.ipcMain.on('export_data', (e, fn, data) => {
+    console.log(fn);
+    console.log(data);
+    fs.writeFile(fn, data, 'utf-8', (err) => {
+        if (err) {
+            electron.dialog.showErrorBox('error', err.message || 'Fail to export!');
+        }
+    });
+});
+
+electron.ipcMain.on('to_import', (fn) => {
+    if (contents && contents.send) {
+        contents.send('to_import', fn);
     }
 });

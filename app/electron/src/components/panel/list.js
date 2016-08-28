@@ -22,6 +22,15 @@ class List extends React.Component {
         };
         this.last_content = this.props.hosts.sys.content;
 
+        SH_event.on('imported', () => {
+            this.setState({
+                current: this.props.current,
+                list: this.props.hosts.list
+            }, () => {
+                SH_event.emit('change');
+            });
+        });
+
         SH_event.on('change', () => {
             SH_event.emit('save_data', this.state.list);
             let content = this.getOnContent();
@@ -92,6 +101,14 @@ class List extends React.Component {
 
         ipcRenderer.on('get_host_list', () => {
             ipcRenderer.send('send_host_list', this.state.list);
+        });
+
+        ipcRenderer.on('get_export_data', (e, fn) => {
+            let data = Object.assign({}, {
+                version: require('../../configs').version,
+                list: this.state.list
+            });
+            ipcRenderer.send('export_data', fn, JSON.stringify(data));
         });
 
         SH_event.on('top_toggle', (on, items) => {
