@@ -4,7 +4,8 @@
   "description": "Switch hosts quickly!",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dev": "ENV=dev electron ."
   },
   "repository": {
     "type": "git",
