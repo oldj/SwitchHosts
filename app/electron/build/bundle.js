@@ -21705,6 +21705,10 @@
 	                _this.on_items = null;
 	            }
 	        });
+	
+	        ipcRenderer.on('to_add_host', function () {
+	            SH_event.emit('add_host');
+	        });
 	        return _this;
 	    }
 	
