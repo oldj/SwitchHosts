@@ -18,6 +18,7 @@ function log(action) {
             'app=sh3',
             'action=' + encodeURIComponent(action),
             'v=' + encodeURIComponent(version),
+            'os=' + process.platform,
             'sid=' + encodeURIComponent(session_id),
             '_r=' + Math.random()
         ].join('&');

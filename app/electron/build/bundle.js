@@ -65,11 +65,9 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	var _data = SH_Agent.getHosts();
-	
 	ipcRenderer.setMaxListeners(20);
 	
-	_reactDom2.default.render(_react2.default.createElement(_app2.default, { hosts: _data }), document.getElementById('app'));
+	_reactDom2.default.render(_react2.default.createElement(_app2.default, null), document.getElementById('app'));
 
 /***/ },
 /* 1 */,
@@ -21479,8 +21477,11 @@
 	
 	        var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 	
+	        var _data = SH_Agent.getHosts();
+	
 	        _this.state = {
-	            current: _this.props.hosts.sys
+	            hosts: _data,
+	            current: _data.sys
 	        };
 	
 	        // auto check refresh
@@ -21497,6 +21498,34 @@
 	            }
 	        });
 	
+	        ipcRenderer.on('to_import', function (e, fn) {
+	            SH_Agent.readFile(fn, function (err, cnt) {
+	                if (err) {
+	                    alert(err.message || 'Import Error!');
+	                    return;
+	                }
+	                var data = void 0;
+	                try {
+	                    data = JSON.parse(cnt);
+	                } catch (e) {
+	                    console.log(e);
+	                    alert(e.message || 'Bad format, the import file should be a JSON file.');
+	                    return;
+	                }
+	
+	                if (!data.list || !Array.isArray(data.list)) {
+	                    alert('Bad format, the data JSON should have a [list] field.');
+	                    return;
+	                }
+	
+	                _this.setState({
+	                    hosts: Object.assign({}, _this.state.hosts, { list: data.list })
+	                }, function () {
+	                    SH_event.emit('imported');
+	                });
+	                console.log('imported.');
+	            });
+	        });
 	        return _this;
 	    }
 	
@@ -21505,7 +21534,7 @@
 	        value: function autoCheckRefresh() {
 	            var _this2 = this;
 	
-	            this.props.hosts.list.map(function (host, idx) {
+	            this.state.hosts.list.map(function (host, idx) {
 	                setTimeout(function () {
 	                    SH_event.emit('check_host_refresh', host);
 	                }, 1000 * 5 * idx);
@@ -21549,7 +21578,7 @@
 	            return _react2.default.createElement(
 	                'div',
 	                { id: 'app' },
-	                _react2.default.createElement(_panel2.default, { hosts: this.props.hosts, current: current, setCurrent: this.setCurrent.bind(this) }),
+	                _react2.default.createElement(_panel2.default, { hosts: this.state.hosts, current: current, setCurrent: this.setCurrent.bind(this) }),
 	                _react2.default.createElement(_content2.default, { current: current, readonly: App.isReadOnly(current),
 	                    setHostContent: this.setHostContent.bind(this) }),
 	                _react2.default.createElement(
@@ -22415,6 +22444,15 @@
 	        };
 	        _this.last_content = _this.props.hosts.sys.content;
 	
+	        SH_event.on('imported', function () {
+	            _this.setState({
+	                current: _this.props.current,
+	                list: _this.props.hosts.list
+	            }, function () {
+	                SH_event.emit('change');
+	            });
+	        });
+	
 	        SH_event.on('change', function () {
 	            SH_event.emit('save_data', _this.state.list);
 	            var content = _this.getOnContent();
@@ -22486,6 +22524,14 @@
 	
 	        ipcRenderer.on('get_host_list', function () {
 	            ipcRenderer.send('send_host_list', _this.state.list);
+	        });
+	
+	        ipcRenderer.on('get_export_data', function (e, fn) {
+	            var data = Object.assign({}, {
+	                version: __webpack_require__(222).version,
+	                list: _this.state.list
+	            });
+	            ipcRenderer.send('export_data', fn, JSON.stringify(data));
 	        });
 	
 	        SH_event.on('top_toggle', function (on, items) {
@@ -33438,6 +33484,31 @@
 	
 	// exports
 
+
+/***/ },
+/* 222 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * configs.js
+	 * @author oldj
+	 * @blog http://oldj.net
+	 */
+	
+	'use strict';
+	
+	var m_ver = __webpack_require__(223).version;
+	
+	exports.version = m_ver.slice(0, 3).join('.');
+	exports.version_full = m_ver.join('.');
+
+/***/ },
+/* 223 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	exports.version = [3, 2, 0, 4106];
 
 /***/ }
 /******/ ]);
