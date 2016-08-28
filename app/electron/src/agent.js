@@ -21,6 +21,8 @@ const data_path = paths.data_path;
 const preference_path = paths.preference_path;
 
 const exec = require('child_process').exec;
+const stat = require('./modules/stat');
+stat.init();
 
 const crypto = require('crypto');
 function md5 (text) {
