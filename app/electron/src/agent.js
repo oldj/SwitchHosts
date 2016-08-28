@@ -15,6 +15,7 @@ const util = require('./libs/util');
 const platform = process.platform;
 
 const paths = require('./libs/paths');
+const pref = require('./libs/pref');
 const sys_host_path = paths.sys_host_path;
 const work_path = paths.work_path;
 const data_path = paths.data_path;
@@ -29,8 +30,22 @@ function md5 (text) {
     return crypto.createHash('md5').update(text).digest('hex');
 }
 
+
 const lang = require('./lang');
 let sudo_pswd = '';
+
+function getUserLang() {
+    let user_lang;
+
+    user_lang = pref.get('user_language') || navigator.language || navigator.userLanguage;
+    if (user_lang === 'zh_CN') {
+        user_lang = 'cn';
+    } else {
+        user_lang = 'en';
+    }
+
+    return user_lang;
+}
 
 
 function getSysHosts() {
@@ -293,5 +308,5 @@ module.exports = {
             , content: getSysHosts()
         }
     },
-    lang: lang.getLang('cn')
+    lang: lang.getLang(getUserLang())
 };
