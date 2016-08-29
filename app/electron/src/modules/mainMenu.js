@@ -239,6 +239,13 @@ exports.init = function (sys_lang = 'en') {
             }
         ]
     } else if (os == 'win32') {
+        template[0].submenu.unshift({
+            type: 'separator'
+        });
+        template[0].submenu.unshift({
+            role: 'about'
+        });
+
         template[0].submenu.push({
             type: 'separator'
         });
