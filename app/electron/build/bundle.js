@@ -208,45 +208,17 @@
 	} ())
 	function runTimeout(fun) {
 	    if (cachedSetTimeout === setTimeout) {
-	        //normal enviroments in sane situations
 	        return setTimeout(fun, 0);
+	    } else {
+	        return cachedSetTimeout.call(null, fun, 0);
 	    }
-	    try {
-	        // when when somebody has screwed with setTimeout but no I.E. maddness
-	        return cachedSetTimeout(fun, 0);
-	    } catch(e){
-	        try {
-	            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-	            return cachedSetTimeout.call(null, fun, 0);
-	        } catch(e){
-	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-	            return cachedSetTimeout.call(this, fun, 0);
-	        }
-	    }
-	
-	
 	}
 	function runClearTimeout(marker) {
 	    if (cachedClearTimeout === clearTimeout) {
-	        //normal enviroments in sane situations
-	        return clearTimeout(marker);
+	        clearTimeout(marker);
+	    } else {
+	        cachedClearTimeout.call(null, marker);
 	    }
-	    try {
-	        // when when somebody has screwed with setTimeout but no I.E. maddness
-	        return cachedClearTimeout(marker);
-	    } catch (e){
-	        try {
-	            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-	            return cachedClearTimeout.call(null, marker);
-	        } catch (e){
-	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-	            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-	            return cachedClearTimeout.call(this, marker);
-	        }
-	    }
-	
-	
-	
 	}
 	var queue = [];
 	var draining = false;
@@ -21735,6 +21707,10 @@
 	            }
 	        });
 	
+	        SH_event.on('cancel_search', function () {
+	            _this.calcelSearch();
+	        });
+	
 	        ipcRenderer.on('to_add_host', function () {
 	            SH_event.emit('add_host');
 	        });
@@ -21770,6 +21746,15 @@
 	                search_on: !this.state.search_on
 	            }, function () {
 	                SH_event.emit(_this3.state.search_on ? 'search_on' : 'search_off');
+	            });
+	        }
+	    }, {
+	        key: 'calcelSearch',
+	        value: function calcelSearch() {
+	            this.setState({
+	                search_on: false
+	            }, function () {
+	                SH_event.emit('search_off');
 	            });
 	        }
 	    }, {
@@ -21903,8 +21888,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22323,6 +22308,11 @@
 	            }, 300);
 	        }
 	    }, {
+	        key: 'onCancel',
+	        value: function onCancel() {
+	            SH_event.emit('cancel_search');
+	        }
+	    }, {
 	        key: 'render',
 	        value: function render() {
 	            var _this2 = this;
@@ -22340,6 +22330,9 @@
 	                    value: this.state.keyword,
 	                    onChange: function onChange(e) {
 	                        return _this2.doSearch(e.target.value);
+	                    },
+	                    onKeyDown: function onKeyDown(e) {
+	                        return e.keyCode === 27 && _this2.onCancel();
 	                    }
 	                })
 	            );
@@ -22367,8 +22360,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./searchbar.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./searchbar.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22999,8 +22992,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23164,8 +23157,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23204,8 +23197,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -24161,8 +24154,12 @@
 	    var comp = compensateForHScroll(display) - display.scroller.scrollLeft + cm.doc.scrollLeft;
 	    var gutterW = display.gutters.offsetWidth, left = comp + "px";
 	    for (var i = 0; i < view.length; i++) if (!view[i].hidden) {
-	      if (cm.options.fixedGutter && view[i].gutter)
-	        view[i].gutter.style.left = left;
+	      if (cm.options.fixedGutter) {
+	        if (view[i].gutter)
+	          view[i].gutter.style.left = left;
+	        if (view[i].gutterBackground)
+	          view[i].gutterBackground.style.left = left;
+	      }
 	      var align = view[i].alignable;
 	      if (align) for (var j = 0; j < align.length; j++)
 	        align[j].style.left = left;
@@ -24718,7 +24715,7 @@
 	  }
 	
 	  function handlePaste(e, cm) {
-	    var pasted = e.clipboardData && e.clipboardData.getData("text/plain");
+	    var pasted = e.clipboardData && e.clipboardData.getData("Text");
 	    if (pasted) {
 	      e.preventDefault();
 	      if (!cm.isReadOnly() && !cm.options.disableInput)
@@ -24762,10 +24759,10 @@
 	    return {text: text, ranges: ranges};
 	  }
 	
-	  function disableBrowserMagic(field) {
+	  function disableBrowserMagic(field, spellcheck) {
 	    field.setAttribute("autocorrect", "off");
 	    field.setAttribute("autocapitalize", "off");
-	    field.setAttribute("spellcheck", "false");
+	    field.setAttribute("spellcheck", !!spellcheck);
 	  }
 	
 	  // TEXTAREA INPUT STYLE
@@ -25143,10 +25140,14 @@
 	    init: function(display) {
 	      var input = this, cm = input.cm;
 	      var div = input.div = display.lineDiv;
-	      disableBrowserMagic(div);
+	      disableBrowserMagic(div, cm.options.spellcheck);
 	
 	      on(div, "paste", function(e) {
-	        if (!signalDOMEvent(cm, e)) handlePaste(e, cm);
+	        if (signalDOMEvent(cm, e) || handlePaste(e, cm)) return
+	        // IE doesn't fire input events, so we schedule a read for the pasted content in this way
+	        if (ie_version <= 11) setTimeout(operation(cm, function() {
+	          if (!input.pollContent()) regChange(cm);
+	        }), 20)
 	      })
 	
 	      on(div, "compositionstart", function(e) {
@@ -25206,23 +25207,27 @@
 	            });
 	          }
 	        }
-	        // iOS exposes the clipboard API, but seems to discard content inserted into it
-	        if (e.clipboardData && !ios) {
-	          e.preventDefault();
+	        if (e.clipboardData) {
 	          e.clipboardData.clearData();
-	          e.clipboardData.setData("text/plain", lastCopied.text.join("\n"));
-	        } else {
-	          // Old-fashioned briefly-focus-a-textarea hack
-	          var kludge = hiddenTextarea(), te = kludge.firstChild;
-	          cm.display.lineSpace.insertBefore(kludge, cm.display.lineSpace.firstChild);
-	          te.value = lastCopied.text.join("\n");
-	          var hadFocus = document.activeElement;
-	          selectInput(te);
-	          setTimeout(function() {
-	            cm.display.lineSpace.removeChild(kludge);
-	            hadFocus.focus();
-	          }, 50);
+	          var content = lastCopied.text.join("\n")
+	          // iOS exposes the clipboard API, but seems to discard content inserted into it
+	          e.clipboardData.setData("Text", content);
+	          if (e.clipboardData.getData("Text") == content) {
+	            e.preventDefault();
+	            return
+	          }
 	        }
+	        // Old-fashioned briefly-focus-a-textarea hack
+	        var kludge = hiddenTextarea(), te = kludge.firstChild;
+	        cm.display.lineSpace.insertBefore(kludge, cm.display.lineSpace.firstChild);
+	        te.value = lastCopied.text.join("\n");
+	        var hadFocus = document.activeElement;
+	        selectInput(te);
+	        setTimeout(function() {
+	          cm.display.lineSpace.removeChild(kludge);
+	          hadFocus.focus();
+	          if (hadFocus == div) input.showPrimarySelection()
+	        }, 50);
 	      }
 	      on(div, "copy", onCopyCut);
 	      on(div, "cut", onCopyCut);
@@ -25530,7 +25535,7 @@
 	      if (found)
 	        return badPos(Pos(found.line, found.ch + dist), bad);
 	      else
-	        dist += after.textContent.length;
+	        dist += before.textContent.length;
 	    }
 	  }
 	
@@ -28517,7 +28522,10 @@
 	    addOverlay: methodOp(function(spec, options) {
 	      var mode = spec.token ? spec : CodeMirror.getMode(this.options, spec);
 	      if (mode.startState) throw new Error("Overlays may not be stateful.");
-	      this.state.overlays.push({mode: mode, modeSpec: spec, opaque: options && options.opaque});
+	      insertSorted(this.state.overlays,
+	                   {mode: mode, modeSpec: spec, opaque: options && options.opaque,
+	                    priority: (options && options.priority) || 0},
+	                   function(overlay) { return overlay.priority })
 	      this.state.modeGen++;
 	      regChange(this);
 	    }),
@@ -28989,6 +28997,9 @@
 	  option("inputStyle", mobile ? "contenteditable" : "textarea", function() {
 	    throw new Error("inputStyle can not (yet) be changed in a running editor"); // FIXME
 	  }, true);
+	  option("spellcheck", false, function(cm, val) {
+	    cm.getInputField().spellcheck = val
+	  }, true);
 	  option("rtlMoveVisually", !windows);
 	  option("wholeLineUpdateBefore", true);
 	
@@ -29098,6 +29109,8 @@
 	      spec.name = found.name;
 	    } else if (typeof spec == "string" && /^[\w\-]+\/[\w\-]+\+xml$/.test(spec)) {
 	      return CodeMirror.resolveMode("application/xml");
+	    } else if (typeof spec == "string" && /^[\w\-]+\/[\w\-]+\+json$/.test(spec)) {
+	      return CodeMirror.resolveMode("application/json");
 	    }
 	    if (typeof spec == "string") return {name: spec};
 	    else return spec || {name: "null"};
@@ -31527,7 +31540,7 @@
 	  }
 	
 	  // Register a change in the history. Merges changes that are within
-	  // a single operation, ore are close together with an origin that
+	  // a single operation, or are close together with an origin that
 	  // allows merging (starting with "+") into a single event.
 	  function addChangeToHistory(doc, change, selAfter, opId) {
 	    var hist = doc.history;
@@ -31928,6 +31941,12 @@
 	    var out = [];
 	    for (var i = 0; i < array.length; i++) out[i] = f(array[i], i);
 	    return out;
+	  }
+	
+	  function insertSorted(array, value, score) {
+	    var pos = 0, priority = score(value)
+	    while (pos < array.length && score(array[pos]) <= priority) pos++
+	    array.splice(pos, 0, value)
 	  }
 	
 	  function nothing() {}
@@ -32498,7 +32517,7 @@
 	
 	  // THE END
 	
-	  CodeMirror.version = "5.17.0";
+	  CodeMirror.version = "5.18.2";
 	
 	  return CodeMirror;
 	});
@@ -32583,8 +32602,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../css-loader/index.js!./codemirror.css", function() {
-				var newContent = require("!!./../../css-loader/index.js!./codemirror.css");
+			module.hot.accept("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css", function() {
+				var newContent = require("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32623,8 +32642,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32663,8 +32682,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32966,8 +32985,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33006,8 +33025,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33395,8 +33414,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33435,8 +33454,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less");
+			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});

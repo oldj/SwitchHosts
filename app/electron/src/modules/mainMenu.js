@@ -161,8 +161,9 @@ exports.init = function (sys_lang = 'en') {
         }
     ];
 
-    if (process.platform === 'darwin') {
-        const name = require('electron').app.getName();
+    const name = require('electron').app.getName();
+    const os = process.platform;
+    if (os === 'darwin') {
         template.unshift({
             label: name,
             submenu: [
@@ -237,6 +238,18 @@ exports.init = function (sys_lang = 'en') {
                 role: 'front'
             }
         ]
+    } else if (os == 'win32') {
+        template[0].submenu.push({
+            type: 'separator'
+        });
+        template[0].submenu.push({
+            label: 'Quit',
+            role: 'quit',
+            accelerator: 'CmdOrCtrl+Q',
+        });
+
+        // VIEW
+        template[2].submenu.splice(0, 4);
     }
 
     const menu = Menu.buildFromTemplate(template);
