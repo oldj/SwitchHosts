@@ -106,7 +106,10 @@ class List extends React.Component {
         ipcRenderer.on('get_export_data', (e, fn) => {
             let data = Object.assign({}, {
                 version: require('../../configs').version,
-                list: this.state.list
+                list: this.state.list.map((item) => {
+                    item.on = false;
+                    return item;
+                })
             });
             ipcRenderer.send('export_data', fn, JSON.stringify(data));
         });
