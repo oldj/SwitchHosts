@@ -55,6 +55,9 @@ export default class SearchBar extends React.Component {
         }, 300);
     }
 
+    onCancel() {
+        SH_event.emit('cancel_search');
+    }
 
     render() {
         if (!this.state.show) {
@@ -68,6 +71,7 @@ export default class SearchBar extends React.Component {
                     placeholder="keyword"
                     value={this.state.keyword}
                     onChange={(e) => this.doSearch(e.target.value)}
+                    onKeyDown={(e)=>(e.keyCode===27 && this.onCancel())}
                 />
             </div>
         );
