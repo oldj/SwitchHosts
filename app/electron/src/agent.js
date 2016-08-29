@@ -89,7 +89,12 @@ function saveData(content) {
 }
 
 
-function apply_UNIX(tmp_fn, success) {
+function apply_UNIX(content, success) {
+    let tmp_fn = path.join(work_path, 'tmp.txt');
+    if (content) {
+        fs.writeFileSync(tmp_fn, content, 'utf-8');
+    }
+
     let cmd;
     if (!sudo_pswd) {
         cmd = [
@@ -174,6 +179,7 @@ function apply_Win32(content, success) {
         fs.writeFileSync(sys_host_path, content, 'utf-8');
     } catch (e) {
         console.log(e);
+        alert(e.message);
         return;
     }
     success && success();
@@ -183,15 +189,11 @@ function apply_Win32(content, success) {
 
 
 function tryToApply(content, success) {
-    let tmp_fn = path.join(work_path, 'tmp.txt');
-    if (content) {
-        fs.writeFileSync(tmp_fn, content, 'utf-8');
-    }
 
     if (platform !== 'win32') {
-        apply_UNIX(tmp_fn, success);
+        apply_UNIX(content, success);
     } else {
-        apply_Win32(tmp_fn, success);
+        apply_Win32(content, success);
     }
 }
 
