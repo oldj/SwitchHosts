@@ -30,6 +30,10 @@ export default class Buttons extends React.Component {
             }
         });
 
+        SH_event.on('cancel_search', () => {
+            this.calcelSearch();
+        });
+
         ipcRenderer.on('to_add_host', () => {
             SH_event.emit('add_host');
         });
@@ -61,6 +65,14 @@ export default class Buttons extends React.Component {
             search_on: !this.state.search_on
         }, () => {
             SH_event.emit(this.state.search_on ? 'search_on' : 'search_off');
+        });
+    }
+
+    calcelSearch() {
+        this.setState({
+            search_on: false
+        }, () => {
+            SH_event.emit('search_off');
         });
     }
 

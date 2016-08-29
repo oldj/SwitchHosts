@@ -78,6 +78,13 @@ function makeTray(app, contents, sys_lang='en') {
     if (is_dock_icon_hidden) {
         app.dock.hide();
     }
+
+    // windows only
+    if (process.platform === 'win32') {
+        tray.on('click', () => {
+            app.emit('show');
+        });
+    }
 }
 
 exports.makeTray = makeTray;
