@@ -38,6 +38,8 @@ class App extends React.Component {
         });
 
         ipcRenderer.on('to_import', (e, fn) => {
+            if (!confirm(SH_Agent.lang.confirm_import)) return;
+
             SH_Agent.readFile(fn, (err, cnt) => {
                 if (err) {
                     alert(err.message || 'Import Error!');

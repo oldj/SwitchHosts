@@ -31,7 +31,7 @@ function md5 (text) {
 }
 
 
-const lang = require('./lang');
+const m_lang = require('./lang');
 let sudo_pswd = '';
 
 function getUserLang() {
@@ -46,6 +46,8 @@ function getUserLang() {
 
     return user_lang;
 }
+
+const lang = m_lang.getLang(getUserLang());
 
 
 function getSysHosts() {
@@ -179,7 +181,11 @@ function apply_Win32(content, success) {
         fs.writeFileSync(sys_host_path, content, 'utf-8');
     } catch (e) {
         console.log(e);
-        alert(e.message);
+        let msg = e.message;
+        if (platform === 'win32') {
+            msg = `${msg}\n\n${lang.please_run_as_admin}`;
+        }
+        alert(msg);
         return;
     }
     success && success();
@@ -313,5 +319,5 @@ module.exports = {
     readFile: function (fn, callback) {
         fs.readFile(fn, 'utf-8', callback);
     },
-    lang: lang.getLang(getUserLang())
+    lang: lang
 };
