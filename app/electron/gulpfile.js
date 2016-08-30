@@ -10,7 +10,7 @@ const path = require('path');
 const gulp = require('gulp');
 const beautify = require('js-beautify').js_beautify;
 
-gulp.task('update_version', () => {
+gulp.task('ver', () => {
     let fn = path.join(__dirname, 'src', 'version.js');
     let version = require('./src/version').version;
     version[3]++;
@@ -30,12 +30,12 @@ gulp.task('update_version', () => {
 });
 
 gulp.task('default', () => {
-    gulp.start('update_version');
+    gulp.start('ver');
 
     gulp.watch([
         './main.js',
         './index.html',
         './src/**/*.*',
         '!./src/version.js'
-    ], ['update_version']);
+    ], ['ver']);
 });

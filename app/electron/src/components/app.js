@@ -112,7 +112,7 @@ class App extends React.Component {
     render() {
         let current = this.state.current;
         return (
-            <div id="app">
+            <div id="app" className={'platform-' + platform}>
                 <Panel hosts={this.state.hosts} current={current} setCurrent={this.setCurrent.bind(this)}/>
                 <Content current={current} readonly={App.isReadOnly(current)}
                          setHostContent={this.setHostContent.bind(this)}/>
