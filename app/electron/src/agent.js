@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const request = require('request');
 const moment = require('moment');
+const notifier = require('node-notifier');
 const util = require('./libs/util');
 const platform = process.platform;
 
@@ -318,6 +319,13 @@ module.exports = {
     },
     readFile: function (fn, callback) {
         fs.readFile(fn, 'utf-8', callback);
+    },
+    notify: (options) => {
+        notifier.notify(Object.assign({
+            title: 'SwitchHosts!',
+            message: '',
+            icon: path.join(__dirname, 'assets', 'logo_512.png')
+        }, options));
     },
     lang: lang
 };
