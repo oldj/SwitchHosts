@@ -11,6 +11,7 @@ const path = require('path');
 const {Menu, Tray, ipcMain, shell} = require('electron');
 const m_lang = require('../lang');
 const pref = require('./../libs/pref');
+const os = process.platform;
 
 let tray = null;
 
@@ -41,15 +42,20 @@ function makeMenu(app, list, contents, sys_lang) {
         shell.openExternal('https://github.com/oldj/SwitchHosts/issues');
     }});
 
-    menu.push({label: lang.toggle_dock_icon, type: 'normal', click: () => {
-        let is_dock_visible = app.dock.isVisible();
-        if (is_dock_visible) {
-            app.dock.hide();
-        } else {
-            app.dock.show();
-        }
-        pref.set('is_dock_icon_hidden', is_dock_visible);
-    }});
+    if (os === 'darwin') {
+        menu.push({
+            label: lang.toggle_dock_icon, type: 'normal', click: () => {
+                let is_dock_visible = app.dock.isVisible();
+                if (is_dock_visible) {
+                    app.dock.hide();
+                } else {
+                    app.dock.show();
+                }
+                pref.set('is_dock_icon_hidden', is_dock_visible);
+            }
+        });
+    }
+
     menu.push({type: 'separator'});
     menu.push({label: lang.quit, type: 'normal', accelerator: 'CommandOrControl+Q', click: () => {
         app.quit();
