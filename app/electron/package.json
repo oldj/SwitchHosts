@@ -22,6 +22,7 @@
     "classnames": "^2.2.5",
     "codemirror": "^5.17.0",
     "moment": "^2.14.1",
+    "node-notifier": "^4.6.1",
     "react": "^15.3.1",
     "react-addons-update": "^15.3.1",
     "react-dom": "^15.3.1",

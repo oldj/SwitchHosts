@@ -151,6 +151,9 @@ class List extends React.Component {
             this.last_content = content;
             success();
             SH_event.emit('save_data', this.state.list);
+            SH_Agent.notify({
+                message: 'host updated.'
+            });
         });
     }
 

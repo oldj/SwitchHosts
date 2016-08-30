@@ -21475,7 +21475,7 @@
 	    function App(props) {
 	        _classCallCheck(this, App);
 	
-	        var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(App).call(this, props));
 	
 	        var _data = SH_Agent.getHosts();
 	
@@ -21652,7 +21652,7 @@
 	    function Panel() {
 	        _classCallCheck(this, Panel);
 	
-	        return _possibleConstructorReturn(this, (Panel.__proto__ || Object.getPrototypeOf(Panel)).apply(this, arguments));
+	        return _possibleConstructorReturn(this, Object.getPrototypeOf(Panel).apply(this, arguments));
 	    }
 	
 	    _createClass(Panel, [{
@@ -21719,7 +21719,7 @@
 	    function Buttons(props) {
 	        _classCallCheck(this, Buttons);
 	
-	        var _this = _possibleConstructorReturn(this, (Buttons.__proto__ || Object.getPrototypeOf(Buttons)).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Buttons).call(this, props));
 	
 	        _this.state = {
 	            top_toggle_on: true,
@@ -21918,8 +21918,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22291,7 +22291,7 @@
 	    function SearchBar(props) {
 	        _classCallCheck(this, SearchBar);
 	
-	        var _this = _possibleConstructorReturn(this, (SearchBar.__proto__ || Object.getPrototypeOf(SearchBar)).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(SearchBar).call(this, props));
 	
 	        _this.state = {
 	            show: false,
@@ -22390,8 +22390,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./searchbar.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./searchbar.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22459,7 +22459,7 @@
 	    function List(props) {
 	        _classCallCheck(this, List);
 	
-	        var _this = _possibleConstructorReturn(this, (List.__proto__ || Object.getPrototypeOf(List)).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(List).call(this, props));
 	
 	        _this.state = {
 	            current: _this.props.current,
@@ -22609,6 +22609,9 @@
 	                _this2.last_content = content;
 	                success();
 	                SH_event.emit('save_data', _this2.state.list);
+	                SH_Agent.notify({
+	                    message: 'host updated.'
+	                });
 	            });
 	        }
 	    }, {
@@ -22771,7 +22774,7 @@
 	    function ListItem(props) {
 	        _classCallCheck(this, ListItem);
 	
-	        var _this = _possibleConstructorReturn(this, (ListItem.__proto__ || Object.getPrototypeOf(ListItem)).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(ListItem).call(this, props));
 	
 	        _this.is_sys = !!_this.props.sys;
 	        _this.state = {
@@ -23025,8 +23028,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23190,8 +23193,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23237,7 +23240,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 0, 4130];
+	exports.version = [3, 2, 0, 4139];
 
 /***/ },
 /* 196 */
@@ -23255,8 +23258,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23362,7 +23365,7 @@
 	    function Content(props) {
 	        _classCallCheck(this, Content);
 	
-	        var _this = _possibleConstructorReturn(this, (Content.__proto__ || Object.getPrototypeOf(Content)).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Content).call(this, props));
 	
 	        _this.codemirror = null;
 	        _this.state = {
@@ -23502,7 +23505,7 @@
 	    function Editor(props) {
 	        _classCallCheck(this, Editor);
 	
-	        var _this = _possibleConstructorReturn(this, (Editor.__proto__ || Object.getPrototypeOf(Editor)).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Editor).call(this, props));
 	
 	        _this.codemirror = null;
 	
@@ -24212,12 +24215,8 @@
 	    var comp = compensateForHScroll(display) - display.scroller.scrollLeft + cm.doc.scrollLeft;
 	    var gutterW = display.gutters.offsetWidth, left = comp + "px";
 	    for (var i = 0; i < view.length; i++) if (!view[i].hidden) {
-	      if (cm.options.fixedGutter) {
-	        if (view[i].gutter)
-	          view[i].gutter.style.left = left;
-	        if (view[i].gutterBackground)
-	          view[i].gutterBackground.style.left = left;
-	      }
+	      if (cm.options.fixedGutter && view[i].gutter)
+	        view[i].gutter.style.left = left;
 	      var align = view[i].alignable;
 	      if (align) for (var j = 0; j < align.length; j++)
 	        align[j].style.left = left;
@@ -24773,7 +24772,7 @@
 	  }
 	
 	  function handlePaste(e, cm) {
-	    var pasted = e.clipboardData && e.clipboardData.getData("Text");
+	    var pasted = e.clipboardData && e.clipboardData.getData("text/plain");
 	    if (pasted) {
 	      e.preventDefault();
 	      if (!cm.isReadOnly() && !cm.options.disableInput)
@@ -24817,10 +24816,10 @@
 	    return {text: text, ranges: ranges};
 	  }
 	
-	  function disableBrowserMagic(field, spellcheck) {
+	  function disableBrowserMagic(field) {
 	    field.setAttribute("autocorrect", "off");
 	    field.setAttribute("autocapitalize", "off");
-	    field.setAttribute("spellcheck", !!spellcheck);
+	    field.setAttribute("spellcheck", "false");
 	  }
 	
 	  // TEXTAREA INPUT STYLE
@@ -25198,14 +25197,10 @@
 	    init: function(display) {
 	      var input = this, cm = input.cm;
 	      var div = input.div = display.lineDiv;
-	      disableBrowserMagic(div, cm.options.spellcheck);
+	      disableBrowserMagic(div);
 	
 	      on(div, "paste", function(e) {
-	        if (signalDOMEvent(cm, e) || handlePaste(e, cm)) return
-	        // IE doesn't fire input events, so we schedule a read for the pasted content in this way
-	        if (ie_version <= 11) setTimeout(operation(cm, function() {
-	          if (!input.pollContent()) regChange(cm);
-	        }), 20)
+	        if (!signalDOMEvent(cm, e)) handlePaste(e, cm);
 	      })
 	
 	      on(div, "compositionstart", function(e) {
@@ -25265,27 +25260,23 @@
 	            });
 	          }
 	        }
-	        if (e.clipboardData) {
+	        // iOS exposes the clipboard API, but seems to discard content inserted into it
+	        if (e.clipboardData && !ios) {
+	          e.preventDefault();
 	          e.clipboardData.clearData();
-	          var content = lastCopied.text.join("\n")
-	          // iOS exposes the clipboard API, but seems to discard content inserted into it
-	          e.clipboardData.setData("Text", content);
-	          if (e.clipboardData.getData("Text") == content) {
-	            e.preventDefault();
-	            return
-	          }
+	          e.clipboardData.setData("text/plain", lastCopied.text.join("\n"));
+	        } else {
+	          // Old-fashioned briefly-focus-a-textarea hack
+	          var kludge = hiddenTextarea(), te = kludge.firstChild;
+	          cm.display.lineSpace.insertBefore(kludge, cm.display.lineSpace.firstChild);
+	          te.value = lastCopied.text.join("\n");
+	          var hadFocus = document.activeElement;
+	          selectInput(te);
+	          setTimeout(function() {
+	            cm.display.lineSpace.removeChild(kludge);
+	            hadFocus.focus();
+	          }, 50);
 	        }
-	        // Old-fashioned briefly-focus-a-textarea hack
-	        var kludge = hiddenTextarea(), te = kludge.firstChild;
-	        cm.display.lineSpace.insertBefore(kludge, cm.display.lineSpace.firstChild);
-	        te.value = lastCopied.text.join("\n");
-	        var hadFocus = document.activeElement;
-	        selectInput(te);
-	        setTimeout(function() {
-	          cm.display.lineSpace.removeChild(kludge);
-	          hadFocus.focus();
-	          if (hadFocus == div) input.showPrimarySelection()
-	        }, 50);
 	      }
 	      on(div, "copy", onCopyCut);
 	      on(div, "cut", onCopyCut);
@@ -25593,7 +25584,7 @@
 	      if (found)
 	        return badPos(Pos(found.line, found.ch + dist), bad);
 	      else
-	        dist += before.textContent.length;
+	        dist += after.textContent.length;
 	    }
 	  }
 	
@@ -28580,10 +28571,7 @@
 	    addOverlay: methodOp(function(spec, options) {
 	      var mode = spec.token ? spec : CodeMirror.getMode(this.options, spec);
 	      if (mode.startState) throw new Error("Overlays may not be stateful.");
-	      insertSorted(this.state.overlays,
-	                   {mode: mode, modeSpec: spec, opaque: options && options.opaque,
-	                    priority: (options && options.priority) || 0},
-	                   function(overlay) { return overlay.priority })
+	      this.state.overlays.push({mode: mode, modeSpec: spec, opaque: options && options.opaque});
 	      this.state.modeGen++;
 	      regChange(this);
 	    }),
@@ -29055,9 +29043,6 @@
 	  option("inputStyle", mobile ? "contenteditable" : "textarea", function() {
 	    throw new Error("inputStyle can not (yet) be changed in a running editor"); // FIXME
 	  }, true);
-	  option("spellcheck", false, function(cm, val) {
-	    cm.getInputField().spellcheck = val
-	  }, true);
 	  option("rtlMoveVisually", !windows);
 	  option("wholeLineUpdateBefore", true);
 	
@@ -29167,8 +29152,6 @@
 	      spec.name = found.name;
 	    } else if (typeof spec == "string" && /^[\w\-]+\/[\w\-]+\+xml$/.test(spec)) {
 	      return CodeMirror.resolveMode("application/xml");
-	    } else if (typeof spec == "string" && /^[\w\-]+\/[\w\-]+\+json$/.test(spec)) {
-	      return CodeMirror.resolveMode("application/json");
 	    }
 	    if (typeof spec == "string") return {name: spec};
 	    else return spec || {name: "null"};
@@ -31598,7 +31581,7 @@
 	  }
 	
 	  // Register a change in the history. Merges changes that are within
-	  // a single operation, or are close together with an origin that
+	  // a single operation, ore are close together with an origin that
 	  // allows merging (starting with "+") into a single event.
 	  function addChangeToHistory(doc, change, selAfter, opId) {
 	    var hist = doc.history;
@@ -31999,12 +31982,6 @@
 	    var out = [];
 	    for (var i = 0; i < array.length; i++) out[i] = f(array[i], i);
 	    return out;
-	  }
-	
-	  function insertSorted(array, value, score) {
-	    var pos = 0, priority = score(value)
-	    while (pos < array.length && score(array[pos]) <= priority) pos++
-	    array.splice(pos, 0, value)
 	  }
 	
 	  function nothing() {}
@@ -32575,7 +32552,7 @@
 	
 	  // THE END
 	
-	  CodeMirror.version = "5.18.2";
+	  CodeMirror.version = "5.17.0";
 	
 	  return CodeMirror;
 	});
@@ -32660,8 +32637,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css", function() {
-				var newContent = require("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css");
+			module.hot.accept("!!./../../css-loader/index.js!./codemirror.css", function() {
+				var newContent = require("!!./../../css-loader/index.js!./codemirror.css");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32700,8 +32677,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32740,8 +32717,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32805,7 +32782,7 @@
 	    function SudoPrompt(props) {
 	        _classCallCheck(this, SudoPrompt);
 	
-	        var _this = _possibleConstructorReturn(this, (SudoPrompt.__proto__ || Object.getPrototypeOf(SudoPrompt)).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(SudoPrompt).call(this, props));
 	
 	        _this.onSuccess = null;
 	        _this.state = {
@@ -32945,7 +32922,7 @@
 	    function Frame(props) {
 	        _classCallCheck(this, Frame);
 	
-	        return _possibleConstructorReturn(this, (Frame.__proto__ || Object.getPrototypeOf(Frame)).call(this, props));
+	        return _possibleConstructorReturn(this, Object.getPrototypeOf(Frame).call(this, props));
 	    }
 	
 	    _createClass(Frame, [{
@@ -33043,8 +33020,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33083,8 +33060,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33150,7 +33127,7 @@
 	    function EditPrompt(props) {
 	        _classCallCheck(this, EditPrompt);
 	
-	        var _this = _possibleConstructorReturn(this, (EditPrompt.__proto__ || Object.getPrototypeOf(EditPrompt)).call(this, props));
+	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(EditPrompt).call(this, props));
 	
 	        _this.state = {
 	            show: false,
@@ -33472,8 +33449,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33512,8 +33489,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
