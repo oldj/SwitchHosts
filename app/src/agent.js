@@ -214,8 +214,9 @@ SH_event.on('test', () => {
 });
 
 SH_event.on('apply', (content, success) => {
-    success = success || function () {};
-    tryToApply(content, success);
+    tryToApply(content, () => {
+        success && success();
+    });
 });
 
 SH_event.on('sudo_pswd', (pswd) => {

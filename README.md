@@ -3,7 +3,7 @@
 Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)
 
 
-这是一个用于快速切换 hosts 文件的小程序，基于 [MacGap](http://macgapproject.github.io) 开发，同时使用了 [Vue.js](http://vuejs.org/) 以及 [CodeMirror](http://codemirror.net/) 等框架/库。
+这是一个用于快速切换 hosts 文件的小程序，基于 [Electron](http://electron.atom.io/) 开发，同时使用了 [React](https://facebook.github.io/react/) 以及 [CodeMirror](http://codemirror.net/) 等框架/库。
 
 
 ## 功能特性：
@@ -30,20 +30,24 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下，其中 `~/.SwitchHo
 
 ## 更新历史：
 
+### v3.2
+
+ - 2016-09-06 使用 Electron 打包，增加 Windows 版[下载](https://github.com/oldj/SwitchHosts/releases)。
+
 ### v3.1
 
- - 2016-04-29 更新自动清除 DNS 缓存功能 [#90](https://github.com/oldj/SwitchHosts/issues/90)
- - 2016-01-15 搜索时增加模糊搜索支持（eg. `go*le` matches `google`）及正则支持（eg. `/go.*le` matches `google`）
+ - 2016-04-29 更新自动清除 DNS 缓存功能 [#90](https://github.com/oldj/SwitchHosts/issues/90)。
+ - 2016-01-15 搜索时增加模糊搜索支持（eg. `go*le` matches `google`）及正则支持（eg. `/go.*le` matches `google`）。
  - 2016-01-10 远程方案可以设置自动更新时间。
  - 2015-12-26 实现 Tray 菜单切换、Dock 图标隐藏、方案导入导出等功能。
  - 2015-12-20 从 Electron 切换至 MacGap 。
 
 ### v3.0
-    
+
  - 2015-11-30 完成 3.0 版基本功能。
- 
+
 ### v2.0
- 
+
  - 2013-02-06 解决 Linux/Mac 下没有修改系统 hosts 文件权限的问题。
  - 2012-12-27 启动时检查是否为单一实例，禁止同时运行多个实例。
  - 2012-11-16 接受 @charlestang 网友的 pull request，同时参考了 @allenm 的修改，实现了 Common Hosts 功能。
@@ -51,7 +55,7 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下，其中 `~/.SwitchHo
  - 2012-10-09 增加 hosts 方案拖拽排序功能。
  - 2012-10-05 修复在中文目录下程序无法正常启动的问题。
  - 2012-09-30 初步完成 0.2.0 版。
- 
+
 ### v1.0
 
  - 2011-12-14 允许输入超长的 hosts 方案。
@@ -64,9 +68,21 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下，其中 `~/.SwitchHo
 
 
 
-## 打包方法
+## 运行/打包方法
 
-请参考 [MacGap 文档](http://docs.macgap.com/)。
+ ### 环境配置
+
+ - 安装 [node.js](https://nodejs.org/) 环境；
+ - 在 `~/app` 目录下，运行 `npm install` 命令，安装依赖库。
+
+ ### 构建及运行
+
+ - 在 `~/app` 目录下，运行 `npm run build` 命令，构建所需文件；
+ - 在 `~/app` 目录下，运行 `npm start` 命令，即可运行程序。
+
+ ### 打包发布
+
+ - 请参考 [Electron 文档](http://electron.atom.io/docs/)。
 
 
 ## 版权
