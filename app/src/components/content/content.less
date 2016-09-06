@@ -1,0 +1,43 @@
+#sh-content {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 240px;
+  height: 100%;
+
+  .inform {
+    position: absolute;
+    z-index: 100;
+    top: 5px;
+    right: 10px;
+    opacity: 0.5;
+    background: #fff;
+
+    i {
+      display: none;
+      color: #666;
+      margin-left: 5px;
+
+      &.show {
+        display: inline-block;
+      }
+    }
+
+    span {
+      display: none;
+
+      &.show {
+        display: inline-block;
+      }
+    }
+  }
+}
+
+.platform-win32 {
+  #sh-content {
+    .inform {
+      right: 20px;
+    }
+  }
+}
