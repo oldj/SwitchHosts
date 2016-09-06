@@ -119,6 +119,7 @@ function apply_UNIX(content, success) {
         if (error) {
             if (!sudo_pswd) {
                 // 尝试让用户输入管理密码
+                SH_event.emit('show_app');
                 SH_event.emit('sudo_prompt', (pswd) => {
                     sudo_pswd = pswd;
                     tryToApply(null, success);
@@ -219,6 +220,10 @@ SH_event.on('apply', (content, success) => {
 
 SH_event.on('sudo_pswd', (pswd) => {
     sudo_pswd = pswd;
+});
+
+SH_event.on('show_app', (pswd) => {
+    ipcRenderer.send('show_app');
 });
 
 SH_event.on('save_data', (content) => {
