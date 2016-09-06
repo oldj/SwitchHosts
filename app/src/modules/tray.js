@@ -33,6 +33,7 @@ function makeMenu(app, list, contents, sys_lang) {
             accelerator: ac[idx],
             click: () => {
                 contents.send('tray_toggle_host', idx);
+                contents.send('get_host_list');
             }
         });
     });
