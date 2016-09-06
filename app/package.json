@@ -11,10 +11,7 @@
     "type": "git",
     "url": "git+https://github.com/oldj/SwitchHosts.git"
   },
-  "keywords": [
-    "SwitchHosts!",
-    "host"
-  ],
+  "keywords": ["SwitchHosts!", "host"],
   "author": "oldj",
   "license": "MIT",
   "bugs": {
