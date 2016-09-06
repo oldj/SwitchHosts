@@ -3,19 +3,15 @@
  * @blog http://oldj.net
  */
 
-"use strict";
+'use strict';
 
-var languages = {
+const languages = {
     'en': {
         add: 'Add'
-        , new: 'New'
-        , quit: 'Quit'
         , cancel: 'Cancel'
         , ok: 'OK'
         , add_host: 'Add new rules.'
         , edit_host: 'Edit host'
-        , import: 'Import'
-        , export: 'Export'
         , host_title: 'Host title'
         , host_title_cant_be_empty: 'Host title could not be empty!'
         , sys_host_title: 'System Hosts'
@@ -35,36 +31,29 @@ var languages = {
         , url: 'URL'
         , bad_url: 'URL is not valid.'
         , auto_refresh: 'Auto refresh'
-        , last_refresh: 'Last refresh: '
+        , last_refresh: 'Last refresh'
         , refresh: 'Refresh'
         , never: 'never'
         , hour: 'hour'
         , hours: 'hours'
         , day: 'day'
         , days: 'days'
-        , feedback: 'Feedback'
-        , homepage: 'Homepage'
         , hide_dock_icon: 'Hide Dock Icon'
         , show_dock_icon: 'Show Dock Icon'
         , toggle_dock_icon: 'Toggle Dock Icon'
         , no_valid_host_found: 'There is no valid host in the file.'
         , confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.'
-        , please_run_as_admin: 'Please run SwitchHosts! as an Administrator.'
     },
     'cn': {
         add: '添加'
-        , new: '新建'
-        , quit: '退出'
         , cancel: '取消'
         , ok: '确定'
         , add_host: '添加 host 规则'
         , edit_host: '修改 host'
-        , import: '导入'
-        , export: '导出'
         , host_title: 'host 方案名'
         , host_title_cant_be_empty: 'Host 方案名不能为空！'
         , sys_host_title: '系统 Hosts'
-        , input_sudo_pswd: '请输入您的开机密码（sudo 密码）'
+        , input_sudo_pswd: '请输入您的开机密码'
         , sudo_pswd: '密码'
         , del_host: '删除当前 host'
         , confirm_del: '确定要删除此 host 吗？'
@@ -80,21 +69,18 @@ var languages = {
         , url: 'URL 地址'
         , bad_url: 'URL 地址有误。'
         , auto_refresh: '自动更新'
-        , last_refresh: '上次更新：'
+        , last_refresh: '上次更新'
         , refresh: '刷新'
         , never: '从不'
         , hour: '小时'
         , hours: '小时'
         , day: '天'
         , days: '天'
-        , feedback: '反馈'
-        , homepage: '主页'
         , hide_dock_icon: '隐藏 Dock 图标'
         , show_dock_icon: '显示 Dock 图标'
         , toggle_dock_icon: '显示/隐藏 Dock 图标'
         , no_valid_host_found: '所指定的文件中未找到合法的 host 配置'
         , confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。'
-        , please_run_as_admin: '请以管理员身份运行 SwitchHosts!'
     }
 };
 

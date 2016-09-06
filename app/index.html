@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>SwitchHosts!</title>
+</head>
+<body>
+<div id="app"></div>
+<script>
+	const SH_event = require('./src/event').event;
+	const SH_Agent = require('./src/agent');
+	const {ipcRenderer} = require('electron');
+	const platform = process.platform;
+</script>
+<!--<script src="build/bundle.js"></script>-->
+<script>require('./build/bundle');</script>
+</body>
+</html>

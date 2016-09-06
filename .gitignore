@@ -7,6 +7,7 @@ dist
 projectFilesBackup
 .DS_Store
 tmp
+*.js.map
 
 *.hosts
 
@@ -15,8 +16,8 @@ src/configs.json
 *.swh
 *.iml
 
-/node_modules
-tmp
 node_modules
 UserInterfaceState.xcuserstate
 xcdebugger
+npm-debug.log
+
