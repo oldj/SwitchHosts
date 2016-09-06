@@ -101,6 +101,8 @@ app.on('activate', function () {
         createWindow();
     } else if (mainWindow.isMinimized()) {
         mainWindow.restore();
+    } else {
+        mainWindow.show();
     }
 });
 
