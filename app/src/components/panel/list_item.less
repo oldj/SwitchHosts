@@ -1,0 +1,61 @@
+#sh-list {
+  .list-item {
+    padding: 7px 10px 7px 15px;
+    cursor: pointer;
+
+    &.hidden {
+      display: none;
+    }
+
+    &.sys-host {
+      font-size: 14px;
+      padding: 8px 10px 8px 12px;
+
+      i {
+        width: 23px;
+      }
+    }
+
+    &.selected {
+      background: #2d3138;
+
+      span {
+        color: #fff;
+      }
+
+      i.item-icon {
+        color: #fff;
+      }
+
+      &:hover {
+        i.icon-edit {
+          display: block;
+          color: #fff;
+        }
+      }
+    }
+
+    i {
+      display: inline-block;
+      width: 20px;
+      text-align: center;
+      margin-right: 5px;
+
+      &.switch {
+        float: right;
+        cursor: pointer;
+        line-height: 23px;
+
+        &.icon-on {
+          color: #af9;
+        }
+      }
+
+      &.icon-edit {
+        float: right;
+        display: none;
+      }
+    }
+
+  }
+}
