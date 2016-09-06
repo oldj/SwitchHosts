@@ -21,6 +21,7 @@ let user_language = (app.getLocale() || '').split('-')[0].toLowerCase() || 'en';
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 let contents;
+let willQuitApp = false;
 let is_tray_initialized;
 
 function createWindow() {
@@ -39,8 +40,19 @@ function createWindow() {
         mainWindow.webContents.openDevTools();
     }
 
+    mainWindow.on('close', (e) => {
+        if (willQuitApp) {
+            /* the user tried to quit the app */
+            mainWindow = null;
+        } else {
+            /* the user only tried to close the window */
+            e.preventDefault();
+            mainWindow.hide();
+        }
+    });
+
     // Emitted when the window is closed.
-    mainWindow.on('closed', function () {
+    mainWindow.on('closed', () => {
         // Dereference the window object, usually you would store windows
         // in an array if your app supports multi windows, this is the time
         // when you should delete the corresponding element.
@@ -90,6 +102,12 @@ app.on('activate', function () {
     } else if (mainWindow.isMinimized()) {
         mainWindow.restore();
     }
+});
+
+app.on('before-quit', () => willQuitApp = true);
+
+electron.ipcMain.on('show_app', () => {
+    app.emit('show');
 });
 
 electron.ipcMain.on('to_add_host', () => {
