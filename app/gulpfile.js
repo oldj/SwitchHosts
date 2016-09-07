@@ -63,7 +63,7 @@ gulp.task('zip', () => {
 cd ./dist
 rm -f ./SwitchHosts-*.zip
 zip -ry SwitchHosts-macOS-x64_v${v}.zip ./SwitchHosts\\!-darwin-x64/SwitchHosts\\!.app
-zip -ry SwitchHosts-win32-x64_${v}.zip ./SwitchHosts\\!-win32-x64
+zip -ry SwitchHosts-win32-x64_v${v}.zip ./SwitchHosts\\!-win32-x64
 cd ..
 `;
 
