@@ -73,6 +73,22 @@ class List extends React.Component {
             });
         });
 
+        SH_event.on('host_refreshed', (data, host) => {
+            let idx = this.state.list.findIndex((item) => item == host);
+            if (idx == -1) return;
+
+            this.setState({
+                list: update(this.state.list, {$splice: [[idx, 1, data]]})
+            }, () => {
+                setTimeout(() => {
+                    if (host === this.state.current) {
+                        this.selectOne(data);
+                    }
+                    SH_event.emit('change', true);
+                }, 100);
+            });
+        });
+
         SH_event.on('del_host', (host) => {
             let list = this.state.list;
             let idx_to_del = list.findIndex((item) => {
@@ -127,13 +143,13 @@ class List extends React.Component {
             });
         });
 
-        SH_event.on('loading', (host, flag) => {
-            if (flag) return;
-            if (host == this.state.current) {
-                setTimeout(() => {
-                    this.selectOne(host);
-                }, 100);
-            }
+        SH_event.on('loading_done', (host, data) => {
+            SH_event.emit('host_refreshed', data, host);
+            // if (host == this.state.current || host._ == this.state.current) {
+            //     setTimeout(() => {
+            //         this.selectOne(this.state.current);
+            //     }, 100);
+            // }
         });
     }
 
