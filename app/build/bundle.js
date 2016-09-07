@@ -22539,6 +22539,24 @@
 	            });
 	        });
 	
+	        SH_event.on('host_refreshed', function (data, host) {
+	            var idx = _this.state.list.findIndex(function (item) {
+	                return item == host;
+	            });
+	            if (idx == -1) return;
+	
+	            _this.setState({
+	                list: (0, _reactAddonsUpdate2.default)(_this.state.list, { $splice: [[idx, 1, data]] })
+	            }, function () {
+	                setTimeout(function () {
+	                    if (host === _this.state.current) {
+	                        _this.selectOne(data);
+	                    }
+	                    SH_event.emit('change', true);
+	                }, 100);
+	            });
+	        });
+	
 	        SH_event.on('del_host', function (host) {
 	            var list = _this.state.list;
 	            var idx_to_del = list.findIndex(function (item) {
@@ -22595,13 +22613,13 @@
 	            });
 	        });
 	
-	        SH_event.on('loading', function (host, flag) {
-	            if (flag) return;
-	            if (host == _this.state.current) {
-	                setTimeout(function () {
-	                    _this.selectOne(host);
-	                }, 100);
-	            }
+	        SH_event.on('loading_done', function (host, data) {
+	            SH_event.emit('host_refreshed', data, host);
+	            // if (host == this.state.current || host._ == this.state.current) {
+	            //     setTimeout(() => {
+	            //         this.selectOne(this.state.current);
+	            //     }, 100);
+	            // }
 	        });
 	        return _this;
 	    }
@@ -23260,7 +23278,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 0, 4152];
+	exports.version = [3, 2, 0, 4156];
 
 /***/ },
 /* 196 */
@@ -23394,10 +23412,19 @@
 	        };
 	        _this._t = null;
 	
-	        SH_event.on('loading', function (host, flag) {
+	        SH_event.on('loading', function (host) {
 	            if (host === _this.props.current) {
 	                _this.setState({
-	                    is_loading: flag
+	                    is_loading: true
+	                });
+	            }
+	        });
+	
+	        SH_event.on('loading_done', function (host, data) {
+	            if (host === _this.props.current) {
+	                _this.setState({
+	                    is_loading: false,
+	                    code: data.content || ''
 	                });
 	            }
 	        });
@@ -33157,6 +33184,10 @@
 	
 	var _frame2 = _interopRequireDefault(_frame);
 	
+	var _classnames = __webpack_require__(177);
+	
+	var _classnames2 = _interopRequireDefault(_classnames);
+	
 	__webpack_require__(220);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -33182,7 +33213,8 @@
 	            title: '',
 	            url: '',
 	            last_refresh: null,
-	            refresh_interval: 0
+	            refresh_interval: 0,
+	            is_loading: false
 	        };
 	
 	        _this.current_host = null;
@@ -33235,6 +33267,16 @@
 	                setTimeout(function () {
 	                    _this2.tryToFocus();
 	                }, 100);
+	            });
+	
+	            SH_event.on('loading_done', function (old_host, data) {
+	                if (old_host === _this2.current_host) {
+	                    _this2.setState({
+	                        last_refresh: data.last_refresh,
+	                        is_loading: false
+	                    });
+	                    SH_event.emit('host_refreshed', data, _this2.current_host);
+	                }
 	            });
 	        }
 	    }, {
@@ -33310,9 +33352,27 @@
 	            );
 	        }
 	    }, {
+	        key: 'refresh',
+	        value: function refresh() {
+	            var _this3 = this;
+	
+	            if (this.state.is_loading) return;
+	
+	            SH_event.emit('check_host_refresh', this.current_host, true);
+	            this.setState({
+	                is_loading: true
+	            }, function () {
+	                setTimeout(function () {
+	                    _this3.setState({
+	                        is_loading: false
+	                    });
+	                }, 1000);
+	            });
+	        }
+	    }, {
 	        key: 'renderRemoteInputs',
 	        value: function renderRemoteInputs() {
-	            var _this3 = this;
+	            var _this4 = this;
 	
 	            if (this.state.where !== 'remote') return null;
 	
@@ -33336,10 +33396,10 @@
 	                            value: this.state.url,
 	                            placeholder: 'http://',
 	                            onChange: function onChange(e) {
-	                                return _this3.setState({ url: e.target.value });
+	                                return _this4.setState({ url: e.target.value });
 	                            },
 	                            onKeyDown: function onKeyDown(e) {
-	                                return e.keyCode === 13 && _this3.onOK() || e.keyCode === 27 && _this3.onCancel();
+	                                return e.keyCode === 13 && _this4.onOK() || e.keyCode === 27 && _this4.onCancel();
 	                            }
 	                        })
 	                    )
@@ -33360,11 +33420,23 @@
 	                            {
 	                                value: this.state.refresh_interval,
 	                                onChange: function onChange(e) {
-	                                    return _this3.setState({ refresh_interval: parseInt(e.target.value) || 0 });
+	                                    return _this4.setState({ refresh_interval: parseInt(e.target.value) || 0 });
 	                                }
 	                            },
 	                            EditPrompt.getRefreshOptions()
 	                        ),
+	                        _react2.default.createElement('i', {
+	                            className: (0, _classnames2.default)({
+	                                iconfont: 1,
+	                                'icon-refresh': 1,
+	                                'invisible': this.state.url != this.current_host.url,
+	                                'loading': this.state.is_loading
+	                            }),
+	                            title: SH_Agent.lang.refresh,
+	                            onClick: function onClick() {
+	                                return _this4.refresh();
+	                            }
+	                        }),
 	                        _react2.default.createElement(
 	                            'span',
 	                            { className: 'last-refresh' },
@@ -33378,7 +33450,7 @@
 	    }, {
 	        key: 'body',
 	        value: function body() {
-	            var _this4 = this;
+	            var _this5 = this;
 	
 	            return _react2.default.createElement(
 	                'div',
@@ -33389,7 +33461,7 @@
 	                    _react2.default.createElement('input', { id: 'ipt-local', type: 'radio', name: 'where', value: 'local',
 	                        checked: this.state.where === 'local',
 	                        onChange: function onChange(e) {
-	                            return _this4.setState({ where: e.target.value });
+	                            return _this5.setState({ where: e.target.value });
 	                        }
 	                    }),
 	                    _react2.default.createElement(
@@ -33400,7 +33472,7 @@
 	                    _react2.default.createElement('input', { id: 'ipt-remote', type: 'radio', name: 'where', value: 'remote',
 	                        checked: this.state.where === 'remote',
 	                        onChange: function onChange(e) {
-	                            return _this4.setState({ where: e.target.value });
+	                            return _this5.setState({ where: e.target.value });
 	                        }
 	                    }),
 	                    _react2.default.createElement(
@@ -33426,10 +33498,10 @@
 	                            name: 'text',
 	                            value: this.state.title,
 	                            onChange: function onChange(e) {
-	                                return _this4.setState({ title: e.target.value });
+	                                return _this5.setState({ title: e.target.value });
 	                            },
 	                            onKeyDown: function onKeyDown(e) {
-	                                return e.keyCode === 13 && _this4.onOK() || e.keyCode === 27 && _this4.onCancel();
+	                                return e.keyCode === 13 && _this5.onOK() || e.keyCode === 27 && _this5.onCancel();
 	                            }
 	                        })
 	                    )
@@ -33441,17 +33513,17 @@
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this5 = this;
+	            var _this6 = this;
 	
 	            return _react2.default.createElement(_frame2.default, {
 	                show: this.state.show,
 	                head: SH_Agent.lang[this.state.add ? 'add_host' : 'edit_host'],
 	                body: this.body(),
 	                onOK: function onOK() {
-	                    return _this5.onOK();
+	                    return _this6.onOK();
 	                },
 	                onCancel: function onCancel() {
-	                    return _this5.onCancel();
+	                    return _this6.onCancel();
 	                }
 	            });
 	        }
@@ -33514,7 +33586,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame label {\n  padding: 0 4em 0 0.5em;\n}\n.frame .last-refresh {\n  padding-left: 1em;\n  color: #999;\n}\n.frame a.del {\n  color: red;\n}\n.frame a.del span {\n  padding-left: 0.5em;\n}\n", ""]);
+	exports.push([module.id, "@keyframes loading {\n  from {\n    transform: rotate(0deg);\n  }\n  to {\n    transform: rotate(360deg);\n  }\n}\n.frame label {\n  padding: 0 4em 0 0.5em;\n}\n.frame .spiner {\n  transform-origin: right center;\n  animation: spin 1s;\n  animation-iteration-count: 1;\n  -webkit-animation-iteration-count: 1;\n}\n.frame .ln i.icon-refresh {\n  display: inline-block;\n  color: #999;\n  margin: 0 0.6em;\n  cursor: pointer;\n}\n.frame .ln i.icon-refresh:hover {\n  color: #333;\n}\n.frame .ln i.icon-refresh.loading {\n  animation: loading 1s infinite linear;\n}\n.frame .ln i.icon-refresh.invisible {\n  visibility: hidden;\n}\n.frame .last-refresh {\n  color: #999;\n}\n.frame a.del {\n  color: red;\n}\n.frame a.del span {\n  padding-left: 0.5em;\n}\n", ""]);
 	
 	// exports
 
