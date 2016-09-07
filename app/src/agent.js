@@ -233,7 +233,9 @@ SH_event.on('save_data', (content) => {
 });
 
 SH_event.on('check_host_refresh', (host, force=false) => {
-    if (host.where !== 'remote' || !host.url || !host.refresh_interval) return;
+    if (host.where !== 'remote' || !host.url || (!force && !host.refresh_interval)) {
+        return;
+    }
 
     let last_refresh = host.last_refresh;
     let refresh_interval = parseInt(host.refresh_interval) || 0;
@@ -247,11 +249,12 @@ SH_event.on('check_host_refresh', (host, force=false) => {
 
     // refresh
     console.log(`getting '${host.url}' ..`);
-    SH_event.emit('loading', host, true);
+    SH_event.emit('loading', host);
     host.is_loading = true;
     request(host.url, (err, res, body) => {
-        console.log(err, res.statusCode);
-        SH_event.emit('loading', host, false);
+        console.log('got', res && res.statusCode);
+        let out = {};
+        // console.log(err, res && res.statusCode);
         host.is_loading = false;
         if (!err && res.statusCode === 200) {
             // console.log(body);
@@ -260,8 +263,10 @@ SH_event.on('check_host_refresh', (host, force=false) => {
 
             SH_event.emit('change');
         } else {
-            console.log(err, res.statusCode);
+            console.log(err, res && res.statusCode);
+            out.content = 'Error: ' + err.message;
         }
+        SH_event.emit('loading_done', host, Object.assign({}, host, out));
     });
 });
 
