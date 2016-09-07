@@ -7,6 +7,7 @@
 
 import React from 'react';
 import Frame from './frame';
+import classnames from 'classnames';
 import './edit.less';
 
 export default class EditPrompt extends React.Component {
@@ -20,7 +21,8 @@ export default class EditPrompt extends React.Component {
             title: '',
             url: '',
             last_refresh: null,
-            refresh_interval: 0
+            refresh_interval: 0,
+            is_loading: false
         };
 
         this.current_host = null;
@@ -66,6 +68,16 @@ export default class EditPrompt extends React.Component {
             setTimeout(() => {
                 this.tryToFocus();
             }, 100);
+        });
+
+        SH_event.on('loading_done', (old_host, data) => {
+            if (old_host === this.current_host) {
+                this.setState({
+                    last_refresh: data.last_refresh,
+                    is_loading: false
+                });
+                SH_event.emit('host_refreshed', data, this.current_host);
+            }
         });
     }
 
@@ -143,6 +155,22 @@ export default class EditPrompt extends React.Component {
         );
     }
 
+    refresh() {
+        if (this.state.is_loading) return;
+
+        SH_event.emit('check_host_refresh', this.current_host, true);
+        this.setState({
+            is_loading: true
+        }, () => {
+            setTimeout(() => {
+                this.setState({
+                    is_loading: false
+                });
+            }, 1000);
+        });
+
+    }
+
     renderRemoteInputs() {
         if (this.state.where !== 'remote') return null;
 
@@ -157,7 +185,7 @@ export default class EditPrompt extends React.Component {
                             value={this.state.url}
                             placeholder="http://"
                             onChange={(e) => this.setState({url: e.target.value})}
-                            onKeyDown={(e)=>(e.keyCode === 13 && this.onOK()||e.keyCode===27 && this.onCancel())}
+                            onKeyDown={(e)=>(e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
                         />
                     </div>
                 </div>
@@ -170,6 +198,17 @@ export default class EditPrompt extends React.Component {
                         >
                             {EditPrompt.getRefreshOptions()}
                         </select>
+
+                        <i
+                            className={classnames({
+                                iconfont: 1,
+                                'icon-refresh': 1,
+                                'invisible': this.state.url != this.current_host.url,
+                                'loading': this.state.is_loading
+                            })}
+                            title={SH_Agent.lang.refresh}
+                            onClick={() => this.refresh()}
+                        />
 
                         <span className="last-refresh">
                             {SH_Agent.lang.last_refresh}
@@ -205,7 +244,7 @@ export default class EditPrompt extends React.Component {
                             name="text"
                             value={this.state.title}
                             onChange={(e) => this.setState({title: e.target.value})}
-                            onKeyDown={(e)=>(e.keyCode === 13 && this.onOK()||e.keyCode===27 && this.onCancel())}
+                            onKeyDown={(e)=>(e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
                         />
                     </div>
                 </div>

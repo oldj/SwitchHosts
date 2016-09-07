@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron .",
     "dev": "ENV=dev electron .",
-    "build": "gulp ver && webpack"
+    "build": "gulp ver && webpack",
+    "pack": "gulp pack"
   },
   "repository": {
     "type": "git",
