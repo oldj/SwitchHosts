@@ -22,10 +22,19 @@ export default class Content extends React.Component {
         };
         this._t = null;
 
-        SH_event.on('loading', (host, flag) => {
+        SH_event.on('loading', (host) => {
             if (host === this.props.current) {
                 this.setState({
-                    is_loading: flag
+                    is_loading: true
+                });
+            }
+        });
+
+        SH_event.on('loading_done', (host, data) => {
+            if (host === this.props.current) {
+                this.setState({
+                    is_loading: false,
+                    code: data.content || ''
                 });
             }
         });
