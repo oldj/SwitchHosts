@@ -73,16 +73,17 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下，其中 `~/.SwitchHo
  ### 环境配置
 
  - 安装 [node.js](https://nodejs.org/) 环境；
- - 在 `~/app` 目录下，运行 `npm install` 命令，安装依赖库。
+ - 在 `./app` 目录下，运行 `npm install` 命令，安装依赖库。
 
  ### 构建及运行
 
- - 在 `~/app` 目录下，运行 `npm run build` 命令，构建所需文件；
- - 在 `~/app` 目录下，运行 `npm start` 命令，即可运行程序。
+ - 在 `./app` 目录下，运行 `npm run build` 命令，构建所需文件；
+ - 在 `./app` 目录下，运行 `npm start` 命令，即可运行程序。
 
  ### 打包发布
 
- - 请参考 [Electron 文档](http://electron.atom.io/docs/)。
+ - 在 `./app` 目录下，运行 `npm run pack` 命令，打包后的文件位于 `./app/dist` 目录
+ - 更多信息请参考 [Electron 文档](http://electron.atom.io/docs/)。
 
 
 ## 版权
