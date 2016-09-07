@@ -24,9 +24,53 @@ Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHos
 
 ## 文件备份
 
-### Mac 用户
+SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为个人主目录下的 `.SwitchHosts` 目录下），其中 `~/.SwitchHosts/data.json` 是 hosts 数据文件，`~/.SwitchHosts/prefereces.json` 是配置信息。
 
-SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下，其中 `~/.SwitchHosts/data.json` 是 hosts 数据文件，`~/.SwitchHosts/prefereces.json` 是配置信息。
+
+## 运行/打包方法
+
+### 环境配置
+
+ - 安装 [node.js](https://nodejs.org/) 环境；
+ - 在 `./app` 目录下，运行 `npm install` 命令，安装依赖库。
+
+ ```bash
+ cd app
+ npm install
+ ```
+
+### 构建及运行
+
+ - 在 `./app` 目录下，运行 `npm run build` 命令，构建所需文件；
+ - 在 `./app` 目录下，运行 `npm start` 命令，即可运行程序。
+
+ ```bash
+ cd app
+
+ # build
+ npm run build
+
+ # start
+ npm start
+
+ # start in developer mode
+ npm run dev
+ ```
+
+### 打包发布
+
+ - 在 `./app` 目录下，运行 `npm run pack` 命令，打包后的文件位于 `./app/dist` 目录
+ - 更多信息请参考 [Electron 文档](http://electron.atom.io/docs/)。
+
+ ```bash
+ cd app
+
+ # pack
+ npm run pack  # the packed files will be in ./app/dist
+
+ # zip
+ gulp zip  # the zipped files will be in ./app/dist
+ ```
 
 ## 更新历史：
 
@@ -66,52 +110,6 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下，其中 `~/.SwitchHo
  - 2011-09-15 发布 0.1.2 版，添加主面板，可以在主面板上对 hosts 进行增加、删除、编辑、重命名等操作。
  - 2011-09-02 发布 0.1.0 版，完成基本功能。
 
-
-
-## 运行/打包方法
-
-### 环境配置
-
- - 安装 [node.js](https://nodejs.org/) 环境；
- - 在 `./app` 目录下，运行 `npm install` 命令，安装依赖库。
-
- ```bash
- cd app
- npm install
- ```
-
-### 构建及运行
-
- - 在 `./app` 目录下，运行 `npm run build` 命令，构建所需文件；
- - 在 `./app` 目录下，运行 `npm start` 命令，即可运行程序。
-
- ```bash
- cd app
-
- # build
- npm run build
-
- # start
- npm start
-
- # start in developer mode
- npm run dev
- ```
-
-### 打包发布
-
- - 在 `./app` 目录下，运行 `npm run pack` 命令，打包后的文件位于 `./app/dist` 目录
- - 更多信息请参考 [Electron 文档](http://electron.atom.io/docs/)。
-
-```bash
-cd app
-
-# pack
-npm run pack  # the packed files will be in ./app/dist
-
-# zip
-gulp zip  # the zipped files will be in ./app/dist
-```
 
 ## 版权
 
