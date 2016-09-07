@@ -268,6 +268,29 @@ exports.init = function (sys_lang = 'en') {
         template[2].submenu.splice(0, 4);
     }
 
+    if (process.env.ENV == 'dev') {
+        // VIEW
+        template[3].submenu = [
+            {
+                label: 'Reload',
+                accelerator: 'CmdOrCtrl+R',
+                click (item, focusedWindow) {
+                    if (focusedWindow) focusedWindow.reload()
+                }
+            },
+            {
+                label: 'Toggle Developer Tools',
+                accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+                click (item, focusedWindow) {
+                    if (focusedWindow) focusedWindow.webContents.toggleDevTools()
+                }
+            },
+            {
+                type: 'separator'
+            }
+        ].concat(template[3].submenu);
+    }
+
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
 };
