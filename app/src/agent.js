@@ -31,15 +31,18 @@ function md5 (text) {
     return crypto.createHash('md5').update(text).digest('hex');
 }
 
-
 const m_lang = require('./lang');
 let sudo_pswd = '';
 
 function getUserLang() {
     let user_lang;
 
-    user_lang = pref.get('user_language') || navigator.language || navigator.userLanguage;
-    if (user_lang === 'zh_CN') {
+    let p_lang = location.search.match(/\blang=(\w+)/);
+
+    user_lang = (p_lang && p_lang[1]) || pref.get('user_language') || navigator.language || navigator.userLanguage || '';
+    user_lang = user_lang.toString().toLowerCase();
+
+    if (user_lang == 'cn' || user_lang == 'zh_cn') {
         user_lang = 'cn';
     } else {
         user_lang = 'en';
@@ -48,7 +51,8 @@ function getUserLang() {
     return user_lang;
 }
 
-const lang = m_lang.getLang(getUserLang());
+let lang_key = getUserLang();
+const lang = m_lang.getLang(lang_key);
 
 
 function getSysHosts() {
@@ -338,5 +342,7 @@ module.exports = {
             icon: path.join(__dirname, 'assets', 'logo_512.png')
         }, options));
     },
-    lang: lang
+    lang: lang,
+    lang_key: lang_key,
+    pref: pref
 };

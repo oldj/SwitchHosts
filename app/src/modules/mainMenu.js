@@ -12,12 +12,12 @@ const m_lang = require('../lang');
 const pref = require('./../libs/pref');
 const version = require('../version').version;
 
-exports.init = function (sys_lang = 'en') {
+exports.init = function (app, sys_lang = 'en') {
     let lang = m_lang.getLang(pref.get('user_language', sys_lang));
 
     const template = [
         {
-            label: 'File',
+            label: lang.file,
             submenu: [
                 {
                     label: lang.new,
@@ -61,11 +61,19 @@ exports.init = function (sys_lang = 'en') {
                             }
                         });
                     }
+                }, {
+                    type: 'separator'
+                }, {
+                    label: lang.preferences,
+                    accelerator: 'CommandOrControl+,',
+                    click: () => {
+                        app.mainWindow.webContents.send('show_preferences');
+                    }
                 }
             ]
         },
         {
-            label: 'Edit',
+            label: lang.edit,
             submenu: [
                 {
                     role: 'undo'
@@ -97,7 +105,7 @@ exports.init = function (sys_lang = 'en') {
             ]
         },
         {
-            label: 'View',
+            label: lang.view,
             submenu: [
                 // {
                 //     label: 'Reload',
@@ -134,6 +142,7 @@ exports.init = function (sys_lang = 'en') {
             ]
         },
         {
+            label: lang.window,
             role: 'window',
             submenu: [
                 {
@@ -145,6 +154,7 @@ exports.init = function (sys_lang = 'en') {
             ]
         },
         {
+            label: lang.help,
             role: 'help',
             submenu: [
                 {
