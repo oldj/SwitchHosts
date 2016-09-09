@@ -12,7 +12,7 @@ const m_lang = require('../lang');
 const pref = require('./../libs/pref');
 const version = require('../version').version;
 
-exports.init = function (sys_lang = 'en') {
+exports.init = function (app, sys_lang = 'en') {
     let lang = m_lang.getLang(pref.get('user_language', sys_lang));
 
     const template = [
@@ -60,6 +60,14 @@ exports.init = function (sys_lang = 'en') {
                                 ipcMain.emit('to_export', fn);
                             }
                         });
+                    }
+                }, {
+                    type: 'separator'
+                }, {
+                    label: lang.preferences,
+                    accelerator: 'CommandOrControl+,',
+                    click: () => {
+                        app.mainWindow.webContents.send('show_preferences');
                     }
                 }
             ]
