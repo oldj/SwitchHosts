@@ -21479,7 +21479,11 @@
 	
 	var _edit2 = _interopRequireDefault(_edit);
 	
-	__webpack_require__(222);
+	var _preferences = __webpack_require__(222);
+	
+	var _preferences2 = _interopRequireDefault(_preferences);
+	
+	__webpack_require__(225);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -21592,7 +21596,13 @@
 	        }
 	    }, {
 	        key: 'componentDidMount',
-	        value: function componentDidMount() {}
+	        value: function componentDidMount() {
+	            window.addEventListener('keydown', function (e) {
+	                if (e.keyCode === 27) {
+	                    SH_event.emit('esc');
+	                }
+	            }, false);
+	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
@@ -21607,7 +21617,8 @@
 	                    'div',
 	                    { className: 'frames' },
 	                    _react2.default.createElement(_sudo2.default, null),
-	                    _react2.default.createElement(_edit2.default, null)
+	                    _react2.default.createElement(_edit2.default, null),
+	                    _react2.default.createElement(_preferences2.default, null)
 	                )
 	            );
 	        }
@@ -21938,8 +21949,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22410,8 +22421,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./searchbar.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./searchbar.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23066,8 +23077,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23231,8 +23242,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23278,7 +23289,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 0, 4156];
+	exports.version = [3, 2, 0, 4157];
 
 /***/ },
 /* 196 */
@@ -23296,8 +23307,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32710,8 +32721,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../css-loader/index.js!./codemirror.css", function() {
-				var newContent = require("!!./../../css-loader/index.js!./codemirror.css");
+			module.hot.accept("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css", function() {
+				var newContent = require("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32750,8 +32761,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32790,8 +32801,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33000,7 +33011,13 @@
 	
 	    _createClass(Frame, [{
 	        key: 'componentDidMount',
-	        value: function componentDidMount() {}
+	        value: function componentDidMount() {
+	            var _this2 = this;
+	
+	            SH_event.on('esc', function () {
+	                _this2.onCancel();
+	            });
+	        }
 	    }, {
 	        key: 'onOK',
 	        value: function onOK() {
@@ -33093,8 +33110,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33133,8 +33150,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33567,8 +33584,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33595,10 +33612,187 @@
 /* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/**
+	 * @author oldj
+	 * @blog http://oldj.net
+	 */
+	
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(3);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _frame = __webpack_require__(214);
+	
+	var _frame2 = _interopRequireDefault(_frame);
+	
+	__webpack_require__(223);
+	
+	var _lang = __webpack_require__(227);
+	
+	var _lang2 = _interopRequireDefault(_lang);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	// import classnames from 'classnames';
+	
+	
+	var PreferencesPrompt = function (_React$Component) {
+	    _inherits(PreferencesPrompt, _React$Component);
+	
+	    function PreferencesPrompt(props) {
+	        _classCallCheck(this, PreferencesPrompt);
+	
+	        var _this = _possibleConstructorReturn(this, (PreferencesPrompt.__proto__ || Object.getPrototypeOf(PreferencesPrompt)).call(this, props));
+	
+	        _this.state = {
+	            show: false,
+	            lang_key: SH_Agent.lang_key
+	        };
+	
+	        return _this;
+	    }
+	
+	    _createClass(PreferencesPrompt, [{
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {
+	            var _this2 = this;
+	
+	            SH_event.on('show_preferences', function () {
+	                _this2.setState({
+	                    show: true
+	                });
+	            });
+	            ipcRenderer.on('show_preferences', function () {
+	                _this2.setState({
+	                    show: true
+	                });
+	            });
+	        }
+	    }, {
+	        key: 'onOK',
+	        value: function onOK() {
+	            this.setState({
+	                show: false
+	            });
+	        }
+	    }, {
+	        key: 'onCancel',
+	        value: function onCancel() {
+	            this.setState({
+	                show: false
+	            });
+	        }
+	    }, {
+	        key: 'updateLangKey',
+	        value: function updateLangKey(k) {
+	            console.log(k);
+	            this.setState({
+	                lange_key: k
+	            }, function () {
+	                SH_Agent.pref.set('user_language', k);
+	            });
+	        }
+	    }, {
+	        key: 'prefLanguage',
+	        value: function prefLanguage() {
+	            var _this3 = this;
+	
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'ln' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'title' },
+	                    SH_Agent.lang.language
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'cnt' },
+	                    _react2.default.createElement(
+	                        'select',
+	                        {
+	                            value: this.state.lang_key,
+	                            onChange: function onChange(e) {
+	                                return _this3.updateLangKey(e.target.value);
+	                            }
+	                        },
+	                        PreferencesPrompt.getLanguageOptions()
+	                    )
+	                )
+	            );
+	        }
+	    }, {
+	        key: 'body',
+	        value: function body() {
+	            return _react2.default.createElement(
+	                'div',
+	                { ref: 'body' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'ln' },
+	                    this.prefLanguage()
+	                )
+	            );
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _this4 = this;
+	
+	            return _react2.default.createElement(_frame2.default, {
+	                show: this.state.show,
+	                head: SH_Agent.lang.preferences,
+	                body: this.body(),
+	                onOK: function onOK() {
+	                    return _this4.onOK();
+	                },
+	                onCancel: function onCancel() {
+	                    return _this4.onCancel();
+	                }
+	            });
+	        }
+	    }], [{
+	        key: 'getLanguageOptions',
+	        value: function getLanguageOptions() {
+	            return _lang2.default.lang_list.map(function (_ref, idx) {
+	                var key = _ref.key;
+	                var name = _ref.name;
+	
+	                return _react2.default.createElement(
+	                    'option',
+	                    { value: key, key: idx },
+	                    name
+	                );
+	            });
+	        }
+	    }]);
+	
+	    return PreferencesPrompt;
+	}(_react2.default.Component);
+	
+	exports.default = PreferencesPrompt;
+
+/***/ },
+/* 223 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(223);
+	var content = __webpack_require__(224);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(181)(content, {});
@@ -33607,8 +33801,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./preferences.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./preferences.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33618,7 +33812,47 @@
 	}
 
 /***/ },
-/* 223 */
+/* 224 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(180)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, "", ""]);
+	
+	// exports
+
+
+/***/ },
+/* 225 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	
+	// load the styles
+	var content = __webpack_require__(226);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(181)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(180)();
@@ -33630,6 +33864,141 @@
 	
 	// exports
 
+
+/***/ },
+/* 227 */
+/***/ function(module, exports) {
+
+	/**
+	 * @author oldj
+	 * @blog http://oldj.net
+	 */
+	
+	"use strict";
+	
+	var languages = {
+	    'en': {
+	        _lang_name: 'English',
+	        add: 'Add',
+	        new: 'New',
+	        quit: 'Quit',
+	        cancel: 'Cancel',
+	        ok: 'OK',
+	        add_host: 'Add new rules.',
+	        edit_host: 'Edit host',
+	        import: 'Import',
+	        export: 'Export',
+	        host_title: 'Host title',
+	        host_title_cant_be_empty: 'Host title could not be empty!',
+	        sys_host_title: 'System Hosts',
+	        input_sudo_pswd: 'Input your sudo password',
+	        sudo_pswd: 'Password',
+	        del_host: 'Delete current host',
+	        confirm_del: 'Are you sure you want to delete this host?',
+	        tmp_clean: 'Temporarily turn off all rules.',
+	        tmp_recover: 'Recover rules.',
+	        new_version_available: 'New version available, download now?',
+	        is_updated_title: 'You are up to date!',
+	        is_updated: 'You already have the latest version of SwitchHosts! installed.',
+	        readonly: 'Read only',
+	        where_local: 'local',
+	        where_remote: 'remote',
+	        remote_hosts: 'Remote hosts',
+	        url: 'URL',
+	        bad_url: 'URL is not valid.',
+	        auto_refresh: 'Auto refresh',
+	        last_refresh: 'Last refresh: ',
+	        refresh: 'Refresh',
+	        never: 'never',
+	        hour: 'hour',
+	        hours: 'hours',
+	        day: 'day',
+	        days: 'days',
+	        feedback: 'Feedback',
+	        homepage: 'Homepage',
+	        hide_dock_icon: 'Hide Dock Icon',
+	        show_dock_icon: 'Show Dock Icon',
+	        toggle_dock_icon: 'Toggle Dock Icon',
+	        no_valid_host_found: 'There is no valid host in the file.',
+	        confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.',
+	        please_run_as_admin: 'Please run SwitchHosts! as an Administrator.',
+	        preferences: 'Preferences',
+	        language: 'Language'
+	    },
+	    'cn': {
+	        _lang_name: '简体中文',
+	        add: '添加',
+	        new: '新建',
+	        quit: '退出',
+	        cancel: '取消',
+	        ok: '确定',
+	        add_host: '添加 host 规则',
+	        edit_host: '修改 host',
+	        import: '导入',
+	        export: '导出',
+	        host_title: 'host 方案名',
+	        host_title_cant_be_empty: 'Host 方案名不能为空！',
+	        sys_host_title: '系统 Hosts',
+	        input_sudo_pswd: '请输入您的开机密码（sudo 密码）',
+	        sudo_pswd: '密码',
+	        del_host: '删除当前 host',
+	        confirm_del: '确定要删除此 host 吗？',
+	        tmp_clean: '临时去掉所有绑定',
+	        tmp_recover: '恢复绑定',
+	        new_version_available: '检测到新版本，立刻下载？',
+	        is_updated_title: '已是最新',
+	        is_updated: '当前版本是最新版本。',
+	        readonly: '只读',
+	        where_local: '本地',
+	        where_remote: '远程',
+	        remote_hosts: '远程方案',
+	        url: 'URL 地址',
+	        bad_url: 'URL 地址有误。',
+	        auto_refresh: '自动更新',
+	        last_refresh: '上次更新：',
+	        refresh: '刷新',
+	        never: '从不',
+	        hour: '小时',
+	        hours: '小时',
+	        day: '天',
+	        days: '天',
+	        feedback: '反馈',
+	        homepage: '主页',
+	        hide_dock_icon: '隐藏 Dock 图标',
+	        show_dock_icon: '显示 Dock 图标',
+	        toggle_dock_icon: '显示/隐藏 Dock 图标',
+	        no_valid_host_found: '所指定的文件中未找到合法的 host 配置',
+	        confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。',
+	        please_run_as_admin: '请以管理员身份运行 SwitchHosts!',
+	        preferences: '设置',
+	        language: '语言'
+	    }
+	};
+	
+	module.exports = {
+	    languages: languages,
+	    lang_list: function () {
+	        var list = [];
+	        for (var k in languages) {
+	            if (languages.hasOwnProperty(k)) {
+	                list.push({
+	                    key: k,
+	                    name: languages[k]._lang_name
+	                });
+	            }
+	        }
+	        return list;
+	    }(),
+	    getLang: function getLang(lang) {
+	        lang = lang.toLowerCase();
+	        if (lang == 'cn' || lang == 'zh-cn') {
+	            lang = 'cn';
+	        } else {
+	            lang = 'en';
+	        }
+	        return languages[lang] || languages['en'];
+	    }
+	};
 
 /***/ }
 /******/ ]);
