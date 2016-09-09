@@ -10,6 +10,7 @@ import Panel from './panel/panel';
 import Content from './content/content';
 import SudoPrompt from './frame/sudo';
 import EditPrompt from './frame/edit';
+import PreferencesPrompt from './frame/preferences';
 import './app.less';
 
 class App extends React.Component {
@@ -107,6 +108,11 @@ class App extends React.Component {
     }
 
     componentDidMount() {
+        window.addEventListener('keydown', (e) => {
+            if (e.keyCode === 27) {
+                SH_event.emit('esc');
+            }
+        }, false);
     }
 
     render() {
@@ -119,6 +125,7 @@ class App extends React.Component {
                 <div className="frames">
                     <SudoPrompt/>
                     <EditPrompt/>
+                    <PreferencesPrompt/>
                 </div>
             </div>
         );

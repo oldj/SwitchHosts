@@ -7,7 +7,8 @@
 
 var languages = {
     'en': {
-        add: 'Add'
+        _lang_name: 'English'
+        , add: 'Add'
         , new: 'New'
         , quit: 'Quit'
         , cancel: 'Cancel'
@@ -50,9 +51,12 @@ var languages = {
         , no_valid_host_found: 'There is no valid host in the file.'
         , confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.'
         , please_run_as_admin: 'Please run SwitchHosts! as an Administrator.'
+        , preferences: 'Preferences'
+        , language: 'Language'
     },
     'cn': {
-        add: '添加'
+        _lang_name: '简体中文'
+        , add: '添加'
         , new: '新建'
         , quit: '退出'
         , cancel: '取消'
@@ -95,11 +99,25 @@ var languages = {
         , no_valid_host_found: '所指定的文件中未找到合法的 host 配置'
         , confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。'
         , please_run_as_admin: '请以管理员身份运行 SwitchHosts!'
+        , preferences: '设置'
+        , language: '语言'
     }
 };
 
 module.exports = {
     languages: languages,
+    lang_list: (() => {
+        let list = [];
+        for (let k in languages) {
+            if (languages.hasOwnProperty(k)) {
+                list.push({
+                    key: k,
+                    name: languages[k]._lang_name
+                });
+            }
+        }
+        return list;
+    })(),
     getLang: function (lang) {
         lang = lang.toLowerCase();
         if (lang == 'cn' || lang == 'zh-cn') {

@@ -14,6 +14,9 @@ export default class Frame extends React.Component {
     }
 
     componentDidMount() {
+        SH_event.on('esc', () => {
+            this.onCancel();
+        });
     }
 
     onOK() {
