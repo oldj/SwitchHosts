@@ -40,7 +40,7 @@ export default class ListItem extends React.Component {
     }
 
     getTitle() {
-        return this.is_sys ? 'System Hosts' : this.props.data.title || 'untitled';
+        return this.is_sys ? SH_Agent.lang.sys_host_title : this.props.data.title || SH_Agent.lang.untitled;
     }
 
     beSelected() {

@@ -15,7 +15,8 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
 const tray = require('./src/modules/tray');
-let user_language = (app.getLocale() || '').split('-')[0].toLowerCase() || 'en';
+const pref = require('./src/libs/pref');
+let user_language = pref.get('user_language') || (app.getLocale() || '').split('-')[0].toLowerCase() || 'en';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -31,9 +32,10 @@ function createWindow() {
         minWidth: 400, minHeight: 250
     });
     contents = mainWindow.webContents;
+    app.mainWindow = mainWindow;
 
     // and load the index.html of the app.
-    mainWindow.loadURL(`file://${__dirname}/index.html`);
+    mainWindow.loadURL(`file://${__dirname}/index.html?lang=${user_language}`);
 
     if (process.env && process.env.ENV === 'dev') {
         // Open the DevTools.
@@ -73,7 +75,7 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
     createWindow();
-    require('./src/modules/mainMenu').init(user_language);
+    require('./src/modules/mainMenu').init(app, user_language);
 });
 
 // Quit when all windows are closed.
