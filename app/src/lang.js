@@ -53,6 +53,13 @@ var languages = {
         , please_run_as_admin: 'Please run SwitchHosts! as an Administrator.'
         , preferences: 'Preferences'
         , language: 'Language'
+        , should_restart_after_change_language: 'Should restart this App after changing language.'
+        , untitled: 'untitled'
+        , file: 'File'
+        , edit: 'Edit'
+        , view: 'View'
+        , window: 'Window'
+        , help: 'Help'
     },
     'cn': {
         _lang_name: '简体中文'
@@ -101,6 +108,13 @@ var languages = {
         , please_run_as_admin: '请以管理员身份运行 SwitchHosts!'
         , preferences: '设置'
         , language: '语言'
+        , should_restart_after_change_language: '修改语言后需要重启应用方可生效。'
+        , untitled: '未命名'
+        , file: '文件'
+        , edit: '编辑'
+        , view: '视图'
+        , window: '窗口'
+        , help: '帮助'
     }
 };
 

@@ -21483,7 +21483,7 @@
 	
 	var _preferences2 = _interopRequireDefault(_preferences);
 	
-	__webpack_require__(225);
+	__webpack_require__(226);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -22853,7 +22853,7 @@
 	    _createClass(ListItem, [{
 	        key: 'getTitle',
 	        value: function getTitle() {
-	            return this.is_sys ? 'System Hosts' : this.props.data.title || 'untitled';
+	            return this.is_sys ? SH_Agent.lang.sys_host_title : this.props.data.title || SH_Agent.lang.untitled;
 	        }
 	    }, {
 	        key: 'beSelected',
@@ -23289,7 +23289,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 0, 4157];
+	exports.version = [3, 2, 0, 4159];
 
 /***/ },
 /* 196 */
@@ -33129,7 +33129,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 60px auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 60px auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
 	
 	// exports
 
@@ -33169,7 +33169,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 60px auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 60px auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
 	
 	// exports
 
@@ -33446,7 +33446,7 @@
 	                            className: (0, _classnames2.default)({
 	                                iconfont: 1,
 	                                'icon-refresh': 1,
-	                                'invisible': this.state.url != this.current_host.url,
+	                                'invisible': !this.current_host || this.state.url != this.current_host.url,
 	                                'loading': this.state.is_loading
 	                            }),
 	                            title: SH_Agent.lang.refresh,
@@ -33635,7 +33635,7 @@
 	
 	__webpack_require__(223);
 	
-	var _lang = __webpack_require__(227);
+	var _lang = __webpack_require__(225);
 	
 	var _lang2 = _interopRequireDefault(_lang);
 	
@@ -33698,11 +33698,10 @@
 	    }, {
 	        key: 'updateLangKey',
 	        value: function updateLangKey(k) {
-	            console.log(k);
+	            SH_Agent.lang_key = k;
+	            SH_Agent.pref.set('user_language', k);
 	            this.setState({
 	                lange_key: k
-	            }, function () {
-	                SH_Agent.pref.set('user_language', k);
 	            });
 	        }
 	    }, {
@@ -33724,12 +33723,17 @@
 	                    _react2.default.createElement(
 	                        'select',
 	                        {
-	                            value: this.state.lang_key,
+	                            value: SH_Agent.lang_key,
 	                            onChange: function onChange(e) {
 	                                return _this3.updateLangKey(e.target.value);
 	                            }
 	                        },
 	                        PreferencesPrompt.getLanguageOptions()
+	                    ),
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'inform' },
+	                        SH_Agent.lang.should_restart_after_change_language
 	                    )
 	                )
 	            );
@@ -33827,46 +33831,6 @@
 
 /***/ },
 /* 225 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(226);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(181)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 226 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(180)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "html,\nbody {\n  margin: 0;\n  padding: 0;\n  height: 100%;\n  font-size: 12px;\n  font-family: Arial, Helvetica, sans-serif;\n  color: #212121;\n  line-height: 20px;\n  background: #fff;\n}\na {\n  text-decoration: none;\n}\n#app {\n  height: 100%;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ },
-/* 227 */
 /***/ function(module, exports) {
 
 	/**
@@ -33923,7 +33887,14 @@
 	        confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.',
 	        please_run_as_admin: 'Please run SwitchHosts! as an Administrator.',
 	        preferences: 'Preferences',
-	        language: 'Language'
+	        language: 'Language',
+	        should_restart_after_change_language: 'Should restart this App after changing language.',
+	        untitled: 'untitled',
+	        file: 'File',
+	        edit: 'Edit',
+	        view: 'View',
+	        window: 'Window',
+	        help: 'Help'
 	    },
 	    'cn': {
 	        _lang_name: '简体中文',
@@ -33971,7 +33942,14 @@
 	        confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。',
 	        please_run_as_admin: '请以管理员身份运行 SwitchHosts!',
 	        preferences: '设置',
-	        language: '语言'
+	        language: '语言',
+	        should_restart_after_change_language: '修改语言后需要重启应用方可生效。',
+	        untitled: '未命名',
+	        file: '文件',
+	        edit: '编辑',
+	        view: '视图',
+	        window: '窗口',
+	        help: '帮助'
 	    }
 	};
 	
@@ -33999,6 +33977,46 @@
 	        return languages[lang] || languages['en'];
 	    }
 	};
+
+/***/ },
+/* 226 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	
+	// load the styles
+	var content = __webpack_require__(227);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(181)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 227 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(180)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, "html,\nbody {\n  margin: 0;\n  padding: 0;\n  height: 100%;\n  font-size: 12px;\n  font-family: Arial, Helvetica, sans-serif;\n  color: #212121;\n  line-height: 20px;\n  background: #fff;\n}\na {\n  text-decoration: none;\n}\n#app {\n  height: 100%;\n}\n", ""]);
+	
+	// exports
+
 
 /***/ }
 /******/ ]);

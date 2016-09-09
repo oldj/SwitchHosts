@@ -203,7 +203,7 @@ export default class EditPrompt extends React.Component {
                             className={classnames({
                                 iconfont: 1,
                                 'icon-refresh': 1,
-                                'invisible': this.state.url != this.current_host.url,
+                                'invisible': !this.current_host || this.state.url != this.current_host.url,
                                 'loading': this.state.is_loading
                             })}
                             title={SH_Agent.lang.refresh}

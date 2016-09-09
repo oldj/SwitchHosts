@@ -17,7 +17,7 @@ exports.init = function (app, sys_lang = 'en') {
 
     const template = [
         {
-            label: 'File',
+            label: lang.file,
             submenu: [
                 {
                     label: lang.new,
@@ -73,7 +73,7 @@ exports.init = function (app, sys_lang = 'en') {
             ]
         },
         {
-            label: 'Edit',
+            label: lang.edit,
             submenu: [
                 {
                     role: 'undo'
@@ -105,7 +105,7 @@ exports.init = function (app, sys_lang = 'en') {
             ]
         },
         {
-            label: 'View',
+            label: lang.view,
             submenu: [
                 // {
                 //     label: 'Reload',
@@ -142,6 +142,7 @@ exports.init = function (app, sys_lang = 'en') {
             ]
         },
         {
+            label: lang.window,
             role: 'window',
             submenu: [
                 {
@@ -153,6 +154,7 @@ exports.init = function (app, sys_lang = 'en') {
             ]
         },
         {
+            label: lang.help,
             role: 'help',
             submenu: [
                 {

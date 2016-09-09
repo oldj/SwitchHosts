@@ -39,8 +39,10 @@ function getUserLang() {
 
     let p_lang = location.search.match(/\blang=(\w+)/);
 
-    user_lang = p_lang || pref.get('user_language') || navigator.language || navigator.userLanguage;
-    if (user_lang === 'zh_CN') {
+    user_lang = (p_lang && p_lang[1]) || pref.get('user_language') || navigator.language || navigator.userLanguage || '';
+    user_lang = user_lang.toString().toLowerCase();
+
+    if (user_lang == 'cn' || user_lang == 'zh_cn') {
         user_lang = 'cn';
     } else {
         user_lang = 'en';

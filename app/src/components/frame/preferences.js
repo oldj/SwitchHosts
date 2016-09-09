@@ -56,12 +56,11 @@ export default class PreferencesPrompt extends React.Component {
     }
 
     updateLangKey(k) {
-        console.log(k);
+        SH_Agent.lang_key = k;
+        SH_Agent.pref.set('user_language', k);
         this.setState({
             lange_key: k
-        }, () => {
-            SH_Agent.pref.set('user_language', k);
-        })
+        });
     }
 
     prefLanguage() {
@@ -70,11 +69,13 @@ export default class PreferencesPrompt extends React.Component {
                 <div className="title">{SH_Agent.lang.language}</div>
                 <div className="cnt">
                     <select
-                        value={this.state.lang_key}
+                        value={SH_Agent.lang_key}
                         onChange={(e) => this.updateLangKey(e.target.value)}
                     >
                         {PreferencesPrompt.getLanguageOptions()}
                     </select>
+
+                    <div className="inform">{SH_Agent.lang.should_restart_after_change_language}</div>
                 </div>
             </div>
         )
