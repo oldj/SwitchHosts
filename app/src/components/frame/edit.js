@@ -127,6 +127,7 @@ export default class EditPrompt extends React.Component {
     static getRefreshOptions() {
         let k = [
             [0, `${SH_Agent.lang.never}`],
+            // [0.002778, `10s`], // test only
             [1, `1 ${SH_Agent.lang.hour}`],
             [24, `24 ${SH_Agent.lang.hours}`],
             [168, `7 ${SH_Agent.lang.days}`]
@@ -194,7 +195,7 @@ export default class EditPrompt extends React.Component {
                     <div className="cnt">
                         <select
                             value={this.state.refresh_interval}
-                            onChange={(e) => this.setState({refresh_interval: parseInt(e.target.value) || 0})}
+                            onChange={(e) => this.setState({refresh_interval: parseFloat(e.target.value) || 0})}
                         >
                             {EditPrompt.getRefreshOptions()}
                         </select>
