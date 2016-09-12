@@ -107,7 +107,7 @@ class List extends React.Component {
                         this.selectOne(next_host);
                     }
                     SH_event.emit('change');
-                    }, 100);
+                }, 100);
             });
         });
 
@@ -151,6 +151,11 @@ class List extends React.Component {
             //     }, 100);
             // }
         });
+
+        // auto check refresh
+        setTimeout(() => {
+            this.autoCheckRefresh();
+        }, 1000 * 5);
     }
 
     /**
@@ -158,8 +163,26 @@ class List extends React.Component {
      * @param host
      * @param force {Boolean} 如果为 true，则只要是 remote 且 refresh_interval != 0，则强制更新
      */
-    checkUpdateHost(host, force=false) {
+    checkUpdateHost(host, force = false) {
         SH_event.emit('check_host_refresh', host, force);
+    }
+
+    autoCheckRefresh() {
+        let remote_idx = -1;
+        this.state.list.map((host, idx) => {
+            if (host.where === 'remote') {
+                remote_idx++;
+            }
+            setTimeout(() => {
+                SH_event.emit('check_host_refresh', host);
+            }, 1000 * 5 * remote_idx + idx);
+        });
+
+        // let wait = 1000 * 60 * 10;
+        let wait = 1000 * 30; // test only
+        setTimeout(() => {
+            this.autoCheckRefresh();
+        }, wait);
     }
 
     apply(content, success) {
@@ -183,7 +206,8 @@ class List extends React.Component {
 
     toggleOne(idx, success) {
         let content = this.getOnContent(idx);
-        this.apply(content, success || function () {});
+        this.apply(content, success || function () {
+            });
     }
 
     getOnItems(idx = -1) {
