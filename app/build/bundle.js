@@ -21508,11 +21508,6 @@
 	            current: _data.sys
 	        };
 	
-	        // auto check refresh
-	        setTimeout(function () {
-	            _this.autoCheckRefresh();
-	        }, 1000 * 5);
-	
 	        SH_event.on('after_apply', function () {
 	            if (_this.state.current.is_sys) {
 	                // 重新读取
@@ -21556,21 +21551,6 @@
 	    }
 	
 	    _createClass(App, [{
-	        key: 'autoCheckRefresh',
-	        value: function autoCheckRefresh() {
-	            var _this2 = this;
-	
-	            this.state.hosts.list.map(function (host, idx) {
-	                setTimeout(function () {
-	                    SH_event.emit('check_host_refresh', host);
-	                }, 1000 * 5 * idx);
-	            });
-	
-	            setTimeout(function () {
-	                _this2.autoCheckRefresh();
-	            }, 1000 * 60 * 10);
-	        }
-	    }, {
 	        key: 'setCurrent',
 	        value: function setCurrent(host) {
 	            this.setState({
@@ -21949,8 +21929,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22421,8 +22401,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./searchbar.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./searchbar.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22632,6 +22612,11 @@
 	            //     }, 100);
 	            // }
 	        });
+	
+	        // auto check refresh
+	        setTimeout(function () {
+	            _this.autoCheckRefresh();
+	        }, 1000 * 5);
 	        return _this;
 	    }
 	
@@ -22650,14 +22635,35 @@
 	            SH_event.emit('check_host_refresh', host, force);
 	        }
 	    }, {
-	        key: 'apply',
-	        value: function apply(content, success) {
+	        key: 'autoCheckRefresh',
+	        value: function autoCheckRefresh() {
 	            var _this2 = this;
 	
+	            var remote_idx = -1;
+	            this.state.list.map(function (host, idx) {
+	                if (host.where === 'remote') {
+	                    remote_idx++;
+	                }
+	                setTimeout(function () {
+	                    SH_event.emit('check_host_refresh', host);
+	                }, 1000 * 5 * remote_idx + idx);
+	            });
+	
+	            // let wait = 1000 * 60 * 10;
+	            var wait = 1000 * 30; // test only
+	            setTimeout(function () {
+	                _this2.autoCheckRefresh();
+	            }, wait);
+	        }
+	    }, {
+	        key: 'apply',
+	        value: function apply(content, success) {
+	            var _this3 = this;
+	
 	            SH_event.emit('apply', content, function () {
-	                _this2.last_content = content;
+	                _this3.last_content = content;
 	                success();
-	                SH_event.emit('save_data', _this2.state.list);
+	                SH_event.emit('save_data', _this3.state.list);
 	                SH_Agent.notify({
 	                    message: 'host updated.'
 	                });
@@ -22703,20 +22709,20 @@
 	    }, {
 	        key: 'customItems',
 	        value: function customItems() {
-	            var _this3 = this;
+	            var _this4 = this;
 	
 	            return this.state.list.map(function (item, idx) {
 	                return _react2.default.createElement(_list_item2.default, {
 	                    data: item,
 	                    idx: idx,
-	                    selectOne: _this3.selectOne.bind(_this3),
-	                    current: _this3.state.current,
+	                    selectOne: _this4.selectOne.bind(_this4),
+	                    current: _this4.state.current,
 	                    onToggle: function onToggle(success) {
-	                        return _this3.toggleOne(idx, success);
+	                        return _this4.toggleOne(idx, success);
 	                    },
 	                    key: 'host-' + idx,
 	                    dragOrder: function dragOrder(sidx, tidx) {
-	                        return _this3.dragOrder(sidx, tidx);
+	                        return _this4.dragOrder(sidx, tidx);
 	                    }
 	                });
 	            });
@@ -23077,8 +23083,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23242,8 +23248,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23289,7 +23295,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 0, 4159];
+	exports.version = [3, 2, 0, 4160];
 
 /***/ },
 /* 196 */
@@ -23307,8 +23313,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32721,8 +32727,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css", function() {
-				var newContent = require("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css");
+			module.hot.accept("!!./../../css-loader/index.js!./codemirror.css", function() {
+				var newContent = require("!!./../../css-loader/index.js!./codemirror.css");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32761,8 +32767,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32801,8 +32807,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33110,8 +33116,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33150,8 +33156,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33437,7 +33443,7 @@
 	                            {
 	                                value: this.state.refresh_interval,
 	                                onChange: function onChange(e) {
-	                                    return _this4.setState({ refresh_interval: parseInt(e.target.value) || 0 });
+	                                    return _this4.setState({ refresh_interval: parseFloat(e.target.value) || 0 });
 	                                }
 	                            },
 	                            EditPrompt.getRefreshOptions()
@@ -33547,7 +33553,9 @@
 	    }], [{
 	        key: 'getRefreshOptions',
 	        value: function getRefreshOptions() {
-	            var k = [[0, '' + SH_Agent.lang.never], [1, '1 ' + SH_Agent.lang.hour], [24, '24 ' + SH_Agent.lang.hours], [168, '7 ' + SH_Agent.lang.days]];
+	            var k = [[0, '' + SH_Agent.lang.never],
+	            // [0.002778, `10s`], // test only
+	            [1, '1 ' + SH_Agent.lang.hour], [24, '24 ' + SH_Agent.lang.hours], [168, '7 ' + SH_Agent.lang.days]];
 	            return k.map(function (_ref, idx) {
 	                var _ref2 = _slicedToArray(_ref, 2);
 	
@@ -33584,8 +33592,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33805,8 +33813,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./preferences.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./preferences.less");
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./preferences.less", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./preferences.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33994,8 +34002,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
