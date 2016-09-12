@@ -27,7 +27,7 @@ const stat = require('./modules/stat');
 stat.init();
 
 const crypto = require('crypto');
-function md5 (text) {
+function md5(text) {
     return crypto.createHash('md5').update(text).digest('hex');
 }
 
@@ -118,7 +118,7 @@ function apply_UNIX(content, success) {
         ].join(' && ');
     }
 
-    exec(cmd, function(error, stdout, stderr) {
+    exec(cmd, function (error, stdout, stderr) {
         // command output is in stdout
         if (error) {
             if (!sudo_pswd) {
@@ -153,7 +153,7 @@ function _after_apply_unix(callback) {
 
     fs.writeFileSync(cmd_fn, cmd, 'utf-8');
 
-    exec(`/bin/sh ${cmd_fn}`, function(error, stdout, stderr) {
+    exec(`/bin/sh ${cmd_fn}`, function (error, stdout, stderr) {
         // command output is in stdout
         if (error) {
             console.log(error);
@@ -236,7 +236,7 @@ SH_event.on('save_data', (content) => {
     ipcRenderer.send('send_host_list', content);
 });
 
-SH_event.on('check_host_refresh', (host, force=false) => {
+SH_event.on('check_host_refresh', (host, force = false) => {
     if (host.where !== 'remote' || !host.url || (!force && !host.refresh_interval)) {
         return;
     }
@@ -245,14 +245,14 @@ SH_event.on('check_host_refresh', (host, force=false) => {
     let refresh_interval = parseInt(host.refresh_interval) || 0;
     if (last_refresh && !force) {
         last_refresh = new Date(last_refresh);
-        let delta = (new Date()).getTime() - (last_refresh.getTime() || 0) / (1000 * 3600);
+        let delta = ((new Date()).getTime() - (last_refresh.getTime() || 0)) / (1000 * 3600);
         if (delta < refresh_interval) {
             return;
         }
     }
 
     // refresh
-    console.log(`getting '${host.url}' ..`);
+    // console.log(`getting '${host.url}' ..`);
     SH_event.emit('loading', host);
     host.is_loading = true;
     request(host.url, (err, res, body) => {
