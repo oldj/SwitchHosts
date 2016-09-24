@@ -344,5 +344,8 @@ module.exports = {
     },
     lang: lang,
     lang_key: lang_key,
-    pref: pref
+    pref: pref,
+    relaunch() {
+        ipcRenderer.send('relaunch');
+    }
 };

@@ -141,3 +141,8 @@ electron.ipcMain.on('to_import', (fn) => {
         contents.send('to_import', fn);
     }
 });
+
+electron.ipcMain.on('relaunch', (fn) => {
+    app.relaunch({args: process.argv.slice(1) + ['--relaunch']});
+    app.exit(0);
+});
