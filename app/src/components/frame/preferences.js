@@ -38,6 +38,10 @@ export default class PreferencesPrompt extends React.Component {
     onOK() {
         this.setState({
             show: false
+        }, () => {
+            setTimeout(() => {
+                SH_Agent.relaunch();
+            }, 200);
         });
     }
 
@@ -102,6 +106,8 @@ export default class PreferencesPrompt extends React.Component {
                 body={this.body()}
                 onOK={() => this.onOK()}
                 onCancel={() => this.onCancel()}
+                cancel_title={SH_Agent.lang.set_and_back}
+                ok_title={SH_Agent.lang.set_and_relaunch_app}
             />
         );
     }
