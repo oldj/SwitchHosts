@@ -102,7 +102,7 @@ export default class PreferencesPrompt extends React.Component {
                     <textarea
                         name=""
                         defaultValue={this.state.after_cmd}
-                        placeholder=""
+                        placeholder={SH_Agent.lang.pref_after_cmd_placeholder}
                         onChange={(e) => this.updateAfterCmd(e.target.value)}
                     />
                 </div>
