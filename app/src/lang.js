@@ -65,6 +65,9 @@ var languages = {
         , pref_after_cmd: 'Command after Host applied'
         , pref_after_cmd_info: 'The following system commands will be executed when Host applied:'
         , pref_after_cmd_placeholder: 'input your commands here'
+        , pref_choice_mode: 'Choide mode'
+        , pref_choice_single: 'Single choice'
+        , pref_choice_multiple: 'Multiple choice'
     },
     'cn': {
         _lang_name: '简体中文'
@@ -125,6 +128,9 @@ var languages = {
         , pref_after_cmd: 'Host 应用后命令'
         , pref_after_cmd_info: '每次 Host 应用后将执行下面的系统命令：'
         , pref_after_cmd_placeholder: '在这儿输入你的命令'
+        , pref_choice_mode: '选择模式'
+        , pref_choice_mode_single: '单选'
+        , pref_choice_mode_multiple: '多选'
     }
 };
 
