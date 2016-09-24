@@ -23295,7 +23295,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 0, 4161];
+	exports.version = [3, 2, 0, 4162];
 
 /***/ },
 /* 196 */
@@ -33783,7 +33783,7 @@
 	                    _react2.default.createElement('textarea', {
 	                        name: '',
 	                        defaultValue: this.state.after_cmd,
-	                        placeholder: '',
+	                        placeholder: SH_Agent.lang.pref_after_cmd_placeholder,
 	                        onChange: function onChange(e) {
 	                            return _this4.updateAfterCmd(e.target.value);
 	                        }
