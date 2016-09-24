@@ -36,7 +36,7 @@ export default class Frame extends React.Component {
                 key="btn-cancel"
                 onClick={this.onCancel.bind(this)}
             >
-                {SH_Agent.lang.cancel}
+                {this.props.cancel_title || SH_Agent.lang.cancel}
             </div>
         );
 
@@ -46,7 +46,7 @@ export default class Frame extends React.Component {
                 key="btn-ok"
                 onClick={this.onOK.bind(this)}
             >
-                {SH_Agent.lang.ok}
+                {this.props.ok_title || SH_Agent.lang.ok}
             </div>
         );
 

@@ -31,7 +31,7 @@ function get(key, default_value=null) {
     return key in data ? data[key] : default_value;
 }
 
-function set(key, value) {
+function set(key, value, callback) {
     clearTimeout(_t);
     if (!is_loaded) load();
 
@@ -41,8 +41,9 @@ function set(key, value) {
             if (err) {
                 console.log(err);
             }
+            typeof callback === 'function' && callback(err);
         });
-    }, 1000);
+    }, 100);
 }
 
 module.exports = {
