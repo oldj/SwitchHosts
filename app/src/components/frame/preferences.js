@@ -17,7 +17,8 @@ export default class PreferencesPrompt extends React.Component {
 
         this.state = {
             show: false,
-            lang_key: SH_Agent.lang_key
+            lang_key: SH_Agent.lang_key,
+            after_cmd: SH_Agent.pref.get('after_cmd') || ''
         };
 
     }
@@ -38,6 +39,10 @@ export default class PreferencesPrompt extends React.Component {
     onOK() {
         this.setState({
             show: false
+        }, () => {
+            setTimeout(() => {
+                SH_Agent.relaunch();
+            }, 200);
         });
     }
 
@@ -55,11 +60,18 @@ export default class PreferencesPrompt extends React.Component {
         });
     }
 
-    updateLangKey(k) {
-        SH_Agent.lang_key = k;
-        SH_Agent.pref.set('user_language', k);
+    updateLangKey(v) {
+        SH_Agent.lang_key = v;
+        SH_Agent.pref.set('user_language', v);
         this.setState({
-            lange_key: k
+            lange_key: v
+        });
+    }
+
+    updateAfterCmd(v) {
+        SH_Agent.pref.set('after_cmd', v);
+        this.setState({
+            after_cmd: v
         });
     }
 
@@ -81,15 +93,31 @@ export default class PreferencesPrompt extends React.Component {
         )
     }
 
+    prefAfterCmd() {
+        return (
+            <div className="ln">
+                <div className="title">{SH_Agent.lang.pref_after_cmd}</div>
+                <div className="cnt">
+                    <div className="inform">{SH_Agent.lang.pref_after_cmd_info}</div>
+                    <textarea
+                        name=""
+                        defaultValue={this.state.after_cmd}
+                        placeholder=""
+                        onChange={(e) => this.updateAfterCmd(e.target.value)}
+                    />
+                </div>
+            </div>
+        )
+    }
+
     body() {
         return (
             <div ref="body">
-                <div className="ln">
-                    {/*<div className="title">{SH_Agent.lang.host_title}</div>*/}
-                    {/*<div className="cnt">*/}
-                    {/*</div>*/}
-                    {this.prefLanguage()}
-                </div>
+                {/*<div className="title">{SH_Agent.lang.host_title}</div>*/}
+                {/*<div className="cnt">*/}
+                {/*</div>*/}
+                {this.prefLanguage()}
+                {this.prefAfterCmd()}
             </div>
         )
     }
@@ -102,6 +130,8 @@ export default class PreferencesPrompt extends React.Component {
                 body={this.body()}
                 onOK={() => this.onOK()}
                 onCancel={() => this.onCancel()}
+                cancel_title={SH_Agent.lang.set_and_back}
+                ok_title={SH_Agent.lang.set_and_relaunch_app}
             />
         );
     }

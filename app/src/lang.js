@@ -13,6 +13,8 @@ var languages = {
         , quit: 'Quit'
         , cancel: 'Cancel'
         , ok: 'OK'
+        , set_and_back: 'Set and back'
+        , set_and_relaunch_app: 'Set and Relaunch App'
         , add_host: 'Add new rules.'
         , edit_host: 'Edit host'
         , import: 'Import'
@@ -53,13 +55,16 @@ var languages = {
         , please_run_as_admin: 'Please run SwitchHosts! as an Administrator.'
         , preferences: 'Preferences'
         , language: 'Language'
-        , should_restart_after_change_language: 'Should restart this App after changing language.'
+        , should_restart_after_change_language: 'Should relaunch this App after changing language.'
         , untitled: 'untitled'
         , file: 'File'
         , edit: 'Edit'
         , view: 'View'
         , window: 'Window'
         , help: 'Help'
+        , pref_after_cmd: 'Command after Host applied'
+        , pref_after_cmd_info: 'The following system commands will be executed when Host applied:'
+        , pref_after_cmd_placeholder: 'input your commands here'
     },
     'cn': {
         _lang_name: '简体中文'
@@ -68,6 +73,8 @@ var languages = {
         , quit: '退出'
         , cancel: '取消'
         , ok: '确定'
+        , set_and_back: '设置并返回'
+        , set_and_relaunch_app: '确定并重启程序'
         , add_host: '添加 host 规则'
         , edit_host: '修改 host'
         , import: '导入'
@@ -115,6 +122,9 @@ var languages = {
         , view: '视图'
         , window: '窗口'
         , help: '帮助'
+        , pref_after_cmd: 'Host 应用后命令'
+        , pref_after_cmd_info: '每次 Host 应用后将执行下面的系统命令：'
+        , pref_after_cmd_placeholder: '在这儿输入你的命令'
     }
 };
 
