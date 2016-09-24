@@ -21929,8 +21929,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./buttons.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./buttons.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -22401,8 +22401,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./searchbar.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./searchbar.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./searchbar.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23083,8 +23083,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list_item.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list_item.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23248,8 +23248,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./list.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./list.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -23295,7 +23295,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 0, 4160];
+	exports.version = [3, 2, 0, 4161];
 
 /***/ },
 /* 196 */
@@ -23313,8 +23313,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./panel.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./panel.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32727,8 +32727,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../css-loader/index.js!./codemirror.css", function() {
-				var newContent = require("!!./../../css-loader/index.js!./codemirror.css");
+			module.hot.accept("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css", function() {
+				var newContent = require("!!./../../../../css-loader/0.23.1/css-loader/index.js!./codemirror.css");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32767,8 +32767,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./editor.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./editor.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -32807,8 +32807,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./content.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./content.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33046,7 +33046,7 @@
 	                    key: 'btn-cancel',
 	                    onClick: this.onCancel.bind(this)
 	                },
-	                SH_Agent.lang.cancel
+	                this.props.cancel_title || SH_Agent.lang.cancel
 	            ));
 	
 	            html.push(_react2.default.createElement(
@@ -33056,7 +33056,7 @@
 	                    key: 'btn-ok',
 	                    onClick: this.onOK.bind(this)
 	                },
-	                SH_Agent.lang.ok
+	                this.props.ok_title || SH_Agent.lang.ok
 	            ));
 	
 	            return html;
@@ -33116,8 +33116,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./frame.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./frame.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33135,7 +33135,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 60px auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 60px auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n  line-height: 18px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 18px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
 	
 	// exports
 
@@ -33156,8 +33156,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./sudo.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./sudo.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33175,7 +33175,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 60px auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  margin: 60px auto;\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n  line-height: 18px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 18px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
 	
 	// exports
 
@@ -33592,8 +33592,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./edit.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./edit.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33667,7 +33667,8 @@
 	
 	        _this.state = {
 	            show: false,
-	            lang_key: SH_Agent.lang_key
+	            lang_key: SH_Agent.lang_key,
+	            after_cmd: SH_Agent.pref.get('after_cmd') || ''
 	        };
 	
 	        return _this;
@@ -33694,6 +33695,10 @@
 	        value: function onOK() {
 	            this.setState({
 	                show: false
+	            }, function () {
+	                setTimeout(function () {
+	                    SH_Agent.relaunch();
+	                }, 200);
 	            });
 	        }
 	    }, {
@@ -33705,11 +33710,19 @@
 	        }
 	    }, {
 	        key: 'updateLangKey',
-	        value: function updateLangKey(k) {
-	            SH_Agent.lang_key = k;
-	            SH_Agent.pref.set('user_language', k);
+	        value: function updateLangKey(v) {
+	            SH_Agent.lang_key = v;
+	            SH_Agent.pref.set('user_language', v);
 	            this.setState({
-	                lange_key: k
+	                lange_key: v
+	            });
+	        }
+	    }, {
+	        key: 'updateAfterCmd',
+	        value: function updateAfterCmd(v) {
+	            SH_Agent.pref.set('after_cmd', v);
+	            this.setState({
+	                after_cmd: v
 	            });
 	        }
 	    }, {
@@ -33747,33 +33760,64 @@
 	            );
 	        }
 	    }, {
+	        key: 'prefAfterCmd',
+	        value: function prefAfterCmd() {
+	            var _this4 = this;
+	
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'ln' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'title' },
+	                    SH_Agent.lang.pref_after_cmd
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'cnt' },
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'inform' },
+	                        SH_Agent.lang.pref_after_cmd_info
+	                    ),
+	                    _react2.default.createElement('textarea', {
+	                        name: '',
+	                        defaultValue: this.state.after_cmd,
+	                        placeholder: '',
+	                        onChange: function onChange(e) {
+	                            return _this4.updateAfterCmd(e.target.value);
+	                        }
+	                    })
+	                )
+	            );
+	        }
+	    }, {
 	        key: 'body',
 	        value: function body() {
 	            return _react2.default.createElement(
 	                'div',
 	                { ref: 'body' },
-	                _react2.default.createElement(
-	                    'div',
-	                    { className: 'ln' },
-	                    this.prefLanguage()
-	                )
+	                this.prefLanguage(),
+	                this.prefAfterCmd()
 	            );
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this4 = this;
+	            var _this5 = this;
 	
 	            return _react2.default.createElement(_frame2.default, {
 	                show: this.state.show,
 	                head: SH_Agent.lang.preferences,
 	                body: this.body(),
 	                onOK: function onOK() {
-	                    return _this4.onOK();
+	                    return _this5.onOK();
 	                },
 	                onCancel: function onCancel() {
-	                    return _this4.onCancel();
-	                }
+	                    return _this5.onCancel();
+	                },
+	                cancel_title: SH_Agent.lang.set_and_back,
+	                ok_title: SH_Agent.lang.set_and_relaunch_app
 	            });
 	        }
 	    }], [{
@@ -33813,8 +33857,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./preferences.less", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./../../../node_modules/less-loader/index.js!./preferences.less");
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./preferences.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./preferences.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33832,7 +33876,7 @@
 	
 	
 	// module
-	exports.push([module.id, "", ""]);
+	exports.push([module.id, ".frame textarea {\n  width: 300px;\n  height: 80px;\n  padding: 2px 4px;\n  outline: none;\n  border: solid 1px #ccc;\n}\n", ""]);
 	
 	// exports
 
@@ -33856,6 +33900,8 @@
 	        quit: 'Quit',
 	        cancel: 'Cancel',
 	        ok: 'OK',
+	        set_and_back: 'Set and back',
+	        set_and_relaunch_app: 'Set and Relaunch App',
 	        add_host: 'Add new rules.',
 	        edit_host: 'Edit host',
 	        import: 'Import',
@@ -33896,13 +33942,16 @@
 	        please_run_as_admin: 'Please run SwitchHosts! as an Administrator.',
 	        preferences: 'Preferences',
 	        language: 'Language',
-	        should_restart_after_change_language: 'Should restart this App after changing language.',
+	        should_restart_after_change_language: 'Should relaunch this App after changing language.',
 	        untitled: 'untitled',
 	        file: 'File',
 	        edit: 'Edit',
 	        view: 'View',
 	        window: 'Window',
-	        help: 'Help'
+	        help: 'Help',
+	        pref_after_cmd: 'Command after Host applied',
+	        pref_after_cmd_info: 'The following system commands will be executed when Host applied:',
+	        pref_after_cmd_placeholder: 'input your commands here'
 	    },
 	    'cn': {
 	        _lang_name: '简体中文',
@@ -33911,6 +33960,8 @@
 	        quit: '退出',
 	        cancel: '取消',
 	        ok: '确定',
+	        set_and_back: '设置并返回',
+	        set_and_relaunch_app: '确定并重启程序',
 	        add_host: '添加 host 规则',
 	        edit_host: '修改 host',
 	        import: '导入',
@@ -33957,7 +34008,10 @@
 	        edit: '编辑',
 	        view: '视图',
 	        window: '窗口',
-	        help: '帮助'
+	        help: '帮助',
+	        pref_after_cmd: 'Host 应用后命令',
+	        pref_after_cmd_info: '每次 Host 应用后将执行下面的系统命令：',
+	        pref_after_cmd_placeholder: '在这儿输入你的命令'
 	    }
 	};
 	
@@ -34002,8 +34056,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/css-loader/index.js!./../../node_modules/less-loader/index.js!./app.less");
+			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
