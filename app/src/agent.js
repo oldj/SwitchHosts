@@ -219,6 +219,17 @@ SH_event.on('test', () => {
 
 SH_event.on('apply', (content, success) => {
     tryToApply(content, () => {
+
+        let cmd = pref.get('after_cmd');
+        if (cmd) {
+            exec(cmd, function (error, stdout, stderr) {
+                // command output is in stdout
+                if (error) {
+                    alert(`AfterCmdError:\n\n${stderr}`);
+                }
+            });
+        }
+
         success && success();
     });
 });
