@@ -15,10 +15,17 @@ export default class PreferencesPrompt extends React.Component {
     constructor(props) {
         super(props);
 
+        let choice_mode = SH_Agent.pref.get('choice_mode');
+        if (!choice_mode || (choice_mode != 'multiple' && choice_mode != 'single')) {
+            choice_mode = 'multiple';
+        }
+
+        console.log(23, choice_mode);
         this.state = {
             show: false,
             lang_key: SH_Agent.lang_key,
-            after_cmd: SH_Agent.pref.get('after_cmd') || ''
+            after_cmd: SH_Agent.pref.get('after_cmd') || '',
+            choice_mode: choice_mode
         };
 
     }
@@ -68,6 +75,14 @@ export default class PreferencesPrompt extends React.Component {
         });
     }
 
+    updateChoiceMode(v) {
+        console.log(79, v);
+        SH_Agent.pref.set('choice_mode', v);
+        this.setState({
+            choice_mode: v
+        });
+    }
+
     updateAfterCmd(v) {
         SH_Agent.pref.set('after_cmd', v);
         this.setState({
@@ -88,6 +103,26 @@ export default class PreferencesPrompt extends React.Component {
                     </select>
 
                     <div className="inform">{SH_Agent.lang.should_restart_after_change_language}</div>
+                </div>
+            </div>
+        )
+    }
+
+    prefChoiceMode() {
+        return (
+            <div className="ln">
+                <div className="title">{SH_Agent.lang.pref_choice_mode}</div>
+                <div className="cnt">
+                    <input type="radio" id="pref-choice-mode-single" name="choice_mode" value="single"
+                           defaultChecked={this.state.choice_mode === 'single'}
+                           onChange={(e) => this.updateChoiceMode(e.target.value)}
+                    />
+                    <label htmlFor="pref-choice-mode-single">{SH_Agent.lang.pref_choice_mode_single}</label>
+                    <input type="radio" id="pref-choice-mode-multiple" name="choice_mode" value="multiple"
+                           defaultChecked={this.state.choice_mode === 'multiple'}
+                           onChange={(e) => this.updateChoiceMode(e.target.value)}
+                    />
+                    <label htmlFor="pref-choice-mode-multiple">{SH_Agent.lang.pref_choice_mode_multiple}</label>
                 </div>
             </div>
         )
@@ -117,6 +152,7 @@ export default class PreferencesPrompt extends React.Component {
                 {/*<div className="cnt">*/}
                 {/*</div>*/}
                 {this.prefLanguage()}
+                {this.prefChoiceMode()}
                 {this.prefAfterCmd()}
             </div>
         )

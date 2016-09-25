@@ -205,14 +205,36 @@ class List extends React.Component {
     }
 
     toggleOne(idx, success) {
+
         let content = this.getOnContent(idx);
-        this.apply(content, success || function () {
-            });
+        this.apply(content, () => {
+            let choice_mode = SH_Agent.pref.get('choice_mode');
+            if (choice_mode === 'single') {
+                // 单选模式
+                this.setState({
+                    list: this.state.list.map((item, _idx) => {
+                        if (idx != _idx) {
+                            item.on = false;
+                        }
+                        return item;
+                    })
+                });
+            }
+
+            if (typeof success === 'function') {
+                success();
+            }
+        });
     }
 
     getOnItems(idx = -1) {
+        let choice_mode = SH_Agent.pref.get('choice_mode');
         return this.state.list.filter((item, _idx) => {
-            return (item.on && _idx != idx) || (!item.on && _idx == idx);
+            if (choice_mode === 'single') {
+                return !item.on && _idx == idx;
+            } else {
+                return (item.on && _idx != idx) || (!item.on && _idx == idx);
+            }
         });
     }
 

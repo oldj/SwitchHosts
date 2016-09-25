@@ -21483,7 +21483,7 @@
 	
 	var _preferences2 = _interopRequireDefault(_preferences);
 	
-	__webpack_require__(226);
+	__webpack_require__(223);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -22681,16 +22681,40 @@
 	    }, {
 	        key: 'toggleOne',
 	        value: function toggleOne(idx, success) {
+	            var _this4 = this;
+	
 	            var content = this.getOnContent(idx);
-	            this.apply(content, success || function () {});
+	            this.apply(content, function () {
+	                var choice_mode = SH_Agent.pref.get('choice_mode');
+	                if (choice_mode === 'single') {
+	                    // 单选模式
+	                    _this4.setState({
+	                        list: _this4.state.list.map(function (item, _idx) {
+	                            if (idx != _idx) {
+	                                item.on = false;
+	                            }
+	                            return item;
+	                        })
+	                    });
+	                }
+	
+	                if (typeof success === 'function') {
+	                    success();
+	                }
+	            });
 	        }
 	    }, {
 	        key: 'getOnItems',
 	        value: function getOnItems() {
 	            var idx = arguments.length <= 0 || arguments[0] === undefined ? -1 : arguments[0];
 	
+	            var choice_mode = SH_Agent.pref.get('choice_mode');
 	            return this.state.list.filter(function (item, _idx) {
-	                return item.on && _idx != idx || !item.on && _idx == idx;
+	                if (choice_mode === 'single') {
+	                    return !item.on && _idx == idx;
+	                } else {
+	                    return item.on && _idx != idx || !item.on && _idx == idx;
+	                }
 	            });
 	        }
 	    }, {
@@ -22709,20 +22733,20 @@
 	    }, {
 	        key: 'customItems',
 	        value: function customItems() {
-	            var _this4 = this;
+	            var _this5 = this;
 	
 	            return this.state.list.map(function (item, idx) {
 	                return _react2.default.createElement(_list_item2.default, {
 	                    data: item,
 	                    idx: idx,
-	                    selectOne: _this4.selectOne.bind(_this4),
-	                    current: _this4.state.current,
+	                    selectOne: _this5.selectOne.bind(_this5),
+	                    current: _this5.state.current,
 	                    onToggle: function onToggle(success) {
-	                        return _this4.toggleOne(idx, success);
+	                        return _this5.toggleOne(idx, success);
 	                    },
 	                    key: 'host-' + idx,
 	                    dragOrder: function dragOrder(sidx, tidx) {
-	                        return _this4.dragOrder(sidx, tidx);
+	                        return _this5.dragOrder(sidx, tidx);
 	                    }
 	                });
 	            });
@@ -23295,7 +23319,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 0, 4162];
+	exports.version = [3, 2, 0, 4163];
 
 /***/ },
 /* 196 */
@@ -33641,9 +33665,9 @@
 	
 	var _frame2 = _interopRequireDefault(_frame);
 	
-	__webpack_require__(223);
+	__webpack_require__(225);
 	
-	var _lang = __webpack_require__(225);
+	var _lang = __webpack_require__(227);
 	
 	var _lang2 = _interopRequireDefault(_lang);
 	
@@ -33665,10 +33689,17 @@
 	
 	        var _this = _possibleConstructorReturn(this, (PreferencesPrompt.__proto__ || Object.getPrototypeOf(PreferencesPrompt)).call(this, props));
 	
+	        var choice_mode = SH_Agent.pref.get('choice_mode');
+	        if (!choice_mode || choice_mode != 'multiple' && choice_mode != 'single') {
+	            choice_mode = 'multiple';
+	        }
+	
+	        console.log(23, choice_mode);
 	        _this.state = {
 	            show: false,
 	            lang_key: SH_Agent.lang_key,
-	            after_cmd: SH_Agent.pref.get('after_cmd') || ''
+	            after_cmd: SH_Agent.pref.get('after_cmd') || '',
+	            choice_mode: choice_mode
 	        };
 	
 	        return _this;
@@ -33718,6 +33749,15 @@
 	            });
 	        }
 	    }, {
+	        key: 'updateChoiceMode',
+	        value: function updateChoiceMode(v) {
+	            console.log(79, v);
+	            SH_Agent.pref.set('choice_mode', v);
+	            this.setState({
+	                choice_mode: v
+	            });
+	        }
+	    }, {
 	        key: 'updateAfterCmd',
 	        value: function updateAfterCmd(v) {
 	            SH_Agent.pref.set('after_cmd', v);
@@ -33760,9 +33800,50 @@
 	            );
 	        }
 	    }, {
+	        key: 'prefChoiceMode',
+	        value: function prefChoiceMode() {
+	            var _this4 = this;
+	
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'ln' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'title' },
+	                    SH_Agent.lang.pref_choice_mode
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'cnt' },
+	                    _react2.default.createElement('input', { type: 'radio', id: 'pref-choice-mode-single', name: 'choice_mode', value: 'single',
+	                        defaultChecked: this.state.choice_mode === 'single',
+	                        onChange: function onChange(e) {
+	                            return _this4.updateChoiceMode(e.target.value);
+	                        }
+	                    }),
+	                    _react2.default.createElement(
+	                        'label',
+	                        { htmlFor: 'pref-choice-mode-single' },
+	                        SH_Agent.lang.pref_choice_mode_single
+	                    ),
+	                    _react2.default.createElement('input', { type: 'radio', id: 'pref-choice-mode-multiple', name: 'choice_mode', value: 'multiple',
+	                        defaultChecked: this.state.choice_mode === 'multiple',
+	                        onChange: function onChange(e) {
+	                            return _this4.updateChoiceMode(e.target.value);
+	                        }
+	                    }),
+	                    _react2.default.createElement(
+	                        'label',
+	                        { htmlFor: 'pref-choice-mode-multiple' },
+	                        SH_Agent.lang.pref_choice_mode_multiple
+	                    )
+	                )
+	            );
+	        }
+	    }, {
 	        key: 'prefAfterCmd',
 	        value: function prefAfterCmd() {
-	            var _this4 = this;
+	            var _this5 = this;
 	
 	            return _react2.default.createElement(
 	                'div',
@@ -33785,7 +33866,7 @@
 	                        defaultValue: this.state.after_cmd,
 	                        placeholder: SH_Agent.lang.pref_after_cmd_placeholder,
 	                        onChange: function onChange(e) {
-	                            return _this4.updateAfterCmd(e.target.value);
+	                            return _this5.updateAfterCmd(e.target.value);
 	                        }
 	                    })
 	                )
@@ -33798,23 +33879,24 @@
 	                'div',
 	                { ref: 'body' },
 	                this.prefLanguage(),
+	                this.prefChoiceMode(),
 	                this.prefAfterCmd()
 	            );
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this5 = this;
+	            var _this6 = this;
 	
 	            return _react2.default.createElement(_frame2.default, {
 	                show: this.state.show,
 	                head: SH_Agent.lang.preferences,
 	                body: this.body(),
 	                onOK: function onOK() {
-	                    return _this5.onOK();
+	                    return _this6.onOK();
 	                },
 	                onCancel: function onCancel() {
-	                    return _this5.onCancel();
+	                    return _this6.onCancel();
 	                },
 	                cancel_title: SH_Agent.lang.set_and_back,
 	                ok_title: SH_Agent.lang.set_and_relaunch_app
@@ -33857,8 +33939,8 @@
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./preferences.less", function() {
-				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./preferences.less");
+			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
+				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -33876,13 +33958,53 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame textarea {\n  width: 300px;\n  height: 80px;\n  padding: 2px 4px;\n  outline: none;\n  border: solid 1px #ccc;\n}\n", ""]);
+	exports.push([module.id, "html,\nbody {\n  margin: 0;\n  padding: 0;\n  height: 100%;\n  font-size: 12px;\n  font-family: Arial, Helvetica, sans-serif;\n  color: #212121;\n  line-height: 20px;\n  background: #fff;\n}\na {\n  text-decoration: none;\n}\n#app {\n  height: 100%;\n}\n", ""]);
 	
 	// exports
 
 
 /***/ },
 /* 225 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	
+	// load the styles
+	var content = __webpack_require__(226);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(181)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./preferences.less", function() {
+				var newContent = require("!!./../../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./preferences.less");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 226 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(180)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, ".frame textarea {\n  width: 300px;\n  height: 80px;\n  padding: 2px 4px;\n  outline: none;\n  border: solid 1px #ccc;\n}\n", ""]);
+	
+	// exports
+
+
+/***/ },
+/* 227 */
 /***/ function(module, exports) {
 
 	/**
@@ -33951,7 +34073,10 @@
 	        help: 'Help',
 	        pref_after_cmd: 'Command after Host applied',
 	        pref_after_cmd_info: 'The following system commands will be executed when Host applied:',
-	        pref_after_cmd_placeholder: 'input your commands here'
+	        pref_after_cmd_placeholder: 'input your commands here',
+	        pref_choice_mode: 'Choide mode',
+	        pref_choice_single: 'Single choice',
+	        pref_choice_multiple: 'Multiple choice'
 	    },
 	    'cn': {
 	        _lang_name: '简体中文',
@@ -34011,7 +34136,10 @@
 	        help: '帮助',
 	        pref_after_cmd: 'Host 应用后命令',
 	        pref_after_cmd_info: '每次 Host 应用后将执行下面的系统命令：',
-	        pref_after_cmd_placeholder: '在这儿输入你的命令'
+	        pref_after_cmd_placeholder: '在这儿输入你的命令',
+	        pref_choice_mode: '选择模式',
+	        pref_choice_mode_single: '单选',
+	        pref_choice_mode_multiple: '多选'
 	    }
 	};
 	
@@ -34039,46 +34167,6 @@
 	        return languages[lang] || languages['en'];
 	    }
 	};
-
-/***/ },
-/* 226 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(227);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(181)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less", function() {
-				var newContent = require("!!./../../node_modules/.npminstall/css-loader/0.23.1/css-loader/index.js!./../../node_modules/.npminstall/less-loader/2.2.3/less-loader/index.js!./app.less");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ },
-/* 227 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(180)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "html,\nbody {\n  margin: 0;\n  padding: 0;\n  height: 100%;\n  font-size: 12px;\n  font-family: Arial, Helvetica, sans-serif;\n  color: #212121;\n  line-height: 20px;\n  background: #fff;\n}\na {\n  text-decoration: none;\n}\n#app {\n  height: 100%;\n}\n", ""]);
-	
-	// exports
-
 
 /***/ }
 /******/ ]);
