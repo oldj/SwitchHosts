@@ -96,9 +96,11 @@ export default class EditPrompt extends React.Component {
             return false;
         }
 
-        let data = Object.assign({
-            content: `# ${this.state.title}`
-        }, this.current_host, this.state);
+        let data = Object.assign({}, this.current_host, this.state, this.state.add ? {
+            content: `# ${this.state.title}`,
+            on: false
+        } : {});
+
         delete data['add'];
         SH_event.emit('host_' + (this.state.add ? 'add' : 'edit') + 'ed', data, this.current_host);
 
