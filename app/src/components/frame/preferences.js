@@ -20,7 +20,6 @@ export default class PreferencesPrompt extends React.Component {
             choice_mode = 'multiple';
         }
 
-        console.log(23, choice_mode);
         this.state = {
             show: false,
             lang_key: SH_Agent.lang_key,
@@ -76,7 +75,6 @@ export default class PreferencesPrompt extends React.Component {
     }
 
     updateChoiceMode(v) {
-        console.log(79, v);
         SH_Agent.pref.set('choice_mode', v);
         this.setState({
             choice_mode: v
