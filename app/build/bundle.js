@@ -22681,16 +22681,40 @@
 	    }, {
 	        key: 'toggleOne',
 	        value: function toggleOne(idx, success) {
+	            var _this4 = this;
+	
 	            var content = this.getOnContent(idx);
-	            this.apply(content, success || function () {});
+	            this.apply(content, function () {
+	                var choice_mode = SH_Agent.pref.get('choice_mode');
+	                if (choice_mode === 'single') {
+	                    // 单选模式
+	                    _this4.setState({
+	                        list: _this4.state.list.map(function (item, _idx) {
+	                            if (idx != _idx) {
+	                                item.on = false;
+	                            }
+	                            return item;
+	                        })
+	                    });
+	                }
+	
+	                if (typeof success === 'function') {
+	                    success();
+	                }
+	            });
 	        }
 	    }, {
 	        key: 'getOnItems',
 	        value: function getOnItems() {
 	            var idx = arguments.length <= 0 || arguments[0] === undefined ? -1 : arguments[0];
 	
+	            var choice_mode = SH_Agent.pref.get('choice_mode');
 	            return this.state.list.filter(function (item, _idx) {
-	                return item.on && _idx != idx || !item.on && _idx == idx;
+	                if (choice_mode === 'single') {
+	                    return !item.on && _idx == idx;
+	                } else {
+	                    return item.on && _idx != idx || !item.on && _idx == idx;
+	                }
 	            });
 	        }
 	    }, {
@@ -22709,20 +22733,20 @@
 	    }, {
 	        key: 'customItems',
 	        value: function customItems() {
-	            var _this4 = this;
+	            var _this5 = this;
 	
 	            return this.state.list.map(function (item, idx) {
 	                return _react2.default.createElement(_list_item2.default, {
 	                    data: item,
 	                    idx: idx,
-	                    selectOne: _this4.selectOne.bind(_this4),
-	                    current: _this4.state.current,
+	                    selectOne: _this5.selectOne.bind(_this5),
+	                    current: _this5.state.current,
 	                    onToggle: function onToggle(success) {
-	                        return _this4.toggleOne(idx, success);
+	                        return _this5.toggleOne(idx, success);
 	                    },
 	                    key: 'host-' + idx,
 	                    dragOrder: function dragOrder(sidx, tidx) {
-	                        return _this4.dragOrder(sidx, tidx);
+	                        return _this5.dragOrder(sidx, tidx);
 	                    }
 	                });
 	            });
