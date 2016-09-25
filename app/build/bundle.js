@@ -33696,7 +33696,6 @@
 	            choice_mode = 'multiple';
 	        }
 	
-	        console.log(23, choice_mode);
 	        _this.state = {
 	            show: false,
 	            lang_key: SH_Agent.lang_key,
@@ -33753,7 +33752,6 @@
 	    }, {
 	        key: 'updateChoiceMode',
 	        value: function updateChoiceMode(v) {
-	            console.log(79, v);
 	            SH_Agent.pref.set('choice_mode', v);
 	            this.setState({
 	                choice_mode: v
