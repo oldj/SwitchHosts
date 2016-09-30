@@ -39,6 +39,7 @@ gulp.task('pack', () => {
     let cmds = `
 # for macOS
 electron-packager . 'SwitchHosts!' --platform=darwin --arch=x64 --overwrite --asar=true --prune --icon=../assets/app.icns --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
+cp ../assets/Credits.rtf dist/SwitchHosts\!-darwin-x64/SwitchHosts\!.app/Contents/Resources/en.lproj
 
 # for windows x64
 electron-packager . 'SwitchHosts!' --platform=win32  --arch=x64 --overwrite --asar=true --prune --icon=../assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
