@@ -274,12 +274,14 @@ SH_event.on('check_host_refresh', (host, force = false) => {
         if (!err && res.statusCode === 200) {
             // console.log(body);
             host.content = body;
+            delete host.error;
             host.last_refresh = moment().format('YYYY-MM-DD HH:mm:ss');
 
             SH_event.emit('change');
         } else {
             console.log(err, res && res.statusCode);
-            out.content = 'Error: ' + err.message;
+            // out.content = 'Error: ' + err.message;
+            out.error = 'Error: ' + err.message;
         }
         SH_event.emit('loading_done', host, Object.assign({}, host, out));
     });
