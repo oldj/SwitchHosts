@@ -81,6 +81,10 @@ export default class Content extends React.Component {
                         title={SH_Agent.lang.readonly}
                     />
                 </div>
+                <div className={classnames({
+                    errorMessage: 1,
+                    show: !!this.props.current.error
+                })}>{this.props.current.error}</div>
                 <Editor
                     code={this.state.code}
                     readonly={this.props.readonly}

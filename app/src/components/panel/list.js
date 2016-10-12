@@ -150,6 +150,9 @@ class List extends React.Component {
             //         this.selectOne(this.state.current);
             //     }, 100);
             // }
+            if (data.error) {
+                console.log(data.error);
+            }
         });
 
         // auto check refresh

@@ -7,6 +7,7 @@
 <body>
 <div id="app"></div>
 <script>
+	const IS_DEV = process.env.ENV === 'dev';
 	const SH_event = require('./src/event').event;
 	const SH_Agent = require('./src/agent');
 	const {ipcRenderer} = require('electron');

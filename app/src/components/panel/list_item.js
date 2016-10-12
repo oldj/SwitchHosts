@@ -137,9 +137,12 @@ export default class ListItem extends React.Component {
                 <i className={classnames({
                     'iconfont': 1
                     , 'item-icon': 1
-                    , 'icon-doc': !sys
-                    , 'icon-sysserver': sys
-                })}/>
+                    , 'icon-warn': !!data.error
+                    , 'icon-doc': !sys && !data.error
+                    , 'icon-sysserver': sys && !data.error
+                })}
+                   title={data.error || ''}
+                />
                 <span>{this.getTitle()}</span>
             </div>
         );
