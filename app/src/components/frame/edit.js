@@ -129,11 +129,13 @@ export default class EditPrompt extends React.Component {
     static getRefreshOptions() {
         let k = [
             [0, `${SH_Agent.lang.never}`],
-            // [0.002778, `10s`], // test only
             [1, `1 ${SH_Agent.lang.hour}`],
             [24, `24 ${SH_Agent.lang.hours}`],
             [168, `7 ${SH_Agent.lang.days}`]
         ];
+        if (IS_DEV) {
+            k.splice(1, 0, [0.002778, `10s (for DEV)`]); // dev test only
+        }
         return k.map(([v, n], idx) => {
             return (
                 <option value={v} key={idx}>{n}</option>
