@@ -23530,6 +23530,14 @@
 	                        title: SH_Agent.lang.readonly
 	                    })
 	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: (0, _classnames2.default)({
+	                            errorMessage: 1,
+	                            show: !!this.props.current.error
+	                        }) },
+	                    this.props.current.error
+	                ),
 	                _react2.default.createElement(_editor2.default, {
 	                    code: this.state.code,
 	                    readonly: this.props.readonly,
@@ -32856,7 +32864,7 @@
 	
 	
 	// module
-	exports.push([module.id, "#sh-content {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 240px;\n  height: 100%;\n}\n#sh-content .inform {\n  position: absolute;\n  z-index: 100;\n  top: 5px;\n  right: 10px;\n  opacity: 0.5;\n  background: #fff;\n}\n#sh-content .inform i {\n  display: none;\n  color: #666;\n  margin-left: 5px;\n}\n#sh-content .inform i.show {\n  display: inline-block;\n}\n#sh-content .inform span {\n  display: none;\n}\n#sh-content .inform span.show {\n  display: inline-block;\n}\n.platform-win32 #sh-content .inform {\n  right: 20px;\n}\n", ""]);
+	exports.push([module.id, "#sh-content {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 240px;\n  height: 100%;\n}\n#sh-content .inform {\n  position: absolute;\n  z-index: 100;\n  top: 5px;\n  right: 10px;\n  opacity: 0.5;\n  background: #fff;\n}\n#sh-content .inform i {\n  display: none;\n  color: #666;\n  margin-left: 5px;\n}\n#sh-content .inform i.show {\n  display: inline-block;\n}\n#sh-content .inform span {\n  display: none;\n}\n#sh-content .inform span.show {\n  display: inline-block;\n}\n#sh-content .errorMessage {\n  display: none;\n  position: absolute;\n  z-index: 101;\n  top: 0;\n  left: 0;\n  right: 0;\n  padding: 4px 40px;\n  text-align: center;\n  background: rgba(153, 0, 0, 0.5);\n  color: #fff;\n  transition: 0.5s;\n}\n#sh-content .errorMessage.show {\n  display: block;\n}\n.platform-win32 #sh-content .inform {\n  right: 20px;\n}\n", ""]);
 	
 	// exports
 
