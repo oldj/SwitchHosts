@@ -32,6 +32,24 @@
       }
     }
   }
+
+  .errorMessage {
+    display: none;
+    position: absolute;
+    z-index: 101;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 4px 40px;
+    text-align: center;
+    background: rgba(153, 0, 0, 0.5);
+    color: #fff;
+    transition: 0.5s;
+
+    &.show {
+      display: block;
+    }
+  }
 }
 
 .platform-win32 {
