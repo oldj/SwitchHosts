@@ -20,6 +20,7 @@ Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHos
 
  - [SwitchHosts! 下载地址1](https://github.com/oldj/SwitchHosts/releases)
  - [SwitchHosts! 下载地址2](http://pan.baidu.com/share/link?shareid=150951&uk=3607385901)
+ - [SwitchHosts! for Linux 下载地址](http://pan.baidu.com/s/1slGQ6kP)
 
 
 ## 文件备份
