@@ -45,6 +45,9 @@ electron-packager . 'SwitchHosts!' --platform=win32  --arch=x64 --overwrite --as
 
 # for windows ia32
 electron-packager . 'SwitchHosts!' --platform=win32  --arch=ia32 --overwrite --asar=true --prune --icon=../assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
+
+# for linux x86_64
+electron-packager . 'SwitchHosts!' --platform=linux  --arch=x64 --overwrite --asar=true --prune --icon=../assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
 `;
 
     console.log(`start packing, v: ${v1}.${v2} ..`);
@@ -69,6 +72,7 @@ rm -f ./SwitchHosts-*.zip
 zip -ry SwitchHosts-macOS-x64_v${v}.zip ./SwitchHosts\\!-darwin-x64/SwitchHosts\\!.app
 zip -ry SwitchHosts-win32-x64_v${v}.zip ./SwitchHosts\\!-win32-x64
 zip -ry SwitchHosts-win32-ia32_v${v}.zip ./SwitchHosts\\!-win32-ia32
+zip -ry SwitchHosts-linux-x64_v${v}.zip ./SwitchHosts\\!-linux-x64
 cd ..
 `;
 
