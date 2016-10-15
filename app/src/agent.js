@@ -113,7 +113,9 @@ function apply_UNIX(content, success) {
         cmd = [
             'echo \'' + sudo_pswd + '\' | sudo -S chmod 777 ' + sys_host_path
             , 'cat "' + tmp_fn + '" > ' + sys_host_path
-            , 'echo \'' + sudo_pswd + '\' | sudo -S chmod 644 ' + sys_host_path
+            , 'echo \'' + sudo_pswd + '\' | sudo -S chmod 644 ' + sys_host_path,
+            'sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+            , 'sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
             // , 'rm -rf ' + tmp_fn
         ].join(' && ');
     }
