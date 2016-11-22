@@ -29,7 +29,8 @@ function createWindow() {
     // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 800, height: 500,
-        minWidth: 400, minHeight: 250
+        minWidth: 400, minHeight: 250,
+        fullscreenable: false
     });
     contents = mainWindow.webContents;
     app.mainWindow = mainWindow;
