@@ -11,6 +11,7 @@ const path = require('path');
 const exec = require('child_process').exec;
 const gulp = require('gulp');
 const beautify = require('js-beautify').js_beautify;
+const ELECTRON_VERSION = '1.4.8';
 
 gulp.task('ver', () => {
     let fn = path.join(__dirname, 'src', 'version.js');
@@ -38,17 +39,17 @@ gulp.task('pack', () => {
 
     let cmds = `
 # for macOS
-electron-packager . 'SwitchHosts!' --platform=darwin --arch=x64 --overwrite --asar=true --prune --icon=../assets/app.icns --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
+electron-packager . 'SwitchHosts!' --platform=darwin --arch=x64 --version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=../assets/app.icns --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
 cp ../assets/Credits.rtf dist/SwitchHosts\!-darwin-x64/SwitchHosts\!.app/Contents/Resources/en.lproj
 
 # for windows x64
-electron-packager . 'SwitchHosts!' --platform=win32  --arch=x64 --overwrite --asar=true --prune --icon=../assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
+electron-packager . 'SwitchHosts!' --platform=win32  --arch=x64 --version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=../assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
 
 # for windows ia32
-electron-packager . 'SwitchHosts!' --platform=win32  --arch=ia32 --overwrite --asar=true --prune --icon=../assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
+electron-packager . 'SwitchHosts!' --platform=win32  --arch=ia32 --version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=../assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
 
 # for linux x86_64
-electron-packager . 'SwitchHosts!' --platform=linux  --arch=x64 --overwrite --asar=true --prune --icon=../assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
+electron-packager . 'SwitchHosts!' --platform=linux  --arch=x64 --version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=../assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
 `;
 
     console.log(`start packing, v: ${v1}.${v2} ..`);
