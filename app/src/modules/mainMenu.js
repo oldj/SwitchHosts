@@ -74,37 +74,35 @@ exports.init = function (app, sys_lang = 'en') {
         },
         {
             label: lang.edit,
-            submenu: [
-                {
-                    role: 'undo'
-                },
-                {
-                    role: 'redo'
-                },
-                {
-                    type: 'separator'
-                },
-                {
-                    role: 'cut'
-                },
-                {
-                    role: 'copy'
-                },
-                {
-                    role: 'paste'
-                },
-                {
-                    role: 'pasteandmatchstyle'
-                },
-                {
-                    role: 'delete'
-                },
-                {
-                    role: 'selectall'
+            submenu: [{
+                role: 'undo'
+            }, {
+                role: 'redo'
+            }, {
+                type: 'separator'
+            }, {
+                role: 'cut'
+            }, {
+                role: 'copy'
+            }, {
+                role: 'paste'
+            }, {
+                role: 'pasteandmatchstyle'
+            }, {
+                role: 'delete'
+            }, {
+                role: 'selectall'
+            }, {
+                type: 'separator'
+            }, {
+                label: lang.search,
+                accelerator: 'CommandOrControl+F',
+                click () {
+                    // ipcMain.emit('to_search');
+                    app.mainWindow.webContents.send('to_search');
                 }
-            ]
-        },
-        {
+            }]
+        }, {
             label: lang.view,
             submenu: [
                 // {
@@ -126,49 +124,38 @@ exports.init = function (app, sys_lang = 'en') {
                 // },
                 {
                     role: 'resetzoom'
-                },
-                {
+                }, {
                     role: 'zoomin'
-                },
-                {
+                }, {
                     role: 'zoomout'
-                },
-                {
+                }, {
                     type: 'separator'
-                },
-                {
+                }, {
                     role: 'togglefullscreen'
                 }
             ]
-        },
-        {
+        }, {
             label: lang.window,
             role: 'window',
-            submenu: [
-                {
-                    role: 'minimize'
-                },
-                {
-                    role: 'close'
-                }
-            ]
-        },
-        {
+            submenu: [{
+                role: 'minimize'
+            }, {
+                role: 'close'
+            }]
+        }, {
             label: lang.help,
             role: 'help',
-            submenu: [
-                {
-                    label: lang.feedback,
-                    click () {
-                        shell.openExternal('https://github.com/oldj/SwitchHosts/issues');
-                    }
-                }, {
-                    label: lang.homepage,
-                    click () {
-                        shell.openExternal('http://oldj.github.io/SwitchHosts/');
-                    }
+            submenu: [{
+                label: lang.feedback,
+                click () {
+                    shell.openExternal('https://github.com/oldj/SwitchHosts/issues');
                 }
-            ]
+            }, {
+                label: lang.homepage,
+                click () {
+                    shell.openExternal('http://oldj.github.io/SwitchHosts/');
+                }
+            }]
         }
     ];
 
@@ -177,13 +164,11 @@ exports.init = function (app, sys_lang = 'en') {
     if (os === 'darwin') {
         template.unshift({
             label: name,
-            submenu: [
-                {
-                    role: 'about'
-                },
-                {
-                    type: 'separator'
-                },
+            submenu: [{
+                role: 'about'
+            }, {
+                type: 'separator'
+            },
                 // {
                 //     role: 'services',
                 //     submenu: []
@@ -193,20 +178,15 @@ exports.init = function (app, sys_lang = 'en') {
                 // },
                 {
                     role: 'hide'
-                },
-                {
+                }, {
                     role: 'hideothers'
-                },
-                {
+                }, {
                     role: 'unhide'
-                },
-                {
+                }, {
                     type: 'separator'
-                },
-                {
+                }, {
                     role: 'quit'
-                }
-            ]
+                }]
         });
         // Edit menu.
         /*template[2].submenu.push(

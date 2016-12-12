@@ -68,6 +68,7 @@ var languages = {
         , pref_choice_mode: 'Choide mode'
         , pref_choice_single: 'Single choice'
         , pref_choice_multiple: 'Multiple choice'
+        , search: 'Search'
     },
     'cn': {
         _lang_name: '简体中文'
@@ -131,6 +132,7 @@ var languages = {
         , pref_choice_mode: '选择模式'
         , pref_choice_mode_single: '单选'
         , pref_choice_mode_multiple: '多选'
+        , search: '搜索'
     }
 };
 
