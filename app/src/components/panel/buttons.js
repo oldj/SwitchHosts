@@ -37,6 +37,7 @@ export default class Buttons extends React.Component {
         ipcRenderer.on('to_add_host', () => {
             SH_event.emit('add_host');
         });
+
     }
 
     static btnAdd() {
@@ -73,6 +74,12 @@ export default class Buttons extends React.Component {
             search_on: false
         }, () => {
             SH_event.emit('search_off');
+        });
+    }
+
+    componentDidMount() {
+        ipcRenderer.on('to_search', () => {
+            this.btnSearch();
         });
     }
 
