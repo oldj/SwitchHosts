@@ -28,7 +28,9 @@
     "start": "electron app",
     "dev": "ENV=dev electron app",
     "build": "gulp ver && webpack",
-    "pack": "gulp pack && gulp zip"
+    "pack": "gulp pack",
+    "zip": "gulp zip",
+    "make": "webpack && npm run pack && npm run zip"
   },
   "repository": {
     "type": "git",
