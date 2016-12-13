@@ -33,21 +33,20 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
 ### 环境配置
 
  - 安装 [node.js](https://nodejs.org/) 环境；
+ - 在根目录 `./` 下，运行 `npm install` 命令，安装依赖库；
  - 在 `./app` 目录下，运行 `npm install` 命令，安装依赖库。
 
- ```bash
- cd app
- npm install
- ```
+```bash
+npm install
+cd app && npm install
+```
 
 ### 构建及运行
 
- - 在 `./app` 目录下，运行 `npm run build` 命令，构建所需文件；
- - 在 `./app` 目录下，运行 `npm start` 命令，即可运行程序。
+ - 在 `./` 目录下，运行 `npm run build` 命令，构建所需文件；
+ - 在 `./` 目录下，运行 `npm start` 命令，即可运行程序。
 
  ```bash
- cd app
-
  # build
  npm run build
 
@@ -60,17 +59,15 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
 
 ### 打包发布
 
- - 在 `./app` 目录下，运行 `npm run pack` 命令，打包后的文件位于 `./app/dist` 目录
+ - 在 `./` 目录下，运行 `npm run pack` 命令，打包后的文件位于 `./dist` 目录
  - 更多信息请参考 [Electron 文档](http://electron.atom.io/docs/)。
 
  ```bash
- cd app
-
  # pack
- npm run pack  # the packed files will be in ./app/dist
+ npm run pack  # the packed files will be in ./dist
 
  # zip
- gulp zip  # the zipped files will be in ./app/dist
+ gulp zip  # the zipped files will be in ./dist
  ```
 
 ## 更新历史：

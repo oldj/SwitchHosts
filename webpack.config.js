@@ -10,10 +10,10 @@ const webpack = require('webpack');
 const uglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 
 module.exports = {
-    entry: './src/ui.js',
+    entry: './app/src/ui.js',
     devtool: 'source-map',
     output: {
-        path: path.join(__dirname, 'build'),
+        path: path.join(__dirname, 'app', 'build'),
         filename: 'bundle.js'
     },
     resolve: {
@@ -24,7 +24,7 @@ module.exports = {
             {
                 test: /\.jsx?$/,
                 exclude: /node_modules/,
-                loaders: ['babel?presets[]=react,presets[]=es2015']
+                loaders: ['babel?presets[]=react,presets[]=latest']
             }, {
                 test: /\.less$/,
                 loaders: ['style', 'css', 'less']

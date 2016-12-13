@@ -1,0 +1,43 @@
+{
+  "name": "switchhosts",
+  "version": "3.2.0",
+  "description": "Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)",
+  "main": "",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-core": "^6.20.0",
+    "babel-loader": "^6.2.9",
+    "babel-preset-latest": "^6.16.0",
+    "babel-preset-react": "^6.16.0",
+    "css-loader": "^0.26.1",
+    "electron-prebuilt": "^1.4.12",
+    "file-loader": "^0.9.0",
+    "gulp": "^3.9.1",
+    "gulp-shell": "^0.5.2",
+    "js-beautify": "^1.6.4",
+    "less": "^2.7.1",
+    "less-loader": "^2.2.3",
+    "style-loader": "^0.13.1",
+    "uglify-loader": "^1.4.0",
+    "url-loader": "^0.5.7",
+    "webpack": "^1.14.0",
+    "yargs": "^6.5.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron app",
+    "dev": "ENV=dev electron app",
+    "build": "gulp ver && webpack",
+    "pack": "gulp pack && gulp zip"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oldj/SwitchHosts.git"
+  },
+  "author": "oldj",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/oldj/SwitchHosts/issues"
+  },
+  "homepage": "https://oldj.github.io/SwitchHosts/"
+}

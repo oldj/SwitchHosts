@@ -10,7 +10,7 @@ const paths = require('../libs/paths');
 const {Menu, shell, ipcMain, dialog} = require('electron');
 const m_lang = require('../lang');
 const pref = require('./../libs/pref');
-const version = require('../version').version;
+const version = require('../../version').version;
 
 exports.init = function (app, sys_lang = 'en') {
     let lang = m_lang.getLang(pref.get('user_language', sys_lang));
