@@ -34,13 +34,17 @@ gulp.task('ver', () => {
     let cnt = `exports.version = ${JSON.stringify(version)};`;
     fs.writeFileSync(fn, cnt, 'utf-8');
 
+    function updatePackage(fn) {
+        cnt = fs.readFileSync(fn);
+        let d = JSON.parse(cnt);
+        d.version = version.slice(0, 3).join('.');
+        cnt = beautify(JSON.stringify(d), {indent_size: 2});
+        fs.writeFileSync(fn, cnt, 'utf-8');
+    }
+
     // update package.json
-    fn = './package.json';
-    cnt = fs.readFileSync(fn);
-    let d = JSON.parse(cnt);
-    d.version = version.slice(0, 3).join('.');
-    cnt = beautify(JSON.stringify(d), {indent_size: 2});
-    fs.writeFileSync(fn, cnt, 'utf-8');
+    updatePackage(path.join(__dirname, 'package.json'));
+    updatePackage(path.join(__dirname, 'app', 'package.json'));
 });
 
 gulp.task('pack', () => {
