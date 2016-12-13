@@ -65,6 +65,7 @@ npm run dev
 ```bash
 # pack
 npm run pack  # the packed files will be in ./dist
+```
 
  - 打包完成后，可运行以下命令将生成的程序压缩为 zip 文件。
 
