@@ -5,6 +5,11 @@
 
 'use strict';
 
+/**
+ * 注：ELECTRON_VERSION 为对应的 Electron 版本
+ * 直接运行命令会自动下载对应文件，
+ * 也可手动从 https://github.com/electron/electron/releases 下载最新版本，放到 ~/.electron 目录下
+ */
 const ELECTRON_VERSION = '1.4.12';
 
 const fs = require('fs');
@@ -15,9 +20,9 @@ const gulp = require('gulp');
 const shell = require('gulp-shell');
 const beautify = require('js-beautify').js_beautify;
 
-const args = require('yargs').argv;
-const IS_DEBUG = !!args.debug;
-const TPL_FILE_INFO = "echo '> (DEBUG " + (IS_DEBUG ? "on" : "off") + ") <%= file.path %>'";
+// const args = require('yargs').argv;
+// const IS_DEBUG = !!args.debug;
+// const TPL_FILE_INFO = "echo '> (DEBUG " + (IS_DEBUG ? "on" : "off") + ") <%= file.path %>'";
 
 gulp.task('ver', () => {
     let fn = path.join(__dirname, 'app', 'version.js');

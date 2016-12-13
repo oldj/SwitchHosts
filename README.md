@@ -46,29 +46,32 @@ cd app && npm install
  - 在 `./` 目录下，运行 `npm run build` 命令，构建所需文件；
  - 在 `./` 目录下，运行 `npm start` 命令，即可运行程序。
 
- ```bash
- # build
- npm run build
+```bash
+# build
+npm run build
 
- # start
- npm start
+# start
+npm start
 
- # start in developer mode
- npm run dev
- ```
+# start in developer mode
+npm run dev
+```
 
 ### 打包发布
 
- - 在 `./` 目录下，运行 `npm run pack` 命令，打包后的文件位于 `./dist` 目录
- - 更多信息请参考 [Electron 文档](http://electron.atom.io/docs/)。
+ - 在 `./` 目录下，运行 `npm run pack` 命令，打包后的文件位于 `./dist` 目录；
+ - 首次执行此命令可能需要花费较多时间（需要下载对应的构建文件），更多信息请参考 [Electron 文档](http://electron.atom.io/docs/)。
 
- ```bash
- # pack
- npm run pack  # the packed files will be in ./dist
+```bash
+# pack
+npm run pack  # the packed files will be in ./dist
 
- # zip
- gulp zip  # the zipped files will be in ./dist
- ```
+ - 打包完成后，可运行以下命令将生成的程序压缩为 zip 文件。
+
+```bash
+# zip
+gulp zip  # the zipped files will be in ./dist
+```
 
 ## 更新历史：
 
