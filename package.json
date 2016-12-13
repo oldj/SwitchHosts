@@ -3,6 +3,25 @@
   "version": "3.2.0",
   "description": "Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)",
   "main": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron app",
+    "dev": "ENV=dev electron app",
+    "build": "gulp ver && webpack",
+    "pack": "gulp pack",
+    "zip": "gulp zip",
+    "make": "webpack && npm run pack && npm run zip"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oldj/SwitchHosts.git"
+  },
+  "author": "oldj",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/oldj/SwitchHosts/issues"
+  },
+  "homepage": "https://oldj.github.io/SwitchHosts/",
   "dependencies": {},
   "devDependencies": {
     "babel-core": "^6.20.0",
@@ -22,24 +41,5 @@
     "url-loader": "^0.5.7",
     "webpack": "^1.14.0",
     "yargs": "^6.5.0"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron app",
-    "dev": "ENV=dev electron app",
-    "build": "gulp ver && webpack",
-    "pack": "gulp pack",
-    "zip": "gulp zip",
-    "make": "webpack && npm run pack && npm run zip"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/oldj/SwitchHosts.git"
-  },
-  "author": "oldj",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/oldj/SwitchHosts/issues"
-  },
-  "homepage": "https://oldj.github.io/SwitchHosts/"
+  }
 }
