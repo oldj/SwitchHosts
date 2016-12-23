@@ -21507,19 +21507,19 @@
 	
 	var _content2 = _interopRequireDefault(_content);
 	
-	var _sudo = __webpack_require__(219);
+	var _sudo = __webpack_require__(220);
 	
 	var _sudo2 = _interopRequireDefault(_sudo);
 	
-	var _edit = __webpack_require__(225);
+	var _edit = __webpack_require__(226);
 	
 	var _edit2 = _interopRequireDefault(_edit);
 	
-	var _preferences = __webpack_require__(228);
+	var _preferences = __webpack_require__(229);
 	
 	var _preferences2 = _interopRequireDefault(_preferences);
 	
-	__webpack_require__(234);
+	__webpack_require__(235);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -23478,7 +23478,7 @@
 	
 	var _classnames2 = _interopRequireDefault(_classnames);
 	
-	__webpack_require__(217);
+	__webpack_require__(218);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -23620,13 +23620,13 @@
 	
 	var _codemirror2 = _interopRequireDefault(_codemirror);
 	
-	__webpack_require__(236);
+	__webpack_require__(212);
 	
 	var _classnames = __webpack_require__(183);
 	
 	var _classnames2 = _interopRequireDefault(_classnames);
 	
-	var _cm_hl = __webpack_require__(212);
+	var _cm_hl = __webpack_require__(213);
 	
 	var _cm_hl2 = _interopRequireDefault(_cm_hl);
 	
@@ -23634,9 +23634,9 @@
 	
 	var _kw2 = _interopRequireDefault(_kw);
 	
-	__webpack_require__(213);
+	__webpack_require__(214);
 	
-	__webpack_require__(215);
+	__webpack_require__(216);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -32902,6 +32902,218 @@
 /* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// CodeMirror, copyright (c) by Marijn Haverbeke and others
+	// Distributed under an MIT license: http://codemirror.net/LICENSE
+	
+	(function(mod) {
+	  if (true) // CommonJS
+	    mod(__webpack_require__(211));
+	  else if (typeof define == "function" && define.amd) // AMD
+	    define(["../../lib/codemirror"], mod);
+	  else // Plain browser env
+	    mod(CodeMirror);
+	})(function(CodeMirror) {
+	  "use strict";
+	
+	  var noOptions = {};
+	  var nonWS = /[^\s\u00a0]/;
+	  var Pos = CodeMirror.Pos;
+	
+	  function firstNonWS(str) {
+	    var found = str.search(nonWS);
+	    return found == -1 ? 0 : found;
+	  }
+	
+	  CodeMirror.commands.toggleComment = function(cm) {
+	    cm.toggleComment();
+	  };
+	
+	  CodeMirror.defineExtension("toggleComment", function(options) {
+	    if (!options) options = noOptions;
+	    var cm = this;
+	    var minLine = Infinity, ranges = this.listSelections(), mode = null;
+	    for (var i = ranges.length - 1; i >= 0; i--) {
+	      var from = ranges[i].from(), to = ranges[i].to();
+	      if (from.line >= minLine) continue;
+	      if (to.line >= minLine) to = Pos(minLine, 0);
+	      minLine = from.line;
+	      if (mode == null) {
+	        if (cm.uncomment(from, to, options)) mode = "un";
+	        else { cm.lineComment(from, to, options); mode = "line"; }
+	      } else if (mode == "un") {
+	        cm.uncomment(from, to, options);
+	      } else {
+	        cm.lineComment(from, to, options);
+	      }
+	    }
+	  });
+	
+	  // Rough heuristic to try and detect lines that are part of multi-line string
+	  function probablyInsideString(cm, pos, line) {
+	    return /\bstring\b/.test(cm.getTokenTypeAt(Pos(pos.line, 0))) && !/^[\'\"`]/.test(line)
+	  }
+	
+	  CodeMirror.defineExtension("lineComment", function(from, to, options) {
+	    if (!options) options = noOptions;
+	    var self = this, mode = self.getModeAt(from);
+	    var firstLine = self.getLine(from.line);
+	    if (firstLine == null || probablyInsideString(self, from, firstLine)) return;
+	
+	    var commentString = options.lineComment || mode.lineComment;
+	    if (!commentString) {
+	      if (options.blockCommentStart || mode.blockCommentStart) {
+	        options.fullLines = true;
+	        self.blockComment(from, to, options);
+	      }
+	      return;
+	    }
+	
+	    var end = Math.min(to.ch != 0 || to.line == from.line ? to.line + 1 : to.line, self.lastLine() + 1);
+	    var pad = options.padding == null ? " " : options.padding;
+	    var blankLines = options.commentBlankLines || from.line == to.line;
+	
+	    self.operation(function() {
+	      if (options.indent) {
+	        var baseString = null;
+	        for (var i = from.line; i < end; ++i) {
+	          var line = self.getLine(i);
+	          var whitespace = line.slice(0, firstNonWS(line));
+	          if (baseString == null || baseString.length > whitespace.length) {
+	            baseString = whitespace;
+	          }
+	        }
+	        for (var i = from.line; i < end; ++i) {
+	          var line = self.getLine(i), cut = baseString.length;
+	          if (!blankLines && !nonWS.test(line)) continue;
+	          if (line.slice(0, cut) != baseString) cut = firstNonWS(line);
+	          self.replaceRange(baseString + commentString + pad, Pos(i, 0), Pos(i, cut));
+	        }
+	      } else {
+	        for (var i = from.line; i < end; ++i) {
+	          if (blankLines || nonWS.test(self.getLine(i)))
+	            self.replaceRange(commentString + pad, Pos(i, 0));
+	        }
+	      }
+	    });
+	  });
+	
+	  CodeMirror.defineExtension("blockComment", function(from, to, options) {
+	    if (!options) options = noOptions;
+	    var self = this, mode = self.getModeAt(from);
+	    var startString = options.blockCommentStart || mode.blockCommentStart;
+	    var endString = options.blockCommentEnd || mode.blockCommentEnd;
+	    if (!startString || !endString) {
+	      if ((options.lineComment || mode.lineComment) && options.fullLines != false)
+	        self.lineComment(from, to, options);
+	      return;
+	    }
+	    if (/\bcomment\b/.test(self.getTokenTypeAt(Pos(from.line, 0)))) return
+	
+	    var end = Math.min(to.line, self.lastLine());
+	    if (end != from.line && to.ch == 0 && nonWS.test(self.getLine(end))) --end;
+	
+	    var pad = options.padding == null ? " " : options.padding;
+	    if (from.line > end) return;
+	
+	    self.operation(function() {
+	      if (options.fullLines != false) {
+	        var lastLineHasText = nonWS.test(self.getLine(end));
+	        self.replaceRange(pad + endString, Pos(end));
+	        self.replaceRange(startString + pad, Pos(from.line, 0));
+	        var lead = options.blockCommentLead || mode.blockCommentLead;
+	        if (lead != null) for (var i = from.line + 1; i <= end; ++i)
+	          if (i != end || lastLineHasText)
+	            self.replaceRange(lead + pad, Pos(i, 0));
+	      } else {
+	        self.replaceRange(endString, to);
+	        self.replaceRange(startString, from);
+	      }
+	    });
+	  });
+	
+	  CodeMirror.defineExtension("uncomment", function(from, to, options) {
+	    if (!options) options = noOptions;
+	    var self = this, mode = self.getModeAt(from);
+	    var end = Math.min(to.ch != 0 || to.line == from.line ? to.line : to.line - 1, self.lastLine()), start = Math.min(from.line, end);
+	
+	    // Try finding line comments
+	    var lineString = options.lineComment || mode.lineComment, lines = [];
+	    var pad = options.padding == null ? " " : options.padding, didSomething;
+	    lineComment: {
+	      if (!lineString) break lineComment;
+	      for (var i = start; i <= end; ++i) {
+	        var line = self.getLine(i);
+	        var found = line.indexOf(lineString);
+	        if (found > -1 && !/comment/.test(self.getTokenTypeAt(Pos(i, found + 1)))) found = -1;
+	        if (found == -1 && nonWS.test(line)) break lineComment;
+	        if (found > -1 && nonWS.test(line.slice(0, found))) break lineComment;
+	        lines.push(line);
+	      }
+	      self.operation(function() {
+	        for (var i = start; i <= end; ++i) {
+	          var line = lines[i - start];
+	          var pos = line.indexOf(lineString), endPos = pos + lineString.length;
+	          if (pos < 0) continue;
+	          if (line.slice(endPos, endPos + pad.length) == pad) endPos += pad.length;
+	          didSomething = true;
+	          self.replaceRange("", Pos(i, pos), Pos(i, endPos));
+	        }
+	      });
+	      if (didSomething) return true;
+	    }
+	
+	    // Try block comments
+	    var startString = options.blockCommentStart || mode.blockCommentStart;
+	    var endString = options.blockCommentEnd || mode.blockCommentEnd;
+	    if (!startString || !endString) return false;
+	    var lead = options.blockCommentLead || mode.blockCommentLead;
+	    var startLine = self.getLine(start), open = startLine.indexOf(startString)
+	    if (open == -1) return false
+	    var endLine = end == start ? startLine : self.getLine(end)
+	    var close = endLine.indexOf(endString, end == start ? open + startString.length : 0);
+	    if (close == -1 && start != end) {
+	      endLine = self.getLine(--end);
+	      close = endLine.indexOf(endString);
+	    }
+	    if (close == -1 ||
+	        !/comment/.test(self.getTokenTypeAt(Pos(start, open + 1))) ||
+	        !/comment/.test(self.getTokenTypeAt(Pos(end, close + 1))))
+	      return false;
+	
+	    // Avoid killing block comments completely outside the selection.
+	    // Positions of the last startString before the start of the selection, and the first endString after it.
+	    var lastStart = startLine.lastIndexOf(startString, from.ch);
+	    var firstEnd = lastStart == -1 ? -1 : startLine.slice(0, from.ch).indexOf(endString, lastStart + startString.length);
+	    if (lastStart != -1 && firstEnd != -1 && firstEnd + endString.length != from.ch) return false;
+	    // Positions of the first endString after the end of the selection, and the last startString before it.
+	    firstEnd = endLine.indexOf(endString, to.ch);
+	    var almostLastStart = endLine.slice(to.ch).lastIndexOf(startString, firstEnd - to.ch);
+	    lastStart = (firstEnd == -1 || almostLastStart == -1) ? -1 : to.ch + almostLastStart;
+	    if (firstEnd != -1 && lastStart != -1 && lastStart != to.ch) return false;
+	
+	    self.operation(function() {
+	      self.replaceRange("", Pos(end, close - (pad && endLine.slice(close - pad.length, close) == pad ? pad.length : 0)),
+	                        Pos(end, close + endString.length));
+	      var openEnd = open + startString.length;
+	      if (pad && startLine.slice(openEnd, openEnd + pad.length) == pad) openEnd += pad.length;
+	      self.replaceRange("", Pos(start, open), Pos(start, openEnd));
+	      if (lead) for (var i = start + 1; i <= end; ++i) {
+	        var line = self.getLine(i), found = line.indexOf(lead);
+	        if (found == -1 || nonWS.test(line.slice(0, found))) continue;
+	        var foundEnd = found + lead.length;
+	        if (pad && line.slice(foundEnd, foundEnd + pad.length) == pad) foundEnd += pad.length;
+	        self.replaceRange("", Pos(i, found), Pos(i, foundEnd));
+	      }
+	    });
+	    return true;
+	  });
+	});
+
+
+/***/ },
+/* 213 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// custom mode
 	
 	'use strict';
@@ -32962,13 +33174,13 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /***/ },
-/* 213 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(214);
+	var content = __webpack_require__(215);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(187)(content, {});
@@ -32988,7 +33200,7 @@
 	}
 
 /***/ },
-/* 214 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(186)();
@@ -33002,13 +33214,13 @@
 
 
 /***/ },
-/* 215 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(216);
+	var content = __webpack_require__(217);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(187)(content, {});
@@ -33028,7 +33240,7 @@
 	}
 
 /***/ },
-/* 216 */
+/* 217 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(186)();
@@ -33042,13 +33254,13 @@
 
 
 /***/ },
-/* 217 */
+/* 218 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(218);
+	var content = __webpack_require__(219);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(187)(content, {});
@@ -33068,7 +33280,7 @@
 	}
 
 /***/ },
-/* 218 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(186)();
@@ -33082,7 +33294,7 @@
 
 
 /***/ },
-/* 219 */
+/* 220 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -33102,11 +33314,11 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _frame = __webpack_require__(220);
+	var _frame = __webpack_require__(221);
 	
 	var _frame2 = _interopRequireDefault(_frame);
 	
-	__webpack_require__(223);
+	__webpack_require__(224);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -33226,7 +33438,7 @@
 	exports.default = SudoPrompt;
 
 /***/ },
-/* 220 */
+/* 221 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -33246,7 +33458,7 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	__webpack_require__(221);
+	__webpack_require__(222);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -33351,13 +33563,13 @@
 	exports.default = Frame;
 
 /***/ },
-/* 221 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(222);
+	var content = __webpack_require__(223);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(187)(content, {});
@@ -33377,7 +33589,7 @@
 	}
 
 /***/ },
-/* 222 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(186)();
@@ -33391,13 +33603,13 @@
 
 
 /***/ },
-/* 223 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(224);
+	var content = __webpack_require__(225);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(187)(content, {});
@@ -33417,7 +33629,7 @@
 	}
 
 /***/ },
-/* 224 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(186)();
@@ -33431,7 +33643,7 @@
 
 
 /***/ },
-/* 225 */
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -33453,7 +33665,7 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _frame = __webpack_require__(220);
+	var _frame = __webpack_require__(221);
 	
 	var _frame2 = _interopRequireDefault(_frame);
 	
@@ -33461,7 +33673,7 @@
 	
 	var _classnames2 = _interopRequireDefault(_classnames);
 	
-	__webpack_require__(226);
+	__webpack_require__(227);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -33829,13 +34041,13 @@
 	exports.default = EditPrompt;
 
 /***/ },
-/* 226 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(227);
+	var content = __webpack_require__(228);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(187)(content, {});
@@ -33855,7 +34067,7 @@
 	}
 
 /***/ },
-/* 227 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(186)();
@@ -33869,7 +34081,7 @@
 
 
 /***/ },
-/* 228 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -33889,13 +34101,13 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _frame = __webpack_require__(220);
+	var _frame = __webpack_require__(221);
 	
 	var _frame2 = _interopRequireDefault(_frame);
 	
-	__webpack_require__(229);
+	__webpack_require__(230);
 	
-	var _lang = __webpack_require__(231);
+	var _lang = __webpack_require__(232);
 	
 	var _lang2 = _interopRequireDefault(_lang);
 	
@@ -34150,13 +34362,13 @@
 	exports.default = PreferencesPrompt;
 
 /***/ },
-/* 229 */
+/* 230 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(230);
+	var content = __webpack_require__(231);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(187)(content, {});
@@ -34176,7 +34388,7 @@
 	}
 
 /***/ },
-/* 230 */
+/* 231 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(186)();
@@ -34190,7 +34402,7 @@
 
 
 /***/ },
-/* 231 */
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -34201,8 +34413,8 @@
 	"use strict";
 	
 	var languages = {
-	    'en': __webpack_require__(232).content,
-	    'cn': __webpack_require__(233).content
+	    'en': __webpack_require__(233).content,
+	    'cn': __webpack_require__(234).content
 	};
 	
 	module.exports = {
@@ -34231,7 +34443,7 @@
 	};
 
 /***/ },
-/* 232 */
+/* 233 */
 /***/ function(module, exports) {
 
 	/**
@@ -34308,7 +34520,7 @@
 	};
 
 /***/ },
-/* 233 */
+/* 234 */
 /***/ function(module, exports) {
 
 	/**
@@ -34385,13 +34597,13 @@
 	};
 
 /***/ },
-/* 234 */
+/* 235 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(235);
+	var content = __webpack_require__(236);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(187)(content, {});
@@ -34411,7 +34623,7 @@
 	}
 
 /***/ },
-/* 235 */
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(186)();
@@ -34422,218 +34634,6 @@
 	exports.push([module.id, "html,\nbody {\n  margin: 0;\n  padding: 0;\n  height: 100%;\n  font-size: 12px;\n  font-family: Arial, Helvetica, sans-serif;\n  color: #212121;\n  line-height: 20px;\n  background: #fff;\n}\na {\n  text-decoration: none;\n}\n#app {\n  height: 100%;\n}\n", ""]);
 	
 	// exports
-
-
-/***/ },
-/* 236 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// CodeMirror, copyright (c) by Marijn Haverbeke and others
-	// Distributed under an MIT license: http://codemirror.net/LICENSE
-	
-	(function(mod) {
-	  if (true) // CommonJS
-	    mod(__webpack_require__(211));
-	  else if (typeof define == "function" && define.amd) // AMD
-	    define(["../../lib/codemirror"], mod);
-	  else // Plain browser env
-	    mod(CodeMirror);
-	})(function(CodeMirror) {
-	  "use strict";
-	
-	  var noOptions = {};
-	  var nonWS = /[^\s\u00a0]/;
-	  var Pos = CodeMirror.Pos;
-	
-	  function firstNonWS(str) {
-	    var found = str.search(nonWS);
-	    return found == -1 ? 0 : found;
-	  }
-	
-	  CodeMirror.commands.toggleComment = function(cm) {
-	    cm.toggleComment();
-	  };
-	
-	  CodeMirror.defineExtension("toggleComment", function(options) {
-	    if (!options) options = noOptions;
-	    var cm = this;
-	    var minLine = Infinity, ranges = this.listSelections(), mode = null;
-	    for (var i = ranges.length - 1; i >= 0; i--) {
-	      var from = ranges[i].from(), to = ranges[i].to();
-	      if (from.line >= minLine) continue;
-	      if (to.line >= minLine) to = Pos(minLine, 0);
-	      minLine = from.line;
-	      if (mode == null) {
-	        if (cm.uncomment(from, to, options)) mode = "un";
-	        else { cm.lineComment(from, to, options); mode = "line"; }
-	      } else if (mode == "un") {
-	        cm.uncomment(from, to, options);
-	      } else {
-	        cm.lineComment(from, to, options);
-	      }
-	    }
-	  });
-	
-	  // Rough heuristic to try and detect lines that are part of multi-line string
-	  function probablyInsideString(cm, pos, line) {
-	    return /\bstring\b/.test(cm.getTokenTypeAt(Pos(pos.line, 0))) && !/^[\'\"`]/.test(line)
-	  }
-	
-	  CodeMirror.defineExtension("lineComment", function(from, to, options) {
-	    if (!options) options = noOptions;
-	    var self = this, mode = self.getModeAt(from);
-	    var firstLine = self.getLine(from.line);
-	    if (firstLine == null || probablyInsideString(self, from, firstLine)) return;
-	
-	    var commentString = options.lineComment || mode.lineComment;
-	    if (!commentString) {
-	      if (options.blockCommentStart || mode.blockCommentStart) {
-	        options.fullLines = true;
-	        self.blockComment(from, to, options);
-	      }
-	      return;
-	    }
-	
-	    var end = Math.min(to.ch != 0 || to.line == from.line ? to.line + 1 : to.line, self.lastLine() + 1);
-	    var pad = options.padding == null ? " " : options.padding;
-	    var blankLines = options.commentBlankLines || from.line == to.line;
-	
-	    self.operation(function() {
-	      if (options.indent) {
-	        var baseString = null;
-	        for (var i = from.line; i < end; ++i) {
-	          var line = self.getLine(i);
-	          var whitespace = line.slice(0, firstNonWS(line));
-	          if (baseString == null || baseString.length > whitespace.length) {
-	            baseString = whitespace;
-	          }
-	        }
-	        for (var i = from.line; i < end; ++i) {
-	          var line = self.getLine(i), cut = baseString.length;
-	          if (!blankLines && !nonWS.test(line)) continue;
-	          if (line.slice(0, cut) != baseString) cut = firstNonWS(line);
-	          self.replaceRange(baseString + commentString + pad, Pos(i, 0), Pos(i, cut));
-	        }
-	      } else {
-	        for (var i = from.line; i < end; ++i) {
-	          if (blankLines || nonWS.test(self.getLine(i)))
-	            self.replaceRange(commentString + pad, Pos(i, 0));
-	        }
-	      }
-	    });
-	  });
-	
-	  CodeMirror.defineExtension("blockComment", function(from, to, options) {
-	    if (!options) options = noOptions;
-	    var self = this, mode = self.getModeAt(from);
-	    var startString = options.blockCommentStart || mode.blockCommentStart;
-	    var endString = options.blockCommentEnd || mode.blockCommentEnd;
-	    if (!startString || !endString) {
-	      if ((options.lineComment || mode.lineComment) && options.fullLines != false)
-	        self.lineComment(from, to, options);
-	      return;
-	    }
-	    if (/\bcomment\b/.test(self.getTokenTypeAt(Pos(from.line, 0)))) return
-	
-	    var end = Math.min(to.line, self.lastLine());
-	    if (end != from.line && to.ch == 0 && nonWS.test(self.getLine(end))) --end;
-	
-	    var pad = options.padding == null ? " " : options.padding;
-	    if (from.line > end) return;
-	
-	    self.operation(function() {
-	      if (options.fullLines != false) {
-	        var lastLineHasText = nonWS.test(self.getLine(end));
-	        self.replaceRange(pad + endString, Pos(end));
-	        self.replaceRange(startString + pad, Pos(from.line, 0));
-	        var lead = options.blockCommentLead || mode.blockCommentLead;
-	        if (lead != null) for (var i = from.line + 1; i <= end; ++i)
-	          if (i != end || lastLineHasText)
-	            self.replaceRange(lead + pad, Pos(i, 0));
-	      } else {
-	        self.replaceRange(endString, to);
-	        self.replaceRange(startString, from);
-	      }
-	    });
-	  });
-	
-	  CodeMirror.defineExtension("uncomment", function(from, to, options) {
-	    if (!options) options = noOptions;
-	    var self = this, mode = self.getModeAt(from);
-	    var end = Math.min(to.ch != 0 || to.line == from.line ? to.line : to.line - 1, self.lastLine()), start = Math.min(from.line, end);
-	
-	    // Try finding line comments
-	    var lineString = options.lineComment || mode.lineComment, lines = [];
-	    var pad = options.padding == null ? " " : options.padding, didSomething;
-	    lineComment: {
-	      if (!lineString) break lineComment;
-	      for (var i = start; i <= end; ++i) {
-	        var line = self.getLine(i);
-	        var found = line.indexOf(lineString);
-	        if (found > -1 && !/comment/.test(self.getTokenTypeAt(Pos(i, found + 1)))) found = -1;
-	        if (found == -1 && nonWS.test(line)) break lineComment;
-	        if (found > -1 && nonWS.test(line.slice(0, found))) break lineComment;
-	        lines.push(line);
-	      }
-	      self.operation(function() {
-	        for (var i = start; i <= end; ++i) {
-	          var line = lines[i - start];
-	          var pos = line.indexOf(lineString), endPos = pos + lineString.length;
-	          if (pos < 0) continue;
-	          if (line.slice(endPos, endPos + pad.length) == pad) endPos += pad.length;
-	          didSomething = true;
-	          self.replaceRange("", Pos(i, pos), Pos(i, endPos));
-	        }
-	      });
-	      if (didSomething) return true;
-	    }
-	
-	    // Try block comments
-	    var startString = options.blockCommentStart || mode.blockCommentStart;
-	    var endString = options.blockCommentEnd || mode.blockCommentEnd;
-	    if (!startString || !endString) return false;
-	    var lead = options.blockCommentLead || mode.blockCommentLead;
-	    var startLine = self.getLine(start), open = startLine.indexOf(startString)
-	    if (open == -1) return false
-	    var endLine = end == start ? startLine : self.getLine(end)
-	    var close = endLine.indexOf(endString, end == start ? open + startString.length : 0);
-	    if (close == -1 && start != end) {
-	      endLine = self.getLine(--end);
-	      close = endLine.indexOf(endString);
-	    }
-	    if (close == -1 ||
-	        !/comment/.test(self.getTokenTypeAt(Pos(start, open + 1))) ||
-	        !/comment/.test(self.getTokenTypeAt(Pos(end, close + 1))))
-	      return false;
-	
-	    // Avoid killing block comments completely outside the selection.
-	    // Positions of the last startString before the start of the selection, and the first endString after it.
-	    var lastStart = startLine.lastIndexOf(startString, from.ch);
-	    var firstEnd = lastStart == -1 ? -1 : startLine.slice(0, from.ch).indexOf(endString, lastStart + startString.length);
-	    if (lastStart != -1 && firstEnd != -1 && firstEnd + endString.length != from.ch) return false;
-	    // Positions of the first endString after the end of the selection, and the last startString before it.
-	    firstEnd = endLine.indexOf(endString, to.ch);
-	    var almostLastStart = endLine.slice(to.ch).lastIndexOf(startString, firstEnd - to.ch);
-	    lastStart = (firstEnd == -1 || almostLastStart == -1) ? -1 : to.ch + almostLastStart;
-	    if (firstEnd != -1 && lastStart != -1 && lastStart != to.ch) return false;
-	
-	    self.operation(function() {
-	      self.replaceRange("", Pos(end, close - (pad && endLine.slice(close - pad.length, close) == pad ? pad.length : 0)),
-	                        Pos(end, close + endString.length));
-	      var openEnd = open + startString.length;
-	      if (pad && startLine.slice(openEnd, openEnd + pad.length) == pad) openEnd += pad.length;
-	      self.replaceRange("", Pos(start, open), Pos(start, openEnd));
-	      if (lead) for (var i = start + 1; i <= end; ++i) {
-	        var line = self.getLine(i), found = line.indexOf(lead);
-	        if (found == -1 || nonWS.test(line.slice(0, found))) continue;
-	        var foundEnd = found + lead.length;
-	        if (pad && line.slice(foundEnd, foundEnd + pad.length) == pad) foundEnd += pad.length;
-	        self.replaceRange("", Pos(i, found), Pos(i, foundEnd));
-	      }
-	    });
-	    return true;
-	  });
-	});
 
 
 /***/ }
