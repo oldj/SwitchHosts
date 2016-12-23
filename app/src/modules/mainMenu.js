@@ -101,6 +101,13 @@ exports.init = function (app, sys_lang = 'en') {
                     // ipcMain.emit('to_search');
                     app.mainWindow.webContents.send('to_search');
                 }
+            }, {
+                label: lang.comment,
+                accelerator: 'CommandOrControl+/',
+                click () {
+                    // ipcMain.emit('to_search');
+                    app.mainWindow.webContents.send('to_comment');
+                }
             }]
         }, {
             label: lang.view,
