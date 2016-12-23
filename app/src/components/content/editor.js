@@ -1,5 +1,4 @@
 /**
- * editor
  * @author oldj
  * @blog http://oldj.net
  */
@@ -8,10 +7,12 @@
 
 import React from 'react';
 import CodeMirror from 'codemirror';
+// import '../../../node_modules/codemirror/addon/comment/comment';
+import 'codemirror/addon/comment/comment';
 import classnames from 'classnames';
 import modeHost from './cm_hl';
 import m_kw from '../../libs/kw';
-import '../../../node_modules/codemirror/lib/codemirror.css';
+import 'codemirror/lib/codemirror.css';
 import './editor.less'
 
 export default class Editor extends React.Component {
@@ -50,6 +51,20 @@ export default class Editor extends React.Component {
         this.props.setValue(v);
     }
 
+    toComment() {
+        let doc = this.codemirror.getDoc();
+        let cur = doc.getCursor();
+        let line = cur.line;
+        let info = doc.lineInfo(line);
+        this.codemirror.toggleComment({
+            line: line,
+            cur: 0
+        }, {
+            line: line,
+            cur: info.text.length
+        });
+    }
+
     componentDidMount() {
         // console.log(this.cnt_node, this.cnt_node.value);
         this.codemirror = CodeMirror.fromTextArea(this.cnt_node, {
@@ -81,6 +96,10 @@ export default class Editor extends React.Component {
             }
             this.codemirror.getDoc().replaceRange(new_ln, {line: info.line, ch: 0}, {line: info.line, ch: ln.length});
             //app.caculateHosts();
+        });
+
+        ipcRenderer.on('to_comment', () => {
+            this.toComment();
         });
     }
 

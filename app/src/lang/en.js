@@ -8,6 +8,7 @@
 exports.content = {
     _lang_name: 'English'
     , add: 'Add'
+    , comment: 'Comment'
     , new: 'New'
     , quit: 'Quit'
     , cancel: 'Cancel'

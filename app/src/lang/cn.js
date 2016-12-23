@@ -8,6 +8,7 @@
 exports.content = {
     _lang_name: '简体中文'
     , add: '添加'
+    , comment: '注释'
     , new: '新建'
     , quit: '退出'
     , cancel: '取消'
