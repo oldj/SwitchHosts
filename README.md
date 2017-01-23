@@ -71,7 +71,7 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
 
     ```bash
     # zip
-    gulp zip  # the zipped files will be in ./dist
+    npm run zip  # the zipped files will be in ./dist
     ```
 
 ## 更新历史：

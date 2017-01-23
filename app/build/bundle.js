@@ -716,6 +716,17 @@
 	  }
 	};
 	
+	var fiveArgumentPooler = function (a1, a2, a3, a4, a5) {
+	  var Klass = this;
+	  if (Klass.instancePool.length) {
+	    var instance = Klass.instancePool.pop();
+	    Klass.call(instance, a1, a2, a3, a4, a5);
+	    return instance;
+	  } else {
+	    return new Klass(a1, a2, a3, a4, a5);
+	  }
+	};
+	
 	var standardReleaser = function (instance) {
 	  var Klass = this;
 	  !(instance instanceof Klass) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Trying to release an instance into a pool of a different type.') : _prodInvariant('25') : void 0;
@@ -755,7 +766,8 @@
 	  oneArgumentPooler: oneArgumentPooler,
 	  twoArgumentPooler: twoArgumentPooler,
 	  threeArgumentPooler: threeArgumentPooler,
-	  fourArgumentPooler: fourArgumentPooler
+	  fourArgumentPooler: fourArgumentPooler,
+	  fiveArgumentPooler: fiveArgumentPooler
 	};
 	
 	module.exports = PooledClass;
@@ -831,18 +843,12 @@
 	 * will remain to ensure logic does not differ in production.
 	 */
 	
-	var validateFormat = function validateFormat(format) {};
-	
-	if (process.env.NODE_ENV !== 'production') {
-	  validateFormat = function validateFormat(format) {
+	function invariant(condition, format, a, b, c, d, e, f) {
+	  if (process.env.NODE_ENV !== 'production') {
 	    if (format === undefined) {
 	      throw new Error('invariant requires an error message argument');
 	    }
-	  };
-	}
-	
-	function invariant(condition, format, a, b, c, d, e, f) {
-	  validateFormat(format);
+	  }
 	
 	  if (!condition) {
 	    var error;
@@ -3095,14 +3101,7 @@
 	    // We warn in this case but don't throw. We expect the element creation to
 	    // succeed and there will likely be errors in render.
 	    if (!validType) {
-	      if (typeof type !== 'function' && typeof type !== 'string') {
-	        var info = '';
-	        if (type === undefined || typeof type === 'object' && type !== null && Object.keys(type).length === 0) {
-	          info += ' You likely forgot to export your component from the file ' + 'it\'s defined in.';
-	        }
-	        info += getDeclarationErrorAddendum();
-	        process.env.NODE_ENV !== 'production' ? warning(false, 'React.createElement: type is invalid -- expected a string (for ' + 'built-in components) or a class/function (for composite ' + 'components) but got: %s.%s', type == null ? type : typeof type, info) : void 0;
-	      }
+	      process.env.NODE_ENV !== 'production' ? warning(false, 'React.createElement: type should not be null, undefined, boolean, or ' + 'number. It should be a string (for DOM elements) or a ReactClass ' + '(for composite components).%s', getDeclarationErrorAddendum()) : void 0;
 	    }
 	
 	    var element = ReactElement.createElement.apply(this, arguments);
@@ -4073,7 +4072,7 @@
 	
 	'use strict';
 	
-	module.exports = '15.4.2';
+	module.exports = '15.4.1';
 
 /***/ },
 /* 33 */
@@ -4272,13 +4271,6 @@
 	var internalInstanceKey = '__reactInternalInstance$' + Math.random().toString(36).slice(2);
 	
 	/**
-	 * Check if a given node should be cached.
-	 */
-	function shouldPrecacheNode(node, nodeID) {
-	  return node.nodeType === 1 && node.getAttribute(ATTR_NAME) === String(nodeID) || node.nodeType === 8 && node.nodeValue === ' react-text: ' + nodeID + ' ' || node.nodeType === 8 && node.nodeValue === ' react-empty: ' + nodeID + ' ';
-	}
-	
-	/**
 	 * Drill down (through composites and empty components) until we get a host or
 	 * host text component.
 	 *
@@ -4343,7 +4335,7 @@
 	    }
 	    // We assume the child nodes are in the same order as the child instances.
 	    for (; childNode !== null; childNode = childNode.nextSibling) {
-	      if (shouldPrecacheNode(childNode, childID)) {
+	      if (childNode.nodeType === 1 && childNode.getAttribute(ATTR_NAME) === String(childID) || childNode.nodeType === 8 && childNode.nodeValue === ' react-text: ' + childID + ' ' || childNode.nodeType === 8 && childNode.nodeValue === ' react-empty: ' + childID + ' ') {
 	        precacheNode(childInst, childNode);
 	        continue outer;
 	      }
@@ -6584,6 +6576,17 @@
 	  }
 	};
 	
+	var fiveArgumentPooler = function (a1, a2, a3, a4, a5) {
+	  var Klass = this;
+	  if (Klass.instancePool.length) {
+	    var instance = Klass.instancePool.pop();
+	    Klass.call(instance, a1, a2, a3, a4, a5);
+	    return instance;
+	  } else {
+	    return new Klass(a1, a2, a3, a4, a5);
+	  }
+	};
+	
 	var standardReleaser = function (instance) {
 	  var Klass = this;
 	  !(instance instanceof Klass) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Trying to release an instance into a pool of a different type.') : _prodInvariant('25') : void 0;
@@ -6623,7 +6626,8 @@
 	  oneArgumentPooler: oneArgumentPooler,
 	  twoArgumentPooler: twoArgumentPooler,
 	  threeArgumentPooler: threeArgumentPooler,
-	  fourArgumentPooler: fourArgumentPooler
+	  fourArgumentPooler: fourArgumentPooler,
+	  fiveArgumentPooler: fiveArgumentPooler
 	};
 	
 	module.exports = PooledClass;
@@ -11441,18 +11445,12 @@
 	    } else {
 	      var contentToUse = CONTENT_TYPES[typeof props.children] ? props.children : null;
 	      var childrenToUse = contentToUse != null ? null : props.children;
-	      // TODO: Validate that text is allowed as a child of this node
 	      if (contentToUse != null) {
-	        // Avoid setting textContent when the text is empty. In IE11 setting
-	        // textContent on a text area will cause the placeholder to not
-	        // show within the textarea until it has been focused and blurred again.
-	        // https://github.com/facebook/react/issues/6731#issuecomment-254874553
-	        if (contentToUse !== '') {
-	          if (process.env.NODE_ENV !== 'production') {
-	            setAndValidateContentChildDev.call(this, contentToUse);
-	          }
-	          DOMLazyTree.queueText(lazyTree, contentToUse);
+	        // TODO: Validate that text is allowed as a child of this node
+	        if (process.env.NODE_ENV !== 'production') {
+	          setAndValidateContentChildDev.call(this, contentToUse);
 	        }
+	        DOMLazyTree.queueText(lazyTree, contentToUse);
 	      } else if (childrenToUse != null) {
 	        var mountImages = this.mountChildren(childrenToUse, transaction, context);
 	        for (var i = 0; i < mountImages.length; i++) {
@@ -13372,17 +13370,7 @@
 	      }
 	    } else {
 	      if (props.value == null && props.defaultValue != null) {
-	        // In Chrome, assigning defaultValue to certain input types triggers input validation.
-	        // For number inputs, the display value loses trailing decimal points. For email inputs,
-	        // Chrome raises "The specified value <x> is not a valid email address".
-	        //
-	        // Here we check to see if the defaultValue has actually changed, avoiding these problems
-	        // when the user is inputting text
-	        //
-	        // https://github.com/facebook/react/issues/7253
-	        if (node.defaultValue !== '' + props.defaultValue) {
-	          node.defaultValue = '' + props.defaultValue;
-	        }
+	        node.defaultValue = '' + props.defaultValue;
 	      }
 	      if (props.checked == null && props.defaultChecked != null) {
 	        node.defaultChecked = !!props.defaultChecked;
@@ -14129,15 +14117,9 @@
 	    // This is in postMount because we need access to the DOM node, which is not
 	    // available until after the component has mounted.
 	    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
-	    var textContent = node.textContent;
 	
-	    // Only set node.value if textContent is equal to the expected
-	    // initial value. In IE10/IE11 there is a bug where the placeholder attribute
-	    // will populate textContent as well.
-	    // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
-	    if (textContent === inst._wrapperState.initialValue) {
-	      node.value = textContent;
-	    }
+	    // Warning: node.value may be the empty string at this point (IE11) if placeholder is set.
+	    node.value = node.textContent; // Detach value from defaultValue
 	  }
 	};
 	
@@ -14939,17 +14921,7 @@
 	    instance = ReactEmptyComponent.create(instantiateReactComponent);
 	  } else if (typeof node === 'object') {
 	    var element = node;
-	    var type = element.type;
-	    if (typeof type !== 'function' && typeof type !== 'string') {
-	      var info = '';
-	      if (process.env.NODE_ENV !== 'production') {
-	        if (type === undefined || typeof type === 'object' && type !== null && Object.keys(type).length === 0) {
-	          info += ' You likely forgot to export your component from the file ' + 'it\'s defined in.';
-	        }
-	      }
-	      info += getDeclarationErrorAddendum(element._owner);
-	       true ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s', type == null ? type : typeof type, info) : _prodInvariant('130', type == null ? type : typeof type, info) : void 0;
-	    }
+	    !(element && (typeof element.type === 'function' || typeof element.type === 'string')) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s', element.type == null ? element.type : typeof element.type, getDeclarationErrorAddendum(element._owner)) : _prodInvariant('130', element.type == null ? element.type : typeof element.type, getDeclarationErrorAddendum(element._owner)) : void 0;
 	
 	    // Special case string values
 	    if (typeof element.type === 'string') {
@@ -15239,7 +15211,7 @@
 	      // Since plain JS classes are defined without any special initialization
 	      // logic, we can not catch common errors early. Therefore, we have to
 	      // catch them here, at initialization time, instead.
-	      process.env.NODE_ENV !== 'production' ? warning(!inst.getInitialState || inst.getInitialState.isReactClassApproved || inst.state, 'getInitialState was defined on %s, a plain JavaScript class. ' + 'This is only supported for classes created using React.createClass. ' + 'Did you mean to define a state property instead?', this.getName() || 'a component') : void 0;
+	      process.env.NODE_ENV !== 'production' ? warning(!inst.getInitialState || inst.getInitialState.isReactClassApproved, 'getInitialState was defined on %s, a plain JavaScript class. ' + 'This is only supported for classes created using React.createClass. ' + 'Did you mean to define a state property instead?', this.getName() || 'a component') : void 0;
 	      process.env.NODE_ENV !== 'production' ? warning(!inst.getDefaultProps || inst.getDefaultProps.isReactClassApproved, 'getDefaultProps was defined on %s, a plain JavaScript class. ' + 'This is only supported for classes created using React.createClass. ' + 'Use a static property to define defaultProps instead.', this.getName() || 'a component') : void 0;
 	      process.env.NODE_ENV !== 'production' ? warning(!inst.propTypes, 'propTypes was defined as an instance property on %s. Use a static ' + 'property to define propTypes instead.', this.getName() || 'a component') : void 0;
 	      process.env.NODE_ENV !== 'production' ? warning(!inst.contextTypes, 'contextTypes was defined as an instance property on %s. Use a ' + 'static property to define contextTypes instead.', this.getName() || 'a component') : void 0;
@@ -16243,11 +16215,14 @@
 	
 	'use strict';
 	
-	var _prodInvariant = __webpack_require__(37);
+	var _prodInvariant = __webpack_require__(37),
+	    _assign = __webpack_require__(6);
 	
 	var invariant = __webpack_require__(10);
 	
 	var genericComponentClass = null;
+	// This registry keeps track of wrapper classes around host tags.
+	var tagToComponentClass = {};
 	var textComponentClass = null;
 	
 	var ReactHostComponentInjection = {
@@ -16260,6 +16235,11 @@
 	  // rendered as props.
 	  injectTextComponentClass: function (componentClass) {
 	    textComponentClass = componentClass;
+	  },
+	  // This accepts a keyed object with classes as values. Each key represents a
+	  // tag. That particular tag will use this class instead of the generic one.
+	  injectComponentClasses: function (componentClasses) {
+	    _assign(tagToComponentClass, componentClasses);
 	  }
 	};
 	
@@ -21114,7 +21094,7 @@
 	
 	'use strict';
 	
-	module.exports = '15.4.2';
+	module.exports = '15.4.1';
 
 /***/ },
 /* 174 */
@@ -23389,7 +23369,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 1, 4180];
+	exports.version = [3, 2, 1, 4181];
 
 /***/ },
 /* 202 */
@@ -23440,7 +23420,7 @@
 	
 	
 	// module
-	exports.push([module.id, "\r\n@font-face {font-family: \"iconfont\";\r\n  src: url(" + __webpack_require__(205) + "); /* IE9*/\r\n  src: url(" + __webpack_require__(205) + "?#iefix) format('embedded-opentype'), \r\n  url(" + __webpack_require__(206) + ") format('woff'), \r\n  url(" + __webpack_require__(207) + ") format('truetype'), \r\n  url(" + __webpack_require__(208) + "#iconfont) format('svg'); /* iOS 4.1- */\r\n}\r\n\r\n.iconfont {\r\n  font-family:\"iconfont\" !important;\r\n  font-size:16px;\r\n  font-style:normal;\r\n  -webkit-font-smoothing: antialiased;\r\n  -webkit-text-stroke-width: 0.2px;\r\n  -moz-osx-font-smoothing: grayscale;\r\n}\r\n.icon-switchoff:before { content: \"\\E60D\"; }\r\n.icon-icon:before { content: \"\\E600\"; }\r\n.icon-warnfill:before { content: \"\\E607\"; }\r\n.icon-warn:before { content: \"\\E608\"; }\r\n.icon-refresh:before { content: \"\\E616\"; }\r\n.icon-ok:before { content: \"\\E604\"; }\r\n.icon-h:before { content: \"\\E617\"; }\r\n.icon-lock:before { content: \"\\E61D\"; }\r\n.icon-off:before { content: \"\\E613\"; }\r\n.icon-on:before { content: \"\\E614\"; }\r\n.icon-search:before { content: \"\\E61C\"; }\r\n.icon-edit:before { content: \"\\E609\"; }\r\n.icon-info:before { content: \"\\E601\"; }\r\n.icon-add-s:before { content: \"\\E612\"; }\r\n.icon-more:before { content: \"\\E602\"; }\r\n.icon-grid:before { content: \"\\E603\"; }\r\n.icon-movedown:before { content: \"\\E60A\"; }\r\n.icon-moveup:before { content: \"\\E60B\"; }\r\n.icon-add:before { content: \"\\E60C\"; }\r\n.icon-folder:before { content: \"\\E618\"; }\r\n.icon-files:before { content: \"\\E619\"; }\r\n.icon-lock2:before { content: \"\\E61E\"; }\r\n.icon-timescircle:before { content: \"\\E60E\"; }\r\n.icon-earth:before { content: \"\\E61A\"; }\r\n.icon-move:before { content: \"\\E60F\"; }\r\n.icon-delete:before { content: \"\\E610\"; }\r\n.icon-doc:before { content: \"\\E606\"; }\r\n.icon-line:before { content: \"\\E611\"; }\r\n.icon-file-box:before { content: \"\\E61B\"; }\r\n.icon-switchon:before { content: \"\\E615\"; }\r\n.icon-sysserver:before { content: \"\\E605\"; }\r\n", ""]);
+	exports.push([module.id, "\n@font-face {font-family: \"iconfont\";\n  src: url(" + __webpack_require__(205) + "); /* IE9*/\n  src: url(" + __webpack_require__(205) + "?#iefix) format('embedded-opentype'), \n  url(" + __webpack_require__(206) + ") format('woff'), \n  url(" + __webpack_require__(207) + ") format('truetype'), \n  url(" + __webpack_require__(208) + "#iconfont) format('svg'); /* iOS 4.1- */\n}\n\n.iconfont {\n  font-family:\"iconfont\" !important;\n  font-size:16px;\n  font-style:normal;\n  -webkit-font-smoothing: antialiased;\n  -webkit-text-stroke-width: 0.2px;\n  -moz-osx-font-smoothing: grayscale;\n}\n.icon-switchoff:before { content: \"\\E60D\"; }\n.icon-icon:before { content: \"\\E600\"; }\n.icon-warnfill:before { content: \"\\E607\"; }\n.icon-warn:before { content: \"\\E608\"; }\n.icon-refresh:before { content: \"\\E616\"; }\n.icon-ok:before { content: \"\\E604\"; }\n.icon-h:before { content: \"\\E617\"; }\n.icon-lock:before { content: \"\\E61D\"; }\n.icon-off:before { content: \"\\E613\"; }\n.icon-on:before { content: \"\\E614\"; }\n.icon-search:before { content: \"\\E61C\"; }\n.icon-edit:before { content: \"\\E609\"; }\n.icon-info:before { content: \"\\E601\"; }\n.icon-add-s:before { content: \"\\E612\"; }\n.icon-more:before { content: \"\\E602\"; }\n.icon-grid:before { content: \"\\E603\"; }\n.icon-movedown:before { content: \"\\E60A\"; }\n.icon-moveup:before { content: \"\\E60B\"; }\n.icon-add:before { content: \"\\E60C\"; }\n.icon-folder:before { content: \"\\E618\"; }\n.icon-files:before { content: \"\\E619\"; }\n.icon-lock2:before { content: \"\\E61E\"; }\n.icon-timescircle:before { content: \"\\E60E\"; }\n.icon-earth:before { content: \"\\E61A\"; }\n.icon-move:before { content: \"\\E60F\"; }\n.icon-delete:before { content: \"\\E610\"; }\n.icon-doc:before { content: \"\\E606\"; }\n.icon-line:before { content: \"\\E611\"; }\n.icon-file-box:before { content: \"\\E61B\"; }\n.icon-switchon:before { content: \"\\E615\"; }\n.icon-sysserver:before { content: \"\\E605\"; }\n", ""]);
 	
 	// exports
 
@@ -23467,7 +23447,7 @@
 /* 208 */
 /***/ function(module, exports) {
 
-	module.exports = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pg0KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIiA+DQo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+DQo8bWV0YWRhdGE+DQpDcmVhdGVkIGJ5IEZvbnRGb3JnZSAyMDEyMDczMSBhdCBTYXQgSmFuIDE2IDE1OjA5OjEwIDIwMTYNCiBCeSBBZHMNCjwvbWV0YWRhdGE+DQo8ZGVmcz4NCjxmb250IGlkPSJpY29uZm9udCIgaG9yaXotYWR2LXg9IjEwMjQiID4NCiAgPGZvbnQtZmFjZSANCiAgICBmb250LWZhbWlseT0iaWNvbmZvbnQiDQogICAgZm9udC13ZWlnaHQ9IjUwMCINCiAgICBmb250LXN0cmV0Y2g9Im5vcm1hbCINCiAgICB1bml0cy1wZXItZW09IjEwMjQiDQogICAgcGFub3NlLTE9IjIgMCA2IDMgMCAwIDAgMCAwIDAiDQogICAgYXNjZW50PSI4OTYiDQogICAgZGVzY2VudD0iLTEyOCINCiAgICB4LWhlaWdodD0iNzkyIg0KICAgIGJib3g9IjAgLTIxMiAxMDI0IDg5NiINCiAgICB1bmRlcmxpbmUtdGhpY2tuZXNzPSI1MCINCiAgICB1bmRlcmxpbmUtcG9zaXRpb249Ii0xMDAiDQogICAgdW5pY29kZS1yYW5nZT0iVSswMDc4LUU2MUUiDQogIC8+DQo8bWlzc2luZy1nbHlwaCBob3Jpei1hZHYteD0iMzc0IiANCmQ9Ik0zNCAwdjY4MmgyNzJ2LTY4MmgtMjcyek02OCAzNGgyMDR2NjE0aC0yMDR2LTYxNHoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9Ii5ub3RkZWYiIGhvcml6LWFkdi14PSIzNzQiIA0KZD0iTTM0IDB2NjgyaDI3MnYtNjgyaC0yNzJ6TTY4IDM0aDIwNHY2MTRoLTIwNHYtNjE0eiIgLz4NCiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0iLm51bGwiIGhvcml6LWFkdi14PSIwIiANCiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJub25tYXJraW5ncmV0dXJuIiBob3Jpei1hZHYteD0iMzQxIiANCiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ4IiB1bmljb2RlPSJ4IiBob3Jpei1hZHYteD0iMTAwMSIgDQpkPSJNMjgxIDU0M3EtMjcgLTEgLTUzIC0xaC04M3EtMTggMCAtMzYuNSAtNnQtMzIuNSAtMTguNXQtMjMgLTMydC05IC00NS41di03Nmg5MTJ2NDFxMCAxNiAtMC41IDMwdC0wLjUgMThxMCAxMyAtNSAyOXQtMTcgMjkuNXQtMzEuNSAyMi41dC00OS41IDloLTEzM3YtOTdoLTQzOHY5N3pNOTU1IDMxMHYtNTJxMCAtMjMgMC41IC01MnQwLjUgLTU4dC0xMC41IC00Ny41dC0yNiAtMzB0LTMzIC0xNnQtMzEuNSAtNC41cS0xNCAtMSAtMjkuNSAtMC41DQp0LTI5LjUgMC41aC0zMmwtNDUgMTI4aC00MzlsLTQ0IC0xMjhoLTI5aC0zNHEtMjAgMCAtNDUgMXEtMjUgMCAtNDEgOS41dC0yNS41IDIzdC0xMy41IDI5LjV0LTQgMzB2MTY3aDkxMXpNMTYzIDI0N3EtMTIgMCAtMjEgLTguNXQtOSAtMjEuNXQ5IC0yMS41dDIxIC04LjVxMTMgMCAyMiA4LjV0OSAyMS41dC05IDIxLjV0LTIyIDguNXpNMzE2IDEyM3EtOCAtMjYgLTE0IC00OHEtNSAtMTkgLTEwLjUgLTM3dC03LjUgLTI1dC0zIC0xNXQxIC0xNC41DQp0OS41IC0xMC41dDIxLjUgLTRoMzdoNjdoODFoODBoNjRoMzZxMjMgMCAzNCAxMnQyIDM4cS01IDEzIC05LjUgMzAuNXQtOS41IDM0LjVxLTUgMTkgLTExIDM5aC0zNjh6TTMzNiA0OTh2MjI4cTAgMTEgMi41IDIzdDEwIDIxLjV0MjAuNSAxNS41dDM0IDZoMTg4cTMxIDAgNTEuNSAtMTQuNXQyMC41IC01Mi41di0yMjdoLTMyN3oiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MDAiIHVuaWNvZGU9IiYjeGU2MDA7IiANCmQ9Ik00ODggNzQ1bDEzMiAtMjY5bDI5NyAtNDNsLTIxNSAtMjA5bDUxIC0yOTZsLTI2NSAxNDBsLTI2NiAtMTQwbDUxIDI5NmwtMjE1IDIwOWwyOTcgNDN6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjAxIiB1bmljb2RlPSImI3hlNjAxOyIgDQpkPSJNNTEyIC0yMHEtMTEwIDAgLTIwMyA1NHQtMTQ3IDE0N3QtNTQgMjAzdDU0IDIwM3QxNDcgMTQ3dDIwMyA1NHQyMDMgLTU0dDE0NyAtMTQ3dDU0IC0yMDN0LTU0IC0yMDN0LTE0NyAtMTQ3dC0yMDMgLTU0ek01NjcgNjA1cTAgNyAtNS41IDEyLjV0LTEyLjUgNS41aC03NHEtNyAwIC0xMi41IC01LjV0LTUuNSAtMTIuNXYtNzRxMCAtNCAxLjUgLTd0NCAtNS41dDUuNSAtNHQ3IC0xLjVoNzRxNyAwIDEyLjUgNXQ1LjUgMTN2NzR6TTU2NyA0MDINCnEwIDUgLTIuNSA5LjV0LTYuNSA3dC05IDIuNWgtNzRxLTcgMCAtMTIuNSAtNS41dC01LjUgLTEzLjV2LTIzOXEwIC01IDIuNSAtOXQ2LjUgLTYuNXQ5IC0yLjVoNzRxNyAwIDEyLjUgNS41dDUuNSAxMi41djIzOXoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MDIiIHVuaWNvZGU9IiYjeGU2MDI7IiANCmQ9Ik0xNzQuNSA1MDFxLTQxLjUgMCAtNzEgLTI5LjV0LTI5LjUgLTcxLjVxMCAtMjcgMTMuNSAtNTAuNXQzNi41IC0zN3Q1MC41IC0xMy41dDUxIDEzLjV0MzcgMzd0MTMuNSA1MC41cTAgNDIgLTMwIDcxLjV0LTcxLjUgMjkuNXpNNTExIDUwMXEtNDIgMCAtNzEuNSAtMjkuNXQtMjkuNSAtNzEuNXEwIC0yNyAxMy41IC01MC41dDM3IC0zN3Q1MC41IC0xMy41cTQyIDAgNzEuNSAyOS41dDI5LjUgNzEuNXEwIDEwIC0yIDIwdC02IDE5DQp0LTkuNSAxNy41dC0xMiAxNXQtMTQuNSAxMnQtMTcgOS41dC0xOSA2dC0yMSAyek04NDggNTAxcS00MiAwIC03MS41IC0yOS41dC0yOS41IC03MS41dDI5LjUgLTcxLjV0NzEuNSAtMjkuNXQ3MS41IDI5LjV0MjkuNSA3MS41dC0yOS41IDcxLjV0LTcxLjUgMjkuNXoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MDMiIHVuaWNvZGU9IiYjeGU2MDM7IiANCmQ9Ik02MDEgODMwaC0xNzlxLTEyIDAgLTIxIC05dC05IC0yMXYtMTc5cTAgLTEyIDkgLTIxdDIxIC05aDE3OXExMiAwIDIxIDl0OSAyMXYxNzlxMCA2IC0yLjUgMTEuNXQtNi41IDkuNXQtOS41IDYuNXQtMTEuNSAyLjV6TTkyOSA4MzBoLTE3OXEtMTIgMCAtMjEgLTl0LTkgLTIxdi0xNzlxMCAtMTIgOSAtMjF0MjEgLTloMTc5cTggMCAxNSA0dDExIDExdDQgMTV2MTc5cTAgMTIgLTkgMjF0LTIxIDl6TTI3MyA4MzBoLTE3OXEtMTIgMCAtMjEgLTkNCnQtOSAtMjF2LTE3OXEwIC0xMiA5IC0yMXQyMSAtOWgxNzlxNiAwIDExLjUgMi41dDkuNSA2LjV0Ni41IDkuNXQyLjUgMTEuNXYxNzlxMCAzIC0xIDYuNXQtMi41IDYuNXQtMy41IDUuNXQtNC41IDQuNXQtNS41IDMuNXQtNi41IDIuNXQtNi41IDF6TTYwMSA1MDJoLTE3OXEtMTIgMCAtMjEgLTl0LTkgLTIxdi0xNzlxMCAtMTMgOSAtMjEuNXQyMSAtOC41aDE3OXExMiAwIDIxIDguNXQ5IDIxLjV2MTc5cTAgNiAtMi41IDExLjV0LTYuNSA5LjUNCnQtOS41IDYuNXQtMTEuNSAyLjV6TTkyOSA1MDJoLTE3OXEtMTIgMCAtMjEgLTl0LTkgLTIxdi0xNzlxMCAtOCA0IC0xNXQxMSAtMTF0MTUgLTRoMTc5cTggMCAxNSA0dDExIDExdDQgMTV2MTc5cTAgMTIgLTkgMjF0LTIxIDl6TTI3MyA1MDJoLTE3OXEtOCAwIC0xNSAtNHQtMTEgLTExdC00IC0xNXYtMTc5cTAgLTEzIDkgLTIxLjV0MjEgLTguNWgxNzlxMTIgMCAyMSA4LjV0OSAyMS41djE3OXEwIDggLTQgMTV0LTExIDExdC0xNSA0ek02MDEgMTc0DQpoLTE3OXEtMTIgMCAtMjEgLTl0LTkgLTIxdi0xNzlxMCAtMTMgOSAtMjEuNXQyMSAtOC41aDE3OXE2IDAgMTEuNSAyLjV0OS41IDYuNXQ2LjUgOS41dDIuNSAxMS41djE3OXEwIDYgLTIuNSAxMS41dC02LjUgOS41dC05LjUgNi41dC0xMS41IDIuNXpNOTI5IDE3NGgtMTc5cS04IDAgLTE1IC00dC0xMSAtMTF0LTQgLTE1di0xNzlxMCAtMTMgOSAtMjEuNXQyMSAtOC41aDE3OXExMiAwIDIxIDguNXQ5IDIxLjV2MTc5cTAgMTIgLTkgMjF0LTIxIDl6DQpNMjczIDE3NGgtMTc5cS02IDAgLTExLjUgLTIuNXQtOS41IC02LjV0LTYuNSAtOS41dC0yLjUgLTExLjV2LTE3OXEwIC04IDQgLTE1dDExIC0xMXQxNSAtNGgxNzlxMTIgMCAyMSA4LjV0OSAyMS41djE3OXEwIDggLTQgMTV0LTExIDExdC0xNSA0eiIgLz4NCiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYwNCIgdW5pY29kZT0iJiN4ZTYwNDsiIA0KZD0iTTUxMiA3MDlxLTU2IDAgLTEwOSAtMTQuNXQtOTggLTQxdC04Mi41IC02NHQtNjQgLTgyLjV0LTQxIC05OHQtMTQuNSAtMTA5cTAgLTExMSA1NC41IC0yMDUuNXQxNDkgLTE0OXQyMDUuNSAtNTQuNXQyMDUuNSA1NC41dDE0OSAxNDl0NTQuNSAyMDUuNXQtNTQuNSAyMDUuNXQtMTQ5IDE0OXQtMjA1LjUgNTQuNXpNMzc2IDI1M3EwIC0xIDUgLTZsOSAtOXE0IC00IDEwIC03LjV0MTAgLTMuNXExNiAwIDEwOSAxMDRsMTM4IDE1OHE0IDUgNyA2LjUNCnQ4IDIuNXE1IDAgMTEuNSAtMnQ5LjUgLTVsNDUgLTQ0cTcgLTggOCAtMThxMCAtNiAtMiAtMTAuNXQtNSAtOC41bC0yNTAgLTI2NGwtNTMgLTU3cS0zIC0zIC04IC01LjV0LTEwIC0yLjVxLTMgMCAtNi41IDF0LTYuNSAyLjV0LTUgMy41bC0xNTEgMTQycS0yIDIgLTMuNSA0dC0yLjUgNHQtMS41IDQuNXQtMC41IDUuNXEtMSAxMSA3IDE5bDM1IDM3cTcgOCAxOCA4LjV0MTkgLTcuNXoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MDUiIHVuaWNvZGU9IiYjeGU2MDU7IiANCmQ9Ik01MTUgMTQ1cS0zNiAwIC03MSAtMTJ0LTY0IC00MXQtMzYgLTY5aDMzOHEtNSA1MyAtNTcgODcuNXQtMTEwIDM0LjV6TTk1NSAxNTdxLTMgMjY1IDAgNTI4cTAgMzQgLTEyLjUgNDd0LTQ2LjUgMTNxLTQ1IC0xIC0zODQgLTF0LTM5MCAxcS0yOCAwIC00MC41IC0xMXQtMTIuNSAtMzlxMSAtMjMxIDAgLTU0NHEwIC0xOCA0LjUgLTI5LjV0MTYgLTE3LjV0MzAuNSAtNXEzNSAxIDEwNyAwLjV0MTA3IDAuNXEyNSAxIDQ4IDE3DQpxNTYgNDAgMTE1LjUgNDV0MTE2LjUgLTI4cTYzIC0zNyAxNTAgLTM1cTk0IDIgMTMyIDBxMzMgLTIgNDYgMTF0MTMgNDd6TTg5MiAyMTNoLTc2MHY0NTZoNzYwdi00NTZ6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjA2IiB1bmljb2RlPSImI3hlNjA2OyIgaG9yaXotYWR2LXg9IjEyODEiIA0KZD0iTTEyODAgNDIyek00OTIgLTdxMiAtMSAzLjUgLTJ0NS41IC01LjV0NS41IC05LjV0LTEuNSAtMTEuNXQtMTIgLTEzLjVoLTQ5aC02OGgtMzRxLTQgMCAtMTAuNSAxLjV0LTI0LjUgOS41dC0zMiAyMC41dC0yNi41IDM4dC0xNS41IDU4LjV2Mzk3bDcgMzVxMjUgODIgMTAwIDk0aDM0MWwyNyAtOHE3NCAtMzIgODAgLTEyOHYtMzM3cS0xIC00IC0yLjUgLTExLjV0LTExLjUgLTI5LjV0LTI0LjUgLTQzdC00MyAtNDh0LTY1LjUgLTQ5aC0xaC0zDQpoLTVoLTZoLTZoLTZoLTZoLTNoLTFxLTEgMCAtMiAwLjV0LTMuNSAyLjV0LTQuNSA0LjV0LTQgN3QtMiA5LjV2MzJxMCAxOSAxIDM3djE4cTAgMSAwLjUgNHQyLjUgMTF0NSAxNXQ5LjUgMTd0MTQgMTcuNXQyMCAxMy41dDI3LjUgOWg4MXYzMjZxMCAzIC0xIDguNXQtNS41IDIwdC0xMS41IDI1LjV0LTIxIDIxLjV0LTMyIDEyLjVoLTMzMnEtMyAwIC03LjUgLTF0LTE2LjUgLTZ0LTIxIC0xMy41dC0xNy41IC0yNy41dC0xMC41IC00NGwtMSAtMzg2DQpsNyAtMzJxMTkgLTUzIDY3IC02MGg0MGg0MGgzNGgyNGg4ek03MzYgMTA2aC03MHEtMzQgLTEwIC0zOCAtNDl2LTYzbDggLTFxNSAwIDM0IDI5cTM3IDM3IDY2IDg0ek02NTEgNDMwcTAgLTEwIC03LjUgLTE3LjV0LTE3LjUgLTcuNWgtMjIxcS03IDAgLTEzIDMuNXQtOSA5dC0zIDEyLjVxMCAxMSA3LjUgMTguNXQxNy41IDcuNWgyMjFxNyAwIDEzIC0zLjV0OSAtOS41dDMgLTEzek02NTIgMjgycTAgLTExIC03LjUgLTE4LjV0LTE4LjUgLTcuNQ0KaC0yMjBxLTExIDAgLTE4LjUgNy41dC03LjUgMTguNXQ3LjUgMTguNXQxOC41IDcuNWgyMjBxMTEgMCAxOC41IC03LjV0Ny41IC0xOC41ek01MjQgMTMzcTAgLTExIC03LjUgLTE5dC0xOC41IC04aC05MXEtMTEgMCAtMTkgOHQtOCAxOXQ4IDE5dDE5IDhoOTFxMTEgMCAxOC41IC04dDcuNSAtMTl6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjA3IiB1bmljb2RlPSImI3hlNjA3OyIgDQpkPSJNOTQzIDEyN2wtMzQxIDYwOXEtMzUgNjMgLTkwLjUgNjN0LTkwLjUgLTYzbC0zNDAgLTYwOXEtMzQgLTYyIC02IC0xMTFxMjkgLTQ4IDEwMCAtNDhoNjc0cTcxIDAgOTkuNSA0OC41dC01LjUgMTEwLjV6TTQ4MCA1NzZxMCAxMyA5LjUgMjIuNXQyMi41IDkuNXQyMi41IC05LjV0OS41IC0yMi41di0yODhxMCAtMTMgLTkuNSAtMjIuNXQtMjIuNSAtOS41dC0yMi41IDkuNXQtOS41IDIyLjV2Mjg4ek01MTIgNjRxLTEzIDAgLTI0IDYuNQ0KdC0xNy41IDE3LjV0LTYuNSAyNHEwIDIwIDE0IDM0dDM0IDE0dDM0IC0xNHQxNCAtMzR0LTE0IC0zNHQtMzQgLTE0eiIgLz4NCiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYwOCIgdW5pY29kZT0iJiN4ZTYwODsiIA0KZD0iTTg0OSAtMzNoLTY3NHEtNzEgMCAtOTkuNSA0OXQ1LjUgMTExbDM0MCA2MDlxMzUgNjMgOTEgNjNxMTMgMCAyNS41IC00dDI0IC0xMnQyMiAtMjB0MTguNSAtMjdsMzQxIC02MDlxMzQgLTYzIDUuNSAtMTExLjV0LTk5LjUgLTQ4LjV6TTUxMiA3MzVxLTkgMCAtMTggLTh0LTE3IC0yMmwtMzQwIC02MTBxLTE3IC0zMCAtNyAtNDd0NDUgLTE3aDY3NHEzNSAwIDQ1IDE3dC03IDQ3bC0zNDEgNjEwcS0xNiAzMCAtMzQgMzB6TTUxMiAyNTYNCnEtMTMgMCAtMjIuNSA5LjV0LTkuNSAyMi41djI4OHEwIDEzIDkuNSAyMi41dDIyLjUgOS41dDIyLjUgLTkuNXQ5LjUgLTIyLjV2LTI4OHEwIC0xMyAtOS41IC0yMi41dC0yMi41IC05LjV6TTUxMiAxNDR6TTQ2NCAxNDRxMCAyMCAxNCAzNHQzNCAxNHExMyAwIDI0IC02LjV0MTcuNSAtMTcuNXQ2LjUgLTI0cTAgLTIwIC0xNCAtMzR0LTM0IC0xNHQtMzQgMTR0LTE0IDM0eiIgLz4NCiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYwOSIgdW5pY29kZT0iJiN4ZTYwOTsiIA0KZD0iTTM4NCAzbC0xNjkgMTY5cS00IDMgLTUuNSA4LjV0MCAxMC41dDUuNSA5bDM4MCAzODBxNCA0IDkgNXQxMCAwdDkgLTVsMTY5IC0xNjlxNCAtNCA1IC05dDAgLTEwdC01IC05bC0zODAgLTM4MHEtNiAtNiAtMTQuNSAtNnQtMTMuNSA2ek02OTMgNjc4cTE4IDE4IDQyLjUgMTh0NDIuNSAtMThsMTEyIC0xMTJxMTggLTE4IDE4IC00Mi41dC0xOCAtNDIuNWwtNTYgLTU2bC0xOTcgMTk3ek0xMTYgLTk2bDU2IDI1NGwxOTggLTE5OHoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MEEiIHVuaWNvZGU9IiYjeGU2MGE7IiANCmQ9Ik03NjggMTA4djM4NGgtNjR2LTM4NGgtMTYwbDE5MiAtMTkybDE5MiAxOTJoLTE2MHpNMzIwIDU1NnYtMTkyaC0xOTJ2MTkyaDE5MnpNMzg0IDYyMGgtMzIwdi0zMjBoMzIwdjMyMHpNNjQgMTcyaDk2di02NGgtOTZ2NjR6TTE5MiAxNzJoOTZ2LTY0aC05NnY2NHpNMzIwIDE3Mmg2NHYtOTZoLTY0djk2ek02NCAtNTJoNjR2LTk2aC02NHY5NnpNMTYwIC04NGg5NnYtNjRoLTk2djY0ek0yODggLTg0aDk2di02NGgtOTZ2NjR6TTY0IDc2aDY0DQp2LTk2aC02NHY5NnpNMzIwIDQ0aDY0di05NmgtNjR2OTZ6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjBCIiB1bmljb2RlPSImI3hlNjBiOyIgDQpkPSJNNzA0IDMwMHYtMzg0aDY0djM4NGgxNjBsLTE5MiAxOTJsLTE5MiAtMTkyaDE2MHpNNjQgNjIwaDk2di02NGgtOTZ2NjR6TTE5MiA2MjBoOTZ2LTY0aC05NnY2NHpNMzIwIDYyMGg2NHYtOTZoLTY0djk2ek02NCAzOTZoNjR2LTk2aC02NHY5NnpNMTYwIDM2NGg5NnYtNjRoLTk2djY0ek0yODggMzY0aDk2di02NGgtOTZ2NjR6TTY0IDUyNGg2NHYtOTZoLTY0djk2ek0zMjAgNDkyaDY0di05NmgtNjR2OTZ6TTMyMCAxMDh2LTE5MmgtMTkydjE5Mg0KaDE5MnpNMzg0IDE3MmgtMzIwdi0zMjBoMzIwdjMyMHoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MEMiIHVuaWNvZGU9IiYjeGU2MGM7IiANCmQ9Ik01MTIgLTQxcS0xMTUgMCAtMjEzIDU3dC0xNTUgMTU1dC01NyAyMTN0NTcgMjEzdDE1NSAxNTV0MjEzIDU3dDIxMyAtNTd0MTU1IC0xNTV0NTcgLTIxM3QtNTcgLTIxM3QtMTU1IC0xNTV0LTIxMyAtNTd6TTcyNCA0MjZoLTE3MHYxNzBoLTg0di0xNzBoLTE3MHYtODRoMTcwdi0xNzBoODR2MTcwaDE3MHY4NHoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MEQiIHVuaWNvZGU9IiYjeGU2MGQ7IiANCmQ9Ik04MzIgODEyaC02NDBxLTgwIDAgLTEzNiAtNTZ0LTU2IC0xMzZ2LTY0MHEwIC03OSA1NiAtMTM1LjV0MTM2IC01Ni41aDY0MHE3OSAwIDEzNS41IDU2LjV0NTYuNSAxMzUuNXY2NDBxMCA4MCAtNTYuNSAxMzZ0LTEzNS41IDU2ek0xNjAgLTg0cS0xMyAwIC0yMi41IDkuNXQtOS41IDIyLjV0OS41IDIyLjV0MjIuNSA5LjV0MjIuNSAtOS41dDkuNSAtMjIuNXQtOS41IC0yMi41dC0yMi41IC05LjV6TTE2MCA2MjBxLTEzIDAgLTIyLjUgOS41DQp0LTkuNSAyMi41dDkuNSAyMi41dDIyLjUgOS41dDIyLjUgLTkuNXQ5LjUgLTIyLjV0LTkuNSAtMjIuNXQtMjIuNSAtOS41ek03MDQgLTIwcTAgLTI3IC0xOC41IC00NS41dC00NS41IC0xOC41aC0yNTZxLTI3IDAgLTQ1LjUgMTguNXQtMTguNSA0NS41djY0MHEwIDI2IDE5IDQ1dDQ1IDE5aDI1NnEyNyAwIDQ1LjUgLTE4LjV0MTguNSAtNDUuNXYtNjQwek04NjQgLTg0cS0xMyAwIC0yMi41IDkuNXQtOS41IDIyLjV0OS41IDIyLjV0MjIuNSA5LjUNCnQyMi41IC05LjV0OS41IC0yMi41dC05LjUgLTIyLjV0LTIyLjUgLTkuNXpNODY0IDYyMHEtMTMgMCAtMjIuNSA5LjV0LTkuNSAyMi41dDkuNSAyMi41dDIyLjUgOS41dDIyLjUgLTkuNXQ5LjUgLTIyLjV0LTkuNSAtMjIuNXQtMjIuNSAtOS41ek01NzYgMzAwaC0xMjhxLTI2IDAgLTQ1IC0xOXQtMTkgLTQ1di0xOTJxMCAtMjcgMTguNSAtNDUuNXQ0NS41IC0xOC41aDEyOHEyNyAwIDQ1LjUgMTguNXQxOC41IDQ1LjV2MTkyDQpxMCAyNyAtMTguNSA0NS41dC00NS41IDE4LjV6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjBFIiB1bmljb2RlPSImI3hlNjBlOyIgDQpkPSJNNjU3IDE3MXEwIDE1IC0xMSAyNmwtMTA0IDEwM2wxMDQgMTAzcTExIDExIDExIDI2cTAgMTYgLTExIDI2bC01MiA1MnEtMTEgMTEgLTI2IDExdC0yNiAtMTFsLTEwMyAtMTA0bC0xMDQgMTA0cS0xMCAxMSAtMjUgMTFxLTE2IDAgLTI3IC0xMWwtNTEgLTUycS0xMSAtMTAgLTExIC0yNnEwIC0xNSAxMSAtMjZsMTAzIC0xMDNsLTEwMyAtMTAzcS0xMSAtMTEgLTExIC0yNnEwIC0xNiAxMSAtMjZsNTEgLTUycTExIC0xMSAyNyAtMTENCnExNSAwIDI1IDExbDEwNCAxMDRsMTAzIC0xMDRxMTEgLTExIDI2IC0xMXQyNiAxMWw1MiA1MnExMSAxMCAxMSAyNnpNODc4IDMwMHEwIC0xMTkgLTU5IC0yMjB0LTE2MCAtMTYwdC0yMjAuNSAtNTl0LTIyMCA1OXQtMTU5LjUgMTYwdC01OSAyMjB0NTkgMjIwdDE1OS41IDE2MHQyMjAgNTl0MjIwLjUgLTU5dDE2MCAtMTYwdDU5IC0yMjB6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjBGIiB1bmljb2RlPSImI3hlNjBmOyIgDQpkPSJNMTAwOCAzMzBsLTE1NiAxNTVxLTkgOSAtMjEgMTIuNXQtMjQgMHQtMjEgLTEyLjVxLTE0IC0xMyAtMTQgLTMyLjV0MTQgLTMzLjVsNzYgLTc2aC0zMDN2MzA5bDc2IC03NXExNCAtMTQgMzMuNSAtMTR0MzIuNSAxM3E5IDkgMTIuNSAyMS41dDAgMjQuNXQtMTIuNSAyMWwtMTU1IDE1NXEtNyA3IC0xNS41IDEwLjV0LTE3LjUgMy41cS0yMCAwIC0zMyAtMTRsLTE1NiAtMTU1cS05IC05IC0xMi41IC0yMXQwIC0yNC41dDEyLjUgLTIxLjUNCnExMyAtMTMgMzIuNSAtMTN0MzMuNSAxM2w3NiA3NnYtMzA5aC0zMDRsNzYgNzZxMTQgMTQgMTQgMzMuNXQtMTQgMzIuNXEtOSA5IC0yMSAxMi41dC0yNCAwdC0yMSAtMTIuNWwtMTU2IC0xNTVxLTEzIC0xNCAtMTMgLTMzLjV0MTMgLTMyLjVsMTU2IC0xNTZxNyAtNyAxNS41IC0xMC41dDE3LjUgLTMuNXE2IDAgMTIgMS41dDExLjUgNC41dDkuNSA4cTkgOSAxMi41IDIxdDAgMjR0LTEyLjUgMjFsLTc2IDc2aDMwNHYtMzAzbC03NiA3Ng0KcS03IDcgLTE1LjUgMTAuNXQtMTcuNSAzLjV0LTE4IC0zLjV0LTE1IC05LjVxLTE0IC0xNCAtMTQgLTMzLjV0MTQgLTMzLjVsMTU1IC0xNTVxMTQgLTE0IDMzLjUgLTE0dDMzLjUgMTRsMTU1IDE1NXExNCAxNCAxNCAzMy41dC0xMy41IDMzdC0zMyAxMy41dC0zMy41IC0xNGwtNzYgLTc1djMwMmgzMDNsLTc2IC03NnEtNyAtNyAtMTAuNSAtMTUuNXQtMy41IC0xNy41dDMuNSAtMTcuNXQxMC41IC0xNS41cTEzIC0xNCAzMyAtMTRxMyAwIDYgMC41DQp0NS41IDF0NS41IDJ0NS41IDN0NS41IDMuNXQ1IDRsMTU2IDE1NnE0IDQgNyA5LjV0NC41IDExdDEuNSAxMi41cTAgNCAtMSA4LjV0LTIuNSA5dC00IDh0LTUuNSA3LjV6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjEwIiB1bmljb2RlPSImI3hlNjEwOyIgDQpkPSJNOTI0IDU3M2gtMTU0djEwNXEwIDI5IC0yMC41IDQ5LjV0LTQ5LjUgMjAuNWgtMzc2cS0xNSAwIC0yOCAtNnQtMjIgLTE1dC0xNC41IC0yMnQtNS41IC0yN3YtMTA1aC0xNTVxLTE0IC0xIC0yNCAtMTBxLTEwIC0xMCAtMTAgLTI0LjV0MTAgLTI0LjV0MjQgLTEwaDc5di01ODFxMCAtMjkgMjAuNSAtNDkuNXQ0OS41IC0yMC41aDUyOHExNCAwIDI3IDUuNXQyMi41IDE0LjV0MTUgMjJ0NS41IDI4djU1OHYyM2g3OHExNSAwIDI1IDEwDQp0MTAgMjQuNXQtMTAgMjQuNXQtMjUgMTB6TTQxMiAtMTBxLTkgMCAtMTcgNC41dC0xMi41IDEyLjV0LTQuNSAxOGwtMSAzNzJxMCA3IDMgMTMuNXQ3LjUgMTEuNXQxMSA3LjV0MTMuNSAyLjVxMTUgMCAyNSAtMTB0MTAgLTI1di0zNzJxMCAtMTUgLTEwIC0yNXQtMjUgLTEwek02MTEuNSAtMTBxLTE0LjUgMCAtMjQuNSAxMHQtMTAgMjV2MzcycTAgMTUgMTAgMjV0MjQuNSAxMHQyNC41IC0xMHQxMCAtMjVsMSAtMzcycTAgLTE1IC0xMC41IC0yNQ0KdC0yNSAtMTB6TTMyMyA2MzVxMCAxNyAxMyAzMHQzMSAxM2gyOTBxMTggMCAzMSAtMTN0MTMgLTMwdi02MmgtMzc4djYyeiIgLz4NCiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYxMSIgdW5pY29kZT0iJiN4ZTYxMTsiIA0KZD0iTTk2MCA1NTJxMCAtMTcgLTEyIC0yOS41dC0zMCAtMTIuNWgtODEycS03IDAgLTEzLjUgMnQtMTEuNSA2dC05IDl0LTYgMTEuNXQtMiAxMy41dDIgMTMuNXQ2IDExLjV0OSA5dDExLjUgNnQxMy41IDJoODEycTE4IDAgMzAgLTEydDEyIC0zMHpNOTYwIDMwMHEwIC0xNyAtMTIgLTI5LjV0LTMwIC0xMi41aC04MTJxLTYgMCAtMTEuNSAxLjV0LTEwIDR0LTguNSA2LjV0LTYuNSA4LjV0LTQgMTB0LTEuNSAxMS41cTAgMTcgMTIgMjkuNQ0KdDMwIDEyLjVoODEycTQgMCA4LjUgLTF0OCAtMi41dDcgLTMuNXQ2LjUgLTV0NSAtNi41dDMuNSAtN3QyLjUgLTh0MSAtOC41ek05NjAgNDhxMCAtMTggLTEyIC0zMHQtMzAgLTEyaC04MTJxLTEyIDAgLTIxLjUgNS41dC0xNSAxNXQtNS41IDIxLjVxMCAxNyAxMiAyOS41dDMwIDEyLjVoODEycTI5IDAgMzkgLTI2cTMgLTkgMyAtMTZ6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjEyIiB1bmljb2RlPSImI3hlNjEyOyIgDQpkPSJNNjk5IDM1OGgtMTU3di0xNThxMCAtNSAtMiAtMTB0LTUuNSAtOC41dC04LjUgLTUuNXQtMTAgLTJxLTExIDAgLTE5IDh0LTggMTh2MTU4aC0xNTdxLTExIDAgLTE4LjUgNy41dC03LjUgMTguNXEwIDcgMy41IDEzdDkuNSA5LjV0MTMgMy41aDE1N3YxNTdxMCAxMSA4IDE4LjV0MTkgNy41cTUgMCAxMCAtMnQ4LjUgLTUuNXQ1LjUgLTguNXQyIC0xMHYtMTU3aDE1N3ExMSAwIDE4LjUgLTcuNXQ3LjUgLTE4LjV0LTcuNSAtMTguNQ0KdC0xOC41IC03LjV6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjEzIiB1bmljb2RlPSImI3hlNjEzOyIgDQpkPSJNNzI5IDkwaC00MzRxLTExNiAwIC0xOTcuNSA4MS41dC04MS41IDE5Ni41djMycTAgMTE1IDgxLjUgMTk2LjV0MTk3LjUgODEuNWg0MzRxMTE2IDAgMTk3LjUgLTgxLjV0ODEuNSAtMTk2LjV2LTMycTAgLTExNSAtODEuNSAtMTk2LjV0LTE5Ny41IC04MS41ek05NDYgNDAwcTAgOTAgLTYzLjUgMTUzdC0xNTMuNSA2M2gtNDM0cS05MCAwIC0xNTMuNSAtNjN0LTYzLjUgLTE1M3YtMzJxMCAtNTkgMjkgLTEwOXQ3OSAtNzl0MTA5IC0yOWg0MzQNCnE5MCAwIDE1My41IDYzLjV0NjMuNSAxNTMuNXYzMnpNMzIyIDIyM3EtNDQgMCAtODIgMjIuNXQtNjAgNjB0LTIyIDgyLjVxMCAzMyAxMyA2My41dDM1IDUyLjV0NTIuNSAzNXQ2My41IDEzcTY4IDAgMTE2IC00OHQ0OCAtMTE2dC00OCAtMTE2LjV0LTExNiAtNDguNXoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MTQiIHVuaWNvZGU9IiYjeGU2MTQ7IiANCmQ9Ik03MjkgOTBoLTQzNHEtMTE2IDAgLTE5Ny41IDgxLjV0LTgxLjUgMTk2LjV2MzJxMCAxMTUgODEuNSAxOTYuNXQxOTcuNSA4MS41aDQzNHExMTYgMCAxOTcuNSAtODEuNXQ4MS41IC0xOTYuNXYtMzJxMCAtMTE1IC04MS41IC0xOTYuNXQtMTk3LjUgLTgxLjV6TTk0NyAzOTlxMCA5MCAtNjMuNSAxNTMuNXQtMTUzLjUgNjMuNWgtNDM2cS04OSAwIC0xNTIuNSAtNjMuNXQtNjMuNSAtMTUzLjV2LTMxcTAgLTU5IDI5IC0xMDl0NzkgLTc5DQp0MTA4IC0yOWg0MzZxOTAgMCAxNTMuNSA2My41dDYzLjUgMTUzLjV2MzF6TTcwMiAyMjNxLTQ0IDAgLTgyIDIydC02MCA2MHQtMjIgODNxMCA2OCA0OCAxMTZ0MTE2IDQ4dDExNi41IC00OHQ0OC41IC0xMTZxMCAtMTcgLTMuNSAtMzMuNXQtOS41IC0zMXQtMTUgLTI3LjV0LTIwLjUgLTI0LjV0LTI0LjUgLTIwdC0yNy41IC0xNXQtMzEgLTEwdC0zMy41IC0zLjV6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjE1IiB1bmljb2RlPSImI3hlNjE1OyIgDQpkPSJNODMyIDg5NmgtNjQwcS04MCAwIC0xMzYgLTU2dC01NiAtMTM2di02NDBxMCAtNzkgNTYgLTEzNS41dDEzNiAtNTYuNWg2NDBxNzkgMCAxMzUuNSA1Ni41dDU2LjUgMTM1LjV2NjQwcTAgODAgLTU2LjUgMTM2dC0xMzUuNSA1NnpNMTYwIDBxLTEzIDAgLTIyLjUgOS41dC05LjUgMjIuNXQ5LjUgMjIuNXQyMi41IDkuNXQyMi41IC05LjV0OS41IC0yMi41dC05LjUgLTIyLjV0LTIyLjUgLTkuNXpNMTYwIDcwNHEtMTMgMCAtMjIuNSA5LjUNCnQtOS41IDIyLjV0OS41IDIyLjV0MjIuNSA5LjV0MjIuNSAtOS41dDkuNSAtMjIuNXQtOS41IC0yMi41dC0yMi41IC05LjV6TTcwNCA2NHEwIC0yNyAtMTguNSAtNDUuNXQtNDUuNSAtMTguNWgtMjU2cS0yNyAwIC00NS41IDE4LjV0LTE4LjUgNDUuNXY2NDBxMCAyNiAxOSA0NXQ0NSAxOWgyNTZxMjcgMCA0NS41IC0xOC41dDE4LjUgLTQ1LjV2LTY0MHpNODY0IDBxLTEzIDAgLTIyLjUgOS41dC05LjUgMjIuNXQ5LjUgMjIuNXQyMi41IDkuNQ0KdDIyLjUgLTkuNXQ5LjUgLTIyLjV0LTkuNSAtMjIuNXQtMjIuNSAtOS41ek04NjQgNzA0cS0xMyAwIC0yMi41IDkuNXQtOS41IDIyLjV0OS41IDIyLjV0MjIuNSA5LjV0MjIuNSAtOS41dDkuNSAtMjIuNXQtOS41IC0yMi41dC0yMi41IC05LjV6TTU3NiA3MDRoLTEyOHEtMjYgMCAtNDUgLTE5dC0xOSAtNDV2LTE5MnEwIC0yNiAxOSAtNDV0NDUgLTE5aDEyOHEyNyAwIDQ1LjUgMTguNXQxOC41IDQ1LjV2MTkycTAgMjcgLTE4LjUgNDUuNQ0KdC00NS41IDE4LjV6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjE2IiB1bmljb2RlPSImI3hlNjE2OyIgDQpkPSJNNTA0IDE3cS05NyAwIC0xNzkuNSA0OHQtMTMwLjUgMTMwLjV0LTQ4IDE3OS41cTAgMTEwIDYyIDIwMWw5MyAtOTN2MjQ1aC0yNDZsOTIgLTkycS0yMCAtMjcgLTM1LjUgLTU3LjV0LTI2LjUgLTYzLjV0LTE3IC02OC41dC02IC03MS41cTAgLTkwIDM1IC0xNzEuNXQ5NC41IC0xNDF0MTQxIC05NC41dDE3MS41IC0zNXE4NSAwIDE2MyAzMWwtNTAgNzFxLTU1IC0xOCAtMTEzIC0xOHpNNzIwIDI3N3YtMjQ2aDI0NmwtOTYgOTYNCnEzNyA1NCA1Ni41IDExN3QxOS41IDEzMXEwIDkwIC0zNSAxNzJ0LTk0IDE0MXQtMTQxIDk0dC0xNzIgMzVxLTcwIDAgLTEzNiAtMjFsNTIgLTczcTQxIDEwIDg0IDEwcTU5IDAgMTEzLjUgLTE4dDk4LjUgLTUxdDc3IC03N3Q1MSAtOTguNXQxOCAtMTEzLjVxMCAtNTAgLTEzLjUgLTk4dC0zOC41IC04OXoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MTciIHVuaWNvZGU9IiYjeGU2MTc7IiANCmQ9Ik01MTIgODAycS0xMDQgMCAtMTkyLjUgLTUxLjV0LTE0MCAtMTQwdC01MS41IC0xOTN0NTEuNSAtMTkzdDE0MCAtMTQwdDE5Mi41IC01MS41dDE5Mi41IDUxLjV0MTQwIDE0MHQ1MS41IDE5M3QtNTEuNSAxOTN0LTE0MCAxNDB0LTE5Mi41IDUxLjV6TTY2MCAyMTRoLTUwdjE3NWgtMTk2di0xNzVoLTUwdjM5NWg1MHYtMTc5aDE5NnYxNzloNTB2LTM5NXoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MTgiIHVuaWNvZGU9IiYjeGU2MTg7IiANCmQ9Ik05NjEgNjQwcTAgNDAgLTI4LjUgNjh0LTY3LjUgMjhoLTE4NmgtMWgtMXEtMyAtMSAtNS41IC0xLjV0LTQuNSAtMC41bC0xIC0xaC0xcS0yIC0yIC00LjUgLTN0LTMuNSAtM3EtMTIgLTExIC0xOS41IC0zMS41dC0xNS41IC01Ni41cS0zIC0xMiAtNCAtMTRxLTQgLTE3IC0yNyAtMTdoLTdoLThoLTQxNnEtNDAgMCAtNjggLTI4LjV0LTI4IC02OS41bDMyIC00MTRxMCAtNDAgMjggLTY4dDY4IC0yOGg2NDBxNDAgMCA2OCAyOHQyOCA2NnoNCk04NjQgOTZxMCAtMTMgLTkuNSAtMjIuNXQtMjIuNSAtOS41aC02NDBxLTkgMCAtMTYgNC41dC0xMS41IDEyLjV0LTQuNSAxN2wtMzIgNDE0cTAgMTMgOS41IDIyLjV0MjIuNSA5LjVoNDE2aDhoN3EzNSAwIDU4LjUgMTd0MzAuNSA0OHExIDIgMiA2dDIgOXE4IDM0IDEzIDQ4aDE2OHExMyAwIDIyLjUgLTkuNXQ5LjUgLTIyLjV2LTJ2LTF6TTEyOCA2NzJoNDE2cTEzIDAgMjIuNSA5LjV0OS41IDIyLjV0LTkuNSAyMi41dC0yMi41IDkuNWgtNDE2DQpxLTEzIDAgLTIyLjUgLTkuNXQtOS41IC0yMi41dDkuNSAtMjIuNXQyMi41IC05LjV6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjE5IiB1bmljb2RlPSImI3hlNjE5OyIgDQpkPSJNNTIxIDE5NGwtMzc2IDI0N2wtNTAgLTUybDQyNiAtMjkxbDQyNiAyOTFsLTUxIDUzek05NDcgNTUwbC00MjYgMjkxbC00MjYgLTI5MWw0MjYgLTI5MXpNNTIxIDc1NmwzMDIgLTIwNmwtMzAyIC0yMDdsLTMwMiAyMDd6TTUyMSAzM2wtMzc2IDI0OGwtNTAgLTUybDQyNiAtMjkxbDQyNiAyOTFsLTUxIDUzeiIgLz4NCiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYxQSIgdW5pY29kZT0iJiN4ZTYxYTsiIA0KZD0iTTg3NCA2NjJxLTQ4IDQ4IC0xMDYgODEuNXQtMTIzIDUxdC0xMzMgMTcuNXEtMTAzIDAgLTE5NiAtMzguNXQtMTY2IC0xMTEuNXEtMzYgLTM2IC02NCAtNzh0LTQ3IC04OHQtMjkgLTk1LjV0LTEwIC0xMDAuNXEwIC0xMDMgMzguNSAtMTk2dDExMS41IC0xNjZxMjQgLTI0IDUxIC00NC41dDU1LjUgLTM3LjV0NTkuNSAtMjkuNXQ2MyAtMjF0NjUuNSAtMTN0NjcuNSAtNC41cTY4IDAgMTMzIDE3LjV0MTIzIDUxdDEwNiA4MS41DQpxNzMgNzMgMTExLjUgMTY2dDM4LjUgMTk2cTAgNTEgLTEwIDEwMC41dC0yOSA5NS41dC00NyA4OHQtNjQgNzh6TTk0MiA0NjZxLTUgOCAtMTYgMTUuNXQtMjEgMTF0LTMxIDExLjVxLTE2IDUgLTI4LjUgMjB0LTE4LjUgMjguNXQtMTUgNDEuNXEtNiAxOCAtMTAgMjcuNXQtMTEgMjQuNXQtMTUuNSAyNS41dC0xOS41IDE5LjVxMTMwIC04MyAxODYgLTIyNXpNNzk4IDI5MHEyIC0xOSAyLjUgLTM1LjV0LTguNSAtMzguNXQtMjkgLTQ1DQpxLTIgLTIgLTQuNSAtNS41dC00LjUgLTYuNXQtNCAtN3QtMyAtN3QtMyAtOHQtMy41IC04dC0zLjUgLThxLTggLTIyIC0xMy41IC0zMy41dC0xNi41IC0yNnQtMjggLTIxdC00MSAtNi41cS03IDggLTEyIDM3cS00IDI0IC0xMCA5MHEtOCAxMTEgLTIxIDE2MHEtMjUgOTIgLTg0IDExMnEtMjYgOSAtNTUgOXEtMTQgMCAtMzkgLTNxLTE3IC0yIC0yNCAtMnEtNSAwIC03LjUgMC41dC03LjUgMi41dC04LjUgNS41dC04LjUgMTF0LTEwIDE4LjUNCnEtMTEgMzAgLTEwIDYzLjV0MjAuNSA2OXQ1My41IDU3LjVxNTUgMzcgODkgMzdxMjcgMCA2OSAtMjNxMjMgLTEyIDQyLjUgLTE2dDM4LjUgLTRoMTBxNSAwIDEyIDFoMTZxOSAwIDE2IC0xLjV0MTUgLTcuNXExMyAtOSAyMS41IC0yNnQxOS41IC00OHE4IC0yNCAxMy41IC0zNy41dDE2LjUgLTMzdDI3IC0zMnQzNyAtMTkuNXEyMiAtOCAzMSAtMTFxLTkgLTkgLTM2IC0zNHEtMjEgLTE4IC0zMCAtMjdxLTE1IC0xMyAtMjEuNSAtMzB0LTUuNSAtMzINCnQyIC0zMXpNNTEgMzA0cTggLTEgMTggLTNxMzQgLTggNDggLTE1cS0zIC02IC0xMiAtMThxLTI4IC00MSAtMjIgLTY1cTIgLTE0IDAuNSAtMjcuNXQtNi41IC0yOC41cS04IDI0IC0xNCA0OXQtOSA1MXQtMyA1M3YydjJ6TTUxMiAtMTYxcS0xMjkgMCAtMjM4IDY2LjV0LTE2OCAxNzYuNXE0MCA3NiAyNyAxMzJxMCA1IDE0IDI0cTYgOCA5IDEyLjV0NyAxM3Q1LjUgMTQuNXQxIDE0LjV0LTQuNSAxNS41cS0xMiAyNiAtODAgNDFxLTEzIDMgLTMxIDYNCnExNCAxMTMgNzggMjA2dDE2NCAxNDYuNXQyMTYgNTMuNXExMTkgMCAyMjMgLTU4cS02IDMgLTEyIDQuNXQtMTEuNSAyLjV0LTkuNSAxaC0xMGgtMTlxLTEzIC0xIC0xOSAtMXEtOSAwIC0xNiAxdC0xOC41IDQuNXQtMjIuNSA5LjVxLTUzIDI4IC05MyAyOHEtNDkgMCAtMTE3IC00NXEtMzEgLTIwIC01My41IC01MC41dC0zNC41IC02Ni41cS0yMyAtNzMgNSAtMTM2cTMwIC02OSA4OSAtNjloN3E0IDAgOC41IDAuNXQ3IDF0Ny41IDAuNQ0KcTIyIDMgMzMgM3ExMCAwIDE5LjUgLTEuNXQxOC41IC00LjVxMzQgLTExIDUxIC03N3ExMiAtNDQgMjAgLTE1MXE2IC04MCAxMyAtMTEwcTYgLTI2IDE3IC00MXExNiAtMjQgNDEgLTI0cTM0IDAgNjEgMTF0NDcgMzNxMTAgMTEgMTguNSAyNnQxMi41IDI0LjV0MTAgMjYuNXExMSAyOCAxNiAzNHEyNyAzMCAzOS41IDYxLjV0MTEgNTMuNXQtMi41IDQ0cS0zIDIxIC0xLjUgMzEuNXQ5LjUgMTguNXE0IDMgNyA1LjV0NiA1LjV0NiA1LjV0NS41IDUNCnQ1LjUgNC41cTMyIDI5IDQxIDM5cTIyIDI0IDE4IDQ0djFxMjcgLTc1IDI3IC0xNTZxMCAtOTQgLTM2LjUgLTE3OXQtOTguNSAtMTQ3dC0xNDcuNSAtOTguNXQtMTc4LjUgLTM2LjV6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjFCIiB1bmljb2RlPSImI3hlNjFiOyIgDQpkPSJNODA0IDc3MGw1MCAtNDMxbC01NyAtN2wtNDUgMzg2aC00ODBsLTQ1IC0zODZsLTU3IDdsNTAgNDMxaDU4NHpNMzE5IDY3NGgzODZ2LTQ4aC0zODZ2NDh6TTMxOSA1NzdoMzg2di00OGgtMzg2djQ4ek0zMTkgNDgxaDM4NnYtNDloLTM4NnY0OXpNMzE5IDM4NGgzODZ2LTQ4aC0zODZ2NDh6TTg3NCAyODdoLTcyNHEtNyAwIC0xMS41IC0zdC02IC04dDAuNSAtMTFsODIgLTI0NHEzIC0xMCAxMiAtMTYuNXQxOSAtNi41aDUzMnExMCAwIDE5IDYuNQ0KdDEyIDE2LjVsODIgMjQ0cTcgMjIgLTE3IDIyek02MDkgMTkxaC0xOTR2NDhoMTk0di00OHoiIC8+DQogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MUMiIHVuaWNvZGU9IiYjeGU2MWM7IiANCmQ9Ik05OTUgM2wtMjcyIDIyN3EtMSAxIC0yIDEuNXQtNCAyLjVxMzcgNzkgMzcgMTYwcTAgODIgLTM0LjUgMTU4dC05OS41IDEzMXEtMTA1IDg5IC0yNDMgODlxLTgyIDAgLTE1OCAtMzV0LTEzMSAtMTAwcS00MyAtNTIgLTY1LjUgLTExNC41dC0yMi41IC0xMjguNXEwIC04MiAzNC41IC0xNTguNXQxMDAuNSAtMTMxLjVxMTA1IC04OCAyNDEgLTg4aDFxMTIxIDAgMjIxIDcycTEgMCAyIC0ybDEgLTFsMjcyIC0yMjdxMTAgLTkgMjMgLTE0DQp0MjYuNSAtNXQyNi41IDMuNXQyNSAxMXQyMSAxOS41bDYgN3EyNCAyOCAyMiA2NC41dC0yOCA1OC41ek01ODUgMjE5cS00MCAtNDcgLTk0LjUgLTcydC0xMTMuNSAtMjVxLTk4IDEgLTE3NCA2NHEtNDcgMzkgLTcyIDk0dC0yNSAxMTRxMCA5OSA2NCAxNzRxMzkgNDggOTMuNSA3Mi41dDExMy41IDI0LjVxOTkgMCAxNzQgLTYzcTQ3IC00MCA3MiAtOTQuNXQyNSAtMTEzLjVxMCAtOTkgLTYzIC0xNzV6IiAvPg0KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjFEIiB1bmljb2RlPSImI3hlNjFkOyIgDQpkPSJNNDI3IDE1MXEwIDIzIDExIDQyLjV0MzEgMzF0NDMgMTEuNXEzNSAwIDYwIC0yNXQyNSAtNjBxMCAtMTEgLTIuNSAtMjJ0LTggLTIwdC0xMi41IC0xNi41dC0xNiAtMTMuNXExIC02IDMgLTE2dDYuNSAtMzguNXQ4LjUgLTU1LjVxMCAtOCAtNC41IC0xNS41dC0xMS41IC0xMnQtMTYgLTQuNWgtNjRxLTEzIDAgLTIyLjUgOS41dC05LjUgMjIuNWwxOCAxMTBxLTM5IDI1IC0zOSA3MnpNMzQxIDM4NXYxNTBxMCAyMyA2LjUgNDV0MTcuNSA0MQ0KdDI2LjUgMzQuNXQzNC41IDI2LjV0NDEgMTd0NDUgNnE0NiAwIDg1LjUgLTIyLjV0NjIuNSAtNjJ0MjMgLTg1LjV2LTE1MGgtMzQyek0yMzUgNTM1di0xNTBoLTY0cS0zNiAwIC02MSAtMjV0LTI1IC02MHYtNDI3cTAgLTM1IDI1IC02MHQ2MSAtMjVoNjgycTM2IDAgNjEgMjV0MjUgNjB2NDI3cTAgMzUgLTI1IDYwdC02MSAyNWgtNjR2MTUwcTAgMTE1IC04MSAxOTZ0LTE5NiA4MXEtNTYgMCAtMTA3LjUgLTIydC04OC41IC01OXQtNTkgLTg4LjUNCnQtMjIgLTEwNy41eiIgLz4NCiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYxRSIgdW5pY29kZT0iJiN4ZTYxZTsiIA0KZD0iTTc2OSA0NDh2MTM1cS0zIDEwNCAtNzcuNSAxNzYuNXQtMTc4LjUgNzIuNXEtNTEgMCAtOTcuNSAtMTkuNXQtODEgLTUyLjV0LTU1IC03OXQtMjIuNSAtOTd2LTEzNmgtMXEtMTcgMCAtMzIgLTguNXQtMjMuNSAtMjMuNXQtOC41IC0zMnYtMzg0cTAgLTI3IDE4LjUgLTQ1LjV0NDUuNSAtMTguNWg1MTJxMTcgMCAzMiA4LjV0MjMuNSAyMy41dDguNSAzMnYzODRxMCAyNiAtMTguNSA0NXQtNDQuNSAxOXpNMzIxIDU4MXEyIDc4IDU4IDEzMi41DQp0MTM0IDU0LjVxMzEgMCA2MCAtOS41dDUyIC0yNi41dDQxIC00MHQyOCAtNTEuNXQxMSAtNTkuNXYtMTMzaC0zODR2MTMzek03NjggMzJxMCAtOSAtNC41IC0xNnQtMTEuNSAtMTEuNXQtMTYgLTQuNWgtNDQ4cS00IDAgLTguNSAxdC04IDN0LTYuNSA1dC01IDYuNXQtMyA4dC0xIDguNXYzMjBxMCAxMyA5LjUgMjIuNXQyMi41IDkuNWg0NDhxNSAwIDEwIC0xLjV0OSAtNC41dDcgLTd0NC41IC05dDEuNSAtMTB2LTMyMHpNNTQ0IDIwNnY1Mg0KcTAgMTMgLTkuNSAyMi41dC0yMi41IDkuNXEtOSAwIC0xNiAtNC41dC0xMS41IC0xMS41dC00LjUgLTE2di01MnEtMjggLTE4IC0yOCAtNTFxMCAtMjUgMTcuNSAtNDIuNXQ0Mi41IC0xNy41dDQyLjUgMTcuNXQxNy41IDQyLjVxMCAzMyAtMjggNTF6IiAvPg0KICA8L2ZvbnQ+DQo8L2RlZnM+PC9zdmc+DQo="
+	module.exports = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiID4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8bWV0YWRhdGE+CkNyZWF0ZWQgYnkgRm9udEZvcmdlIDIwMTIwNzMxIGF0IFNhdCBKYW4gMTYgMTU6MDk6MTAgMjAxNgogQnkgQWRzCjwvbWV0YWRhdGE+CjxkZWZzPgo8Zm9udCBpZD0iaWNvbmZvbnQiIGhvcml6LWFkdi14PSIxMDI0IiA+CiAgPGZvbnQtZmFjZSAKICAgIGZvbnQtZmFtaWx5PSJpY29uZm9udCIKICAgIGZvbnQtd2VpZ2h0PSI1MDAiCiAgICBmb250LXN0cmV0Y2g9Im5vcm1hbCIKICAgIHVuaXRzLXBlci1lbT0iMTAyNCIKICAgIHBhbm9zZS0xPSIyIDAgNiAzIDAgMCAwIDAgMCAwIgogICAgYXNjZW50PSI4OTYiCiAgICBkZXNjZW50PSItMTI4IgogICAgeC1oZWlnaHQ9Ijc5MiIKICAgIGJib3g9IjAgLTIxMiAxMDI0IDg5NiIKICAgIHVuZGVybGluZS10aGlja25lc3M9IjUwIgogICAgdW5kZXJsaW5lLXBvc2l0aW9uPSItMTAwIgogICAgdW5pY29kZS1yYW5nZT0iVSswMDc4LUU2MUUiCiAgLz4KPG1pc3NpbmctZ2x5cGggaG9yaXotYWR2LXg9IjM3NCIgCmQ9Ik0zNCAwdjY4MmgyNzJ2LTY4MmgtMjcyek02OCAzNGgyMDR2NjE0aC0yMDR2LTYxNHoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0iLm5vdGRlZiIgaG9yaXotYWR2LXg9IjM3NCIgCmQ9Ik0zNCAwdjY4MmgyNzJ2LTY4MmgtMjcyek02OCAzNGgyMDR2NjE0aC0yMDR2LTYxNHoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0iLm51bGwiIGhvcml6LWFkdi14PSIwIiAKIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0ibm9ubWFya2luZ3JldHVybiIgaG9yaXotYWR2LXg9IjM0MSIgCiAvPgogICAgPGdseXBoIGdseXBoLW5hbWU9IngiIHVuaWNvZGU9IngiIGhvcml6LWFkdi14PSIxMDAxIiAKZD0iTTI4MSA1NDNxLTI3IC0xIC01MyAtMWgtODNxLTE4IDAgLTM2LjUgLTZ0LTMyLjUgLTE4LjV0LTIzIC0zMnQtOSAtNDUuNXYtNzZoOTEydjQxcTAgMTYgLTAuNSAzMHQtMC41IDE4cTAgMTMgLTUgMjl0LTE3IDI5LjV0LTMxLjUgMjIuNXQtNDkuNSA5aC0xMzN2LTk3aC00Mzh2OTd6TTk1NSAzMTB2LTUycTAgLTIzIDAuNSAtNTJ0MC41IC01OHQtMTAuNSAtNDcuNXQtMjYgLTMwdC0zMyAtMTZ0LTMxLjUgLTQuNXEtMTQgLTEgLTI5LjUgLTAuNQp0LTI5LjUgMC41aC0zMmwtNDUgMTI4aC00MzlsLTQ0IC0xMjhoLTI5aC0zNHEtMjAgMCAtNDUgMXEtMjUgMCAtNDEgOS41dC0yNS41IDIzdC0xMy41IDI5LjV0LTQgMzB2MTY3aDkxMXpNMTYzIDI0N3EtMTIgMCAtMjEgLTguNXQtOSAtMjEuNXQ5IC0yMS41dDIxIC04LjVxMTMgMCAyMiA4LjV0OSAyMS41dC05IDIxLjV0LTIyIDguNXpNMzE2IDEyM3EtOCAtMjYgLTE0IC00OHEtNSAtMTkgLTEwLjUgLTM3dC03LjUgLTI1dC0zIC0xNXQxIC0xNC41CnQ5LjUgLTEwLjV0MjEuNSAtNGgzN2g2N2g4MWg4MGg2NGgzNnEyMyAwIDM0IDEydDIgMzhxLTUgMTMgLTkuNSAzMC41dC05LjUgMzQuNXEtNSAxOSAtMTEgMzloLTM2OHpNMzM2IDQ5OHYyMjhxMCAxMSAyLjUgMjN0MTAgMjEuNXQyMC41IDE1LjV0MzQgNmgxODhxMzEgMCA1MS41IC0xNC41dDIwLjUgLTUyLjV2LTIyN2gtMzI3eiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjAwIiB1bmljb2RlPSImI3hlNjAwOyIgCmQ9Ik00ODggNzQ1bDEzMiAtMjY5bDI5NyAtNDNsLTIxNSAtMjA5bDUxIC0yOTZsLTI2NSAxNDBsLTI2NiAtMTQwbDUxIDI5NmwtMjE1IDIwOWwyOTcgNDN6IiAvPgogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MDEiIHVuaWNvZGU9IiYjeGU2MDE7IiAKZD0iTTUxMiAtMjBxLTExMCAwIC0yMDMgNTR0LTE0NyAxNDd0LTU0IDIwM3Q1NCAyMDN0MTQ3IDE0N3QyMDMgNTR0MjAzIC01NHQxNDcgLTE0N3Q1NCAtMjAzdC01NCAtMjAzdC0xNDcgLTE0N3QtMjAzIC01NHpNNTY3IDYwNXEwIDcgLTUuNSAxMi41dC0xMi41IDUuNWgtNzRxLTcgMCAtMTIuNSAtNS41dC01LjUgLTEyLjV2LTc0cTAgLTQgMS41IC03dDQgLTUuNXQ1LjUgLTR0NyAtMS41aDc0cTcgMCAxMi41IDV0NS41IDEzdjc0ek01NjcgNDAyCnEwIDUgLTIuNSA5LjV0LTYuNSA3dC05IDIuNWgtNzRxLTcgMCAtMTIuNSAtNS41dC01LjUgLTEzLjV2LTIzOXEwIC01IDIuNSAtOXQ2LjUgLTYuNXQ5IC0yLjVoNzRxNyAwIDEyLjUgNS41dDUuNSAxMi41djIzOXoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYwMiIgdW5pY29kZT0iJiN4ZTYwMjsiIApkPSJNMTc0LjUgNTAxcS00MS41IDAgLTcxIC0yOS41dC0yOS41IC03MS41cTAgLTI3IDEzLjUgLTUwLjV0MzYuNSAtMzd0NTAuNSAtMTMuNXQ1MSAxMy41dDM3IDM3dDEzLjUgNTAuNXEwIDQyIC0zMCA3MS41dC03MS41IDI5LjV6TTUxMSA1MDFxLTQyIDAgLTcxLjUgLTI5LjV0LTI5LjUgLTcxLjVxMCAtMjcgMTMuNSAtNTAuNXQzNyAtMzd0NTAuNSAtMTMuNXE0MiAwIDcxLjUgMjkuNXQyOS41IDcxLjVxMCAxMCAtMiAyMHQtNiAxOQp0LTkuNSAxNy41dC0xMiAxNXQtMTQuNSAxMnQtMTcgOS41dC0xOSA2dC0yMSAyek04NDggNTAxcS00MiAwIC03MS41IC0yOS41dC0yOS41IC03MS41dDI5LjUgLTcxLjV0NzEuNSAtMjkuNXQ3MS41IDI5LjV0MjkuNSA3MS41dC0yOS41IDcxLjV0LTcxLjUgMjkuNXoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYwMyIgdW5pY29kZT0iJiN4ZTYwMzsiIApkPSJNNjAxIDgzMGgtMTc5cS0xMiAwIC0yMSAtOXQtOSAtMjF2LTE3OXEwIC0xMiA5IC0yMXQyMSAtOWgxNzlxMTIgMCAyMSA5dDkgMjF2MTc5cTAgNiAtMi41IDExLjV0LTYuNSA5LjV0LTkuNSA2LjV0LTExLjUgMi41ek05MjkgODMwaC0xNzlxLTEyIDAgLTIxIC05dC05IC0yMXYtMTc5cTAgLTEyIDkgLTIxdDIxIC05aDE3OXE4IDAgMTUgNHQxMSAxMXQ0IDE1djE3OXEwIDEyIC05IDIxdC0yMSA5ek0yNzMgODMwaC0xNzlxLTEyIDAgLTIxIC05CnQtOSAtMjF2LTE3OXEwIC0xMiA5IC0yMXQyMSAtOWgxNzlxNiAwIDExLjUgMi41dDkuNSA2LjV0Ni41IDkuNXQyLjUgMTEuNXYxNzlxMCAzIC0xIDYuNXQtMi41IDYuNXQtMy41IDUuNXQtNC41IDQuNXQtNS41IDMuNXQtNi41IDIuNXQtNi41IDF6TTYwMSA1MDJoLTE3OXEtMTIgMCAtMjEgLTl0LTkgLTIxdi0xNzlxMCAtMTMgOSAtMjEuNXQyMSAtOC41aDE3OXExMiAwIDIxIDguNXQ5IDIxLjV2MTc5cTAgNiAtMi41IDExLjV0LTYuNSA5LjUKdC05LjUgNi41dC0xMS41IDIuNXpNOTI5IDUwMmgtMTc5cS0xMiAwIC0yMSAtOXQtOSAtMjF2LTE3OXEwIC04IDQgLTE1dDExIC0xMXQxNSAtNGgxNzlxOCAwIDE1IDR0MTEgMTF0NCAxNXYxNzlxMCAxMiAtOSAyMXQtMjEgOXpNMjczIDUwMmgtMTc5cS04IDAgLTE1IC00dC0xMSAtMTF0LTQgLTE1di0xNzlxMCAtMTMgOSAtMjEuNXQyMSAtOC41aDE3OXExMiAwIDIxIDguNXQ5IDIxLjV2MTc5cTAgOCAtNCAxNXQtMTEgMTF0LTE1IDR6TTYwMSAxNzQKaC0xNzlxLTEyIDAgLTIxIC05dC05IC0yMXYtMTc5cTAgLTEzIDkgLTIxLjV0MjEgLTguNWgxNzlxNiAwIDExLjUgMi41dDkuNSA2LjV0Ni41IDkuNXQyLjUgMTEuNXYxNzlxMCA2IC0yLjUgMTEuNXQtNi41IDkuNXQtOS41IDYuNXQtMTEuNSAyLjV6TTkyOSAxNzRoLTE3OXEtOCAwIC0xNSAtNHQtMTEgLTExdC00IC0xNXYtMTc5cTAgLTEzIDkgLTIxLjV0MjEgLTguNWgxNzlxMTIgMCAyMSA4LjV0OSAyMS41djE3OXEwIDEyIC05IDIxdC0yMSA5egpNMjczIDE3NGgtMTc5cS02IDAgLTExLjUgLTIuNXQtOS41IC02LjV0LTYuNSAtOS41dC0yLjUgLTExLjV2LTE3OXEwIC04IDQgLTE1dDExIC0xMXQxNSAtNGgxNzlxMTIgMCAyMSA4LjV0OSAyMS41djE3OXEwIDggLTQgMTV0LTExIDExdC0xNSA0eiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjA0IiB1bmljb2RlPSImI3hlNjA0OyIgCmQ9Ik01MTIgNzA5cS01NiAwIC0xMDkgLTE0LjV0LTk4IC00MXQtODIuNSAtNjR0LTY0IC04Mi41dC00MSAtOTh0LTE0LjUgLTEwOXEwIC0xMTEgNTQuNSAtMjA1LjV0MTQ5IC0xNDl0MjA1LjUgLTU0LjV0MjA1LjUgNTQuNXQxNDkgMTQ5dDU0LjUgMjA1LjV0LTU0LjUgMjA1LjV0LTE0OSAxNDl0LTIwNS41IDU0LjV6TTM3NiAyNTNxMCAtMSA1IC02bDkgLTlxNCAtNCAxMCAtNy41dDEwIC0zLjVxMTYgMCAxMDkgMTA0bDEzOCAxNThxNCA1IDcgNi41CnQ4IDIuNXE1IDAgMTEuNSAtMnQ5LjUgLTVsNDUgLTQ0cTcgLTggOCAtMThxMCAtNiAtMiAtMTAuNXQtNSAtOC41bC0yNTAgLTI2NGwtNTMgLTU3cS0zIC0zIC04IC01LjV0LTEwIC0yLjVxLTMgMCAtNi41IDF0LTYuNSAyLjV0LTUgMy41bC0xNTEgMTQycS0yIDIgLTMuNSA0dC0yLjUgNHQtMS41IDQuNXQtMC41IDUuNXEtMSAxMSA3IDE5bDM1IDM3cTcgOCAxOCA4LjV0MTkgLTcuNXoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYwNSIgdW5pY29kZT0iJiN4ZTYwNTsiIApkPSJNNTE1IDE0NXEtMzYgMCAtNzEgLTEydC02NCAtNDF0LTM2IC02OWgzMzhxLTUgNTMgLTU3IDg3LjV0LTExMCAzNC41ek05NTUgMTU3cS0zIDI2NSAwIDUyOHEwIDM0IC0xMi41IDQ3dC00Ni41IDEzcS00NSAtMSAtMzg0IC0xdC0zOTAgMXEtMjggMCAtNDAuNSAtMTF0LTEyLjUgLTM5cTEgLTIzMSAwIC01NDRxMCAtMTggNC41IC0yOS41dDE2IC0xNy41dDMwLjUgLTVxMzUgMSAxMDcgMC41dDEwNyAwLjVxMjUgMSA0OCAxNwpxNTYgNDAgMTE1LjUgNDV0MTE2LjUgLTI4cTYzIC0zNyAxNTAgLTM1cTk0IDIgMTMyIDBxMzMgLTIgNDYgMTF0MTMgNDd6TTg5MiAyMTNoLTc2MHY0NTZoNzYwdi00NTZ6IiAvPgogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MDYiIHVuaWNvZGU9IiYjeGU2MDY7IiBob3Jpei1hZHYteD0iMTI4MSIgCmQ9Ik0xMjgwIDQyMnpNNDkyIC03cTIgLTEgMy41IC0ydDUuNSAtNS41dDUuNSAtOS41dC0xLjUgLTExLjV0LTEyIC0xMy41aC00OWgtNjhoLTM0cS00IDAgLTEwLjUgMS41dC0yNC41IDkuNXQtMzIgMjAuNXQtMjYuNSAzOHQtMTUuNSA1OC41djM5N2w3IDM1cTI1IDgyIDEwMCA5NGgzNDFsMjcgLThxNzQgLTMyIDgwIC0xMjh2LTMzN3EtMSAtNCAtMi41IC0xMS41dC0xMS41IC0yOS41dC0yNC41IC00M3QtNDMgLTQ4dC02NS41IC00OWgtMWgtMwpoLTVoLTZoLTZoLTZoLTZoLTNoLTFxLTEgMCAtMiAwLjV0LTMuNSAyLjV0LTQuNSA0LjV0LTQgN3QtMiA5LjV2MzJxMCAxOSAxIDM3djE4cTAgMSAwLjUgNHQyLjUgMTF0NSAxNXQ5LjUgMTd0MTQgMTcuNXQyMCAxMy41dDI3LjUgOWg4MXYzMjZxMCAzIC0xIDguNXQtNS41IDIwdC0xMS41IDI1LjV0LTIxIDIxLjV0LTMyIDEyLjVoLTMzMnEtMyAwIC03LjUgLTF0LTE2LjUgLTZ0LTIxIC0xMy41dC0xNy41IC0yNy41dC0xMC41IC00NGwtMSAtMzg2Cmw3IC0zMnExOSAtNTMgNjcgLTYwaDQwaDQwaDM0aDI0aDh6TTczNiAxMDZoLTcwcS0zNCAtMTAgLTM4IC00OXYtNjNsOCAtMXE1IDAgMzQgMjlxMzcgMzcgNjYgODR6TTY1MSA0MzBxMCAtMTAgLTcuNSAtMTcuNXQtMTcuNSAtNy41aC0yMjFxLTcgMCAtMTMgMy41dC05IDl0LTMgMTIuNXEwIDExIDcuNSAxOC41dDE3LjUgNy41aDIyMXE3IDAgMTMgLTMuNXQ5IC05LjV0MyAtMTN6TTY1MiAyODJxMCAtMTEgLTcuNSAtMTguNXQtMTguNSAtNy41CmgtMjIwcS0xMSAwIC0xOC41IDcuNXQtNy41IDE4LjV0Ny41IDE4LjV0MTguNSA3LjVoMjIwcTExIDAgMTguNSAtNy41dDcuNSAtMTguNXpNNTI0IDEzM3EwIC0xMSAtNy41IC0xOXQtMTguNSAtOGgtOTFxLTExIDAgLTE5IDh0LTggMTl0OCAxOXQxOSA4aDkxcTExIDAgMTguNSAtOHQ3LjUgLTE5eiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjA3IiB1bmljb2RlPSImI3hlNjA3OyIgCmQ9Ik05NDMgMTI3bC0zNDEgNjA5cS0zNSA2MyAtOTAuNSA2M3QtOTAuNSAtNjNsLTM0MCAtNjA5cS0zNCAtNjIgLTYgLTExMXEyOSAtNDggMTAwIC00OGg2NzRxNzEgMCA5OS41IDQ4LjV0LTUuNSAxMTAuNXpNNDgwIDU3NnEwIDEzIDkuNSAyMi41dDIyLjUgOS41dDIyLjUgLTkuNXQ5LjUgLTIyLjV2LTI4OHEwIC0xMyAtOS41IC0yMi41dC0yMi41IC05LjV0LTIyLjUgOS41dC05LjUgMjIuNXYyODh6TTUxMiA2NHEtMTMgMCAtMjQgNi41CnQtMTcuNSAxNy41dC02LjUgMjRxMCAyMCAxNCAzNHQzNCAxNHQzNCAtMTR0MTQgLTM0dC0xNCAtMzR0LTM0IC0xNHoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYwOCIgdW5pY29kZT0iJiN4ZTYwODsiIApkPSJNODQ5IC0zM2gtNjc0cS03MSAwIC05OS41IDQ5dDUuNSAxMTFsMzQwIDYwOXEzNSA2MyA5MSA2M3ExMyAwIDI1LjUgLTR0MjQgLTEydDIyIC0yMHQxOC41IC0yN2wzNDEgLTYwOXEzNCAtNjMgNS41IC0xMTEuNXQtOTkuNSAtNDguNXpNNTEyIDczNXEtOSAwIC0xOCAtOHQtMTcgLTIybC0zNDAgLTYxMHEtMTcgLTMwIC03IC00N3Q0NSAtMTdoNjc0cTM1IDAgNDUgMTd0LTcgNDdsLTM0MSA2MTBxLTE2IDMwIC0zNCAzMHpNNTEyIDI1NgpxLTEzIDAgLTIyLjUgOS41dC05LjUgMjIuNXYyODhxMCAxMyA5LjUgMjIuNXQyMi41IDkuNXQyMi41IC05LjV0OS41IC0yMi41di0yODhxMCAtMTMgLTkuNSAtMjIuNXQtMjIuNSAtOS41ek01MTIgMTQ0ek00NjQgMTQ0cTAgMjAgMTQgMzR0MzQgMTRxMTMgMCAyNCAtNi41dDE3LjUgLTE3LjV0Ni41IC0yNHEwIC0yMCAtMTQgLTM0dC0zNCAtMTR0LTM0IDE0dC0xNCAzNHoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYwOSIgdW5pY29kZT0iJiN4ZTYwOTsiIApkPSJNMzg0IDNsLTE2OSAxNjlxLTQgMyAtNS41IDguNXQwIDEwLjV0NS41IDlsMzgwIDM4MHE0IDQgOSA1dDEwIDB0OSAtNWwxNjkgLTE2OXE0IC00IDUgLTl0MCAtMTB0LTUgLTlsLTM4MCAtMzgwcS02IC02IC0xNC41IC02dC0xMy41IDZ6TTY5MyA2NzhxMTggMTggNDIuNSAxOHQ0Mi41IC0xOGwxMTIgLTExMnExOCAtMTggMTggLTQyLjV0LTE4IC00Mi41bC01NiAtNTZsLTE5NyAxOTd6TTExNiAtOTZsNTYgMjU0bDE5OCAtMTk4eiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjBBIiB1bmljb2RlPSImI3hlNjBhOyIgCmQ9Ik03NjggMTA4djM4NGgtNjR2LTM4NGgtMTYwbDE5MiAtMTkybDE5MiAxOTJoLTE2MHpNMzIwIDU1NnYtMTkyaC0xOTJ2MTkyaDE5MnpNMzg0IDYyMGgtMzIwdi0zMjBoMzIwdjMyMHpNNjQgMTcyaDk2di02NGgtOTZ2NjR6TTE5MiAxNzJoOTZ2LTY0aC05NnY2NHpNMzIwIDE3Mmg2NHYtOTZoLTY0djk2ek02NCAtNTJoNjR2LTk2aC02NHY5NnpNMTYwIC04NGg5NnYtNjRoLTk2djY0ek0yODggLTg0aDk2di02NGgtOTZ2NjR6TTY0IDc2aDY0CnYtOTZoLTY0djk2ek0zMjAgNDRoNjR2LTk2aC02NHY5NnoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYwQiIgdW5pY29kZT0iJiN4ZTYwYjsiIApkPSJNNzA0IDMwMHYtMzg0aDY0djM4NGgxNjBsLTE5MiAxOTJsLTE5MiAtMTkyaDE2MHpNNjQgNjIwaDk2di02NGgtOTZ2NjR6TTE5MiA2MjBoOTZ2LTY0aC05NnY2NHpNMzIwIDYyMGg2NHYtOTZoLTY0djk2ek02NCAzOTZoNjR2LTk2aC02NHY5NnpNMTYwIDM2NGg5NnYtNjRoLTk2djY0ek0yODggMzY0aDk2di02NGgtOTZ2NjR6TTY0IDUyNGg2NHYtOTZoLTY0djk2ek0zMjAgNDkyaDY0di05NmgtNjR2OTZ6TTMyMCAxMDh2LTE5MmgtMTkydjE5MgpoMTkyek0zODQgMTcyaC0zMjB2LTMyMGgzMjB2MzIweiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjBDIiB1bmljb2RlPSImI3hlNjBjOyIgCmQ9Ik01MTIgLTQxcS0xMTUgMCAtMjEzIDU3dC0xNTUgMTU1dC01NyAyMTN0NTcgMjEzdDE1NSAxNTV0MjEzIDU3dDIxMyAtNTd0MTU1IC0xNTV0NTcgLTIxM3QtNTcgLTIxM3QtMTU1IC0xNTV0LTIxMyAtNTd6TTcyNCA0MjZoLTE3MHYxNzBoLTg0di0xNzBoLTE3MHYtODRoMTcwdi0xNzBoODR2MTcwaDE3MHY4NHoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYwRCIgdW5pY29kZT0iJiN4ZTYwZDsiIApkPSJNODMyIDgxMmgtNjQwcS04MCAwIC0xMzYgLTU2dC01NiAtMTM2di02NDBxMCAtNzkgNTYgLTEzNS41dDEzNiAtNTYuNWg2NDBxNzkgMCAxMzUuNSA1Ni41dDU2LjUgMTM1LjV2NjQwcTAgODAgLTU2LjUgMTM2dC0xMzUuNSA1NnpNMTYwIC04NHEtMTMgMCAtMjIuNSA5LjV0LTkuNSAyMi41dDkuNSAyMi41dDIyLjUgOS41dDIyLjUgLTkuNXQ5LjUgLTIyLjV0LTkuNSAtMjIuNXQtMjIuNSAtOS41ek0xNjAgNjIwcS0xMyAwIC0yMi41IDkuNQp0LTkuNSAyMi41dDkuNSAyMi41dDIyLjUgOS41dDIyLjUgLTkuNXQ5LjUgLTIyLjV0LTkuNSAtMjIuNXQtMjIuNSAtOS41ek03MDQgLTIwcTAgLTI3IC0xOC41IC00NS41dC00NS41IC0xOC41aC0yNTZxLTI3IDAgLTQ1LjUgMTguNXQtMTguNSA0NS41djY0MHEwIDI2IDE5IDQ1dDQ1IDE5aDI1NnEyNyAwIDQ1LjUgLTE4LjV0MTguNSAtNDUuNXYtNjQwek04NjQgLTg0cS0xMyAwIC0yMi41IDkuNXQtOS41IDIyLjV0OS41IDIyLjV0MjIuNSA5LjUKdDIyLjUgLTkuNXQ5LjUgLTIyLjV0LTkuNSAtMjIuNXQtMjIuNSAtOS41ek04NjQgNjIwcS0xMyAwIC0yMi41IDkuNXQtOS41IDIyLjV0OS41IDIyLjV0MjIuNSA5LjV0MjIuNSAtOS41dDkuNSAtMjIuNXQtOS41IC0yMi41dC0yMi41IC05LjV6TTU3NiAzMDBoLTEyOHEtMjYgMCAtNDUgLTE5dC0xOSAtNDV2LTE5MnEwIC0yNyAxOC41IC00NS41dDQ1LjUgLTE4LjVoMTI4cTI3IDAgNDUuNSAxOC41dDE4LjUgNDUuNXYxOTIKcTAgMjcgLTE4LjUgNDUuNXQtNDUuNSAxOC41eiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjBFIiB1bmljb2RlPSImI3hlNjBlOyIgCmQ9Ik02NTcgMTcxcTAgMTUgLTExIDI2bC0xMDQgMTAzbDEwNCAxMDNxMTEgMTEgMTEgMjZxMCAxNiAtMTEgMjZsLTUyIDUycS0xMSAxMSAtMjYgMTF0LTI2IC0xMWwtMTAzIC0xMDRsLTEwNCAxMDRxLTEwIDExIC0yNSAxMXEtMTYgMCAtMjcgLTExbC01MSAtNTJxLTExIC0xMCAtMTEgLTI2cTAgLTE1IDExIC0yNmwxMDMgLTEwM2wtMTAzIC0xMDNxLTExIC0xMSAtMTEgLTI2cTAgLTE2IDExIC0yNmw1MSAtNTJxMTEgLTExIDI3IC0xMQpxMTUgMCAyNSAxMWwxMDQgMTA0bDEwMyAtMTA0cTExIC0xMSAyNiAtMTF0MjYgMTFsNTIgNTJxMTEgMTAgMTEgMjZ6TTg3OCAzMDBxMCAtMTE5IC01OSAtMjIwdC0xNjAgLTE2MHQtMjIwLjUgLTU5dC0yMjAgNTl0LTE1OS41IDE2MHQtNTkgMjIwdDU5IDIyMHQxNTkuNSAxNjB0MjIwIDU5dDIyMC41IC01OXQxNjAgLTE2MHQ1OSAtMjIweiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjBGIiB1bmljb2RlPSImI3hlNjBmOyIgCmQ9Ik0xMDA4IDMzMGwtMTU2IDE1NXEtOSA5IC0yMSAxMi41dC0yNCAwdC0yMSAtMTIuNXEtMTQgLTEzIC0xNCAtMzIuNXQxNCAtMzMuNWw3NiAtNzZoLTMwM3YzMDlsNzYgLTc1cTE0IC0xNCAzMy41IC0xNHQzMi41IDEzcTkgOSAxMi41IDIxLjV0MCAyNC41dC0xMi41IDIxbC0xNTUgMTU1cS03IDcgLTE1LjUgMTAuNXQtMTcuNSAzLjVxLTIwIDAgLTMzIC0xNGwtMTU2IC0xNTVxLTkgLTkgLTEyLjUgLTIxdDAgLTI0LjV0MTIuNSAtMjEuNQpxMTMgLTEzIDMyLjUgLTEzdDMzLjUgMTNsNzYgNzZ2LTMwOWgtMzA0bDc2IDc2cTE0IDE0IDE0IDMzLjV0LTE0IDMyLjVxLTkgOSAtMjEgMTIuNXQtMjQgMHQtMjEgLTEyLjVsLTE1NiAtMTU1cS0xMyAtMTQgLTEzIC0zMy41dDEzIC0zMi41bDE1NiAtMTU2cTcgLTcgMTUuNSAtMTAuNXQxNy41IC0zLjVxNiAwIDEyIDEuNXQxMS41IDQuNXQ5LjUgOHE5IDkgMTIuNSAyMXQwIDI0dC0xMi41IDIxbC03NiA3NmgzMDR2LTMwM2wtNzYgNzYKcS03IDcgLTE1LjUgMTAuNXQtMTcuNSAzLjV0LTE4IC0zLjV0LTE1IC05LjVxLTE0IC0xNCAtMTQgLTMzLjV0MTQgLTMzLjVsMTU1IC0xNTVxMTQgLTE0IDMzLjUgLTE0dDMzLjUgMTRsMTU1IDE1NXExNCAxNCAxNCAzMy41dC0xMy41IDMzdC0zMyAxMy41dC0zMy41IC0xNGwtNzYgLTc1djMwMmgzMDNsLTc2IC03NnEtNyAtNyAtMTAuNSAtMTUuNXQtMy41IC0xNy41dDMuNSAtMTcuNXQxMC41IC0xNS41cTEzIC0xNCAzMyAtMTRxMyAwIDYgMC41CnQ1LjUgMXQ1LjUgMnQ1LjUgM3Q1LjUgMy41dDUgNGwxNTYgMTU2cTQgNCA3IDkuNXQ0LjUgMTF0MS41IDEyLjVxMCA0IC0xIDguNXQtMi41IDl0LTQgOHQtNS41IDcuNXoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYxMCIgdW5pY29kZT0iJiN4ZTYxMDsiIApkPSJNOTI0IDU3M2gtMTU0djEwNXEwIDI5IC0yMC41IDQ5LjV0LTQ5LjUgMjAuNWgtMzc2cS0xNSAwIC0yOCAtNnQtMjIgLTE1dC0xNC41IC0yMnQtNS41IC0yN3YtMTA1aC0xNTVxLTE0IC0xIC0yNCAtMTBxLTEwIC0xMCAtMTAgLTI0LjV0MTAgLTI0LjV0MjQgLTEwaDc5di01ODFxMCAtMjkgMjAuNSAtNDkuNXQ0OS41IC0yMC41aDUyOHExNCAwIDI3IDUuNXQyMi41IDE0LjV0MTUgMjJ0NS41IDI4djU1OHYyM2g3OHExNSAwIDI1IDEwCnQxMCAyNC41dC0xMCAyNC41dC0yNSAxMHpNNDEyIC0xMHEtOSAwIC0xNyA0LjV0LTEyLjUgMTIuNXQtNC41IDE4bC0xIDM3MnEwIDcgMyAxMy41dDcuNSAxMS41dDExIDcuNXQxMy41IDIuNXExNSAwIDI1IC0xMHQxMCAtMjV2LTM3MnEwIC0xNSAtMTAgLTI1dC0yNSAtMTB6TTYxMS41IC0xMHEtMTQuNSAwIC0yNC41IDEwdC0xMCAyNXYzNzJxMCAxNSAxMCAyNXQyNC41IDEwdDI0LjUgLTEwdDEwIC0yNWwxIC0zNzJxMCAtMTUgLTEwLjUgLTI1CnQtMjUgLTEwek0zMjMgNjM1cTAgMTcgMTMgMzB0MzEgMTNoMjkwcTE4IDAgMzEgLTEzdDEzIC0zMHYtNjJoLTM3OHY2MnoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYxMSIgdW5pY29kZT0iJiN4ZTYxMTsiIApkPSJNOTYwIDU1MnEwIC0xNyAtMTIgLTI5LjV0LTMwIC0xMi41aC04MTJxLTcgMCAtMTMuNSAydC0xMS41IDZ0LTkgOXQtNiAxMS41dC0yIDEzLjV0MiAxMy41dDYgMTEuNXQ5IDl0MTEuNSA2dDEzLjUgMmg4MTJxMTggMCAzMCAtMTJ0MTIgLTMwek05NjAgMzAwcTAgLTE3IC0xMiAtMjkuNXQtMzAgLTEyLjVoLTgxMnEtNiAwIC0xMS41IDEuNXQtMTAgNHQtOC41IDYuNXQtNi41IDguNXQtNCAxMHQtMS41IDExLjVxMCAxNyAxMiAyOS41CnQzMCAxMi41aDgxMnE0IDAgOC41IC0xdDggLTIuNXQ3IC0zLjV0Ni41IC01dDUgLTYuNXQzLjUgLTd0Mi41IC04dDEgLTguNXpNOTYwIDQ4cTAgLTE4IC0xMiAtMzB0LTMwIC0xMmgtODEycS0xMiAwIC0yMS41IDUuNXQtMTUgMTV0LTUuNSAyMS41cTAgMTcgMTIgMjkuNXQzMCAxMi41aDgxMnEyOSAwIDM5IC0yNnEzIC05IDMgLTE2eiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjEyIiB1bmljb2RlPSImI3hlNjEyOyIgCmQ9Ik02OTkgMzU4aC0xNTd2LTE1OHEwIC01IC0yIC0xMHQtNS41IC04LjV0LTguNSAtNS41dC0xMCAtMnEtMTEgMCAtMTkgOHQtOCAxOHYxNThoLTE1N3EtMTEgMCAtMTguNSA3LjV0LTcuNSAxOC41cTAgNyAzLjUgMTN0OS41IDkuNXQxMyAzLjVoMTU3djE1N3EwIDExIDggMTguNXQxOSA3LjVxNSAwIDEwIC0ydDguNSAtNS41dDUuNSAtOC41dDIgLTEwdi0xNTdoMTU3cTExIDAgMTguNSAtNy41dDcuNSAtMTguNXQtNy41IC0xOC41CnQtMTguNSAtNy41eiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjEzIiB1bmljb2RlPSImI3hlNjEzOyIgCmQ9Ik03MjkgOTBoLTQzNHEtMTE2IDAgLTE5Ny41IDgxLjV0LTgxLjUgMTk2LjV2MzJxMCAxMTUgODEuNSAxOTYuNXQxOTcuNSA4MS41aDQzNHExMTYgMCAxOTcuNSAtODEuNXQ4MS41IC0xOTYuNXYtMzJxMCAtMTE1IC04MS41IC0xOTYuNXQtMTk3LjUgLTgxLjV6TTk0NiA0MDBxMCA5MCAtNjMuNSAxNTN0LTE1My41IDYzaC00MzRxLTkwIDAgLTE1My41IC02M3QtNjMuNSAtMTUzdi0zMnEwIC01OSAyOSAtMTA5dDc5IC03OXQxMDkgLTI5aDQzNApxOTAgMCAxNTMuNSA2My41dDYzLjUgMTUzLjV2MzJ6TTMyMiAyMjNxLTQ0IDAgLTgyIDIyLjV0LTYwIDYwdC0yMiA4Mi41cTAgMzMgMTMgNjMuNXQzNSA1Mi41dDUyLjUgMzV0NjMuNSAxM3E2OCAwIDExNiAtNDh0NDggLTExNnQtNDggLTExNi41dC0xMTYgLTQ4LjV6IiAvPgogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MTQiIHVuaWNvZGU9IiYjeGU2MTQ7IiAKZD0iTTcyOSA5MGgtNDM0cS0xMTYgMCAtMTk3LjUgODEuNXQtODEuNSAxOTYuNXYzMnEwIDExNSA4MS41IDE5Ni41dDE5Ny41IDgxLjVoNDM0cTExNiAwIDE5Ny41IC04MS41dDgxLjUgLTE5Ni41di0zMnEwIC0xMTUgLTgxLjUgLTE5Ni41dC0xOTcuNSAtODEuNXpNOTQ3IDM5OXEwIDkwIC02My41IDE1My41dC0xNTMuNSA2My41aC00MzZxLTg5IDAgLTE1Mi41IC02My41dC02My41IC0xNTMuNXYtMzFxMCAtNTkgMjkgLTEwOXQ3OSAtNzkKdDEwOCAtMjloNDM2cTkwIDAgMTUzLjUgNjMuNXQ2My41IDE1My41djMxek03MDIgMjIzcS00NCAwIC04MiAyMnQtNjAgNjB0LTIyIDgzcTAgNjggNDggMTE2dDExNiA0OHQxMTYuNSAtNDh0NDguNSAtMTE2cTAgLTE3IC0zLjUgLTMzLjV0LTkuNSAtMzF0LTE1IC0yNy41dC0yMC41IC0yNC41dC0yNC41IC0yMHQtMjcuNSAtMTV0LTMxIC0xMHQtMzMuNSAtMy41eiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjE1IiB1bmljb2RlPSImI3hlNjE1OyIgCmQ9Ik04MzIgODk2aC02NDBxLTgwIDAgLTEzNiAtNTZ0LTU2IC0xMzZ2LTY0MHEwIC03OSA1NiAtMTM1LjV0MTM2IC01Ni41aDY0MHE3OSAwIDEzNS41IDU2LjV0NTYuNSAxMzUuNXY2NDBxMCA4MCAtNTYuNSAxMzZ0LTEzNS41IDU2ek0xNjAgMHEtMTMgMCAtMjIuNSA5LjV0LTkuNSAyMi41dDkuNSAyMi41dDIyLjUgOS41dDIyLjUgLTkuNXQ5LjUgLTIyLjV0LTkuNSAtMjIuNXQtMjIuNSAtOS41ek0xNjAgNzA0cS0xMyAwIC0yMi41IDkuNQp0LTkuNSAyMi41dDkuNSAyMi41dDIyLjUgOS41dDIyLjUgLTkuNXQ5LjUgLTIyLjV0LTkuNSAtMjIuNXQtMjIuNSAtOS41ek03MDQgNjRxMCAtMjcgLTE4LjUgLTQ1LjV0LTQ1LjUgLTE4LjVoLTI1NnEtMjcgMCAtNDUuNSAxOC41dC0xOC41IDQ1LjV2NjQwcTAgMjYgMTkgNDV0NDUgMTloMjU2cTI3IDAgNDUuNSAtMTguNXQxOC41IC00NS41di02NDB6TTg2NCAwcS0xMyAwIC0yMi41IDkuNXQtOS41IDIyLjV0OS41IDIyLjV0MjIuNSA5LjUKdDIyLjUgLTkuNXQ5LjUgLTIyLjV0LTkuNSAtMjIuNXQtMjIuNSAtOS41ek04NjQgNzA0cS0xMyAwIC0yMi41IDkuNXQtOS41IDIyLjV0OS41IDIyLjV0MjIuNSA5LjV0MjIuNSAtOS41dDkuNSAtMjIuNXQtOS41IC0yMi41dC0yMi41IC05LjV6TTU3NiA3MDRoLTEyOHEtMjYgMCAtNDUgLTE5dC0xOSAtNDV2LTE5MnEwIC0yNiAxOSAtNDV0NDUgLTE5aDEyOHEyNyAwIDQ1LjUgMTguNXQxOC41IDQ1LjV2MTkycTAgMjcgLTE4LjUgNDUuNQp0LTQ1LjUgMTguNXoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYxNiIgdW5pY29kZT0iJiN4ZTYxNjsiIApkPSJNNTA0IDE3cS05NyAwIC0xNzkuNSA0OHQtMTMwLjUgMTMwLjV0LTQ4IDE3OS41cTAgMTEwIDYyIDIwMWw5MyAtOTN2MjQ1aC0yNDZsOTIgLTkycS0yMCAtMjcgLTM1LjUgLTU3LjV0LTI2LjUgLTYzLjV0LTE3IC02OC41dC02IC03MS41cTAgLTkwIDM1IC0xNzEuNXQ5NC41IC0xNDF0MTQxIC05NC41dDE3MS41IC0zNXE4NSAwIDE2MyAzMWwtNTAgNzFxLTU1IC0xOCAtMTEzIC0xOHpNNzIwIDI3N3YtMjQ2aDI0NmwtOTYgOTYKcTM3IDU0IDU2LjUgMTE3dDE5LjUgMTMxcTAgOTAgLTM1IDE3MnQtOTQgMTQxdC0xNDEgOTR0LTE3MiAzNXEtNzAgMCAtMTM2IC0yMWw1MiAtNzNxNDEgMTAgODQgMTBxNTkgMCAxMTMuNSAtMTh0OTguNSAtNTF0NzcgLTc3dDUxIC05OC41dDE4IC0xMTMuNXEwIC01MCAtMTMuNSAtOTh0LTM4LjUgLTg5eiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjE3IiB1bmljb2RlPSImI3hlNjE3OyIgCmQ9Ik01MTIgODAycS0xMDQgMCAtMTkyLjUgLTUxLjV0LTE0MCAtMTQwdC01MS41IC0xOTN0NTEuNSAtMTkzdDE0MCAtMTQwdDE5Mi41IC01MS41dDE5Mi41IDUxLjV0MTQwIDE0MHQ1MS41IDE5M3QtNTEuNSAxOTN0LTE0MCAxNDB0LTE5Mi41IDUxLjV6TTY2MCAyMTRoLTUwdjE3NWgtMTk2di0xNzVoLTUwdjM5NWg1MHYtMTc5aDE5NnYxNzloNTB2LTM5NXoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYxOCIgdW5pY29kZT0iJiN4ZTYxODsiIApkPSJNOTYxIDY0MHEwIDQwIC0yOC41IDY4dC02Ny41IDI4aC0xODZoLTFoLTFxLTMgLTEgLTUuNSAtMS41dC00LjUgLTAuNWwtMSAtMWgtMXEtMiAtMiAtNC41IC0zdC0zLjUgLTNxLTEyIC0xMSAtMTkuNSAtMzEuNXQtMTUuNSAtNTYuNXEtMyAtMTIgLTQgLTE0cS00IC0xNyAtMjcgLTE3aC03aC04aC00MTZxLTQwIDAgLTY4IC0yOC41dC0yOCAtNjkuNWwzMiAtNDE0cTAgLTQwIDI4IC02OHQ2OCAtMjhoNjQwcTQwIDAgNjggMjh0MjggNjZ6Ck04NjQgOTZxMCAtMTMgLTkuNSAtMjIuNXQtMjIuNSAtOS41aC02NDBxLTkgMCAtMTYgNC41dC0xMS41IDEyLjV0LTQuNSAxN2wtMzIgNDE0cTAgMTMgOS41IDIyLjV0MjIuNSA5LjVoNDE2aDhoN3EzNSAwIDU4LjUgMTd0MzAuNSA0OHExIDIgMiA2dDIgOXE4IDM0IDEzIDQ4aDE2OHExMyAwIDIyLjUgLTkuNXQ5LjUgLTIyLjV2LTJ2LTF6TTEyOCA2NzJoNDE2cTEzIDAgMjIuNSA5LjV0OS41IDIyLjV0LTkuNSAyMi41dC0yMi41IDkuNWgtNDE2CnEtMTMgMCAtMjIuNSAtOS41dC05LjUgLTIyLjV0OS41IC0yMi41dDIyLjUgLTkuNXoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYxOSIgdW5pY29kZT0iJiN4ZTYxOTsiIApkPSJNNTIxIDE5NGwtMzc2IDI0N2wtNTAgLTUybDQyNiAtMjkxbDQyNiAyOTFsLTUxIDUzek05NDcgNTUwbC00MjYgMjkxbC00MjYgLTI5MWw0MjYgLTI5MXpNNTIxIDc1NmwzMDIgLTIwNmwtMzAyIC0yMDdsLTMwMiAyMDd6TTUyMSAzM2wtMzc2IDI0OGwtNTAgLTUybDQyNiAtMjkxbDQyNiAyOTFsLTUxIDUzeiIgLz4KICAgIDxnbHlwaCBnbHlwaC1uYW1lPSJ1bmlFNjFBIiB1bmljb2RlPSImI3hlNjFhOyIgCmQ9Ik04NzQgNjYycS00OCA0OCAtMTA2IDgxLjV0LTEyMyA1MXQtMTMzIDE3LjVxLTEwMyAwIC0xOTYgLTM4LjV0LTE2NiAtMTExLjVxLTM2IC0zNiAtNjQgLTc4dC00NyAtODh0LTI5IC05NS41dC0xMCAtMTAwLjVxMCAtMTAzIDM4LjUgLTE5NnQxMTEuNSAtMTY2cTI0IC0yNCA1MSAtNDQuNXQ1NS41IC0zNy41dDU5LjUgLTI5LjV0NjMgLTIxdDY1LjUgLTEzdDY3LjUgLTQuNXE2OCAwIDEzMyAxNy41dDEyMyA1MXQxMDYgODEuNQpxNzMgNzMgMTExLjUgMTY2dDM4LjUgMTk2cTAgNTEgLTEwIDEwMC41dC0yOSA5NS41dC00NyA4OHQtNjQgNzh6TTk0MiA0NjZxLTUgOCAtMTYgMTUuNXQtMjEgMTF0LTMxIDExLjVxLTE2IDUgLTI4LjUgMjB0LTE4LjUgMjguNXQtMTUgNDEuNXEtNiAxOCAtMTAgMjcuNXQtMTEgMjQuNXQtMTUuNSAyNS41dC0xOS41IDE5LjVxMTMwIC04MyAxODYgLTIyNXpNNzk4IDI5MHEyIC0xOSAyLjUgLTM1LjV0LTguNSAtMzguNXQtMjkgLTQ1CnEtMiAtMiAtNC41IC01LjV0LTQuNSAtNi41dC00IC03dC0zIC03dC0zIC04dC0zLjUgLTh0LTMuNSAtOHEtOCAtMjIgLTEzLjUgLTMzLjV0LTE2LjUgLTI2dC0yOCAtMjF0LTQxIC02LjVxLTcgOCAtMTIgMzdxLTQgMjQgLTEwIDkwcS04IDExMSAtMjEgMTYwcS0yNSA5MiAtODQgMTEycS0yNiA5IC01NSA5cS0xNCAwIC0zOSAtM3EtMTcgLTIgLTI0IC0ycS01IDAgLTcuNSAwLjV0LTcuNSAyLjV0LTguNSA1LjV0LTguNSAxMXQtMTAgMTguNQpxLTExIDMwIC0xMCA2My41dDIwLjUgNjl0NTMuNSA1Ny41cTU1IDM3IDg5IDM3cTI3IDAgNjkgLTIzcTIzIC0xMiA0Mi41IC0xNnQzOC41IC00aDEwcTUgMCAxMiAxaDE2cTkgMCAxNiAtMS41dDE1IC03LjVxMTMgLTkgMjEuNSAtMjZ0MTkuNSAtNDhxOCAtMjQgMTMuNSAtMzcuNXQxNi41IC0zM3QyNyAtMzJ0MzcgLTE5LjVxMjIgLTggMzEgLTExcS05IC05IC0zNiAtMzRxLTIxIC0xOCAtMzAgLTI3cS0xNSAtMTMgLTIxLjUgLTMwdC01LjUgLTMyCnQyIC0zMXpNNTEgMzA0cTggLTEgMTggLTNxMzQgLTggNDggLTE1cS0zIC02IC0xMiAtMThxLTI4IC00MSAtMjIgLTY1cTIgLTE0IDAuNSAtMjcuNXQtNi41IC0yOC41cS04IDI0IC0xNCA0OXQtOSA1MXQtMyA1M3YydjJ6TTUxMiAtMTYxcS0xMjkgMCAtMjM4IDY2LjV0LTE2OCAxNzYuNXE0MCA3NiAyNyAxMzJxMCA1IDE0IDI0cTYgOCA5IDEyLjV0NyAxM3Q1LjUgMTQuNXQxIDE0LjV0LTQuNSAxNS41cS0xMiAyNiAtODAgNDFxLTEzIDMgLTMxIDYKcTE0IDExMyA3OCAyMDZ0MTY0IDE0Ni41dDIxNiA1My41cTExOSAwIDIyMyAtNThxLTYgMyAtMTIgNC41dC0xMS41IDIuNXQtOS41IDFoLTEwaC0xOXEtMTMgLTEgLTE5IC0xcS05IDAgLTE2IDF0LTE4LjUgNC41dC0yMi41IDkuNXEtNTMgMjggLTkzIDI4cS00OSAwIC0xMTcgLTQ1cS0zMSAtMjAgLTUzLjUgLTUwLjV0LTM0LjUgLTY2LjVxLTIzIC03MyA1IC0xMzZxMzAgLTY5IDg5IC02OWg3cTQgMCA4LjUgMC41dDcgMXQ3LjUgMC41CnEyMiAzIDMzIDNxMTAgMCAxOS41IC0xLjV0MTguNSAtNC41cTM0IC0xMSA1MSAtNzdxMTIgLTQ0IDIwIC0xNTFxNiAtODAgMTMgLTExMHE2IC0yNiAxNyAtNDFxMTYgLTI0IDQxIC0yNHEzNCAwIDYxIDExdDQ3IDMzcTEwIDExIDE4LjUgMjZ0MTIuNSAyNC41dDEwIDI2LjVxMTEgMjggMTYgMzRxMjcgMzAgMzkuNSA2MS41dDExIDUzLjV0LTIuNSA0NHEtMyAyMSAtMS41IDMxLjV0OS41IDE4LjVxNCAzIDcgNS41dDYgNS41dDYgNS41dDUuNSA1CnQ1LjUgNC41cTMyIDI5IDQxIDM5cTIyIDI0IDE4IDQ0djFxMjcgLTc1IDI3IC0xNTZxMCAtOTQgLTM2LjUgLTE3OXQtOTguNSAtMTQ3dC0xNDcuNSAtOTguNXQtMTc4LjUgLTM2LjV6IiAvPgogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MUIiIHVuaWNvZGU9IiYjeGU2MWI7IiAKZD0iTTgwNCA3NzBsNTAgLTQzMWwtNTcgLTdsLTQ1IDM4NmgtNDgwbC00NSAtMzg2bC01NyA3bDUwIDQzMWg1ODR6TTMxOSA2NzRoMzg2di00OGgtMzg2djQ4ek0zMTkgNTc3aDM4NnYtNDhoLTM4NnY0OHpNMzE5IDQ4MWgzODZ2LTQ5aC0zODZ2NDl6TTMxOSAzODRoMzg2di00OGgtMzg2djQ4ek04NzQgMjg3aC03MjRxLTcgMCAtMTEuNSAtM3QtNiAtOHQwLjUgLTExbDgyIC0yNDRxMyAtMTAgMTIgLTE2LjV0MTkgLTYuNWg1MzJxMTAgMCAxOSA2LjUKdDEyIDE2LjVsODIgMjQ0cTcgMjIgLTE3IDIyek02MDkgMTkxaC0xOTR2NDhoMTk0di00OHoiIC8+CiAgICA8Z2x5cGggZ2x5cGgtbmFtZT0idW5pRTYxQyIgdW5pY29kZT0iJiN4ZTYxYzsiIApkPSJNOTk1IDNsLTI3MiAyMjdxLTEgMSAtMiAxLjV0LTQgMi41cTM3IDc5IDM3IDE2MHEwIDgyIC0zNC41IDE1OHQtOTkuNSAxMzFxLTEwNSA4OSAtMjQzIDg5cS04MiAwIC0xNTggLTM1dC0xMzEgLTEwMHEtNDMgLTUyIC02NS41IC0xMTQuNXQtMjIuNSAtMTI4LjVxMCAtODIgMzQuNSAtMTU4LjV0MTAwLjUgLTEzMS41cTEwNSAtODggMjQxIC04OGgxcTEyMSAwIDIyMSA3MnExIDAgMiAtMmwxIC0xbDI3MiAtMjI3cTEwIC05IDIzIC0xNAp0MjYuNSAtNXQyNi41IDMuNXQyNSAxMXQyMSAxOS41bDYgN3EyNCAyOCAyMiA2NC41dC0yOCA1OC41ek01ODUgMjE5cS00MCAtNDcgLTk0LjUgLTcydC0xMTMuNSAtMjVxLTk4IDEgLTE3NCA2NHEtNDcgMzkgLTcyIDk0dC0yNSAxMTRxMCA5OSA2NCAxNzRxMzkgNDggOTMuNSA3Mi41dDExMy41IDI0LjVxOTkgMCAxNzQgLTYzcTQ3IC00MCA3MiAtOTQuNXQyNSAtMTEzLjVxMCAtOTkgLTYzIC0xNzV6IiAvPgogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MUQiIHVuaWNvZGU9IiYjeGU2MWQ7IiAKZD0iTTQyNyAxNTFxMCAyMyAxMSA0Mi41dDMxIDMxdDQzIDExLjVxMzUgMCA2MCAtMjV0MjUgLTYwcTAgLTExIC0yLjUgLTIydC04IC0yMHQtMTIuNSAtMTYuNXQtMTYgLTEzLjVxMSAtNiAzIC0xNnQ2LjUgLTM4LjV0OC41IC01NS41cTAgLTggLTQuNSAtMTUuNXQtMTEuNSAtMTJ0LTE2IC00LjVoLTY0cS0xMyAwIC0yMi41IDkuNXQtOS41IDIyLjVsMTggMTEwcS0zOSAyNSAtMzkgNzJ6TTM0MSAzODV2MTUwcTAgMjMgNi41IDQ1dDE3LjUgNDEKdDI2LjUgMzQuNXQzNC41IDI2LjV0NDEgMTd0NDUgNnE0NiAwIDg1LjUgLTIyLjV0NjIuNSAtNjJ0MjMgLTg1LjV2LTE1MGgtMzQyek0yMzUgNTM1di0xNTBoLTY0cS0zNiAwIC02MSAtMjV0LTI1IC02MHYtNDI3cTAgLTM1IDI1IC02MHQ2MSAtMjVoNjgycTM2IDAgNjEgMjV0MjUgNjB2NDI3cTAgMzUgLTI1IDYwdC02MSAyNWgtNjR2MTUwcTAgMTE1IC04MSAxOTZ0LTE5NiA4MXEtNTYgMCAtMTA3LjUgLTIydC04OC41IC01OXQtNTkgLTg4LjUKdC0yMiAtMTA3LjV6IiAvPgogICAgPGdseXBoIGdseXBoLW5hbWU9InVuaUU2MUUiIHVuaWNvZGU9IiYjeGU2MWU7IiAKZD0iTTc2OSA0NDh2MTM1cS0zIDEwNCAtNzcuNSAxNzYuNXQtMTc4LjUgNzIuNXEtNTEgMCAtOTcuNSAtMTkuNXQtODEgLTUyLjV0LTU1IC03OXQtMjIuNSAtOTd2LTEzNmgtMXEtMTcgMCAtMzIgLTguNXQtMjMuNSAtMjMuNXQtOC41IC0zMnYtMzg0cTAgLTI3IDE4LjUgLTQ1LjV0NDUuNSAtMTguNWg1MTJxMTcgMCAzMiA4LjV0MjMuNSAyMy41dDguNSAzMnYzODRxMCAyNiAtMTguNSA0NXQtNDQuNSAxOXpNMzIxIDU4MXEyIDc4IDU4IDEzMi41CnQxMzQgNTQuNXEzMSAwIDYwIC05LjV0NTIgLTI2LjV0NDEgLTQwdDI4IC01MS41dDExIC01OS41di0xMzNoLTM4NHYxMzN6TTc2OCAzMnEwIC05IC00LjUgLTE2dC0xMS41IC0xMS41dC0xNiAtNC41aC00NDhxLTQgMCAtOC41IDF0LTggM3QtNi41IDV0LTUgNi41dC0zIDh0LTEgOC41djMyMHEwIDEzIDkuNSAyMi41dDIyLjUgOS41aDQ0OHE1IDAgMTAgLTEuNXQ5IC00LjV0NyAtN3Q0LjUgLTl0MS41IC0xMHYtMzIwek01NDQgMjA2djUyCnEwIDEzIC05LjUgMjIuNXQtMjIuNSA5LjVxLTkgMCAtMTYgLTQuNXQtMTEuNSAtMTEuNXQtNC41IC0xNnYtNTJxLTI4IC0xOCAtMjggLTUxcTAgLTI1IDE3LjUgLTQyLjV0NDIuNSAtMTcuNXQ0Mi41IDE3LjV0MTcuNSA0Mi41cTAgMzMgLTI4IDUxeiIgLz4KICA8L2ZvbnQ+CjwvZGVmcz48L3N2Zz4K"
 
 /***/ },
 /* 209 */
@@ -24787,12 +24767,12 @@
 	var bidiOrdering = (function() {
 	  // Character types for codepoints 0 to 0xff
 	  var lowTypes = "bbbbbbbbbtstwsbbbbbbbbbbbbbbssstwNN%%%NNNNNN,N,N1111111111NNNNNNNLLLLLLLLLLLLLLLLLLLLLLLLLLNNNNNNLLLLLLLLLLLLLLLLLLLLLLLLLLNNNNbbbbbbsbbbbbbbbbbbbbbbbbbbbbbbbbb,N%%%%NNNNLNNNNN%%11NLNNN1LNNNNNLLLLLLLLLLLLLLLLLLLLLLLNLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLN"
-	  // Character types for codepoints 0x600 to 0x6f9
-	  var arabicTypes = "nnnnnnNNr%%r,rNNmmmmmmmmmmmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmmmmmmmmmmmmmmmnnnnnnnnnn%nnrrrmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmnNmmmmmmrrmmNmmmmrr1111111111"
+	  // Character types for codepoints 0x600 to 0x6ff
+	  var arabicTypes = "rrrrrrrrrrrr,rNNmmmmmmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmmmmmmmmrrrrrrrnnnnnnnnnn%nnrrrmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmmmmmmmmmmmmmNmmmm"
 	  function charType(code) {
 	    if (code <= 0xf7) { return lowTypes.charAt(code) }
 	    else if (0x590 <= code && code <= 0x5f4) { return "R" }
-	    else if (0x600 <= code && code <= 0x6f9) { return arabicTypes.charAt(code - 0x600) }
+	    else if (0x600 <= code && code <= 0x6ed) { return arabicTypes.charAt(code - 0x600) }
 	    else if (0x6ee <= code && code <= 0x8ac) { return "r" }
 	    else if (0x2000 <= code && code <= 0x200b) { return "w" }
 	    else if (code == 0x200c) { return "b" }
@@ -27098,7 +27078,7 @@
 	  }
 	}
 	
-	var NativeScrollbars = function(place, scroll, cm) {
+	function NativeScrollbars(place, scroll, cm) {
 	  this.cm = cm
 	  var vert = this.vert = elt("div", [elt("div", null, null, "min-width: 1px")], "CodeMirror-vscrollbar")
 	  var horiz = this.horiz = elt("div", [elt("div", null, null, "height: 100%; min-height: 1px")], "CodeMirror-hscrollbar")
@@ -27114,92 +27094,91 @@
 	  this.checkedZeroWidth = false
 	  // Need to set a minimum width to see the scrollbar on IE7 (but must not set it on IE8).
 	  if (ie && ie_version < 8) { this.horiz.style.minHeight = this.vert.style.minWidth = "18px" }
-	};
+	}
 	
-	NativeScrollbars.prototype.update = function (measure) {
-	  var needsH = measure.scrollWidth > measure.clientWidth + 1
-	  var needsV = measure.scrollHeight > measure.clientHeight + 1
-	  var sWidth = measure.nativeBarWidth
+	NativeScrollbars.prototype = copyObj({
+	  update: function(measure) {
+	    var needsH = measure.scrollWidth > measure.clientWidth + 1
+	    var needsV = measure.scrollHeight > measure.clientHeight + 1
+	    var sWidth = measure.nativeBarWidth
 	
-	  if (needsV) {
-	    this.vert.style.display = "block"
-	    this.vert.style.bottom = needsH ? sWidth + "px" : "0"
-	    var totalHeight = measure.viewHeight - (needsH ? sWidth : 0)
-	    // A bug in IE8 can cause this value to be negative, so guard it.
-	    this.vert.firstChild.style.height =
-	      Math.max(0, measure.scrollHeight - measure.clientHeight + totalHeight) + "px"
-	  } else {
-	    this.vert.style.display = ""
-	    this.vert.firstChild.style.height = "0"
+	    if (needsV) {
+	      this.vert.style.display = "block"
+	      this.vert.style.bottom = needsH ? sWidth + "px" : "0"
+	      var totalHeight = measure.viewHeight - (needsH ? sWidth : 0)
+	      // A bug in IE8 can cause this value to be negative, so guard it.
+	      this.vert.firstChild.style.height =
+	        Math.max(0, measure.scrollHeight - measure.clientHeight + totalHeight) + "px"
+	    } else {
+	      this.vert.style.display = ""
+	      this.vert.firstChild.style.height = "0"
+	    }
+	
+	    if (needsH) {
+	      this.horiz.style.display = "block"
+	      this.horiz.style.right = needsV ? sWidth + "px" : "0"
+	      this.horiz.style.left = measure.barLeft + "px"
+	      var totalWidth = measure.viewWidth - measure.barLeft - (needsV ? sWidth : 0)
+	      this.horiz.firstChild.style.width =
+	        (measure.scrollWidth - measure.clientWidth + totalWidth) + "px"
+	    } else {
+	      this.horiz.style.display = ""
+	      this.horiz.firstChild.style.width = "0"
+	    }
+	
+	    if (!this.checkedZeroWidth && measure.clientHeight > 0) {
+	      if (sWidth == 0) { this.zeroWidthHack() }
+	      this.checkedZeroWidth = true
+	    }
+	
+	    return {right: needsV ? sWidth : 0, bottom: needsH ? sWidth : 0}
+	  },
+	  setScrollLeft: function(pos) {
+	    if (this.horiz.scrollLeft != pos) { this.horiz.scrollLeft = pos }
+	    if (this.disableHoriz) { this.enableZeroWidthBar(this.horiz, this.disableHoriz) }
+	  },
+	  setScrollTop: function(pos) {
+	    if (this.vert.scrollTop != pos) { this.vert.scrollTop = pos }
+	    if (this.disableVert) { this.enableZeroWidthBar(this.vert, this.disableVert) }
+	  },
+	  zeroWidthHack: function() {
+	    var w = mac && !mac_geMountainLion ? "12px" : "18px"
+	    this.horiz.style.height = this.vert.style.width = w
+	    this.horiz.style.pointerEvents = this.vert.style.pointerEvents = "none"
+	    this.disableHoriz = new Delayed
+	    this.disableVert = new Delayed
+	  },
+	  enableZeroWidthBar: function(bar, delay) {
+	    bar.style.pointerEvents = "auto"
+	    function maybeDisable() {
+	      // To find out whether the scrollbar is still visible, we
+	      // check whether the element under the pixel in the bottom
+	      // left corner of the scrollbar box is the scrollbar box
+	      // itself (when the bar is still visible) or its filler child
+	      // (when the bar is hidden). If it is still visible, we keep
+	      // it enabled, if it's hidden, we disable pointer events.
+	      var box = bar.getBoundingClientRect()
+	      var elt = document.elementFromPoint(box.left + 1, box.bottom - 1)
+	      if (elt != bar) { bar.style.pointerEvents = "none" }
+	      else { delay.set(1000, maybeDisable) }
+	    }
+	    delay.set(1000, maybeDisable)
+	  },
+	  clear: function() {
+	    var parent = this.horiz.parentNode
+	    parent.removeChild(this.horiz)
+	    parent.removeChild(this.vert)
 	  }
+	}, NativeScrollbars.prototype)
 	
-	  if (needsH) {
-	    this.horiz.style.display = "block"
-	    this.horiz.style.right = needsV ? sWidth + "px" : "0"
-	    this.horiz.style.left = measure.barLeft + "px"
-	    var totalWidth = measure.viewWidth - measure.barLeft - (needsV ? sWidth : 0)
-	    this.horiz.firstChild.style.width =
-	      (measure.scrollWidth - measure.clientWidth + totalWidth) + "px"
-	  } else {
-	    this.horiz.style.display = ""
-	    this.horiz.firstChild.style.width = "0"
-	  }
+	function NullScrollbars() {}
 	
-	  if (!this.checkedZeroWidth && measure.clientHeight > 0) {
-	    if (sWidth == 0) { this.zeroWidthHack() }
-	    this.checkedZeroWidth = true
-	  }
-	
-	  return {right: needsV ? sWidth : 0, bottom: needsH ? sWidth : 0}
-	};
-	
-	NativeScrollbars.prototype.setScrollLeft = function (pos) {
-	  if (this.horiz.scrollLeft != pos) { this.horiz.scrollLeft = pos }
-	  if (this.disableHoriz) { this.enableZeroWidthBar(this.horiz, this.disableHoriz) }
-	};
-	
-	NativeScrollbars.prototype.setScrollTop = function (pos) {
-	  if (this.vert.scrollTop != pos) { this.vert.scrollTop = pos }
-	  if (this.disableVert) { this.enableZeroWidthBar(this.vert, this.disableVert) }
-	};
-	
-	NativeScrollbars.prototype.zeroWidthHack = function () {
-	  var w = mac && !mac_geMountainLion ? "12px" : "18px"
-	  this.horiz.style.height = this.vert.style.width = w
-	  this.horiz.style.pointerEvents = this.vert.style.pointerEvents = "none"
-	  this.disableHoriz = new Delayed
-	  this.disableVert = new Delayed
-	};
-	
-	NativeScrollbars.prototype.enableZeroWidthBar = function (bar, delay) {
-	  bar.style.pointerEvents = "auto"
-	  function maybeDisable() {
-	    // To find out whether the scrollbar is still visible, we
-	    // check whether the element under the pixel in the bottom
-	    // left corner of the scrollbar box is the scrollbar box
-	    // itself (when the bar is still visible) or its filler child
-	    // (when the bar is hidden). If it is still visible, we keep
-	    // it enabled, if it's hidden, we disable pointer events.
-	    var box = bar.getBoundingClientRect()
-	    var elt = document.elementFromPoint(box.left + 1, box.bottom - 1)
-	    if (elt != bar) { bar.style.pointerEvents = "none" }
-	    else { delay.set(1000, maybeDisable) }
-	  }
-	  delay.set(1000, maybeDisable)
-	};
-	
-	NativeScrollbars.prototype.clear = function () {
-	  var parent = this.horiz.parentNode
-	  parent.removeChild(this.horiz)
-	  parent.removeChild(this.vert)
-	};
-	
-	var NullScrollbars = function () {};
-	
-	NullScrollbars.prototype.update = function () { return {bottom: 0, right: 0} };
-	NullScrollbars.prototype.setScrollLeft = function () {};
-	NullScrollbars.prototype.setScrollTop = function () {};
-	NullScrollbars.prototype.clear = function () {};
+	NullScrollbars.prototype = copyObj({
+	  update: function() { return {bottom: 0, right: 0} },
+	  setScrollLeft: function() {},
+	  setScrollTop: function() {},
+	  clear: function() {}
+	}, NullScrollbars.prototype)
 	
 	function updateScrollbars(cm, measure) {
 	  if (!measure) { measure = measureForScrollbars(cm) }
@@ -27778,7 +27757,7 @@
 	
 	// DISPLAY DRAWING
 	
-	var DisplayUpdate = function(cm, viewport, force) {
+	function DisplayUpdate(cm, viewport, force) {
 	  var display = cm.display
 	
 	  this.viewport = viewport
@@ -27791,18 +27770,18 @@
 	  this.force = force
 	  this.dims = getDimensions(cm)
 	  this.events = []
-	};
+	}
 	
-	DisplayUpdate.prototype.signal = function (emitter, type) {
+	DisplayUpdate.prototype.signal = function(emitter, type) {
 	  if (hasHandler(emitter, type))
 	    { this.events.push(arguments) }
-	};
-	DisplayUpdate.prototype.finish = function () {
-	    var this$1 = this;
+	}
+	DisplayUpdate.prototype.finish = function() {
+	  var this$1 = this;
 	
 	  for (var i = 0; i < this.events.length; i++)
 	    { signal.apply(null, this$1.events[i]) }
-	};
+	}
 	
 	function maybeClipScrollbars(cm) {
 	  var display = cm.display
@@ -30930,7 +30909,7 @@
 	    for (var i = newBreaks.length - 1; i >= 0; i--)
 	      { replaceRange(cm.doc, val, newBreaks[i], Pos(newBreaks[i].line, newBreaks[i].ch + val.length)) }
 	  })
-	  option("specialChars", /[\u0000-\u001f\u007f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff]/g, function (cm, val, old) {
+	  option("specialChars", /[\u0000-\u001f\u007f\u00ad\u200b-\u200f\u2028\u2029\ufeff]/g, function (cm, val, old) {
 	    cm.state.specialChars = new RegExp(val.source + (val.test("\t") ? "" : "|\t"), "g")
 	    if (old != Init) { cm.refresh() }
 	  })
@@ -31020,7 +30999,7 @@
 	function guttersChanged(cm) {
 	  updateGutters(cm)
 	  regChange(cm)
-	  alignHorizontally(cm)
+	  setTimeout(function () { return alignHorizontally(cm); }, 20)
 	}
 	
 	function dragDropChanged(cm, value, old) {
@@ -31075,6 +31054,7 @@
 	  themeChanged(this)
 	  if (options.lineWrapping)
 	    { this.display.wrapper.className += " CodeMirror-wrap" }
+	  if (options.autofocus && !mobile) { display.input.focus() }
 	  initScrollbars(this)
 	
 	  this.state = {
@@ -31092,8 +31072,6 @@
 	    keySeq: null,  // Unfinished key sequence
 	    specialChars: null
 	  }
-	
-	  if (options.autofocus && !mobile) { display.input.focus() }
 	
 	  // Override magic textarea content restore that IE sometimes does
 	  // on our hidden textarea on reload
@@ -31450,7 +31428,6 @@
 	      options[option] = value
 	      if (optionHandlers.hasOwnProperty(option))
 	        { operation(this, optionHandlers[option])(this, value, old) }
-	      signal(this, "optionChange", this, option)
 	    },
 	
 	    getOption: function(option) {return this.options[option]},
@@ -31958,333 +31935,331 @@
 	
 	// CONTENTEDITABLE INPUT STYLE
 	
-	var ContentEditableInput = function(cm) {
+	function ContentEditableInput(cm) {
 	  this.cm = cm
 	  this.lastAnchorNode = this.lastAnchorOffset = this.lastFocusNode = this.lastFocusOffset = null
 	  this.polling = new Delayed()
 	  this.composing = null
 	  this.gracePeriod = false
 	  this.readDOMTimeout = null
-	};
+	}
 	
-	ContentEditableInput.prototype.init = function (display) {
+	ContentEditableInput.prototype = copyObj({
+	  init: function(display) {
 	    var this$1 = this;
 	
-	  var input = this, cm = input.cm
-	  var div = input.div = display.lineDiv
-	  disableBrowserMagic(div, cm.options.spellcheck)
+	    var input = this, cm = input.cm
+	    var div = input.div = display.lineDiv
+	    disableBrowserMagic(div, cm.options.spellcheck)
 	
-	  on(div, "paste", function (e) {
-	    if (signalDOMEvent(cm, e) || handlePaste(e, cm)) { return }
-	    // IE doesn't fire input events, so we schedule a read for the pasted content in this way
-	    if (ie_version <= 11) { setTimeout(operation(cm, function () {
-	      if (!input.pollContent()) { regChange(cm) }
-	    }), 20) }
-	  })
+	    on(div, "paste", function (e) {
+	      if (signalDOMEvent(cm, e) || handlePaste(e, cm)) { return }
+	      // IE doesn't fire input events, so we schedule a read for the pasted content in this way
+	      if (ie_version <= 11) { setTimeout(operation(cm, function () {
+	        if (!input.pollContent()) { regChange(cm) }
+	      }), 20) }
+	    })
 	
-	  on(div, "compositionstart", function (e) {
-	    this$1.composing = {data: e.data, done: false}
-	  })
-	  on(div, "compositionupdate", function (e) {
-	    if (!this$1.composing) { this$1.composing = {data: e.data, done: false} }
-	  })
-	  on(div, "compositionend", function (e) {
-	    if (this$1.composing) {
-	      if (e.data != this$1.composing.data) { this$1.readFromDOMSoon() }
-	      this$1.composing.done = true
-	    }
-	  })
-	
-	  on(div, "touchstart", function () { return input.forceCompositionEnd(); })
-	
-	  on(div, "input", function () {
-	    if (!this$1.composing) { this$1.readFromDOMSoon() }
-	  })
-	
-	  function onCopyCut(e) {
-	    if (signalDOMEvent(cm, e)) { return }
-	    if (cm.somethingSelected()) {
-	      setLastCopied({lineWise: false, text: cm.getSelections()})
-	      if (e.type == "cut") { cm.replaceSelection("", null, "cut") }
-	    } else if (!cm.options.lineWiseCopyCut) {
-	      return
-	    } else {
-	      var ranges = copyableRanges(cm)
-	      setLastCopied({lineWise: true, text: ranges.text})
-	      if (e.type == "cut") {
-	        cm.operation(function () {
-	          cm.setSelections(ranges.ranges, 0, sel_dontScroll)
-	          cm.replaceSelection("", null, "cut")
-	        })
+	    on(div, "compositionstart", function (e) {
+	      this$1.composing = {data: e.data}
+	    })
+	    on(div, "compositionupdate", function (e) {
+	      if (!this$1.composing) { this$1.composing = {data: e.data} }
+	    })
+	    on(div, "compositionend", function (e) {
+	      if (this$1.composing) {
+	        if (e.data != this$1.composing.data) { this$1.readFromDOMSoon() }
+	        this$1.composing = null
 	      }
-	    }
-	    if (e.clipboardData) {
-	      e.clipboardData.clearData()
-	      var content = lastCopied.text.join("\n")
-	      // iOS exposes the clipboard API, but seems to discard content inserted into it
-	      e.clipboardData.setData("Text", content)
-	      if (e.clipboardData.getData("Text") == content) {
-	        e.preventDefault()
+	    })
+	
+	    on(div, "touchstart", function () { return input.forceCompositionEnd(); })
+	
+	    on(div, "input", function () {
+	      if (!this$1.composing) { this$1.readFromDOMSoon() }
+	    })
+	
+	    function onCopyCut(e) {
+	      if (signalDOMEvent(cm, e)) { return }
+	      if (cm.somethingSelected()) {
+	        setLastCopied({lineWise: false, text: cm.getSelections()})
+	        if (e.type == "cut") { cm.replaceSelection("", null, "cut") }
+	      } else if (!cm.options.lineWiseCopyCut) {
 	        return
+	      } else {
+	        var ranges = copyableRanges(cm)
+	        setLastCopied({lineWise: true, text: ranges.text})
+	        if (e.type == "cut") {
+	          cm.operation(function () {
+	            cm.setSelections(ranges.ranges, 0, sel_dontScroll)
+	            cm.replaceSelection("", null, "cut")
+	          })
+	        }
 	      }
+	      if (e.clipboardData) {
+	        e.clipboardData.clearData()
+	        var content = lastCopied.text.join("\n")
+	        // iOS exposes the clipboard API, but seems to discard content inserted into it
+	        e.clipboardData.setData("Text", content)
+	        if (e.clipboardData.getData("Text") == content) {
+	          e.preventDefault()
+	          return
+	        }
+	      }
+	      // Old-fashioned briefly-focus-a-textarea hack
+	      var kludge = hiddenTextarea(), te = kludge.firstChild
+	      cm.display.lineSpace.insertBefore(kludge, cm.display.lineSpace.firstChild)
+	      te.value = lastCopied.text.join("\n")
+	      var hadFocus = document.activeElement
+	      selectInput(te)
+	      setTimeout(function () {
+	        cm.display.lineSpace.removeChild(kludge)
+	        hadFocus.focus()
+	        if (hadFocus == div) { input.showPrimarySelection() }
+	      }, 50)
 	    }
-	    // Old-fashioned briefly-focus-a-textarea hack
-	    var kludge = hiddenTextarea(), te = kludge.firstChild
-	    cm.display.lineSpace.insertBefore(kludge, cm.display.lineSpace.firstChild)
-	    te.value = lastCopied.text.join("\n")
-	    var hadFocus = document.activeElement
-	    selectInput(te)
-	    setTimeout(function () {
-	      cm.display.lineSpace.removeChild(kludge)
-	      hadFocus.focus()
-	      if (hadFocus == div) { input.showPrimarySelection() }
-	    }, 50)
-	  }
-	  on(div, "copy", onCopyCut)
-	  on(div, "cut", onCopyCut)
-	};
+	    on(div, "copy", onCopyCut)
+	    on(div, "cut", onCopyCut)
+	  },
 	
-	ContentEditableInput.prototype.prepareSelection = function () {
-	  var result = prepareSelection(this.cm, false)
-	  result.focus = this.cm.state.focused
-	  return result
-	};
+	  prepareSelection: function() {
+	    var result = prepareSelection(this.cm, false)
+	    result.focus = this.cm.state.focused
+	    return result
+	  },
 	
-	ContentEditableInput.prototype.showSelection = function (info, takeFocus) {
-	  if (!info || !this.cm.display.view.length) { return }
-	  if (info.focus || takeFocus) { this.showPrimarySelection() }
-	  this.showMultipleSelections(info)
-	};
+	  showSelection: function(info, takeFocus) {
+	    if (!info || !this.cm.display.view.length) { return }
+	    if (info.focus || takeFocus) { this.showPrimarySelection() }
+	    this.showMultipleSelections(info)
+	  },
 	
-	ContentEditableInput.prototype.showPrimarySelection = function () {
-	  var sel = window.getSelection(), prim = this.cm.doc.sel.primary()
-	  var curAnchor = domToPos(this.cm, sel.anchorNode, sel.anchorOffset)
-	  var curFocus = domToPos(this.cm, sel.focusNode, sel.focusOffset)
-	  if (curAnchor && !curAnchor.bad && curFocus && !curFocus.bad &&
-	      cmp(minPos(curAnchor, curFocus), prim.from()) == 0 &&
-	      cmp(maxPos(curAnchor, curFocus), prim.to()) == 0)
-	    { return }
+	  showPrimarySelection: function() {
+	    var sel = window.getSelection(), prim = this.cm.doc.sel.primary()
+	    var curAnchor = domToPos(this.cm, sel.anchorNode, sel.anchorOffset)
+	    var curFocus = domToPos(this.cm, sel.focusNode, sel.focusOffset)
+	    if (curAnchor && !curAnchor.bad && curFocus && !curFocus.bad &&
+	        cmp(minPos(curAnchor, curFocus), prim.from()) == 0 &&
+	        cmp(maxPos(curAnchor, curFocus), prim.to()) == 0)
+	      { return }
 	
-	  var start = posToDOM(this.cm, prim.from())
-	  var end = posToDOM(this.cm, prim.to())
-	  if (!start && !end) { return }
+	    var start = posToDOM(this.cm, prim.from())
+	    var end = posToDOM(this.cm, prim.to())
+	    if (!start && !end) { return }
 	
-	  var view = this.cm.display.view
-	  var old = sel.rangeCount && sel.getRangeAt(0)
-	  if (!start) {
-	    start = {node: view[0].measure.map[2], offset: 0}
-	  } else if (!end) { // FIXME dangerously hacky
-	    var measure = view[view.length - 1].measure
-	    var map = measure.maps ? measure.maps[measure.maps.length - 1] : measure.map
-	    end = {node: map[map.length - 1], offset: map[map.length - 2] - map[map.length - 3]}
-	  }
+	    var view = this.cm.display.view
+	    var old = sel.rangeCount && sel.getRangeAt(0)
+	    if (!start) {
+	      start = {node: view[0].measure.map[2], offset: 0}
+	    } else if (!end) { // FIXME dangerously hacky
+	      var measure = view[view.length - 1].measure
+	      var map = measure.maps ? measure.maps[measure.maps.length - 1] : measure.map
+	      end = {node: map[map.length - 1], offset: map[map.length - 2] - map[map.length - 3]}
+	    }
 	
-	  var rng
-	  try { rng = range(start.node, start.offset, end.offset, end.node) }
-	  catch(e) {} // Our model of the DOM might be outdated, in which case the range we try to set can be impossible
-	  if (rng) {
-	    if (!gecko && this.cm.state.focused) {
-	      sel.collapse(start.node, start.offset)
-	      if (!rng.collapsed) {
+	    var rng
+	    try { rng = range(start.node, start.offset, end.offset, end.node) }
+	    catch(e) {} // Our model of the DOM might be outdated, in which case the range we try to set can be impossible
+	    if (rng) {
+	      if (!gecko && this.cm.state.focused) {
+	        sel.collapse(start.node, start.offset)
+	        if (!rng.collapsed) {
+	          sel.removeAllRanges()
+	          sel.addRange(rng)
+	        }
+	      } else {
 	        sel.removeAllRanges()
 	        sel.addRange(rng)
 	      }
-	    } else {
-	      sel.removeAllRanges()
-	      sel.addRange(rng)
+	      if (old && sel.anchorNode == null) { sel.addRange(old) }
+	      else if (gecko) { this.startGracePeriod() }
 	    }
-	    if (old && sel.anchorNode == null) { sel.addRange(old) }
-	    else if (gecko) { this.startGracePeriod() }
-	  }
-	  this.rememberSelection()
-	};
-	
-	ContentEditableInput.prototype.startGracePeriod = function () {
-	    var this$1 = this;
-	
-	  clearTimeout(this.gracePeriod)
-	  this.gracePeriod = setTimeout(function () {
-	    this$1.gracePeriod = false
-	    if (this$1.selectionChanged())
-	      { this$1.cm.operation(function () { return this$1.cm.curOp.selectionChanged = true; }) }
-	  }, 20)
-	};
-	
-	ContentEditableInput.prototype.showMultipleSelections = function (info) {
-	  removeChildrenAndAdd(this.cm.display.cursorDiv, info.cursors)
-	  removeChildrenAndAdd(this.cm.display.selectionDiv, info.selection)
-	};
-	
-	ContentEditableInput.prototype.rememberSelection = function () {
-	  var sel = window.getSelection()
-	  this.lastAnchorNode = sel.anchorNode; this.lastAnchorOffset = sel.anchorOffset
-	  this.lastFocusNode = sel.focusNode; this.lastFocusOffset = sel.focusOffset
-	};
-	
-	ContentEditableInput.prototype.selectionInEditor = function () {
-	  var sel = window.getSelection()
-	  if (!sel.rangeCount) { return false }
-	  var node = sel.getRangeAt(0).commonAncestorContainer
-	  return contains(this.div, node)
-	};
-	
-	ContentEditableInput.prototype.focus = function () {
-	  if (this.cm.options.readOnly != "nocursor") {
-	    if (!this.selectionInEditor())
-	      { this.showSelection(this.prepareSelection(), true) }
-	    this.div.focus()
-	  }
-	};
-	ContentEditableInput.prototype.blur = function () { this.div.blur() };
-	ContentEditableInput.prototype.getField = function () { return this.div };
-	
-	ContentEditableInput.prototype.supportsTouch = function () { return true };
-	
-	ContentEditableInput.prototype.receivedFocus = function () {
-	  var input = this
-	  if (this.selectionInEditor())
-	    { this.pollSelection() }
-	  else
-	    { runInOp(this.cm, function () { return input.cm.curOp.selectionChanged = true; }) }
-	
-	  function poll() {
-	    if (input.cm.state.focused) {
-	      input.pollSelection()
-	      input.polling.set(input.cm.options.pollInterval, poll)
-	    }
-	  }
-	  this.polling.set(this.cm.options.pollInterval, poll)
-	};
-	
-	ContentEditableInput.prototype.selectionChanged = function () {
-	  var sel = window.getSelection()
-	  return sel.anchorNode != this.lastAnchorNode || sel.anchorOffset != this.lastAnchorOffset ||
-	    sel.focusNode != this.lastFocusNode || sel.focusOffset != this.lastFocusOffset
-	};
-	
-	ContentEditableInput.prototype.pollSelection = function () {
-	  if (!this.composing && this.readDOMTimeout == null && !this.gracePeriod && this.selectionChanged()) {
-	    var sel = window.getSelection(), cm = this.cm
 	    this.rememberSelection()
-	    var anchor = domToPos(cm, sel.anchorNode, sel.anchorOffset)
-	    var head = domToPos(cm, sel.focusNode, sel.focusOffset)
-	    if (anchor && head) { runInOp(cm, function () {
-	      setSelection(cm.doc, simpleSelection(anchor, head), sel_dontScroll)
-	      if (anchor.bad || head.bad) { cm.curOp.selectionChanged = true }
-	    }) }
-	  }
-	};
+	  },
 	
-	ContentEditableInput.prototype.pollContent = function () {
-	  if (this.readDOMTimeout != null) {
-	    clearTimeout(this.readDOMTimeout)
-	    this.readDOMTimeout = null
-	  }
-	
-	  var cm = this.cm, display = cm.display, sel = cm.doc.sel.primary()
-	  var from = sel.from(), to = sel.to()
-	  if (from.ch == 0 && from.line > cm.firstLine())
-	    { from = Pos(from.line - 1, getLine(cm.doc, from.line - 1).length) }
-	  if (to.ch == getLine(cm.doc, to.line).text.length && to.line < cm.lastLine())
-	    { to = Pos(to.line + 1, 0) }
-	  if (from.line < display.viewFrom || to.line > display.viewTo - 1) { return false }
-	
-	  var fromIndex, fromLine, fromNode
-	  if (from.line == display.viewFrom || (fromIndex = findViewIndex(cm, from.line)) == 0) {
-	    fromLine = lineNo(display.view[0].line)
-	    fromNode = display.view[0].node
-	  } else {
-	    fromLine = lineNo(display.view[fromIndex].line)
-	    fromNode = display.view[fromIndex - 1].node.nextSibling
-	  }
-	  var toIndex = findViewIndex(cm, to.line)
-	  var toLine, toNode
-	  if (toIndex == display.view.length - 1) {
-	    toLine = display.viewTo - 1
-	    toNode = display.lineDiv.lastChild
-	  } else {
-	    toLine = lineNo(display.view[toIndex + 1].line) - 1
-	    toNode = display.view[toIndex + 1].node.previousSibling
-	  }
-	
-	  if (!fromNode) { return false }
-	  var newText = cm.doc.splitLines(domTextBetween(cm, fromNode, toNode, fromLine, toLine))
-	  var oldText = getBetween(cm.doc, Pos(fromLine, 0), Pos(toLine, getLine(cm.doc, toLine).text.length))
-	  while (newText.length > 1 && oldText.length > 1) {
-	    if (lst(newText) == lst(oldText)) { newText.pop(); oldText.pop(); toLine-- }
-	    else if (newText[0] == oldText[0]) { newText.shift(); oldText.shift(); fromLine++ }
-	    else { break }
-	  }
-	
-	  var cutFront = 0, cutEnd = 0
-	  var newTop = newText[0], oldTop = oldText[0], maxCutFront = Math.min(newTop.length, oldTop.length)
-	  while (cutFront < maxCutFront && newTop.charCodeAt(cutFront) == oldTop.charCodeAt(cutFront))
-	    { ++cutFront }
-	  var newBot = lst(newText), oldBot = lst(oldText)
-	  var maxCutEnd = Math.min(newBot.length - (newText.length == 1 ? cutFront : 0),
-	                           oldBot.length - (oldText.length == 1 ? cutFront : 0))
-	  while (cutEnd < maxCutEnd &&
-	         newBot.charCodeAt(newBot.length - cutEnd - 1) == oldBot.charCodeAt(oldBot.length - cutEnd - 1))
-	    { ++cutEnd }
-	
-	  newText[newText.length - 1] = newBot.slice(0, newBot.length - cutEnd).replace(/^\u200b+/, "")
-	  newText[0] = newText[0].slice(cutFront).replace(/\u200b+$/, "")
-	
-	  var chFrom = Pos(fromLine, cutFront)
-	  var chTo = Pos(toLine, oldText.length ? lst(oldText).length - cutEnd : 0)
-	  if (newText.length > 1 || newText[0] || cmp(chFrom, chTo)) {
-	    replaceRange(cm.doc, newText, chFrom, chTo, "+input")
-	    return true
-	  }
-	};
-	
-	ContentEditableInput.prototype.ensurePolled = function () {
-	  this.forceCompositionEnd()
-	};
-	ContentEditableInput.prototype.reset = function () {
-	  this.forceCompositionEnd()
-	};
-	ContentEditableInput.prototype.forceCompositionEnd = function () {
-	  if (!this.composing) { return }
-	  clearTimeout(this.readDOMTimeout)
-	  this.composing = null
-	  if (!this.pollContent()) { regChange(this.cm) }
-	  this.div.blur()
-	  this.div.focus()
-	};
-	ContentEditableInput.prototype.readFromDOMSoon = function () {
+	  startGracePeriod: function() {
 	    var this$1 = this;
 	
-	  if (this.readDOMTimeout != null) { return }
-	  this.readDOMTimeout = setTimeout(function () {
-	    this$1.readDOMTimeout = null
-	    if (this$1.composing) {
-	      if (this$1.composing.done) { this$1.composing = null }
-	      else { return }
+	    clearTimeout(this.gracePeriod)
+	    this.gracePeriod = setTimeout(function () {
+	      this$1.gracePeriod = false
+	      if (this$1.selectionChanged())
+	        { this$1.cm.operation(function () { return this$1.cm.curOp.selectionChanged = true; }) }
+	    }, 20)
+	  },
+	
+	  showMultipleSelections: function(info) {
+	    removeChildrenAndAdd(this.cm.display.cursorDiv, info.cursors)
+	    removeChildrenAndAdd(this.cm.display.selectionDiv, info.selection)
+	  },
+	
+	  rememberSelection: function() {
+	    var sel = window.getSelection()
+	    this.lastAnchorNode = sel.anchorNode; this.lastAnchorOffset = sel.anchorOffset
+	    this.lastFocusNode = sel.focusNode; this.lastFocusOffset = sel.focusOffset
+	  },
+	
+	  selectionInEditor: function() {
+	    var sel = window.getSelection()
+	    if (!sel.rangeCount) { return false }
+	    var node = sel.getRangeAt(0).commonAncestorContainer
+	    return contains(this.div, node)
+	  },
+	
+	  focus: function() {
+	    if (this.cm.options.readOnly != "nocursor") {
+	      if (!this.selectionInEditor())
+	        { this.showSelection(this.prepareSelection(), true) }
+	      this.div.focus()
 	    }
-	    if (this$1.cm.isReadOnly() || !this$1.pollContent())
-	      { runInOp(this$1.cm, function () { return regChange(this$1.cm); }) }
-	  }, 80)
-	};
+	  },
+	  blur: function() { this.div.blur() },
+	  getField: function() { return this.div },
 	
-	ContentEditableInput.prototype.setUneditable = function (node) {
-	  node.contentEditable = "false"
-	};
+	  supportsTouch: function() { return true },
 	
-	ContentEditableInput.prototype.onKeyPress = function (e) {
-	  e.preventDefault()
-	  if (!this.cm.isReadOnly())
-	    { operation(this.cm, applyTextInput)(this.cm, String.fromCharCode(e.charCode == null ? e.keyCode : e.charCode), 0) }
-	};
+	  receivedFocus: function() {
+	    var input = this
+	    if (this.selectionInEditor())
+	      { this.pollSelection() }
+	    else
+	      { runInOp(this.cm, function () { return input.cm.curOp.selectionChanged = true; }) }
 	
-	ContentEditableInput.prototype.readOnlyChanged = function (val) {
-	  this.div.contentEditable = String(val != "nocursor")
-	};
+	    function poll() {
+	      if (input.cm.state.focused) {
+	        input.pollSelection()
+	        input.polling.set(input.cm.options.pollInterval, poll)
+	      }
+	    }
+	    this.polling.set(this.cm.options.pollInterval, poll)
+	  },
 	
-	ContentEditableInput.prototype.onContextMenu = function () {};
-	ContentEditableInput.prototype.resetPosition = function () {};
+	  selectionChanged: function() {
+	    var sel = window.getSelection()
+	    return sel.anchorNode != this.lastAnchorNode || sel.anchorOffset != this.lastAnchorOffset ||
+	      sel.focusNode != this.lastFocusNode || sel.focusOffset != this.lastFocusOffset
+	  },
 	
-	ContentEditableInput.prototype.needsContentAttribute = true
+	  pollSelection: function() {
+	    if (!this.composing && this.readDOMTimeout == null && !this.gracePeriod && this.selectionChanged()) {
+	      var sel = window.getSelection(), cm = this.cm
+	      this.rememberSelection()
+	      var anchor = domToPos(cm, sel.anchorNode, sel.anchorOffset)
+	      var head = domToPos(cm, sel.focusNode, sel.focusOffset)
+	      if (anchor && head) { runInOp(cm, function () {
+	        setSelection(cm.doc, simpleSelection(anchor, head), sel_dontScroll)
+	        if (anchor.bad || head.bad) { cm.curOp.selectionChanged = true }
+	      }) }
+	    }
+	  },
+	
+	  pollContent: function() {
+	    if (this.readDOMTimeout != null) {
+	      clearTimeout(this.readDOMTimeout)
+	      this.readDOMTimeout = null
+	    }
+	
+	    var cm = this.cm, display = cm.display, sel = cm.doc.sel.primary()
+	    var from = sel.from(), to = sel.to()
+	    if (from.ch == 0 && from.line > cm.firstLine())
+	      { from = Pos(from.line - 1, getLine(cm.doc, from.line - 1).length) }
+	    if (to.ch == getLine(cm.doc, to.line).text.length && to.line < cm.lastLine())
+	      { to = Pos(to.line + 1, 0) }
+	    if (from.line < display.viewFrom || to.line > display.viewTo - 1) { return false }
+	
+	    var fromIndex, fromLine, fromNode
+	    if (from.line == display.viewFrom || (fromIndex = findViewIndex(cm, from.line)) == 0) {
+	      fromLine = lineNo(display.view[0].line)
+	      fromNode = display.view[0].node
+	    } else {
+	      fromLine = lineNo(display.view[fromIndex].line)
+	      fromNode = display.view[fromIndex - 1].node.nextSibling
+	    }
+	    var toIndex = findViewIndex(cm, to.line)
+	    var toLine, toNode
+	    if (toIndex == display.view.length - 1) {
+	      toLine = display.viewTo - 1
+	      toNode = display.lineDiv.lastChild
+	    } else {
+	      toLine = lineNo(display.view[toIndex + 1].line) - 1
+	      toNode = display.view[toIndex + 1].node.previousSibling
+	    }
+	
+	    if (!fromNode) { return false }
+	    var newText = cm.doc.splitLines(domTextBetween(cm, fromNode, toNode, fromLine, toLine))
+	    var oldText = getBetween(cm.doc, Pos(fromLine, 0), Pos(toLine, getLine(cm.doc, toLine).text.length))
+	    while (newText.length > 1 && oldText.length > 1) {
+	      if (lst(newText) == lst(oldText)) { newText.pop(); oldText.pop(); toLine-- }
+	      else if (newText[0] == oldText[0]) { newText.shift(); oldText.shift(); fromLine++ }
+	      else { break }
+	    }
+	
+	    var cutFront = 0, cutEnd = 0
+	    var newTop = newText[0], oldTop = oldText[0], maxCutFront = Math.min(newTop.length, oldTop.length)
+	    while (cutFront < maxCutFront && newTop.charCodeAt(cutFront) == oldTop.charCodeAt(cutFront))
+	      { ++cutFront }
+	    var newBot = lst(newText), oldBot = lst(oldText)
+	    var maxCutEnd = Math.min(newBot.length - (newText.length == 1 ? cutFront : 0),
+	                             oldBot.length - (oldText.length == 1 ? cutFront : 0))
+	    while (cutEnd < maxCutEnd &&
+	           newBot.charCodeAt(newBot.length - cutEnd - 1) == oldBot.charCodeAt(oldBot.length - cutEnd - 1))
+	      { ++cutEnd }
+	
+	    newText[newText.length - 1] = newBot.slice(0, newBot.length - cutEnd).replace(/^\u200b+/, "")
+	    newText[0] = newText[0].slice(cutFront).replace(/\u200b+$/, "")
+	
+	    var chFrom = Pos(fromLine, cutFront)
+	    var chTo = Pos(toLine, oldText.length ? lst(oldText).length - cutEnd : 0)
+	    if (newText.length > 1 || newText[0] || cmp(chFrom, chTo)) {
+	      replaceRange(cm.doc, newText, chFrom, chTo, "+input")
+	      return true
+	    }
+	  },
+	
+	  ensurePolled: function() {
+	    this.forceCompositionEnd()
+	  },
+	  reset: function() {
+	    this.forceCompositionEnd()
+	  },
+	  forceCompositionEnd: function() {
+	    if (!this.composing) { return }
+	    this.composing = null
+	    if (!this.pollContent()) { regChange(this.cm) }
+	    this.div.blur()
+	    this.div.focus()
+	  },
+	  readFromDOMSoon: function() {
+	    var this$1 = this;
+	
+	    if (this.readDOMTimeout != null) { return }
+	    this.readDOMTimeout = setTimeout(function () {
+	      this$1.readDOMTimeout = null
+	      if (this$1.composing) { return }
+	      if (this$1.cm.isReadOnly() || !this$1.pollContent())
+	        { runInOp(this$1.cm, function () { return regChange(this$1.cm); }) }
+	    }, 80)
+	  },
+	
+	  setUneditable: function(node) {
+	    node.contentEditable = "false"
+	  },
+	
+	  onKeyPress: function(e) {
+	    e.preventDefault()
+	    if (!this.cm.isReadOnly())
+	      { operation(this.cm, applyTextInput)(this.cm, String.fromCharCode(e.charCode == null ? e.keyCode : e.charCode), 0) }
+	  },
+	
+	  readOnlyChanged: function(val) {
+	    this.div.contentEditable = String(val != "nocursor")
+	  },
+	
+	  onContextMenu: nothing,
+	  resetPosition: nothing,
+	
+	  needsContentAttribute: true
+	  }, ContentEditableInput.prototype)
 	
 	function posToDOM(cm, pos) {
 	  var view = findViewForLine(cm, pos.line)
@@ -32421,7 +32396,7 @@
 	
 	// TEXTAREA INPUT STYLE
 	
-	var TextareaInput = function(cm) {
+	function TextareaInput(cm) {
 	  this.cm = cm
 	  // See input.poll and input.reset
 	  this.prevInput = ""
@@ -32438,333 +32413,335 @@
 	  // Used to work around IE issue with selection being forgotten when focus moves away from textarea
 	  this.hasSelection = false
 	  this.composing = null
-	};
+	}
 	
-	TextareaInput.prototype.init = function (display) {
+	TextareaInput.prototype = copyObj({
+	  init: function(display) {
 	    var this$1 = this;
 	
-	  var input = this, cm = this.cm
+	    var input = this, cm = this.cm
 	
-	  // Wraps and hides input textarea
-	  var div = this.wrapper = hiddenTextarea()
-	  // The semihidden textarea that is focused when the editor is
-	  // focused, and receives input.
-	  var te = this.textarea = div.firstChild
-	  display.wrapper.insertBefore(div, display.wrapper.firstChild)
+	    // Wraps and hides input textarea
+	    var div = this.wrapper = hiddenTextarea()
+	    // The semihidden textarea that is focused when the editor is
+	    // focused, and receives input.
+	    var te = this.textarea = div.firstChild
+	    display.wrapper.insertBefore(div, display.wrapper.firstChild)
 	
-	  // Needed to hide big blue blinking cursor on Mobile Safari (doesn't seem to work in iOS 8 anymore)
-	  if (ios) { te.style.width = "0px" }
+	    // Needed to hide big blue blinking cursor on Mobile Safari (doesn't seem to work in iOS 8 anymore)
+	    if (ios) { te.style.width = "0px" }
 	
-	  on(te, "input", function () {
-	    if (ie && ie_version >= 9 && this$1.hasSelection) { this$1.hasSelection = null }
-	    input.poll()
-	  })
-	
-	  on(te, "paste", function (e) {
-	    if (signalDOMEvent(cm, e) || handlePaste(e, cm)) { return }
-	
-	    cm.state.pasteIncoming = true
-	    input.fastPoll()
-	  })
-	
-	  function prepareCopyCut(e) {
-	    if (signalDOMEvent(cm, e)) { return }
-	    if (cm.somethingSelected()) {
-	      setLastCopied({lineWise: false, text: cm.getSelections()})
-	      if (input.inaccurateSelection) {
-	        input.prevInput = ""
-	        input.inaccurateSelection = false
-	        te.value = lastCopied.text.join("\n")
-	        selectInput(te)
-	      }
-	    } else if (!cm.options.lineWiseCopyCut) {
-	      return
-	    } else {
-	      var ranges = copyableRanges(cm)
-	      setLastCopied({lineWise: true, text: ranges.text})
-	      if (e.type == "cut") {
-	        cm.setSelections(ranges.ranges, null, sel_dontScroll)
-	      } else {
-	        input.prevInput = ""
-	        te.value = ranges.text.join("\n")
-	        selectInput(te)
-	      }
-	    }
-	    if (e.type == "cut") { cm.state.cutIncoming = true }
-	  }
-	  on(te, "cut", prepareCopyCut)
-	  on(te, "copy", prepareCopyCut)
-	
-	  on(display.scroller, "paste", function (e) {
-	    if (eventInWidget(display, e) || signalDOMEvent(cm, e)) { return }
-	    cm.state.pasteIncoming = true
-	    input.focus()
-	  })
-	
-	  // Prevent normal selection in the editor (we handle our own)
-	  on(display.lineSpace, "selectstart", function (e) {
-	    if (!eventInWidget(display, e)) { e_preventDefault(e) }
-	  })
-	
-	  on(te, "compositionstart", function () {
-	    var start = cm.getCursor("from")
-	    if (input.composing) { input.composing.range.clear() }
-	    input.composing = {
-	      start: start,
-	      range: cm.markText(start, cm.getCursor("to"), {className: "CodeMirror-composing"})
-	    }
-	  })
-	  on(te, "compositionend", function () {
-	    if (input.composing) {
+	    on(te, "input", function () {
+	      if (ie && ie_version >= 9 && this$1.hasSelection) { this$1.hasSelection = null }
 	      input.poll()
-	      input.composing.range.clear()
-	      input.composing = null
-	    }
-	  })
-	};
+	    })
 	
-	TextareaInput.prototype.prepareSelection = function () {
-	  // Redraw the selection and/or cursor
-	  var cm = this.cm, display = cm.display, doc = cm.doc
-	  var result = prepareSelection(cm)
+	    on(te, "paste", function (e) {
+	      if (signalDOMEvent(cm, e) || handlePaste(e, cm)) { return }
 	
-	  // Move the hidden textarea near the cursor to prevent scrolling artifacts
-	  if (cm.options.moveInputWithCursor) {
-	    var headPos = cursorCoords(cm, doc.sel.primary().head, "div")
-	    var wrapOff = display.wrapper.getBoundingClientRect(), lineOff = display.lineDiv.getBoundingClientRect()
-	    result.teTop = Math.max(0, Math.min(display.wrapper.clientHeight - 10,
-	                                        headPos.top + lineOff.top - wrapOff.top))
-	    result.teLeft = Math.max(0, Math.min(display.wrapper.clientWidth - 10,
-	                                         headPos.left + lineOff.left - wrapOff.left))
-	  }
+	      cm.state.pasteIncoming = true
+	      input.fastPoll()
+	    })
 	
-	  return result
-	};
-	
-	TextareaInput.prototype.showSelection = function (drawn) {
-	  var cm = this.cm, display = cm.display
-	  removeChildrenAndAdd(display.cursorDiv, drawn.cursors)
-	  removeChildrenAndAdd(display.selectionDiv, drawn.selection)
-	  if (drawn.teTop != null) {
-	    this.wrapper.style.top = drawn.teTop + "px"
-	    this.wrapper.style.left = drawn.teLeft + "px"
-	  }
-	};
-	
-	// Reset the input to correspond to the selection (or to be empty,
-	// when not typing and nothing is selected)
-	TextareaInput.prototype.reset = function (typing) {
-	  if (this.contextMenuPending) { return }
-	  var minimal, selected, cm = this.cm, doc = cm.doc
-	  if (cm.somethingSelected()) {
-	    this.prevInput = ""
-	    var range = doc.sel.primary()
-	    minimal = hasCopyEvent &&
-	      (range.to().line - range.from().line > 100 || (selected = cm.getSelection()).length > 1000)
-	    var content = minimal ? "-" : selected || cm.getSelection()
-	    this.textarea.value = content
-	    if (cm.state.focused) { selectInput(this.textarea) }
-	    if (ie && ie_version >= 9) { this.hasSelection = content }
-	  } else if (!typing) {
-	    this.prevInput = this.textarea.value = ""
-	    if (ie && ie_version >= 9) { this.hasSelection = null }
-	  }
-	  this.inaccurateSelection = minimal
-	};
-	
-	TextareaInput.prototype.getField = function () { return this.textarea };
-	
-	TextareaInput.prototype.supportsTouch = function () { return false };
-	
-	TextareaInput.prototype.focus = function () {
-	  if (this.cm.options.readOnly != "nocursor" && (!mobile || activeElt() != this.textarea)) {
-	    try { this.textarea.focus() }
-	    catch (e) {} // IE8 will throw if the textarea is display: none or not in DOM
-	  }
-	};
-	
-	TextareaInput.prototype.blur = function () { this.textarea.blur() };
-	
-	TextareaInput.prototype.resetPosition = function () {
-	  this.wrapper.style.top = this.wrapper.style.left = 0
-	};
-	
-	TextareaInput.prototype.receivedFocus = function () { this.slowPoll() };
-	
-	// Poll for input changes, using the normal rate of polling. This
-	// runs as long as the editor is focused.
-	TextareaInput.prototype.slowPoll = function () {
-	    var this$1 = this;
-	
-	  if (this.pollingFast) { return }
-	  this.polling.set(this.cm.options.pollInterval, function () {
-	    this$1.poll()
-	    if (this$1.cm.state.focused) { this$1.slowPoll() }
-	  })
-	};
-	
-	// When an event has just come in that is likely to add or change
-	// something in the input textarea, we poll faster, to ensure that
-	// the change appears on the screen quickly.
-	TextareaInput.prototype.fastPoll = function () {
-	  var missed = false, input = this
-	  input.pollingFast = true
-	  function p() {
-	    var changed = input.poll()
-	    if (!changed && !missed) {missed = true; input.polling.set(60, p)}
-	    else {input.pollingFast = false; input.slowPoll()}
-	  }
-	  input.polling.set(20, p)
-	};
-	
-	// Read input from the textarea, and update the document to match.
-	// When something is selected, it is present in the textarea, and
-	// selected (unless it is huge, in which case a placeholder is
-	// used). When nothing is selected, the cursor sits after previously
-	// seen text (can be empty), which is stored in prevInput (we must
-	// not reset the textarea when typing, because that breaks IME).
-	TextareaInput.prototype.poll = function () {
-	    var this$1 = this;
-	
-	  var cm = this.cm, input = this.textarea, prevInput = this.prevInput
-	  // Since this is called a *lot*, try to bail out as cheaply as
-	  // possible when it is clear that nothing happened. hasSelection
-	  // will be the case when there is a lot of text in the textarea,
-	  // in which case reading its value would be expensive.
-	  if (this.contextMenuPending || !cm.state.focused ||
-	      (hasSelection(input) && !prevInput && !this.composing) ||
-	      cm.isReadOnly() || cm.options.disableInput || cm.state.keySeq)
-	    { return false }
-	
-	  var text = input.value
-	  // If nothing changed, bail.
-	  if (text == prevInput && !cm.somethingSelected()) { return false }
-	  // Work around nonsensical selection resetting in IE9/10, and
-	  // inexplicable appearance of private area unicode characters on
-	  // some key combos in Mac (#2689).
-	  if (ie && ie_version >= 9 && this.hasSelection === text ||
-	      mac && /[\uf700-\uf7ff]/.test(text)) {
-	    cm.display.input.reset()
-	    return false
-	  }
-	
-	  if (cm.doc.sel == cm.display.selForContextMenu) {
-	    var first = text.charCodeAt(0)
-	    if (first == 0x200b && !prevInput) { prevInput = "\u200b" }
-	    if (first == 0x21da) { this.reset(); return this.cm.execCommand("undo") }
-	  }
-	  // Find the part of the input that is actually new
-	  var same = 0, l = Math.min(prevInput.length, text.length)
-	  while (same < l && prevInput.charCodeAt(same) == text.charCodeAt(same)) { ++same }
-	
-	  runInOp(cm, function () {
-	    applyTextInput(cm, text.slice(same), prevInput.length - same,
-	                   null, this$1.composing ? "*compose" : null)
-	
-	    // Don't leave long text in the textarea, since it makes further polling slow
-	    if (text.length > 1000 || text.indexOf("\n") > -1) { input.value = this$1.prevInput = "" }
-	    else { this$1.prevInput = text }
-	
-	    if (this$1.composing) {
-	      this$1.composing.range.clear()
-	      this$1.composing.range = cm.markText(this$1.composing.start, cm.getCursor("to"),
-	                                         {className: "CodeMirror-composing"})
-	    }
-	  })
-	  return true
-	};
-	
-	TextareaInput.prototype.ensurePolled = function () {
-	  if (this.pollingFast && this.poll()) { this.pollingFast = false }
-	};
-	
-	TextareaInput.prototype.onKeyPress = function () {
-	  if (ie && ie_version >= 9) { this.hasSelection = null }
-	  this.fastPoll()
-	};
-	
-	TextareaInput.prototype.onContextMenu = function (e) {
-	  var input = this, cm = input.cm, display = cm.display, te = input.textarea
-	  var pos = posFromMouse(cm, e), scrollPos = display.scroller.scrollTop
-	  if (!pos || presto) { return } // Opera is difficult.
-	
-	  // Reset the current text selection only if the click is done outside of the selection
-	  // and 'resetSelectionOnContextMenu' option is true.
-	  var reset = cm.options.resetSelectionOnContextMenu
-	  if (reset && cm.doc.sel.contains(pos) == -1)
-	    { operation(cm, setSelection)(cm.doc, simpleSelection(pos), sel_dontScroll) }
-	
-	  var oldCSS = te.style.cssText, oldWrapperCSS = input.wrapper.style.cssText
-	  input.wrapper.style.cssText = "position: absolute"
-	  var wrapperBox = input.wrapper.getBoundingClientRect()
-	  te.style.cssText = "position: absolute; width: 30px; height: 30px;\n      top: " + (e.clientY - wrapperBox.top - 5) + "px; left: " + (e.clientX - wrapperBox.left - 5) + "px;\n      z-index: 1000; background: " + (ie ? "rgba(255, 255, 255, .05)" : "transparent") + ";\n      outline: none; border-width: 0; outline: none; overflow: hidden; opacity: .05; filter: alpha(opacity=5);"
-	  var oldScrollY
-	  if (webkit) { oldScrollY = window.scrollY } // Work around Chrome issue (#2712)
-	  display.input.focus()
-	  if (webkit) { window.scrollTo(null, oldScrollY) }
-	  display.input.reset()
-	  // Adds "Select all" to context menu in FF
-	  if (!cm.somethingSelected()) { te.value = input.prevInput = " " }
-	  input.contextMenuPending = true
-	  display.selForContextMenu = cm.doc.sel
-	  clearTimeout(display.detectingSelectAll)
-	
-	  // Select-all will be greyed out if there's nothing to select, so
-	  // this adds a zero-width space so that we can later check whether
-	  // it got selected.
-	  function prepareSelectAllHack() {
-	    if (te.selectionStart != null) {
-	      var selected = cm.somethingSelected()
-	      var extval = "\u200b" + (selected ? te.value : "")
-	      te.value = "\u21da" // Used to catch context-menu undo
-	      te.value = extval
-	      input.prevInput = selected ? "" : "\u200b"
-	      te.selectionStart = 1; te.selectionEnd = extval.length
-	      // Re-set this, in case some other handler touched the
-	      // selection in the meantime.
-	      display.selForContextMenu = cm.doc.sel
-	    }
-	  }
-	  function rehide() {
-	    input.contextMenuPending = false
-	    input.wrapper.style.cssText = oldWrapperCSS
-	    te.style.cssText = oldCSS
-	    if (ie && ie_version < 9) { display.scrollbars.setScrollTop(display.scroller.scrollTop = scrollPos) }
-	
-	    // Try to detect the user choosing select-all
-	    if (te.selectionStart != null) {
-	      if (!ie || (ie && ie_version < 9)) { prepareSelectAllHack() }
-	      var i = 0, poll = function () {
-	        if (display.selForContextMenu == cm.doc.sel && te.selectionStart == 0 &&
-	            te.selectionEnd > 0 && input.prevInput == "\u200b")
-	          { operation(cm, selectAll)(cm) }
-	        else if (i++ < 10) { display.detectingSelectAll = setTimeout(poll, 500) }
-	        else { display.input.reset() }
+	    function prepareCopyCut(e) {
+	      if (signalDOMEvent(cm, e)) { return }
+	      if (cm.somethingSelected()) {
+	        setLastCopied({lineWise: false, text: cm.getSelections()})
+	        if (input.inaccurateSelection) {
+	          input.prevInput = ""
+	          input.inaccurateSelection = false
+	          te.value = lastCopied.text.join("\n")
+	          selectInput(te)
+	        }
+	      } else if (!cm.options.lineWiseCopyCut) {
+	        return
+	      } else {
+	        var ranges = copyableRanges(cm)
+	        setLastCopied({lineWise: true, text: ranges.text})
+	        if (e.type == "cut") {
+	          cm.setSelections(ranges.ranges, null, sel_dontScroll)
+	        } else {
+	          input.prevInput = ""
+	          te.value = ranges.text.join("\n")
+	          selectInput(te)
+	        }
 	      }
-	      display.detectingSelectAll = setTimeout(poll, 200)
+	      if (e.type == "cut") { cm.state.cutIncoming = true }
 	    }
-	  }
+	    on(te, "cut", prepareCopyCut)
+	    on(te, "copy", prepareCopyCut)
 	
-	  if (ie && ie_version >= 9) { prepareSelectAllHack() }
-	  if (captureRightClick) {
-	    e_stop(e)
-	    var mouseup = function () {
-	      off(window, "mouseup", mouseup)
-	      setTimeout(rehide, 20)
+	    on(display.scroller, "paste", function (e) {
+	      if (eventInWidget(display, e) || signalDOMEvent(cm, e)) { return }
+	      cm.state.pasteIncoming = true
+	      input.focus()
+	    })
+	
+	    // Prevent normal selection in the editor (we handle our own)
+	    on(display.lineSpace, "selectstart", function (e) {
+	      if (!eventInWidget(display, e)) { e_preventDefault(e) }
+	    })
+	
+	    on(te, "compositionstart", function () {
+	      var start = cm.getCursor("from")
+	      if (input.composing) { input.composing.range.clear() }
+	      input.composing = {
+	        start: start,
+	        range: cm.markText(start, cm.getCursor("to"), {className: "CodeMirror-composing"})
+	      }
+	    })
+	    on(te, "compositionend", function () {
+	      if (input.composing) {
+	        input.poll()
+	        input.composing.range.clear()
+	        input.composing = null
+	      }
+	    })
+	  },
+	
+	  prepareSelection: function() {
+	    // Redraw the selection and/or cursor
+	    var cm = this.cm, display = cm.display, doc = cm.doc
+	    var result = prepareSelection(cm)
+	
+	    // Move the hidden textarea near the cursor to prevent scrolling artifacts
+	    if (cm.options.moveInputWithCursor) {
+	      var headPos = cursorCoords(cm, doc.sel.primary().head, "div")
+	      var wrapOff = display.wrapper.getBoundingClientRect(), lineOff = display.lineDiv.getBoundingClientRect()
+	      result.teTop = Math.max(0, Math.min(display.wrapper.clientHeight - 10,
+	                                          headPos.top + lineOff.top - wrapOff.top))
+	      result.teLeft = Math.max(0, Math.min(display.wrapper.clientWidth - 10,
+	                                           headPos.left + lineOff.left - wrapOff.left))
 	    }
-	    on(window, "mouseup", mouseup)
-	  } else {
-	    setTimeout(rehide, 50)
-	  }
-	};
 	
-	TextareaInput.prototype.readOnlyChanged = function (val) {
-	  if (!val) { this.reset() }
-	};
+	    return result
+	  },
 	
-	TextareaInput.prototype.setUneditable = function () {};
+	  showSelection: function(drawn) {
+	    var cm = this.cm, display = cm.display
+	    removeChildrenAndAdd(display.cursorDiv, drawn.cursors)
+	    removeChildrenAndAdd(display.selectionDiv, drawn.selection)
+	    if (drawn.teTop != null) {
+	      this.wrapper.style.top = drawn.teTop + "px"
+	      this.wrapper.style.left = drawn.teLeft + "px"
+	    }
+	  },
 	
-	TextareaInput.prototype.needsContentAttribute = false
+	  // Reset the input to correspond to the selection (or to be empty,
+	  // when not typing and nothing is selected)
+	  reset: function(typing) {
+	    if (this.contextMenuPending) { return }
+	    var minimal, selected, cm = this.cm, doc = cm.doc
+	    if (cm.somethingSelected()) {
+	      this.prevInput = ""
+	      var range = doc.sel.primary()
+	      minimal = hasCopyEvent &&
+	        (range.to().line - range.from().line > 100 || (selected = cm.getSelection()).length > 1000)
+	      var content = minimal ? "-" : selected || cm.getSelection()
+	      this.textarea.value = content
+	      if (cm.state.focused) { selectInput(this.textarea) }
+	      if (ie && ie_version >= 9) { this.hasSelection = content }
+	    } else if (!typing) {
+	      this.prevInput = this.textarea.value = ""
+	      if (ie && ie_version >= 9) { this.hasSelection = null }
+	    }
+	    this.inaccurateSelection = minimal
+	  },
+	
+	  getField: function() { return this.textarea },
+	
+	  supportsTouch: function() { return false },
+	
+	  focus: function() {
+	    if (this.cm.options.readOnly != "nocursor" && (!mobile || activeElt() != this.textarea)) {
+	      try { this.textarea.focus() }
+	      catch (e) {} // IE8 will throw if the textarea is display: none or not in DOM
+	    }
+	  },
+	
+	  blur: function() { this.textarea.blur() },
+	
+	  resetPosition: function() {
+	    this.wrapper.style.top = this.wrapper.style.left = 0
+	  },
+	
+	  receivedFocus: function() { this.slowPoll() },
+	
+	  // Poll for input changes, using the normal rate of polling. This
+	  // runs as long as the editor is focused.
+	  slowPoll: function() {
+	    var this$1 = this;
+	
+	    if (this.pollingFast) { return }
+	    this.polling.set(this.cm.options.pollInterval, function () {
+	      this$1.poll()
+	      if (this$1.cm.state.focused) { this$1.slowPoll() }
+	    })
+	  },
+	
+	  // When an event has just come in that is likely to add or change
+	  // something in the input textarea, we poll faster, to ensure that
+	  // the change appears on the screen quickly.
+	  fastPoll: function() {
+	    var missed = false, input = this
+	    input.pollingFast = true
+	    function p() {
+	      var changed = input.poll()
+	      if (!changed && !missed) {missed = true; input.polling.set(60, p)}
+	      else {input.pollingFast = false; input.slowPoll()}
+	    }
+	    input.polling.set(20, p)
+	  },
+	
+	  // Read input from the textarea, and update the document to match.
+	  // When something is selected, it is present in the textarea, and
+	  // selected (unless it is huge, in which case a placeholder is
+	  // used). When nothing is selected, the cursor sits after previously
+	  // seen text (can be empty), which is stored in prevInput (we must
+	  // not reset the textarea when typing, because that breaks IME).
+	  poll: function() {
+	    var this$1 = this;
+	
+	    var cm = this.cm, input = this.textarea, prevInput = this.prevInput
+	    // Since this is called a *lot*, try to bail out as cheaply as
+	    // possible when it is clear that nothing happened. hasSelection
+	    // will be the case when there is a lot of text in the textarea,
+	    // in which case reading its value would be expensive.
+	    if (this.contextMenuPending || !cm.state.focused ||
+	        (hasSelection(input) && !prevInput && !this.composing) ||
+	        cm.isReadOnly() || cm.options.disableInput || cm.state.keySeq)
+	      { return false }
+	
+	    var text = input.value
+	    // If nothing changed, bail.
+	    if (text == prevInput && !cm.somethingSelected()) { return false }
+	    // Work around nonsensical selection resetting in IE9/10, and
+	    // inexplicable appearance of private area unicode characters on
+	    // some key combos in Mac (#2689).
+	    if (ie && ie_version >= 9 && this.hasSelection === text ||
+	        mac && /[\uf700-\uf7ff]/.test(text)) {
+	      cm.display.input.reset()
+	      return false
+	    }
+	
+	    if (cm.doc.sel == cm.display.selForContextMenu) {
+	      var first = text.charCodeAt(0)
+	      if (first == 0x200b && !prevInput) { prevInput = "\u200b" }
+	      if (first == 0x21da) { this.reset(); return this.cm.execCommand("undo") }
+	    }
+	    // Find the part of the input that is actually new
+	    var same = 0, l = Math.min(prevInput.length, text.length)
+	    while (same < l && prevInput.charCodeAt(same) == text.charCodeAt(same)) { ++same }
+	
+	    runInOp(cm, function () {
+	      applyTextInput(cm, text.slice(same), prevInput.length - same,
+	                     null, this$1.composing ? "*compose" : null)
+	
+	      // Don't leave long text in the textarea, since it makes further polling slow
+	      if (text.length > 1000 || text.indexOf("\n") > -1) { input.value = this$1.prevInput = "" }
+	      else { this$1.prevInput = text }
+	
+	      if (this$1.composing) {
+	        this$1.composing.range.clear()
+	        this$1.composing.range = cm.markText(this$1.composing.start, cm.getCursor("to"),
+	                                           {className: "CodeMirror-composing"})
+	      }
+	    })
+	    return true
+	  },
+	
+	  ensurePolled: function() {
+	    if (this.pollingFast && this.poll()) { this.pollingFast = false }
+	  },
+	
+	  onKeyPress: function() {
+	    if (ie && ie_version >= 9) { this.hasSelection = null }
+	    this.fastPoll()
+	  },
+	
+	  onContextMenu: function(e) {
+	    var input = this, cm = input.cm, display = cm.display, te = input.textarea
+	    var pos = posFromMouse(cm, e), scrollPos = display.scroller.scrollTop
+	    if (!pos || presto) { return } // Opera is difficult.
+	
+	    // Reset the current text selection only if the click is done outside of the selection
+	    // and 'resetSelectionOnContextMenu' option is true.
+	    var reset = cm.options.resetSelectionOnContextMenu
+	    if (reset && cm.doc.sel.contains(pos) == -1)
+	      { operation(cm, setSelection)(cm.doc, simpleSelection(pos), sel_dontScroll) }
+	
+	    var oldCSS = te.style.cssText, oldWrapperCSS = input.wrapper.style.cssText
+	    input.wrapper.style.cssText = "position: absolute"
+	    var wrapperBox = input.wrapper.getBoundingClientRect()
+	    te.style.cssText = "position: absolute; width: 30px; height: 30px;\n      top: " + (e.clientY - wrapperBox.top - 5) + "px; left: " + (e.clientX - wrapperBox.left - 5) + "px;\n      z-index: 1000; background: " + (ie ? "rgba(255, 255, 255, .05)" : "transparent") + ";\n      outline: none; border-width: 0; outline: none; overflow: hidden; opacity: .05; filter: alpha(opacity=5);"
+	    var oldScrollY
+	    if (webkit) { oldScrollY = window.scrollY } // Work around Chrome issue (#2712)
+	    display.input.focus()
+	    if (webkit) { window.scrollTo(null, oldScrollY) }
+	    display.input.reset()
+	    // Adds "Select all" to context menu in FF
+	    if (!cm.somethingSelected()) { te.value = input.prevInput = " " }
+	    input.contextMenuPending = true
+	    display.selForContextMenu = cm.doc.sel
+	    clearTimeout(display.detectingSelectAll)
+	
+	    // Select-all will be greyed out if there's nothing to select, so
+	    // this adds a zero-width space so that we can later check whether
+	    // it got selected.
+	    function prepareSelectAllHack() {
+	      if (te.selectionStart != null) {
+	        var selected = cm.somethingSelected()
+	        var extval = "\u200b" + (selected ? te.value : "")
+	        te.value = "\u21da" // Used to catch context-menu undo
+	        te.value = extval
+	        input.prevInput = selected ? "" : "\u200b"
+	        te.selectionStart = 1; te.selectionEnd = extval.length
+	        // Re-set this, in case some other handler touched the
+	        // selection in the meantime.
+	        display.selForContextMenu = cm.doc.sel
+	      }
+	    }
+	    function rehide() {
+	      input.contextMenuPending = false
+	      input.wrapper.style.cssText = oldWrapperCSS
+	      te.style.cssText = oldCSS
+	      if (ie && ie_version < 9) { display.scrollbars.setScrollTop(display.scroller.scrollTop = scrollPos) }
+	
+	      // Try to detect the user choosing select-all
+	      if (te.selectionStart != null) {
+	        if (!ie || (ie && ie_version < 9)) { prepareSelectAllHack() }
+	        var i = 0, poll = function () {
+	          if (display.selForContextMenu == cm.doc.sel && te.selectionStart == 0 &&
+	              te.selectionEnd > 0 && input.prevInput == "\u200b")
+	            { operation(cm, selectAll)(cm) }
+	          else if (i++ < 10) { display.detectingSelectAll = setTimeout(poll, 500) }
+	          else { display.input.reset() }
+	        }
+	        display.detectingSelectAll = setTimeout(poll, 200)
+	      }
+	    }
+	
+	    if (ie && ie_version >= 9) { prepareSelectAllHack() }
+	    if (captureRightClick) {
+	      e_stop(e)
+	      var mouseup = function () {
+	        off(window, "mouseup", mouseup)
+	        setTimeout(rehide, 20)
+	      }
+	      on(window, "mouseup", mouseup)
+	    } else {
+	      setTimeout(rehide, 50)
+	    }
+	  },
+	
+	  readOnlyChanged: function(val) {
+	    if (!val) { this.reset() }
+	  },
+	
+	  setUneditable: nothing,
+	
+	  needsContentAttribute: false
+	}, TextareaInput.prototype)
 	
 	function fromTextArea(textarea, options) {
 	  options = options ? copyObj(options) : {}
@@ -32915,7 +32892,7 @@
 	
 	addLegacyProps(CodeMirror)
 	
-	CodeMirror.version = "5.22.2"
+	CodeMirror.version = "5.21.0"
 	
 	return CodeMirror;
 	
@@ -33231,7 +33208,7 @@
 	
 	
 	// module
-	exports.push([module.id, "/* BASICS */\n\n.CodeMirror {\n  /* Set height, width, borders, and global font properties here */\n  font-family: monospace;\n  height: 300px;\n  color: black;\n}\n\n/* PADDING */\n\n.CodeMirror-lines {\n  padding: 4px 0; /* Vertical padding around content */\n}\n.CodeMirror pre {\n  padding: 0 4px; /* Horizontal padding of content */\n}\n\n.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  background-color: white; /* The little square between H and V scrollbars */\n}\n\n/* GUTTER */\n\n.CodeMirror-gutters {\n  border-right: 1px solid #ddd;\n  background-color: #f7f7f7;\n  white-space: nowrap;\n}\n.CodeMirror-linenumbers {}\n.CodeMirror-linenumber {\n  padding: 0 3px 0 5px;\n  min-width: 20px;\n  text-align: right;\n  color: #999;\n  white-space: nowrap;\n}\n\n.CodeMirror-guttermarker { color: black; }\n.CodeMirror-guttermarker-subtle { color: #999; }\n\n/* CURSOR */\n\n.CodeMirror-cursor {\n  border-left: 1px solid black;\n  border-right: none;\n  width: 0;\n}\n/* Shown when moving in bi-directional text */\n.CodeMirror div.CodeMirror-secondarycursor {\n  border-left: 1px solid silver;\n}\n.cm-fat-cursor .CodeMirror-cursor {\n  width: auto;\n  border: 0 !important;\n  background: #7e7;\n}\n.cm-fat-cursor div.CodeMirror-cursors {\n  z-index: 1;\n}\n\n.cm-animate-fat-cursor {\n  width: auto;\n  border: 0;\n  -webkit-animation: blink 1.06s steps(1) infinite;\n  -moz-animation: blink 1.06s steps(1) infinite;\n  animation: blink 1.06s steps(1) infinite;\n  background-color: #7e7;\n}\n@-moz-keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n@-webkit-keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n@keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n\n/* Can style cursor different in overwrite (non-insert) mode */\n.CodeMirror-overwrite .CodeMirror-cursor {}\n\n.cm-tab { display: inline-block; text-decoration: inherit; }\n\n.CodeMirror-rulers {\n  position: absolute;\n  left: 0; right: 0; top: -50px; bottom: -20px;\n  overflow: hidden;\n}\n.CodeMirror-ruler {\n  border-left: 1px solid #ccc;\n  top: 0; bottom: 0;\n  position: absolute;\n}\n\n/* DEFAULT THEME */\n\n.cm-s-default .cm-header {color: blue;}\n.cm-s-default .cm-quote {color: #090;}\n.cm-negative {color: #d44;}\n.cm-positive {color: #292;}\n.cm-header, .cm-strong {font-weight: bold;}\n.cm-em {font-style: italic;}\n.cm-link {text-decoration: underline;}\n.cm-strikethrough {text-decoration: line-through;}\n\n.cm-s-default .cm-keyword {color: #708;}\n.cm-s-default .cm-atom {color: #219;}\n.cm-s-default .cm-number {color: #164;}\n.cm-s-default .cm-def {color: #00f;}\n.cm-s-default .cm-variable,\n.cm-s-default .cm-punctuation,\n.cm-s-default .cm-property,\n.cm-s-default .cm-operator {}\n.cm-s-default .cm-variable-2 {color: #05a;}\n.cm-s-default .cm-variable-3 {color: #085;}\n.cm-s-default .cm-comment {color: #a50;}\n.cm-s-default .cm-string {color: #a11;}\n.cm-s-default .cm-string-2 {color: #f50;}\n.cm-s-default .cm-meta {color: #555;}\n.cm-s-default .cm-qualifier {color: #555;}\n.cm-s-default .cm-builtin {color: #30a;}\n.cm-s-default .cm-bracket {color: #997;}\n.cm-s-default .cm-tag {color: #170;}\n.cm-s-default .cm-attribute {color: #00c;}\n.cm-s-default .cm-hr {color: #999;}\n.cm-s-default .cm-link {color: #00c;}\n\n.cm-s-default .cm-error {color: #f00;}\n.cm-invalidchar {color: #f00;}\n\n.CodeMirror-composing { border-bottom: 2px solid; }\n\n/* Default styles for common addons */\n\ndiv.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}\ndiv.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}\n.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }\n.CodeMirror-activeline-background {background: #e8f2ff;}\n\n/* STOP */\n\n/* The rest of this file contains styles related to the mechanics of\n   the editor. You probably shouldn't touch them. */\n\n.CodeMirror {\n  position: relative;\n  overflow: hidden;\n  background: white;\n}\n\n.CodeMirror-scroll {\n  overflow: scroll !important; /* Things will break if this is overridden */\n  /* 30px is the magic margin used to hide the element's real scrollbars */\n  /* See overflow: hidden in .CodeMirror */\n  margin-bottom: -30px; margin-right: -30px;\n  padding-bottom: 30px;\n  height: 100%;\n  outline: none; /* Prevent dragging from highlighting the element */\n  position: relative;\n}\n.CodeMirror-sizer {\n  position: relative;\n  border-right: 30px solid transparent;\n}\n\n/* The fake, visible scrollbars. Used to force redraw during scrolling\n   before actual scrolling happens, thus preventing shaking and\n   flickering artifacts. */\n.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  position: absolute;\n  z-index: 6;\n  display: none;\n}\n.CodeMirror-vscrollbar {\n  right: 0; top: 0;\n  overflow-x: hidden;\n  overflow-y: scroll;\n}\n.CodeMirror-hscrollbar {\n  bottom: 0; left: 0;\n  overflow-y: hidden;\n  overflow-x: scroll;\n}\n.CodeMirror-scrollbar-filler {\n  right: 0; bottom: 0;\n}\n.CodeMirror-gutter-filler {\n  left: 0; bottom: 0;\n}\n\n.CodeMirror-gutters {\n  position: absolute; left: 0; top: 0;\n  min-height: 100%;\n  z-index: 3;\n}\n.CodeMirror-gutter {\n  white-space: normal;\n  height: 100%;\n  display: inline-block;\n  vertical-align: top;\n  margin-bottom: -30px;\n}\n.CodeMirror-gutter-wrapper {\n  position: absolute;\n  z-index: 4;\n  background: none !important;\n  border: none !important;\n}\n.CodeMirror-gutter-background {\n  position: absolute;\n  top: 0; bottom: 0;\n  z-index: 4;\n}\n.CodeMirror-gutter-elt {\n  position: absolute;\n  cursor: default;\n  z-index: 4;\n}\n.CodeMirror-gutter-wrapper {\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  user-select: none;\n}\n\n.CodeMirror-lines {\n  cursor: text;\n  min-height: 1px; /* prevents collapsing before first draw */\n}\n.CodeMirror pre {\n  /* Reset some styles that the rest of the page might have set */\n  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;\n  border-width: 0;\n  background: transparent;\n  font-family: inherit;\n  font-size: inherit;\n  margin: 0;\n  white-space: pre;\n  word-wrap: normal;\n  line-height: inherit;\n  color: inherit;\n  z-index: 2;\n  position: relative;\n  overflow: visible;\n  -webkit-tap-highlight-color: transparent;\n  -webkit-font-variant-ligatures: contextual;\n  font-variant-ligatures: contextual;\n}\n.CodeMirror-wrap pre {\n  word-wrap: break-word;\n  white-space: pre-wrap;\n  word-break: normal;\n}\n\n.CodeMirror-linebackground {\n  position: absolute;\n  left: 0; right: 0; top: 0; bottom: 0;\n  z-index: 0;\n}\n\n.CodeMirror-linewidget {\n  position: relative;\n  z-index: 2;\n  overflow: auto;\n}\n\n.CodeMirror-widget {}\n\n.CodeMirror-code {\n  outline: none;\n}\n\n/* Force content-box sizing for the elements where we expect it */\n.CodeMirror-scroll,\n.CodeMirror-sizer,\n.CodeMirror-gutter,\n.CodeMirror-gutters,\n.CodeMirror-linenumber {\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n}\n\n.CodeMirror-measure {\n  position: absolute;\n  width: 100%;\n  height: 0;\n  overflow: hidden;\n  visibility: hidden;\n}\n\n.CodeMirror-cursor {\n  position: absolute;\n  pointer-events: none;\n}\n.CodeMirror-measure pre { position: static; }\n\ndiv.CodeMirror-cursors {\n  visibility: hidden;\n  position: relative;\n  z-index: 3;\n}\ndiv.CodeMirror-dragcursors {\n  visibility: visible;\n}\n\n.CodeMirror-focused div.CodeMirror-cursors {\n  visibility: visible;\n}\n\n.CodeMirror-selected { background: #d9d9d9; }\n.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }\n.CodeMirror-crosshair { cursor: crosshair; }\n.CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background: #d7d4f0; }\n.CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background: #d7d4f0; }\n\n.cm-searching {\n  background: #ffa;\n  background: rgba(255, 255, 0, .4);\n}\n\n/* Used to force a border model for a node */\n.cm-force-border { padding-right: .1px; }\n\n@media print {\n  /* Hide the cursor when printing */\n  .CodeMirror div.CodeMirror-cursors {\n    visibility: hidden;\n  }\n}\n\n/* See issue #2901 */\n.cm-tab-wrap-hack:after { content: ''; }\n\n/* Help users use markselection to safely style text background */\nspan.CodeMirror-selectedtext { background: none; }\n", ""]);
+	exports.push([module.id, "/* BASICS */\n\n.CodeMirror {\n  /* Set height, width, borders, and global font properties here */\n  font-family: monospace;\n  height: 300px;\n  color: black;\n}\n\n/* PADDING */\n\n.CodeMirror-lines {\n  padding: 4px 0; /* Vertical padding around content */\n}\n.CodeMirror pre {\n  padding: 0 4px; /* Horizontal padding of content */\n}\n\n.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  background-color: white; /* The little square between H and V scrollbars */\n}\n\n/* GUTTER */\n\n.CodeMirror-gutters {\n  border-right: 1px solid #ddd;\n  background-color: #f7f7f7;\n  white-space: nowrap;\n}\n.CodeMirror-linenumbers {}\n.CodeMirror-linenumber {\n  padding: 0 3px 0 5px;\n  min-width: 20px;\n  text-align: right;\n  color: #999;\n  white-space: nowrap;\n}\n\n.CodeMirror-guttermarker { color: black; }\n.CodeMirror-guttermarker-subtle { color: #999; }\n\n/* CURSOR */\n\n.CodeMirror-cursor {\n  border-left: 1px solid black;\n  border-right: none;\n  width: 0;\n}\n/* Shown when moving in bi-directional text */\n.CodeMirror div.CodeMirror-secondarycursor {\n  border-left: 1px solid silver;\n}\n.cm-fat-cursor .CodeMirror-cursor {\n  width: auto;\n  border: 0 !important;\n  background: #7e7;\n}\n.cm-fat-cursor div.CodeMirror-cursors {\n  z-index: 1;\n}\n\n.cm-animate-fat-cursor {\n  width: auto;\n  border: 0;\n  -webkit-animation: blink 1.06s steps(1) infinite;\n  -moz-animation: blink 1.06s steps(1) infinite;\n  animation: blink 1.06s steps(1) infinite;\n  background-color: #7e7;\n}\n@-moz-keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n@-webkit-keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n@keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n\n/* Can style cursor different in overwrite (non-insert) mode */\n.CodeMirror-overwrite .CodeMirror-cursor {}\n\n.cm-tab { display: inline-block; text-decoration: inherit; }\n\n.CodeMirror-rulers {\n  position: absolute;\n  left: 0; right: 0; top: -50px; bottom: -20px;\n  overflow: hidden;\n}\n.CodeMirror-ruler {\n  border-left: 1px solid #ccc;\n  top: 0; bottom: 0;\n  position: absolute;\n}\n\n/* DEFAULT THEME */\n\n.cm-s-default .cm-header {color: blue;}\n.cm-s-default .cm-quote {color: #090;}\n.cm-negative {color: #d44;}\n.cm-positive {color: #292;}\n.cm-header, .cm-strong {font-weight: bold;}\n.cm-em {font-style: italic;}\n.cm-link {text-decoration: underline;}\n.cm-strikethrough {text-decoration: line-through;}\n\n.cm-s-default .cm-keyword {color: #708;}\n.cm-s-default .cm-atom {color: #219;}\n.cm-s-default .cm-number {color: #164;}\n.cm-s-default .cm-def {color: #00f;}\n.cm-s-default .cm-variable,\n.cm-s-default .cm-punctuation,\n.cm-s-default .cm-property,\n.cm-s-default .cm-operator {}\n.cm-s-default .cm-variable-2 {color: #05a;}\n.cm-s-default .cm-variable-3 {color: #085;}\n.cm-s-default .cm-comment {color: #a50;}\n.cm-s-default .cm-string {color: #a11;}\n.cm-s-default .cm-string-2 {color: #f50;}\n.cm-s-default .cm-meta {color: #555;}\n.cm-s-default .cm-qualifier {color: #555;}\n.cm-s-default .cm-builtin {color: #30a;}\n.cm-s-default .cm-bracket {color: #997;}\n.cm-s-default .cm-tag {color: #170;}\n.cm-s-default .cm-attribute {color: #00c;}\n.cm-s-default .cm-hr {color: #999;}\n.cm-s-default .cm-link {color: #00c;}\n\n.cm-s-default .cm-error {color: #f00;}\n.cm-invalidchar {color: #f00;}\n\n.CodeMirror-composing { border-bottom: 2px solid; }\n\n/* Default styles for common addons */\n\ndiv.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}\ndiv.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}\n.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }\n.CodeMirror-activeline-background {background: #e8f2ff;}\n\n/* STOP */\n\n/* The rest of this file contains styles related to the mechanics of\n   the editor. You probably shouldn't touch them. */\n\n.CodeMirror {\n  position: relative;\n  overflow: hidden;\n  background: white;\n}\n\n.CodeMirror-scroll {\n  overflow: scroll !important; /* Things will break if this is overridden */\n  /* 30px is the magic margin used to hide the element's real scrollbars */\n  /* See overflow: hidden in .CodeMirror */\n  margin-bottom: -30px; margin-right: -30px;\n  padding-bottom: 30px;\n  height: 100%;\n  outline: none; /* Prevent dragging from highlighting the element */\n  position: relative;\n}\n.CodeMirror-sizer {\n  position: relative;\n  border-right: 30px solid transparent;\n}\n\n/* The fake, visible scrollbars. Used to force redraw during scrolling\n   before actual scrolling happens, thus preventing shaking and\n   flickering artifacts. */\n.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  position: absolute;\n  z-index: 6;\n  display: none;\n}\n.CodeMirror-vscrollbar {\n  right: 0; top: 0;\n  overflow-x: hidden;\n  overflow-y: scroll;\n}\n.CodeMirror-hscrollbar {\n  bottom: 0; left: 0;\n  overflow-y: hidden;\n  overflow-x: scroll;\n}\n.CodeMirror-scrollbar-filler {\n  right: 0; bottom: 0;\n}\n.CodeMirror-gutter-filler {\n  left: 0; bottom: 0;\n}\n\n.CodeMirror-gutters {\n  position: absolute; left: 0; top: 0;\n  min-height: 100%;\n  z-index: 3;\n}\n.CodeMirror-gutter {\n  white-space: normal;\n  height: 100%;\n  display: inline-block;\n  vertical-align: top;\n  margin-bottom: -30px;\n}\n.CodeMirror-gutter-wrapper {\n  position: absolute;\n  z-index: 4;\n  background: none !important;\n  border: none !important;\n}\n.CodeMirror-gutter-background {\n  position: absolute;\n  top: 0; bottom: 0;\n  z-index: 4;\n}\n.CodeMirror-gutter-elt {\n  position: absolute;\n  cursor: default;\n  z-index: 4;\n}\n.CodeMirror-gutter-wrapper {\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  user-select: none;\n}\n\n.CodeMirror-lines {\n  cursor: text;\n  min-height: 1px; /* prevents collapsing before first draw */\n}\n.CodeMirror pre {\n  /* Reset some styles that the rest of the page might have set */\n  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;\n  border-width: 0;\n  background: transparent;\n  font-family: inherit;\n  font-size: inherit;\n  margin: 0;\n  white-space: pre;\n  word-wrap: normal;\n  line-height: inherit;\n  color: inherit;\n  z-index: 2;\n  position: relative;\n  overflow: visible;\n  -webkit-tap-highlight-color: transparent;\n  -webkit-font-variant-ligatures: none;\n  font-variant-ligatures: none;\n}\n.CodeMirror-wrap pre {\n  word-wrap: break-word;\n  white-space: pre-wrap;\n  word-break: normal;\n}\n\n.CodeMirror-linebackground {\n  position: absolute;\n  left: 0; right: 0; top: 0; bottom: 0;\n  z-index: 0;\n}\n\n.CodeMirror-linewidget {\n  position: relative;\n  z-index: 2;\n  overflow: auto;\n}\n\n.CodeMirror-widget {}\n\n.CodeMirror-code {\n  outline: none;\n}\n\n/* Force content-box sizing for the elements where we expect it */\n.CodeMirror-scroll,\n.CodeMirror-sizer,\n.CodeMirror-gutter,\n.CodeMirror-gutters,\n.CodeMirror-linenumber {\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n}\n\n.CodeMirror-measure {\n  position: absolute;\n  width: 100%;\n  height: 0;\n  overflow: hidden;\n  visibility: hidden;\n}\n\n.CodeMirror-cursor {\n  position: absolute;\n  pointer-events: none;\n}\n.CodeMirror-measure pre { position: static; }\n\ndiv.CodeMirror-cursors {\n  visibility: hidden;\n  position: relative;\n  z-index: 3;\n}\ndiv.CodeMirror-dragcursors {\n  visibility: visible;\n}\n\n.CodeMirror-focused div.CodeMirror-cursors {\n  visibility: visible;\n}\n\n.CodeMirror-selected { background: #d9d9d9; }\n.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }\n.CodeMirror-crosshair { cursor: crosshair; }\n.CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background: #d7d4f0; }\n.CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background: #d7d4f0; }\n\n.cm-searching {\n  background: #ffa;\n  background: rgba(255, 255, 0, .4);\n}\n\n/* Used to force a border model for a node */\n.cm-force-border { padding-right: .1px; }\n\n@media print {\n  /* Hide the cursor when printing */\n  .CodeMirror div.CodeMirror-cursors {\n    visibility: hidden;\n  }\n}\n\n/* See issue #2901 */\n.cm-tab-wrap-hack:after { content: ''; }\n\n/* Help users use markselection to safely style text background */\nspan.CodeMirror-selectedtext { background: none; }\n", ""]);
 	
 	// exports
 
@@ -34537,8 +34514,8 @@
 	    pref_after_cmd_info: 'The following system commands will be executed when Host applied:',
 	    pref_after_cmd_placeholder: 'input your commands here',
 	    pref_choice_mode: 'Choide mode',
-	    pref_choice_single: 'Single choice',
-	    pref_choice_multiple: 'Multiple choice',
+	    pref_choice_mode_single: 'Single choice',
+	    pref_choice_mode_multiple: 'Multiple choice',
 	    search: 'Search'
 	};
 
