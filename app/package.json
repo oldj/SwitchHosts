@@ -16,6 +16,7 @@
   },
   "homepage": "https://oldj.github.io/SwitchHosts/",
   "dependencies": {
+    "auto-launch": "^5.0.1",
     "classnames": "^2.2.5",
     "codemirror": "^5.17.0",
     "moment": "^2.14.1",
