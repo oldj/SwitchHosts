@@ -10,7 +10,7 @@
  * 直接运行命令会自动下载对应文件，
  * 也可手动从 https://github.com/electron/electron/releases 下载最新版本，放到 ~/.electron 目录下
  */
-const ELECTRON_VERSION = '1.4.12';
+const ELECTRON_VERSION = '1.4.15';
 
 const fs = require('fs');
 const path = require('path');
