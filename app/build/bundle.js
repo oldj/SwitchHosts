@@ -364,8 +364,15 @@
 /* 6 */
 /***/ function(module, exports) {
 
+	/*
+	object-assign
+	(c) Sindre Sorhus
+	@license MIT
+	*/
+	
 	'use strict';
 	/* eslint-disable no-unused-vars */
+	var getOwnPropertySymbols = Object.getOwnPropertySymbols;
 	var hasOwnProperty = Object.prototype.hasOwnProperty;
 	var propIsEnumerable = Object.prototype.propertyIsEnumerable;
 	
@@ -386,7 +393,7 @@
 			// Detect buggy property enumeration order in older V8 versions.
 	
 			// https://bugs.chromium.org/p/v8/issues/detail?id=4118
-			var test1 = new String('abc');  // eslint-disable-line
+			var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
 			test1[5] = 'de';
 			if (Object.getOwnPropertyNames(test1)[0] === '5') {
 				return false;
@@ -415,7 +422,7 @@
 			}
 	
 			return true;
-		} catch (e) {
+		} catch (err) {
 			// We don't expect any of the above to throw, but better to be safe.
 			return false;
 		}
@@ -435,8 +442,8 @@
 				}
 			}
 	
-			if (Object.getOwnPropertySymbols) {
-				symbols = Object.getOwnPropertySymbols(from);
+			if (getOwnPropertySymbols) {
+				symbols = getOwnPropertySymbols(from);
 				for (var i = 0; i < symbols.length; i++) {
 					if (propIsEnumerable.call(from, symbols[i])) {
 						to[symbols[i]] = from[symbols[i]];
@@ -716,17 +723,6 @@
 	  }
 	};
 	
-	var fiveArgumentPooler = function (a1, a2, a3, a4, a5) {
-	  var Klass = this;
-	  if (Klass.instancePool.length) {
-	    var instance = Klass.instancePool.pop();
-	    Klass.call(instance, a1, a2, a3, a4, a5);
-	    return instance;
-	  } else {
-	    return new Klass(a1, a2, a3, a4, a5);
-	  }
-	};
-	
 	var standardReleaser = function (instance) {
 	  var Klass = this;
 	  !(instance instanceof Klass) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Trying to release an instance into a pool of a different type.') : _prodInvariant('25') : void 0;
@@ -766,8 +762,7 @@
 	  oneArgumentPooler: oneArgumentPooler,
 	  twoArgumentPooler: twoArgumentPooler,
 	  threeArgumentPooler: threeArgumentPooler,
-	  fourArgumentPooler: fourArgumentPooler,
-	  fiveArgumentPooler: fiveArgumentPooler
+	  fourArgumentPooler: fourArgumentPooler
 	};
 	
 	module.exports = PooledClass;
@@ -843,12 +838,18 @@
 	 * will remain to ensure logic does not differ in production.
 	 */
 	
-	function invariant(condition, format, a, b, c, d, e, f) {
-	  if (process.env.NODE_ENV !== 'production') {
+	var validateFormat = function validateFormat(format) {};
+	
+	if (process.env.NODE_ENV !== 'production') {
+	  validateFormat = function validateFormat(format) {
 	    if (format === undefined) {
 	      throw new Error('invariant requires an error message argument');
 	    }
-	  }
+	  };
+	}
+	
+	function invariant(condition, format, a, b, c, d, e, f) {
+	  validateFormat(format);
 	
 	  if (!condition) {
 	    var error;
@@ -3101,7 +3102,14 @@
 	    // We warn in this case but don't throw. We expect the element creation to
 	    // succeed and there will likely be errors in render.
 	    if (!validType) {
-	      process.env.NODE_ENV !== 'production' ? warning(false, 'React.createElement: type should not be null, undefined, boolean, or ' + 'number. It should be a string (for DOM elements) or a ReactClass ' + '(for composite components).%s', getDeclarationErrorAddendum()) : void 0;
+	      if (typeof type !== 'function' && typeof type !== 'string') {
+	        var info = '';
+	        if (type === undefined || typeof type === 'object' && type !== null && Object.keys(type).length === 0) {
+	          info += ' You likely forgot to export your component from the file ' + 'it\'s defined in.';
+	        }
+	        info += getDeclarationErrorAddendum();
+	        process.env.NODE_ENV !== 'production' ? warning(false, 'React.createElement: type is invalid -- expected a string (for ' + 'built-in components) or a class/function (for composite ' + 'components) but got: %s.%s', type == null ? type : typeof type, info) : void 0;
+	      }
 	    }
 	
 	    var element = ReactElement.createElement.apply(this, arguments);
@@ -4072,7 +4080,7 @@
 	
 	'use strict';
 	
-	module.exports = '15.4.1';
+	module.exports = '15.4.2';
 
 /***/ },
 /* 33 */
@@ -4271,6 +4279,13 @@
 	var internalInstanceKey = '__reactInternalInstance$' + Math.random().toString(36).slice(2);
 	
 	/**
+	 * Check if a given node should be cached.
+	 */
+	function shouldPrecacheNode(node, nodeID) {
+	  return node.nodeType === 1 && node.getAttribute(ATTR_NAME) === String(nodeID) || node.nodeType === 8 && node.nodeValue === ' react-text: ' + nodeID + ' ' || node.nodeType === 8 && node.nodeValue === ' react-empty: ' + nodeID + ' ';
+	}
+	
+	/**
 	 * Drill down (through composites and empty components) until we get a host or
 	 * host text component.
 	 *
@@ -4335,7 +4350,7 @@
 	    }
 	    // We assume the child nodes are in the same order as the child instances.
 	    for (; childNode !== null; childNode = childNode.nextSibling) {
-	      if (childNode.nodeType === 1 && childNode.getAttribute(ATTR_NAME) === String(childID) || childNode.nodeType === 8 && childNode.nodeValue === ' react-text: ' + childID + ' ' || childNode.nodeType === 8 && childNode.nodeValue === ' react-empty: ' + childID + ' ') {
+	      if (shouldPrecacheNode(childNode, childID)) {
 	        precacheNode(childInst, childNode);
 	        continue outer;
 	      }
@@ -6576,17 +6591,6 @@
 	  }
 	};
 	
-	var fiveArgumentPooler = function (a1, a2, a3, a4, a5) {
-	  var Klass = this;
-	  if (Klass.instancePool.length) {
-	    var instance = Klass.instancePool.pop();
-	    Klass.call(instance, a1, a2, a3, a4, a5);
-	    return instance;
-	  } else {
-	    return new Klass(a1, a2, a3, a4, a5);
-	  }
-	};
-	
 	var standardReleaser = function (instance) {
 	  var Klass = this;
 	  !(instance instanceof Klass) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Trying to release an instance into a pool of a different type.') : _prodInvariant('25') : void 0;
@@ -6626,8 +6630,7 @@
 	  oneArgumentPooler: oneArgumentPooler,
 	  twoArgumentPooler: twoArgumentPooler,
 	  threeArgumentPooler: threeArgumentPooler,
-	  fourArgumentPooler: fourArgumentPooler,
-	  fiveArgumentPooler: fiveArgumentPooler
+	  fourArgumentPooler: fourArgumentPooler
 	};
 	
 	module.exports = PooledClass;
@@ -11445,12 +11448,18 @@
 	    } else {
 	      var contentToUse = CONTENT_TYPES[typeof props.children] ? props.children : null;
 	      var childrenToUse = contentToUse != null ? null : props.children;
+	      // TODO: Validate that text is allowed as a child of this node
 	      if (contentToUse != null) {
-	        // TODO: Validate that text is allowed as a child of this node
-	        if (process.env.NODE_ENV !== 'production') {
-	          setAndValidateContentChildDev.call(this, contentToUse);
+	        // Avoid setting textContent when the text is empty. In IE11 setting
+	        // textContent on a text area will cause the placeholder to not
+	        // show within the textarea until it has been focused and blurred again.
+	        // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+	        if (contentToUse !== '') {
+	          if (process.env.NODE_ENV !== 'production') {
+	            setAndValidateContentChildDev.call(this, contentToUse);
+	          }
+	          DOMLazyTree.queueText(lazyTree, contentToUse);
 	        }
-	        DOMLazyTree.queueText(lazyTree, contentToUse);
 	      } else if (childrenToUse != null) {
 	        var mountImages = this.mountChildren(childrenToUse, transaction, context);
 	        for (var i = 0; i < mountImages.length; i++) {
@@ -13370,7 +13379,17 @@
 	      }
 	    } else {
 	      if (props.value == null && props.defaultValue != null) {
-	        node.defaultValue = '' + props.defaultValue;
+	        // In Chrome, assigning defaultValue to certain input types triggers input validation.
+	        // For number inputs, the display value loses trailing decimal points. For email inputs,
+	        // Chrome raises "The specified value <x> is not a valid email address".
+	        //
+	        // Here we check to see if the defaultValue has actually changed, avoiding these problems
+	        // when the user is inputting text
+	        //
+	        // https://github.com/facebook/react/issues/7253
+	        if (node.defaultValue !== '' + props.defaultValue) {
+	          node.defaultValue = '' + props.defaultValue;
+	        }
 	      }
 	      if (props.checked == null && props.defaultChecked != null) {
 	        node.defaultChecked = !!props.defaultChecked;
@@ -14117,9 +14136,15 @@
 	    // This is in postMount because we need access to the DOM node, which is not
 	    // available until after the component has mounted.
 	    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+	    var textContent = node.textContent;
 	
-	    // Warning: node.value may be the empty string at this point (IE11) if placeholder is set.
-	    node.value = node.textContent; // Detach value from defaultValue
+	    // Only set node.value if textContent is equal to the expected
+	    // initial value. In IE10/IE11 there is a bug where the placeholder attribute
+	    // will populate textContent as well.
+	    // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
+	    if (textContent === inst._wrapperState.initialValue) {
+	      node.value = textContent;
+	    }
 	  }
 	};
 	
@@ -14921,7 +14946,17 @@
 	    instance = ReactEmptyComponent.create(instantiateReactComponent);
 	  } else if (typeof node === 'object') {
 	    var element = node;
-	    !(element && (typeof element.type === 'function' || typeof element.type === 'string')) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s', element.type == null ? element.type : typeof element.type, getDeclarationErrorAddendum(element._owner)) : _prodInvariant('130', element.type == null ? element.type : typeof element.type, getDeclarationErrorAddendum(element._owner)) : void 0;
+	    var type = element.type;
+	    if (typeof type !== 'function' && typeof type !== 'string') {
+	      var info = '';
+	      if (process.env.NODE_ENV !== 'production') {
+	        if (type === undefined || typeof type === 'object' && type !== null && Object.keys(type).length === 0) {
+	          info += ' You likely forgot to export your component from the file ' + 'it\'s defined in.';
+	        }
+	      }
+	      info += getDeclarationErrorAddendum(element._owner);
+	       true ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s', type == null ? type : typeof type, info) : _prodInvariant('130', type == null ? type : typeof type, info) : void 0;
+	    }
 	
 	    // Special case string values
 	    if (typeof element.type === 'string') {
@@ -15211,7 +15246,7 @@
 	      // Since plain JS classes are defined without any special initialization
 	      // logic, we can not catch common errors early. Therefore, we have to
 	      // catch them here, at initialization time, instead.
-	      process.env.NODE_ENV !== 'production' ? warning(!inst.getInitialState || inst.getInitialState.isReactClassApproved, 'getInitialState was defined on %s, a plain JavaScript class. ' + 'This is only supported for classes created using React.createClass. ' + 'Did you mean to define a state property instead?', this.getName() || 'a component') : void 0;
+	      process.env.NODE_ENV !== 'production' ? warning(!inst.getInitialState || inst.getInitialState.isReactClassApproved || inst.state, 'getInitialState was defined on %s, a plain JavaScript class. ' + 'This is only supported for classes created using React.createClass. ' + 'Did you mean to define a state property instead?', this.getName() || 'a component') : void 0;
 	      process.env.NODE_ENV !== 'production' ? warning(!inst.getDefaultProps || inst.getDefaultProps.isReactClassApproved, 'getDefaultProps was defined on %s, a plain JavaScript class. ' + 'This is only supported for classes created using React.createClass. ' + 'Use a static property to define defaultProps instead.', this.getName() || 'a component') : void 0;
 	      process.env.NODE_ENV !== 'production' ? warning(!inst.propTypes, 'propTypes was defined as an instance property on %s. Use a static ' + 'property to define propTypes instead.', this.getName() || 'a component') : void 0;
 	      process.env.NODE_ENV !== 'production' ? warning(!inst.contextTypes, 'contextTypes was defined as an instance property on %s. Use a ' + 'static property to define contextTypes instead.', this.getName() || 'a component') : void 0;
@@ -16215,14 +16250,11 @@
 	
 	'use strict';
 	
-	var _prodInvariant = __webpack_require__(37),
-	    _assign = __webpack_require__(6);
+	var _prodInvariant = __webpack_require__(37);
 	
 	var invariant = __webpack_require__(10);
 	
 	var genericComponentClass = null;
-	// This registry keeps track of wrapper classes around host tags.
-	var tagToComponentClass = {};
 	var textComponentClass = null;
 	
 	var ReactHostComponentInjection = {
@@ -16235,11 +16267,6 @@
 	  // rendered as props.
 	  injectTextComponentClass: function (componentClass) {
 	    textComponentClass = componentClass;
-	  },
-	  // This accepts a keyed object with classes as values. Each key represents a
-	  // tag. That particular tag will use this class instead of the generic one.
-	  injectComponentClasses: function (componentClasses) {
-	    _assign(tagToComponentClass, componentClasses);
 	  }
 	};
 	
@@ -21094,7 +21121,7 @@
 	
 	'use strict';
 	
-	module.exports = '15.4.1';
+	module.exports = '15.4.2';
 
 /***/ },
 /* 174 */
@@ -23369,7 +23396,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 2, 4182];
+	exports.version = [3, 2, 2, 4196];
 
 /***/ },
 /* 202 */
@@ -24767,12 +24794,12 @@
 	var bidiOrdering = (function() {
 	  // Character types for codepoints 0 to 0xff
 	  var lowTypes = "bbbbbbbbbtstwsbbbbbbbbbbbbbbssstwNN%%%NNNNNN,N,N1111111111NNNNNNNLLLLLLLLLLLLLLLLLLLLLLLLLLNNNNNNLLLLLLLLLLLLLLLLLLLLLLLLLLNNNNbbbbbbsbbbbbbbbbbbbbbbbbbbbbbbbbb,N%%%%NNNNLNNNNN%%11NLNNN1LNNNNNLLLLLLLLLLLLLLLLLLLLLLLNLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLN"
-	  // Character types for codepoints 0x600 to 0x6ff
-	  var arabicTypes = "rrrrrrrrrrrr,rNNmmmmmmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmmmmmmmmrrrrrrrnnnnnnnnnn%nnrrrmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmmmmmmmmmmmmmNmmmm"
+	  // Character types for codepoints 0x600 to 0x6f9
+	  var arabicTypes = "nnnnnnNNr%%r,rNNmmmmmmmmmmmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmmmmmmmmmmmmmmmnnnnnnnnnn%nnrrrmrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrmmmmmmmnNmmmmmmrrmmNmmmmrr1111111111"
 	  function charType(code) {
 	    if (code <= 0xf7) { return lowTypes.charAt(code) }
 	    else if (0x590 <= code && code <= 0x5f4) { return "R" }
-	    else if (0x600 <= code && code <= 0x6ed) { return arabicTypes.charAt(code - 0x600) }
+	    else if (0x600 <= code && code <= 0x6f9) { return arabicTypes.charAt(code - 0x600) }
 	    else if (0x6ee <= code && code <= 0x8ac) { return "r" }
 	    else if (0x2000 <= code && code <= 0x200b) { return "w" }
 	    else if (code == 0x200c) { return "b" }
@@ -25536,6 +25563,9 @@
 	                 col: 0, pos: 0, cm: cm,
 	                 trailingSpace: false,
 	                 splitSpaces: (ie || webkit) && cm.getOption("lineWrapping")}
+	  // hide from accessibility tree
+	  content.setAttribute("role", "presentation")
+	  builder.pre.setAttribute("role", "presentation")
 	  lineView.measure = {}
 	
 	  // Iterate over the logical lines that make up this visual line.
@@ -27078,7 +27108,7 @@
 	  }
 	}
 	
-	function NativeScrollbars(place, scroll, cm) {
+	var NativeScrollbars = function(place, scroll, cm) {
 	  this.cm = cm
 	  var vert = this.vert = elt("div", [elt("div", null, null, "min-width: 1px")], "CodeMirror-vscrollbar")
 	  var horiz = this.horiz = elt("div", [elt("div", null, null, "height: 100%; min-height: 1px")], "CodeMirror-hscrollbar")
@@ -27094,91 +27124,92 @@
 	  this.checkedZeroWidth = false
 	  // Need to set a minimum width to see the scrollbar on IE7 (but must not set it on IE8).
 	  if (ie && ie_version < 8) { this.horiz.style.minHeight = this.vert.style.minWidth = "18px" }
-	}
+	};
 	
-	NativeScrollbars.prototype = copyObj({
-	  update: function(measure) {
-	    var needsH = measure.scrollWidth > measure.clientWidth + 1
-	    var needsV = measure.scrollHeight > measure.clientHeight + 1
-	    var sWidth = measure.nativeBarWidth
+	NativeScrollbars.prototype.update = function (measure) {
+	  var needsH = measure.scrollWidth > measure.clientWidth + 1
+	  var needsV = measure.scrollHeight > measure.clientHeight + 1
+	  var sWidth = measure.nativeBarWidth
 	
-	    if (needsV) {
-	      this.vert.style.display = "block"
-	      this.vert.style.bottom = needsH ? sWidth + "px" : "0"
-	      var totalHeight = measure.viewHeight - (needsH ? sWidth : 0)
-	      // A bug in IE8 can cause this value to be negative, so guard it.
-	      this.vert.firstChild.style.height =
-	        Math.max(0, measure.scrollHeight - measure.clientHeight + totalHeight) + "px"
-	    } else {
-	      this.vert.style.display = ""
-	      this.vert.firstChild.style.height = "0"
-	    }
-	
-	    if (needsH) {
-	      this.horiz.style.display = "block"
-	      this.horiz.style.right = needsV ? sWidth + "px" : "0"
-	      this.horiz.style.left = measure.barLeft + "px"
-	      var totalWidth = measure.viewWidth - measure.barLeft - (needsV ? sWidth : 0)
-	      this.horiz.firstChild.style.width =
-	        (measure.scrollWidth - measure.clientWidth + totalWidth) + "px"
-	    } else {
-	      this.horiz.style.display = ""
-	      this.horiz.firstChild.style.width = "0"
-	    }
-	
-	    if (!this.checkedZeroWidth && measure.clientHeight > 0) {
-	      if (sWidth == 0) { this.zeroWidthHack() }
-	      this.checkedZeroWidth = true
-	    }
-	
-	    return {right: needsV ? sWidth : 0, bottom: needsH ? sWidth : 0}
-	  },
-	  setScrollLeft: function(pos) {
-	    if (this.horiz.scrollLeft != pos) { this.horiz.scrollLeft = pos }
-	    if (this.disableHoriz) { this.enableZeroWidthBar(this.horiz, this.disableHoriz) }
-	  },
-	  setScrollTop: function(pos) {
-	    if (this.vert.scrollTop != pos) { this.vert.scrollTop = pos }
-	    if (this.disableVert) { this.enableZeroWidthBar(this.vert, this.disableVert) }
-	  },
-	  zeroWidthHack: function() {
-	    var w = mac && !mac_geMountainLion ? "12px" : "18px"
-	    this.horiz.style.height = this.vert.style.width = w
-	    this.horiz.style.pointerEvents = this.vert.style.pointerEvents = "none"
-	    this.disableHoriz = new Delayed
-	    this.disableVert = new Delayed
-	  },
-	  enableZeroWidthBar: function(bar, delay) {
-	    bar.style.pointerEvents = "auto"
-	    function maybeDisable() {
-	      // To find out whether the scrollbar is still visible, we
-	      // check whether the element under the pixel in the bottom
-	      // left corner of the scrollbar box is the scrollbar box
-	      // itself (when the bar is still visible) or its filler child
-	      // (when the bar is hidden). If it is still visible, we keep
-	      // it enabled, if it's hidden, we disable pointer events.
-	      var box = bar.getBoundingClientRect()
-	      var elt = document.elementFromPoint(box.left + 1, box.bottom - 1)
-	      if (elt != bar) { bar.style.pointerEvents = "none" }
-	      else { delay.set(1000, maybeDisable) }
-	    }
-	    delay.set(1000, maybeDisable)
-	  },
-	  clear: function() {
-	    var parent = this.horiz.parentNode
-	    parent.removeChild(this.horiz)
-	    parent.removeChild(this.vert)
+	  if (needsV) {
+	    this.vert.style.display = "block"
+	    this.vert.style.bottom = needsH ? sWidth + "px" : "0"
+	    var totalHeight = measure.viewHeight - (needsH ? sWidth : 0)
+	    // A bug in IE8 can cause this value to be negative, so guard it.
+	    this.vert.firstChild.style.height =
+	      Math.max(0, measure.scrollHeight - measure.clientHeight + totalHeight) + "px"
+	  } else {
+	    this.vert.style.display = ""
+	    this.vert.firstChild.style.height = "0"
 	  }
-	}, NativeScrollbars.prototype)
 	
-	function NullScrollbars() {}
+	  if (needsH) {
+	    this.horiz.style.display = "block"
+	    this.horiz.style.right = needsV ? sWidth + "px" : "0"
+	    this.horiz.style.left = measure.barLeft + "px"
+	    var totalWidth = measure.viewWidth - measure.barLeft - (needsV ? sWidth : 0)
+	    this.horiz.firstChild.style.width =
+	      (measure.scrollWidth - measure.clientWidth + totalWidth) + "px"
+	  } else {
+	    this.horiz.style.display = ""
+	    this.horiz.firstChild.style.width = "0"
+	  }
 	
-	NullScrollbars.prototype = copyObj({
-	  update: function() { return {bottom: 0, right: 0} },
-	  setScrollLeft: function() {},
-	  setScrollTop: function() {},
-	  clear: function() {}
-	}, NullScrollbars.prototype)
+	  if (!this.checkedZeroWidth && measure.clientHeight > 0) {
+	    if (sWidth == 0) { this.zeroWidthHack() }
+	    this.checkedZeroWidth = true
+	  }
+	
+	  return {right: needsV ? sWidth : 0, bottom: needsH ? sWidth : 0}
+	};
+	
+	NativeScrollbars.prototype.setScrollLeft = function (pos) {
+	  if (this.horiz.scrollLeft != pos) { this.horiz.scrollLeft = pos }
+	  if (this.disableHoriz) { this.enableZeroWidthBar(this.horiz, this.disableHoriz) }
+	};
+	
+	NativeScrollbars.prototype.setScrollTop = function (pos) {
+	  if (this.vert.scrollTop != pos) { this.vert.scrollTop = pos }
+	  if (this.disableVert) { this.enableZeroWidthBar(this.vert, this.disableVert) }
+	};
+	
+	NativeScrollbars.prototype.zeroWidthHack = function () {
+	  var w = mac && !mac_geMountainLion ? "12px" : "18px"
+	  this.horiz.style.height = this.vert.style.width = w
+	  this.horiz.style.pointerEvents = this.vert.style.pointerEvents = "none"
+	  this.disableHoriz = new Delayed
+	  this.disableVert = new Delayed
+	};
+	
+	NativeScrollbars.prototype.enableZeroWidthBar = function (bar, delay) {
+	  bar.style.pointerEvents = "auto"
+	  function maybeDisable() {
+	    // To find out whether the scrollbar is still visible, we
+	    // check whether the element under the pixel in the bottom
+	    // left corner of the scrollbar box is the scrollbar box
+	    // itself (when the bar is still visible) or its filler child
+	    // (when the bar is hidden). If it is still visible, we keep
+	    // it enabled, if it's hidden, we disable pointer events.
+	    var box = bar.getBoundingClientRect()
+	    var elt = document.elementFromPoint(box.left + 1, box.bottom - 1)
+	    if (elt != bar) { bar.style.pointerEvents = "none" }
+	    else { delay.set(1000, maybeDisable) }
+	  }
+	  delay.set(1000, maybeDisable)
+	};
+	
+	NativeScrollbars.prototype.clear = function () {
+	  var parent = this.horiz.parentNode
+	  parent.removeChild(this.horiz)
+	  parent.removeChild(this.vert)
+	};
+	
+	var NullScrollbars = function () {};
+	
+	NullScrollbars.prototype.update = function () { return {bottom: 0, right: 0} };
+	NullScrollbars.prototype.setScrollLeft = function () {};
+	NullScrollbars.prototype.setScrollTop = function () {};
+	NullScrollbars.prototype.clear = function () {};
 	
 	function updateScrollbars(cm, measure) {
 	  if (!measure) { measure = measureForScrollbars(cm) }
@@ -27757,7 +27788,7 @@
 	
 	// DISPLAY DRAWING
 	
-	function DisplayUpdate(cm, viewport, force) {
+	var DisplayUpdate = function(cm, viewport, force) {
 	  var display = cm.display
 	
 	  this.viewport = viewport
@@ -27770,18 +27801,18 @@
 	  this.force = force
 	  this.dims = getDimensions(cm)
 	  this.events = []
-	}
+	};
 	
-	DisplayUpdate.prototype.signal = function(emitter, type) {
+	DisplayUpdate.prototype.signal = function (emitter, type) {
 	  if (hasHandler(emitter, type))
 	    { this.events.push(arguments) }
-	}
-	DisplayUpdate.prototype.finish = function() {
-	  var this$1 = this;
+	};
+	DisplayUpdate.prototype.finish = function () {
+	    var this$1 = this;
 	
 	  for (var i = 0; i < this.events.length; i++)
 	    { signal.apply(null, this$1.events[i]) }
-	}
+	};
 	
 	function maybeClipScrollbars(cm) {
 	  var display = cm.display
@@ -29373,6 +29404,7 @@
 	    // Showing up as a widget implies collapsed (widget replaces text)
 	    marker.collapsed = true
 	    marker.widgetNode = elt("span", [marker.replacedWith], "CodeMirror-widget")
+	    marker.widgetNode.setAttribute("role", "presentation") // hide from accessibility tree
 	    if (!options.handleMouseEvents) { marker.widgetNode.setAttribute("cm-ignore-events", "true") }
 	    if (options.insertLeft) { marker.widgetNode.insertLeft = true }
 	  }
@@ -29720,7 +29752,6 @@
 	  clearGutter: docMethodOp(function(gutterID) {
 	    var this$1 = this;
 	
-	    var i = this.first
 	    this.iter(function (line) {
 	      if (line.gutterMarkers && line.gutterMarkers[gutterID]) {
 	        changeLine(this$1, line, "gutter", function () {
@@ -29729,7 +29760,6 @@
 	          return true
 	        })
 	      }
-	      ++i
 	    })
 	  }),
 	
@@ -30909,7 +30939,7 @@
 	    for (var i = newBreaks.length - 1; i >= 0; i--)
 	      { replaceRange(cm.doc, val, newBreaks[i], Pos(newBreaks[i].line, newBreaks[i].ch + val.length)) }
 	  })
-	  option("specialChars", /[\u0000-\u001f\u007f\u00ad\u200b-\u200f\u2028\u2029\ufeff]/g, function (cm, val, old) {
+	  option("specialChars", /[\u0000-\u001f\u007f\u00ad\u061c\u200b-\u200f\u2028\u2029\ufeff]/g, function (cm, val, old) {
 	    cm.state.specialChars = new RegExp(val.source + (val.test("\t") ? "" : "|\t"), "g")
 	    if (old != Init) { cm.refresh() }
 	  })
@@ -30999,7 +31029,7 @@
 	function guttersChanged(cm) {
 	  updateGutters(cm)
 	  regChange(cm)
-	  setTimeout(function () { return alignHorizontally(cm); }, 20)
+	  alignHorizontally(cm)
 	}
 	
 	function dragDropChanged(cm, value, old) {
@@ -31054,7 +31084,6 @@
 	  themeChanged(this)
 	  if (options.lineWrapping)
 	    { this.display.wrapper.className += " CodeMirror-wrap" }
-	  if (options.autofocus && !mobile) { display.input.focus() }
 	  initScrollbars(this)
 	
 	  this.state = {
@@ -31072,6 +31101,8 @@
 	    keySeq: null,  // Unfinished key sequence
 	    specialChars: null
 	  }
+	
+	  if (options.autofocus && !mobile) { display.input.focus() }
 	
 	  // Override magic textarea content restore that IE sometimes does
 	  // on our hidden textarea on reload
@@ -31428,6 +31459,7 @@
 	      options[option] = value
 	      if (optionHandlers.hasOwnProperty(option))
 	        { operation(this, optionHandlers[option])(this, value, old) }
+	      signal(this, "optionChange", this, option)
 	    },
 	
 	    getOption: function(option) {return this.options[option]},
@@ -31935,331 +31967,333 @@
 	
 	// CONTENTEDITABLE INPUT STYLE
 	
-	function ContentEditableInput(cm) {
+	var ContentEditableInput = function(cm) {
 	  this.cm = cm
 	  this.lastAnchorNode = this.lastAnchorOffset = this.lastFocusNode = this.lastFocusOffset = null
 	  this.polling = new Delayed()
 	  this.composing = null
 	  this.gracePeriod = false
 	  this.readDOMTimeout = null
-	}
+	};
 	
-	ContentEditableInput.prototype = copyObj({
-	  init: function(display) {
+	ContentEditableInput.prototype.init = function (display) {
 	    var this$1 = this;
 	
-	    var input = this, cm = input.cm
-	    var div = input.div = display.lineDiv
-	    disableBrowserMagic(div, cm.options.spellcheck)
+	  var input = this, cm = input.cm
+	  var div = input.div = display.lineDiv
+	  disableBrowserMagic(div, cm.options.spellcheck)
 	
-	    on(div, "paste", function (e) {
-	      if (signalDOMEvent(cm, e) || handlePaste(e, cm)) { return }
-	      // IE doesn't fire input events, so we schedule a read for the pasted content in this way
-	      if (ie_version <= 11) { setTimeout(operation(cm, function () {
-	        if (!input.pollContent()) { regChange(cm) }
-	      }), 20) }
-	    })
+	  on(div, "paste", function (e) {
+	    if (signalDOMEvent(cm, e) || handlePaste(e, cm)) { return }
+	    // IE doesn't fire input events, so we schedule a read for the pasted content in this way
+	    if (ie_version <= 11) { setTimeout(operation(cm, function () {
+	      if (!input.pollContent()) { regChange(cm) }
+	    }), 20) }
+	  })
 	
-	    on(div, "compositionstart", function (e) {
-	      this$1.composing = {data: e.data}
-	    })
-	    on(div, "compositionupdate", function (e) {
-	      if (!this$1.composing) { this$1.composing = {data: e.data} }
-	    })
-	    on(div, "compositionend", function (e) {
-	      if (this$1.composing) {
-	        if (e.data != this$1.composing.data) { this$1.readFromDOMSoon() }
-	        this$1.composing = null
+	  on(div, "compositionstart", function (e) {
+	    this$1.composing = {data: e.data, done: false}
+	  })
+	  on(div, "compositionupdate", function (e) {
+	    if (!this$1.composing) { this$1.composing = {data: e.data, done: false} }
+	  })
+	  on(div, "compositionend", function (e) {
+	    if (this$1.composing) {
+	      if (e.data != this$1.composing.data) { this$1.readFromDOMSoon() }
+	      this$1.composing.done = true
+	    }
+	  })
+	
+	  on(div, "touchstart", function () { return input.forceCompositionEnd(); })
+	
+	  on(div, "input", function () {
+	    if (!this$1.composing) { this$1.readFromDOMSoon() }
+	  })
+	
+	  function onCopyCut(e) {
+	    if (signalDOMEvent(cm, e)) { return }
+	    if (cm.somethingSelected()) {
+	      setLastCopied({lineWise: false, text: cm.getSelections()})
+	      if (e.type == "cut") { cm.replaceSelection("", null, "cut") }
+	    } else if (!cm.options.lineWiseCopyCut) {
+	      return
+	    } else {
+	      var ranges = copyableRanges(cm)
+	      setLastCopied({lineWise: true, text: ranges.text})
+	      if (e.type == "cut") {
+	        cm.operation(function () {
+	          cm.setSelections(ranges.ranges, 0, sel_dontScroll)
+	          cm.replaceSelection("", null, "cut")
+	        })
 	      }
-	    })
-	
-	    on(div, "touchstart", function () { return input.forceCompositionEnd(); })
-	
-	    on(div, "input", function () {
-	      if (!this$1.composing) { this$1.readFromDOMSoon() }
-	    })
-	
-	    function onCopyCut(e) {
-	      if (signalDOMEvent(cm, e)) { return }
-	      if (cm.somethingSelected()) {
-	        setLastCopied({lineWise: false, text: cm.getSelections()})
-	        if (e.type == "cut") { cm.replaceSelection("", null, "cut") }
-	      } else if (!cm.options.lineWiseCopyCut) {
+	    }
+	    if (e.clipboardData) {
+	      e.clipboardData.clearData()
+	      var content = lastCopied.text.join("\n")
+	      // iOS exposes the clipboard API, but seems to discard content inserted into it
+	      e.clipboardData.setData("Text", content)
+	      if (e.clipboardData.getData("Text") == content) {
+	        e.preventDefault()
 	        return
-	      } else {
-	        var ranges = copyableRanges(cm)
-	        setLastCopied({lineWise: true, text: ranges.text})
-	        if (e.type == "cut") {
-	          cm.operation(function () {
-	            cm.setSelections(ranges.ranges, 0, sel_dontScroll)
-	            cm.replaceSelection("", null, "cut")
-	          })
-	        }
 	      }
-	      if (e.clipboardData) {
-	        e.clipboardData.clearData()
-	        var content = lastCopied.text.join("\n")
-	        // iOS exposes the clipboard API, but seems to discard content inserted into it
-	        e.clipboardData.setData("Text", content)
-	        if (e.clipboardData.getData("Text") == content) {
-	          e.preventDefault()
-	          return
-	        }
-	      }
-	      // Old-fashioned briefly-focus-a-textarea hack
-	      var kludge = hiddenTextarea(), te = kludge.firstChild
-	      cm.display.lineSpace.insertBefore(kludge, cm.display.lineSpace.firstChild)
-	      te.value = lastCopied.text.join("\n")
-	      var hadFocus = document.activeElement
-	      selectInput(te)
-	      setTimeout(function () {
-	        cm.display.lineSpace.removeChild(kludge)
-	        hadFocus.focus()
-	        if (hadFocus == div) { input.showPrimarySelection() }
-	      }, 50)
 	    }
-	    on(div, "copy", onCopyCut)
-	    on(div, "cut", onCopyCut)
-	  },
+	    // Old-fashioned briefly-focus-a-textarea hack
+	    var kludge = hiddenTextarea(), te = kludge.firstChild
+	    cm.display.lineSpace.insertBefore(kludge, cm.display.lineSpace.firstChild)
+	    te.value = lastCopied.text.join("\n")
+	    var hadFocus = document.activeElement
+	    selectInput(te)
+	    setTimeout(function () {
+	      cm.display.lineSpace.removeChild(kludge)
+	      hadFocus.focus()
+	      if (hadFocus == div) { input.showPrimarySelection() }
+	    }, 50)
+	  }
+	  on(div, "copy", onCopyCut)
+	  on(div, "cut", onCopyCut)
+	};
 	
-	  prepareSelection: function() {
-	    var result = prepareSelection(this.cm, false)
-	    result.focus = this.cm.state.focused
-	    return result
-	  },
+	ContentEditableInput.prototype.prepareSelection = function () {
+	  var result = prepareSelection(this.cm, false)
+	  result.focus = this.cm.state.focused
+	  return result
+	};
 	
-	  showSelection: function(info, takeFocus) {
-	    if (!info || !this.cm.display.view.length) { return }
-	    if (info.focus || takeFocus) { this.showPrimarySelection() }
-	    this.showMultipleSelections(info)
-	  },
+	ContentEditableInput.prototype.showSelection = function (info, takeFocus) {
+	  if (!info || !this.cm.display.view.length) { return }
+	  if (info.focus || takeFocus) { this.showPrimarySelection() }
+	  this.showMultipleSelections(info)
+	};
 	
-	  showPrimarySelection: function() {
-	    var sel = window.getSelection(), prim = this.cm.doc.sel.primary()
-	    var curAnchor = domToPos(this.cm, sel.anchorNode, sel.anchorOffset)
-	    var curFocus = domToPos(this.cm, sel.focusNode, sel.focusOffset)
-	    if (curAnchor && !curAnchor.bad && curFocus && !curFocus.bad &&
-	        cmp(minPos(curAnchor, curFocus), prim.from()) == 0 &&
-	        cmp(maxPos(curAnchor, curFocus), prim.to()) == 0)
-	      { return }
+	ContentEditableInput.prototype.showPrimarySelection = function () {
+	  var sel = window.getSelection(), prim = this.cm.doc.sel.primary()
+	  var curAnchor = domToPos(this.cm, sel.anchorNode, sel.anchorOffset)
+	  var curFocus = domToPos(this.cm, sel.focusNode, sel.focusOffset)
+	  if (curAnchor && !curAnchor.bad && curFocus && !curFocus.bad &&
+	      cmp(minPos(curAnchor, curFocus), prim.from()) == 0 &&
+	      cmp(maxPos(curAnchor, curFocus), prim.to()) == 0)
+	    { return }
 	
-	    var start = posToDOM(this.cm, prim.from())
-	    var end = posToDOM(this.cm, prim.to())
-	    if (!start && !end) { return }
+	  var start = posToDOM(this.cm, prim.from())
+	  var end = posToDOM(this.cm, prim.to())
+	  if (!start && !end) { return }
 	
-	    var view = this.cm.display.view
-	    var old = sel.rangeCount && sel.getRangeAt(0)
-	    if (!start) {
-	      start = {node: view[0].measure.map[2], offset: 0}
-	    } else if (!end) { // FIXME dangerously hacky
-	      var measure = view[view.length - 1].measure
-	      var map = measure.maps ? measure.maps[measure.maps.length - 1] : measure.map
-	      end = {node: map[map.length - 1], offset: map[map.length - 2] - map[map.length - 3]}
-	    }
+	  var view = this.cm.display.view
+	  var old = sel.rangeCount && sel.getRangeAt(0)
+	  if (!start) {
+	    start = {node: view[0].measure.map[2], offset: 0}
+	  } else if (!end) { // FIXME dangerously hacky
+	    var measure = view[view.length - 1].measure
+	    var map = measure.maps ? measure.maps[measure.maps.length - 1] : measure.map
+	    end = {node: map[map.length - 1], offset: map[map.length - 2] - map[map.length - 3]}
+	  }
 	
-	    var rng
-	    try { rng = range(start.node, start.offset, end.offset, end.node) }
-	    catch(e) {} // Our model of the DOM might be outdated, in which case the range we try to set can be impossible
-	    if (rng) {
-	      if (!gecko && this.cm.state.focused) {
-	        sel.collapse(start.node, start.offset)
-	        if (!rng.collapsed) {
-	          sel.removeAllRanges()
-	          sel.addRange(rng)
-	        }
-	      } else {
+	  var rng
+	  try { rng = range(start.node, start.offset, end.offset, end.node) }
+	  catch(e) {} // Our model of the DOM might be outdated, in which case the range we try to set can be impossible
+	  if (rng) {
+	    if (!gecko && this.cm.state.focused) {
+	      sel.collapse(start.node, start.offset)
+	      if (!rng.collapsed) {
 	        sel.removeAllRanges()
 	        sel.addRange(rng)
 	      }
-	      if (old && sel.anchorNode == null) { sel.addRange(old) }
-	      else if (gecko) { this.startGracePeriod() }
+	    } else {
+	      sel.removeAllRanges()
+	      sel.addRange(rng)
 	    }
-	    this.rememberSelection()
-	  },
+	    if (old && sel.anchorNode == null) { sel.addRange(old) }
+	    else if (gecko) { this.startGracePeriod() }
+	  }
+	  this.rememberSelection()
+	};
 	
-	  startGracePeriod: function() {
+	ContentEditableInput.prototype.startGracePeriod = function () {
 	    var this$1 = this;
 	
-	    clearTimeout(this.gracePeriod)
-	    this.gracePeriod = setTimeout(function () {
-	      this$1.gracePeriod = false
-	      if (this$1.selectionChanged())
-	        { this$1.cm.operation(function () { return this$1.cm.curOp.selectionChanged = true; }) }
-	    }, 20)
-	  },
+	  clearTimeout(this.gracePeriod)
+	  this.gracePeriod = setTimeout(function () {
+	    this$1.gracePeriod = false
+	    if (this$1.selectionChanged())
+	      { this$1.cm.operation(function () { return this$1.cm.curOp.selectionChanged = true; }) }
+	  }, 20)
+	};
 	
-	  showMultipleSelections: function(info) {
-	    removeChildrenAndAdd(this.cm.display.cursorDiv, info.cursors)
-	    removeChildrenAndAdd(this.cm.display.selectionDiv, info.selection)
-	  },
+	ContentEditableInput.prototype.showMultipleSelections = function (info) {
+	  removeChildrenAndAdd(this.cm.display.cursorDiv, info.cursors)
+	  removeChildrenAndAdd(this.cm.display.selectionDiv, info.selection)
+	};
 	
-	  rememberSelection: function() {
-	    var sel = window.getSelection()
-	    this.lastAnchorNode = sel.anchorNode; this.lastAnchorOffset = sel.anchorOffset
-	    this.lastFocusNode = sel.focusNode; this.lastFocusOffset = sel.focusOffset
-	  },
+	ContentEditableInput.prototype.rememberSelection = function () {
+	  var sel = window.getSelection()
+	  this.lastAnchorNode = sel.anchorNode; this.lastAnchorOffset = sel.anchorOffset
+	  this.lastFocusNode = sel.focusNode; this.lastFocusOffset = sel.focusOffset
+	};
 	
-	  selectionInEditor: function() {
-	    var sel = window.getSelection()
-	    if (!sel.rangeCount) { return false }
-	    var node = sel.getRangeAt(0).commonAncestorContainer
-	    return contains(this.div, node)
-	  },
+	ContentEditableInput.prototype.selectionInEditor = function () {
+	  var sel = window.getSelection()
+	  if (!sel.rangeCount) { return false }
+	  var node = sel.getRangeAt(0).commonAncestorContainer
+	  return contains(this.div, node)
+	};
 	
-	  focus: function() {
-	    if (this.cm.options.readOnly != "nocursor") {
-	      if (!this.selectionInEditor())
-	        { this.showSelection(this.prepareSelection(), true) }
-	      this.div.focus()
-	    }
-	  },
-	  blur: function() { this.div.blur() },
-	  getField: function() { return this.div },
-	
-	  supportsTouch: function() { return true },
-	
-	  receivedFocus: function() {
-	    var input = this
-	    if (this.selectionInEditor())
-	      { this.pollSelection() }
-	    else
-	      { runInOp(this.cm, function () { return input.cm.curOp.selectionChanged = true; }) }
-	
-	    function poll() {
-	      if (input.cm.state.focused) {
-	        input.pollSelection()
-	        input.polling.set(input.cm.options.pollInterval, poll)
-	      }
-	    }
-	    this.polling.set(this.cm.options.pollInterval, poll)
-	  },
-	
-	  selectionChanged: function() {
-	    var sel = window.getSelection()
-	    return sel.anchorNode != this.lastAnchorNode || sel.anchorOffset != this.lastAnchorOffset ||
-	      sel.focusNode != this.lastFocusNode || sel.focusOffset != this.lastFocusOffset
-	  },
-	
-	  pollSelection: function() {
-	    if (!this.composing && this.readDOMTimeout == null && !this.gracePeriod && this.selectionChanged()) {
-	      var sel = window.getSelection(), cm = this.cm
-	      this.rememberSelection()
-	      var anchor = domToPos(cm, sel.anchorNode, sel.anchorOffset)
-	      var head = domToPos(cm, sel.focusNode, sel.focusOffset)
-	      if (anchor && head) { runInOp(cm, function () {
-	        setSelection(cm.doc, simpleSelection(anchor, head), sel_dontScroll)
-	        if (anchor.bad || head.bad) { cm.curOp.selectionChanged = true }
-	      }) }
-	    }
-	  },
-	
-	  pollContent: function() {
-	    if (this.readDOMTimeout != null) {
-	      clearTimeout(this.readDOMTimeout)
-	      this.readDOMTimeout = null
-	    }
-	
-	    var cm = this.cm, display = cm.display, sel = cm.doc.sel.primary()
-	    var from = sel.from(), to = sel.to()
-	    if (from.ch == 0 && from.line > cm.firstLine())
-	      { from = Pos(from.line - 1, getLine(cm.doc, from.line - 1).length) }
-	    if (to.ch == getLine(cm.doc, to.line).text.length && to.line < cm.lastLine())
-	      { to = Pos(to.line + 1, 0) }
-	    if (from.line < display.viewFrom || to.line > display.viewTo - 1) { return false }
-	
-	    var fromIndex, fromLine, fromNode
-	    if (from.line == display.viewFrom || (fromIndex = findViewIndex(cm, from.line)) == 0) {
-	      fromLine = lineNo(display.view[0].line)
-	      fromNode = display.view[0].node
-	    } else {
-	      fromLine = lineNo(display.view[fromIndex].line)
-	      fromNode = display.view[fromIndex - 1].node.nextSibling
-	    }
-	    var toIndex = findViewIndex(cm, to.line)
-	    var toLine, toNode
-	    if (toIndex == display.view.length - 1) {
-	      toLine = display.viewTo - 1
-	      toNode = display.lineDiv.lastChild
-	    } else {
-	      toLine = lineNo(display.view[toIndex + 1].line) - 1
-	      toNode = display.view[toIndex + 1].node.previousSibling
-	    }
-	
-	    if (!fromNode) { return false }
-	    var newText = cm.doc.splitLines(domTextBetween(cm, fromNode, toNode, fromLine, toLine))
-	    var oldText = getBetween(cm.doc, Pos(fromLine, 0), Pos(toLine, getLine(cm.doc, toLine).text.length))
-	    while (newText.length > 1 && oldText.length > 1) {
-	      if (lst(newText) == lst(oldText)) { newText.pop(); oldText.pop(); toLine-- }
-	      else if (newText[0] == oldText[0]) { newText.shift(); oldText.shift(); fromLine++ }
-	      else { break }
-	    }
-	
-	    var cutFront = 0, cutEnd = 0
-	    var newTop = newText[0], oldTop = oldText[0], maxCutFront = Math.min(newTop.length, oldTop.length)
-	    while (cutFront < maxCutFront && newTop.charCodeAt(cutFront) == oldTop.charCodeAt(cutFront))
-	      { ++cutFront }
-	    var newBot = lst(newText), oldBot = lst(oldText)
-	    var maxCutEnd = Math.min(newBot.length - (newText.length == 1 ? cutFront : 0),
-	                             oldBot.length - (oldText.length == 1 ? cutFront : 0))
-	    while (cutEnd < maxCutEnd &&
-	           newBot.charCodeAt(newBot.length - cutEnd - 1) == oldBot.charCodeAt(oldBot.length - cutEnd - 1))
-	      { ++cutEnd }
-	
-	    newText[newText.length - 1] = newBot.slice(0, newBot.length - cutEnd).replace(/^\u200b+/, "")
-	    newText[0] = newText[0].slice(cutFront).replace(/\u200b+$/, "")
-	
-	    var chFrom = Pos(fromLine, cutFront)
-	    var chTo = Pos(toLine, oldText.length ? lst(oldText).length - cutEnd : 0)
-	    if (newText.length > 1 || newText[0] || cmp(chFrom, chTo)) {
-	      replaceRange(cm.doc, newText, chFrom, chTo, "+input")
-	      return true
-	    }
-	  },
-	
-	  ensurePolled: function() {
-	    this.forceCompositionEnd()
-	  },
-	  reset: function() {
-	    this.forceCompositionEnd()
-	  },
-	  forceCompositionEnd: function() {
-	    if (!this.composing) { return }
-	    this.composing = null
-	    if (!this.pollContent()) { regChange(this.cm) }
-	    this.div.blur()
+	ContentEditableInput.prototype.focus = function () {
+	  if (this.cm.options.readOnly != "nocursor") {
+	    if (!this.selectionInEditor())
+	      { this.showSelection(this.prepareSelection(), true) }
 	    this.div.focus()
-	  },
-	  readFromDOMSoon: function() {
+	  }
+	};
+	ContentEditableInput.prototype.blur = function () { this.div.blur() };
+	ContentEditableInput.prototype.getField = function () { return this.div };
+	
+	ContentEditableInput.prototype.supportsTouch = function () { return true };
+	
+	ContentEditableInput.prototype.receivedFocus = function () {
+	  var input = this
+	  if (this.selectionInEditor())
+	    { this.pollSelection() }
+	  else
+	    { runInOp(this.cm, function () { return input.cm.curOp.selectionChanged = true; }) }
+	
+	  function poll() {
+	    if (input.cm.state.focused) {
+	      input.pollSelection()
+	      input.polling.set(input.cm.options.pollInterval, poll)
+	    }
+	  }
+	  this.polling.set(this.cm.options.pollInterval, poll)
+	};
+	
+	ContentEditableInput.prototype.selectionChanged = function () {
+	  var sel = window.getSelection()
+	  return sel.anchorNode != this.lastAnchorNode || sel.anchorOffset != this.lastAnchorOffset ||
+	    sel.focusNode != this.lastFocusNode || sel.focusOffset != this.lastFocusOffset
+	};
+	
+	ContentEditableInput.prototype.pollSelection = function () {
+	  if (!this.composing && this.readDOMTimeout == null && !this.gracePeriod && this.selectionChanged()) {
+	    var sel = window.getSelection(), cm = this.cm
+	    this.rememberSelection()
+	    var anchor = domToPos(cm, sel.anchorNode, sel.anchorOffset)
+	    var head = domToPos(cm, sel.focusNode, sel.focusOffset)
+	    if (anchor && head) { runInOp(cm, function () {
+	      setSelection(cm.doc, simpleSelection(anchor, head), sel_dontScroll)
+	      if (anchor.bad || head.bad) { cm.curOp.selectionChanged = true }
+	    }) }
+	  }
+	};
+	
+	ContentEditableInput.prototype.pollContent = function () {
+	  if (this.readDOMTimeout != null) {
+	    clearTimeout(this.readDOMTimeout)
+	    this.readDOMTimeout = null
+	  }
+	
+	  var cm = this.cm, display = cm.display, sel = cm.doc.sel.primary()
+	  var from = sel.from(), to = sel.to()
+	  if (from.ch == 0 && from.line > cm.firstLine())
+	    { from = Pos(from.line - 1, getLine(cm.doc, from.line - 1).length) }
+	  if (to.ch == getLine(cm.doc, to.line).text.length && to.line < cm.lastLine())
+	    { to = Pos(to.line + 1, 0) }
+	  if (from.line < display.viewFrom || to.line > display.viewTo - 1) { return false }
+	
+	  var fromIndex, fromLine, fromNode
+	  if (from.line == display.viewFrom || (fromIndex = findViewIndex(cm, from.line)) == 0) {
+	    fromLine = lineNo(display.view[0].line)
+	    fromNode = display.view[0].node
+	  } else {
+	    fromLine = lineNo(display.view[fromIndex].line)
+	    fromNode = display.view[fromIndex - 1].node.nextSibling
+	  }
+	  var toIndex = findViewIndex(cm, to.line)
+	  var toLine, toNode
+	  if (toIndex == display.view.length - 1) {
+	    toLine = display.viewTo - 1
+	    toNode = display.lineDiv.lastChild
+	  } else {
+	    toLine = lineNo(display.view[toIndex + 1].line) - 1
+	    toNode = display.view[toIndex + 1].node.previousSibling
+	  }
+	
+	  if (!fromNode) { return false }
+	  var newText = cm.doc.splitLines(domTextBetween(cm, fromNode, toNode, fromLine, toLine))
+	  var oldText = getBetween(cm.doc, Pos(fromLine, 0), Pos(toLine, getLine(cm.doc, toLine).text.length))
+	  while (newText.length > 1 && oldText.length > 1) {
+	    if (lst(newText) == lst(oldText)) { newText.pop(); oldText.pop(); toLine-- }
+	    else if (newText[0] == oldText[0]) { newText.shift(); oldText.shift(); fromLine++ }
+	    else { break }
+	  }
+	
+	  var cutFront = 0, cutEnd = 0
+	  var newTop = newText[0], oldTop = oldText[0], maxCutFront = Math.min(newTop.length, oldTop.length)
+	  while (cutFront < maxCutFront && newTop.charCodeAt(cutFront) == oldTop.charCodeAt(cutFront))
+	    { ++cutFront }
+	  var newBot = lst(newText), oldBot = lst(oldText)
+	  var maxCutEnd = Math.min(newBot.length - (newText.length == 1 ? cutFront : 0),
+	                           oldBot.length - (oldText.length == 1 ? cutFront : 0))
+	  while (cutEnd < maxCutEnd &&
+	         newBot.charCodeAt(newBot.length - cutEnd - 1) == oldBot.charCodeAt(oldBot.length - cutEnd - 1))
+	    { ++cutEnd }
+	
+	  newText[newText.length - 1] = newBot.slice(0, newBot.length - cutEnd).replace(/^\u200b+/, "")
+	  newText[0] = newText[0].slice(cutFront).replace(/\u200b+$/, "")
+	
+	  var chFrom = Pos(fromLine, cutFront)
+	  var chTo = Pos(toLine, oldText.length ? lst(oldText).length - cutEnd : 0)
+	  if (newText.length > 1 || newText[0] || cmp(chFrom, chTo)) {
+	    replaceRange(cm.doc, newText, chFrom, chTo, "+input")
+	    return true
+	  }
+	};
+	
+	ContentEditableInput.prototype.ensurePolled = function () {
+	  this.forceCompositionEnd()
+	};
+	ContentEditableInput.prototype.reset = function () {
+	  this.forceCompositionEnd()
+	};
+	ContentEditableInput.prototype.forceCompositionEnd = function () {
+	  if (!this.composing) { return }
+	  clearTimeout(this.readDOMTimeout)
+	  this.composing = null
+	  if (!this.pollContent()) { regChange(this.cm) }
+	  this.div.blur()
+	  this.div.focus()
+	};
+	ContentEditableInput.prototype.readFromDOMSoon = function () {
 	    var this$1 = this;
 	
-	    if (this.readDOMTimeout != null) { return }
-	    this.readDOMTimeout = setTimeout(function () {
-	      this$1.readDOMTimeout = null
-	      if (this$1.composing) { return }
-	      if (this$1.cm.isReadOnly() || !this$1.pollContent())
-	        { runInOp(this$1.cm, function () { return regChange(this$1.cm); }) }
-	    }, 80)
-	  },
+	  if (this.readDOMTimeout != null) { return }
+	  this.readDOMTimeout = setTimeout(function () {
+	    this$1.readDOMTimeout = null
+	    if (this$1.composing) {
+	      if (this$1.composing.done) { this$1.composing = null }
+	      else { return }
+	    }
+	    if (this$1.cm.isReadOnly() || !this$1.pollContent())
+	      { runInOp(this$1.cm, function () { return regChange(this$1.cm); }) }
+	  }, 80)
+	};
 	
-	  setUneditable: function(node) {
-	    node.contentEditable = "false"
-	  },
+	ContentEditableInput.prototype.setUneditable = function (node) {
+	  node.contentEditable = "false"
+	};
 	
-	  onKeyPress: function(e) {
-	    e.preventDefault()
-	    if (!this.cm.isReadOnly())
-	      { operation(this.cm, applyTextInput)(this.cm, String.fromCharCode(e.charCode == null ? e.keyCode : e.charCode), 0) }
-	  },
+	ContentEditableInput.prototype.onKeyPress = function (e) {
+	  e.preventDefault()
+	  if (!this.cm.isReadOnly())
+	    { operation(this.cm, applyTextInput)(this.cm, String.fromCharCode(e.charCode == null ? e.keyCode : e.charCode), 0) }
+	};
 	
-	  readOnlyChanged: function(val) {
-	    this.div.contentEditable = String(val != "nocursor")
-	  },
+	ContentEditableInput.prototype.readOnlyChanged = function (val) {
+	  this.div.contentEditable = String(val != "nocursor")
+	};
 	
-	  onContextMenu: nothing,
-	  resetPosition: nothing,
+	ContentEditableInput.prototype.onContextMenu = function () {};
+	ContentEditableInput.prototype.resetPosition = function () {};
 	
-	  needsContentAttribute: true
-	  }, ContentEditableInput.prototype)
+	ContentEditableInput.prototype.needsContentAttribute = true
 	
 	function posToDOM(cm, pos) {
 	  var view = findViewForLine(cm, pos.line)
@@ -32396,7 +32430,7 @@
 	
 	// TEXTAREA INPUT STYLE
 	
-	function TextareaInput(cm) {
+	var TextareaInput = function(cm) {
 	  this.cm = cm
 	  // See input.poll and input.reset
 	  this.prevInput = ""
@@ -32413,335 +32447,333 @@
 	  // Used to work around IE issue with selection being forgotten when focus moves away from textarea
 	  this.hasSelection = false
 	  this.composing = null
-	}
+	};
 	
-	TextareaInput.prototype = copyObj({
-	  init: function(display) {
+	TextareaInput.prototype.init = function (display) {
 	    var this$1 = this;
 	
-	    var input = this, cm = this.cm
+	  var input = this, cm = this.cm
 	
-	    // Wraps and hides input textarea
-	    var div = this.wrapper = hiddenTextarea()
-	    // The semihidden textarea that is focused when the editor is
-	    // focused, and receives input.
-	    var te = this.textarea = div.firstChild
-	    display.wrapper.insertBefore(div, display.wrapper.firstChild)
+	  // Wraps and hides input textarea
+	  var div = this.wrapper = hiddenTextarea()
+	  // The semihidden textarea that is focused when the editor is
+	  // focused, and receives input.
+	  var te = this.textarea = div.firstChild
+	  display.wrapper.insertBefore(div, display.wrapper.firstChild)
 	
-	    // Needed to hide big blue blinking cursor on Mobile Safari (doesn't seem to work in iOS 8 anymore)
-	    if (ios) { te.style.width = "0px" }
+	  // Needed to hide big blue blinking cursor on Mobile Safari (doesn't seem to work in iOS 8 anymore)
+	  if (ios) { te.style.width = "0px" }
 	
-	    on(te, "input", function () {
-	      if (ie && ie_version >= 9 && this$1.hasSelection) { this$1.hasSelection = null }
-	      input.poll()
-	    })
+	  on(te, "input", function () {
+	    if (ie && ie_version >= 9 && this$1.hasSelection) { this$1.hasSelection = null }
+	    input.poll()
+	  })
 	
-	    on(te, "paste", function (e) {
-	      if (signalDOMEvent(cm, e) || handlePaste(e, cm)) { return }
+	  on(te, "paste", function (e) {
+	    if (signalDOMEvent(cm, e) || handlePaste(e, cm)) { return }
 	
-	      cm.state.pasteIncoming = true
-	      input.fastPoll()
-	    })
+	    cm.state.pasteIncoming = true
+	    input.fastPoll()
+	  })
 	
-	    function prepareCopyCut(e) {
-	      if (signalDOMEvent(cm, e)) { return }
-	      if (cm.somethingSelected()) {
-	        setLastCopied({lineWise: false, text: cm.getSelections()})
-	        if (input.inaccurateSelection) {
-	          input.prevInput = ""
-	          input.inaccurateSelection = false
-	          te.value = lastCopied.text.join("\n")
-	          selectInput(te)
-	        }
-	      } else if (!cm.options.lineWiseCopyCut) {
-	        return
-	      } else {
-	        var ranges = copyableRanges(cm)
-	        setLastCopied({lineWise: true, text: ranges.text})
-	        if (e.type == "cut") {
-	          cm.setSelections(ranges.ranges, null, sel_dontScroll)
-	        } else {
-	          input.prevInput = ""
-	          te.value = ranges.text.join("\n")
-	          selectInput(te)
-	        }
-	      }
-	      if (e.type == "cut") { cm.state.cutIncoming = true }
-	    }
-	    on(te, "cut", prepareCopyCut)
-	    on(te, "copy", prepareCopyCut)
-	
-	    on(display.scroller, "paste", function (e) {
-	      if (eventInWidget(display, e) || signalDOMEvent(cm, e)) { return }
-	      cm.state.pasteIncoming = true
-	      input.focus()
-	    })
-	
-	    // Prevent normal selection in the editor (we handle our own)
-	    on(display.lineSpace, "selectstart", function (e) {
-	      if (!eventInWidget(display, e)) { e_preventDefault(e) }
-	    })
-	
-	    on(te, "compositionstart", function () {
-	      var start = cm.getCursor("from")
-	      if (input.composing) { input.composing.range.clear() }
-	      input.composing = {
-	        start: start,
-	        range: cm.markText(start, cm.getCursor("to"), {className: "CodeMirror-composing"})
-	      }
-	    })
-	    on(te, "compositionend", function () {
-	      if (input.composing) {
-	        input.poll()
-	        input.composing.range.clear()
-	        input.composing = null
-	      }
-	    })
-	  },
-	
-	  prepareSelection: function() {
-	    // Redraw the selection and/or cursor
-	    var cm = this.cm, display = cm.display, doc = cm.doc
-	    var result = prepareSelection(cm)
-	
-	    // Move the hidden textarea near the cursor to prevent scrolling artifacts
-	    if (cm.options.moveInputWithCursor) {
-	      var headPos = cursorCoords(cm, doc.sel.primary().head, "div")
-	      var wrapOff = display.wrapper.getBoundingClientRect(), lineOff = display.lineDiv.getBoundingClientRect()
-	      result.teTop = Math.max(0, Math.min(display.wrapper.clientHeight - 10,
-	                                          headPos.top + lineOff.top - wrapOff.top))
-	      result.teLeft = Math.max(0, Math.min(display.wrapper.clientWidth - 10,
-	                                           headPos.left + lineOff.left - wrapOff.left))
-	    }
-	
-	    return result
-	  },
-	
-	  showSelection: function(drawn) {
-	    var cm = this.cm, display = cm.display
-	    removeChildrenAndAdd(display.cursorDiv, drawn.cursors)
-	    removeChildrenAndAdd(display.selectionDiv, drawn.selection)
-	    if (drawn.teTop != null) {
-	      this.wrapper.style.top = drawn.teTop + "px"
-	      this.wrapper.style.left = drawn.teLeft + "px"
-	    }
-	  },
-	
-	  // Reset the input to correspond to the selection (or to be empty,
-	  // when not typing and nothing is selected)
-	  reset: function(typing) {
-	    if (this.contextMenuPending) { return }
-	    var minimal, selected, cm = this.cm, doc = cm.doc
+	  function prepareCopyCut(e) {
+	    if (signalDOMEvent(cm, e)) { return }
 	    if (cm.somethingSelected()) {
-	      this.prevInput = ""
-	      var range = doc.sel.primary()
-	      minimal = hasCopyEvent &&
-	        (range.to().line - range.from().line > 100 || (selected = cm.getSelection()).length > 1000)
-	      var content = minimal ? "-" : selected || cm.getSelection()
-	      this.textarea.value = content
-	      if (cm.state.focused) { selectInput(this.textarea) }
-	      if (ie && ie_version >= 9) { this.hasSelection = content }
-	    } else if (!typing) {
-	      this.prevInput = this.textarea.value = ""
-	      if (ie && ie_version >= 9) { this.hasSelection = null }
-	    }
-	    this.inaccurateSelection = minimal
-	  },
-	
-	  getField: function() { return this.textarea },
-	
-	  supportsTouch: function() { return false },
-	
-	  focus: function() {
-	    if (this.cm.options.readOnly != "nocursor" && (!mobile || activeElt() != this.textarea)) {
-	      try { this.textarea.focus() }
-	      catch (e) {} // IE8 will throw if the textarea is display: none or not in DOM
-	    }
-	  },
-	
-	  blur: function() { this.textarea.blur() },
-	
-	  resetPosition: function() {
-	    this.wrapper.style.top = this.wrapper.style.left = 0
-	  },
-	
-	  receivedFocus: function() { this.slowPoll() },
-	
-	  // Poll for input changes, using the normal rate of polling. This
-	  // runs as long as the editor is focused.
-	  slowPoll: function() {
-	    var this$1 = this;
-	
-	    if (this.pollingFast) { return }
-	    this.polling.set(this.cm.options.pollInterval, function () {
-	      this$1.poll()
-	      if (this$1.cm.state.focused) { this$1.slowPoll() }
-	    })
-	  },
-	
-	  // When an event has just come in that is likely to add or change
-	  // something in the input textarea, we poll faster, to ensure that
-	  // the change appears on the screen quickly.
-	  fastPoll: function() {
-	    var missed = false, input = this
-	    input.pollingFast = true
-	    function p() {
-	      var changed = input.poll()
-	      if (!changed && !missed) {missed = true; input.polling.set(60, p)}
-	      else {input.pollingFast = false; input.slowPoll()}
-	    }
-	    input.polling.set(20, p)
-	  },
-	
-	  // Read input from the textarea, and update the document to match.
-	  // When something is selected, it is present in the textarea, and
-	  // selected (unless it is huge, in which case a placeholder is
-	  // used). When nothing is selected, the cursor sits after previously
-	  // seen text (can be empty), which is stored in prevInput (we must
-	  // not reset the textarea when typing, because that breaks IME).
-	  poll: function() {
-	    var this$1 = this;
-	
-	    var cm = this.cm, input = this.textarea, prevInput = this.prevInput
-	    // Since this is called a *lot*, try to bail out as cheaply as
-	    // possible when it is clear that nothing happened. hasSelection
-	    // will be the case when there is a lot of text in the textarea,
-	    // in which case reading its value would be expensive.
-	    if (this.contextMenuPending || !cm.state.focused ||
-	        (hasSelection(input) && !prevInput && !this.composing) ||
-	        cm.isReadOnly() || cm.options.disableInput || cm.state.keySeq)
-	      { return false }
-	
-	    var text = input.value
-	    // If nothing changed, bail.
-	    if (text == prevInput && !cm.somethingSelected()) { return false }
-	    // Work around nonsensical selection resetting in IE9/10, and
-	    // inexplicable appearance of private area unicode characters on
-	    // some key combos in Mac (#2689).
-	    if (ie && ie_version >= 9 && this.hasSelection === text ||
-	        mac && /[\uf700-\uf7ff]/.test(text)) {
-	      cm.display.input.reset()
-	      return false
-	    }
-	
-	    if (cm.doc.sel == cm.display.selForContextMenu) {
-	      var first = text.charCodeAt(0)
-	      if (first == 0x200b && !prevInput) { prevInput = "\u200b" }
-	      if (first == 0x21da) { this.reset(); return this.cm.execCommand("undo") }
-	    }
-	    // Find the part of the input that is actually new
-	    var same = 0, l = Math.min(prevInput.length, text.length)
-	    while (same < l && prevInput.charCodeAt(same) == text.charCodeAt(same)) { ++same }
-	
-	    runInOp(cm, function () {
-	      applyTextInput(cm, text.slice(same), prevInput.length - same,
-	                     null, this$1.composing ? "*compose" : null)
-	
-	      // Don't leave long text in the textarea, since it makes further polling slow
-	      if (text.length > 1000 || text.indexOf("\n") > -1) { input.value = this$1.prevInput = "" }
-	      else { this$1.prevInput = text }
-	
-	      if (this$1.composing) {
-	        this$1.composing.range.clear()
-	        this$1.composing.range = cm.markText(this$1.composing.start, cm.getCursor("to"),
-	                                           {className: "CodeMirror-composing"})
+	      setLastCopied({lineWise: false, text: cm.getSelections()})
+	      if (input.inaccurateSelection) {
+	        input.prevInput = ""
+	        input.inaccurateSelection = false
+	        te.value = lastCopied.text.join("\n")
+	        selectInput(te)
 	      }
-	    })
-	    return true
-	  },
-	
-	  ensurePolled: function() {
-	    if (this.pollingFast && this.poll()) { this.pollingFast = false }
-	  },
-	
-	  onKeyPress: function() {
-	    if (ie && ie_version >= 9) { this.hasSelection = null }
-	    this.fastPoll()
-	  },
-	
-	  onContextMenu: function(e) {
-	    var input = this, cm = input.cm, display = cm.display, te = input.textarea
-	    var pos = posFromMouse(cm, e), scrollPos = display.scroller.scrollTop
-	    if (!pos || presto) { return } // Opera is difficult.
-	
-	    // Reset the current text selection only if the click is done outside of the selection
-	    // and 'resetSelectionOnContextMenu' option is true.
-	    var reset = cm.options.resetSelectionOnContextMenu
-	    if (reset && cm.doc.sel.contains(pos) == -1)
-	      { operation(cm, setSelection)(cm.doc, simpleSelection(pos), sel_dontScroll) }
-	
-	    var oldCSS = te.style.cssText, oldWrapperCSS = input.wrapper.style.cssText
-	    input.wrapper.style.cssText = "position: absolute"
-	    var wrapperBox = input.wrapper.getBoundingClientRect()
-	    te.style.cssText = "position: absolute; width: 30px; height: 30px;\n      top: " + (e.clientY - wrapperBox.top - 5) + "px; left: " + (e.clientX - wrapperBox.left - 5) + "px;\n      z-index: 1000; background: " + (ie ? "rgba(255, 255, 255, .05)" : "transparent") + ";\n      outline: none; border-width: 0; outline: none; overflow: hidden; opacity: .05; filter: alpha(opacity=5);"
-	    var oldScrollY
-	    if (webkit) { oldScrollY = window.scrollY } // Work around Chrome issue (#2712)
-	    display.input.focus()
-	    if (webkit) { window.scrollTo(null, oldScrollY) }
-	    display.input.reset()
-	    // Adds "Select all" to context menu in FF
-	    if (!cm.somethingSelected()) { te.value = input.prevInput = " " }
-	    input.contextMenuPending = true
-	    display.selForContextMenu = cm.doc.sel
-	    clearTimeout(display.detectingSelectAll)
-	
-	    // Select-all will be greyed out if there's nothing to select, so
-	    // this adds a zero-width space so that we can later check whether
-	    // it got selected.
-	    function prepareSelectAllHack() {
-	      if (te.selectionStart != null) {
-	        var selected = cm.somethingSelected()
-	        var extval = "\u200b" + (selected ? te.value : "")
-	        te.value = "\u21da" // Used to catch context-menu undo
-	        te.value = extval
-	        input.prevInput = selected ? "" : "\u200b"
-	        te.selectionStart = 1; te.selectionEnd = extval.length
-	        // Re-set this, in case some other handler touched the
-	        // selection in the meantime.
-	        display.selForContextMenu = cm.doc.sel
-	      }
-	    }
-	    function rehide() {
-	      input.contextMenuPending = false
-	      input.wrapper.style.cssText = oldWrapperCSS
-	      te.style.cssText = oldCSS
-	      if (ie && ie_version < 9) { display.scrollbars.setScrollTop(display.scroller.scrollTop = scrollPos) }
-	
-	      // Try to detect the user choosing select-all
-	      if (te.selectionStart != null) {
-	        if (!ie || (ie && ie_version < 9)) { prepareSelectAllHack() }
-	        var i = 0, poll = function () {
-	          if (display.selForContextMenu == cm.doc.sel && te.selectionStart == 0 &&
-	              te.selectionEnd > 0 && input.prevInput == "\u200b")
-	            { operation(cm, selectAll)(cm) }
-	          else if (i++ < 10) { display.detectingSelectAll = setTimeout(poll, 500) }
-	          else { display.input.reset() }
-	        }
-	        display.detectingSelectAll = setTimeout(poll, 200)
-	      }
-	    }
-	
-	    if (ie && ie_version >= 9) { prepareSelectAllHack() }
-	    if (captureRightClick) {
-	      e_stop(e)
-	      var mouseup = function () {
-	        off(window, "mouseup", mouseup)
-	        setTimeout(rehide, 20)
-	      }
-	      on(window, "mouseup", mouseup)
+	    } else if (!cm.options.lineWiseCopyCut) {
+	      return
 	    } else {
-	      setTimeout(rehide, 50)
+	      var ranges = copyableRanges(cm)
+	      setLastCopied({lineWise: true, text: ranges.text})
+	      if (e.type == "cut") {
+	        cm.setSelections(ranges.ranges, null, sel_dontScroll)
+	      } else {
+	        input.prevInput = ""
+	        te.value = ranges.text.join("\n")
+	        selectInput(te)
+	      }
 	    }
-	  },
+	    if (e.type == "cut") { cm.state.cutIncoming = true }
+	  }
+	  on(te, "cut", prepareCopyCut)
+	  on(te, "copy", prepareCopyCut)
 	
-	  readOnlyChanged: function(val) {
-	    if (!val) { this.reset() }
-	  },
+	  on(display.scroller, "paste", function (e) {
+	    if (eventInWidget(display, e) || signalDOMEvent(cm, e)) { return }
+	    cm.state.pasteIncoming = true
+	    input.focus()
+	  })
 	
-	  setUneditable: nothing,
+	  // Prevent normal selection in the editor (we handle our own)
+	  on(display.lineSpace, "selectstart", function (e) {
+	    if (!eventInWidget(display, e)) { e_preventDefault(e) }
+	  })
 	
-	  needsContentAttribute: false
-	}, TextareaInput.prototype)
+	  on(te, "compositionstart", function () {
+	    var start = cm.getCursor("from")
+	    if (input.composing) { input.composing.range.clear() }
+	    input.composing = {
+	      start: start,
+	      range: cm.markText(start, cm.getCursor("to"), {className: "CodeMirror-composing"})
+	    }
+	  })
+	  on(te, "compositionend", function () {
+	    if (input.composing) {
+	      input.poll()
+	      input.composing.range.clear()
+	      input.composing = null
+	    }
+	  })
+	};
+	
+	TextareaInput.prototype.prepareSelection = function () {
+	  // Redraw the selection and/or cursor
+	  var cm = this.cm, display = cm.display, doc = cm.doc
+	  var result = prepareSelection(cm)
+	
+	  // Move the hidden textarea near the cursor to prevent scrolling artifacts
+	  if (cm.options.moveInputWithCursor) {
+	    var headPos = cursorCoords(cm, doc.sel.primary().head, "div")
+	    var wrapOff = display.wrapper.getBoundingClientRect(), lineOff = display.lineDiv.getBoundingClientRect()
+	    result.teTop = Math.max(0, Math.min(display.wrapper.clientHeight - 10,
+	                                        headPos.top + lineOff.top - wrapOff.top))
+	    result.teLeft = Math.max(0, Math.min(display.wrapper.clientWidth - 10,
+	                                         headPos.left + lineOff.left - wrapOff.left))
+	  }
+	
+	  return result
+	};
+	
+	TextareaInput.prototype.showSelection = function (drawn) {
+	  var cm = this.cm, display = cm.display
+	  removeChildrenAndAdd(display.cursorDiv, drawn.cursors)
+	  removeChildrenAndAdd(display.selectionDiv, drawn.selection)
+	  if (drawn.teTop != null) {
+	    this.wrapper.style.top = drawn.teTop + "px"
+	    this.wrapper.style.left = drawn.teLeft + "px"
+	  }
+	};
+	
+	// Reset the input to correspond to the selection (or to be empty,
+	// when not typing and nothing is selected)
+	TextareaInput.prototype.reset = function (typing) {
+	  if (this.contextMenuPending) { return }
+	  var minimal, selected, cm = this.cm, doc = cm.doc
+	  if (cm.somethingSelected()) {
+	    this.prevInput = ""
+	    var range = doc.sel.primary()
+	    minimal = hasCopyEvent &&
+	      (range.to().line - range.from().line > 100 || (selected = cm.getSelection()).length > 1000)
+	    var content = minimal ? "-" : selected || cm.getSelection()
+	    this.textarea.value = content
+	    if (cm.state.focused) { selectInput(this.textarea) }
+	    if (ie && ie_version >= 9) { this.hasSelection = content }
+	  } else if (!typing) {
+	    this.prevInput = this.textarea.value = ""
+	    if (ie && ie_version >= 9) { this.hasSelection = null }
+	  }
+	  this.inaccurateSelection = minimal
+	};
+	
+	TextareaInput.prototype.getField = function () { return this.textarea };
+	
+	TextareaInput.prototype.supportsTouch = function () { return false };
+	
+	TextareaInput.prototype.focus = function () {
+	  if (this.cm.options.readOnly != "nocursor" && (!mobile || activeElt() != this.textarea)) {
+	    try { this.textarea.focus() }
+	    catch (e) {} // IE8 will throw if the textarea is display: none or not in DOM
+	  }
+	};
+	
+	TextareaInput.prototype.blur = function () { this.textarea.blur() };
+	
+	TextareaInput.prototype.resetPosition = function () {
+	  this.wrapper.style.top = this.wrapper.style.left = 0
+	};
+	
+	TextareaInput.prototype.receivedFocus = function () { this.slowPoll() };
+	
+	// Poll for input changes, using the normal rate of polling. This
+	// runs as long as the editor is focused.
+	TextareaInput.prototype.slowPoll = function () {
+	    var this$1 = this;
+	
+	  if (this.pollingFast) { return }
+	  this.polling.set(this.cm.options.pollInterval, function () {
+	    this$1.poll()
+	    if (this$1.cm.state.focused) { this$1.slowPoll() }
+	  })
+	};
+	
+	// When an event has just come in that is likely to add or change
+	// something in the input textarea, we poll faster, to ensure that
+	// the change appears on the screen quickly.
+	TextareaInput.prototype.fastPoll = function () {
+	  var missed = false, input = this
+	  input.pollingFast = true
+	  function p() {
+	    var changed = input.poll()
+	    if (!changed && !missed) {missed = true; input.polling.set(60, p)}
+	    else {input.pollingFast = false; input.slowPoll()}
+	  }
+	  input.polling.set(20, p)
+	};
+	
+	// Read input from the textarea, and update the document to match.
+	// When something is selected, it is present in the textarea, and
+	// selected (unless it is huge, in which case a placeholder is
+	// used). When nothing is selected, the cursor sits after previously
+	// seen text (can be empty), which is stored in prevInput (we must
+	// not reset the textarea when typing, because that breaks IME).
+	TextareaInput.prototype.poll = function () {
+	    var this$1 = this;
+	
+	  var cm = this.cm, input = this.textarea, prevInput = this.prevInput
+	  // Since this is called a *lot*, try to bail out as cheaply as
+	  // possible when it is clear that nothing happened. hasSelection
+	  // will be the case when there is a lot of text in the textarea,
+	  // in which case reading its value would be expensive.
+	  if (this.contextMenuPending || !cm.state.focused ||
+	      (hasSelection(input) && !prevInput && !this.composing) ||
+	      cm.isReadOnly() || cm.options.disableInput || cm.state.keySeq)
+	    { return false }
+	
+	  var text = input.value
+	  // If nothing changed, bail.
+	  if (text == prevInput && !cm.somethingSelected()) { return false }
+	  // Work around nonsensical selection resetting in IE9/10, and
+	  // inexplicable appearance of private area unicode characters on
+	  // some key combos in Mac (#2689).
+	  if (ie && ie_version >= 9 && this.hasSelection === text ||
+	      mac && /[\uf700-\uf7ff]/.test(text)) {
+	    cm.display.input.reset()
+	    return false
+	  }
+	
+	  if (cm.doc.sel == cm.display.selForContextMenu) {
+	    var first = text.charCodeAt(0)
+	    if (first == 0x200b && !prevInput) { prevInput = "\u200b" }
+	    if (first == 0x21da) { this.reset(); return this.cm.execCommand("undo") }
+	  }
+	  // Find the part of the input that is actually new
+	  var same = 0, l = Math.min(prevInput.length, text.length)
+	  while (same < l && prevInput.charCodeAt(same) == text.charCodeAt(same)) { ++same }
+	
+	  runInOp(cm, function () {
+	    applyTextInput(cm, text.slice(same), prevInput.length - same,
+	                   null, this$1.composing ? "*compose" : null)
+	
+	    // Don't leave long text in the textarea, since it makes further polling slow
+	    if (text.length > 1000 || text.indexOf("\n") > -1) { input.value = this$1.prevInput = "" }
+	    else { this$1.prevInput = text }
+	
+	    if (this$1.composing) {
+	      this$1.composing.range.clear()
+	      this$1.composing.range = cm.markText(this$1.composing.start, cm.getCursor("to"),
+	                                         {className: "CodeMirror-composing"})
+	    }
+	  })
+	  return true
+	};
+	
+	TextareaInput.prototype.ensurePolled = function () {
+	  if (this.pollingFast && this.poll()) { this.pollingFast = false }
+	};
+	
+	TextareaInput.prototype.onKeyPress = function () {
+	  if (ie && ie_version >= 9) { this.hasSelection = null }
+	  this.fastPoll()
+	};
+	
+	TextareaInput.prototype.onContextMenu = function (e) {
+	  var input = this, cm = input.cm, display = cm.display, te = input.textarea
+	  var pos = posFromMouse(cm, e), scrollPos = display.scroller.scrollTop
+	  if (!pos || presto) { return } // Opera is difficult.
+	
+	  // Reset the current text selection only if the click is done outside of the selection
+	  // and 'resetSelectionOnContextMenu' option is true.
+	  var reset = cm.options.resetSelectionOnContextMenu
+	  if (reset && cm.doc.sel.contains(pos) == -1)
+	    { operation(cm, setSelection)(cm.doc, simpleSelection(pos), sel_dontScroll) }
+	
+	  var oldCSS = te.style.cssText, oldWrapperCSS = input.wrapper.style.cssText
+	  input.wrapper.style.cssText = "position: absolute"
+	  var wrapperBox = input.wrapper.getBoundingClientRect()
+	  te.style.cssText = "position: absolute; width: 30px; height: 30px;\n      top: " + (e.clientY - wrapperBox.top - 5) + "px; left: " + (e.clientX - wrapperBox.left - 5) + "px;\n      z-index: 1000; background: " + (ie ? "rgba(255, 255, 255, .05)" : "transparent") + ";\n      outline: none; border-width: 0; outline: none; overflow: hidden; opacity: .05; filter: alpha(opacity=5);"
+	  var oldScrollY
+	  if (webkit) { oldScrollY = window.scrollY } // Work around Chrome issue (#2712)
+	  display.input.focus()
+	  if (webkit) { window.scrollTo(null, oldScrollY) }
+	  display.input.reset()
+	  // Adds "Select all" to context menu in FF
+	  if (!cm.somethingSelected()) { te.value = input.prevInput = " " }
+	  input.contextMenuPending = true
+	  display.selForContextMenu = cm.doc.sel
+	  clearTimeout(display.detectingSelectAll)
+	
+	  // Select-all will be greyed out if there's nothing to select, so
+	  // this adds a zero-width space so that we can later check whether
+	  // it got selected.
+	  function prepareSelectAllHack() {
+	    if (te.selectionStart != null) {
+	      var selected = cm.somethingSelected()
+	      var extval = "\u200b" + (selected ? te.value : "")
+	      te.value = "\u21da" // Used to catch context-menu undo
+	      te.value = extval
+	      input.prevInput = selected ? "" : "\u200b"
+	      te.selectionStart = 1; te.selectionEnd = extval.length
+	      // Re-set this, in case some other handler touched the
+	      // selection in the meantime.
+	      display.selForContextMenu = cm.doc.sel
+	    }
+	  }
+	  function rehide() {
+	    input.contextMenuPending = false
+	    input.wrapper.style.cssText = oldWrapperCSS
+	    te.style.cssText = oldCSS
+	    if (ie && ie_version < 9) { display.scrollbars.setScrollTop(display.scroller.scrollTop = scrollPos) }
+	
+	    // Try to detect the user choosing select-all
+	    if (te.selectionStart != null) {
+	      if (!ie || (ie && ie_version < 9)) { prepareSelectAllHack() }
+	      var i = 0, poll = function () {
+	        if (display.selForContextMenu == cm.doc.sel && te.selectionStart == 0 &&
+	            te.selectionEnd > 0 && input.prevInput == "\u200b")
+	          { operation(cm, selectAll)(cm) }
+	        else if (i++ < 10) { display.detectingSelectAll = setTimeout(poll, 500) }
+	        else { display.input.reset() }
+	      }
+	      display.detectingSelectAll = setTimeout(poll, 200)
+	    }
+	  }
+	
+	  if (ie && ie_version >= 9) { prepareSelectAllHack() }
+	  if (captureRightClick) {
+	    e_stop(e)
+	    var mouseup = function () {
+	      off(window, "mouseup", mouseup)
+	      setTimeout(rehide, 20)
+	    }
+	    on(window, "mouseup", mouseup)
+	  } else {
+	    setTimeout(rehide, 50)
+	  }
+	};
+	
+	TextareaInput.prototype.readOnlyChanged = function (val) {
+	  if (!val) { this.reset() }
+	};
+	
+	TextareaInput.prototype.setUneditable = function () {};
+	
+	TextareaInput.prototype.needsContentAttribute = false
 	
 	function fromTextArea(textarea, options) {
 	  options = options ? copyObj(options) : {}
@@ -32892,7 +32924,7 @@
 	
 	addLegacyProps(CodeMirror)
 	
-	CodeMirror.version = "5.21.0"
+	CodeMirror.version = "5.23.0"
 	
 	return CodeMirror;
 	
@@ -33208,7 +33240,7 @@
 	
 	
 	// module
-	exports.push([module.id, "/* BASICS */\n\n.CodeMirror {\n  /* Set height, width, borders, and global font properties here */\n  font-family: monospace;\n  height: 300px;\n  color: black;\n}\n\n/* PADDING */\n\n.CodeMirror-lines {\n  padding: 4px 0; /* Vertical padding around content */\n}\n.CodeMirror pre {\n  padding: 0 4px; /* Horizontal padding of content */\n}\n\n.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  background-color: white; /* The little square between H and V scrollbars */\n}\n\n/* GUTTER */\n\n.CodeMirror-gutters {\n  border-right: 1px solid #ddd;\n  background-color: #f7f7f7;\n  white-space: nowrap;\n}\n.CodeMirror-linenumbers {}\n.CodeMirror-linenumber {\n  padding: 0 3px 0 5px;\n  min-width: 20px;\n  text-align: right;\n  color: #999;\n  white-space: nowrap;\n}\n\n.CodeMirror-guttermarker { color: black; }\n.CodeMirror-guttermarker-subtle { color: #999; }\n\n/* CURSOR */\n\n.CodeMirror-cursor {\n  border-left: 1px solid black;\n  border-right: none;\n  width: 0;\n}\n/* Shown when moving in bi-directional text */\n.CodeMirror div.CodeMirror-secondarycursor {\n  border-left: 1px solid silver;\n}\n.cm-fat-cursor .CodeMirror-cursor {\n  width: auto;\n  border: 0 !important;\n  background: #7e7;\n}\n.cm-fat-cursor div.CodeMirror-cursors {\n  z-index: 1;\n}\n\n.cm-animate-fat-cursor {\n  width: auto;\n  border: 0;\n  -webkit-animation: blink 1.06s steps(1) infinite;\n  -moz-animation: blink 1.06s steps(1) infinite;\n  animation: blink 1.06s steps(1) infinite;\n  background-color: #7e7;\n}\n@-moz-keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n@-webkit-keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n@keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n\n/* Can style cursor different in overwrite (non-insert) mode */\n.CodeMirror-overwrite .CodeMirror-cursor {}\n\n.cm-tab { display: inline-block; text-decoration: inherit; }\n\n.CodeMirror-rulers {\n  position: absolute;\n  left: 0; right: 0; top: -50px; bottom: -20px;\n  overflow: hidden;\n}\n.CodeMirror-ruler {\n  border-left: 1px solid #ccc;\n  top: 0; bottom: 0;\n  position: absolute;\n}\n\n/* DEFAULT THEME */\n\n.cm-s-default .cm-header {color: blue;}\n.cm-s-default .cm-quote {color: #090;}\n.cm-negative {color: #d44;}\n.cm-positive {color: #292;}\n.cm-header, .cm-strong {font-weight: bold;}\n.cm-em {font-style: italic;}\n.cm-link {text-decoration: underline;}\n.cm-strikethrough {text-decoration: line-through;}\n\n.cm-s-default .cm-keyword {color: #708;}\n.cm-s-default .cm-atom {color: #219;}\n.cm-s-default .cm-number {color: #164;}\n.cm-s-default .cm-def {color: #00f;}\n.cm-s-default .cm-variable,\n.cm-s-default .cm-punctuation,\n.cm-s-default .cm-property,\n.cm-s-default .cm-operator {}\n.cm-s-default .cm-variable-2 {color: #05a;}\n.cm-s-default .cm-variable-3 {color: #085;}\n.cm-s-default .cm-comment {color: #a50;}\n.cm-s-default .cm-string {color: #a11;}\n.cm-s-default .cm-string-2 {color: #f50;}\n.cm-s-default .cm-meta {color: #555;}\n.cm-s-default .cm-qualifier {color: #555;}\n.cm-s-default .cm-builtin {color: #30a;}\n.cm-s-default .cm-bracket {color: #997;}\n.cm-s-default .cm-tag {color: #170;}\n.cm-s-default .cm-attribute {color: #00c;}\n.cm-s-default .cm-hr {color: #999;}\n.cm-s-default .cm-link {color: #00c;}\n\n.cm-s-default .cm-error {color: #f00;}\n.cm-invalidchar {color: #f00;}\n\n.CodeMirror-composing { border-bottom: 2px solid; }\n\n/* Default styles for common addons */\n\ndiv.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}\ndiv.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}\n.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }\n.CodeMirror-activeline-background {background: #e8f2ff;}\n\n/* STOP */\n\n/* The rest of this file contains styles related to the mechanics of\n   the editor. You probably shouldn't touch them. */\n\n.CodeMirror {\n  position: relative;\n  overflow: hidden;\n  background: white;\n}\n\n.CodeMirror-scroll {\n  overflow: scroll !important; /* Things will break if this is overridden */\n  /* 30px is the magic margin used to hide the element's real scrollbars */\n  /* See overflow: hidden in .CodeMirror */\n  margin-bottom: -30px; margin-right: -30px;\n  padding-bottom: 30px;\n  height: 100%;\n  outline: none; /* Prevent dragging from highlighting the element */\n  position: relative;\n}\n.CodeMirror-sizer {\n  position: relative;\n  border-right: 30px solid transparent;\n}\n\n/* The fake, visible scrollbars. Used to force redraw during scrolling\n   before actual scrolling happens, thus preventing shaking and\n   flickering artifacts. */\n.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  position: absolute;\n  z-index: 6;\n  display: none;\n}\n.CodeMirror-vscrollbar {\n  right: 0; top: 0;\n  overflow-x: hidden;\n  overflow-y: scroll;\n}\n.CodeMirror-hscrollbar {\n  bottom: 0; left: 0;\n  overflow-y: hidden;\n  overflow-x: scroll;\n}\n.CodeMirror-scrollbar-filler {\n  right: 0; bottom: 0;\n}\n.CodeMirror-gutter-filler {\n  left: 0; bottom: 0;\n}\n\n.CodeMirror-gutters {\n  position: absolute; left: 0; top: 0;\n  min-height: 100%;\n  z-index: 3;\n}\n.CodeMirror-gutter {\n  white-space: normal;\n  height: 100%;\n  display: inline-block;\n  vertical-align: top;\n  margin-bottom: -30px;\n}\n.CodeMirror-gutter-wrapper {\n  position: absolute;\n  z-index: 4;\n  background: none !important;\n  border: none !important;\n}\n.CodeMirror-gutter-background {\n  position: absolute;\n  top: 0; bottom: 0;\n  z-index: 4;\n}\n.CodeMirror-gutter-elt {\n  position: absolute;\n  cursor: default;\n  z-index: 4;\n}\n.CodeMirror-gutter-wrapper {\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  user-select: none;\n}\n\n.CodeMirror-lines {\n  cursor: text;\n  min-height: 1px; /* prevents collapsing before first draw */\n}\n.CodeMirror pre {\n  /* Reset some styles that the rest of the page might have set */\n  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;\n  border-width: 0;\n  background: transparent;\n  font-family: inherit;\n  font-size: inherit;\n  margin: 0;\n  white-space: pre;\n  word-wrap: normal;\n  line-height: inherit;\n  color: inherit;\n  z-index: 2;\n  position: relative;\n  overflow: visible;\n  -webkit-tap-highlight-color: transparent;\n  -webkit-font-variant-ligatures: none;\n  font-variant-ligatures: none;\n}\n.CodeMirror-wrap pre {\n  word-wrap: break-word;\n  white-space: pre-wrap;\n  word-break: normal;\n}\n\n.CodeMirror-linebackground {\n  position: absolute;\n  left: 0; right: 0; top: 0; bottom: 0;\n  z-index: 0;\n}\n\n.CodeMirror-linewidget {\n  position: relative;\n  z-index: 2;\n  overflow: auto;\n}\n\n.CodeMirror-widget {}\n\n.CodeMirror-code {\n  outline: none;\n}\n\n/* Force content-box sizing for the elements where we expect it */\n.CodeMirror-scroll,\n.CodeMirror-sizer,\n.CodeMirror-gutter,\n.CodeMirror-gutters,\n.CodeMirror-linenumber {\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n}\n\n.CodeMirror-measure {\n  position: absolute;\n  width: 100%;\n  height: 0;\n  overflow: hidden;\n  visibility: hidden;\n}\n\n.CodeMirror-cursor {\n  position: absolute;\n  pointer-events: none;\n}\n.CodeMirror-measure pre { position: static; }\n\ndiv.CodeMirror-cursors {\n  visibility: hidden;\n  position: relative;\n  z-index: 3;\n}\ndiv.CodeMirror-dragcursors {\n  visibility: visible;\n}\n\n.CodeMirror-focused div.CodeMirror-cursors {\n  visibility: visible;\n}\n\n.CodeMirror-selected { background: #d9d9d9; }\n.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }\n.CodeMirror-crosshair { cursor: crosshair; }\n.CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background: #d7d4f0; }\n.CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background: #d7d4f0; }\n\n.cm-searching {\n  background: #ffa;\n  background: rgba(255, 255, 0, .4);\n}\n\n/* Used to force a border model for a node */\n.cm-force-border { padding-right: .1px; }\n\n@media print {\n  /* Hide the cursor when printing */\n  .CodeMirror div.CodeMirror-cursors {\n    visibility: hidden;\n  }\n}\n\n/* See issue #2901 */\n.cm-tab-wrap-hack:after { content: ''; }\n\n/* Help users use markselection to safely style text background */\nspan.CodeMirror-selectedtext { background: none; }\n", ""]);
+	exports.push([module.id, "/* BASICS */\n\n.CodeMirror {\n  /* Set height, width, borders, and global font properties here */\n  font-family: monospace;\n  height: 300px;\n  color: black;\n}\n\n/* PADDING */\n\n.CodeMirror-lines {\n  padding: 4px 0; /* Vertical padding around content */\n}\n.CodeMirror pre {\n  padding: 0 4px; /* Horizontal padding of content */\n}\n\n.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  background-color: white; /* The little square between H and V scrollbars */\n}\n\n/* GUTTER */\n\n.CodeMirror-gutters {\n  border-right: 1px solid #ddd;\n  background-color: #f7f7f7;\n  white-space: nowrap;\n}\n.CodeMirror-linenumbers {}\n.CodeMirror-linenumber {\n  padding: 0 3px 0 5px;\n  min-width: 20px;\n  text-align: right;\n  color: #999;\n  white-space: nowrap;\n}\n\n.CodeMirror-guttermarker { color: black; }\n.CodeMirror-guttermarker-subtle { color: #999; }\n\n/* CURSOR */\n\n.CodeMirror-cursor {\n  border-left: 1px solid black;\n  border-right: none;\n  width: 0;\n}\n/* Shown when moving in bi-directional text */\n.CodeMirror div.CodeMirror-secondarycursor {\n  border-left: 1px solid silver;\n}\n.cm-fat-cursor .CodeMirror-cursor {\n  width: auto;\n  border: 0 !important;\n  background: #7e7;\n}\n.cm-fat-cursor div.CodeMirror-cursors {\n  z-index: 1;\n}\n\n.cm-animate-fat-cursor {\n  width: auto;\n  border: 0;\n  -webkit-animation: blink 1.06s steps(1) infinite;\n  -moz-animation: blink 1.06s steps(1) infinite;\n  animation: blink 1.06s steps(1) infinite;\n  background-color: #7e7;\n}\n@-moz-keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n@-webkit-keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n@keyframes blink {\n  0% {}\n  50% { background-color: transparent; }\n  100% {}\n}\n\n/* Can style cursor different in overwrite (non-insert) mode */\n.CodeMirror-overwrite .CodeMirror-cursor {}\n\n.cm-tab { display: inline-block; text-decoration: inherit; }\n\n.CodeMirror-rulers {\n  position: absolute;\n  left: 0; right: 0; top: -50px; bottom: -20px;\n  overflow: hidden;\n}\n.CodeMirror-ruler {\n  border-left: 1px solid #ccc;\n  top: 0; bottom: 0;\n  position: absolute;\n}\n\n/* DEFAULT THEME */\n\n.cm-s-default .cm-header {color: blue;}\n.cm-s-default .cm-quote {color: #090;}\n.cm-negative {color: #d44;}\n.cm-positive {color: #292;}\n.cm-header, .cm-strong {font-weight: bold;}\n.cm-em {font-style: italic;}\n.cm-link {text-decoration: underline;}\n.cm-strikethrough {text-decoration: line-through;}\n\n.cm-s-default .cm-keyword {color: #708;}\n.cm-s-default .cm-atom {color: #219;}\n.cm-s-default .cm-number {color: #164;}\n.cm-s-default .cm-def {color: #00f;}\n.cm-s-default .cm-variable,\n.cm-s-default .cm-punctuation,\n.cm-s-default .cm-property,\n.cm-s-default .cm-operator {}\n.cm-s-default .cm-variable-2 {color: #05a;}\n.cm-s-default .cm-variable-3 {color: #085;}\n.cm-s-default .cm-comment {color: #a50;}\n.cm-s-default .cm-string {color: #a11;}\n.cm-s-default .cm-string-2 {color: #f50;}\n.cm-s-default .cm-meta {color: #555;}\n.cm-s-default .cm-qualifier {color: #555;}\n.cm-s-default .cm-builtin {color: #30a;}\n.cm-s-default .cm-bracket {color: #997;}\n.cm-s-default .cm-tag {color: #170;}\n.cm-s-default .cm-attribute {color: #00c;}\n.cm-s-default .cm-hr {color: #999;}\n.cm-s-default .cm-link {color: #00c;}\n\n.cm-s-default .cm-error {color: #f00;}\n.cm-invalidchar {color: #f00;}\n\n.CodeMirror-composing { border-bottom: 2px solid; }\n\n/* Default styles for common addons */\n\ndiv.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}\ndiv.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}\n.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }\n.CodeMirror-activeline-background {background: #e8f2ff;}\n\n/* STOP */\n\n/* The rest of this file contains styles related to the mechanics of\n   the editor. You probably shouldn't touch them. */\n\n.CodeMirror {\n  position: relative;\n  overflow: hidden;\n  background: white;\n}\n\n.CodeMirror-scroll {\n  overflow: scroll !important; /* Things will break if this is overridden */\n  /* 30px is the magic margin used to hide the element's real scrollbars */\n  /* See overflow: hidden in .CodeMirror */\n  margin-bottom: -30px; margin-right: -30px;\n  padding-bottom: 30px;\n  height: 100%;\n  outline: none; /* Prevent dragging from highlighting the element */\n  position: relative;\n}\n.CodeMirror-sizer {\n  position: relative;\n  border-right: 30px solid transparent;\n}\n\n/* The fake, visible scrollbars. Used to force redraw during scrolling\n   before actual scrolling happens, thus preventing shaking and\n   flickering artifacts. */\n.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {\n  position: absolute;\n  z-index: 6;\n  display: none;\n}\n.CodeMirror-vscrollbar {\n  right: 0; top: 0;\n  overflow-x: hidden;\n  overflow-y: scroll;\n}\n.CodeMirror-hscrollbar {\n  bottom: 0; left: 0;\n  overflow-y: hidden;\n  overflow-x: scroll;\n}\n.CodeMirror-scrollbar-filler {\n  right: 0; bottom: 0;\n}\n.CodeMirror-gutter-filler {\n  left: 0; bottom: 0;\n}\n\n.CodeMirror-gutters {\n  position: absolute; left: 0; top: 0;\n  min-height: 100%;\n  z-index: 3;\n}\n.CodeMirror-gutter {\n  white-space: normal;\n  height: 100%;\n  display: inline-block;\n  vertical-align: top;\n  margin-bottom: -30px;\n}\n.CodeMirror-gutter-wrapper {\n  position: absolute;\n  z-index: 4;\n  background: none !important;\n  border: none !important;\n}\n.CodeMirror-gutter-background {\n  position: absolute;\n  top: 0; bottom: 0;\n  z-index: 4;\n}\n.CodeMirror-gutter-elt {\n  position: absolute;\n  cursor: default;\n  z-index: 4;\n}\n.CodeMirror-gutter-wrapper {\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  user-select: none;\n}\n\n.CodeMirror-lines {\n  cursor: text;\n  min-height: 1px; /* prevents collapsing before first draw */\n}\n.CodeMirror pre {\n  /* Reset some styles that the rest of the page might have set */\n  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;\n  border-width: 0;\n  background: transparent;\n  font-family: inherit;\n  font-size: inherit;\n  margin: 0;\n  white-space: pre;\n  word-wrap: normal;\n  line-height: inherit;\n  color: inherit;\n  z-index: 2;\n  position: relative;\n  overflow: visible;\n  -webkit-tap-highlight-color: transparent;\n  -webkit-font-variant-ligatures: contextual;\n  font-variant-ligatures: contextual;\n}\n.CodeMirror-wrap pre {\n  word-wrap: break-word;\n  white-space: pre-wrap;\n  word-break: normal;\n}\n\n.CodeMirror-linebackground {\n  position: absolute;\n  left: 0; right: 0; top: 0; bottom: 0;\n  z-index: 0;\n}\n\n.CodeMirror-linewidget {\n  position: relative;\n  z-index: 2;\n  overflow: auto;\n}\n\n.CodeMirror-widget {}\n\n.CodeMirror-code {\n  outline: none;\n}\n\n/* Force content-box sizing for the elements where we expect it */\n.CodeMirror-scroll,\n.CodeMirror-sizer,\n.CodeMirror-gutter,\n.CodeMirror-gutters,\n.CodeMirror-linenumber {\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n}\n\n.CodeMirror-measure {\n  position: absolute;\n  width: 100%;\n  height: 0;\n  overflow: hidden;\n  visibility: hidden;\n}\n\n.CodeMirror-cursor {\n  position: absolute;\n  pointer-events: none;\n}\n.CodeMirror-measure pre { position: static; }\n\ndiv.CodeMirror-cursors {\n  visibility: hidden;\n  position: relative;\n  z-index: 3;\n}\ndiv.CodeMirror-dragcursors {\n  visibility: visible;\n}\n\n.CodeMirror-focused div.CodeMirror-cursors {\n  visibility: visible;\n}\n\n.CodeMirror-selected { background: #d9d9d9; }\n.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }\n.CodeMirror-crosshair { cursor: crosshair; }\n.CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background: #d7d4f0; }\n.CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background: #d7d4f0; }\n\n.cm-searching {\n  background: #ffa;\n  background: rgba(255, 255, 0, .4);\n}\n\n/* Used to force a border model for a node */\n.cm-force-border { padding-right: .1px; }\n\n@media print {\n  /* Hide the cursor when printing */\n  .CodeMirror div.CodeMirror-cursors {\n    visibility: hidden;\n  }\n}\n\n/* See issue #2901 */\n.cm-tab-wrap-hack:after { content: ''; }\n\n/* Help users use markselection to safely style text background */\nspan.CodeMirror-selectedtext { background: none; }\n", ""]);
 	
 	// exports
 
@@ -33597,7 +33629,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n  line-height: 18px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 18px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 18px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
 	
 	// exports
 
@@ -33637,7 +33669,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n  line-height: 18px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 18px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 18px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
 	
 	// exports
 
@@ -34138,7 +34170,8 @@
 	            show: false,
 	            lang_key: SH_Agent.lang_key,
 	            after_cmd: SH_Agent.pref.get('after_cmd') || '',
-	            choice_mode: choice_mode
+	            choice_mode: choice_mode,
+	            auto_launch: !!SH_Agent.pref.get('auto_launch')
 	        };
 	
 	        return _this;
@@ -34202,6 +34235,16 @@
 	            this.setState({
 	                after_cmd: v
 	            });
+	        }
+	    }, {
+	        key: 'updateAutoLaunch',
+	        value: function updateAutoLaunch(v) {
+	            SH_Agent.pref.set('auto_launch', v);
+	            this.setState({
+	                auto_launch: v
+	            });
+	
+	            // todo set auto launch
 	        }
 	    }, {
 	        key: 'prefLanguage',
@@ -34311,6 +34354,31 @@
 	            );
 	        }
 	    }, {
+	        key: 'prefAutoLaunch',
+	        value: function prefAutoLaunch() {
+	            var _this6 = this;
+	
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'ln' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'title' },
+	                    SH_Agent.lang.auto_launch
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'cnt' },
+	                    _react2.default.createElement('input', { type: 'checkbox', name: '',
+	                        defaultValue: this.state.auto_launch,
+	                        onChange: function onChange(e) {
+	                            return _this6.updateAutoLaunch(e.target.checked);
+	                        }
+	                    })
+	                )
+	            );
+	        }
+	    }, {
 	        key: 'body',
 	        value: function body() {
 	            return _react2.default.createElement(
@@ -34318,23 +34386,24 @@
 	                { ref: 'body' },
 	                this.prefLanguage(),
 	                this.prefChoiceMode(),
-	                this.prefAfterCmd()
+	                this.prefAfterCmd(),
+	                this.prefAutoLaunch()
 	            );
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this6 = this;
+	            var _this7 = this;
 	
 	            return _react2.default.createElement(_frame2.default, {
 	                show: this.state.show,
 	                head: SH_Agent.lang.preferences,
 	                body: this.body(),
 	                onOK: function onOK() {
-	                    return _this6.onOK();
+	                    return _this7.onOK();
 	                },
 	                onCancel: function onCancel() {
-	                    return _this6.onCancel();
+	                    return _this7.onCancel();
 	                },
 	                cancel_title: SH_Agent.lang.set_and_back,
 	                ok_title: SH_Agent.lang.set_and_relaunch_app
@@ -34456,6 +34525,7 @@
 	exports.content = {
 	    _lang_name: 'English',
 	    add: 'Add',
+	    auto_launch: 'Run at login',
 	    comment: 'Comment',
 	    new: 'New',
 	    quit: 'Quit',
@@ -34463,7 +34533,7 @@
 	    ok: 'OK',
 	    set_and_back: 'Set and back',
 	    set_and_relaunch_app: 'Set and Relaunch App',
-	    add_host: 'Add new rules.',
+	    add_host: 'Add new rules',
 	    edit_host: 'Edit host',
 	    import: 'Import',
 	    export: 'Export',
@@ -34533,6 +34603,7 @@
 	exports.content = {
 	    _lang_name: '简体中文',
 	    add: '添加',
+	    auto_launch: '随系统一起启动',
 	    comment: '注释',
 	    new: '新建',
 	    quit: '退出',

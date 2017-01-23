@@ -8,6 +8,7 @@
 exports.content = {
     _lang_name: 'English'
     , add: 'Add'
+    , auto_launch: 'Run at login'
     , comment: 'Comment'
     , new: 'New'
     , quit: 'Quit'
@@ -15,7 +16,7 @@ exports.content = {
     , ok: 'OK'
     , set_and_back: 'Set and back'
     , set_and_relaunch_app: 'Set and Relaunch App'
-    , add_host: 'Add new rules.'
+    , add_host: 'Add new rules'
     , edit_host: 'Edit host'
     , import: 'Import'
     , export: 'Export'

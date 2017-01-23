@@ -24,7 +24,8 @@ export default class PreferencesPrompt extends React.Component {
             show: false,
             lang_key: SH_Agent.lang_key,
             after_cmd: SH_Agent.pref.get('after_cmd') || '',
-            choice_mode: choice_mode
+            choice_mode: choice_mode,
+            auto_launch: !!SH_Agent.pref.get('auto_launch')
         };
 
     }
@@ -88,6 +89,15 @@ export default class PreferencesPrompt extends React.Component {
         });
     }
 
+    updateAutoLaunch(v) {
+        SH_Agent.pref.set('auto_launch', v);
+        this.setState({
+            auto_launch: v
+        });
+
+        // todo set auto launch
+    }
+
     prefLanguage() {
         return (
             <div className="ln">
@@ -143,6 +153,20 @@ export default class PreferencesPrompt extends React.Component {
         )
     }
 
+    prefAutoLaunch() {
+        return (
+            <div className="ln">
+                <div className="title">{SH_Agent.lang.auto_launch}</div>
+                <div className="cnt">
+                    <input type="checkbox" name=""
+                           defaultValue={this.state.auto_launch}
+                           onChange={(e) => this.updateAutoLaunch(e.target.checked)}
+                    />
+                </div>
+            </div>
+        )
+    }
+
     body() {
         return (
             <div ref="body">
@@ -152,6 +176,7 @@ export default class PreferencesPrompt extends React.Component {
                 {this.prefLanguage()}
                 {this.prefChoiceMode()}
                 {this.prefAfterCmd()}
+                {this.prefAutoLaunch()}
             </div>
         )
     }

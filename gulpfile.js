@@ -106,7 +106,7 @@ cd ..
 });
 
 gulp.task('default', () => {
-    gulp.start('ver');
+    // gulp.start('ver');
 
     gulp.watch([
         './app/main.js',
