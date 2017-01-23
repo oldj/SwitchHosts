@@ -11,7 +11,6 @@ const fs = require('fs');
 const path = require('path');
 const request = require('request');
 const moment = require('moment');
-const notifier = require('node-notifier');
 const util = require('./libs/util');
 const platform = process.platform;
 
@@ -105,15 +104,15 @@ function apply_UNIX(content, success) {
     let cmd;
     if (!sudo_pswd) {
         cmd = [
-            'cat "' + tmp_fn + '" > ' + sys_host_path
-            , 'rm -rf ' + tmp_fn
+            `cat "${tmp_fn}" > ${sys_host_path}`
+            , `rm -rf ${tmp_fn}`
         ].join(' && ');
     } else {
         sudo_pswd = sudo_pswd.replace(/'/g, '\\x27');
         cmd = [
-            'echo \'' + sudo_pswd + '\' | sudo -S chmod 777 ' + sys_host_path
-            , 'cat "' + tmp_fn + '" > ' + sys_host_path
-            , 'echo \'' + sudo_pswd + '\' | sudo -S chmod 644 ' + sys_host_path
+            `echo '${sudo_pswd}' | sudo -S chmod 777 ${sys_host_path}`
+            , `cat "${tmp_fn}" > ${sys_host_path}`
+            , `echo '${sudo_pswd}' | sudo -S chmod 644 ${sys_host_path}`
             // , 'rm -rf ' + tmp_fn
         ].join(' && ');
     }
@@ -142,14 +141,21 @@ function apply_UNIX(content, success) {
 
 function _after_apply_unix(callback) {
     let cmd_fn = path.join(work_path, '_restart_mDNSResponder.sh');
+    let cmd = `
+p1=/System/Library/LaunchDaemons/com.apple.mDNSResponder.plist
+if [ -f $p1 ]; then
+    sudo launchctl unload -w $p1
+    sudo launchctl load -w $p1
+fi
 
-    let cmd = [
-        'sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
-        , 'sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
-        , 'sudo launchctl unload -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
-        , 'sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.discoveryd.plist'
-        , 'sudo killall -HUP mDNSResponder'
-    ].join('\n');
+p2=/System/Library/LaunchDaemons/com.apple.discoveryd.plist
+if [ -f p2 ]; then
+    sudo launchctl unload -w $p2
+    sudo launchctl load -w $p2
+fi
+
+sudo killall -HUP mDNSResponder
+`;
 
     fs.writeFileSync(cmd_fn, cmd, 'utf-8');
 
@@ -219,7 +225,6 @@ SH_event.on('test', () => {
 
 SH_event.on('apply', (content, success) => {
     tryToApply(content, () => {
-
         let cmd = pref.get('after_cmd');
         if (cmd) {
             exec(cmd, function (error, stdout, stderr) {
