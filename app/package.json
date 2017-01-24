@@ -23,7 +23,8 @@
     "react": "^15.3.1",
     "react-addons-update": "^15.3.1",
     "react-dom": "^15.3.1",
-    "request": "^2.74.0"
+    "request": "^2.74.0",
+    "yargs": "^6.6.0"
   },
   "devDependencies": {}
 }

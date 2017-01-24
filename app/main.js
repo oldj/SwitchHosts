@@ -14,6 +14,9 @@ const app = electron.app;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
 
+// const yargs = require('yargs');
+// console.log('argv', yargs.argv);
+
 const tray = require('./src/modules/tray');
 const pref = require('./src/libs/pref');
 let user_language = pref.get('user_language') || (app.getLocale() || '').split('-')[0].toLowerCase() || 'en';
