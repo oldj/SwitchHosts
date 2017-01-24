@@ -22655,8 +22655,9 @@
 	            var data = Object.assign({}, {
 	                version: __webpack_require__(200).version,
 	                list: _this.state.list.map(function (item) {
-	                    item.on = false;
-	                    return item;
+	                    var new_item = Object.assign({}, item);
+	                    new_item.on = false;
+	                    return new_item;
 	                })
 	            });
 	            ipcRenderer.send('export_data', fn, JSON.stringify(data));
@@ -23396,7 +23397,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 2, 4210];
+	exports.version = [3, 2, 2, 4212];
 
 /***/ },
 /* 202 */

@@ -14,6 +14,7 @@ const version = require('../../version').version;
 
 exports.init = function (app, sys_lang = 'en') {
     let lang = m_lang.getLang(pref.get('user_language', sys_lang));
+    let last_path = null;
 
     const template = [
         {
@@ -33,7 +34,7 @@ exports.init = function (app, sys_lang = 'en') {
                     click: () => {
                         dialog.showOpenDialog({
                             title: lang.import,
-                            defaultPath: path.join(paths.home_path, 'sh.json'),
+                            defaultPath: path.join(last_path || paths.home_path, 'sh.json'),
                             filters: [
                                 {name: 'JSON', extensions: ['json']},
                                 {name: 'All Files', extensions: ['*']}
@@ -41,6 +42,7 @@ exports.init = function (app, sys_lang = 'en') {
                         }, (fns) => {
                             if (fns && fns.length > 0) {
                                 ipcMain.emit('to_import', fns[0]);
+                                last_path = path.dirname(fns[0]);
                             }
                         });
                     }
@@ -50,7 +52,7 @@ exports.init = function (app, sys_lang = 'en') {
                     click: () => {
                         dialog.showSaveDialog({
                             title: lang.export,
-                            defaultPath: path.join(paths.home_path, 'sh.json'),
+                            defaultPath: path.join(last_path || paths.home_path, 'sh.json'),
                             filters: [
                                 {name: 'JSON', extensions: ['json']},
                                 {name: 'All Files', extensions: ['*']}
@@ -58,6 +60,7 @@ exports.init = function (app, sys_lang = 'en') {
                         }, (fn) => {
                             if (fn) {
                                 ipcMain.emit('to_export', fn);
+                                last_path = path.dirname(fn);
                             }
                         });
                     }

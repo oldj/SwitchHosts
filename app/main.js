@@ -72,6 +72,8 @@ function createWindow() {
             is_tray_initialized = true;
         }
     });
+
+    require('./bg/events').init(app, contents);
 }
 
 // This method will be called when Electron has finished
@@ -113,40 +115,3 @@ app.on('activate', function () {
 });
 
 app.on('before-quit', () => willQuitApp = true);
-
-electron.ipcMain.on('show_app', () => {
-    app.emit('show');
-});
-
-electron.ipcMain.on('to_add_host', () => {
-    if (contents && contents.send) {
-        contents.send('to_add_host');
-    }
-});
-
-electron.ipcMain.on('to_export', (fn) => {
-    if (contents && contents.send) {
-        contents.send('get_export_data', fn);
-    }
-});
-
-electron.ipcMain.on('export_data', (e, fn, data) => {
-    console.log(fn);
-    console.log(data);
-    fs.writeFile(fn, data, 'utf-8', (err) => {
-        if (err) {
-            electron.dialog.showErrorBox('error', err.message || 'Fail to export!');
-        }
-    });
-});
-
-electron.ipcMain.on('to_import', (fn) => {
-    if (contents && contents.send) {
-        contents.send('to_import', fn);
-    }
-});
-
-electron.ipcMain.on('relaunch', (fn) => {
-    app.relaunch({args: process.argv.slice(1) + ['--relaunch']});
-    app.exit(0);
-});
