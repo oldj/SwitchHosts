@@ -8,10 +8,16 @@
 const fs = require('fs');
 const paths = require('./paths');
 const util = require('./util');
+// const AutoLaunch = require('auto-launch');
+// const auto_launch = new AutoLaunch({
+//     name: 'SwitchHosts!',
+//     path: paths.current_app_path,
+// });
 
 let is_loaded;
 let data = {};
 let _t;
+
 
 function load() {
     if (util.isFile(paths.preference_path)) {
