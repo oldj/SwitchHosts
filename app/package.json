@@ -16,7 +16,6 @@
   },
   "homepage": "https://oldj.github.io/SwitchHosts/",
   "dependencies": {
-    "auto-launch": "^5.0.1",
     "classnames": "^2.2.5",
     "codemirror": "^5.17.0",
     "moment": "^2.14.1",
@@ -24,7 +23,8 @@
     "react": "^15.3.1",
     "react-addons-update": "^15.3.1",
     "react-dom": "^15.3.1",
-    "request": "^2.74.0"
+    "request": "^2.74.0",
+    "yargs": "^6.6.0"
   },
   "devDependencies": {}
 }

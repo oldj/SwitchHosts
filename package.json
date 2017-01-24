@@ -9,8 +9,9 @@
     "dev": "ENV=dev electron app",
     "build": "gulp ver && webpack",
     "pack": "gulp pack",
+    "pack-mac": "gulp pack --platform=macOS",
     "zip": "gulp zip",
-    "make": "webpack && npm run pack && npm run zip"
+    "make": "webpack && gulp pack && gulp zip"
   },
   "repository": {
     "type": "git",

@@ -23396,7 +23396,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 2, 4196];
+	exports.version = [3, 2, 2, 4210];
 
 /***/ },
 /* 202 */
@@ -34153,6 +34153,8 @@
 	// import classnames from 'classnames';
 	
 	
+	var AUTO_LAUNCH = 'auto_launch';
+	
 	var PreferencesPrompt = function (_React$Component) {
 	    _inherits(PreferencesPrompt, _React$Component);
 	
@@ -34166,12 +34168,14 @@
 	            choice_mode = 'multiple';
 	        }
 	
+	        console.log(AUTO_LAUNCH, SH_Agent.pref.get(AUTO_LAUNCH));
+	
 	        _this.state = {
 	            show: false,
 	            lang_key: SH_Agent.lang_key,
 	            after_cmd: SH_Agent.pref.get('after_cmd') || '',
 	            choice_mode: choice_mode,
-	            auto_launch: !!SH_Agent.pref.get('auto_launch')
+	            auto_launch: !!SH_Agent.pref.get(AUTO_LAUNCH)
 	        };
 	
 	        return _this;
@@ -34239,7 +34243,7 @@
 	    }, {
 	        key: 'updateAutoLaunch',
 	        value: function updateAutoLaunch(v) {
-	            SH_Agent.pref.set('auto_launch', v);
+	            SH_Agent.pref.set(AUTO_LAUNCH, v);
 	            this.setState({
 	                auto_launch: v
 	            });
@@ -34370,7 +34374,7 @@
 	                    'div',
 	                    { className: 'cnt' },
 	                    _react2.default.createElement('input', { type: 'checkbox', name: '',
-	                        defaultValue: this.state.auto_launch,
+	                        defaultChecked: this.state.auto_launch,
 	                        onChange: function onChange(e) {
 	                            return _this6.updateAutoLaunch(e.target.checked);
 	                        }
@@ -34386,8 +34390,7 @@
 	                { ref: 'body' },
 	                this.prefLanguage(),
 	                this.prefChoiceMode(),
-	                this.prefAfterCmd(),
-	                this.prefAutoLaunch()
+	                this.prefAfterCmd()
 	            );
 	        }
 	    }, {
