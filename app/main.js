@@ -33,7 +33,7 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 800, height: 500,
         minWidth: 400, minHeight: 250,
-        fullscreenable: false
+        fullscreenable: true
     });
     contents = mainWindow.webContents;
     app.mainWindow = mainWindow;
@@ -44,6 +44,11 @@ function createWindow() {
     if (process.env && process.env.ENV === 'dev') {
         // Open the DevTools.
         mainWindow.webContents.openDevTools();
+    }
+
+    if (pref.get('hide_at_launch')) {
+        // mainWindow.minimize();
+        mainWindow.hide();
     }
 
     mainWindow.on('close', (e) => {
