@@ -23397,7 +23397,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 2, 4212];
+	exports.version = [3, 2, 2, 4246];
 
 /***/ },
 /* 202 */
@@ -33630,7 +33630,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 18px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n  line-height: 24px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n  line-height: 24px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .cnt textarea {\n  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 24px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n", ""]);
 	
 	// exports
 
@@ -33670,7 +33670,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 18px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
+	exports.push([module.id, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n  line-height: 24px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n  line-height: 24px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .cnt textarea {\n  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 24px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
 	
 	// exports
 
@@ -34169,14 +34169,13 @@
 	            choice_mode = 'multiple';
 	        }
 	
-	        console.log(AUTO_LAUNCH, SH_Agent.pref.get(AUTO_LAUNCH));
-	
 	        _this.state = {
 	            show: false,
 	            lang_key: SH_Agent.lang_key,
 	            after_cmd: SH_Agent.pref.get('after_cmd') || '',
 	            choice_mode: choice_mode,
-	            auto_launch: !!SH_Agent.pref.get(AUTO_LAUNCH)
+	            auto_launch: !!SH_Agent.pref.get(AUTO_LAUNCH),
+	            hide_at_launch: !!SH_Agent.pref.get('hide_at_launch')
 	        };
 	
 	        return _this;
@@ -34250,6 +34249,14 @@
 	            });
 	
 	            // todo set auto launch
+	        }
+	    }, {
+	        key: 'updateMinimizeAtLaunch',
+	        value: function updateMinimizeAtLaunch(v) {
+	            SH_Agent.pref.set('hide_at_launch', v);
+	            this.setState({
+	                hide_at_launch: v
+	            });
 	        }
 	    }, {
 	        key: 'prefLanguage',
@@ -34384,6 +34391,31 @@
 	            );
 	        }
 	    }, {
+	        key: 'prefMinimizeAtLaunch',
+	        value: function prefMinimizeAtLaunch() {
+	            var _this7 = this;
+	
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'ln' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'title' },
+	                    SH_Agent.lang.hide_at_launch
+	                ),
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'cnt' },
+	                    _react2.default.createElement('input', { type: 'checkbox', name: '',
+	                        defaultChecked: this.state.hide_at_launch,
+	                        onChange: function onChange(e) {
+	                            return _this7.updateMinimizeAtLaunch(e.target.checked);
+	                        }
+	                    })
+	                )
+	            );
+	        }
+	    }, {
 	        key: 'body',
 	        value: function body() {
 	            return _react2.default.createElement(
@@ -34391,23 +34423,24 @@
 	                { ref: 'body' },
 	                this.prefLanguage(),
 	                this.prefChoiceMode(),
-	                this.prefAfterCmd()
+	                this.prefAfterCmd(),
+	                this.prefMinimizeAtLaunch()
 	            );
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this7 = this;
+	            var _this8 = this;
 	
 	            return _react2.default.createElement(_frame2.default, {
 	                show: this.state.show,
 	                head: SH_Agent.lang.preferences,
 	                body: this.body(),
 	                onOK: function onOK() {
-	                    return _this7.onOK();
+	                    return _this8.onOK();
 	                },
 	                onCancel: function onCancel() {
-	                    return _this7.onCancel();
+	                    return _this8.onCancel();
 	                },
 	                cancel_title: SH_Agent.lang.set_and_back,
 	                ok_title: SH_Agent.lang.set_and_relaunch_app
@@ -34529,68 +34562,69 @@
 	exports.content = {
 	    _lang_name: 'English',
 	    add: 'Add',
-	    auto_launch: 'Run at login',
-	    comment: 'Comment',
-	    new: 'New',
-	    quit: 'Quit',
-	    cancel: 'Cancel',
-	    ok: 'OK',
-	    set_and_back: 'Set and back',
-	    set_and_relaunch_app: 'Set and Relaunch App',
 	    add_host: 'Add new rules',
-	    edit_host: 'Edit host',
-	    import: 'Import',
-	    export: 'Export',
-	    host_title: 'Host title',
-	    host_title_cant_be_empty: 'Host title could not be empty!',
-	    sys_host_title: 'System Hosts',
-	    input_sudo_pswd: 'Input your sudo password',
-	    sudo_pswd: 'Password',
-	    del_host: 'Delete current host',
-	    confirm_del: 'Are you sure you want to delete this host?',
-	    tmp_clean: 'Temporarily turn off all rules.',
-	    tmp_recover: 'Recover rules.',
-	    new_version_available: 'New version available, download now?',
-	    is_updated_title: 'You are up to date!',
-	    is_updated: 'You already have the latest version of SwitchHosts! installed.',
-	    readonly: 'Read only',
-	    where_local: 'local',
-	    where_remote: 'remote',
-	    remote_hosts: 'Remote hosts',
-	    url: 'URL',
-	    bad_url: 'URL is not valid.',
+	    auto_launch: 'Run at login',
 	    auto_refresh: 'Auto refresh',
-	    last_refresh: 'Last refresh: ',
-	    refresh: 'Refresh',
-	    never: 'never',
-	    hour: 'hour',
-	    hours: 'hours',
+	    bad_url: 'URL is not valid.',
+	    cancel: 'Cancel',
+	    comment: 'Comment',
+	    confirm_del: 'Are you sure you want to delete this host?',
+	    confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.',
 	    day: 'day',
 	    days: 'days',
-	    feedback: 'Feedback',
-	    homepage: 'Homepage',
-	    hide_dock_icon: 'Hide Dock Icon',
-	    show_dock_icon: 'Show Dock Icon',
-	    toggle_dock_icon: 'Toggle Dock Icon',
-	    no_valid_host_found: 'There is no valid host in the file.',
-	    confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.',
-	    please_run_as_admin: 'Please run SwitchHosts! as an Administrator.',
-	    preferences: 'Preferences',
-	    language: 'Language',
-	    should_restart_after_change_language: 'Should relaunch this App after changing language.',
-	    untitled: 'untitled',
-	    file: 'File',
+	    del_host: 'Delete current host',
 	    edit: 'Edit',
-	    view: 'View',
-	    window: 'Window',
+	    edit_host: 'Edit host',
+	    export: 'Export',
+	    feedback: 'Feedback',
+	    file: 'File',
 	    help: 'Help',
-	    pref_after_cmd: 'Command after Host applied',
-	    pref_after_cmd_info: 'The following system commands will be executed when Host applied:',
+	    hide_at_launch: 'Hide at launch',
+	    hide_dock_icon: 'Hide Dock Icon',
+	    homepage: 'Homepage',
+	    host_title: 'Host title',
+	    host_title_cant_be_empty: 'Host title could not be empty!',
+	    hour: 'hour',
+	    hours: 'hours',
+	    import: 'Import',
+	    input_sudo_pswd: 'Input your sudo password',
+	    is_updated: 'You already have the latest version of SwitchHosts! installed.',
+	    is_updated_title: 'You are up to date!',
+	    language: 'Language',
+	    last_refresh: 'Last refresh: ',
+	    never: 'never',
+	    new: 'New',
+	    new_version_available: 'New version available, download now?',
+	    no_valid_host_found: 'There is no valid host in the file.',
+	    ok: 'OK',
+	    please_run_as_admin: 'Please run SwitchHosts! as an Administrator.',
+	    pref_after_cmd: 'Command after a host be applied',
+	    pref_after_cmd_info: 'The following system commands will be executed when Host applied: ',
 	    pref_after_cmd_placeholder: 'input your commands here',
 	    pref_choice_mode: 'Choide mode',
-	    pref_choice_mode_single: 'Single choice',
 	    pref_choice_mode_multiple: 'Multiple choice',
-	    search: 'Search'
+	    pref_choice_mode_single: 'Single choice',
+	    preferences: 'Preferences',
+	    quit: 'Quit',
+	    readonly: 'Read only',
+	    refresh: 'Refresh',
+	    remote_hosts: 'Remote hosts',
+	    search: 'Search',
+	    set_and_back: 'Set and back',
+	    set_and_relaunch_app: 'Set and Relaunch App',
+	    should_restart_after_change_language: 'Should relaunch this App after changing language.',
+	    show_dock_icon: 'Show Dock Icon',
+	    sudo_pswd: 'Password',
+	    sys_host_title: 'System Hosts',
+	    tmp_clean: 'Temporarily turn off all rules.',
+	    tmp_recover: 'Recover rules.',
+	    toggle_dock_icon: 'Toggle Dock Icon',
+	    untitled: 'untitled',
+	    url: 'URL',
+	    view: 'View',
+	    where_local: 'local',
+	    where_remote: 'remote',
+	    window: 'Window'
 	};
 
 /***/ },
@@ -34607,68 +34641,69 @@
 	exports.content = {
 	    _lang_name: '简体中文',
 	    add: '添加',
-	    auto_launch: '随系统一起启动',
-	    comment: '注释',
-	    new: '新建',
-	    quit: '退出',
-	    cancel: '取消',
-	    ok: '确定',
-	    set_and_back: '设置并返回',
-	    set_and_relaunch_app: '确定并重启程序',
 	    add_host: '添加 host 规则',
-	    edit_host: '修改 host',
-	    import: '导入',
-	    export: '导出',
-	    host_title: 'host 方案名',
-	    host_title_cant_be_empty: 'Host 方案名不能为空！',
-	    sys_host_title: '系统 Hosts',
-	    input_sudo_pswd: '请输入您的开机密码（sudo 密码）',
-	    sudo_pswd: '密码',
-	    del_host: '删除当前 host',
-	    confirm_del: '确定要删除此 host 吗？',
-	    tmp_clean: '临时去掉所有绑定',
-	    tmp_recover: '恢复绑定',
-	    new_version_available: '检测到新版本，立刻下载？',
-	    is_updated_title: '已是最新',
-	    is_updated: '当前版本是最新版本。',
-	    readonly: '只读',
-	    where_local: '本地',
-	    where_remote: '远程',
-	    remote_hosts: '远程方案',
-	    url: 'URL 地址',
-	    bad_url: 'URL 地址有误。',
+	    auto_launch: '随系统一起启动',
 	    auto_refresh: '自动更新',
-	    last_refresh: '上次更新：',
-	    refresh: '刷新',
-	    never: '从不',
-	    hour: '小时',
-	    hours: '小时',
+	    bad_url: 'URL 地址有误。',
+	    cancel: '取消',
+	    comment: '注释',
+	    confirm_del: '确定要删除此 host 吗？',
+	    confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。',
 	    day: '天',
 	    days: '天',
-	    feedback: '反馈',
-	    homepage: '主页',
-	    hide_dock_icon: '隐藏 Dock 图标',
-	    show_dock_icon: '显示 Dock 图标',
-	    toggle_dock_icon: '显示/隐藏 Dock 图标',
-	    no_valid_host_found: '所指定的文件中未找到合法的 host 配置',
-	    confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。',
-	    please_run_as_admin: '请以管理员身份运行 SwitchHosts!',
-	    preferences: '设置',
-	    language: '语言',
-	    should_restart_after_change_language: '修改语言后需要重启应用方可生效。',
-	    untitled: '未命名',
-	    file: '文件',
+	    del_host: '删除当前 host',
 	    edit: '编辑',
-	    view: '视图',
-	    window: '窗口',
+	    edit_host: '修改 host',
+	    export: '导出',
+	    feedback: '反馈',
+	    file: '文件',
 	    help: '帮助',
+	    hide_at_launch: '启动时隐藏',
+	    hide_dock_icon: '隐藏 Dock 图标',
+	    homepage: '主页',
+	    host_title: 'host 方案名',
+	    host_title_cant_be_empty: 'Host 方案名不能为空！',
+	    hour: '小时',
+	    hours: '小时',
+	    import: '导入',
+	    input_sudo_pswd: '请输入您的开机密码（sudo 密码）',
+	    is_updated: '当前版本是最新版本。',
+	    is_updated_title: '已是最新',
+	    language: '语言',
+	    last_refresh: '上次更新：',
+	    never: '从不',
+	    new: '新建',
+	    new_version_available: '检测到新版本，立刻下载？',
+	    no_valid_host_found: '所指定的文件中未找到合法的 host 配置',
+	    ok: '确定',
+	    please_run_as_admin: '请以管理员身份运行 SwitchHosts!',
 	    pref_after_cmd: 'Host 应用后命令',
 	    pref_after_cmd_info: '每次 Host 应用后将执行下面的系统命令：',
 	    pref_after_cmd_placeholder: '在这儿输入你的命令',
 	    pref_choice_mode: '选择模式',
-	    pref_choice_mode_single: '单选',
 	    pref_choice_mode_multiple: '多选',
-	    search: '搜索'
+	    pref_choice_mode_single: '单选',
+	    preferences: '设置',
+	    quit: '退出',
+	    readonly: '只读',
+	    refresh: '刷新',
+	    remote_hosts: '远程方案',
+	    search: '搜索',
+	    set_and_back: '设置并返回',
+	    set_and_relaunch_app: '确定并重启程序',
+	    should_restart_after_change_language: '修改语言后需要重启应用方可生效。',
+	    show_dock_icon: '显示 Dock 图标',
+	    sudo_pswd: '密码',
+	    sys_host_title: '系统 Hosts',
+	    tmp_clean: '临时去掉所有绑定',
+	    tmp_recover: '恢复绑定',
+	    toggle_dock_icon: '显示/隐藏 Dock 图标',
+	    untitled: '未命名',
+	    url: 'URL 地址',
+	    view: '视图',
+	    where_local: '本地',
+	    where_remote: '远程',
+	    window: '窗口'
 	};
 
 /***/ },

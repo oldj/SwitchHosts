@@ -1,6 +1,7 @@
 .frame {
   @bg: #f5f5f5;
   @btn_default: #05a;
+  @lh: 24px;
 
   position: fixed;
   top: 0;
@@ -44,20 +45,24 @@
         .title {
           float: left;
           width: 100px;
-          //line-height: 18px;
+          line-height: @lh;
         }
         .cnt {
           margin-left: 100px;
+          line-height: @lh;
           input[type=text] {
             width: 240px;
             outline: none;
             padding: 6px 10px;
           }
+          textarea {
+            font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+          }
         }
 
         .inform {
           color: #999;
-          line-height: 18px;
+          line-height: @lh;
         }
       }
 

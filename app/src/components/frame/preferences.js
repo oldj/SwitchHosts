@@ -22,14 +22,13 @@ export default class PreferencesPrompt extends React.Component {
             choice_mode = 'multiple';
         }
 
-        console.log(AUTO_LAUNCH, SH_Agent.pref.get(AUTO_LAUNCH));
-
         this.state = {
             show: false,
             lang_key: SH_Agent.lang_key,
             after_cmd: SH_Agent.pref.get('after_cmd') || '',
             choice_mode: choice_mode,
-            auto_launch: !!SH_Agent.pref.get(AUTO_LAUNCH)
+            auto_launch: !!SH_Agent.pref.get(AUTO_LAUNCH),
+            hide_at_launch: !!SH_Agent.pref.get('hide_at_launch')
         };
 
     }
@@ -102,6 +101,13 @@ export default class PreferencesPrompt extends React.Component {
         // todo set auto launch
     }
 
+    updateMinimizeAtLaunch(v) {
+        SH_Agent.pref.set('hide_at_launch', v);
+        this.setState({
+            hide_at_launch: v
+        });
+    }
+
     prefLanguage() {
         return (
             <div className="ln">
@@ -171,6 +177,20 @@ export default class PreferencesPrompt extends React.Component {
         )
     }
 
+    prefMinimizeAtLaunch() {
+        return (
+            <div className="ln">
+                <div className="title">{SH_Agent.lang.hide_at_launch}</div>
+                <div className="cnt">
+                    <input type="checkbox" name=""
+                           defaultChecked={this.state.hide_at_launch}
+                           onChange={(e) => this.updateMinimizeAtLaunch(e.target.checked)}
+                    />
+                </div>
+            </div>
+        )
+    }
+
     body() {
         return (
             <div ref="body">
@@ -181,6 +201,7 @@ export default class PreferencesPrompt extends React.Component {
                 {this.prefChoiceMode()}
                 {this.prefAfterCmd()}
                 {/*{this.prefAutoLaunch()}*/}
+                {this.prefMinimizeAtLaunch()}
             </div>
         )
     }
