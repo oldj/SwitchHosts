@@ -8,6 +8,7 @@
 exports.content = {
     _lang_name: '简体中文'
     , add: '添加'
+    , auto_launch: '随系统一起启动'
     , comment: '注释'
     , new: '新建'
     , quit: '退出'

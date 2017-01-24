@@ -11,6 +11,8 @@ import Frame from './frame';
 import './preferences.less';
 import lang from '../../lang';
 
+const AUTO_LAUNCH = 'auto_launch';
+
 export default class PreferencesPrompt extends React.Component {
     constructor(props) {
         super(props);
@@ -20,11 +22,14 @@ export default class PreferencesPrompt extends React.Component {
             choice_mode = 'multiple';
         }
 
+        console.log(AUTO_LAUNCH, SH_Agent.pref.get(AUTO_LAUNCH));
+
         this.state = {
             show: false,
             lang_key: SH_Agent.lang_key,
             after_cmd: SH_Agent.pref.get('after_cmd') || '',
-            choice_mode: choice_mode
+            choice_mode: choice_mode,
+            auto_launch: !!SH_Agent.pref.get(AUTO_LAUNCH)
         };
 
     }
@@ -88,6 +93,15 @@ export default class PreferencesPrompt extends React.Component {
         });
     }
 
+    updateAutoLaunch(v) {
+        SH_Agent.pref.set(AUTO_LAUNCH, v);
+        this.setState({
+            auto_launch: v
+        });
+
+        // todo set auto launch
+    }
+
     prefLanguage() {
         return (
             <div className="ln">
@@ -143,6 +157,20 @@ export default class PreferencesPrompt extends React.Component {
         )
     }
 
+    prefAutoLaunch() {
+        return (
+            <div className="ln">
+                <div className="title">{SH_Agent.lang.auto_launch}</div>
+                <div className="cnt">
+                    <input type="checkbox" name=""
+                           defaultChecked={this.state.auto_launch}
+                           onChange={(e) => this.updateAutoLaunch(e.target.checked)}
+                    />
+                </div>
+            </div>
+        )
+    }
+
     body() {
         return (
             <div ref="body">
@@ -152,6 +180,7 @@ export default class PreferencesPrompt extends React.Component {
                 {this.prefLanguage()}
                 {this.prefChoiceMode()}
                 {this.prefAfterCmd()}
+                {/*{this.prefAutoLaunch()}*/}
             </div>
         )
     }

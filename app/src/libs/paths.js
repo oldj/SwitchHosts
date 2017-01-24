@@ -16,10 +16,25 @@ const work_path = path.join(home_path, '.SwitchHosts');
 const data_path = path.join(work_path, 'data.json');
 const preference_path = path.join(work_path, 'preferences.json');
 
+function getCurrentAppPath() {
+    let a = __dirname.split(path.sep);
+    // console.log(a);
+    while (a.length > 0) {
+        let i = a[a.length - 1];
+        if (i.endsWith('.app')) {
+            return a.join(path.sep);
+        }
+        a.pop();
+    }
+
+    return null;
+}
+
 module.exports = {
-    home_path: home_path,
-    work_path: work_path,
-    data_path: data_path,
-    preference_path: preference_path,
-    sys_host_path: sys_host_path
+    home_path: home_path
+    , work_path: work_path
+    , data_path: data_path
+    , preference_path: preference_path
+    , sys_host_path: sys_host_path
+    // ,current_app_path: getCurrentAppPath()
 };
