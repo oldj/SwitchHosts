@@ -62,8 +62,15 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
 
 ### 打包发布
 
+ - 建议使用 [electron-packager](https://github.com/electron-userland/electron-packager) 进行打包
+
+    ```bash
+    # install electron-packager for use from cli
+    npm install electron-packager -g
+    ```
+
  - 在 `./` 目录下，运行 `npm run pack` 命令，打包后的文件位于 `./dist` 目录；
- - 首次执行此命令可能需要花费较多时间（需要下载对应的构建文件），更多信息请参考 [Electron 文档](http://electron.atom.io/docs/)。
+ - 首次执行此命令可能需要花费较多时间（需要下载对应的构建文件），也可先手动下载[对应的发布版本](https://github.com/electron/electron/releases)（[淘宝镜像](https://npm.taobao.org/mirrors/electron/)），手动保存到 `~/.electron` 目录下。更多信息请参考 [Electron 文档](http://electron.atom.io/docs/)。
 
     ```bash
     # pack
