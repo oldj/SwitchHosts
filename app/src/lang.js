@@ -6,8 +6,8 @@
 "use strict";
 
 const languages = {
-    'en': require('./lang/en').content,
-    'cn': require('./lang/cn').content
+    'en': require('../common/lang/en').content,
+    'cn': require('../common/lang/cn').content
 };
 
 module.exports = {
@@ -24,7 +24,7 @@ module.exports = {
         }
         return list;
     })(),
-    getLang: function (lang) {
+    getLang: (lang) => {
         lang = lang.toLowerCase();
         if (lang == 'cn' || lang == 'zh-cn') {
             lang = 'cn';
@@ -32,5 +32,12 @@ module.exports = {
             lang = 'en';
         }
         return languages[lang] || languages['en'];
+    },
+    fill: (tpl, ...vals) => {
+        vals.map((v, idx) => {
+            let r = new RegExp('\\$\\{' + idx + '\\}', 'g');
+            tpl = tpl.replace(r, v);
+        });
+        return tpl;
     }
 };

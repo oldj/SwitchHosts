@@ -156,6 +156,14 @@ exports.init = function (app, sys_lang = 'en') {
             label: lang.help,
             role: 'help',
             submenu: [{
+
+                label: lang.check_update,
+                click () {
+                    require('../../bg/check_for_update').check();
+                }
+            }, {
+                type: 'separator'
+            }, {
                 label: lang.feedback,
                 click () {
                     shell.openExternal('https://github.com/oldj/SwitchHosts/issues');
@@ -293,4 +301,5 @@ exports.init = function (app, sys_lang = 'en') {
 
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
-};
+}
+;
