@@ -7,7 +7,7 @@ Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHos
 
 ## 软件截图：
 
-<img src="https://oldj.github.io/SwitchHosts/images/capture.png" alt="Capture" width="800" style="border:1px solid #979797;">
+<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/assets/capture.png" alt="Capture" width="980" style="border:1px solid #979797;">
 
 
 ## 功能特性：
