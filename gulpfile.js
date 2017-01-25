@@ -57,20 +57,20 @@ gulp.task('pack', (done) => {
     let pack = {};
     pack.macOS = `
 # for macOS
-electron-packager ./app 'SwitchHosts!' --platform=darwin --arch=x64 --electron-version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.icns --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
+electron-packager ./app 'SwitchHosts!' --platform=darwin --arch=x64 --version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.icns --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
 cp ./assets/Credits.rtf dist/SwitchHosts\!-darwin-x64/SwitchHosts\!.app/Contents/Resources/en.lproj
 `;
     pack.win64 = `
 # for windows x64
-electron-packager ./app 'SwitchHosts!' --platform=win32  --arch=x64 --electron-version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
+electron-packager ./app 'SwitchHosts!' --platform=win32  --arch=x64 --version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
 `;
     pack.win32 = `
 # for windows ia32
-electron-packager ./app 'SwitchHosts!' --platform=win32  --arch=ia32 --electron-version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
+electron-packager ./app 'SwitchHosts!' --platform=win32  --arch=ia32 --version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
 `;
     pack.linux = `
 # for linux x86_64
-electron-packager ./app 'SwitchHosts!' --platform=linux  --arch=x64 --electron-version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
+electron-packager ./app 'SwitchHosts!' --platform=linux  --arch=x64 --version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
 `;
 
     let cmds = [];
