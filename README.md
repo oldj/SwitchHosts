@@ -5,6 +5,10 @@ Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHos
 
 这是一个用于快速切换 hosts 文件的小程序，基于 [Electron](http://electron.atom.io/) 开发，同时使用了 [React](https://facebook.github.io/react/) 以及 [CodeMirror](http://codemirror.net/) 等框架/库。
 
+## 软件截图：
+
+<img src="https://oldj.github.io/SwitchHosts/images/capture.png" alt="Capture" width="800" style="border:1px solid #979797;">
+
 
 ## 功能特性：
 
