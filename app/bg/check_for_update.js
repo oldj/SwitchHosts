@@ -52,11 +52,13 @@ function compareVersion(a, b) {
 exports.check = () => {
     console.log('start check updates..');
     request(release_url, (err, res, body) => {
+        let buttons = [lang.ok];
         if (err) {
             console.log(err);
             dialog.showMessageBox({
                 type: 'error',
-                message: lang.check_update_err
+                message: lang.check_update_err,
+                buttons
             });
             return;
         }
@@ -75,7 +77,6 @@ exports.check = () => {
         let cmp = compareVersion(current_version, last_v);
         console.log('cmp', cmp);
         let message;
-        let buttons = [lang.ok];
         if (cmp >= 0) {
             message = m_lang.fill(lang.check_update_nofound);
         } else {
