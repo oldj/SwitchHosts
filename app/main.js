@@ -17,10 +17,10 @@ const BrowserWindow = electron.BrowserWindow;
 // const yargs = require('yargs');
 // console.log('argv', yargs.argv);
 
-const tray = require('./src/modules/tray');
 const pref = require('./src/libs/pref');
 let user_language = pref.get('user_language') || (app.getLocale() || '').split('-')[0].toLowerCase() || 'en';
 global.user_language = user_language;
+const tray = require('./src/modules/tray');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.

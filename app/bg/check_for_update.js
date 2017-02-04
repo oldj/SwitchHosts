@@ -78,7 +78,7 @@ exports.check = () => {
         console.log('cmp', cmp);
         let message;
         if (cmp >= 0) {
-            message = m_lang.fill(lang.check_update_nofound);
+            message = m_lang.fill(lang.check_update_nofound, 'v' + current_version.join('.'));
         } else {
             message = m_lang.fill(lang.check_update_found, last_v);
             buttons.unshift(lang.cancel);

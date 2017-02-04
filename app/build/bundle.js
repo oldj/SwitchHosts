@@ -23397,7 +23397,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 2, 4252];
+	exports.version = [3, 2, 3, 4255];
 
 /***/ },
 /* 202 */
@@ -34154,6 +34154,8 @@
 	// import classnames from 'classnames';
 	
 	
+	var current_version = __webpack_require__(201).version;
+	
 	var AUTO_LAUNCH = 'auto_launch';
 	
 	var PreferencesPrompt = function (_React$Component) {
@@ -34421,6 +34423,12 @@
 	            return _react2.default.createElement(
 	                'div',
 	                { ref: 'body' },
+	                _react2.default.createElement(
+	                    'div',
+	                    { className: 'current-version' },
+	                    'v',
+	                    current_version.join('.')
+	                ),
 	                this.prefLanguage(),
 	                this.prefChoiceMode(),
 	                this.prefAfterCmd(),
@@ -34502,7 +34510,7 @@
 	
 	
 	// module
-	exports.push([module.id, ".frame textarea {\n  width: 300px;\n  height: 80px;\n  padding: 2px 4px;\n  outline: none;\n  border: solid 1px #ccc;\n}\n", ""]);
+	exports.push([module.id, ".frame textarea {\n  width: 300px;\n  height: 80px;\n  padding: 2px 4px;\n  outline: none;\n  border: solid 1px #ccc;\n}\n.frame .current-version {\n  float: right;\n  margin-top: -60px;\n  color: #999;\n}\n", ""]);
 	
 	// exports
 
@@ -34581,11 +34589,12 @@
 	    check_update: 'Check for updates',
 	    check_update_err: 'Something went wrong while checking updates, please try again later. :-(',
 	    check_update_found: 'New version ${0} is avaliable, download it now?',
-	    check_update_nofound: 'Current version is the latest version.',
+	    check_update_nofound: 'Current version(${0}) is the latest version.',
 	    comment: 'Comment',
 	    confirm_del: 'Are you sure you want to delete this host?',
-	    confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.',
-	    day: 'day',
+	    confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.'
+	    // , current_version: 'Current version: '
+	    , day: 'day',
 	    days: 'days',
 	    del_host: 'Delete current host',
 	    edit: 'Edit',
@@ -34664,11 +34673,12 @@
 	    check_update: '检查更新',
 	    check_update_err: '检查更新出错，请稍后再试。:-(',
 	    check_update_found: '发现新版本 ${0}，前往下载？',
-	    check_update_nofound: '当前版本已是最新版本。',
+	    check_update_nofound: '当前版本（${0}）已是最新版本。',
 	    comment: '注释',
 	    confirm_del: '确定要删除此 host 吗？',
-	    confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。',
-	    day: '天',
+	    confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。'
+	    // , current_version: '当前版本：'
+	    , day: '天',
 	    days: '天',
 	    del_host: '删除当前 host',
 	    edit: '编辑',

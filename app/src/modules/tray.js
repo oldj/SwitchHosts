@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const {Menu, Tray, ipcMain, shell} = require('electron');
 const m_lang = require('../lang');
+const m_chk_update = require('../../bg/check_for_update');
 const pref = require('./../libs/pref');
 const os = process.platform;
 
@@ -41,6 +42,10 @@ function makeMenu(app, list, contents, sys_lang) {
     menu.push({type: 'separator'});
     menu.push({label: lang.feedback, type: 'normal', click: () => {
         shell.openExternal('https://github.com/oldj/SwitchHosts/issues');
+    }});
+
+    menu.push({label: lang.check_update, type: 'normal', click: () => {
+        m_chk_update.check();
     }});
 
     if (os === 'darwin') {

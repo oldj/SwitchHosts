@@ -8,6 +8,7 @@
 const path = require('path');
 const paths = require('../libs/paths');
 const {Menu, shell, ipcMain, dialog} = require('electron');
+const m_chk_update = require('../../bg/check_for_update');
 const m_lang = require('../lang');
 const pref = require('./../libs/pref');
 const version = require('../../version').version;
@@ -156,10 +157,9 @@ exports.init = function (app, sys_lang = 'en') {
             label: lang.help,
             role: 'help',
             submenu: [{
-
                 label: lang.check_update,
                 click () {
-                    require('../../bg/check_for_update').check();
+                    m_chk_update.check();
                 }
             }, {
                 type: 'separator'
