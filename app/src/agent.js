@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const request = require('request');
 const moment = require('moment');
-const util = require('./libs/util');
+const io = require('./libs/io');
 const platform = process.platform;
 
 const paths = require('./libs/paths');
@@ -67,7 +67,7 @@ function getSysHosts() {
 }
 
 function tryToCreateWorkDir() {
-    if (util.isDirectory((work_path))) {
+    if (io.isDirectory((work_path))) {
         console.log('work dir exists.');
         return;
     }
@@ -313,7 +313,7 @@ module.exports = {
     getHosts: function () {
         let data = null;
 
-        if (!util.isFile(data_path)) {
+        if (!io.isFile(data_path)) {
             return initGet();
         }
 

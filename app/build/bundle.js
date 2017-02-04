@@ -21546,7 +21546,7 @@
 	
 	var _preferences2 = _interopRequireDefault(_preferences);
 	
-	__webpack_require__(235);
+	__webpack_require__(236);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -23397,7 +23397,7 @@
 
 	"use strict";
 	
-	exports.version = [3, 2, 3, 4255];
+	exports.version = [3, 2, 3, 4259];
 
 /***/ },
 /* 202 */
@@ -34144,6 +34144,10 @@
 	
 	var _lang2 = _interopRequireDefault(_lang);
 	
+	var _util = __webpack_require__(235);
+	
+	var _util2 = _interopRequireDefault(_util);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -34426,8 +34430,7 @@
 	                _react2.default.createElement(
 	                    'div',
 	                    { className: 'current-version' },
-	                    'v',
-	                    current_version.join('.')
+	                    _util2.default.formatVersion(current_version)
 	                ),
 	                this.prefLanguage(),
 	                this.prefChoiceMode(),
@@ -34589,7 +34592,7 @@
 	    check_update: 'Check for updates',
 	    check_update_err: 'Something went wrong while checking updates, please try again later. :-(',
 	    check_update_found: 'New version ${0} is avaliable, download it now?',
-	    check_update_nofound: 'Current version(${0}) is the latest version.',
+	    check_update_nofound: 'Current version ${0} is the latest version.',
 	    comment: 'Comment',
 	    confirm_del: 'Are you sure you want to delete this host?',
 	    confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.'
@@ -34673,7 +34676,7 @@
 	    check_update: '检查更新',
 	    check_update_err: '检查更新出错，请稍后再试。:-(',
 	    check_update_found: '发现新版本 ${0}，前往下载？',
-	    check_update_nofound: '当前版本（${0}）已是最新版本。',
+	    check_update_nofound: '当前版本 ${0} 已是最新版本。',
 	    comment: '注释',
 	    confirm_del: '确定要删除此 host 吗？',
 	    confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。'
@@ -34737,12 +34740,28 @@
 
 /***/ },
 /* 235 */
+/***/ function(module, exports) {
+
+	/**
+	 * util
+	 * @author oldj
+	 * @blog http://oldj.net
+	 */
+	
+	'use strict';
+	
+	exports.formatVersion = function (v) {
+	  return 'v' + v.slice(0, 3).join('.') + (' (' + v[3] + ')');
+	};
+
+/***/ },
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(236);
+	var content = __webpack_require__(237);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(187)(content, {});
@@ -34762,7 +34781,7 @@
 	}
 
 /***/ },
-/* 236 */
+/* 237 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(186)();

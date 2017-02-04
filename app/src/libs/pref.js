@@ -8,6 +8,7 @@
 const fs = require('fs');
 const paths = require('./paths');
 const util = require('./util');
+const io = require('./io');
 // const AutoLaunch = require('auto-launch');
 // const auto_launch = new AutoLaunch({
 //     name: 'SwitchHosts!',
@@ -20,7 +21,7 @@ let _t;
 
 
 function load() {
-    if (util.isFile(paths.preference_path)) {
+    if (io.isFile(paths.preference_path)) {
         let cnt = fs.readFileSync(paths.preference_path, 'utf-8');
         try {
             data = JSON.parse(cnt);

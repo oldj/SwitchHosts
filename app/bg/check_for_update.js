@@ -11,6 +11,7 @@ const {shell, dialog} = require('electron');
 const release_url = 'https://github.com/oldj/SwitchHosts/releases';
 const current_version = require('../version').version;
 const m_lang = require('../src/lang');
+const util = require('../src/libs/util');
 const lang = m_lang.getLang(global.user_language);
 
 function convertStrVersion(v) {
@@ -78,7 +79,7 @@ exports.check = () => {
         console.log('cmp', cmp);
         let message;
         if (cmp >= 0) {
-            message = m_lang.fill(lang.check_update_nofound, 'v' + current_version.join('.'));
+            message = m_lang.fill(lang.check_update_nofound, util.formatVersion(current_version));
         } else {
             message = m_lang.fill(lang.check_update_found, last_v);
             buttons.unshift(lang.cancel);
