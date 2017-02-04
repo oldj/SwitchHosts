@@ -10,6 +10,7 @@ import Frame from './frame';
 // import classnames from 'classnames';
 import './preferences.less';
 import lang from '../../lang';
+const current_version = require('../../../version').version;
 
 const AUTO_LAUNCH = 'auto_launch';
 
@@ -197,6 +198,7 @@ export default class PreferencesPrompt extends React.Component {
                 {/*<div className="title">{SH_Agent.lang.host_title}</div>*/}
                 {/*<div className="cnt">*/}
                 {/*</div>*/}
+                <div className="current-version">v{current_version.join('.')}</div>
                 {this.prefLanguage()}
                 {this.prefChoiceMode()}
                 {this.prefAfterCmd()}
