@@ -17,10 +17,10 @@ const BrowserWindow = electron.BrowserWindow;
 // const yargs = require('yargs');
 // console.log('argv', yargs.argv);
 
-const pref = require('./src/libs/pref');
+const pref = require('./ui/libs/pref');
 let user_language = pref.get('user_language') || (app.getLocale() || '').split('-')[0].toLowerCase() || 'en';
 global.user_language = user_language;
-const tray = require('./src/modules/tray');
+const tray = require('./ui/modules/tray');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -28,6 +28,7 @@ let mainWindow;
 let contents;
 let willQuitApp = false;
 let is_tray_initialized;
+let renderer;
 
 function createWindow() {
     // Create the browser window.
@@ -102,7 +103,17 @@ if (should_quit) {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
     createWindow();
-    require('./src/modules/mainMenu').init(app, user_language);
+    require('./ui/modules/mainMenu').init(app, user_language);
+
+    setTimeout(() => {
+        if (renderer) {
+            require('./bg/check_for_update').check(true, renderer);
+        }
+    }, 1000);
+});
+
+electron.ipcMain.on('reg_renderer', (e) => {
+    renderer = e.sender;
 });
 
 // Quit when all windows are closed.
