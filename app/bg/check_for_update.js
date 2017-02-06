@@ -10,8 +10,8 @@ const cheerio = require('cheerio');
 const {shell, dialog} = require('electron');
 const release_url = 'https://github.com/oldj/SwitchHosts/releases';
 const current_version = require('../version').version;
-const m_lang = require('../src/lang');
-const util = require('../src/libs/util');
+const m_lang = require('../ui/lang');
+const util = require('../ui/libs/util');
 const lang = m_lang.getLang(global.user_language);
 
 function convertStrVersion(v) {
