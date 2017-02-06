@@ -41,7 +41,7 @@
     "style-loader": "^0.13.1",
     "uglify-loader": "^1.4.0",
     "url-loader": "^0.5.7",
-    "webpack": "^1.14.0",
+    "webpack": "^2.2.1",
     "yargs": "^6.5.0"
   }
 }
