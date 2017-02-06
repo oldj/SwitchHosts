@@ -12,7 +12,7 @@
     "pack-mac": "gulp pack --platform=macOS",
     "pack-win": "gulp pack --platform=win64",
     "zip": "gulp zip",
-    "make": "webpack && gulp pack && gulp zip"
+    "make": "webpack -p && gulp pack && gulp zip"
   },
   "repository": {
     "type": "git",
