@@ -8,7 +8,6 @@
 const request = require('request');
 const cheerio = require('cheerio');
 const {shell, dialog} = require('electron');
-const release_url = 'https://github.com/oldj/SwitchHosts/releases';
 const current_version = require('../version').version;
 const m_lang = require('../ui/lang');
 const util = require('../ui/libs/util');
@@ -50,17 +49,21 @@ function compareVersion(a, b) {
     }
 }
 
-exports.check = () => {
+exports.check = (is_silent = false, renderer = null) => {
+    let release_url = require('../ui/configs').url_download;
     console.log('start check updates..');
     request(release_url, (err, res, body) => {
         let buttons = [lang.ok];
         if (err) {
             console.log(err);
-            dialog.showMessageBox({
-                type: 'error',
-                message: lang.check_update_err,
-                buttons
-            });
+
+            if (!is_silent) {
+                dialog.showMessageBox({
+                    type: 'error',
+                    message: lang.check_update_err,
+                    buttons
+                });
+            }
             return;
         }
 
@@ -79,20 +82,26 @@ exports.check = () => {
         console.log('cmp', cmp);
         let message;
         if (cmp >= 0) {
+            // 没有发现新版本
             message = m_lang.fill(lang.check_update_nofound, util.formatVersion(current_version));
+
         } else {
+            // 发现新版本
             message = m_lang.fill(lang.check_update_found, last_v);
             buttons.unshift(lang.cancel);
+            renderer.send('update_found', last_v);
         }
 
-        dialog.showMessageBox({
-            type: 'info',
-            message,
-            buttons
-        }, (res) => {
-            if (cmp < 0 && res === 1) {
-                shell.openExternal(release_url);
-            }
-        });
+        if (!is_silent) {
+            dialog.showMessageBox({
+                type: 'info',
+                message,
+                buttons
+            }, (res) => {
+                if (cmp < 0 && res === 1) {
+                    shell.openExternal(release_url);
+                }
+            });
+        }
     });
 };

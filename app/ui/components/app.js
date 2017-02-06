@@ -63,6 +63,8 @@ class App extends React.Component {
                 console.log('imported.');
             })
         });
+
+        ipcRenderer.send('reg_renderer');
     }
 
     setCurrent(host) {
