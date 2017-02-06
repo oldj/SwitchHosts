@@ -10,7 +10,7 @@ const webpack = require('webpack');
 // const uglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 
 module.exports = {
-    entry: './app/src/ui.js',
+    entry: './app/ui/ui.js',
     devtool: 'source-map',
     output: {
         path: path.join(__dirname, 'app', 'build'),
