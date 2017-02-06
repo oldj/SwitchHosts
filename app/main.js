@@ -28,6 +28,7 @@ let mainWindow;
 let contents;
 let willQuitApp = false;
 let is_tray_initialized;
+let renderer;
 
 function createWindow() {
     // Create the browser window.
@@ -103,6 +104,16 @@ if (should_quit) {
 app.on('ready', () => {
     createWindow();
     require('./ui/modules/mainMenu').init(app, user_language);
+
+    setTimeout(() => {
+        if (renderer) {
+            require('./bg/check_for_update').check(true, renderer);
+        }
+    }, 1000);
+});
+
+electron.ipcMain.on('reg_renderer', (e) => {
+    renderer = e.sender;
 });
 
 // Quit when all windows are closed.

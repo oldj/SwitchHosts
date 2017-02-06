@@ -10,4 +10,5 @@ const m_ver = require('../version').version;
 
 exports.version = m_ver.slice(0, 3).join('.');
 exports.version_full = m_ver.join('.');
+exports.url_download = 'https://github.com/oldj/SwitchHosts/releases';
 

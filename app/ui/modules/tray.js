@@ -13,6 +13,8 @@ const m_lang = require('../lang');
 const m_chk_update = require('../../bg/check_for_update');
 const pref = require('./../libs/pref');
 const os = process.platform;
+const util = require('../libs/util');
+const current_version = require('../../version').version;
 
 let tray = null;
 
@@ -20,9 +22,15 @@ function makeMenu(app, list, contents, sys_lang) {
     let menu = [];
     let lang = m_lang.getLang(pref.get('user_language', sys_lang));
 
-    menu.push({label: 'SwitchHosts!', type: 'normal', click: () => {
-        app.emit('show');
-    }});
+    menu.push({
+        label: 'SwitchHosts!',
+        type: 'normal',
+        // sublabel: util.formatVersion(current_version), // does not work on Mac
+        click: () => {
+            app.emit('show');
+        }
+    });
+    menu.push({label: util.formatVersion(current_version), type: 'normal', enabled: false});
     menu.push({label: '-', type: 'separator'});
 
     let ac = '1234567890abcdefghijklmnopqrstuvwxyz'.split('');
@@ -40,13 +48,17 @@ function makeMenu(app, list, contents, sys_lang) {
     });
 
     menu.push({type: 'separator'});
-    menu.push({label: lang.feedback, type: 'normal', click: () => {
-        shell.openExternal('https://github.com/oldj/SwitchHosts/issues');
-    }});
+    menu.push({
+        label: lang.feedback, type: 'normal', click: () => {
+            shell.openExternal('https://github.com/oldj/SwitchHosts/issues');
+        }
+    });
 
-    menu.push({label: lang.check_update, type: 'normal', click: () => {
-        m_chk_update.check();
-    }});
+    menu.push({
+        label: lang.check_update, type: 'normal', click: () => {
+            m_chk_update.check();
+        }
+    });
 
     if (os === 'darwin') {
         menu.push({
@@ -63,14 +75,16 @@ function makeMenu(app, list, contents, sys_lang) {
     }
 
     menu.push({type: 'separator'});
-    menu.push({label: lang.quit, type: 'normal', accelerator: 'CommandOrControl+Q', click: () => {
-        app.quit();
-    }});
+    menu.push({
+        label: lang.quit, type: 'normal', accelerator: 'CommandOrControl+Q', click: () => {
+            app.quit();
+        }
+    });
 
     return menu;
 }
 
-function makeTray(app, contents, sys_lang='en') {
+function makeTray(app, contents, sys_lang = 'en') {
     let icon = 'logo.png';
     if (process.platform === 'darwin') {
         icon = 'ilogoTemplate.png';

@@ -6,7 +6,7 @@
 'use strict';
 
 const fs = require('fs');
-const {ipcMain} = require('electron');
+const {ipcMain, shell} = require('electron');
 
 exports.init = (app, contents) => {
 
@@ -45,6 +45,10 @@ exports.init = (app, contents) => {
     ipcMain.on('relaunch', (fn) => {
         app.relaunch({args: process.argv.slice(1) + ['--relaunch']});
         app.exit(0);
+    });
+
+    ipcMain.on('open_url', (e, url) => {
+        shell.openExternal(url);
     });
 
 };

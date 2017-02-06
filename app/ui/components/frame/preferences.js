@@ -7,7 +7,7 @@
 
 import React from 'react';
 import Frame from './frame';
-// import classnames from 'classnames';
+import classnames from 'classnames';
 import './preferences.less';
 import lang from '../../lang';
 import util from '../../libs/util';
@@ -30,7 +30,8 @@ export default class PreferencesPrompt extends React.Component {
             after_cmd: SH_Agent.pref.get('after_cmd') || '',
             choice_mode: choice_mode,
             auto_launch: !!SH_Agent.pref.get(AUTO_LAUNCH),
-            hide_at_launch: !!SH_Agent.pref.get('hide_at_launch')
+            hide_at_launch: !!SH_Agent.pref.get('hide_at_launch'),
+            update_found: false // 发现新版本
         };
 
     }
@@ -44,6 +45,13 @@ export default class PreferencesPrompt extends React.Component {
         ipcRenderer.on('show_preferences', () => {
             this.setState({
                 show: true
+            });
+        });
+
+        ipcRenderer.on('update_found', (v) => {
+            console.log(v);
+            this.setState({
+                update_found: true
             });
         });
     }
@@ -193,13 +201,19 @@ export default class PreferencesPrompt extends React.Component {
         )
     }
 
+    openDownloadPage() {
+        ipcRenderer.send('open_url', require('../../configs').url_download);
+    }
+
     body() {
         return (
             <div ref="body">
                 {/*<div className="title">{SH_Agent.lang.host_title}</div>*/}
                 {/*<div className="cnt">*/}
                 {/*</div>*/}
-                <div className="current-version">{util.formatVersion(current_version)}</div>
+                <div className={classnames("current-version", {"update-found": this.state.update_found})}>
+                    <a href="#" onClick={this.openDownloadPage}>{util.formatVersion(current_version)}</a>
+                </div>
                 {this.prefLanguage()}
                 {this.prefChoiceMode()}
                 {this.prefAfterCmd()}

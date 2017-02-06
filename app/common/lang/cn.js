@@ -27,7 +27,7 @@ exports.content = {
     , edit: '编辑'
     , edit_host: '修改 host'
     , export: '导出'
-    , feedback: '反馈'
+    , feedback: '意见反馈'
     , file: '文件'
     , help: '帮助'
     , hide_at_launch: '启动时隐藏'
