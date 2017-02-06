@@ -7,7 +7,7 @@
 
 const path = require('path');
 const webpack = require('webpack');
-const uglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
+// const uglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 
 module.exports = {
     entry: './app/src/ui.js',
@@ -17,24 +17,23 @@ module.exports = {
         filename: 'bundle.js'
     },
     resolve: {
-        extensions: ['', '.js', '.jsx']
+        extensions: ['.js', '.jsx']
     },
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.jsx?$/,
                 exclude: /node_modules/,
-                loaders: ['babel?presets[]=react,presets[]=latest']
+                use: ['babel-loader?presets[]=react,presets[]=latest']
             }, {
                 test: /\.less$/,
-                loaders: ['style', 'css', 'less']
+                use: ['style-loader', 'css-loader', 'less-loader']
             }, {
                 test: /\.css$/,
-                loaders: ['style', 'css']
-            },
-            {
+                use: ['style-loader', 'css-loader']
+            }, {
                 test: /\.(eot|woff|woff2|ttf|svg|png|jpg)$/,
-                loader: 'url-loader?limit=30000&name=[name]-[hash].[ext]'
+                use: 'url-loader?limit=30000&name=[name]-[hash].[ext]'
             }
         ]//,
         // query: {
@@ -43,8 +42,9 @@ module.exports = {
     },
     plugins: [
         // new uglifyJsPlugin({
+        //     sourceMap: true,
         //     compress: {
-        //         warnings: false
+        //         warnings: true
         //     }
         // })
     ]
