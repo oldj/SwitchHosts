@@ -35,7 +35,7 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
 
 ### 环境配置
 
- - 安装 [node.js](https://nodejs.org/) 环境；
+ - 安装 [Node.js](https://nodejs.org/) 环境；
  - 在根目录 `./` 下，运行 `npm install` 命令，安装依赖库；
  - 在 `./app` 目录下，运行 `npm install` 命令，安装依赖库。
 
