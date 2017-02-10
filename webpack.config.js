@@ -47,5 +47,6 @@ module.exports = {
         //         warnings: true
         //     }
         // })
+        new webpack.IgnorePlugin(new RegExp("^(electron|fs|path)$"))
     ]
 };
