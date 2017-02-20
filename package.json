@@ -4,7 +4,7 @@
   "description": "Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)",
   "main": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "nyc ava",
     "start": "electron app",
     "dev": "ENV=dev electron app",
     "build": "gulp ver && webpack -p",
@@ -26,10 +26,14 @@
   "homepage": "https://oldj.github.io/SwitchHosts/",
   "dependencies": {},
   "devDependencies": {
+    "ava": "^0.18.2",
     "babel-core": "^6.20.0",
     "babel-loader": "^6.2.9",
-    "babel-preset-latest": "^6.16.0",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-latest": "^6.22.0",
     "babel-preset-react": "^6.16.0",
+    "babel-preset-stage-0": "^6.22.0",
+    "babel-register": "^6.23.0",
     "css-loader": "^0.26.1",
     "electron-prebuilt": "^1.4.12",
     "file-loader": "^0.9.0",
@@ -38,10 +42,38 @@
     "js-beautify": "^1.6.4",
     "less": "^2.7.1",
     "less-loader": "^2.2.3",
+    "nyc": "^10.1.2",
+    "spectron": "^3.6.0",
     "style-loader": "^0.13.1",
     "uglify-loader": "^1.4.0",
     "url-loader": "^0.5.7",
     "webpack": "^2.2.1",
     "yargs": "^6.5.0"
+  },
+  "ava": {
+    "files": [
+      "src/**/*.ava.js",
+      "test/*.js",
+      "!**/node_modules/**/*.*"
+    ],
+    "source": [
+      "**/*.{js,jsx}",
+      "!dist/**/*"
+    ],
+    "match": [],
+    "concurrency": 5,
+    "failFast": true,
+    "tap": true,
+    "powerAssert": false,
+    "require": [
+      "babel-polyfill",
+      "babel-register"
+    ],
+    "babel": {
+      "presets": [
+        "latest",
+        "stage-0"
+      ]
+    }
   }
 }
