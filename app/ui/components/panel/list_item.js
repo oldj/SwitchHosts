@@ -138,7 +138,8 @@ export default class ListItem extends React.Component {
                     'iconfont': 1
                     , 'item-icon': 1
                     , 'icon-warn': !!data.error
-                    , 'icon-doc': !sys && !data.error
+                    , 'icon-file': !sys && !data.error && data.where !== 'group'
+                    , 'icon-files': data.where === 'group'
                     , 'icon-sysserver': sys && !data.error
                 })}
                    title={data.error || ''}
