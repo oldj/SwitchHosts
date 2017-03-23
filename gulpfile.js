@@ -19,6 +19,8 @@ const path = require('path');
 const exec = require('child_process').exec;
 const gulp = require('gulp');
 const shell = require('gulp-shell');
+const webpack = require('webpack');
+const gulp_webpack = require('gulp-webpack');
 const beautify = require('js-beautify').js_beautify;
 
 const args = require('yargs').argv;
@@ -122,13 +124,19 @@ cd ..
 
 });
 
-gulp.task('default', () => {
-    // gulp.start('ver');
-
-    gulp.watch([
-        './app/main.js',
-        './app/index.html',
-        './app/src/**/*.*',
-        '!./app/version.js'
-    ], ['ver']);
+gulp.task('webpack', ['ver'], () => {
+    return gulp.src('./app/ui/ui.js')
+        .pipe(gulp_webpack(require('./webpack.config.js'), webpack))
+        // .pipe(webpack())
+        .pipe(gulp.dest('app/build'));
 });
+
+gulp.task('default', () => {
+    return gulp.watch([
+        'app/**/*.*'
+        , '!app/build/*'
+        , '!app/node_modules/*'
+        , '!app/version.js'
+    ], ['webpack']);
+});
+

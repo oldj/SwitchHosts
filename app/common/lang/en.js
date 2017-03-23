@@ -73,6 +73,7 @@ exports.content = {
     , untitled: 'untitled'
     , url: 'URL'
     , view: 'View'
+    , where_group: 'Group'
     , where_local: 'local'
     , where_remote: 'remote'
     , window: 'Window'

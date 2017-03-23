@@ -73,6 +73,7 @@ exports.content = {
     , untitled: '未命名'
     , url: 'URL 地址'
     , view: '视图'
+    , where_group: '分组'
     , where_local: '本地'
     , where_remote: '远程'
     , window: '窗口'
