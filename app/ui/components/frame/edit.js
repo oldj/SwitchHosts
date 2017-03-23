@@ -8,6 +8,7 @@
 import React from 'react';
 import Frame from './frame';
 import classnames from 'classnames';
+import Group from './group';
 import './edit.less';
 
 export default class EditPrompt extends React.Component {
@@ -176,6 +177,12 @@ export default class EditPrompt extends React.Component {
 
     }
 
+    renderGroup() {
+        if (this.state.where !== 'group') return null;
+
+        return <Group/>;
+    }
+
     renderRemoteInputs() {
         if (this.state.where !== 'remote') return null;
 
@@ -239,6 +246,11 @@ export default class EditPrompt extends React.Component {
                            onChange={(e) => this.setState({where: e.target.value})}
                     />
                     <label htmlFor="ipt-remote">{SH_Agent.lang.where_remote}</label>
+                    <input id="ipt-remote" type="radio" name="where" value="group"
+                           checked={this.state.where === 'group'}
+                           onChange={(e) => this.setState({where: e.target.value})}
+                    />
+                    <label htmlFor="ipt-remote">{SH_Agent.lang.where_group}</label>
                 </div>
                 <div className="ln">
                     <div className="title">{SH_Agent.lang.host_title}</div>
@@ -254,6 +266,7 @@ export default class EditPrompt extends React.Component {
                     </div>
                 </div>
                 {this.renderRemoteInputs()}
+                {this.renderGroup()}
                 {this.getEditOperations()}
             </div>
         )

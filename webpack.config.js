@@ -7,7 +7,6 @@
 
 const path = require('path');
 const webpack = require('webpack');
-// const uglifyJsPlugin = webpack.optimize.UglifyJsPlugin;
 
 module.exports = {
     entry: './app/ui/ui.js',
@@ -41,12 +40,17 @@ module.exports = {
         // }
     },
     plugins: [
-        // new uglifyJsPlugin({
-        //     sourceMap: true,
-        //     compress: {
-        //         warnings: true
-        //     }
-        // })
-        new webpack.IgnorePlugin(new RegExp("^(electron|fs|path)$"))
+        new webpack.DefinePlugin({
+            'process.env': {
+                NODE_ENV: JSON.stringify('production')
+            }
+        }),
+        new webpack.optimize.UglifyJsPlugin({
+            sourceMap: true,
+            compress: {
+                warnings: true
+            }
+        })
+        , new webpack.IgnorePlugin(new RegExp("^(electron|fs|path)$"))
     ]
 };

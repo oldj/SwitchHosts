@@ -39,6 +39,7 @@
     "file-loader": "^0.9.0",
     "gulp": "^3.9.1",
     "gulp-shell": "^0.5.2",
+    "gulp-webpack": "^1.5.0",
     "js-beautify": "^1.6.4",
     "less": "^2.7.1",
     "less-loader": "^2.2.3",
@@ -47,33 +48,20 @@
     "style-loader": "^0.13.1",
     "uglify-loader": "^1.4.0",
     "url-loader": "^0.5.7",
-    "webpack": "^2.2.1",
+    "webpack": "^2.3.0",
     "yargs": "^6.5.0"
   },
   "ava": {
-    "files": [
-      "src/**/*.ava.js",
-      "test/*.js",
-      "!**/node_modules/**/*.*"
-    ],
-    "source": [
-      "**/*.{js,jsx}",
-      "!dist/**/*"
-    ],
+    "files": ["src/**/*.ava.js", "test/*.js", "!**/node_modules/**/*.*"],
+    "source": ["**/*.{js,jsx}", "!dist/**/*"],
     "match": [],
     "concurrency": 5,
     "failFast": true,
     "tap": true,
     "powerAssert": false,
-    "require": [
-      "babel-polyfill",
-      "babel-register"
-    ],
+    "require": ["babel-polyfill", "babel-register"],
     "babel": {
-      "presets": [
-        "latest",
-        "stage-0"
-      ]
+      "presets": ["latest", "stage-0"]
     }
   }
 }
