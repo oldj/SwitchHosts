@@ -48,7 +48,7 @@ module.exports = {
         new webpack.optimize.UglifyJsPlugin({
             sourceMap: true,
             compress: {
-                warnings: true
+                warnings: false
             }
         })
         , new webpack.IgnorePlugin(new RegExp("^(electron|fs|path)$"))

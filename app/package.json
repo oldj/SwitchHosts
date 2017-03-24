@@ -25,6 +25,7 @@
     "react-addons-update": "^15.3.1",
     "react-dom": "^15.3.1",
     "request": "^2.79.0",
+    "sortablejs": "^1.5.1",
     "yargs": "^6.6.0"
   },
   "devDependencies": {}
