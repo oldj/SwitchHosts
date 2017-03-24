@@ -5,16 +5,11 @@
 
 'use strict';
 
-//import React from 'react';
-//import ReactDom from 'react-dom';
-//import App from './components/app';
-//
-//ReactDom.render(
-//    <App/>
-//    , document.getElementById('app')
-//);
+import React from 'react';
+import ReactDom from 'react-dom';
+import App from './components/app';
 
-console.log(SHRenderer.act)
-SHRenderer.act('test', (e, r) => {
-  console.log(e, r)
-})
+ReactDom.render(
+    <App/>
+    , document.getElementById('app')
+);
