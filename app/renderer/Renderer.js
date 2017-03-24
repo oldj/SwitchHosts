@@ -28,7 +28,6 @@ function act (action, data, callback) {
     ipcRenderer.once(fn, (e, d) => callback.apply(null, d))
   }
 
-  console.log(fn)
   ipcRenderer.send('x', {
     action
     , data
