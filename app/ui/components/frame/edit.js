@@ -9,6 +9,7 @@ import React from 'react'
 import MyFrame from './frame'
 import classnames from 'classnames'
 import Group from './group'
+import util from '../../libs/util'
 import './edit.less'
 
 export default class EditPrompt extends React.Component {
@@ -102,6 +103,8 @@ export default class EditPrompt extends React.Component {
         content: `# ${this.state.title}`,
         on: false,
       } : {})
+
+    if (!data.id) data.id = util.makeId()
 
     delete data['add']
     SH_event.emit('host_' + (this.state.add ? 'add' : 'edit') + 'ed', data,

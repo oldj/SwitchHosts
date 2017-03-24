@@ -8,6 +8,7 @@
 import React from 'react'
 import classnames from 'classnames'
 import Sortable from 'sortablejs'
+import listToArray from 'wheel-js/src/common/list-to-array'
 import './group.less'
 
 export default class Group extends React.Component {
@@ -21,21 +22,28 @@ export default class Group extends React.Component {
     this.current_host = null
   }
 
+  makeItem (item) {
+    let attrs = {
+      'data-id': 'id:' + (item.id || '')
+    }
+    return (
+      <div className="hosts-item" {...attrs}>
+        <i className={classnames({
+          'iconfont': 1
+          , 'item-icon': 1
+          , 'icon-file': item.where !== 'group'
+          , 'icon-files': item.where === 'group'
+        })}
+        />
+        <span>{item.title}</span>
+      </div>
+    )
+  }
+
   makeList () {
-    let items = this.state.list.map(item => {
-      return (
-        <div className="host-item">
-          <i className={classnames({
-            'iconfont': 1
-            , 'item-icon': 1
-            , 'icon-file': item.where !== 'group'
-            , 'icon-files': item.where === 'group'
-          })}
-          />
-          <span>{item.title}</span>
-        </div>
-      )
-    })
+    let items = this.state.list
+      .filter(item => item.where !== 'group')
+      .map(item => this.makeItem(item))
 
     return (
       <div id="hosts-group-valid">
@@ -54,6 +62,12 @@ export default class Group extends React.Component {
     )
   }
 
+  getCurrentListFromDOM () {
+    let nodes = this.refs.group_current.getElementsByClassName('hosts-item')
+    nodes = listToArray(nodes)
+    console.log(nodes)
+  }
+
   componentDidMount () {
     Sortable.create(this.refs.group_valid, {
       group: 'sorting'
@@ -63,6 +77,9 @@ export default class Group extends React.Component {
     Sortable.create(this.refs.group_current, {
       group: 'sorting'
       , sort: true
+      , onSort: evt => {
+        this.getCurrentListFromDOM()
+      }
     })
   }
 
@@ -70,7 +87,7 @@ export default class Group extends React.Component {
     return (
       <div id="hosts-group">
         {this.makeList()}
-        <div className="arrow"></div>
+        <div className="arrow"/>
         {this.currentList()}
       </div>
     )
