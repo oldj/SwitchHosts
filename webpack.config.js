@@ -9,7 +9,7 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
-    entry: './app/ui/ui.js',
+    entry: './app/ui2/ui.js',
     devtool: 'source-map',
     output: {
         path: path.join(__dirname, 'app', 'build'),

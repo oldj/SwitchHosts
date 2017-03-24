@@ -7,14 +7,8 @@
 <body>
 <div id="app"></div>
 <script>
-  const IS_DEV = process.env.ENV === 'dev'
-  const SH_event = require('./ui/event').event
-  const SH_Agent = require('./ui/agent')
-  const {ipcRenderer} = require('electron')
-  const notifier = require('node-notifier')
-  const platform = process.platform
+  const SHRenderer = require('./renderer/Renderer')
+  require('./build/bundle')
 </script>
-<!--<script src="build/bundle.js"></script>-->
-<script>require('./build/bundle')</script>
 </body>
 </html>
