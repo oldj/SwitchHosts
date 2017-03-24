@@ -109,7 +109,7 @@ class App extends React.Component {
                          setHostContent={this.setHostContent.bind(this)}/>
                 <div className="frames">
                     <SudoPrompt/>
-                    <EditPrompt/>
+                    <EditPrompt hosts={this.state.hosts}/>
                     <PreferencesPrompt/>
                 </div>
             </div>

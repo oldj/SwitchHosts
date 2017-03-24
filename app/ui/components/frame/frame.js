@@ -8,7 +8,7 @@
 import React from 'react';
 import './frame.less';
 
-export default class Frame extends React.Component {
+export default class MyFrame extends React.Component {
     constructor(props) {
         super(props);
     }
