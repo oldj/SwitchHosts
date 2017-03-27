@@ -24,7 +24,7 @@ const gulp_webpack = require('gulp-webpack')
 const beautify = require('js-beautify').js_beautify
 
 const args = require('yargs').argv
-console.log(args)
+//console.log(args)
 // const IS_DEBUG = !!args.debug;
 // const TPL_FILE_INFO = "echo '> (DEBUG " + (IS_DEBUG ? "on" : "off") + ") <%= file.path %>'";
 
@@ -49,6 +49,7 @@ gulp.task('ver', () => {
   // update package.json
   updatePackage(path.join(__dirname, 'package.json'))
   updatePackage(path.join(__dirname, 'app', 'package.json'))
+  updatePackage(path.join(__dirname, 'ui', 'package.json'))
 })
 
 gulp.task('pack', (done) => {
@@ -125,21 +126,25 @@ cd ..
 })
 
 gulp.task('webpack', ['ver'], () => {
-  return gulp.src('./app/ui/ui.js').
-    pipe(gulp_webpack(require('./webpack.config.js'), webpack))
+  return gulp.src('./app/ui/ui.js')
+    .pipe(gulp_webpack(require('./webpack.config.js'), webpack))
     // .pipe(webpack())
     .pipe(gulp.dest('app/build'))
 })
 
 gulp.task('default', () => {
-  gulp.start('webpack')
+  //gulp.start('webpack')
 
-  return gulp.watch([
+  gulp.watch([
     'app/**/*.*'
     , '!app/version.js'
-    , '!app/build/*'
+    , '!app/static/*'
     , '!app/node_modules/*'
-    , '!app/version.js',
-  ], ['webpack'])
+
+    , 'ui/**/*.*'
+    , '!ui/node_modules/*'
+
+    , '!**/package.json'
+  ], ['ver'])
 })
 

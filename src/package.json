@@ -8,10 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/oldj/SwitchHosts.git"
   },
-  "keywords": [
-    "SwitchHosts!",
-    "host"
-  ],
+  "keywords": ["SwitchHosts!", "host"],
   "author": "oldj",
   "license": "MIT",
   "bugs": {
@@ -24,9 +21,9 @@
     "codemirror": "^5.17.0",
     "moment": "^2.14.1",
     "node-notifier": "^4.6.1",
-    "react": "^15.4.2",
-    "react-addons-update": "^15.4.2",
-    "react-dom": "^15.4.2",
+    "react": "^15.3.1",
+    "react-addons-update": "^15.3.1",
+    "react-dom": "^15.3.1",
     "request": "^2.79.0",
     "sortablejs": "^1.5.1",
     "wheel-js": "0.0.2",

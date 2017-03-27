@@ -1,0 +1,21 @@
+{
+  "name": "switchhosts",
+  "version": "3.3.0",
+  "description": "Switch hosts quickly!",
+  "author": "oldj <oldj.wu@gmail.com>",
+  "private": true,
+  "scripts": {
+    "dev": "node build/dev-server.js",
+    "build": "node build/build.js",
+    "lint": "eslint --ext .js,.vue src"
+  },
+  "dependencies": {
+    "vue": "^2.2.2",
+    "vue-router": "^2.2.0"
+  },
+  "engines": {
+    "node": ">= 4.0.0",
+    "npm": ">= 3.0.0"
+  },
+  "browserslist": ["> 1%", "last 2 versions", "not ie <= 8"]
+}
