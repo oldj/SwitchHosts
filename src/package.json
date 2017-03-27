@@ -1,0 +1,36 @@
+{
+  "name": "SwitchHosts!",
+  "version": "3.3.0",
+  "description": "Switch hosts quickly!",
+  "main": "main.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oldj/SwitchHosts.git"
+  },
+  "keywords": [
+    "SwitchHosts!",
+    "host"
+  ],
+  "author": "oldj",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/oldj/SwitchHosts/issues"
+  },
+  "homepage": "https://oldj.github.io/SwitchHosts/",
+  "dependencies": {
+    "cheerio": "^0.22.0",
+    "classnames": "^2.2.5",
+    "codemirror": "^5.17.0",
+    "moment": "^2.14.1",
+    "node-notifier": "^4.6.1",
+    "react": "^15.4.2",
+    "react-addons-update": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "request": "^2.79.0",
+    "sortablejs": "^1.5.1",
+    "wheel-js": "0.0.2",
+    "yargs": "^6.6.0"
+  },
+  "devDependencies": {}
+}
