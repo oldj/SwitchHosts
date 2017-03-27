@@ -5,6 +5,4 @@
 
 'use strict'
 
-exports.test = (data, callback) => {
-  setTimeout(() => callback(null, 'ttt'), 100)
-}
+module.exports = require('./actions/index')
