@@ -10,13 +10,13 @@
 const getSysHosts = require('./getSysHosts')
 const getUserHosts = require('./getUserHosts')
 
-module.exports = (args, callback) => {
-  Promise
+module.exports = () => {
+  return Promise
     .all([getSysHosts(), getUserHosts()])
     .then(([sys_hosts, user_hosts]) => {
-      callback(null, {
+      return {
         sys: sys_hosts,
         list: user_hosts
-      })
+      }
     })
 }

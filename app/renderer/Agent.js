@@ -20,6 +20,12 @@ const evt = new MyEmitter();
 
 let x_get_idx = 0
 
+/**
+ * act
+ * @param action {String}
+ * @param [data] {Any}
+ * @param callback {Function}
+ */
 function act (action, data, callback) {
   let fn = ['_cb', (new Date()).getTime(), (x_get_idx++)].join('_')
 

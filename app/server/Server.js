@@ -7,19 +7,18 @@
 
 const {ipcMain} = require('electron')
 const actions = require('./actions')
-console.log(actions)
 
 ipcMain.on('x', (e, d) => {
   let sender = e.sender
   let action = d.action
   if (typeof actions[action] === 'function') {
-    actions[action](d.args, (e, v) => {
-      try {
-        sender.send(d.callback, [e, v])
-      } catch (e2) {
-        console.log(e2)
-        sender.send(d.callback, [e2])
-      }
-    })
+    actions[action](...(d.args || []))
+      .then(v => {
+        sender.send(d.callback, [null, v])
+      })
+      .catch(e => {
+        console.log(e)
+        sender.send(d.callback, [e])
+      })
   }
 })
