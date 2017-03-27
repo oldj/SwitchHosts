@@ -7,6 +7,7 @@
 
 const {ipcMain} = require('electron')
 const actions = require('./actions')
+console.log(actions)
 
 ipcMain.on('x', (e, d) => {
   let sender = e.sender

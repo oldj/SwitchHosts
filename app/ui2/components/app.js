@@ -11,71 +11,32 @@ import Content from './content/content'
 import SudoPrompt from './frame/sudo'
 import EditPrompt from './frame/edit'
 import PreferencesPrompt from './frame/preferences'
-import util from '../libs/util'
+import Agent from '../../renderer/Agent'
 import './app.less'
 
 class App extends React.Component {
   constructor (props) {
     super(props)
 
-    let _data = SH_Agent.getHosts()
-
     this.state = {
-      hosts: _data,
-      current: _data.sys
+      hosts: [],
+      current: {}
     }
 
-    SH_event.on('after_apply', () => {
-      if (this.state.current.is_sys) {
-        // 重新读取
-        this.setState({
-          current: SH_Agent.getSysHosts()
-        })
-      }
-    })
-
-    ipcRenderer.on('to_import', (e, fn) => {
-      if (!confirm(SH_Agent.lang.confirm_import)) return
-
-      SH_Agent.readFile(fn, (err, cnt) => {
-        if (err) {
-          alert(err.message || 'Import Error!')
-          return
-        }
-        let data
-        try {
-          data = JSON.parse(cnt)
-        } catch (e) {
-          console.log(e)
-          alert(
-            e.message || 'Bad format, the import file should be a JSON file.')
-          return
-        }
-
-        if (!data.list || !Array.isArray(data.list)) {
-          alert('Bad format, the data JSON should have a [list] field.')
-          return
-        }
-
-        data.list.map(item => {
-          if (!item.id) {
-            item.id = util.makeId()
-          }
-        })
-
-        this.setState({
-          hosts: Object.assign({}, this.state.hosts, {list: data.list})
-        }, () => {
-          SH_event.emit('imported')
-        })
-        console.log('imported.')
+    Agent.act('getUserHosts', (e, data) => {
+      this.setState({
+        hosts: data.list
       })
     })
-
-    ipcRenderer.send('reg_renderer')
   }
 
   setCurrent (host) {
+    if (host.is_sys) {
+      Agent.act('getSysHosts', (e, cnt) => {
+
+      })
+    } else {
+    }
     this.setState({
       current: host.is_sys ? SH_Agent.getSysHosts() : host
     })
@@ -89,7 +50,7 @@ class App extends React.Component {
     clearTimeout(this._t)
 
     this._t = setTimeout(() => {
-      SH_event.emit('change')
+      Agent.emit('change')
     }, 1000)
   }
 
@@ -103,7 +64,7 @@ class App extends React.Component {
   componentDidMount () {
     window.addEventListener('keydown', (e) => {
       if (e.keyCode === 27) {
-        SH_event.emit('esc')
+        Agent.emit('esc')
       }
     }, false)
   }
@@ -111,7 +72,7 @@ class App extends React.Component {
   render () {
     let current = this.state.current
     return (
-      <div id="app" className={'platform-' + platform}>
+      <div id="app" className={'platform-' + Agent.platform}>
         <Panel hosts={this.state.hosts} current={current}
                setCurrent={this.setCurrent.bind(this)}/>
         <Content current={current} readonly={App.isReadOnly(current)}

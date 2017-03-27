@@ -14,6 +14,10 @@ const platform = process.platform
 
 ipcRenderer.setMaxListeners(20)
 
+const EventEmitter = require('events')
+class MyEmitter extends EventEmitter {}
+const evt = new MyEmitter();
+
 let x_get_idx = 0
 
 function act (action, data, callback) {
@@ -46,4 +50,6 @@ module.exports = {
   , platform
   , act
   , pact
+  , on: (...args) => evt.on(...args)
+  , emit: (...args) => evt.emit(...args)
 }
