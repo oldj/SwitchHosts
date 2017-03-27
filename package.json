@@ -5,8 +5,8 @@
   "main": "",
   "scripts": {
     "test": "nyc ava",
-    "start": "electron app",
-    "dev": "ENV=dev electron app",
+    "start": "electron src",
+    "dev": "ENV=dev electron src",
     "build": "gulp ver && webpack -p",
     "build-w": "webpack -w",
     "pack": "gulp pack",
