@@ -19,31 +19,40 @@ class App extends React.Component {
     super(props)
 
     this.state = {
-      hosts: [],
-      current: {}
+      list: [],
+      sys: {},
+      current: {},
+      lang: {}
     }
 
     Agent.act('getUserHosts', (e, data) => {
       this.setState({
-        hosts: data.list
+        list: data.list,
+        sys: data.sys
       })
+    })
+
+    Agent.act('getLang', (e, lang) => {
+      this.setState({lang})
     })
   }
 
-  setCurrent (host) {
-    if (host.is_sys) {
-      Agent.act('getSysHosts', (e, cnt) => {
-
+  setCurrent (hosts) {
+    if (hosts.is_sys) {
+      Agent.act('getSysHosts', (e, _hosts) => {
+        this.setState({
+          current: _hosts
+        })
       })
     } else {
+      this.setState({
+        current: hosts
+      })
     }
-    this.setState({
-      current: host.is_sys ? SH_Agent.getSysHosts() : host
-    })
   }
 
   static isReadOnly (host) {
-    return host.is_sys || host.where === 'remote'
+    return !host || host.is_sys || host.where === 'remote'
   }
 
   toSave () {
@@ -73,10 +82,19 @@ class App extends React.Component {
     let current = this.state.current
     return (
       <div id="app" className={'platform-' + Agent.platform}>
-        <Panel hosts={this.state.hosts} current={current}
-               setCurrent={this.setCurrent.bind(this)}/>
-        <Content current={current} readonly={App.isReadOnly(current)}
-                 setHostContent={this.setHostContent.bind(this)}/>
+        <Panel
+          list={this.state.list}
+          sys={this.state.sys}
+          current={current}
+          setCurrent={this.setCurrent.bind(this)}
+          lang={this.state.lang}
+        />
+        <Content
+          current={current}
+          readonly={App.isReadOnly(current)}
+          setHostContent={this.setHostContent.bind(this)}
+          lang={this.state.lang}
+        />
         <div className="frames">
           <SudoPrompt/>
           <EditPrompt hosts={this.state.hosts}/>

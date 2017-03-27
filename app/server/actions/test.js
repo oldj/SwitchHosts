@@ -5,7 +5,7 @@
 
 'use strict'
 
-module.exports = (args, callback) => {
-  setTimeout(() => callback(null, 'ttt22'), 100)
+module.exports = () => {
+  return Promise.resolve().then(() => 'ttt33')
 }
 

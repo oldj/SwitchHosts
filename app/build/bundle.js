@@ -18923,27 +18923,41 @@ var App = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
 
     _this.state = {
-      hosts: [],
-      current: {}
+      list: [],
+      sys: {},
+      current: {},
+      lang: {}
     };
 
     _Agent2.default.act('getUserHosts', function (e, data) {
       _this.setState({
-        hosts: data.list
+        list: data.list,
+        sys: data.sys
       });
+    });
+
+    _Agent2.default.act('getLang', function (e, lang) {
+      _this.setState({ lang: lang });
     });
     return _this;
   }
 
   _createClass(App, [{
     key: 'setCurrent',
-    value: function setCurrent(host) {
-      if (host.is_sys) {
-        _Agent2.default.act('getSysHosts', function (e, cnt) {});
-      } else {}
-      this.setState({
-        current: host.is_sys ? SH_Agent.getSysHosts() : host
-      });
+    value: function setCurrent(hosts) {
+      var _this2 = this;
+
+      if (hosts.is_sys) {
+        _Agent2.default.act('getSysHosts', function (e, _hosts) {
+          _this2.setState({
+            current: _hosts
+          });
+        });
+      } else {
+        this.setState({
+          current: hosts
+        });
+      }
     }
   }, {
     key: 'toSave',
@@ -18978,10 +18992,19 @@ var App = function (_React$Component) {
       return _react2.default.createElement(
         'div',
         { id: 'app', className: 'platform-' + _Agent2.default.platform },
-        _react2.default.createElement(_panel2.default, { hosts: this.state.hosts, current: current,
-          setCurrent: this.setCurrent.bind(this) }),
-        _react2.default.createElement(_content2.default, { current: current, readonly: App.isReadOnly(current),
-          setHostContent: this.setHostContent.bind(this) }),
+        _react2.default.createElement(_panel2.default, {
+          list: this.state.list,
+          sys: this.state.sys,
+          current: current,
+          setCurrent: this.setCurrent.bind(this),
+          lang: this.state.lang
+        }),
+        _react2.default.createElement(_content2.default, {
+          current: current,
+          readonly: App.isReadOnly(current),
+          setHostContent: this.setHostContent.bind(this),
+          lang: this.state.lang
+        }),
         _react2.default.createElement(
           'div',
           { className: 'frames' },
@@ -18994,7 +19017,7 @@ var App = function (_React$Component) {
   }], [{
     key: 'isReadOnly',
     value: function isReadOnly(host) {
-      return host.is_sys || host.where === 'remote';
+      return !host || host.is_sys || host.where === 'remote';
     }
   }]);
 
@@ -32334,6 +32357,12 @@ var evt = new MyEmitter();
 
 var x_get_idx = 0;
 
+/**
+ * act
+ * @param action {String}
+ * @param [data] {Any}
+ * @param callback {Function}
+ */
 function act(action, data, callback) {
   var fn = ['_cb', new Date().getTime(), x_get_idx++].join('_');
 
@@ -32454,7 +32483,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -32466,6 +32495,10 @@ var _react2 = _interopRequireDefault(_react);
 var _editor = __webpack_require__(187);
 
 var _editor2 = _interopRequireDefault(_editor);
+
+var _Agent = __webpack_require__(184);
+
+var _Agent2 = _interopRequireDefault(_Agent);
 
 var _classnames = __webpack_require__(14);
 
@@ -32482,108 +32515,108 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Content = function (_React$Component) {
-    _inherits(Content, _React$Component);
+  _inherits(Content, _React$Component);
 
-    function Content(props) {
-        _classCallCheck(this, Content);
+  function Content(props) {
+    _classCallCheck(this, Content);
 
-        var _this = _possibleConstructorReturn(this, (Content.__proto__ || Object.getPrototypeOf(Content)).call(this, props));
+    var _this = _possibleConstructorReturn(this, (Content.__proto__ || Object.getPrototypeOf(Content)).call(this, props));
 
-        _this.codemirror = null;
-        _this.state = {
-            is_loading: _this.props.current.is_loading,
-            code: _this.props.current.content || ''
-        };
-        _this._t = null;
+    _this.codemirror = null;
+    _this.state = {
+      is_loading: _this.props.current.is_loading,
+      code: _this.props.current.content || ''
+    };
+    _this._t = null;
 
-        SH_event.on('loading', function (host) {
-            if (host === _this.props.current) {
-                _this.setState({
-                    is_loading: true
-                });
-            }
+    _Agent2.default.on('loading', function (host) {
+      if (host === _this.props.current) {
+        _this.setState({
+          is_loading: true
         });
+      }
+    });
 
-        SH_event.on('loading_done', function (host, data) {
-            if (host === _this.props.current) {
-                _this.setState({
-                    is_loading: false,
-                    code: data.content || ''
-                });
-            }
+    _Agent2.default.on('loading_done', function (host, data) {
+      if (host === _this.props.current) {
+        _this.setState({
+          is_loading: false,
+          code: data.content || ''
         });
-        return _this;
+      }
+    });
+    return _this;
+  }
+
+  _createClass(Content, [{
+    key: 'setValue',
+    value: function setValue(v) {
+      this.props.setHostContent(v);
     }
-
-    _createClass(Content, [{
-        key: 'setValue',
-        value: function setValue(v) {
-            this.props.setHostContent(v);
-        }
-    }, {
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(next_props) {
-            this.setState({
-                is_loading: next_props.current.is_loading,
-                code: next_props.current.content || ''
-            });
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var current = this.props.current;
+  }, {
+    key: 'componentWillReceiveProps',
+    value: function componentWillReceiveProps(next_props) {
+      this.setState({
+        is_loading: next_props.current.is_loading,
+        code: next_props.current.content || ''
+      });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var current = this.props.current;
 
 
-            return _react2.default.createElement(
-                'div',
-                { id: 'sh-content' },
-                _react2.default.createElement(
-                    'div',
-                    { className: 'inform' },
-                    _react2.default.createElement(
-                        'span',
-                        {
-                            className: (0, _classnames2.default)({
-                                loading: 1,
-                                show: this.state.is_loading
-                            })
-                        },
-                        'loading...'
-                    ),
-                    _react2.default.createElement('i', {
-                        className: (0, _classnames2.default)({
-                            show: current.where === 'remote',
-                            iconfont: 1,
-                            'icon-earth': 1
-                        }),
-                        title: SH_Agent.lang.remote_hosts
-                    }),
-                    _react2.default.createElement('i', {
-                        className: (0, _classnames2.default)({
-                            show: this.props.readonly,
-                            iconfont: 1,
-                            'icon-lock2': 1
-                        }),
-                        title: SH_Agent.lang.readonly
-                    })
-                ),
-                _react2.default.createElement(
-                    'div',
-                    { className: (0, _classnames2.default)({
-                            errorMessage: 1,
-                            show: !!this.props.current.error
-                        }) },
-                    this.props.current.error
-                ),
-                _react2.default.createElement(_editor2.default, {
-                    code: this.state.code,
-                    readonly: this.props.readonly,
-                    setValue: this.setValue.bind(this) })
-            );
-        }
-    }]);
+      return _react2.default.createElement(
+        'div',
+        { id: 'sh-content' },
+        _react2.default.createElement(
+          'div',
+          { className: 'inform' },
+          _react2.default.createElement(
+            'span',
+            {
+              className: (0, _classnames2.default)({
+                loading: 1,
+                show: this.state.is_loading
+              })
+            },
+            'loading...'
+          ),
+          _react2.default.createElement('i', {
+            className: (0, _classnames2.default)({
+              show: current.where === 'remote',
+              iconfont: 1,
+              'icon-earth': 1
+            }),
+            title: _Agent2.default.lang.remote_hosts
+          }),
+          _react2.default.createElement('i', {
+            className: (0, _classnames2.default)({
+              show: this.props.readonly,
+              iconfont: 1,
+              'icon-lock2': 1
+            }),
+            title: _Agent2.default.lang.readonly
+          })
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: (0, _classnames2.default)({
+              errorMessage: 1,
+              show: !!this.props.current.error
+            }) },
+          this.props.current.error
+        ),
+        _react2.default.createElement(_editor2.default, {
+          code: this.state.code,
+          readonly: this.props.readonly,
+          setValue: this.setValue.bind(this) })
+      );
+    }
+  }]);
 
-    return Content;
+  return Content;
 }(_react2.default.Component);
 
 exports.default = Content;
@@ -33908,7 +33941,7 @@ exports.default = SudoPrompt;
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -33921,6 +33954,10 @@ var _classnames = __webpack_require__(14);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
+var _Agent = __webpack_require__(184);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
 __webpack_require__(223);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -33932,146 +33969,146 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Buttons = function (_React$Component) {
-    _inherits(Buttons, _React$Component);
+  _inherits(Buttons, _React$Component);
 
-    function Buttons(props) {
-        _classCallCheck(this, Buttons);
+  function Buttons(props) {
+    _classCallCheck(this, Buttons);
 
-        var _this = _possibleConstructorReturn(this, (Buttons.__proto__ || Object.getPrototypeOf(Buttons)).call(this, props));
+    var _this = _possibleConstructorReturn(this, (Buttons.__proto__ || Object.getPrototypeOf(Buttons)).call(this, props));
 
-        _this.state = {
-            top_toggle_on: true,
-            search_on: false
-        };
+    _this.state = {
+      top_toggle_on: true,
+      search_on: false
+    };
 
+    _this.on_items = null;
+
+    _Agent2.default.on('toggle_host', function (on) {
+      if (on && !_this.state.top_toggle_on) {
+        _this.setState({
+          top_toggle_on: true
+        });
         _this.on_items = null;
+      }
+    });
 
-        SH_event.on('toggle_host', function (on) {
-            if (on && !_this.state.top_toggle_on) {
-                _this.setState({
-                    top_toggle_on: true
-                });
-                _this.on_items = null;
-            }
+    _Agent2.default.on('cancel_search', function () {
+      _this.calcelSearch();
+    });
+
+    _Agent2.default.on('to_add_host', function () {
+      _Agent2.default.emit('add_host');
+    });
+
+    return _this;
+  }
+
+  _createClass(Buttons, [{
+    key: 'btnToggle',
+    value: function btnToggle() {
+      var _this2 = this;
+
+      if (this.state.top_toggle_on) {
+        _Agent2.default.emit('get_on_hosts', function (items) {
+          _this2.on_items = items;
         });
+      }
 
-        SH_event.on('cancel_search', function () {
-            _this.calcelSearch();
-        });
-
-        ipcRenderer.on('to_add_host', function () {
-            SH_event.emit('add_host');
-        });
-
-        return _this;
+      this.setState({
+        top_toggle_on: !this.state.top_toggle_on
+      }, function () {
+        _Agent2.default.emit('top_toggle', _this2.state.top_toggle_on, _this2.on_items);
+        if (_this2.state.top_toggle_on) {
+          _this2.on_items = null;
+        }
+      });
     }
+  }, {
+    key: 'btnSearch',
+    value: function btnSearch() {
+      var _this3 = this;
 
-    _createClass(Buttons, [{
-        key: 'btnToggle',
-        value: function btnToggle() {
-            var _this2 = this;
+      this.setState({
+        search_on: !this.state.search_on
+      }, function () {
+        _Agent2.default.emit(_this3.state.search_on ? 'search_on' : 'search_off');
+      });
+    }
+  }, {
+    key: 'calcelSearch',
+    value: function calcelSearch() {
+      this.setState({
+        search_on: false
+      }, function () {
+        _Agent2.default.emit('search_off');
+      });
+    }
+  }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      var _this4 = this;
 
-            if (this.state.top_toggle_on) {
-                SH_event.emit('get_on_hosts', function (items) {
-                    _this2.on_items = items;
-                });
+      _Agent2.default.on('to_search', function () {
+        _this4.btnSearch();
+      });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this5 = this;
+
+      return _react2.default.createElement(
+        'div',
+        { id: 'sh-buttons' },
+        _react2.default.createElement(
+          'div',
+          { className: 'left' },
+          _react2.default.createElement(
+            'a',
+            {
+              className: 'btn-add',
+              href: '#',
+              onClick: function onClick() {
+                return Buttons.btnAdd();
+              }
+            },
+            '+'
+          )
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: 'right' },
+          _react2.default.createElement('i', {
+            className: (0, _classnames2.default)({
+              iconfont: 1,
+              'icon-search': 1,
+              'on': this.state.search_on
+            }),
+            onClick: function onClick() {
+              return _this5.btnSearch();
             }
+          }),
+          _react2.default.createElement('i', {
+            className: (0, _classnames2.default)({
+              iconfont: 1,
+              'icon-switchon': this.state.top_toggle_on,
+              'icon-switchoff': !this.state.top_toggle_on
+            }),
+            onClick: function onClick() {
+              return _this5.btnToggle();
+            }
+          })
+        )
+      );
+    }
+  }], [{
+    key: 'btnAdd',
+    value: function btnAdd() {
+      _Agent2.default.emit('add_host');
+    }
+  }]);
 
-            this.setState({
-                top_toggle_on: !this.state.top_toggle_on
-            }, function () {
-                SH_event.emit('top_toggle', _this2.state.top_toggle_on, _this2.on_items);
-                if (_this2.state.top_toggle_on) {
-                    _this2.on_items = null;
-                }
-            });
-        }
-    }, {
-        key: 'btnSearch',
-        value: function btnSearch() {
-            var _this3 = this;
-
-            this.setState({
-                search_on: !this.state.search_on
-            }, function () {
-                SH_event.emit(_this3.state.search_on ? 'search_on' : 'search_off');
-            });
-        }
-    }, {
-        key: 'calcelSearch',
-        value: function calcelSearch() {
-            this.setState({
-                search_on: false
-            }, function () {
-                SH_event.emit('search_off');
-            });
-        }
-    }, {
-        key: 'componentDidMount',
-        value: function componentDidMount() {
-            var _this4 = this;
-
-            ipcRenderer.on('to_search', function () {
-                _this4.btnSearch();
-            });
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var _this5 = this;
-
-            return _react2.default.createElement(
-                'div',
-                { id: 'sh-buttons' },
-                _react2.default.createElement(
-                    'div',
-                    { className: 'left' },
-                    _react2.default.createElement(
-                        'a',
-                        {
-                            className: 'btn-add',
-                            href: '#',
-                            onClick: function onClick() {
-                                return Buttons.btnAdd();
-                            }
-                        },
-                        '+'
-                    )
-                ),
-                _react2.default.createElement(
-                    'div',
-                    { className: 'right' },
-                    _react2.default.createElement('i', {
-                        className: (0, _classnames2.default)({
-                            iconfont: 1,
-                            'icon-search': 1,
-                            'on': this.state.search_on
-                        }),
-                        onClick: function onClick() {
-                            return _this5.btnSearch();
-                        }
-                    }),
-                    _react2.default.createElement('i', {
-                        className: (0, _classnames2.default)({
-                            iconfont: 1,
-                            'icon-switchon': this.state.top_toggle_on,
-                            'icon-switchoff': !this.state.top_toggle_on
-                        }),
-                        onClick: function onClick() {
-                            return _this5.btnToggle();
-                        }
-                    })
-                )
-            );
-        }
-    }], [{
-        key: 'btnAdd',
-        value: function btnAdd() {
-            SH_event.emit('add_host');
-        }
-    }]);
-
-    return Buttons;
+  return Buttons;
 }(_react2.default.Component);
 
 exports.default = Buttons;
@@ -34089,7 +34126,7 @@ exports.default = Buttons;
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -34101,6 +34138,10 @@ var _react2 = _interopRequireDefault(_react);
 var _list_item = __webpack_require__(194);
 
 var _list_item2 = _interopRequireDefault(_list_item);
+
+var _Agent = __webpack_require__(184);
+
+var _Agent2 = _interopRequireDefault(_Agent);
 
 var _reactAddonsUpdate = __webpack_require__(103);
 
@@ -34117,351 +34158,214 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var List = function (_React$Component) {
-    _inherits(List, _React$Component);
+  _inherits(List, _React$Component);
 
-    function List(props) {
-        _classCallCheck(this, List);
+  function List(props) {
+    _classCallCheck(this, List);
 
-        var _this = _possibleConstructorReturn(this, (List.__proto__ || Object.getPrototypeOf(List)).call(this, props));
+    var _this = _possibleConstructorReturn(this, (List.__proto__ || Object.getPrototypeOf(List)).call(this, props));
 
-        _this.state = {
-            current: _this.props.current,
-            list: _this.props.hosts.list
-        };
-        _this.last_content = _this.props.hosts.sys.content;
+    _this.state = {
+      current: _this.props.current,
+      list: _this.props.list,
+      sys: _this.props.sys
+    };
+    _this.last_content = _this.props.sys.content;
 
-        SH_event.on('imported', function () {
-            _this.setState({
-                current: _this.props.current,
-                list: _this.props.hosts.list
-            }, function () {
-                SH_event.emit('change');
-            });
-        });
+    // auto check refresh
+    setTimeout(function () {
+      _this.autoCheckRefresh();
+    }, 1000 * 5);
+    return _this;
+  }
 
-        SH_event.on('change', function () {
-            SH_event.emit('save_data', _this.state.list);
-            var content = _this.getOnContent();
-            if (content !== _this.last_content) {
-                SH_event.emit('apply', content, function () {
-                    _this.last_content = content;
-                });
-            }
-        });
+  /**
+   * 检查当前 host 是否需要从网络下载更新
+   * @param host
+   * @param force {Boolean} 如果为 true，则只要是 remote 且 refresh_interval != 0，则强制更新
+   */
 
-        SH_event.on('host_added', function (data) {
-            _this.setState({
-                list: (0, _reactAddonsUpdate2.default)(_this.state.list, { $push: [data] })
-            }, function () {
-                _this.selectOne(data);
 
-                setTimeout(function () {
-                    SH_event.emit('change', true);
-                    var el = _this.refs.items;
-                    el.scrollTop = document.querySelector('.list-item.selected').offsetTop - el.offsetHeight + 50;
-                    _this.checkUpdateHost(data);
-                }, 100);
-            });
-        });
+  _createClass(List, [{
+    key: 'checkUpdateHost',
+    value: function checkUpdateHost(host) {
+      var force = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
-        SH_event.on('host_edited', function (data, host) {
-            var idx = _this.state.list.findIndex(function (item) {
-                return item == host;
-            });
-            if (idx == -1) return;
-
-            _this.setState({
-                list: (0, _reactAddonsUpdate2.default)(_this.state.list, { $splice: [[idx, 1, data]] })
-            }, function () {
-                _this.selectOne(data);
-
-                setTimeout(function () {
-                    SH_event.emit('change', true);
-                    _this.checkUpdateHost(data, true);
-                }, 100);
-            });
-        });
-
-        SH_event.on('host_refreshed', function (data, host) {
-            var idx = _this.state.list.findIndex(function (item) {
-                return item == host;
-            });
-            if (idx == -1) return;
-
-            _this.setState({
-                list: (0, _reactAddonsUpdate2.default)(_this.state.list, { $splice: [[idx, 1, data]] })
-            }, function () {
-                setTimeout(function () {
-                    if (host === _this.state.current) {
-                        _this.selectOne(data);
-                    }
-                    SH_event.emit('change', true);
-                }, 100);
-            });
-        });
-
-        SH_event.on('del_host', function (host) {
-            var list = _this.state.list;
-            var idx_to_del = list.findIndex(function (item) {
-                return host === item;
-            });
-            if (idx_to_del == -1) return;
-            // list.splice(idx_to_del, 1);
-            _this.setState({
-                list: (0, _reactAddonsUpdate2.default)(_this.state.list, { $splice: [[idx_to_del, 1]] })
-                // list: this.state.list.filter((item, idx) => idx != idx_to_del)
-            }, function () {
-                setTimeout(function () {
-                    var list = _this.state.list;
-                    var next_host = list[idx_to_del] || list[list.length - 1] || _this.props.hosts.sys;
-                    if (next_host) {
-                        _this.selectOne(next_host);
-                    }
-                    SH_event.emit('change');
-                }, 100);
-            });
-        });
-
-        SH_event.on('get_on_hosts', function (callback) {
-            callback(_this.getOnItems());
-        });
-
-        ipcRenderer.on('get_host_list', function () {
-            ipcRenderer.send('send_host_list', _this.state.list);
-        });
-
-        ipcRenderer.on('get_export_data', function (e, fn) {
-            var data = Object.assign({}, {
-                version: __webpack_require__(82).version,
-                list: _this.state.list.map(function (item) {
-                    var new_item = Object.assign({}, item);
-                    new_item.on = false;
-                    return new_item;
-                })
-            });
-            ipcRenderer.send('export_data', fn, JSON.stringify(data));
-        });
-
-        SH_event.on('top_toggle', function (on, items) {
-            _this.setState({
-                list: _this.state.list.map(function (item) {
-                    if (items.findIndex(function (i) {
-                        return i == item;
-                    }) > -1) {
-                        item.on = on;
-                    }
-                    return item;
-                })
-            }, function () {
-                SH_event.emit('change');
-            });
-        });
-
-        SH_event.on('loading_done', function (host, data) {
-            SH_event.emit('host_refreshed', data, host);
-            // if (host == this.state.current || host._ == this.state.current) {
-            //     setTimeout(() => {
-            //         this.selectOne(this.state.current);
-            //     }, 100);
-            // }
-            if (data.error) {
-                console.log(data.error);
-            }
-        });
-
-        // auto check refresh
-        setTimeout(function () {
-            _this.autoCheckRefresh();
-        }, 1000 * 5);
-        return _this;
+      _Agent2.default.emit('check_host_refresh', host, force);
     }
+  }, {
+    key: 'autoCheckRefresh',
+    value: function autoCheckRefresh() {
+      var _this2 = this;
 
-    /**
-     * 检查当前 host 是否需要从网络下载更新
-     * @param host
-     * @param force {Boolean} 如果为 true，则只要是 remote 且 refresh_interval != 0，则强制更新
-     */
-
-
-    _createClass(List, [{
-        key: 'checkUpdateHost',
-        value: function checkUpdateHost(host) {
-            var force = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-            SH_event.emit('check_host_refresh', host, force);
+      var remote_idx = -1;
+      this.state.list.map(function (host, idx) {
+        if (host.where === 'remote') {
+          remote_idx++;
         }
-    }, {
-        key: 'autoCheckRefresh',
-        value: function autoCheckRefresh() {
-            var _this2 = this;
+        setTimeout(function () {
+          _Agent2.default.emit('check_host_refresh', host);
+        }, 1000 * 5 * remote_idx + idx);
+      });
 
-            var remote_idx = -1;
-            this.state.list.map(function (host, idx) {
-                if (host.where === 'remote') {
-                    remote_idx++;
-                }
-                setTimeout(function () {
-                    SH_event.emit('check_host_refresh', host);
-                }, 1000 * 5 * remote_idx + idx);
-            });
+      // let wait = 1000 * 60 * 10;
+      var wait = 1000 * 30; // test only
+      setTimeout(function () {
+        _this2.autoCheckRefresh();
+      }, wait);
+    }
+  }, {
+    key: 'apply',
+    value: function apply(content, success) {
+      var _this3 = this;
 
-            // let wait = 1000 * 60 * 10;
-            var wait = 1000 * 30; // test only
-            setTimeout(function () {
-                _this2.autoCheckRefresh();
-            }, wait);
+      _Agent2.default.emit('apply', content, function () {
+        _this3.last_content = content;
+        success();
+        _Agent2.default.emit('save_data', _this3.state.list);
+        _Agent2.default.notify({
+          message: 'host updated.'
+        });
+      });
+    }
+  }, {
+    key: 'selectOne',
+    value: function selectOne(host) {
+      this.setState({
+        current: host
+      });
+
+      this.props.setCurrent(host);
+    }
+  }, {
+    key: 'toggleOne',
+    value: function toggleOne(idx, success) {
+      var _this4 = this;
+
+      var content = this.getOnContent(idx);
+      this.apply(content, function () {
+        var choice_mode = _Agent2.default.pref.get('choice_mode');
+        if (choice_mode === 'single') {
+          // 单选模式
+          _this4.setState({
+            list: _this4.state.list.map(function (item, _idx) {
+              if (idx !== _idx) {
+                item.on = false;
+              }
+              return item;
+            })
+          });
         }
-    }, {
-        key: 'apply',
-        value: function apply(content, success) {
-            var _this3 = this;
 
-            SH_event.emit('apply', content, function () {
-                _this3.last_content = content;
-                success();
-                SH_event.emit('save_data', _this3.state.list);
-                SH_Agent.notify({
-                    message: 'host updated.'
-                });
-            });
+        if (typeof success === 'function') {
+          success();
         }
-    }, {
-        key: 'selectOne',
-        value: function selectOne(host) {
-            this.setState({
-                current: host
-            });
+      });
+    }
+  }, {
+    key: 'getOnItems',
+    value: function getOnItems() {
+      var idx = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
 
-            this.props.setCurrent(host);
+      var choice_mode = _Agent2.default.pref.get('choice_mode');
+      return this.state.list.filter(function (item, _idx) {
+        if (choice_mode === 'single') {
+          return !item.on && _idx === idx;
+        } else {
+          return item.on && _idx !== idx || !item.on && _idx === idx;
         }
-    }, {
-        key: 'toggleOne',
-        value: function toggleOne(idx, success) {
-            var _this4 = this;
+      });
+    }
+  }, {
+    key: 'getOnContent',
+    value: function getOnContent() {
+      var idx = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
 
-            var content = this.getOnContent(idx);
-            this.apply(content, function () {
-                var choice_mode = SH_Agent.pref.get('choice_mode');
-                if (choice_mode === 'single') {
-                    // 单选模式
-                    _this4.setState({
-                        list: _this4.state.list.map(function (item, _idx) {
-                            if (idx != _idx) {
-                                item.on = false;
-                            }
-                            return item;
-                        })
-                    });
-                }
+      var contents = this.getOnItems(idx).map(function (item) {
+        return item.content || '';
+      });
 
-                if (typeof success === 'function') {
-                    success();
-                }
-            });
-        }
-    }, {
-        key: 'getOnItems',
-        value: function getOnItems() {
-            var idx = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
+      contents.unshift('# SwitchHosts!');
 
-            var choice_mode = SH_Agent.pref.get('choice_mode');
-            return this.state.list.filter(function (item, _idx) {
-                if (choice_mode === 'single') {
-                    return !item.on && _idx == idx;
-                } else {
-                    return item.on && _idx != idx || !item.on && _idx == idx;
-                }
-            });
-        }
-    }, {
-        key: 'getOnContent',
-        value: function getOnContent() {
-            var idx = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
+      return contents.join('\n\n');
+    }
+  }, {
+    key: 'customItems',
+    value: function customItems() {
+      var _this5 = this;
 
-            var contents = this.getOnItems(idx).map(function (item) {
-                return item.content || '';
-            });
+      return this.state.list.map(function (item, idx) {
+        return _react2.default.createElement(_list_item2.default, {
+          data: item,
+          idx: idx,
+          selectOne: _this5.selectOne.bind(_this5),
+          current: _this5.state.current,
+          onToggle: function onToggle(success) {
+            return _this5.toggleOne(idx, success);
+          },
+          key: 'host-' + idx,
+          dragOrder: function dragOrder(sidx, tidx) {
+            return _this5.dragOrder(sidx, tidx);
+          }
+        });
+      });
+    }
+  }, {
+    key: 'dragOrder',
+    value: function dragOrder(source_idx, target_idx) {
+      var source = this.state.list[source_idx];
+      var target = this.state.list[target_idx];
 
-            contents.unshift('# SwitchHosts!');
+      var list = this.state.list.filter(function (item, idx) {
+        return idx !== source_idx;
+      });
+      var new_target_idx = list.findIndex(function (item) {
+        return item === target;
+      });
 
-            return contents.join('\n\n');
-        }
-    }, {
-        key: 'customItems',
-        value: function customItems() {
-            var _this5 = this;
+      var to_idx = void 0;
+      if (source_idx < target_idx) {
+        // append
+        to_idx = new_target_idx + 1;
+      } else {
+        // insert before
+        to_idx = new_target_idx;
+      }
+      list.splice(to_idx, 0, source);
 
-            return this.state.list.map(function (item, idx) {
-                return _react2.default.createElement(_list_item2.default, {
-                    data: item,
-                    idx: idx,
-                    selectOne: _this5.selectOne.bind(_this5),
-                    current: _this5.state.current,
-                    onToggle: function onToggle(success) {
-                        return _this5.toggleOne(idx, success);
-                    },
-                    key: 'host-' + idx,
-                    dragOrder: function dragOrder(sidx, tidx) {
-                        return _this5.dragOrder(sidx, tidx);
-                    }
-                });
-            });
-        }
-    }, {
-        key: 'dragOrder',
-        value: function dragOrder(source_idx, target_idx) {
-            var source = this.state.list[source_idx];
-            var target = this.state.list[target_idx];
+      this.setState({
+        list: list
+      });
 
-            var list = this.state.list.filter(function (item, idx) {
-                return idx != source_idx;
-            });
-            var new_target_idx = list.findIndex(function (item) {
-                return item == target;
-            });
+      setTimeout(function () {
+        _Agent2.default.emit('change');
+      }, 100);
+    }
+  }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {}
+  }, {
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(
+        'div',
+        { id: 'sh-list' },
+        _react2.default.createElement(_list_item2.default, {
+          data: this.props.sys,
+          lang: this.props.lang,
+          selectOne: this.selectOne.bind(this),
+          current: this.state.current,
+          sys: '1' }),
+        _react2.default.createElement(
+          'div',
+          { ref: 'items', className: 'custom-items' },
+          this.customItems()
+        )
+      );
+    }
+  }]);
 
-            var to_idx = void 0;
-            if (source_idx < target_idx) {
-                // append
-                to_idx = new_target_idx + 1;
-            } else {
-                // insert before
-                to_idx = new_target_idx;
-            }
-            list.splice(to_idx, 0, source);
-
-            this.setState({
-                list: list
-            });
-
-            setTimeout(function () {
-                SH_event.emit('change');
-            }, 100);
-        }
-    }, {
-        key: 'componentDidMount',
-        value: function componentDidMount() {}
-    }, {
-        key: 'render',
-        value: function render() {
-            return _react2.default.createElement(
-                'div',
-                { id: 'sh-list' },
-                _react2.default.createElement(_list_item2.default, {
-                    data: this.props.hosts.sys,
-                    selectOne: this.selectOne.bind(this),
-                    current: this.state.current,
-                    sys: '1' }),
-                _react2.default.createElement(
-                    'div',
-                    { ref: 'items', className: 'custom-items' },
-                    this.customItems()
-                )
-            );
-        }
-    }]);
-
-    return List;
+  return List;
 }(_react2.default.Component);
 
 exports.default = List;
@@ -34479,7 +34383,7 @@ exports.default = List;
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -34491,6 +34395,10 @@ var _react2 = _interopRequireDefault(_react);
 var _classnames = __webpack_require__(14);
 
 var _classnames2 = _interopRequireDefault(_classnames);
+
+var _Agent = __webpack_require__(184);
+
+var _Agent2 = _interopRequireDefault(_Agent);
 
 var _kw = __webpack_require__(83);
 
@@ -34505,179 +34413,173 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var ListItem = function (_React$Component) {
-    _inherits(ListItem, _React$Component);
+  _inherits(ListItem, _React$Component);
 
-    function ListItem(props) {
-        _classCallCheck(this, ListItem);
+  function ListItem(props) {
+    _classCallCheck(this, ListItem);
 
-        var _this = _possibleConstructorReturn(this, (ListItem.__proto__ || Object.getPrototypeOf(ListItem)).call(this, props));
+    var _this = _possibleConstructorReturn(this, (ListItem.__proto__ || Object.getPrototypeOf(ListItem)).call(this, props));
 
-        _this.is_sys = !!_this.props.sys;
-        _this.state = {
-            is_selected: false,
-            search_kw: '',
-            search_re: null
-        };
+    _this.is_sys = !!_this.props.sys;
+    _this.state = {
+      is_selected: false,
+      search_kw: '',
+      search_re: null
+      // on: this.props.data.on,
+    };
 
-        SH_event.on('search', function (kw) {
-            _this.setState({
-                search_kw: kw,
-                search_re: kw ? (0, _kw.kw2re)(kw) : null
-            });
-        });
+    _Agent2.default.on('search', function (kw) {
+      _this.setState({
+        search_kw: kw,
+        search_re: kw ? (0, _kw.kw2re)(kw) : null
+      });
+    });
+    return _this;
+  }
 
-        ipcRenderer.on('tray_toggle_host', function (e, idx) {
-            // ipcRenderer.send('send_host_list', this.state.list);
-            // this.toggleOne(idx);
-            if (idx === _this.props.idx) {
-                _this.toggle();
-            }
-        });
+  _createClass(ListItem, [{
+    key: 'getTitle',
+    value: function getTitle() {
+      var lang = this.props.lang;
 
-        return _this;
+      return this.is_sys ? lang.sys_host_title : this.props.data.title || lang.untitled;
     }
+  }, {
+    key: 'beSelected',
+    value: function beSelected() {
+      // this.setState({
+      //     is_selected: true
+      // });
 
-    _createClass(ListItem, [{
-        key: 'getTitle',
-        value: function getTitle() {
-            return this.is_sys ? SH_Agent.lang.sys_host_title : this.props.data.title || SH_Agent.lang.untitled;
-        }
-    }, {
-        key: 'beSelected',
-        value: function beSelected() {
-            // this.setState({
-            //     is_selected: true
-            // });
+      this.props.selectOne(this.props.data);
+    }
+  }, {
+    key: 'toEdit',
+    value: function toEdit() {
+      _Agent2.default.emit('edit_host', this.props.data);
+    }
+  }, {
+    key: 'toggle',
+    value: function toggle() {
+      var _this2 = this;
 
-            this.props.selectOne(this.props.data);
-        }
-    }, {
-        key: 'toEdit',
-        value: function toEdit() {
-            SH_event.emit('edit_host', this.props.data);
-        }
-    }, {
-        key: 'toggle',
-        value: function toggle() {
-            var _this2 = this;
+      var on = !this.props.data.on;
 
-            var on = !this.props.data.on;
+      this.props.onToggle(function () {
+        _this2.props.data.on = on;
+        _this2.forceUpdate();
+      });
 
-            this.props.onToggle(function () {
-                _this2.props.data.on = on;
-                _this2.forceUpdate();
-            });
+      _Agent2.default.emit('toggle_host', on);
+    }
+  }, {
+    key: 'allowedDrop',
+    value: function allowedDrop(e) {
+      e.preventDefault();
+    }
+  }, {
+    key: 'onDrop',
+    value: function onDrop(e) {
+      if (this.props.sys) {
+        e.preventDefault();
+        return false;
+      }
+      var source_idx = parseInt(e.dataTransfer.getData('text'));
 
-            SH_event.emit('toggle_host', on);
-        }
-    }, {
-        key: 'allowedDrop',
-        value: function allowedDrop(e) {
-            e.preventDefault();
-        }
-    }, {
-        key: 'onDrop',
-        value: function onDrop(e) {
-            if (this.props.sys) {
-                e.preventDefault();
-                return false;
-            }
-            var source_idx = parseInt(e.dataTransfer.getData('text'));
+      this.props.dragOrder(source_idx, this.props.idx);
+    }
+  }, {
+    key: 'onDrag',
+    value: function onDrag(e) {
+      e.dataTransfer.setData('text', this.props.idx);
+    }
+  }, {
+    key: 'isMatched',
+    value: function isMatched() {
+      if (this.props.sys) return true;
+      var kw = this.state.search_kw;
+      var re = this.state.search_re;
+      if (!kw || kw === '/') return true;
 
-            this.props.dragOrder(source_idx, this.props.idx);
-        }
-    }, {
-        key: 'onDrag',
-        value: function onDrag(e) {
-            e.dataTransfer.setData('text', this.props.idx);
-        }
-    }, {
-        key: 'isMatched',
-        value: function isMatched() {
-            if (this.props.sys) return true;
-            var kw = this.state.search_kw;
-            var re = this.state.search_re;
-            if (!kw || kw === '/') return true;
-
-            var _props$data = this.props.data,
-                title = _props$data.title,
-                content = _props$data.content;
+      var _props$data = this.props.data,
+          title = _props$data.title,
+          content = _props$data.content;
 
 
-            if (re) {
-                return re.test(title) || re.test(content);
-            } else {
-                return title.indexOf(kw) > -1 || content.indexOf(kw) > -1;
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var _this3 = this;
+      if (re) {
+        return re.test(title) || re.test(content);
+      } else {
+        return title.indexOf(kw) > -1 || content.indexOf(kw) > -1;
+      }
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this3 = this;
 
-            var _props = this.props,
-                data = _props.data,
-                sys = _props.sys,
-                current = _props.current;
+      var _props = this.props,
+          data = _props.data,
+          sys = _props.sys,
+          current = _props.current;
 
-            var is_selected = data == current;
+      var is_selected = data === current;
 
-            return _react2.default.createElement(
-                'div',
-                { className: (0, _classnames2.default)({
-                        'list-item': 1,
-                        'hidden': !this.isMatched(),
-                        'sys-host': sys,
-                        'selected': is_selected
-                    }),
-                    onClick: this.beSelected.bind(this),
-                    draggable: !sys,
-                    onDragStart: function onDragStart(e) {
-                        return _this3.onDrag(e);
-                    },
-                    onDragOver: function onDragOver(e) {
-                        return _this3.allowedDrop(e);
-                    },
-                    onDrop: function onDrop(e) {
-                        return _this3.onDrop(e);
-                    }
-                },
-                sys ? null : _react2.default.createElement(
-                    'div',
-                    null,
-                    _react2.default.createElement('i', { className: (0, _classnames2.default)({
-                            'switch': 1,
-                            'iconfont': 1,
-                            'icon-on': data.on,
-                            'icon-off': !data.on
-                        }),
-                        onClick: this.toggle.bind(this)
-                    }),
-                    _react2.default.createElement('i', {
-                        className: 'iconfont icon-edit',
-                        onClick: this.toEdit.bind(this)
-                    })
-                ),
-                _react2.default.createElement('i', { className: (0, _classnames2.default)({
-                        'iconfont': 1,
-                        'item-icon': 1,
-                        'icon-warn': !!data.error,
-                        'icon-file': !sys && !data.error && data.where !== 'group',
-                        'icon-files': data.where === 'group',
-                        'icon-sysserver': sys && !data.error
-                    }),
-                    title: data.error || ''
-                }),
-                _react2.default.createElement(
-                    'span',
-                    null,
-                    this.getTitle()
-                )
-            );
-        }
-    }]);
+      return _react2.default.createElement(
+        'div',
+        { className: (0, _classnames2.default)({
+            'list-item': 1,
+            'hidden': !this.isMatched(),
+            'sys-host': sys,
+            'selected': is_selected
+          }),
+          onClick: this.beSelected.bind(this),
+          draggable: !sys,
+          onDragStart: function onDragStart(e) {
+            return _this3.onDrag(e);
+          },
+          onDragOver: function onDragOver(e) {
+            return _this3.allowedDrop(e);
+          },
+          onDrop: function onDrop(e) {
+            return _this3.onDrop(e);
+          }
+        },
+        sys ? null : _react2.default.createElement(
+          'div',
+          null,
+          _react2.default.createElement('i', { className: (0, _classnames2.default)({
+              'switch': 1,
+              'iconfont': 1,
+              'icon-on': data.on,
+              'icon-off': !data.on
+            }),
+            onClick: this.toggle.bind(this)
+          }),
+          _react2.default.createElement('i', {
+            className: 'iconfont icon-edit',
+            onClick: this.toEdit.bind(this)
+          })
+        ),
+        _react2.default.createElement('i', { className: (0, _classnames2.default)({
+            'iconfont': 1,
+            'item-icon': 1,
+            'icon-warn': !!data.error,
+            'icon-file': !sys && !data.error && data.where !== 'group',
+            'icon-files': data.where === 'group',
+            'icon-sysserver': sys && !data.error
+          }),
+          title: data.error || ''
+        }),
+        _react2.default.createElement(
+          'span',
+          null,
+          this.getTitle()
+        )
+      );
+    }
+  }]);
 
-    return ListItem;
+  return ListItem;
 }(_react2.default.Component);
 
 exports.default = ListItem;
@@ -34695,7 +34597,7 @@ exports.default = ListItem;
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -34727,33 +34629,42 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Panel = function (_React$Component) {
-    _inherits(Panel, _React$Component);
+  _inherits(Panel, _React$Component);
 
-    function Panel() {
-        _classCallCheck(this, Panel);
+  function Panel() {
+    _classCallCheck(this, Panel);
 
-        return _possibleConstructorReturn(this, (Panel.__proto__ || Object.getPrototypeOf(Panel)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Panel.__proto__ || Object.getPrototypeOf(Panel)).apply(this, arguments));
+  }
+
+  _createClass(Panel, [{
+    key: 'render',
+    value: function render() {
+      var _props = this.props,
+          current = _props.current,
+          list = _props.list,
+          sys = _props.sys,
+          setCurrent = _props.setCurrent,
+          lang = _props.lang;
+
+
+      return _react2.default.createElement(
+        'div',
+        { id: 'panel' },
+        _react2.default.createElement(_list2.default, {
+          list: list,
+          sys: sys,
+          current: current,
+          setCurrent: setCurrent,
+          lang: lang
+        }),
+        _react2.default.createElement(_searchbar2.default, null),
+        _react2.default.createElement(_buttons2.default, null)
+      );
     }
+  }]);
 
-    _createClass(Panel, [{
-        key: 'render',
-        value: function render() {
-            var _props = this.props,
-                current = _props.current,
-                hosts = _props.hosts;
-
-
-            return _react2.default.createElement(
-                'div',
-                { id: 'panel' },
-                _react2.default.createElement(_list2.default, { hosts: hosts, current: current, setCurrent: this.props.setCurrent }),
-                _react2.default.createElement(_searchbar2.default, null),
-                _react2.default.createElement(_buttons2.default, null)
-            );
-        }
-    }]);
-
-    return Panel;
+  return Panel;
 }(_react2.default.Component);
 
 exports.default = Panel;
@@ -34771,7 +34682,7 @@ exports.default = Panel;
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -34779,6 +34690,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 var _react = __webpack_require__(6);
 
 var _react2 = _interopRequireDefault(_react);
+
+var _Agent = __webpack_require__(184);
+
+var _Agent2 = _interopRequireDefault(_Agent);
 
 var _classnames = __webpack_require__(14);
 
@@ -34795,90 +34710,90 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var SearchBar = function (_React$Component) {
-    _inherits(SearchBar, _React$Component);
+  _inherits(SearchBar, _React$Component);
 
-    function SearchBar(props) {
-        _classCallCheck(this, SearchBar);
+  function SearchBar(props) {
+    _classCallCheck(this, SearchBar);
 
-        var _this = _possibleConstructorReturn(this, (SearchBar.__proto__ || Object.getPrototypeOf(SearchBar)).call(this, props));
+    var _this = _possibleConstructorReturn(this, (SearchBar.__proto__ || Object.getPrototypeOf(SearchBar)).call(this, props));
 
-        _this.state = {
-            show: false,
-            keyword: ''
-        };
+    _this.state = {
+      show: false,
+      keyword: ''
+    };
 
-        _this._t = null;
+    _this._t = null;
 
-        SH_event.on('search_on', function () {
-            _this.setState({
-                show: true
-            }, function () {
-                setTimeout(function () {
-                    _this.refs.keyword.focus();
-                }, 100);
-            });
-        });
+    _Agent2.default.on('search_on', function () {
+      _this.setState({
+        show: true
+      }, function () {
+        setTimeout(function () {
+          _this.refs.keyword.focus();
+        }, 100);
+      });
+    });
 
-        SH_event.on('search_off', function () {
-            _this.clearSearch();
-        });
-        return _this;
+    _Agent2.default.on('search_off', function () {
+      _this.clearSearch();
+    });
+    return _this;
+  }
+
+  _createClass(SearchBar, [{
+    key: 'clearSearch',
+    value: function clearSearch() {
+      this.setState({
+        show: false,
+        keyword: ''
+      });
+      _Agent2.default.emit('search', '');
     }
+  }, {
+    key: 'doSearch',
+    value: function doSearch(kw) {
+      this.setState({
+        keyword: kw
+      });
 
-    _createClass(SearchBar, [{
-        key: 'clearSearch',
-        value: function clearSearch() {
-            this.setState({
-                show: false,
-                keyword: ''
-            });
-            SH_event.emit('search', '');
-        }
-    }, {
-        key: 'doSearch',
-        value: function doSearch(kw) {
-            this.setState({
-                keyword: kw
-            });
+      clearTimeout(this._t);
+      this._t = setTimeout(function () {
+        _Agent2.default.emit('search', kw);
+      }, 300);
+    }
+  }, {
+    key: 'onCancel',
+    value: function onCancel() {
+      _Agent2.default.emit('cancel_search');
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this2 = this;
 
-            clearTimeout(this._t);
-            this._t = setTimeout(function () {
-                SH_event.emit('search', kw);
-            }, 300);
-        }
-    }, {
-        key: 'onCancel',
-        value: function onCancel() {
-            SH_event.emit('cancel_search');
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var _this2 = this;
+      if (!this.state.show) {
+        return null;
+      }
+      return _react2.default.createElement(
+        'div',
+        { id: 'sh-searchbar' },
+        _react2.default.createElement('input', {
+          ref: 'keyword',
+          type: 'text',
+          placeholder: 'keyword',
+          value: this.state.keyword,
+          onChange: function onChange(e) {
+            return _this2.doSearch(e.target.value);
+          },
+          onKeyDown: function onKeyDown(e) {
+            return e.keyCode === 27 && _this2.onCancel();
+          }
+        })
+      );
+    }
+  }]);
 
-            if (!this.state.show) {
-                return null;
-            }
-            return _react2.default.createElement(
-                'div',
-                { id: 'sh-searchbar' },
-                _react2.default.createElement('input', {
-                    ref: 'keyword',
-                    type: 'text',
-                    placeholder: 'keyword',
-                    value: this.state.keyword,
-                    onChange: function onChange(e) {
-                        return _this2.doSearch(e.target.value);
-                    },
-                    onKeyDown: function onKeyDown(e) {
-                        return e.keyCode === 27 && _this2.onCancel();
-                    }
-                })
-            );
-        }
-    }]);
-
-    return SearchBar;
+  return SearchBar;
 }(_react2.default.Component);
 
 exports.default = SearchBar;
@@ -34896,44 +34811,44 @@ exports.default = SearchBar;
 
 
 var languages = {
-    'en': __webpack_require__(183).content,
-    'cn': __webpack_require__(182).content
+  'en': __webpack_require__(183).content,
+  'cn': __webpack_require__(182).content
 };
 
 module.exports = {
-    languages: languages,
-    lang_list: function () {
-        var list = [];
-        for (var k in languages) {
-            if (languages.hasOwnProperty(k)) {
-                list.push({
-                    key: k,
-                    name: languages[k]._lang_name
-                });
-            }
-        }
-        return list;
-    }(),
-    getLang: function getLang(lang) {
-        lang = lang.toLowerCase();
-        if (lang == 'cn' || lang == 'zh-cn') {
-            lang = 'cn';
-        } else {
-            lang = 'en';
-        }
-        return languages[lang] || languages['en'];
-    },
-    fill: function fill(tpl) {
-        for (var _len = arguments.length, vals = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-            vals[_key - 1] = arguments[_key];
-        }
-
-        vals.map(function (v, idx) {
-            var r = new RegExp('\\$\\{' + idx + '\\}', 'g');
-            tpl = tpl.replace(r, v);
+  languages: languages,
+  lang_list: function () {
+    var list = [];
+    for (var k in languages) {
+      if (languages.hasOwnProperty(k)) {
+        list.push({
+          key: k,
+          name: languages[k]._lang_name
         });
-        return tpl;
+      }
     }
+    return list;
+  }(),
+  getLang: function getLang(lang) {
+    lang = lang.toLowerCase();
+    if (lang === 'cn' || lang === 'zh-cn') {
+      lang = 'cn';
+    } else {
+      lang = 'en';
+    }
+    return languages[lang] || languages['en'];
+  },
+  fill: function fill(tpl) {
+    for (var _len = arguments.length, vals = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      vals[_key - 1] = arguments[_key];
+    }
+
+    vals.map(function (v, idx) {
+      var r = new RegExp('\\$\\{' + idx + '\\}', 'g');
+      tpl = tpl.replace(r, v);
+    });
+    return tpl;
+  }
 };
 
 /***/ }),

@@ -18,7 +18,7 @@ const pref = require('./ui/libs/pref')
 let user_language = pref.get('user_language') ||
   (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
 global.user_language = user_language
-const tray = require('./ui/modules/tray')
+//const tray = require('./ui/modules/tray')
 const SHServer = require('./server/Server')
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -74,7 +74,7 @@ function createWindow () {
 
   contents.on('did-finish-load', () => {
     if (!is_tray_initialized) {
-      tray.makeTray(app, contents, user_language)
+      //tray.makeTray(app, contents, user_language)
       is_tray_initialized = true
     }
   })
