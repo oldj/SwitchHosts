@@ -9,14 +9,15 @@
 
 const electron = require('electron')
 const fs = require('fs')
+// Module to control application life.
 const app = electron.app
+// Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
+const pref = require('./ui/libs/pref')
 
-const pref = require('./server/pref')
 let user_language = pref.get('user_language') ||
   (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
 global.user_language = user_language
-
 //const tray = require('./ui/modules/tray')
 const SHServer = require('./server/Server')
 
@@ -78,7 +79,7 @@ function createWindow () {
     }
   })
 
-  //require('./bg/events').init(app, contents)
+  require('./bg/events').init(app, contents)
 }
 
 const should_quit = app.makeSingleInstance((commandLine, workingDirectory) => {
@@ -101,11 +102,11 @@ if (should_quit) {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   createWindow()
-  //require('./ui/modules/mainMenu').init(app, user_language)
+  require('./ui/modules/mainMenu').init(app, user_language)
 
   setTimeout(() => {
     if (renderer) {
-      //require('./bg/check_for_update').check(true, renderer)
+      require('./bg/check_for_update').check(true, renderer)
     }
   }, 1000)
 })

@@ -11,55 +11,85 @@ import Content from './content/content'
 import SudoPrompt from './frame/sudo'
 import EditPrompt from './frame/edit'
 import PreferencesPrompt from './frame/preferences'
-import Agent from '../../renderer/Agent'
+import util from '../libs/util'
 import './app.less'
 
 class App extends React.Component {
   constructor (props) {
     super(props)
 
+    let _data = SH_Agent.getHosts()
+
     this.state = {
-      list: [],
-      sys: {},
-      current: {},
-      lang: {}
+      hosts: _data,
+      current: _data.sys
     }
 
-    Agent.act('getUserHosts', (e, data) => {
-      this.setState({
-        list: data.list,
-        sys: data.sys
+    SH_event.on('after_apply', () => {
+      if (this.state.current.is_sys) {
+        // 重新读取
+        this.setState({
+          current: SH_Agent.getSysHosts()
+        })
+      }
+    })
+
+    ipcRenderer.on('to_import', (e, fn) => {
+      if (!confirm(SH_Agent.lang.confirm_import)) return
+
+      SH_Agent.readFile(fn, (err, cnt) => {
+        if (err) {
+          alert(err.message || 'Import Error!')
+          return
+        }
+        let data
+        try {
+          data = JSON.parse(cnt)
+        } catch (e) {
+          console.log(e)
+          alert(
+            e.message || 'Bad format, the import file should be a JSON file.')
+          return
+        }
+
+        if (!data.list || !Array.isArray(data.list)) {
+          alert('Bad format, the data JSON should have a [list] field.')
+          return
+        }
+
+        data.list.map(item => {
+          if (!item.id) {
+            item.id = util.makeId()
+          }
+        })
+
+        this.setState({
+          hosts: Object.assign({}, this.state.hosts, {list: data.list})
+        }, () => {
+          SH_event.emit('imported')
+        })
+        console.log('imported.')
       })
     })
 
-    Agent.act('getLang', (e, lang) => {
-      this.setState({lang})
-    })
+    ipcRenderer.send('reg_renderer')
   }
 
-  setCurrent (hosts) {
-    if (hosts.is_sys) {
-      Agent.act('getSysHosts', (e, _hosts) => {
-        this.setState({
-          current: _hosts
-        })
-      })
-    } else {
-      this.setState({
-        current: hosts
-      })
-    }
+  setCurrent (host) {
+    this.setState({
+      current: host.is_sys ? SH_Agent.getSysHosts() : host
+    })
   }
 
   static isReadOnly (host) {
-    return !host || host.is_sys || host.where === 'remote'
+    return host.is_sys || host.where === 'remote'
   }
 
   toSave () {
     clearTimeout(this._t)
 
     this._t = setTimeout(() => {
-      Agent.emit('change')
+      SH_event.emit('change')
     }, 1000)
   }
 
@@ -73,7 +103,7 @@ class App extends React.Component {
   componentDidMount () {
     window.addEventListener('keydown', (e) => {
       if (e.keyCode === 27) {
-        Agent.emit('esc')
+        SH_event.emit('esc')
       }
     }, false)
   }
@@ -81,25 +111,16 @@ class App extends React.Component {
   render () {
     let current = this.state.current
     return (
-      <div id="app" className={'platform-' + Agent.platform}>
-        <Panel
-          list={this.state.list}
-          sys={this.state.sys}
-          current={current}
-          setCurrent={this.setCurrent.bind(this)}
-          lang={this.state.lang}
-        />
-        {/*<Content*/}
-          {/*current={current}*/}
-          {/*readonly={App.isReadOnly(current)}*/}
-          {/*setHostContent={this.setHostContent.bind(this)}*/}
-          {/*lang={this.state.lang}*/}
-        {/*/>*/}
-        {/*<div className="frames">*/}
-          {/*<SudoPrompt/>*/}
-          {/*<EditPrompt hosts={this.state.hosts}/>*/}
-          {/*<PreferencesPrompt/>*/}
-        {/*</div>*/}
+      <div id="app" className={'platform-' + platform}>
+        <Panel hosts={this.state.hosts} current={current}
+               setCurrent={this.setCurrent.bind(this)}/>
+        <Content current={current} readonly={App.isReadOnly(current)}
+                 setHostContent={this.setHostContent.bind(this)}/>
+        <div className="frames">
+          <SudoPrompt/>
+          <EditPrompt hosts={this.state.hosts}/>
+          <PreferencesPrompt/>
+        </div>
       </div>
     )
   }
