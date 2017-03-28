@@ -28,9 +28,7 @@ export default class Editor extends React.Component {
     this.marks = []
     this.kw = ''
 
-    this.state = {
-      code: this.props.code
-    }
+    this.state = {}
 
     Agent.on('search', (kw) => {
       this.kw = kw
@@ -53,7 +51,7 @@ export default class Editor extends React.Component {
   }
 
   setValue (v) {
-    //this.props.setValue(v)
+    this.props.setValue(v)
   }
 
   toComment () {

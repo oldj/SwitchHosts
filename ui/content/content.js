@@ -19,6 +19,10 @@ export default class Content extends React.Component {
     }
   }
 
+  setValue(v) {
+    this.props.setHostsContent(v)
+  }
+
   render () {
     let {current, lang} = this.props
 
@@ -55,7 +59,7 @@ export default class Content extends React.Component {
         <Editor
           readonly={this.props.readonly}
           code={this.props.current.content || ''}
-          //setValue={this.setValue.bind(this)}
+          setValue={this.setValue.bind(this)}
         />
       </div>
     )
