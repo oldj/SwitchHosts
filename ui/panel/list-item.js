@@ -24,7 +24,6 @@ export default class ListItem extends React.Component {
   }
 
   beSelected() {
-    console.log(this.props.data)
     this.props.setCurrent(this.props.data)
   }
 
