@@ -9,10 +9,10 @@ const path = require('path')
 const webpack = require('webpack')
 
 module.exports = {
-  entry: './src/ui/index.js',
+  entry: './ui/index.js',
   devtool: 'source-map',
   output: {
-    path: path.join(__dirname, 'src')
+    path: path.join(__dirname, 'app')
     , filename: 'bundle.js'
     , sourceMapFilename: 'bundle.js.map'
   },
@@ -39,7 +39,7 @@ module.exports = {
     // query: {
     // presets: ['es2015', 'stage-0', 'react']
     // }
-    , noParse: [/renderer\/Agent/]
+    , noParse: [/\bAgent\b/]
   },
   plugins: [
     new webpack.DefinePlugin({
