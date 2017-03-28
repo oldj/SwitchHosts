@@ -48,7 +48,6 @@ gulp.task('ver', () => {
   // update package.json
   updatePackage(path.join(__dirname, 'package.json'))
   updatePackage(path.join(__dirname, 'app', 'package.json'))
-  updatePackage(path.join(__dirname, 'ui', 'package.json'))
 })
 
 gulp.task('pack', (done) => {
@@ -130,12 +129,9 @@ gulp.task('default', () => {
   gulp.watch([
     'app/**/*.*'
     , '!app/version.js'
-    , '!app/static/*'
     , '!app/node_modules/*'
 
     , 'ui/**/*.*'
-    , '!ui/node_modules/*'
-
     , '!**/package.json'
   ], ['ver'])
 })
