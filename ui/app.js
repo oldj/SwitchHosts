@@ -7,7 +7,7 @@
 
 import React from 'react'
 import Panel from './panel/panel'
-//import Content from './content/content'
+import Content from './content/content'
 //import SudoPrompt from './frame/sudo'
 //import EditPrompt from './frame/edit'
 //import PreferencesPrompt from './frame/preferences'
@@ -28,7 +28,8 @@ export default class App extends React.Component {
     Agent.pact('getHosts').then(data => {
       this.setState({
         list: data.list,
-        sys_hosts: data.sys_hosts
+        sys_hosts: data.sys_hosts,
+        current: data.sys_hosts
       })
     })
 
@@ -90,12 +91,12 @@ export default class App extends React.Component {
           setCurrent={this.setCurrent.bind(this)}
           lang={this.state.lang}
         />
-        {/*<Content*/}
-        {/*current={current}*/}
-        {/*readonly={App.isReadOnly(current)}*/}
-        {/*setHostContent={this.setHostContent.bind(this)}*/}
-        {/*lang={this.state.lang}*/}
-        {/*/>*/}
+        <Content
+          current={current}
+          readonly={App.isReadOnly(current)}
+          setHostContent={this.setHostsContent.bind(this)}
+          lang={this.state.lang}
+        />
         {/*<div className="frames">*/}
         {/*<SudoPrompt/>*/}
         {/*<EditPrompt hosts={this.state.hosts}/>*/}
