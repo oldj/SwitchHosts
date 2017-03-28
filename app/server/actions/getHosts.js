@@ -15,7 +15,7 @@ module.exports = () => {
     .all([getSysHosts(), getUserHosts()])
     .then(([sys_hosts, user_hosts]) => {
       return {
-        sys: sys_hosts,
+        sys_hosts: sys_hosts,
         list: user_hosts
       }
     })

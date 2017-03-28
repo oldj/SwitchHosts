@@ -25,6 +25,6 @@ module.exports = () => {
       if (!Array.isArray(data.list)) {
         data.list = []
       }
-      return data
+      return data.list
     })
 }
