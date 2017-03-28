@@ -14,21 +14,21 @@ import Panel from './panel/panel'
 import Agent from './Agent'
 import './app.less'
 
-class App extends React.Component {
+export default class App extends React.Component {
   constructor (props) {
     super(props)
 
     this.state = {
       list: [], // 用户的 hosts 列表
-      sys: {}, // 系统 hosts
+      sys_hosts: {}, // 系统 hosts
       current: {}, // 当前 hosts
       lang: {} // 语言
     }
 
-    Agent.pact('getUserHosts').then(data => {
+    Agent.pact('getHosts').then(data => {
       this.setState({
         list: data.list,
-        sys: data.sys
+        sys_hosts: data.sys_hosts
       })
     })
 
@@ -41,6 +41,7 @@ class App extends React.Component {
     if (hosts.is_sys) {
       Agent.act('getSysHosts', (e, _hosts) => {
         this.setState({
+          sys_hosts: _hosts,
           current: _hosts
         })
       })
@@ -84,7 +85,7 @@ class App extends React.Component {
       <div id="app" className={'platform-' + Agent.platform}>
         <Panel
           list={this.state.list}
-          sys={this.state.sys}
+          sys_hosts={this.state.sys_hosts}
           current={current}
           setCurrent={this.setCurrent.bind(this)}
           lang={this.state.lang}
@@ -104,5 +105,3 @@ class App extends React.Component {
     )
   }
 }
-
-export default App
