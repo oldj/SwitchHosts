@@ -7,6 +7,7 @@
 
 const paths = require('../paths')
 const io = require('../io')
+const makeId = require('../../libs/make-id')
 
 module.exports = () => {
   let fn = paths.data_path
@@ -26,5 +27,15 @@ module.exports = () => {
         data.list = []
       }
       return data.list
+    })
+    .then(list => {
+      let ids = {}
+      return list.map(item => {
+        if (!item.id || ids.hasOwnProperty(item.id)) {
+          item.id = makeId()
+        }
+        ids[item.id] = 1
+        return item
+      })
     })
 }

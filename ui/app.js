@@ -30,6 +30,19 @@ export default class App extends React.Component {
     Agent.pact('getLang').then(lang => {
       this.setState({lang})
     })
+
+    Agent.on('toggle-hosts', (hosts, on) => {
+      Agent.pact('toggleHosts', hosts.id, on)
+        .then(() => {
+          hosts.on = on
+          this.setState({
+            list: this.state.list
+          })
+        })
+        .catch(e => {
+          console.log(e)
+        })
+    })
   }
 
   loadHosts () {
