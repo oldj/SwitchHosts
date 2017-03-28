@@ -6,8 +6,6 @@
 'use strict'
 
 const IS_DEV = process.env.ENV === 'dev'
-//const SH_event = require('./ui/event').event
-//const SH_Agent = require('./ui/agent')
 const {ipcRenderer} = require('electron')
 const platform = process.platform
 
@@ -44,8 +42,8 @@ function act (action, data, callback) {
   })
 }
 
-function pact (action, data) {
-  return new Promise((resolve, reject) => act(action, data,
+function pact (action, ...args) {
+  return new Promise((resolve, reject) => act(action, args,
     (err, result) => err ? reject(err) : resolve(result)))
 }
 

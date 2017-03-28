@@ -9540,13 +9540,7 @@ var App = function (_React$Component) {
       lang: {} // 语言
     };
 
-    _Agent2.default.pact('getHosts').then(function (data) {
-      _this.setState({
-        list: data.list,
-        sys_hosts: data.sys_hosts,
-        current: data.sys_hosts
-      });
-    });
+    _this.loadHosts();
 
     _Agent2.default.pact('getLang').then(function (lang) {
       _this.setState({ lang: lang });
@@ -9555,13 +9549,26 @@ var App = function (_React$Component) {
   }
 
   _createClass(App, [{
+    key: 'loadHosts',
+    value: function loadHosts() {
+      var _this2 = this;
+
+      _Agent2.default.pact('getHosts').then(function (data) {
+        _this2.setState({
+          list: data.list,
+          sys_hosts: data.sys_hosts,
+          current: data.sys_hosts
+        });
+      });
+    }
+  }, {
     key: 'setCurrent',
     value: function setCurrent(hosts) {
-      var _this2 = this;
+      var _this3 = this;
 
       if (hosts.is_sys) {
         _Agent2.default.act('getSysHosts', function (e, _hosts) {
-          _this2.setState({
+          _this3.setState({
             sys_hosts: _hosts,
             current: _hosts
           });
@@ -9575,10 +9582,13 @@ var App = function (_React$Component) {
   }, {
     key: 'toSave',
     value: function toSave() {
+      var _this4 = this;
+
       clearTimeout(this._t);
 
       this._t = setTimeout(function () {
-        _Agent2.default.emit('change');
+        //Agent.emit('change')
+        _Agent2.default.pact('saveHosts', _this4.state.list);
       }, 1000);
     }
   }, {
@@ -9615,7 +9625,7 @@ var App = function (_React$Component) {
         _react2.default.createElement(_content2.default, {
           current: current,
           readonly: App.isReadOnly(current),
-          setHostContent: this.setHostsContent.bind(this),
+          setHostsContent: this.setHostsContent.bind(this),
           lang: this.state.lang
         })
       );
@@ -9660,8 +9670,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var IS_DEV = process.env.ENV === 'dev';
-//const SH_event = require('./ui/event').event
-//const SH_Agent = require('./ui/agent')
 
 var _require = require('electron'),
     ipcRenderer = _require.ipcRenderer;
@@ -9715,9 +9723,13 @@ function act(action, data, callback) {
   });
 }
 
-function pact(action, data) {
+function pact(action) {
+  for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    args[_key - 1] = arguments[_key];
+  }
+
   return new Promise(function (resolve, reject) {
-    return act(action, data, function (err, result) {
+    return act(action, args, function (err, result) {
       return err ? reject(err) : resolve(result);
     });
   });
@@ -21715,6 +21727,11 @@ var Content = function (_React$Component) {
   }
 
   _createClass(Content, [{
+    key: 'setValue',
+    value: function setValue(v) {
+      this.props.setHostsContent(v);
+    }
+  }, {
     key: 'render',
     value: function render() {
       var _props = this.props,
@@ -21765,8 +21782,8 @@ var Content = function (_React$Component) {
         ),
         _react2.default.createElement(_editor2.default, {
           readonly: this.props.readonly,
-          code: this.props.current.content || ''
-          //setValue={this.setValue.bind(this)}
+          code: this.props.current.content || '',
+          setValue: this.setValue.bind(this)
         })
       );
     }
@@ -31265,9 +31282,7 @@ var Editor = function (_React$Component) {
     _this.marks = [];
     _this.kw = '';
 
-    _this.state = {
-      code: _this.props.code
-    };
+    _this.state = {};
 
     _Agent2.default.on('search', function (kw) {
       _this.kw = kw;
@@ -31296,7 +31311,7 @@ var Editor = function (_React$Component) {
   }, {
     key: 'setValue',
     value: function setValue(v) {
-      //this.props.setValue(v)
+      this.props.setValue(v);
     }
   }, {
     key: 'toComment',

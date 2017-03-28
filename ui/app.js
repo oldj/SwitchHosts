@@ -25,16 +25,20 @@ export default class App extends React.Component {
       lang: {} // 语言
     }
 
+    this.loadHosts()
+
+    Agent.pact('getLang').then(lang => {
+      this.setState({lang})
+    })
+  }
+
+  loadHosts () {
     Agent.pact('getHosts').then(data => {
       this.setState({
         list: data.list,
         sys_hosts: data.sys_hosts,
         current: data.sys_hosts
       })
-    })
-
-    Agent.pact('getLang').then(lang => {
-      this.setState({lang})
     })
   }
 
@@ -61,7 +65,8 @@ export default class App extends React.Component {
     clearTimeout(this._t)
 
     this._t = setTimeout(() => {
-      Agent.emit('change')
+      //Agent.emit('change')
+      Agent.pact('saveHosts', this.state.list)
     }, 1000)
   }
 
@@ -94,7 +99,7 @@ export default class App extends React.Component {
         <Content
           current={current}
           readonly={App.isReadOnly(current)}
-          setHostContent={this.setHostsContent.bind(this)}
+          setHostsContent={this.setHostsContent.bind(this)}
           lang={this.state.lang}
         />
         {/*<div className="frames">*/}

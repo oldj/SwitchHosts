@@ -12,7 +12,7 @@ ipcMain.on('x', (e, d) => {
   let sender = e.sender
   let action = d.action
   if (typeof actions[action] === 'function') {
-    actions[action](...(d.args || []))
+    actions[action](...(d.data || []))
       .then(v => {
         sender.send(d.callback, [null, v])
       })
