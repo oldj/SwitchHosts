@@ -9545,6 +9545,17 @@ var App = function (_React$Component) {
     _Agent2.default.pact('getLang').then(function (lang) {
       _this.setState({ lang: lang });
     });
+
+    _Agent2.default.on('toggle-hosts', function (hosts, on) {
+      _Agent2.default.pact('toggleHosts', hosts.id, on).then(function () {
+        hosts.on = on;
+        _this.setState({
+          list: _this.state.list
+        });
+      }).catch(function (e) {
+        console.log(e);
+      });
+    });
     return _this;
   }
 
@@ -9802,6 +9813,10 @@ var _classnames = __webpack_require__(101);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
+var _Agent = __webpack_require__(82);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
 __webpack_require__(94);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -9838,6 +9853,13 @@ var ListItem = function (_React$Component) {
       this.props.setCurrent(this.props.data);
     }
   }, {
+    key: 'toggle',
+    value: function toggle() {
+      var on = !this.props.data.on;
+
+      _Agent2.default.emit('toggle-hosts', this.props.data, on);
+    }
+  }, {
     key: 'render',
     value: function render() {
       var _props = this.props,
@@ -9867,8 +9889,8 @@ var ListItem = function (_React$Component) {
               'iconfont': 1,
               'icon-on': data.on,
               'icon-off': !data.on
-            })
-            //onClick={this.toggle.bind(this)}
+            }),
+            onClick: this.toggle.bind(this)
           }),
           _react2.default.createElement('i', {
             className: 'iconfont icon-edit'

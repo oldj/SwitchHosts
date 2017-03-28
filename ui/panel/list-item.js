@@ -7,6 +7,7 @@
 
 import React from 'react'
 import classnames from 'classnames'
+import Agent from '../Agent'
 import './list-item.less'
 
 export default class ListItem extends React.Component {
@@ -23,8 +24,14 @@ export default class ListItem extends React.Component {
       lang.untitled
   }
 
-  beSelected() {
+  beSelected () {
     this.props.setCurrent(this.props.data)
+  }
+
+  toggle () {
+    let on = !this.props.data.on
+
+    Agent.emit('toggle-hosts', this.props.data, on)
   }
 
   render () {
@@ -50,7 +57,7 @@ export default class ListItem extends React.Component {
               , 'icon-on': data.on
               , 'icon-off': !data.on
             })}
-              //onClick={this.toggle.bind(this)}
+               onClick={this.toggle.bind(this)}
             />
             <i
               className="iconfont icon-edit"
