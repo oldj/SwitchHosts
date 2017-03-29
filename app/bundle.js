@@ -18985,8 +18985,6 @@ var _Agent2 = _interopRequireDefault(_Agent);
 
 var _index = __webpack_require__(219);
 
-var _index2 = _interopRequireDefault(_index);
-
 __webpack_require__(112);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -19022,7 +19020,7 @@ var App = function (_React$Component) {
       _this.setState({ lang: lang });
     });
 
-    _index2.default.reg(_this);
+    (0, _index.reg)(_this);
     return _this;
   }
 
@@ -20241,7 +20239,7 @@ var Group = function (_React$Component) {
     key: 'makeItem',
     value: function makeItem(item) {
       var attrs = {
-        'data-id': 'id:' + (item.id || '')
+        'data-id': item.id || ''
       };
       return _react2.default.createElement(
         'div',
@@ -20300,8 +20298,6 @@ var Group = function (_React$Component) {
   }, {
     key: 'componentWillMount',
     value: function componentWillMount() {
-      console.log(1111);
-      console.log(this.props);
       this.setState({
         list: this.props.list
       });
@@ -20553,6 +20549,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = __webpack_require__(7);
@@ -20641,9 +20639,13 @@ var ListItem = function (_React$Component) {
 
       if (!data) return null;
 
+      var attrs = {
+        'data-id': data.id || ''
+      };
+
       return _react2.default.createElement(
         'div',
-        { className: (0, _classnames2.default)({
+        _extends({ className: (0, _classnames2.default)({
             'list-item': 1
             //, 'hidden': !this.isMatched()
             , 'sys-hosts': sys,
@@ -20653,7 +20655,7 @@ var ListItem = function (_React$Component) {
           ref: function ref(el) {
             return _this3.el = el;
           }
-        },
+        }, attrs),
         sys ? null : _react2.default.createElement(
           'div',
           null,
@@ -20720,6 +20722,18 @@ var _listItem = __webpack_require__(94);
 
 var _listItem2 = _interopRequireDefault(_listItem);
 
+var _sortablejs = __webpack_require__(216);
+
+var _sortablejs2 = _interopRequireDefault(_sortablejs);
+
+var _listToArray = __webpack_require__(217);
+
+var _listToArray2 = _interopRequireDefault(_listToArray);
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
 __webpack_require__(120);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -20757,6 +20771,31 @@ var List = function (_React$Component) {
           , key: 'hosts-' + idx
           //dragOrder={(sidx, tidx) => this.dragOrder(sidx, tidx)}
         });
+      });
+    }
+  }, {
+    key: 'getCurrentListFromDOM',
+    value: function getCurrentListFromDOM() {
+      var nodes = this.refs.items.getElementsByClassName('list-item');
+      nodes = (0, _listToArray2.default)(nodes);
+      var ids = nodes.map(function (el) {
+        return el.getAttribute('data-id');
+      });
+
+      _Agent2.default.emit('order', ids);
+    }
+  }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      var _this3 = this;
+
+      _sortablejs2.default.create(this.refs.items, {
+        group: 'list-sorting',
+        sort: true,
+        onSort: function onSort(evt) {
+          _this3.getCurrentListFromDOM();
+          //console.log(evt)
+        }
       });
     }
   }, {
@@ -34703,6 +34742,8 @@ var map = {
 	"./del_hosts.js": 227,
 	"./index": 219,
 	"./index.js": 219,
+	"./order": 229,
+	"./order.js": 229,
 	"./save": 222,
 	"./save.js": 222,
 	"./toggle_hosts": 220,
@@ -34757,6 +34798,7 @@ module.exports = function (app, list) {
 var map = {
 	"./del_hosts.js": 227,
 	"./index.js": 219,
+	"./order.js": 229,
 	"./save.js": 222,
 	"./toggle_hosts.js": 220,
 	"./update_hosts.js": 228
@@ -34851,6 +34893,41 @@ module.exports = function (app, hosts) {
     app.setState({ list: list }, function () {
       _Agent2.default.emit('select', hosts.id);
     });
+  });
+};
+
+/***/ }),
+/* 229 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = function (app, ids) {
+  var list = app.state.list;
+  var new_list = [];
+  ids.map(function (id) {
+    var item = list.find(function (i) {
+      return i.id === id;
+    });
+    if (item) {
+      new_list.push(item);
+    }
+  });
+
+  _Agent2.default.pact('saveHosts', new_list).then(function () {
+    return app.setState({ list: list });
   });
 };
 

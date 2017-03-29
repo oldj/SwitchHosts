@@ -12,7 +12,7 @@ import Content from './content/content'
 import EditPrompt from './frame/edit'
 //import PreferencesPrompt from './frame/preferences'
 import Agent from './Agent'
-import events from './events/index'
+import {reg as events_reg} from './events/index'
 import './app.less'
 
 export default class App extends React.Component {
@@ -32,7 +32,7 @@ export default class App extends React.Component {
       this.setState({lang})
     })
 
-    events.reg(this)
+    events_reg(this)
   }
 
   loadHosts () {
