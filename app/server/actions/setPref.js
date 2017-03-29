@@ -9,7 +9,7 @@ const paths = require('../paths')
 const io = require('../io')
 const getPref = require('./getPref')
 
-module.exports = (k, v) => {
+module.exports = (svr, k, v) => {
   let fn = paths.preference_path
 
   return Promise

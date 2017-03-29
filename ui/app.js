@@ -8,11 +8,11 @@
 import React from 'react'
 import Panel from './panel/panel'
 import Content from './content/content'
-//import SudoPrompt from './frame/sudo'
+import SudoPrompt from './frame/sudo'
 import EditPrompt from './frame/edit'
 //import PreferencesPrompt from './frame/preferences'
 import Agent from './Agent'
-import {reg as events_reg} from './events/index'
+import { reg as events_reg } from './events/index'
 import './app.less'
 
 export default class App extends React.Component {
@@ -107,7 +107,7 @@ export default class App extends React.Component {
           lang={this.state.lang}
         />
         <div className="frames">
-          {/*<SudoPrompt/>*/}
+          <SudoPrompt lang={this.state.lang}/>
           <EditPrompt lang={this.state.lang} list={this.state.list}/>
           {/*<PreferencesPrompt/>*/}
         </div>

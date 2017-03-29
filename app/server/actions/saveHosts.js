@@ -3,14 +3,37 @@
  * @blog https://oldj.net
  */
 
-'use strict';
+'use strict'
 
 const version = require('../../version').version
 const paths = require('../paths')
 const io = require('../io')
 const jsbeautify = require('js-beautify').js_beautify
+const apply = require('../apply')
+const sudo = require('../sudo')
 
-module.exports = (list) => {
+function tryToApply (svr, cnt) {
+  return new Promise((resolve, reject) => {
+    apply(cnt)
+      .then(() => resolve())
+      .catch(e => {
+        if (e !== 'need_sudo') {
+          reject(e)
+          return
+        }
+
+        sudo(svr)
+          .then(() => {
+            apply(cnt)
+              .then(() => resolve())
+              .catch(e => reject(e))
+          })
+          .catch(e => reject(e))
+      })
+  })
+}
+
+module.exports = (svr, list) => {
   let fn = paths.data_path
   let data = {
     list,
@@ -21,7 +44,8 @@ module.exports = (list) => {
     indent_size: 2
   })
 
-  // todo try to update system hosts
-
-  return io.pWriteFile(fn, cnt)
+  // try to update system hosts
+  return tryToApply(svr, cnt)
+    .then(() => io.pWriteFile(fn, cnt))
+    .catch(e => console.log(e))
 }
