@@ -6,8 +6,8 @@
 'use strict'
 
 import React from 'react'
-//import Buttons from './buttons'
-//import SearchBar from './searchbar'
+import Buttons from './buttons'
+import SearchBar from './searchbar'
 import List from './list'
 import './panel.less'
 
@@ -16,8 +16,8 @@ export default class Panel extends React.Component {
     return (
       <div id="panel">
         <List {...this.props}/>
-        {/*<SearchBar/>*/}
-        {/*<Buttons/>*/}
+        <SearchBar/>
+        <Buttons/>
       </div>
     )
   }
