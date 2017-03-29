@@ -7,7 +7,6 @@
 
 import Agent from '../Agent'
 
-module.exports = () => {
-  Agent.pact('esc')
-  Agent.pact('sudoCancel')
+module.exports = (app, pswd) => {
+  Agent.pact('sudoPSWD', pswd)
 }

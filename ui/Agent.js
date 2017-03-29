@@ -10,8 +10,7 @@ const {ipcRenderer} = require('electron')
 const platform = process.platform
 
 const EventEmitter = require('events')
-class MyEmitter extends EventEmitter {}
-const evt = new MyEmitter()
+const evt = new EventEmitter()
 
 const max_listener_count = 20
 evt.setMaxListeners(max_listener_count)
