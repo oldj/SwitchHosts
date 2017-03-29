@@ -16,6 +16,12 @@ export default class ListItem extends React.Component {
 
     this.is_sys = !!this.props.sys
     this.state = {}
+
+    Agent.on('select', id => {
+      if (id && id === this.props.data.id) {
+        this.beSelected()
+      }
+    })
   }
 
   getTitle () {

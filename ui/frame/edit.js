@@ -85,7 +85,6 @@ export default class EditPrompt extends React.Component {
   }
 
   onOK () {
-    console.log('ok')
     this.setState({
       title: (this.state.title || '').replace(/^\s+|\s+$/g, ''),
       url: (this.state.url || '').replace(/^\s+|\s+$/g, '')
@@ -103,6 +102,7 @@ export default class EditPrompt extends React.Component {
 
     let data = Object.assign({}, this.current_hosts, this.state,
       this.state.is_add ? {
+        id: makeId(),
         content: `# ${this.state.title}`,
         on: false
       } : {})
@@ -110,8 +110,7 @@ export default class EditPrompt extends React.Component {
     if (!data.id) data.id = makeId()
 
     delete data['is_add']
-    Agent.emit('hosts_' + (this.state.is_add ? 'add' : 'edit') + 'ed', data,
-      this.current_hosts)
+    Agent.emit('hosts_update', data)
 
     this.setState({
       show: false

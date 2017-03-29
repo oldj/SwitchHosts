@@ -9,26 +9,25 @@ const IS_DEV = process.env.ENV === 'dev'
 const {ipcRenderer} = require('electron')
 const platform = process.platform
 
-ipcRenderer.setMaxListeners(20)
-
 const EventEmitter = require('events')
 class MyEmitter extends EventEmitter {}
-const evt = new MyEmitter();
+const evt = new MyEmitter()
+
+ipcRenderer.setMaxListeners(20)
 
 let x_get_idx = 0
 
 /**
  * act
  * @param action {String}
- * @param [data] {Any}
- * @param callback {Function}
+ * @param args {Array}
  */
-function act (action, data, callback) {
+function act (action, ...args) {
   let fn = ['_cb', (new Date()).getTime(), (x_get_idx++)].join('_')
 
-  if (!callback && typeof data === 'function') {
-    callback = data
-    data = null
+  let callback
+  if (args.length > 0 && typeof args[args.length - 1] === 'function') {
+    callback = args.pop()
   }
 
   if (typeof callback === 'function') {
@@ -37,14 +36,16 @@ function act (action, data, callback) {
 
   ipcRenderer.send('x', {
     action
-    , data
+    , data: args
     , callback: fn
   })
 }
 
 function pact (action, ...args) {
-  return new Promise((resolve, reject) => act(action, args,
-    (err, result) => err ? reject(err) : resolve(result)))
+  return new Promise((resolve, reject) => {
+    args.push((err, result) => err ? reject(err) : resolve(result))
+    act(action, ...args)
+  })
 }
 
 module.exports = {
