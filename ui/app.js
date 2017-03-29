@@ -12,6 +12,7 @@ import Content from './content/content'
 import EditPrompt from './frame/edit'
 //import PreferencesPrompt from './frame/preferences'
 import Agent from './Agent'
+import events from './events/index'
 import './app.less'
 
 export default class App extends React.Component {
@@ -31,18 +32,7 @@ export default class App extends React.Component {
       this.setState({lang})
     })
 
-    Agent.on('toggle_hosts', (hosts, on) => {
-      Agent.pact('toggleHosts', hosts.id, on)
-        .then(() => {
-          hosts.on = on
-          this.setState({
-            list: this.state.list
-          })
-        })
-        .catch(e => {
-          console.log(e)
-        })
-    })
+    events.reg(this)
   }
 
   loadHosts () {
@@ -57,12 +47,13 @@ export default class App extends React.Component {
 
   setCurrent (hosts) {
     if (hosts.is_sys) {
-      Agent.act('getSysHosts', (e, _hosts) => {
-        this.setState({
-          sys_hosts: _hosts,
-          current: _hosts
+      Agent.pact('getSysHosts')
+        .then(_hosts => {
+          this.setState({
+            sys_hosts: _hosts,
+            current: _hosts
+          })
         })
-      })
     } else {
       this.setState({
         current: hosts
@@ -78,8 +69,7 @@ export default class App extends React.Component {
     clearTimeout(this._t)
 
     this._t = setTimeout(() => {
-      //Agent.emit('change')
-      Agent.pact('saveHosts', this.state.list)
+      Agent.emit('save', this.state.list)
     }, 1000)
   }
 

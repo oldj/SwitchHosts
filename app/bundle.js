@@ -1605,8 +1605,6 @@ var _require = require('electron'),
 
 var platform = process.platform;
 
-ipcRenderer.setMaxListeners(20);
-
 var EventEmitter = require('events');
 
 var MyEmitter = function (_EventEmitter) {
@@ -1623,20 +1621,25 @@ var MyEmitter = function (_EventEmitter) {
 
 var evt = new MyEmitter();
 
+ipcRenderer.setMaxListeners(20);
+
 var x_get_idx = 0;
 
 /**
  * act
  * @param action {String}
- * @param [data] {Any}
- * @param callback {Function}
+ * @param args {Array}
  */
-function act(action, data, callback) {
+function act(action) {
+  for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    args[_key - 1] = arguments[_key];
+  }
+
   var fn = ['_cb', new Date().getTime(), x_get_idx++].join('_');
 
-  if (!callback && typeof data === 'function') {
-    callback = data;
-    data = null;
+  var callback = void 0;
+  if (args.length > 0 && typeof args[args.length - 1] === 'function') {
+    callback = args.pop();
   }
 
   if (typeof callback === 'function') {
@@ -1647,20 +1650,21 @@ function act(action, data, callback) {
 
   ipcRenderer.send('x', {
     action: action,
-    data: data,
+    data: args,
     callback: fn
   });
 }
 
 function pact(action) {
-  for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    args[_key - 1] = arguments[_key];
+  for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+    args[_key2 - 1] = arguments[_key2];
   }
 
   return new Promise(function (resolve, reject) {
-    return act(action, args, function (err, result) {
+    args.push(function (err, result) {
       return err ? reject(err) : resolve(result);
     });
+    act.apply(undefined, [action].concat(args));
   });
 }
 
@@ -18977,6 +18981,10 @@ var _Agent = __webpack_require__(14);
 
 var _Agent2 = _interopRequireDefault(_Agent);
 
+var _index = __webpack_require__(219);
+
+var _index2 = _interopRequireDefault(_index);
+
 __webpack_require__(112);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -19012,16 +19020,7 @@ var App = function (_React$Component) {
       _this.setState({ lang: lang });
     });
 
-    _Agent2.default.on('toggle_hosts', function (hosts, on) {
-      _Agent2.default.pact('toggleHosts', hosts.id, on).then(function () {
-        hosts.on = on;
-        _this.setState({
-          list: _this.state.list
-        });
-      }).catch(function (e) {
-        console.log(e);
-      });
-    });
+    _index2.default.reg(_this);
     return _this;
   }
 
@@ -19044,7 +19043,7 @@ var App = function (_React$Component) {
       var _this3 = this;
 
       if (hosts.is_sys) {
-        _Agent2.default.act('getSysHosts', function (e, _hosts) {
+        _Agent2.default.pact('getSysHosts').then(function (_hosts) {
           _this3.setState({
             sys_hosts: _hosts,
             current: _hosts
@@ -19064,8 +19063,7 @@ var App = function (_React$Component) {
       clearTimeout(this._t);
 
       this._t = setTimeout(function () {
-        //Agent.emit('change')
-        _Agent2.default.pact('saveHosts', _this4.state.list);
+        _Agent2.default.emit('save', _this4.state.list);
       }, 1000);
     }
   }, {
@@ -19731,7 +19729,6 @@ var EditPrompt = function (_React$Component) {
   }, {
     key: 'onOK',
     value: function onOK() {
-      console.log('ok');
       this.setState({
         title: (this.state.title || '').replace(/^\s+|\s+$/g, ''),
         url: (this.state.url || '').replace(/^\s+|\s+$/g, '')
@@ -19748,6 +19745,7 @@ var EditPrompt = function (_React$Component) {
       }
 
       var data = Object.assign({}, this.current_hosts, this.state, this.state.is_add ? {
+        id: (0, _makeId2.default)(),
         content: '# ' + this.state.title,
         on: false
       } : {});
@@ -19755,7 +19753,7 @@ var EditPrompt = function (_React$Component) {
       if (!data.id) data.id = (0, _makeId2.default)();
 
       delete data['is_add'];
-      _Agent2.default.emit('hosts_' + (this.state.is_add ? 'add' : 'edit') + 'ed', data, this.current_hosts);
+      _Agent2.default.emit('hosts_update', data);
 
       this.setState({
         show: false
@@ -20587,6 +20585,12 @@ var ListItem = function (_React$Component) {
 
     _this.is_sys = !!_this.props.sys;
     _this.state = {};
+
+    _Agent2.default.on('select', function (id) {
+      if (id && id === _this.props.data.id) {
+        _this.beSelected();
+      }
+    });
     return _this;
   }
 
@@ -34609,6 +34613,189 @@ module.exports = (list) => {
 
 module.exports = function () {
   return new Date().getTime() + '-' + Math.floor(Math.random() * 1e6);
+};
+
+/***/ }),
+/* 219 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var req = __webpack_require__(225);
+
+exports.reg = function (app) {
+  req.keys().map(function (fn) {
+    var m = fn.match(/^\.\/([\w\-]+)\.js$/);
+    var name = m ? m[1] : null;
+    if (!name || name === 'index') return;
+    _Agent2.default.on(name, function () {
+      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      var fn = __webpack_require__(221)("./" + name);
+      fn.apply(undefined, [app].concat(args));
+    });
+  });
+};
+
+/***/ }),
+/* 220 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = function (app, hosts, on) {
+  _Agent2.default.pact('toggleHosts', hosts.id, on).then(function () {
+    hosts.on = on;
+    app.setState({
+      list: app.state.list
+    });
+  }).catch(function (e) {
+    console.log(e);
+  });
+};
+
+/***/ }),
+/* 221 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var map = {
+	"./hosts_update": 226,
+	"./hosts_update.js": 226,
+	"./index": 219,
+	"./index.js": 219,
+	"./save": 222,
+	"./save.js": 222,
+	"./toggle_hosts": 220,
+	"./toggle_hosts.js": 220
+};
+function webpackContext(req) {
+	return __webpack_require__(webpackContextResolve(req));
+};
+function webpackContextResolve(req) {
+	var id = map[req];
+	if(!(id + 1)) // check for number or string
+		throw new Error("Cannot find module '" + req + "'.");
+	return id;
+};
+webpackContext.keys = function webpackContextKeys() {
+	return Object.keys(map);
+};
+webpackContext.resolve = webpackContextResolve;
+module.exports = webpackContext;
+webpackContext.id = 221;
+
+/***/ }),
+/* 222 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = function (app, list) {
+  _Agent2.default.pact('saveHosts', list);
+};
+
+/***/ }),
+/* 223 */,
+/* 224 */,
+/* 225 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var map = {
+	"./hosts_update.js": 226,
+	"./index.js": 219,
+	"./save.js": 222,
+	"./toggle_hosts.js": 220
+};
+function webpackContext(req) {
+	return __webpack_require__(webpackContextResolve(req));
+};
+function webpackContextResolve(req) {
+	var id = map[req];
+	if(!(id + 1)) // check for number or string
+		throw new Error("Cannot find module '" + req + "'.");
+	return id;
+};
+webpackContext.keys = function webpackContextKeys() {
+	return Object.keys(map);
+};
+webpackContext.resolve = webpackContextResolve;
+module.exports = webpackContext;
+webpackContext.id = 225;
+
+/***/ }),
+/* 226 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+//import makeId from '../../app/libs/make-id'
+
+module.exports = function (app, hosts) {
+  var list = app.state.list;
+  var inner = list.find(function (item) {
+    return item.id === hosts.id;
+  });
+  if (!inner) {
+    list.push(Object.assign({}, hosts));
+  } else {
+    Object.assign(inner, hosts);
+  }
+
+  _Agent2.default.pact('saveHosts', list).then(function () {
+    app.setState({ list: list }, function () {
+      _Agent2.default.emit('select', hosts.id);
+    });
+  });
 };
 
 /***/ })
