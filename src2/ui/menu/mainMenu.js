@@ -25,7 +25,7 @@ exports.init = function (app, sys_lang = 'en') {
                     label: lang.new,
                     accelerator: 'CommandOrControl+N',
                     click: () => {
-                        ipcMain.emit('to_add_host');
+                        ipcMain.emit('to_add_hosts');
                     }
                 }, {
                     type: 'separator'

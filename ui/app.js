@@ -70,8 +70,8 @@ export default class App extends React.Component {
     }
   }
 
-  static isReadOnly (host) {
-    return !host || host.is_sys || host.where === 'remote'
+  static isReadOnly (hosts) {
+    return !hosts || hosts.is_sys || hosts.where === 'remote'
   }
 
   toSave () {

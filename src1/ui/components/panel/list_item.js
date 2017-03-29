@@ -29,7 +29,7 @@ export default class ListItem extends React.Component {
             });
         });
 
-        ipcRenderer.on('tray_toggle_host', (e, idx) => {
+        ipcRenderer.on('tray_toggle_hosts', (e, idx) => {
             // ipcRenderer.send('send_host_list', this.state.list);
             // this.toggleOne(idx);
             if (idx === this.props.idx) {

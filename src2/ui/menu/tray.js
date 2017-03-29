@@ -41,7 +41,7 @@ function makeMenu(app, list, contents, sys_lang) {
             checked: item.on,
             accelerator: ac[idx],
             click: () => {
-                contents.send('tray_toggle_host', idx);
+                contents.send('tray_toggle_hosts', idx);
                 contents.send('get_host_list');
             }
         });

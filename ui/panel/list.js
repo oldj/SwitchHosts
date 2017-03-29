@@ -26,7 +26,7 @@ export default class List extends React.Component {
           current={this.props.current}
           setCurrent={this.props.setCurrent}
           //onToggle={(success) => this.toggleOne(idx, success)}
-          key={'host-' + idx}
+          key={'hosts-' + idx}
           //dragOrder={(sidx, tidx) => this.dragOrder(sidx, tidx)}
         />
       )

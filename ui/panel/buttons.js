@@ -23,7 +23,7 @@ export default class Buttons extends React.Component {
   }
 
   static btnAdd () {
-    Agent.emit('add_host')
+    Agent.emit('add_hosts')
   }
 
   btnToggle () {

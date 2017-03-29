@@ -46,5 +46,5 @@ export default function () {
     }
   })
 
-  //CodeMirror.defineMIME('text/x-host', 'hosts');
+  //CodeMirror.defineMIME('text/x-hosts', 'hosts');
 }
