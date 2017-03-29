@@ -30,13 +30,11 @@ export default class ListItem extends React.Component {
   }
 
   toggle () {
-    let on = !this.props.data.on
-
-    Agent.emit('toggle_hosts', this.props.data, on)
+    Agent.emit('toggle_hosts', Object.assign({}, this.props.data))
   }
 
   toEdit () {
-    Agent.emit('edit_hosts', this.props.data)
+    Agent.emit('edit_hosts', Object.assign({}, this.props.data))
   }
 
   componentDidMount () {

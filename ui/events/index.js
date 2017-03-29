@@ -6,7 +6,6 @@
 'use strict'
 
 import Agent from '../Agent'
-
 const req = require.context('./', false, /\.js$/)
 
 exports.reg = (app) => {

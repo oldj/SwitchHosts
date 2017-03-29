@@ -50,6 +50,12 @@ function pact (action, ...args) {
   })
 }
 
+
+ipcRenderer.on('y', (sender, d) => {
+  console.log(d)
+  evt.emit(d.event, ...d.data || [])
+})
+
 module.exports = {
   IS_DEV
   , platform

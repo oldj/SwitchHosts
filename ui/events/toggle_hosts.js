@@ -5,17 +5,10 @@
 
 'use strict'
 
-import Agent from '../Agent'
+//import Agent from '../Agent'
+const update = require('./update_hosts')
 
-module.exports = (app, hosts, on) => {
-  Agent.pact('toggleHosts', hosts.id, on)
-    .then(() => {
-      hosts.on = on
-      app.setState({
-        list: app.state.list
-      })
-    })
-    .catch(e => {
-      console.log(e)
-    })
+module.exports = (app, hosts) => {
+  hosts.on = !hosts.on
+  update(app, hosts)
 }

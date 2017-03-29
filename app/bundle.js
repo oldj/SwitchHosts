@@ -1592,6 +1592,8 @@ module.exports = ReactCurrentOwner;
 
 'use strict';
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -1669,6 +1671,11 @@ function pact(action) {
     act.apply(undefined, [action].concat(args));
   });
 }
+
+ipcRenderer.on('y', function (sender, d) {
+  console.log(d);
+  evt.emit.apply(evt, [d.event].concat(_toConsumableArray(d.data || [])));
+});
 
 module.exports = {
   IS_DEV: IS_DEV,
@@ -18975,6 +18982,10 @@ var _content = __webpack_require__(86);
 
 var _content2 = _interopRequireDefault(_content);
 
+var _sudo = __webpack_require__(230);
+
+var _sudo2 = _interopRequireDefault(_sudo);
+
 var _edit = __webpack_require__(89);
 
 var _edit2 = _interopRequireDefault(_edit);
@@ -18994,8 +19005,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-//import SudoPrompt from './frame/sudo'
-
 //import PreferencesPrompt from './frame/preferences'
 
 
@@ -19106,6 +19115,7 @@ var App = function (_React$Component) {
         _react2.default.createElement(
           'div',
           { className: 'frames' },
+          _react2.default.createElement(_sudo2.default, { lang: this.state.lang }),
           _react2.default.createElement(_edit2.default, { lang: this.state.lang, list: this.state.list })
         )
       );
@@ -20604,14 +20614,12 @@ var ListItem = function (_React$Component) {
   }, {
     key: 'toggle',
     value: function toggle() {
-      var on = !this.props.data.on;
-
-      _Agent2.default.emit('toggle_hosts', this.props.data, on);
+      _Agent2.default.emit('toggle_hosts', Object.assign({}, this.props.data));
     }
   }, {
     key: 'toEdit',
     value: function toEdit() {
-      _Agent2.default.emit('edit_hosts', this.props.data);
+      _Agent2.default.emit('edit_hosts', Object.assign({}, this.props.data));
     }
   }, {
     key: 'componentDidMount',
@@ -34716,21 +34724,13 @@ exports.reg = function (app) {
 
 
 
-var _Agent = __webpack_require__(14);
+//import Agent from '../Agent'
 
-var _Agent2 = _interopRequireDefault(_Agent);
+var update = __webpack_require__(228);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-module.exports = function (app, hosts, on) {
-  _Agent2.default.pact('toggleHosts', hosts.id, on).then(function () {
-    hosts.on = on;
-    app.setState({
-      list: app.state.list
-    });
-  }).catch(function (e) {
-    console.log(e);
-  });
+module.exports = function (app, hosts) {
+  hosts.on = !hosts.on;
+  update(app, hosts);
 };
 
 /***/ }),
@@ -34740,6 +34740,8 @@ module.exports = function (app, hosts, on) {
 var map = {
 	"./del_hosts": 227,
 	"./del_hosts.js": 227,
+	"./esc": 233,
+	"./esc.js": 233,
 	"./index": 219,
 	"./index.js": 219,
 	"./order": 229,
@@ -34797,6 +34799,7 @@ module.exports = function (app, list) {
 
 var map = {
 	"./del_hosts.js": 227,
+	"./esc.js": 233,
 	"./index.js": 219,
 	"./order.js": 229,
 	"./save.js": 222,
@@ -34879,14 +34882,15 @@ var _Agent2 = _interopRequireDefault(_Agent);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = function (app, hosts) {
-  var list = app.state.list;
-  var inner = list.find(function (item) {
+  var list = app.state.list.slice(0);
+  var idx = list.findIndex(function (item) {
     return item.id === hosts.id;
   });
-  if (!inner) {
+  if (idx === -1) {
     list.push(Object.assign({}, hosts));
   } else {
-    Object.assign(inner, hosts);
+    var old_hosts = list[idx];
+    list.splice(idx, 1, Object.assign({}, old_hosts, hosts));
   }
 
   _Agent2.default.pact('saveHosts', list).then(function () {
@@ -34929,6 +34933,222 @@ module.exports = function (app, ids) {
   _Agent2.default.pact('saveHosts', new_list).then(function () {
     return app.setState({ list: list });
   });
+};
+
+/***/ }),
+/* 230 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog http://oldj.net
+ */
+
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(7);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+var _frame = __webpack_require__(90);
+
+var _frame2 = _interopRequireDefault(_frame);
+
+__webpack_require__(232);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var SudoPrompt = function (_React$Component) {
+  _inherits(SudoPrompt, _React$Component);
+
+  function SudoPrompt(props) {
+    _classCallCheck(this, SudoPrompt);
+
+    var _this = _possibleConstructorReturn(this, (SudoPrompt.__proto__ || Object.getPrototypeOf(SudoPrompt)).call(this, props));
+
+    _this.onSuccess = null;
+    _this.state = {
+      show: false,
+      pswd: ''
+    };
+    return _this;
+  }
+
+  _createClass(SudoPrompt, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      var _this2 = this;
+
+      _Agent2.default.on('sudo_prompt', function (success) {
+        _this2.setState({ show: true });
+        _this2.onSuccess = success;
+        setTimeout(function () {
+          var el = _this2.refs.body;
+          el && el.querySelector('input').focus();
+        }, 100);
+      });
+    }
+  }, {
+    key: 'onOK',
+    value: function onOK() {
+      var pswd = this.refs.pswd.value;
+      if (!pswd) return;
+
+      this.setState({
+        show: false,
+        pswd: pswd
+      });
+
+      _Agent2.default.emit('sudo_pswd', pswd);
+      if (typeof this.onSuccess === 'function') {
+        this.onSuccess(pswd);
+      }
+      this.onSuccess = null;
+    }
+  }, {
+    key: 'onCancel',
+    value: function onCancel() {
+      this.setState({
+        show: false
+      });
+      this.onSuccess = null;
+    }
+  }, {
+    key: 'body',
+    value: function body() {
+      var _this3 = this;
+
+      var lang = this.props.lang;
+
+      return _react2.default.createElement(
+        'div',
+        { ref: 'body' },
+        _react2.default.createElement(
+          'div',
+          { className: 'ln' },
+          _react2.default.createElement(
+            'div',
+            { className: 'title' },
+            lang.sudo_pswd
+          ),
+          _react2.default.createElement(
+            'div',
+            { className: 'cnt' },
+            _react2.default.createElement('input', {
+              type: 'password',
+              ref: 'pswd',
+              onKeyDown: function onKeyDown(e) {
+                return e.keyCode === 13 && _this3.onOK() || e.keyCode === 27 && _this3.onCancel();
+              }
+            })
+          )
+        )
+      );
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this4 = this;
+
+      var lang = this.props.lang;
+
+      return _react2.default.createElement(_frame2.default, {
+        show: this.state.show,
+        head: lang.input_sudo_pswd,
+        body: this.body(),
+        onOK: function onOK() {
+          return _this4.onOK();
+        },
+        onCancel: function onCancel() {
+          return _this4.onCancel();
+        },
+        lang: lang
+      });
+    }
+  }]);
+
+  return SudoPrompt;
+}(_react2.default.Component);
+
+exports.default = SudoPrompt;
+
+/***/ }),
+/* 231 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(6)();
+// imports
+
+
+// module
+exports.push([module.i, ".frame {\n  position: fixed;\n  top: 0;\n  right: 0;\n  bottom: 0;\n  left: 0;\n}\n.frame .overlay {\n  position: absolute;\n  z-index: -1;\n  width: 100%;\n  height: 100%;\n  background: #000;\n  opacity: 0.5;\n}\n.frame .prompt {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  min-width: 300px;\n  max-width: 600px;\n  background: #fff;\n  box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);\n}\n.frame .prompt .head {\n  padding: 20px;\n  font-size: 16px;\n  background: #f5f5f5;\n}\n.frame .prompt .body {\n  padding: 20px 20px;\n}\n.frame .prompt .body .ln {\n  line-height: 30px;\n  padding: 2px 0;\n}\n.frame .prompt .body .ln .title {\n  float: left;\n  width: 100px;\n  line-height: 24px;\n}\n.frame .prompt .body .ln .cnt {\n  margin-left: 100px;\n  line-height: 24px;\n}\n.frame .prompt .body .ln .cnt input[type=text] {\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .body .ln .cnt textarea {\n  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;\n}\n.frame .prompt .body .ln .inform {\n  color: #999;\n  line-height: 24px;\n}\n.frame .prompt .body input {\n  padding: 6px 4px;\n}\n.frame .prompt .body input[type=password] {\n  letter-spacing: 8px;\n  width: 240px;\n  outline: none;\n  padding: 6px 10px;\n}\n.frame .prompt .foot {\n  padding: 20px;\n  background: #f5f5f5;\n  text-align: right;\n}\n.frame .prompt .foot .button {\n  display: inline-block;\n  background: #ccc;\n  padding: 8px 20px;\n  margin-left: 1em;\n  cursor: pointer;\n}\n.frame .prompt .foot .button:hover {\n  background: #ddd;\n}\n.frame .prompt .foot .button.btn-default {\n  background: #05a;\n  color: #fff;\n}\n.frame .prompt .foot .button.btn-default:hover {\n  background: #0077ee;\n}\n.frame .prompt {\n  width: 480px;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 232 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(231);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(8)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../../node_modules/css-loader/index.js!../../node_modules/less-loader/dist/index.js!./sudo.less", function() {
+			var newContent = require("!!../../node_modules/css-loader/index.js!../../node_modules/less-loader/dist/index.js!./sudo.less");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 233 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = function () {
+  _Agent2.default.pact('esc');
 };
 
 /***/ })
