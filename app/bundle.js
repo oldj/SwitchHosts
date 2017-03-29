@@ -19114,8 +19114,8 @@ var App = function (_React$Component) {
     }
   }], [{
     key: 'isReadOnly',
-    value: function isReadOnly(host) {
-      return !host || host.is_sys || host.where === 'remote';
+    value: function isReadOnly(hosts) {
+      return !hosts || hosts.is_sys || hosts.where === 'remote';
     }
   }]);
 
@@ -19189,7 +19189,7 @@ exports.default = function () {
     };
   });
 
-  //CodeMirror.defineMIME('text/x-host', 'hosts');
+  //CodeMirror.defineMIME('text/x-hosts', 'hosts');
 };
 
 var _codemirror = __webpack_require__(33);
@@ -19633,6 +19633,10 @@ var _Agent = __webpack_require__(14);
 
 var _Agent2 = _interopRequireDefault(_Agent);
 
+var _makeId = __webpack_require__(218);
+
+var _makeId2 = _interopRequireDefault(_makeId);
+
 __webpack_require__(115);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -19662,7 +19666,7 @@ var EditPrompt = function (_React$Component) {
       is_loading: false
     };
 
-    _this.current_host = null;
+    _this.current_hosts = null;
     return _this;
   }
 
@@ -19688,45 +19692,46 @@ var EditPrompt = function (_React$Component) {
     value: function componentDidMount() {
       var _this2 = this;
 
-      _Agent2.default.on('add_host', function () {
+      _Agent2.default.on('add_hosts', function () {
         _this2.setState({
           show: true,
-          add: true
+          is_add: true
         });
         setTimeout(function () {
           _this2.tryToFocus();
         }, 100);
       });
 
-      _Agent2.default.on('edit_host', function (host) {
-        _this2.current_host = host;
+      _Agent2.default.on('edit_hosts', function (hosts) {
+        _this2.current_hosts = hosts;
         _this2.setState({
           show: true,
-          add: false,
-          where: host.where || 'local',
-          title: host.title || '',
-          url: host.url || '',
-          last_refresh: host.last_refresh || null,
-          refresh_interval: host.refresh_interval || 0
+          is_add: false,
+          where: hosts.where || 'local',
+          title: hosts.title || '',
+          url: hosts.url || '',
+          last_refresh: hosts.last_refresh || null,
+          refresh_interval: hosts.refresh_interval || 0
         });
         setTimeout(function () {
           _this2.tryToFocus();
         }, 100);
       });
 
-      _Agent2.default.on('loading_done', function (old_host, data) {
-        if (old_host === _this2.current_host) {
+      _Agent2.default.on('loading_done', function (old_hosts, data) {
+        if (old_hosts === _this2.current_hosts) {
           _this2.setState({
             last_refresh: data.last_refresh,
             is_loading: false
           });
-          _Agent2.default.emit('host_refreshed', data, _this2.current_host);
+          _Agent2.default.emit('host_refreshed', data, _this2.current_hosts);
         }
       });
     }
   }, {
     key: 'onOK',
     value: function onOK() {
+      console.log('ok');
       this.setState({
         title: (this.state.title || '').replace(/^\s+|\s+$/g, ''),
         url: (this.state.url || '').replace(/^\s+|\s+$/g, '')
@@ -19736,20 +19741,21 @@ var EditPrompt = function (_React$Component) {
         this.refs.title.focus();
         return false;
       }
+
       if (this.state.where === 'remote' && this.state.url === '') {
         this.refs.url.focus();
         return false;
       }
 
-      var data = Object.assign({}, this.current_host, this.state, this.state.add ? {
+      var data = Object.assign({}, this.current_hosts, this.state, this.state.is_add ? {
         content: '# ' + this.state.title,
         on: false
       } : {});
 
-      if (!data.id) data.id = util.makeId();
+      if (!data.id) data.id = (0, _makeId2.default)();
 
-      delete data['add'];
-      _Agent2.default.emit('host_' + (this.state.add ? 'add' : 'edit') + 'ed', data, this.current_host);
+      delete data['is_add'];
+      _Agent2.default.emit('hosts_' + (this.state.is_add ? 'add' : 'edit') + 'ed', data, this.current_hosts);
 
       this.setState({
         show: false
@@ -19770,7 +19776,7 @@ var EditPrompt = function (_React$Component) {
       var lang = this.props.lang;
 
       if (!confirm(lang.confirm_del)) return;
-      _Agent2.default.emit('del_host', this.current_host);
+      _Agent2.default.emit('del_hosts', this.current_hosts);
       this.setState({
         show: false
       });
@@ -19800,7 +19806,7 @@ var EditPrompt = function (_React$Component) {
   }, {
     key: 'getEditOperations',
     value: function getEditOperations() {
-      if (this.state.add) return null;
+      if (this.state.is_add) return null;
 
       var lang = this.props.lang;
 
@@ -19820,7 +19826,7 @@ var EditPrompt = function (_React$Component) {
             _react2.default.createElement(
               'span',
               null,
-              lang.del_host
+              lang.del_hosts
             )
           )
         )
@@ -19833,7 +19839,7 @@ var EditPrompt = function (_React$Component) {
 
       if (this.state.is_loading) return;
 
-      _Agent2.default.emit('check_host_refresh', this.current_host, true);
+      _Agent2.default.emit('check_host_refresh', this.current_hosts, true);
       this.setState({
         is_loading: true
       }, function () {
@@ -19914,7 +19920,7 @@ var EditPrompt = function (_React$Component) {
               className: (0, _classnames2.default)({
                 iconfont: 1,
                 'icon-refresh': 1,
-                'invisible': !this.current_host || this.state.url !== this.current_host.url,
+                'invisible': !this.current_hosts || this.state.url !== this.current_hosts.url,
                 'loading': this.state.is_loading
               }),
               title: lang.refresh,
@@ -20019,7 +20025,7 @@ var EditPrompt = function (_React$Component) {
 
       return _react2.default.createElement(_frame2.default, {
         show: this.state.show,
-        head: lang[this.state.add ? 'add_host' : 'edit_host'],
+        head: lang[this.state.is_add ? 'add_hosts' : 'edit_hosts'],
         body: this.body(),
         onOK: function onOK() {
           return _this6.onOK();
@@ -20227,7 +20233,7 @@ var Group = function (_React$Component) {
       list: []
     };
 
-    _this.current_host = null;
+    _this.current_hosts = null;
     return _this;
   }
 
@@ -20522,7 +20528,7 @@ var Buttons = function (_React$Component) {
   }], [{
     key: 'btnAdd',
     value: function btnAdd() {
-      _Agent2.default.emit('add_host');
+      _Agent2.default.emit('add_hosts');
     }
   }]);
 
@@ -20604,6 +20610,11 @@ var ListItem = function (_React$Component) {
       _Agent2.default.emit('toggle_hosts', this.props.data, on);
     }
   }, {
+    key: 'toEdit',
+    value: function toEdit() {
+      _Agent2.default.emit('edit_hosts', this.props.data);
+    }
+  }, {
     key: 'render',
     value: function render() {
       var _props = this.props,
@@ -20620,7 +20631,7 @@ var ListItem = function (_React$Component) {
         { className: (0, _classnames2.default)({
             'list-item': 1
             //, 'hidden': !this.isMatched()
-            , 'sys-host': sys,
+            , 'sys-hosts': sys,
             'selected': is_selected
           }),
           onClick: this.beSelected.bind(this)
@@ -20637,8 +20648,8 @@ var ListItem = function (_React$Component) {
             onClick: this.toggle.bind(this)
           }),
           _react2.default.createElement('i', {
-            className: 'iconfont icon-edit'
-            //onClick={this.toEdit.bind(this)}
+            className: 'iconfont icon-edit',
+            onClick: this.toEdit.bind(this)
           })
         ),
         _react2.default.createElement('i', { className: (0, _classnames2.default)({
@@ -20725,7 +20736,7 @@ var List = function (_React$Component) {
           current: _this2.props.current,
           setCurrent: _this2.props.setCurrent
           //onToggle={(success) => this.toggleOne(idx, success)}
-          , key: 'host-' + idx
+          , key: 'hosts-' + idx
           //dragOrder={(sidx, tidx) => this.dragOrder(sidx, tidx)}
         });
       });
@@ -21059,7 +21070,7 @@ exports = module.exports = __webpack_require__(6)();
 
 
 // module
-exports.push([module.i, "#sh-list .list-item {\n  padding: 7px 10px 7px 15px;\n  cursor: pointer;\n}\n#sh-list .list-item.hidden {\n  display: none;\n}\n#sh-list .list-item.sys-host {\n  font-size: 14px;\n  padding: 8px 10px 8px 12px;\n}\n#sh-list .list-item.sys-host i {\n  width: 23px;\n}\n#sh-list .list-item.selected {\n  background: #2d3138;\n}\n#sh-list .list-item.selected span {\n  color: #fff;\n}\n#sh-list .list-item.selected i.item-icon {\n  color: #fff;\n}\n#sh-list .list-item.selected:hover i.icon-edit {\n  display: block;\n  color: #fff;\n}\n#sh-list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 5px;\n}\n#sh-list .list-item i.item-icon {\n  font-size: 12px;\n}\n#sh-list .list-item i.switch {\n  float: right;\n  cursor: pointer;\n  line-height: 23px;\n}\n#sh-list .list-item i.switch.icon-on {\n  color: #af9;\n}\n#sh-list .list-item i.icon-edit {\n  float: right;\n  display: none;\n}\n", ""]);
+exports.push([module.i, "#sh-list .list-item {\n  padding: 7px 10px 7px 15px;\n  cursor: pointer;\n}\n#sh-list .list-item.hidden {\n  display: none;\n}\n#sh-list .list-item.sys-hosts {\n  font-size: 14px;\n  padding: 8px 10px 8px 12px;\n}\n#sh-list .list-item.sys-hosts i {\n  width: 23px;\n}\n#sh-list .list-item.selected {\n  background: #2d3138;\n}\n#sh-list .list-item.selected span {\n  color: #fff;\n}\n#sh-list .list-item.selected i.item-icon {\n  color: #fff;\n}\n#sh-list .list-item.selected:hover i.icon-edit {\n  display: block;\n  color: #fff;\n}\n#sh-list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 5px;\n}\n#sh-list .list-item i.item-icon {\n  font-size: 12px;\n}\n#sh-list .list-item i.switch {\n  float: right;\n  cursor: pointer;\n  line-height: 23px;\n}\n#sh-list .list-item i.switch.icon-on {\n  color: #af9;\n}\n#sh-list .list-item i.icon-edit {\n  float: right;\n  display: none;\n}\n", ""]);
 
 // exports
 
@@ -34583,6 +34594,22 @@ module.exports = (list) => {
   }
 }
 
+
+/***/ }),
+/* 218 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+module.exports = function () {
+  return new Date().getTime() + '-' + Math.floor(Math.random() * 1e6);
+};
 
 /***/ })
 /******/ ]);

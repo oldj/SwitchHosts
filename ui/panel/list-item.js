@@ -34,6 +34,10 @@ export default class ListItem extends React.Component {
     Agent.emit('toggle_hosts', this.props.data, on)
   }
 
+  toEdit () {
+    Agent.emit('edit_hosts', this.props.data)
+  }
+
   render () {
     let {data, sys, current} = this.props
     let is_selected = data === current
@@ -44,7 +48,7 @@ export default class ListItem extends React.Component {
       <div className={classnames({
         'list-item': 1
         //, 'hidden': !this.isMatched()
-        , 'sys-host': sys
+        , 'sys-hosts': sys
         , 'selected': is_selected
       })}
            onClick={this.beSelected.bind(this)}
@@ -61,7 +65,7 @@ export default class ListItem extends React.Component {
             />
             <i
               className="iconfont icon-edit"
-              //onClick={this.toEdit.bind(this)}
+              onClick={this.toEdit.bind(this)}
             />
           </div>
         )}

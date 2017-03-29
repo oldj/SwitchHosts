@@ -23,16 +23,16 @@ export default class Content extends React.Component {
     }
     this._t = null
 
-    Agent.on('loading', (host) => {
-      if (host === this.props.current) {
+    Agent.on('loading', (hosts) => {
+      if (hosts === this.props.current) {
         this.setState({
           is_loading: true
         })
       }
     })
 
-    Agent.on('loading_done', (host, data) => {
-      if (host === this.props.current) {
+    Agent.on('loading_done', (hosts, data) => {
+      if (hosts === this.props.current) {
         this.setState({
           is_loading: false,
           code: data.content || ''

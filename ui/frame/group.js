@@ -19,7 +19,7 @@ export default class Group extends React.Component {
       list: []
     }
 
-    this.current_host = null
+    this.current_hosts = null
   }
 
   makeItem (item) {

@@ -140,8 +140,8 @@ a:hover {
 #pswd-form .body .ln .inform {
   color: #f03;
 }
-#edit-form .body .ln .delete-host,
-#pswd-form .body .ln .delete-host {
+#edit-form .body .ln .delete-hosts,
+#pswd-form .body .ln .delete-hosts {
   color: #f03;
 }
 #edit-form .foot,
@@ -162,7 +162,7 @@ a:hover {
   background: #09f;
   color: #fff;
 }
-#host-list ul {
+#hosts-list ul {
   margin: 0;
   padding: 0;
   list-style: none;

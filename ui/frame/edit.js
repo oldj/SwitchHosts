@@ -10,6 +10,7 @@ import MyFrame from './frame'
 import classnames from 'classnames'
 import Group from './group'
 import Agent from '../Agent'
+import makeId from '../../app/libs/make-id'
 import './edit.less'
 
 export default class EditPrompt extends React.Component {
@@ -27,7 +28,7 @@ export default class EditPrompt extends React.Component {
       is_loading: false
     }
 
-    this.current_host = null
+    this.current_hosts = null
   }
 
   tryToFocus () {
@@ -46,44 +47,45 @@ export default class EditPrompt extends React.Component {
   }
 
   componentDidMount () {
-    Agent.on('add_host', () => {
+    Agent.on('add_hosts', () => {
       this.setState({
         show: true,
-        add: true
+        is_add: true
       })
       setTimeout(() => {
         this.tryToFocus()
       }, 100)
     })
 
-    Agent.on('edit_host', (host) => {
-      this.current_host = host
+    Agent.on('edit_hosts', (hosts) => {
+      this.current_hosts = hosts
       this.setState({
         show: true,
-        add: false,
-        where: host.where || 'local',
-        title: host.title || '',
-        url: host.url || '',
-        last_refresh: host.last_refresh || null,
-        refresh_interval: host.refresh_interval || 0
+        is_add: false,
+        where: hosts.where || 'local',
+        title: hosts.title || '',
+        url: hosts.url || '',
+        last_refresh: hosts.last_refresh || null,
+        refresh_interval: hosts.refresh_interval || 0
       })
       setTimeout(() => {
         this.tryToFocus()
       }, 100)
     })
 
-    Agent.on('loading_done', (old_host, data) => {
-      if (old_host === this.current_host) {
+    Agent.on('loading_done', (old_hosts, data) => {
+      if (old_hosts === this.current_hosts) {
         this.setState({
           last_refresh: data.last_refresh,
           is_loading: false
         })
-        Agent.emit('host_refreshed', data, this.current_host)
+        Agent.emit('host_refreshed', data, this.current_hosts)
       }
     })
   }
 
   onOK () {
+    console.log('ok')
     this.setState({
       title: (this.state.title || '').replace(/^\s+|\s+$/g, ''),
       url: (this.state.url || '').replace(/^\s+|\s+$/g, '')
@@ -93,22 +95,23 @@ export default class EditPrompt extends React.Component {
       this.refs.title.focus()
       return false
     }
+
     if (this.state.where === 'remote' && this.state.url === '') {
       this.refs.url.focus()
       return false
     }
 
-    let data = Object.assign({}, this.current_host, this.state,
-      this.state.add ? {
+    let data = Object.assign({}, this.current_hosts, this.state,
+      this.state.is_add ? {
         content: `# ${this.state.title}`,
         on: false
       } : {})
 
-    if (!data.id) data.id = util.makeId()
+    if (!data.id) data.id = makeId()
 
-    delete data['add']
-    Agent.emit('host_' + (this.state.add ? 'add' : 'edit') + 'ed', data,
-      this.current_host)
+    delete data['is_add']
+    Agent.emit('hosts_' + (this.state.is_add ? 'add' : 'edit') + 'ed', data,
+      this.current_hosts)
 
     this.setState({
       show: false
@@ -126,7 +129,7 @@ export default class EditPrompt extends React.Component {
   confirmDel () {
     let {lang} = this.props
     if (!confirm(lang.confirm_del)) return
-    Agent.emit('del_host', this.current_host)
+    Agent.emit('del_hosts', this.current_hosts)
     this.setState({
       show: false
     })
@@ -152,7 +155,7 @@ export default class EditPrompt extends React.Component {
   }
 
   getEditOperations () {
-    if (this.state.add) return null
+    if (this.state.is_add) return null
 
     let {lang} = this.props
 
@@ -163,7 +166,7 @@ export default class EditPrompt extends React.Component {
              onClick={this.confirmDel.bind(this)}
           >
             <i className="iconfont icon-delete"/>
-            <span>{lang.del_host}</span>
+            <span>{lang.del_hosts}</span>
           </a>
         </div>
       </div>
@@ -173,7 +176,7 @@ export default class EditPrompt extends React.Component {
   refresh () {
     if (this.state.is_loading) return
 
-    Agent.emit('check_host_refresh', this.current_host, true)
+    Agent.emit('check_host_refresh', this.current_hosts, true)
     this.setState({
       is_loading: true
     }, () => {
@@ -228,8 +231,8 @@ export default class EditPrompt extends React.Component {
               className={classnames({
                 iconfont: 1,
                 'icon-refresh': 1,
-                'invisible': !this.current_host ||
-                             this.state.url !== this.current_host.url,
+                'invisible': !this.current_hosts ||
+                             this.state.url !== this.current_hosts.url,
                 'loading': this.state.is_loading
               })}
               title={lang.refresh}
@@ -294,7 +297,7 @@ export default class EditPrompt extends React.Component {
     return (
       <MyFrame
         show={this.state.show}
-        head={lang[this.state.add ? 'add_host' : 'edit_host']}
+        head={lang[this.state.is_add ? 'add_hosts' : 'edit_hosts']}
         body={this.body()}
         onOK={() => this.onOK()}
         onCancel={() => this.onCancel()}
