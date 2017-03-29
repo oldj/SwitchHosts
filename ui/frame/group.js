@@ -24,7 +24,7 @@ export default class Group extends React.Component {
 
   makeItem (item) {
     let attrs = {
-      'data-id': 'id:' + (item.id || '')
+      'data-id': item.id || ''
     }
     return (
       <div className="hosts-item" {...attrs}>
@@ -69,8 +69,6 @@ export default class Group extends React.Component {
   }
 
   componentWillMount () {
-    console.log(1111)
-    console.log(this.props)
     this.setState({
       list: this.props.list
     })

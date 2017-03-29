@@ -54,6 +54,10 @@ export default class ListItem extends React.Component {
 
     if (!data) return null
 
+    let attrs = {
+      'data-id': data.id || ''
+    }
+
     return (
       <div className={classnames({
         'list-item': 1
@@ -63,6 +67,7 @@ export default class ListItem extends React.Component {
       })}
            onClick={this.beSelected.bind(this)}
            ref={el => this.el = el}
+           {...attrs}
       >
         {sys ? null : (
           <div>

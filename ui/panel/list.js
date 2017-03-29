@@ -7,6 +7,9 @@
 
 import React from 'react'
 import ListItem from './list-item'
+import Sortable from 'sortablejs'
+import listToArray from 'wheel-js/src/common/list-to-array'
+import Agent from '../Agent'
 import './list.less'
 
 export default class List extends React.Component {
@@ -30,6 +33,25 @@ export default class List extends React.Component {
           //dragOrder={(sidx, tidx) => this.dragOrder(sidx, tidx)}
         />
       )
+    })
+  }
+
+  getCurrentListFromDOM () {
+    let nodes = this.refs.items.getElementsByClassName('list-item')
+    nodes = listToArray(nodes)
+    let ids = nodes.map(el => el.getAttribute('data-id'))
+
+    Agent.emit('order', ids)
+  }
+
+  componentDidMount () {
+    Sortable.create(this.refs.items, {
+      group: 'list-sorting'
+      , sort: true
+      , onSort: evt => {
+        this.getCurrentListFromDOM()
+        //console.log(evt)
+      }
     })
   }
 
