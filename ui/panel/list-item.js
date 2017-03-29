@@ -31,7 +31,7 @@ export default class ListItem extends React.Component {
   toggle () {
     let on = !this.props.data.on
 
-    Agent.emit('toggle-hosts', this.props.data, on)
+    Agent.emit('toggle_hosts', this.props.data, on)
   }
 
   render () {

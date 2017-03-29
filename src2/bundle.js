@@ -11584,7 +11584,7 @@ var Buttons = function (_React$Component) {
     });
 
     _Agent2.default.on('cancel_search', function () {
-      _this.calcelSearch();
+      _this.cancelSearch();
     });
 
     _Agent2.default.on('to_add_host', function () {

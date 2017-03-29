@@ -9,7 +9,7 @@ import React from 'react'
 import Panel from './panel/panel'
 import Content from './content/content'
 //import SudoPrompt from './frame/sudo'
-//import EditPrompt from './frame/edit'
+import EditPrompt from './frame/edit'
 //import PreferencesPrompt from './frame/preferences'
 import Agent from './Agent'
 import './app.less'
@@ -31,7 +31,7 @@ export default class App extends React.Component {
       this.setState({lang})
     })
 
-    Agent.on('toggle-hosts', (hosts, on) => {
+    Agent.on('toggle_hosts', (hosts, on) => {
       Agent.pact('toggleHosts', hosts.id, on)
         .then(() => {
           hosts.on = on
@@ -115,11 +115,11 @@ export default class App extends React.Component {
           setHostsContent={this.setHostsContent.bind(this)}
           lang={this.state.lang}
         />
-        {/*<div className="frames">*/}
-        {/*<SudoPrompt/>*/}
-        {/*<EditPrompt hosts={this.state.hosts}/>*/}
-        {/*<PreferencesPrompt/>*/}
-        {/*</div>*/}
+        <div className="frames">
+          {/*<SudoPrompt/>*/}
+          <EditPrompt lang={this.state.lang} list={this.state.list}/>
+          {/*<PreferencesPrompt/>*/}
+        </div>
       </div>
     )
   }
