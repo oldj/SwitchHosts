@@ -6,7 +6,6 @@
 'use strict'
 
 import Agent from '../Agent'
-//import makeId from '../../app/libs/make-id'
 
 module.exports = (app, hosts) => {
   let list = app.state.list

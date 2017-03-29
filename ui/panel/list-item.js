@@ -17,17 +17,12 @@ export default class ListItem extends React.Component {
     this.is_sys = !!this.props.sys
     this.state = {}
 
-    Agent.on('select', id => {
-      if (id && id === this.props.data.id) {
-        this.beSelected()
-      }
-    })
   }
 
   getTitle () {
     let {lang} = this.props
     return this.is_sys ? lang.sys_host_title : this.props.data.title ||
-      lang.untitled
+                                               lang.untitled
   }
 
   beSelected () {
@@ -44,6 +39,15 @@ export default class ListItem extends React.Component {
     Agent.emit('edit_hosts', this.props.data)
   }
 
+  componentDidMount () {
+    Agent.on('select', id => {
+      if (id && id === this.props.data.id) {
+        this.beSelected()
+        this.el && this.el.scrollIntoView()
+      }
+    })
+  }
+
   render () {
     let {data, sys, current} = this.props
     let is_selected = data === current
@@ -58,6 +62,7 @@ export default class ListItem extends React.Component {
         , 'selected': is_selected
       })}
            onClick={this.beSelected.bind(this)}
+           ref={el => this.el = el}
       >
         {sys ? null : (
           <div>
