@@ -23,4 +23,5 @@ module.exports = (app, hosts) => {
         Agent.emit('select', hosts.id)
       })
     })
+    .catch(e => console.log(e))
 }

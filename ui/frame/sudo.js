@@ -34,7 +34,11 @@ export default class SudoPrompt extends React.Component {
 
   onOK () {
     let pswd = this.refs.pswd.value
-    if (!pswd) return
+    if (!pswd) {
+      let el = this.refs.body
+      el && el.querySelector('input').focus()
+      return
+    }
 
     this.setState({
       show: false,
@@ -49,6 +53,7 @@ export default class SudoPrompt extends React.Component {
   }
 
   onCancel () {
+    Agent.emit('sudo_cancel')
     this.setState({
       show: false
     })

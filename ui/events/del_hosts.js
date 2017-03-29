@@ -26,4 +26,5 @@ module.exports = (app, hosts) => {
         }
       })
     })
+    .catch(e => console.log(e))
 }

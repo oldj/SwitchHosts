@@ -1594,12 +1594,6 @@ module.exports = ReactCurrentOwner;
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
 var IS_DEV = process.env.ENV === 'dev';
 
 var _require = require('electron'),
@@ -1608,20 +1602,7 @@ var _require = require('electron'),
 var platform = process.platform;
 
 var EventEmitter = require('events');
-
-var MyEmitter = function (_EventEmitter) {
-  _inherits(MyEmitter, _EventEmitter);
-
-  function MyEmitter() {
-    _classCallCheck(this, MyEmitter);
-
-    return _possibleConstructorReturn(this, (MyEmitter.__proto__ || Object.getPrototypeOf(MyEmitter)).apply(this, arguments));
-  }
-
-  return MyEmitter;
-}(EventEmitter);
-
-var evt = new MyEmitter();
+var evt = new EventEmitter();
 
 var max_listener_count = 20;
 evt.setMaxListeners(max_listener_count);
@@ -34748,6 +34729,10 @@ var map = {
 	"./order.js": 229,
 	"./save": 222,
 	"./save.js": 222,
+	"./sudo_cancel": 235,
+	"./sudo_cancel.js": 235,
+	"./sudo_pswd": 234,
+	"./sudo_pswd.js": 234,
 	"./toggle_hosts": 220,
 	"./toggle_hosts.js": 220,
 	"./update_hosts": 228,
@@ -34788,7 +34773,9 @@ var _Agent2 = _interopRequireDefault(_Agent);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = function (app, list) {
-  _Agent2.default.pact('saveHosts', list);
+  _Agent2.default.pact('saveHosts', list).catch(function (e) {
+    return console.log(e);
+  });
 };
 
 /***/ }),
@@ -34803,6 +34790,8 @@ var map = {
 	"./index.js": 219,
 	"./order.js": 229,
 	"./save.js": 222,
+	"./sudo_cancel.js": 235,
+	"./sudo_pswd.js": 234,
 	"./toggle_hosts.js": 220,
 	"./update_hosts.js": 228
 };
@@ -34860,6 +34849,8 @@ module.exports = function (app, hosts) {
         _Agent2.default.emit('select', id);
       }
     });
+  }).catch(function (e) {
+    return console.log(e);
   });
 };
 
@@ -34897,6 +34888,8 @@ module.exports = function (app, hosts) {
     app.setState({ list: list }, function () {
       _Agent2.default.emit('select', hosts.id);
     });
+  }).catch(function (e) {
+    return console.log(e);
   });
 };
 
@@ -34932,6 +34925,8 @@ module.exports = function (app, ids) {
 
   _Agent2.default.pact('saveHosts', new_list).then(function () {
     return app.setState({ list: list });
+  }).catch(function (e) {
+    return console.log(e);
   });
 };
 
@@ -35009,7 +35004,11 @@ var SudoPrompt = function (_React$Component) {
     key: 'onOK',
     value: function onOK() {
       var pswd = this.refs.pswd.value;
-      if (!pswd) return;
+      if (!pswd) {
+        var el = this.refs.body;
+        el && el.querySelector('input').focus();
+        return;
+      }
 
       this.setState({
         show: false,
@@ -35025,6 +35024,7 @@ var SudoPrompt = function (_React$Component) {
   }, {
     key: 'onCancel',
     value: function onCancel() {
+      _Agent2.default.emit('sudo_cancel');
       this.setState({
         show: false
       });
@@ -35149,6 +35149,51 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 module.exports = function () {
   _Agent2.default.pact('esc');
+  _Agent2.default.pact('sudoCancel');
+};
+
+/***/ }),
+/* 234 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = function (app, pswd) {
+  _Agent2.default.pact('sudoPSWD', pswd);
+};
+
+/***/ }),
+/* 235 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = function () {
+  _Agent2.default.pact('sudoCancel');
 };
 
 /***/ })

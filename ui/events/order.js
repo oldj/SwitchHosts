@@ -19,4 +19,5 @@ module.exports = (app, ids) => {
 
   Agent.pact('saveHosts', new_list)
     .then(() => app.setState({list}))
+    .catch(e => console.log(e))
 }

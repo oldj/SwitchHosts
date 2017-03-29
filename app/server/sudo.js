@@ -7,13 +7,33 @@
 
 'use strict'
 
-const paths = require('./paths')
-
 module.exports = svr => {
+
+  let _resolve
+  let _reject
+
+  svr.once('sudo_pswd', (pswd) => {
+    svr.removeAllListeners('sudo_cancel')
+    try {
+      _resolve(pswd)
+    } catch (e) {
+      console.log(e)
+    }
+  })
+
+  svr.once('sudo_cancel', () => {
+    svr.removeAllListeners('sudo_pswd')
+    try {
+      _reject('user:sudo_cancel')
+    } catch (e) {
+      console.log(e)
+    }
+  })
+
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      svr.broadcast('sudo_prompt')
-      resolve()
-    }, 1000)
+    svr.broadcast('sudo_prompt')
+
+    _resolve = resolve
+    _reject = reject
   })
 }

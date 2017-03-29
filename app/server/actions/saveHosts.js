@@ -14,7 +14,7 @@ const sudo = require('../sudo')
 
 function tryToApply (svr, cnt) {
   return new Promise((resolve, reject) => {
-    apply(cnt)
+    return apply(cnt)
       .then(() => resolve())
       .catch(e => {
         if (e !== 'need_sudo') {
@@ -24,7 +24,7 @@ function tryToApply (svr, cnt) {
 
         sudo(svr)
           .then(() => {
-            apply(cnt)
+            return apply(cnt)
               .then(() => resolve())
               .catch(e => reject(e))
           })
@@ -47,5 +47,4 @@ module.exports = (svr, list) => {
   // try to update system hosts
   return tryToApply(svr, cnt)
     .then(() => io.pWriteFile(fn, cnt))
-    .catch(e => console.log(e))
 }
