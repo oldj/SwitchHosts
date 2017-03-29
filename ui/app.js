@@ -62,7 +62,8 @@ export default class App extends React.Component {
   }
 
   static isReadOnly (hosts) {
-    return !hosts || hosts.is_sys || hosts.where === 'remote'
+    return !hosts || hosts.is_sys || hosts.where === 'remote' ||
+           hosts.where === 'group'
   }
 
   toSave () {

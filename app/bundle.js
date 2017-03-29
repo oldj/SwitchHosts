@@ -1621,7 +1621,9 @@ var MyEmitter = function (_EventEmitter) {
 
 var evt = new MyEmitter();
 
-ipcRenderer.setMaxListeners(20);
+var max_listener_count = 20;
+evt.setMaxListeners(max_listener_count);
+ipcRenderer.setMaxListeners(max_listener_count);
 
 var x_get_idx = 0;
 
@@ -19113,7 +19115,7 @@ var App = function (_React$Component) {
   }], [{
     key: 'isReadOnly',
     value: function isReadOnly(hosts) {
-      return !hosts || hosts.is_sys || hosts.where === 'remote';
+      return !hosts || hosts.is_sys || hosts.where === 'remote' || hosts.where === 'group';
     }
   }]);
 
@@ -19753,7 +19755,7 @@ var EditPrompt = function (_React$Component) {
       if (!data.id) data.id = (0, _makeId2.default)();
 
       delete data['is_add'];
-      _Agent2.default.emit('hosts_update', data);
+      _Agent2.default.emit('update_hosts', data);
 
       this.setState({
         show: false
@@ -20586,11 +20588,6 @@ var ListItem = function (_React$Component) {
     _this.is_sys = !!_this.props.sys;
     _this.state = {};
 
-    _Agent2.default.on('select', function (id) {
-      if (id && id === _this.props.data.id) {
-        _this.beSelected();
-      }
-    });
     return _this;
   }
 
@@ -20619,8 +20616,22 @@ var ListItem = function (_React$Component) {
       _Agent2.default.emit('edit_hosts', this.props.data);
     }
   }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      var _this2 = this;
+
+      _Agent2.default.on('select', function (id) {
+        if (id && id === _this2.props.data.id) {
+          _this2.beSelected();
+          _this2.el && _this2.el.scrollIntoView();
+        }
+      });
+    }
+  }, {
     key: 'render',
     value: function render() {
+      var _this3 = this;
+
       var _props = this.props,
           data = _props.data,
           sys = _props.sys,
@@ -20638,7 +20649,10 @@ var ListItem = function (_React$Component) {
             , 'sys-hosts': sys,
             'selected': is_selected
           }),
-          onClick: this.beSelected.bind(this)
+          onClick: this.beSelected.bind(this),
+          ref: function ref(el) {
+            return _this3.el = el;
+          }
         },
         sys ? null : _react2.default.createElement(
           'div',
@@ -34685,14 +34699,16 @@ module.exports = function (app, hosts, on) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var map = {
-	"./hosts_update": 226,
-	"./hosts_update.js": 226,
+	"./del_hosts": 227,
+	"./del_hosts.js": 227,
 	"./index": 219,
 	"./index.js": 219,
 	"./save": 222,
 	"./save.js": 222,
 	"./toggle_hosts": 220,
-	"./toggle_hosts.js": 220
+	"./toggle_hosts.js": 220,
+	"./update_hosts": 228,
+	"./update_hosts.js": 228
 };
 function webpackContext(req) {
 	return __webpack_require__(webpackContextResolve(req));
@@ -34739,10 +34755,11 @@ module.exports = function (app, list) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var map = {
-	"./hosts_update.js": 226,
+	"./del_hosts.js": 227,
 	"./index.js": 219,
 	"./save.js": 222,
-	"./toggle_hosts.js": 220
+	"./toggle_hosts.js": 220,
+	"./update_hosts.js": 228
 };
 function webpackContext(req) {
 	return __webpack_require__(webpackContextResolve(req));
@@ -34761,7 +34778,8 @@ module.exports = webpackContext;
 webpackContext.id = 225;
 
 /***/ }),
-/* 226 */
+/* 226 */,
+/* 227 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -34778,7 +34796,45 @@ var _Agent2 = _interopRequireDefault(_Agent);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-//import makeId from '../../app/libs/make-id'
+module.exports = function (app, hosts) {
+  var list = app.state.list;
+  var idx = list.findIndex(function (item) {
+    return item.id === hosts.id;
+  });
+  if (idx === -1) {
+    return;
+  }
+
+  list.splice(idx, 1);
+
+  _Agent2.default.pact('saveHosts', list).then(function () {
+    app.setState({ list: list }, function () {
+      // 选中下一个 hosts
+      var id = (list[idx] || list[idx - 1] || {}).id;
+      if (id) {
+        _Agent2.default.emit('select', id);
+      }
+    });
+  });
+};
+
+/***/ }),
+/* 228 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(14);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = function (app, hosts) {
   var list = app.state.list;

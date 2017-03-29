@@ -110,7 +110,7 @@ export default class EditPrompt extends React.Component {
     if (!data.id) data.id = makeId()
 
     delete data['is_add']
-    Agent.emit('hosts_update', data)
+    Agent.emit('update_hosts', data)
 
     this.setState({
       show: false

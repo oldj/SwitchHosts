@@ -13,7 +13,9 @@ const EventEmitter = require('events')
 class MyEmitter extends EventEmitter {}
 const evt = new MyEmitter()
 
-ipcRenderer.setMaxListeners(20)
+const max_listener_count = 20
+evt.setMaxListeners(max_listener_count)
+ipcRenderer.setMaxListeners(max_listener_count)
 
 let x_get_idx = 0
 
