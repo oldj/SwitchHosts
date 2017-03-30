@@ -8,7 +8,7 @@
 import React from 'react'
 import classnames from 'classnames'
 import Sortable from 'sortablejs'
-import listToArray from 'wheel-js/src/common/list-to-array'
+import listToArray from 'wheel-js/src/common/listToArray'
 import './group.less'
 
 export default class Group extends React.Component {

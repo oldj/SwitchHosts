@@ -11,10 +11,11 @@ const io = require('../io')
 const jsbeautify = require('js-beautify').js_beautify
 const apply = require('../apply')
 const sudo = require('../sudo')
+const makeOutHosts = require('../makeOutHosts')
 
-function tryToApply (svr, cnt) {
+function tryToApply (svr, cnt, pswd) {
   return new Promise((resolve, reject) => {
-    return apply(cnt)
+    return apply(cnt, pswd)
       .then(() => resolve())
       .catch(e => {
         if (e !== 'need_sudo') {
@@ -23,8 +24,8 @@ function tryToApply (svr, cnt) {
         }
 
         sudo(svr)
-          .then(() => {
-            return apply(cnt)
+          .then(pswd => {
+            return tryToApply(svr, cnt, pswd)
               .then(() => resolve())
               .catch(e => reject(e))
           })
@@ -44,7 +45,8 @@ module.exports = (svr, list) => {
     indent_size: 2
   })
 
+  let out = makeOutHosts(list)
   // try to update system hosts
-  return tryToApply(svr, cnt)
+  return tryToApply(svr, out)
     .then(() => io.pWriteFile(fn, cnt))
 }
