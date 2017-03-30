@@ -8,7 +8,7 @@
 import React from 'react'
 import ListItem from './list-item'
 import Sortable from 'sortablejs'
-import listToArray from 'wheel-js/src/common/list-to-array'
+import listToArray from 'wheel-js/src/common/listToArray'
 import Agent from '../Agent'
 import './list.less'
 

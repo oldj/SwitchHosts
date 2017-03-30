@@ -8,9 +8,8 @@
   },
   "author": "oldj",
   "license": "MIT",
-  "devDependencies": {
-    "gulp-shell": "^0.6.3",
-    "gulp-webpack": "^1.5.0",
-    "js-beautify": "^1.6.12"
+  "dependencies": {
+    "js-beautify": "^1.6.12",
+    "md5-file": "^3.1.1"
   }
 }

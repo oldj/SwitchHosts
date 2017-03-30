@@ -14,8 +14,7 @@
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "sortablejs": "^1.5.1",
-    "wheel-js": "0.0.2"
+    "wheel-js": "0.0.3"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
