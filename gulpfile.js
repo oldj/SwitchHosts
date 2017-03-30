@@ -128,11 +128,13 @@ gulp.task('default', () => {
 
   gulp.watch([
     'app/**/*.*'
-    , '!app/version.js'
+    , '!app/bundle.*'
     , '!app/node_modules/*'
+    , '!app/package.json'
+    , '!app/version.js'
 
     , 'ui/**/*.*'
-    , '!**/package.json'
+    , '!ui/node_modules/*'
   ], ['ver'])
 })
 
