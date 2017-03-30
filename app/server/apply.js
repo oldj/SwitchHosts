@@ -17,6 +17,19 @@ const platform = process.platform
 
 let sudo_pswd = ''
 
+function needPswd(str) {
+  str = str.toLowerCase()
+
+  console.log('---')
+  console.log(str)
+  let keys = [
+    'Permission denied'
+    , 'incorrect password'
+    , 'Password:Sorry, try again.'
+  ]
+  return !!keys.find(k => str.includes(k.toLowerCase()))
+}
+
 function apply_Unix (content, callback) {
   let tmp_fn = path.join(work_path, 'tmp.txt')
 
@@ -49,11 +62,12 @@ function apply_Unix (content, callback) {
     .then(cmd => {
       exec(cmd, function (error, stdout, stderr) {
         // command output is in stdout
-        if (error) {
-          callback(!sudo_pswd ? 'need_sudo' : error)
-        } else {
+        if (!error) {
           callback()
+          return
         }
+
+        callback(!sudo_pswd || needPswd(stdout + stderr) ? 'need_sudo' : error)
       })
     })
 }
