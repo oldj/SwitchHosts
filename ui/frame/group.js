@@ -16,10 +16,12 @@ export default class Group extends React.Component {
     super(props)
 
     this.state = {
-      list: []
+      list: [],
+      include: []
     }
 
     this.current_hosts = null
+    this.ids = []
   }
 
   makeItem (item) {
@@ -41,8 +43,9 @@ export default class Group extends React.Component {
   }
 
   makeList () {
+    let include = this.state.include
     let items = this.state.list
-      .filter(item => item.where !== 'group')
+      .filter(item => item.where !== 'group' && !include.includes(item.id))
       .map(item => this.makeItem(item))
 
     return (
@@ -55,22 +58,33 @@ export default class Group extends React.Component {
   }
 
   currentList () {
+    let list = this.state.list
+    let items = this.state.include
+      .map(id => list.find(item => item.id === id))
+      .map(item => this.makeItem(item))
+
     return (
       <div id="hosts-group-current">
-        <div ref="group_current" className="hosts-group-list"></div>
+        <div ref="group_current" className="hosts-group-list">
+          {items}
+        </div>
       </div>
     )
   }
 
   getCurrentListFromDOM () {
+    let {updateInclude} = this.props
     let nodes = this.refs.group_current.getElementsByClassName('hosts-item')
     nodes = listToArray(nodes)
-    console.log(nodes)
+    let ids = nodes.map(item => item.getAttribute('data-id'))
+    this.ids = ids
+    updateInclude(ids)
   }
 
   componentWillMount () {
     this.setState({
-      list: this.props.list
+      list: this.props.list,
+      include: this.props.include
     })
   }
 
@@ -83,7 +97,7 @@ export default class Group extends React.Component {
     Sortable.create(this.refs.group_current, {
       group: 'sorting'
       , sort: true
-      , onSort: evt => {
+      , onSort: () => {
         this.getCurrentListFromDOM()
       }
     })

@@ -36,7 +36,7 @@ function tryToApply (svr, cnt, pswd) {
 }
 
 module.exports = (svr, list) => {
-  list = cleanData(list)
+  //list = cleanData(list)
 
   let fn = paths.data_path
   let data = {
