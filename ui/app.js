@@ -43,7 +43,7 @@ export default class App extends React.Component {
           if (!list) return
           Agent.emit('list_updated', list)
         })
-    }, 10000)
+    }, 3000)
   }
 
   loadHosts () {

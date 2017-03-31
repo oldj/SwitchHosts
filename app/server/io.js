@@ -7,6 +7,8 @@
 'use strict'
 
 const fs = require('fs')
+const crypto = require('crypto')
+const md5File = require('md5-file')
 
 exports.getUserHome = () => {
   return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME']
@@ -33,7 +35,13 @@ exports.isDirectory = (p) => {
 }
 
 let writeFile = exports.writeFile = (fn, data, callback) => {
-  fs.writeFile(fn, data, 'utf-8', callback)
+  let cnt_md5 = crypto.createHash('md5').update(data).digest('hex')
+  if (isFile(fn) && md5File.sync(fn) === cnt_md5) {
+    callback()
+  } else {
+    console.log('md5 not match..')
+    fs.writeFile(fn, data, 'utf-8', callback)
+  }
 }
 
 exports.pWriteFile = (fn, data) => {
