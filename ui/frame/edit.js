@@ -276,11 +276,11 @@ export default class EditPrompt extends React.Component {
                  onChange={(e) => this.setState({where: e.target.value})}
           />
           <label htmlFor="ipt-remote">{lang.where_remote}</label>
-          <input id="ipt-remote" type="radio" name="where" value="group"
+          <input id="ipt-group" type="radio" name="where" value="group"
                  checked={this.state.where === 'group'}
                  onChange={(e) => this.setState({where: e.target.value})}
           />
-          <label htmlFor="ipt-remote">{lang.where_group}</label>
+          <label htmlFor="ipt-group">{lang.where_group}</label>
         </div>
         <div className="ln">
           <div className="title">{lang.host_title}</div>
