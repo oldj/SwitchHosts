@@ -8,6 +8,7 @@
 const EventEmitter = require('events')
 const {ipcMain} = require('electron')
 const actions = require('./actions/index')
+const app = require('./http/app')
 
 let renderer
 let svr = new EventEmitter()
