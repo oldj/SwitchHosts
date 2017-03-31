@@ -38,20 +38,19 @@ export default class ListItem extends React.Component {
   }
 
   componentDidMount () {
-    Agent.on('select', id => {
-      if (id && id === this.props.data.id) {
-        this.beSelected()
-        this.el && this.el.scrollIntoView()
-      }
-    })
+    //Agent.on('select_hosts', id => {
+    //  if (id && id === this.props.data.id) {
+    //    this.beSelected()
+    //    this.el && this.el.scrollIntoView()
+    //  }
+    //})
   }
 
   render () {
-    let {data, sys, current} = this.props
-    let is_selected = data === current
-
+    let {data, sys, current, show} = this.props
     if (!data) return null
 
+    let is_selected = data === current
     let attrs = {
       'data-id': data.id || ''
     }
@@ -62,6 +61,7 @@ export default class ListItem extends React.Component {
         //, 'hidden': !this.isMatched()
         , 'sys-hosts': sys
         , 'selected': is_selected
+        , 'hidden': show === false
       })}
            onClick={this.beSelected.bind(this)}
            ref={el => this.el = el}

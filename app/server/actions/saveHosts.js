@@ -12,6 +12,7 @@ const jsbeautify = require('js-beautify').js_beautify
 const apply = require('../apply')
 const sudo = require('../sudo')
 const makeOutHosts = require('../makeOutHosts')
+const cleanData = require('../cleanData')
 
 function tryToApply (svr, cnt, pswd) {
   return new Promise((resolve, reject) => {
@@ -35,6 +36,8 @@ function tryToApply (svr, cnt, pswd) {
 }
 
 module.exports = (svr, list) => {
+  list = cleanData(list)
+
   let fn = paths.data_path
   let data = {
     list,

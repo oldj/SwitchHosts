@@ -10,6 +10,7 @@ import ListItem from './list-item'
 import Sortable from 'sortablejs'
 import listToArray from 'wheel-js/src/common/listToArray'
 import Agent from '../Agent'
+import {findPositions} from '../content/kw'
 import './list.less'
 
 export default class List extends React.Component {
@@ -17,20 +18,36 @@ export default class List extends React.Component {
   constructor (props) {
     super(props)
 
-    this.state = {}
+    this.state = {
+      kw: ''
+    }
+
+    Agent.on('search', kw => {
+      this.setState({kw})
+    })
   }
 
   customItems () {
+    let kw = this.state.kw
+
+    function match(kw, item) {
+      return findPositions(kw, item.content).length > 0 || findPositions(kw, item.title).length > 0
+    }
+
     return this.props.list.map((item, idx) => {
+      let show = true
+      if (kw && !match(kw, item)) {
+        show = false
+      }
+
       return (
         <ListItem
           data={item}
           idx={idx}
           current={this.props.current}
           setCurrent={this.props.setCurrent}
-          //onToggle={(success) => this.toggleOne(idx, success)}
           key={'hosts-' + idx}
-          //dragOrder={(sidx, tidx) => this.dragOrder(sidx, tidx)}
+          show={show}
         />
       )
     })
