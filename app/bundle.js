@@ -4380,9 +4380,9 @@ module.exports = function (app, hosts) {
   _Agent2.default.pact('saveHosts', list).then(function () {
     app.setState({ list: list }, function () {
       // 选中下一个 hosts
-      var id = (list[idx] || list[idx - 1] || {}).id;
-      if (id) {
-        _Agent2.default.emit('select', id);
+      var next_hosts = list[idx] || list[idx - 1] || null;
+      if (next_hosts) {
+        app.setState({ current: next_hosts });
       }
     });
   }).catch(function (e) {
@@ -21469,59 +21469,59 @@ exports.default = Editor;
 
 
 function kw2re(kw) {
-    // 模糊搜索
-    var r = void 0;
-    var m = void 0;
-    var flag = [];
+  // 模糊搜索
+  var r = void 0;
+  var m = void 0;
+  var flag = [];
 
-    if (kw === '/') {
-        return;
-    } else if (m = kw.match(/^\/([^\/]+)\/?(\w*)$/)) {
-        if (m[2].indexOf('i') > -1) {
-            flag.push('i');
-        }
-        // if (m[2].indexOf('g') > -1) {
-        flag.push('g');
-        // }
-        try {
-            r = new RegExp(m[1], flag.join(''));
-        } catch (e) {}
-    } else if (kw.indexOf('*') > -1) {
-        try {
-            r = new RegExp(kw.replace(/\*/g, '.*'), 'ig');
-        } catch (e) {}
+  if (kw === '/') {
+    return;
+  } else if (m = kw.match(/^\/([^\/]+)\/?(\w*)$/)) {
+    if (m[2].indexOf('i') > -1) {
+      flag.push('i');
     }
+    // if (m[2].indexOf('g') > -1) {
+    flag.push('g');
+    // }
+    try {
+      r = new RegExp(m[1], flag.join(''));
+    } catch (e) {}
+  } else if (kw.indexOf('*') > -1) {
+    try {
+      r = new RegExp(kw.replace(/\*/g, '.*'), 'ig');
+    } catch (e) {}
+  }
 
-    return r;
+  return r;
 }
 
 exports.findPositions = function (kw, code) {
-    if (!kw || kw === '/') return;
+  if (!kw || kw === '/') return [];
 
-    var r = kw2re(kw);
-    if (!r) {
-        try {
-            r = new RegExp(kw.replace(/([\.\?\*\+\^\$\(\)\-\[\]\{\}])/g, '\\$1'), 'ig');
-        } catch (e) {
-            console.log(e);
-            return;
-        }
+  var r = kw2re(kw);
+  if (!r) {
+    try {
+      r = new RegExp(kw.replace(/([\.\?\*\+\^\$\(\)\-\[\]\{\}])/g, '\\$1'), 'ig');
+    } catch (e) {
+      console.log(e);
+      return [];
     }
-    var indexes = [];
+  }
+  var indexes = [];
 
-    var lines = code.split('\n');
+  var lines = code.split('\n');
 
-    lines.map(function (ln, idx) {
-        var match = void 0;
-        var max_loop = 30;
-        while (match = r.exec(ln)) {
-            indexes.push([{ line: idx, ch: match.index }, { line: idx, ch: match.index + match[0].length }]);
-            max_loop--;
-            if (max_loop < 0) break;
-        }
-    });
+  lines.map(function (ln, idx) {
+    var match = void 0;
+    var max_loop = 30;
+    while (match = r.exec(ln)) {
+      indexes.push([{ line: idx, ch: match.index }, { line: idx, ch: match.index + match[0].length }]);
+      max_loop--;
+      if (max_loop < 0) break;
+    }
+  });
 
-    return indexes;
+  return indexes;
 };
 
 exports.kw2re = kw2re;
@@ -22576,29 +22576,27 @@ var ListItem = function (_React$Component) {
   }, {
     key: 'componentDidMount',
     value: function componentDidMount() {
-      var _this2 = this;
-
-      _Agent2.default.on('select', function (id) {
-        if (id && id === _this2.props.data.id) {
-          _this2.beSelected();
-          _this2.el && _this2.el.scrollIntoView();
-        }
-      });
+      //Agent.on('select_hosts', id => {
+      //  if (id && id === this.props.data.id) {
+      //    this.beSelected()
+      //    this.el && this.el.scrollIntoView()
+      //  }
+      //})
     }
   }, {
     key: 'render',
     value: function render() {
-      var _this3 = this;
+      var _this2 = this;
 
       var _props = this.props,
           data = _props.data,
           sys = _props.sys,
-          current = _props.current;
-
-      var is_selected = data === current;
+          current = _props.current,
+          show = _props.show;
 
       if (!data) return null;
 
+      var is_selected = data === current;
       var attrs = {
         'data-id': data.id || ''
       };
@@ -22609,11 +22607,12 @@ var ListItem = function (_React$Component) {
             'list-item': 1
             //, 'hidden': !this.isMatched()
             , 'sys-hosts': sys,
-            'selected': is_selected
+            'selected': is_selected,
+            'hidden': show === false
           }),
           onClick: this.beSelected.bind(this),
           ref: function ref(el) {
-            return _this3.el = el;
+            return _this2.el = el;
           }
         }, attrs),
         sys ? null : _react2.default.createElement(
@@ -22694,6 +22693,8 @@ var _Agent = __webpack_require__(5);
 
 var _Agent2 = _interopRequireDefault(_Agent);
 
+var _kw = __webpack_require__(101);
+
 __webpack_require__(135);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -22712,7 +22713,13 @@ var List = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (List.__proto__ || Object.getPrototypeOf(List)).call(this, props));
 
-    _this.state = {};
+    _this.state = {
+      kw: ''
+    };
+
+    _Agent2.default.on('search', function (kw) {
+      _this.setState({ kw: kw });
+    });
     return _this;
   }
 
@@ -22721,15 +22728,25 @@ var List = function (_React$Component) {
     value: function customItems() {
       var _this2 = this;
 
+      var kw = this.state.kw;
+
+      function match(kw, item) {
+        return (0, _kw.findPositions)(kw, item.content).length > 0 || (0, _kw.findPositions)(kw, item.title).length > 0;
+      }
+
       return this.props.list.map(function (item, idx) {
+        var show = true;
+        if (kw && !match(kw, item)) {
+          show = false;
+        }
+
         return _react2.default.createElement(_listItem2.default, {
           data: item,
           idx: idx,
           current: _this2.props.current,
-          setCurrent: _this2.props.setCurrent
-          //onToggle={(success) => this.toggleOne(idx, success)}
-          , key: 'hosts-' + idx
-          //dragOrder={(sidx, tidx) => this.dragOrder(sidx, tidx)}
+          setCurrent: _this2.props.setCurrent,
+          key: 'hosts-' + idx,
+          show: show
         });
       });
     }
@@ -23115,7 +23132,7 @@ exports = module.exports = __webpack_require__(6)();
 
 
 // module
-exports.push([module.i, "#sh-list .custom-items {\n  position: fixed;\n  width: 240px;\n  top: 36px;\n  bottom: 30px;\n  overflow: auto;\n}\n", ""]);
+exports.push([module.i, "#sh-list .custom-items {\n  position: fixed;\n  width: 240px;\n  top: 36px;\n  bottom: 30px;\n  overflow: auto;\n}\n#sh-list .hidden {\n  display: none;\n}\n", ""]);
 
 // exports
 

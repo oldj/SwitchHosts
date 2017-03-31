@@ -20,9 +20,9 @@ module.exports = (app, hosts) => {
     .then(() => {
       app.setState({list}, () => {
         // 选中下一个 hosts
-        let id = (list[idx] || list[idx - 1] || {}).id
-        if (id) {
-          Agent.emit('select', id)
+        let next_hosts = list[idx] || list[idx - 1] || null
+        if (next_hosts) {
+          app.setState({current: next_hosts})
         }
       })
     })
