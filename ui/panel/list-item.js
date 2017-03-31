@@ -50,7 +50,7 @@ export default class ListItem extends React.Component {
     let {data, sys, current, show} = this.props
     if (!data) return null
 
-    let is_selected = data === current
+    let is_selected = data.id === current.id
     let attrs = {
       'data-id': data.id || ''
     }

@@ -613,7 +613,6 @@ function pact(action) {
 }
 
 ipcRenderer.on('y', function (sender, d) {
-  console.log(d);
   evt.emit.apply(evt, [d.event].concat(_toConsumableArray(d.data || [])));
 });
 
@@ -22381,7 +22380,7 @@ var Buttons = function (_React$Component) {
       search_on: false
     };
 
-    _this.on_items = null;
+    _this.on_ids = [];
     return _this;
   }
 
@@ -22390,20 +22389,33 @@ var Buttons = function (_React$Component) {
     value: function btnToggle() {
       var _this2 = this;
 
-      if (this.state.top_toggle_on) {
-        _Agent2.default.emit('get_on_hosts', function (items) {
-          _this2.on_items = items;
-        });
-      }
+      var doToggle = function doToggle() {
+        var on = !_this2.state.top_toggle_on;
 
-      this.setState({
-        top_toggle_on: !this.state.top_toggle_on
-      }, function () {
-        _Agent2.default.emit('top_toggle', _this2.state.top_toggle_on, _this2.on_items);
-        if (_this2.state.top_toggle_on) {
-          _this2.on_items = null;
-        }
-      });
+        _Agent2.default.emit('top_toggle', on, _this2.on_ids, function (e) {
+          if (e) {
+            console.log(e);
+            return;
+          }
+
+          _this2.setState({
+            top_toggle_on: on
+          }, function () {
+            if (_this2.state.top_toggle_on) {
+              _this2.on_ids = [];
+            }
+          });
+        });
+      };
+
+      if (this.state.top_toggle_on) {
+        _Agent2.default.emit('get_on_hosts', function (ids) {
+          _this2.on_ids = ids;
+          doToggle();
+        });
+      } else {
+        doToggle();
+      }
     }
   }, {
     key: 'btnSearch',
@@ -22432,6 +22444,12 @@ var Buttons = function (_React$Component) {
 
       _Agent2.default.on('to_search', function () {
         _this4.btnSearch();
+      });
+
+      _Agent2.default.on('esc', function () {
+        if (_this4.state.search_on) {
+          _this4.btnSearch();
+        }
       });
     }
   }, {
@@ -22596,7 +22614,7 @@ var ListItem = function (_React$Component) {
 
       if (!data) return null;
 
-      var is_selected = data === current;
+      var is_selected = data.id === current.id;
       var attrs = {
         'data-id': data.id || ''
       };
@@ -23680,6 +23698,8 @@ var map = {
 	"./del_hosts.js": 35,
 	"./esc": 36,
 	"./esc.js": 36,
+	"./get_on_hosts": 233,
+	"./get_on_hosts.js": 233,
 	"./index": 28,
 	"./index.js": 28,
 	"./order": 37,
@@ -23692,6 +23712,8 @@ var map = {
 	"./sudo_pswd.js": 40,
 	"./toggle_hosts": 41,
 	"./toggle_hosts.js": 41,
+	"./top_toggle": 234,
+	"./top_toggle.js": 234,
 	"./update_hosts": 29,
 	"./update_hosts.js": 29
 };
@@ -23718,12 +23740,14 @@ webpackContext.id = 143;
 var map = {
 	"./del_hosts.js": 35,
 	"./esc.js": 36,
+	"./get_on_hosts.js": 233,
 	"./index.js": 28,
 	"./order.js": 37,
 	"./save.js": 38,
 	"./sudo_cancel.js": 39,
 	"./sudo_pswd.js": 40,
 	"./toggle_hosts.js": 41,
+	"./top_toggle.js": 234,
 	"./update_hosts.js": 29
 };
 function webpackContext(req) {
@@ -35209,6 +35233,66 @@ function traverseAllChildren(children, callback, traverseContext) {
 }
 
 module.exports = traverseAllChildren;
+
+/***/ }),
+/* 233 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+module.exports = function (app, callback) {
+  var list = app.state.list;
+  var ids = list.filter(function (item) {
+    return item.on;
+  }).map(function (item) {
+    return item.id;
+  });
+  callback(ids);
+};
+
+/***/ }),
+/* 234 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(5);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = function (app, on, on_ids, callback) {
+  var list = app.state.list;
+  console.log(on_ids);
+
+  var new_list = list.map(function (item) {
+    var new_item = Object.assign({}, item);
+    new_item.on = !!(on && on_ids.includes(item.id));
+
+    return new_item;
+  });
+
+  _Agent2.default.pact('saveHosts', new_list).then(function () {
+    app.setState({ list: new_list });
+    //app.forceUpdate()
+    callback();
+  }).catch(function (e) {
+    return callback(e);
+  });
+};
 
 /***/ })
 /******/ ]);
