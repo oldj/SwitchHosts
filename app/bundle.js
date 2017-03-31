@@ -20953,7 +20953,7 @@ var App = function (_React$Component) {
         if (!list) return;
         _Agent2.default.emit('list_updated', list);
       });
-    }, 10000);
+    }, 3000);
     return _this;
   }
 
