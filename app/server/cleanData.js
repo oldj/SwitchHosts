@@ -5,7 +5,7 @@
 
 'use strict'
 
-function makeGroupContent(item, list) {
+function makeGroupContent (item, list) {
   return (item.include || []).map(id => {
     return (list.find(i => i.id === id) || {}).content || ''
   }).join('\n\n')
@@ -16,7 +16,15 @@ module.exports = (list) => {
     let new_item = {}
 
     let valid_keys = [
-      'id', 'title', 'content', 'on', 'where', 'last_refresh', 'url', 'include'
+      'id',
+      'title',
+      'content',
+      'on',
+      'where',
+      'url',
+      'last_refresh',
+      'refresh_interval',
+      'include'
     ]
     valid_keys.map(k => {
       if (item.hasOwnProperty(k)) {

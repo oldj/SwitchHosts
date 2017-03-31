@@ -3471,12 +3471,12 @@ module.exports = function (app, hosts) {
     list.splice(idx, 1, Object.assign({}, old_hosts, hosts));
   }
 
-  list = (0, _cleanData2.default)(list);
+  //list = cleanData(list)
 
-  _Agent2.default.pact('saveHosts', list).then(function () {
-    var state = { list: list };
+  _Agent2.default.pact('saveHosts', list).then(function (new_list) {
+    var state = { list: new_list };
     var current = app.state.current;
-    var item = list.find(function (i) {
+    var item = new_list.find(function (i) {
       return i.id === current.id;
     });
     if (item) {
@@ -35372,7 +35372,7 @@ module.exports = function (list) {
   return list.map(function (item) {
     var new_item = {};
 
-    var valid_keys = ['id', 'title', 'content', 'on', 'where', 'last_refresh', 'url', 'include'];
+    var valid_keys = ['id', 'title', 'content', 'on', 'where', 'url', 'last_refresh', 'refresh_interval', 'include'];
     valid_keys.map(function (k) {
       if (item.hasOwnProperty(k)) {
         new_item[k] = item[k];

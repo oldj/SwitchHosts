@@ -13,6 +13,7 @@ const apply = require('../apply')
 const sudo = require('../sudo')
 const makeOutHosts = require('../makeOutHosts')
 const cleanData = require('../cleanData')
+const checkAllRemoteHostses = require('./checkAllRemoteHostses')
 
 function tryToApply (svr, cnt, pswd) {
   return new Promise((resolve, reject) => {
@@ -36,20 +37,24 @@ function tryToApply (svr, cnt, pswd) {
 }
 
 module.exports = (svr, list) => {
-  //list = cleanData(list)
 
-  let fn = paths.data_path
-  let data = {
-    list,
-    version
-  }
-  let cnt = JSON.stringify(data)
-  cnt = jsbeautify(cnt, {
-    indent_size: 2
-  })
+  return checkAllRemoteHostses(svr, list)
+    .then(list => cleanData(list))
+    .then(list => {
+      let fn = paths.data_path
+      let data = {
+        list,
+        version
+      }
+      let cnt = JSON.stringify(data)
+      cnt = jsbeautify(cnt, {
+        indent_size: 2
+      })
 
-  let out = makeOutHosts(list)
-  // try to update system hosts
-  return tryToApply(svr, out)
-    .then(() => io.pWriteFile(fn, cnt))
+      let out = makeOutHosts(list)
+      // try to update system hosts
+      return tryToApply(svr, out)
+        .then(() => io.pWriteFile(fn, cnt))
+        .then(() => list)
+    })
 }

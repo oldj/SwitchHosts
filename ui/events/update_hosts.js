@@ -18,13 +18,13 @@ module.exports = (app, hosts) => {
     list.splice(idx, 1, Object.assign({}, old_hosts, hosts))
   }
 
-  list = cleanData(list)
+  //list = cleanData(list)
 
   Agent.pact('saveHosts', list)
-    .then(() => {
-      let state = {list}
+    .then(new_list => {
+      let state = {list: new_list}
       let current = app.state.current
-      let item = list.find(i => i.id === current.id)
+      let item = new_list.find(i => i.id === current.id)
       if (item) {
         state.current = item
       }

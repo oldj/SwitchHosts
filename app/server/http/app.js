@@ -9,6 +9,11 @@ const {PORT} = require('../../configs')
 const express = require('express')
 const app = express()
 
+app.use(function (req, res, next) {
+  console.log(`> "${(new Date()).toString()}"`, req.method, req.originalUrl, `"${req.headers['user-agent']}"`)
+  next()
+})
+
 app.get('/', function (req, res) {
   res.send('Hello SwitchHost!')
 })
