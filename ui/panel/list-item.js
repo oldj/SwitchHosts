@@ -68,7 +68,11 @@ export default class ListItem extends React.Component {
            {...attrs}
       >
         {sys ? null : (
-          <div>
+          <div className="item-buttons">
+            <i
+              className="iconfont icon-edit"
+              onClick={this.toEdit.bind(this)}
+            />
             <i className={classnames({
               'switch': 1
               , 'iconfont': 1
@@ -76,10 +80,6 @@ export default class ListItem extends React.Component {
               , 'icon-off': !data.on
             })}
                onClick={this.toggle.bind(this)}
-            />
-            <i
-              className="iconfont icon-edit"
-              onClick={this.toEdit.bind(this)}
             />
           </div>
         )}

@@ -1,5 +1,6 @@
 #sh-list {
   .list-item {
+    position: relative;
     padding: 7px 10px 7px 15px;
     cursor: pointer;
 
@@ -29,7 +30,7 @@
 
       &:hover {
         i.icon-edit {
-          display: block;
+          display: inline-block;
           color: #fff;
         }
       }
@@ -46,7 +47,6 @@
       }
 
       &.switch {
-        float: right;
         cursor: pointer;
         line-height: 23px;
 
@@ -56,10 +56,13 @@
       }
 
       &.icon-edit {
-        float: right;
         display: none;
       }
     }
 
+    .item-buttons {
+      position: absolute;
+      right: 10px;
+    }
   }
 }
