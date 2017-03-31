@@ -9,6 +9,7 @@
   "author": "oldj",
   "license": "MIT",
   "dependencies": {
+    "express": "^4.15.2",
     "js-beautify": "^1.6.12",
     "md5-file": "^3.1.1"
   }
