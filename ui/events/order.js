@@ -6,6 +6,7 @@
 'use strict'
 
 import Agent from '../Agent'
+import updated from './list_updated'
 
 module.exports = (app, ids) => {
   let list = app.state.list
@@ -18,6 +19,8 @@ module.exports = (app, ids) => {
   })
 
   Agent.pact('saveHosts', new_list)
-    .then(() => app.setState({list}))
+    .then(list => {
+      updated(app, list)
+    })
     .catch(e => console.log(e))
 }

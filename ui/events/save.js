@@ -13,5 +13,7 @@ module.exports = (app, list, hosts = null) => {
     .then(new_list => {
       updated(app, new_list, hosts)
     })
-    .catch(e => console.log(e))
+    .catch(e => {
+      console.log(e)
+    })
 }

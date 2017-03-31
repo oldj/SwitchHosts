@@ -65,9 +65,15 @@ export default class List extends React.Component {
     Sortable.create(this.refs.items, {
       group: 'list-sorting'
       , sort: true
-      , onSort: evt => {
+      , animation: 150
+      , onStart: () => {
+        console.log('drag start..')
+      }
+      , onSort: (evt) => {
         this.getCurrentListFromDOM()
         //console.log(evt)
+        console.log(evt.item)
+        console.log(evt.oldIndex, evt.newIndex)
       }
     })
   }

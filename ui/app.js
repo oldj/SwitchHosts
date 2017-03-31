@@ -38,21 +38,24 @@ export default class App extends React.Component {
       let list = this.state.list
       if (!list || list.length === 0) return
 
-      Agent.pact('checkNeedRemoteRefresh', list)
-        .then(list => {
-          if (!list) return
-          Agent.emit('list_updated', list)
-        })
+      //Agent.pact('checkNeedRemoteRefresh', list)
+      //  .then(list => {
+      //    if (!list) return
+      //    Agent.emit('list_updated', list)
+      //  })
     }, 3000)
   }
 
   loadHosts () {
     Agent.pact('getHosts').then(data => {
-      this.setState({
+      let state = {
         list: data.list,
-        sys_hosts: data.sys_hosts,
-        current: data.sys_hosts
-      })
+        sys_hosts: data.sys_hosts
+      }
+      let current = this.state.current
+      state.current = data.list.find(item => item.id === current.id) || data.sys_hosts
+
+      this.setState(state)
     })
   }
 
