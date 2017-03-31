@@ -6,36 +6,27 @@
 'use strict'
 
 const getUrl = require('./getUrl')
+const isExpired = require('./checkIsExpired')
 
-function isExpired (interval, last) {
-  if (!last) return true
+function now () {
+  let dt = new Date()
 
-  let dt
-  try {
-    dt = new Date(last)
-  } catch (e) {
-    return true
-  }
-
-  let now = new Date()
-  let hour = 3600000
-
-  return (now.getTime() - dt.getTime()) / hour > interval
+  return `${dt.getFullYear()}-${dt.getMonth() +
+                                1}-${dt.getDate()} ${dt.getHours()}:${dt.getMinutes()}:${dt.getSeconds()}`
 }
 
 module.exports = (svr, hosts) => {
-  console.log(27, hosts)
   return new Promise((resolve, reject) => {
     if (hosts.where !== 'remote' || !hosts.url) {
       resolve(hosts)
       return
     }
 
-    let {refresh_interval, last_refresh} = hosts
-    if (isExpired(refresh_interval, last_refresh)) {
+    if (isExpired(svr, hosts)) {
       getUrl(svr, hosts.url)
         .then(content => {
           hosts.content = content
+          hosts.last_refresh = now()
         })
         .then(() => resolve(hosts))
         .catch(e => resolve(e))
