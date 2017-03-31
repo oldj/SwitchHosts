@@ -33,8 +33,8 @@ function needPswd(str) {
 function apply_Unix (content, callback) {
   let tmp_fn = path.join(work_path, 'tmp.txt')
 
-  if (!content) {
-    callback('no content')
+  if (typeof content !== 'string') {
+    callback('bad content')
     return
   }
 

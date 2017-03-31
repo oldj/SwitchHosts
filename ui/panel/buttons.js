@@ -3,7 +3,7 @@
  * @blog https://oldj.net
  */
 
-'use strict';
+'use strict'
 
 import React from 'react'
 import classnames from 'classnames'
@@ -19,7 +19,7 @@ export default class Buttons extends React.Component {
       search_on: false
     }
 
-    this.on_items = null
+    this.on_ids = []
   }
 
   static btnAdd () {
@@ -27,20 +27,34 @@ export default class Buttons extends React.Component {
   }
 
   btnToggle () {
-    if (this.state.top_toggle_on) {
-      Agent.emit('get_on_hosts', (items) => {
-        this.on_items = items
+    let doToggle = () => {
+      let on = !this.state.top_toggle_on
+
+      Agent.emit('top_toggle', on, this.on_ids, (e) => {
+        if (e) {
+          console.log(e)
+          return
+        }
+
+        this.setState({
+          top_toggle_on: on
+        }, () => {
+          if (this.state.top_toggle_on) {
+            this.on_ids = []
+          }
+        })
       })
     }
 
-    this.setState({
-      top_toggle_on: !this.state.top_toggle_on
-    }, () => {
-      Agent.emit('top_toggle', this.state.top_toggle_on, this.on_items)
-      if (this.state.top_toggle_on) {
-        this.on_items = null
-      }
-    })
+    if (this.state.top_toggle_on) {
+      Agent.emit('get_on_hosts', (ids) => {
+        this.on_ids = ids
+        doToggle()
+      })
+    } else {
+      doToggle()
+    }
+
   }
 
   btnSearch () {
@@ -62,6 +76,12 @@ export default class Buttons extends React.Component {
   componentDidMount () {
     Agent.on('to_search', () => {
       this.btnSearch()
+    })
+
+    Agent.on('esc', () => {
+      if (this.state.search_on) {
+        this.btnSearch()
+      }
     })
   }
 
