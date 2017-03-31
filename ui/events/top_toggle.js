@@ -9,7 +9,6 @@ import Agent from '../Agent'
 
 module.exports = (app, on, on_ids, callback) => {
   let list = app.state.list
-  console.log(on_ids)
 
   let new_list = list.map(item => {
     let new_item = Object.assign({}, item)

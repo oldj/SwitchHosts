@@ -91,11 +91,13 @@ export default class Group extends React.Component {
   componentDidMount () {
     Sortable.create(this.refs.group_valid, {
       group: 'sorting'
+      , animation: 150
       , sort: false
     })
 
     Sortable.create(this.refs.group_current, {
       group: 'sorting'
+      , animation: 150
       , sort: true
       , onSort: () => {
         this.getCurrentListFromDOM()
