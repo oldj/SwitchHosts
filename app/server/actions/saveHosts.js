@@ -37,7 +37,6 @@ function tryToApply (svr, cnt, pswd) {
 }
 
 module.exports = (svr, list) => {
-
   return checkAllRemoteHostses(svr, list)
     .then(list => cleanData(list))
     .then(list => {

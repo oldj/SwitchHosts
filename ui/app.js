@@ -33,6 +33,17 @@ export default class App extends React.Component {
     })
 
     events_reg(this)
+
+    setInterval(() => {
+      let list = this.state.list
+      if (!list || list.length === 0) return
+
+      Agent.pact('checkNeedRemoteRefresh', list)
+        .then(list => {
+          if (!list) return
+          Agent.emit('list_updated', list)
+        })
+    }, 10000)
   }
 
   loadHosts () {

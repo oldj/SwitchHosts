@@ -3449,13 +3449,12 @@ exports.reg = function (app) {
 
 
 
-var _Agent = __webpack_require__(5);
+//import Agent from '../Agent'
+//import cleanData from '../../app/server/cleanData'
 
-var _Agent2 = _interopRequireDefault(_Agent);
+var _save = __webpack_require__(38);
 
-var _cleanData = __webpack_require__(235);
-
-var _cleanData2 = _interopRequireDefault(_cleanData);
+var _save2 = _interopRequireDefault(_save);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3472,23 +3471,7 @@ module.exports = function (app, hosts) {
   }
 
   //list = cleanData(list)
-
-  _Agent2.default.pact('saveHosts', list).then(function (new_list) {
-    var state = { list: new_list };
-    var current = app.state.current;
-    var item = new_list.find(function (i) {
-      return i.id === current.id;
-    });
-    if (item) {
-      state.current = item;
-    }
-
-    app.setState(state, function () {
-      _Agent2.default.emit('select', hosts.id);
-    });
-  }).catch(function (e) {
-    return console.log(e);
-  });
+  (0, _save2.default)(app, list, hosts);
 };
 
 /***/ }),
@@ -4480,10 +4463,18 @@ var _Agent = __webpack_require__(5);
 
 var _Agent2 = _interopRequireDefault(_Agent);
 
+var _list_updated = __webpack_require__(236);
+
+var _list_updated2 = _interopRequireDefault(_list_updated);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = function (app, list) {
-  _Agent2.default.pact('saveHosts', list).catch(function (e) {
+  var hosts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+  _Agent2.default.pact('saveHosts', list).then(function (new_list) {
+    (0, _list_updated2.default)(app, new_list, hosts);
+  }).catch(function (e) {
     return console.log(e);
   });
 };
@@ -20953,6 +20944,16 @@ var App = function (_React$Component) {
     });
 
     (0, _index.reg)(_this);
+
+    setInterval(function () {
+      var list = _this.state.list;
+      if (!list || list.length === 0) return;
+
+      _Agent2.default.pact('checkNeedRemoteRefresh', list).then(function (list) {
+        if (!list) return;
+        _Agent2.default.emit('list_updated', list);
+      });
+    }, 10000);
     return _this;
   }
 
@@ -23756,6 +23757,8 @@ var map = {
 	"./get_on_hosts.js": 233,
 	"./index": 28,
 	"./index.js": 28,
+	"./list_updated": 236,
+	"./list_updated.js": 236,
 	"./order": 37,
 	"./order.js": 37,
 	"./save": 38,
@@ -23796,6 +23799,7 @@ var map = {
 	"./esc.js": 36,
 	"./get_on_hosts.js": 233,
 	"./index.js": 28,
+	"./list_updated.js": 236,
 	"./order.js": 37,
 	"./save.js": 38,
 	"./sudo_cancel.js": 39,
@@ -35349,7 +35353,8 @@ module.exports = function (app, on, on_ids, callback) {
 };
 
 /***/ }),
-/* 235 */
+/* 235 */,
+/* 236 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -35360,30 +35365,28 @@ module.exports = function (app, on, on_ids, callback) {
 
 
 
-function makeGroupContent(item, list) {
-  return (item.include || []).map(function (id) {
-    return (list.find(function (i) {
-      return i.id === id;
-    }) || {}).content || '';
-  }).join('\n\n');
-}
+var _Agent = __webpack_require__(5);
 
-module.exports = function (list) {
-  return list.map(function (item) {
-    var new_item = {};
+var _Agent2 = _interopRequireDefault(_Agent);
 
-    var valid_keys = ['id', 'title', 'content', 'on', 'where', 'url', 'last_refresh', 'refresh_interval', 'include'];
-    valid_keys.map(function (k) {
-      if (item.hasOwnProperty(k)) {
-        new_item[k] = item[k];
-      }
-    });
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-    if (new_item.where === 'group') {
-      new_item.content = makeGroupContent(new_item, list);
+module.exports = function (app, new_list) {
+  var hosts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+  var state = { list: new_list };
+  var current = app.state.current;
+  var item = new_list.find(function (i) {
+    return i.id === current.id;
+  });
+  if (item) {
+    state.current = item;
+  }
+
+  app.setState(state, function () {
+    if (hosts) {
+      _Agent2.default.emit('select', hosts.id);
     }
-
-    return new_item;
   });
 };
 

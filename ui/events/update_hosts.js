@@ -5,8 +5,9 @@
 
 'use strict'
 
-import Agent from '../Agent'
-import cleanData from '../../app/server/cleanData'
+//import Agent from '../Agent'
+//import cleanData from '../../app/server/cleanData'
+import save from './save'
 
 module.exports = (app, hosts) => {
   let list = app.state.list.slice(0)
@@ -19,19 +20,5 @@ module.exports = (app, hosts) => {
   }
 
   //list = cleanData(list)
-
-  Agent.pact('saveHosts', list)
-    .then(new_list => {
-      let state = {list: new_list}
-      let current = app.state.current
-      let item = new_list.find(i => i.id === current.id)
-      if (item) {
-        state.current = item
-      }
-
-      app.setState(state, () => {
-        Agent.emit('select', hosts.id)
-      })
-    })
-    .catch(e => console.log(e))
+  save(app, list, hosts)
 }
