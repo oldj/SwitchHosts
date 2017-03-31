@@ -22617,7 +22617,11 @@ var ListItem = function (_React$Component) {
         }, attrs),
         sys ? null : _react2.default.createElement(
           'div',
-          null,
+          { className: 'item-buttons' },
+          _react2.default.createElement('i', {
+            className: 'iconfont icon-edit',
+            onClick: this.toEdit.bind(this)
+          }),
           _react2.default.createElement('i', { className: (0, _classnames2.default)({
               'switch': 1,
               'iconfont': 1,
@@ -22625,10 +22629,6 @@ var ListItem = function (_React$Component) {
               'icon-off': !data.on
             }),
             onClick: this.toggle.bind(this)
-          }),
-          _react2.default.createElement('i', {
-            className: 'iconfont icon-edit',
-            onClick: this.toEdit.bind(this)
           })
         ),
         _react2.default.createElement('i', { className: (0, _classnames2.default)({
@@ -23118,7 +23118,7 @@ exports = module.exports = __webpack_require__(6)();
 
 
 // module
-exports.push([module.i, "#sh-list .list-item {\n  padding: 7px 10px 7px 15px;\n  cursor: pointer;\n}\n#sh-list .list-item.hidden {\n  display: none;\n}\n#sh-list .list-item.sys-hosts {\n  font-size: 14px;\n  padding: 8px 10px 8px 12px;\n}\n#sh-list .list-item.sys-hosts i {\n  width: 23px;\n}\n#sh-list .list-item.selected {\n  background: #2d3138;\n}\n#sh-list .list-item.selected span {\n  color: #fff;\n}\n#sh-list .list-item.selected i.item-icon {\n  color: #fff;\n}\n#sh-list .list-item.selected:hover i.icon-edit {\n  display: block;\n  color: #fff;\n}\n#sh-list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 5px;\n}\n#sh-list .list-item i.item-icon {\n  font-size: 12px;\n}\n#sh-list .list-item i.switch {\n  float: right;\n  cursor: pointer;\n  line-height: 23px;\n}\n#sh-list .list-item i.switch.icon-on {\n  color: #af9;\n}\n#sh-list .list-item i.icon-edit {\n  float: right;\n  display: none;\n}\n", ""]);
+exports.push([module.i, "#sh-list .list-item {\n  position: relative;\n  padding: 7px 10px 7px 15px;\n  cursor: pointer;\n}\n#sh-list .list-item.hidden {\n  display: none;\n}\n#sh-list .list-item.sys-hosts {\n  font-size: 14px;\n  padding: 8px 10px 8px 12px;\n}\n#sh-list .list-item.sys-hosts i {\n  width: 23px;\n}\n#sh-list .list-item.selected {\n  background: #2d3138;\n}\n#sh-list .list-item.selected span {\n  color: #fff;\n}\n#sh-list .list-item.selected i.item-icon {\n  color: #fff;\n}\n#sh-list .list-item.selected:hover i.icon-edit {\n  display: inline-block;\n  color: #fff;\n}\n#sh-list .list-item i {\n  display: inline-block;\n  width: 20px;\n  text-align: center;\n  margin-right: 5px;\n}\n#sh-list .list-item i.item-icon {\n  font-size: 12px;\n}\n#sh-list .list-item i.switch {\n  cursor: pointer;\n  line-height: 23px;\n}\n#sh-list .list-item i.switch.icon-on {\n  color: #af9;\n}\n#sh-list .list-item i.icon-edit {\n  display: none;\n}\n#sh-list .list-item .item-buttons {\n  position: absolute;\n  right: 10px;\n}\n", ""]);
 
 // exports
 
