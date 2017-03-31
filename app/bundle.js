@@ -21934,7 +21934,7 @@ var EditPrompt = function (_React$Component) {
             { htmlFor: 'ipt-remote' },
             lang.where_remote
           ),
-          _react2.default.createElement('input', { id: 'ipt-remote', type: 'radio', name: 'where', value: 'group',
+          _react2.default.createElement('input', { id: 'ipt-group', type: 'radio', name: 'where', value: 'group',
             checked: this.state.where === 'group',
             onChange: function onChange(e) {
               return _this5.setState({ where: e.target.value });
@@ -21942,7 +21942,7 @@ var EditPrompt = function (_React$Component) {
           }),
           _react2.default.createElement(
             'label',
-            { htmlFor: 'ipt-remote' },
+            { htmlFor: 'ipt-group' },
             lang.where_group
           )
         ),
