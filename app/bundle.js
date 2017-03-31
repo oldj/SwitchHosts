@@ -3453,6 +3453,10 @@ var _Agent = __webpack_require__(5);
 
 var _Agent2 = _interopRequireDefault(_Agent);
 
+var _cleanData = __webpack_require__(235);
+
+var _cleanData2 = _interopRequireDefault(_cleanData);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = function (app, hosts) {
@@ -3467,8 +3471,19 @@ module.exports = function (app, hosts) {
     list.splice(idx, 1, Object.assign({}, old_hosts, hosts));
   }
 
+  list = (0, _cleanData2.default)(list);
+
   _Agent2.default.pact('saveHosts', list).then(function () {
-    app.setState({ list: list }, function () {
+    var state = { list: list };
+    var current = app.state.current;
+    var item = list.find(function (i) {
+      return i.id === current.id;
+    });
+    if (item) {
+      state.current = item;
+    }
+
+    app.setState(state, function () {
       _Agent2.default.emit('select', hosts.id);
     });
   }).catch(function (e) {
@@ -21595,7 +21610,8 @@ var EditPrompt = function (_React$Component) {
       url: '',
       last_refresh: null,
       refresh_interval: 0,
-      is_loading: false
+      is_loading: false,
+      include: []
     };
 
     _this.current_hosts = null;
@@ -21636,6 +21652,9 @@ var EditPrompt = function (_React$Component) {
 
       _Agent2.default.on('edit_hosts', function (hosts) {
         _this2.current_hosts = hosts;
+        var include = hosts.include || [];
+        include = Array.from(new Set(include));
+
         _this2.setState({
           show: true,
           is_add: false,
@@ -21643,7 +21662,8 @@ var EditPrompt = function (_React$Component) {
           title: hosts.title || '',
           url: hosts.url || '',
           last_refresh: hosts.last_refresh || null,
-          refresh_interval: hosts.refresh_interval || 0
+          refresh_interval: hosts.refresh_interval || 0,
+          include: include
         });
         setTimeout(function () {
           _this2.tryToFocus();
@@ -21713,6 +21733,11 @@ var EditPrompt = function (_React$Component) {
         show: false
       });
       this.clear();
+    }
+  }, {
+    key: 'updateInclude',
+    value: function updateInclude(include) {
+      this.setState({ include: include });
     }
   }, {
     key: 'getRefreshOptions',
@@ -21787,7 +21812,11 @@ var EditPrompt = function (_React$Component) {
     value: function renderGroup() {
       if (this.state.where !== 'group') return null;
 
-      return _react2.default.createElement(_group2.default, { list: this.props.list });
+      return _react2.default.createElement(_group2.default, {
+        list: this.props.list,
+        include: this.state.include,
+        updateInclude: this.updateInclude.bind(this)
+      });
     }
   }, {
     key: 'renderRemoteInputs',
@@ -22030,10 +22059,12 @@ var Group = function (_React$Component) {
     var _this = _possibleConstructorReturn(this, (Group.__proto__ || Object.getPrototypeOf(Group)).call(this, props));
 
     _this.state = {
-      list: []
+      list: [],
+      include: []
     };
 
     _this.current_hosts = null;
+    _this.ids = [];
     return _this;
   }
 
@@ -22065,8 +22096,9 @@ var Group = function (_React$Component) {
     value: function makeList() {
       var _this2 = this;
 
+      var include = this.state.include;
       var items = this.state.list.filter(function (item) {
-        return item.where !== 'group';
+        return item.where !== 'group' && !include.includes(item.id);
       }).map(function (item) {
         return _this2.makeItem(item);
       });
@@ -22084,30 +22116,52 @@ var Group = function (_React$Component) {
   }, {
     key: 'currentList',
     value: function currentList() {
+      var _this3 = this;
+
+      var list = this.state.list;
+      var items = this.state.include.map(function (id) {
+        return list.find(function (item) {
+          return item.id === id;
+        });
+      }).map(function (item) {
+        return _this3.makeItem(item);
+      });
+
       return _react2.default.createElement(
         'div',
         { id: 'hosts-group-current' },
-        _react2.default.createElement('div', { ref: 'group_current', className: 'hosts-group-list' })
+        _react2.default.createElement(
+          'div',
+          { ref: 'group_current', className: 'hosts-group-list' },
+          items
+        )
       );
     }
   }, {
     key: 'getCurrentListFromDOM',
     value: function getCurrentListFromDOM() {
+      var updateInclude = this.props.updateInclude;
+
       var nodes = this.refs.group_current.getElementsByClassName('hosts-item');
       nodes = (0, _listToArray2.default)(nodes);
-      console.log(nodes);
+      var ids = nodes.map(function (item) {
+        return item.getAttribute('data-id');
+      });
+      this.ids = ids;
+      updateInclude(ids);
     }
   }, {
     key: 'componentWillMount',
     value: function componentWillMount() {
       this.setState({
-        list: this.props.list
+        list: this.props.list,
+        include: this.props.include
       });
     }
   }, {
     key: 'componentDidMount',
     value: function componentDidMount() {
-      var _this3 = this;
+      var _this4 = this;
 
       _sortablejs2.default.create(this.refs.group_valid, {
         group: 'sorting',
@@ -22117,8 +22171,8 @@ var Group = function (_React$Component) {
       _sortablejs2.default.create(this.refs.group_current, {
         group: 'sorting',
         sort: true,
-        onSort: function onSort(evt) {
-          _this3.getCurrentListFromDOM();
+        onSort: function onSort() {
+          _this4.getCurrentListFromDOM();
         }
       });
     }
@@ -35291,6 +35345,45 @@ module.exports = function (app, on, on_ids, callback) {
     callback();
   }).catch(function (e) {
     return callback(e);
+  });
+};
+
+/***/ }),
+/* 235 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+function makeGroupContent(item, list) {
+  return (item.include || []).map(function (id) {
+    return (list.find(function (i) {
+      return i.id === id;
+    }) || {}).content || '';
+  }).join('\n\n');
+}
+
+module.exports = function (list) {
+  return list.map(function (item) {
+    var new_item = {};
+
+    var valid_keys = ['id', 'title', 'content', 'on', 'where', 'last_refresh', 'url', 'include'];
+    valid_keys.map(function (k) {
+      if (item.hasOwnProperty(k)) {
+        new_item[k] = item[k];
+      }
+    });
+
+    if (new_item.where === 'group') {
+      new_item.content = makeGroupContent(new_item, list);
+    }
+
+    return new_item;
   });
 };
 

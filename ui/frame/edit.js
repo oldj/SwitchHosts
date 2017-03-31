@@ -25,7 +25,8 @@ export default class EditPrompt extends React.Component {
       url: '',
       last_refresh: null,
       refresh_interval: 0,
-      is_loading: false
+      is_loading: false,
+      include: []
     }
 
     this.current_hosts = null
@@ -59,6 +60,9 @@ export default class EditPrompt extends React.Component {
 
     Agent.on('edit_hosts', (hosts) => {
       this.current_hosts = hosts
+      let include = hosts.include || []
+      include = Array.from(new Set(include))
+
       this.setState({
         show: true,
         is_add: false,
@@ -66,7 +70,8 @@ export default class EditPrompt extends React.Component {
         title: hosts.title || '',
         url: hosts.url || '',
         last_refresh: hosts.last_refresh || null,
-        refresh_interval: hosts.refresh_interval || 0
+        refresh_interval: hosts.refresh_interval || 0,
+        include
       })
       setTimeout(() => {
         this.tryToFocus()
@@ -135,6 +140,10 @@ export default class EditPrompt extends React.Component {
     this.clear()
   }
 
+  updateInclude (include) {
+    this.setState({include})
+  }
+
   getRefreshOptions () {
     let {lang} = this.props
     let k = [
@@ -191,7 +200,11 @@ export default class EditPrompt extends React.Component {
   renderGroup () {
     if (this.state.where !== 'group') return null
 
-    return <Group list={this.props.list}/>
+    return <Group
+      list={this.props.list}
+      include={this.state.include}
+      updateInclude={this.updateInclude.bind(this)}
+    />
   }
 
   renderRemoteInputs () {

@@ -1,11 +1,13 @@
 /**
  * @author oldj
  * @blog https://oldj.net
+ *
+ * 输出 hosts，提供给系统等应用
  */
 
 'use strict'
 
-function getHostsContent(item, list) {
+function getHostsContent(item) {
   return item.content || ''
 }
 
