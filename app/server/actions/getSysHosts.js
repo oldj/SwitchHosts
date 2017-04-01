@@ -10,6 +10,7 @@ const io = require('../io')
 
 module.exports = () => {
   let fn = paths.sys_host_path
+  console.log('getSysHosts:', fn)
   return io
     .pReadFile(fn)
     .then(cnt => {
