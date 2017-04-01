@@ -44,11 +44,9 @@ export default class List extends React.Component {
         <ListItem
           data={item}
           idx={idx}
-          current={this.props.current}
-          setCurrent={this.props.setCurrent}
-          lang={this.props.lang}
           key={'hosts-' + idx + Math.random()}
           show={show}
+          {...this.props}
         />
       )
     })
@@ -84,9 +82,7 @@ export default class List extends React.Component {
       <div id="sh-list">
         <ListItem
           data={this.props.sys_hosts}
-          lang={this.props.lang}
-          current={this.props.current}
-          setCurrent={this.props.setCurrent}
+          {...this.props}
           sys="1"/>
         <div ref="items" className="custom-items">
           {this.customItems()}

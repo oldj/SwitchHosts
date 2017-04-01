@@ -13,14 +13,12 @@ module.exports = (app, new_list, hosts = null) => {
     .then(sys_hosts => {
       state.sys_hosts = sys_hosts
 
+      if (hosts) {
+        state.current = hosts
+      }
       let current = app.state.current
       if (current.is_sys) {
         state.current = sys_hosts
-      } else {
-        let item = new_list.find(i => i.id === current.id)
-        if (item) {
-          state.current = item
-        }
       }
 
       app.setState(state, () => {

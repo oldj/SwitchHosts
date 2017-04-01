@@ -8,6 +8,7 @@
 import React from 'react'
 import classnames from 'classnames'
 import Agent from '../Agent'
+import isInViewport from 'wheel-js/src/browser/isInViewport'
 import './list-item.less'
 
 export default class ListItem extends React.Component {
@@ -16,7 +17,6 @@ export default class ListItem extends React.Component {
 
     this.is_sys = !!this.props.sys
     this.state = {}
-
   }
 
   getTitle () {
@@ -38,19 +38,30 @@ export default class ListItem extends React.Component {
   }
 
   componentDidMount () {
+    let {just_added_id, data} = this.props
     //Agent.on('select_hosts', id => {
     //  if (id && id === this.props.data.id) {
     //    this.beSelected()
     //    this.el && this.el.scrollIntoView()
     //  }
     //})
+
+    if (!this.el) {
+      return
+    }
+
+    let el = this.el
+    if (just_added_id === data.id && !isInViewport(el)) {
+      el.scrollIntoView()
+      this.props.justAdd(null)
+    }
   }
 
   render () {
     let {data, sys, current, show} = this.props
     if (!data) return null
 
-    let is_selected = data.id === current.id
+    let is_selected = data.id === current.id || (data.is_sys && current.is_sys)
     let attrs = {
       'data-id': data.id || ''
     }
