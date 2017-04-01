@@ -10,6 +10,7 @@ const paths = require('../server/paths')
 const {Menu, shell, dialog} = require('electron')
 const m_lang = require('../server/lang')
 const getPref = require('../server/actions/getPref')
+const checkUpdate = require('../server/checkUpdate')
 const svr = require('../server/svr')
 const version = require('../version').version
 
@@ -168,8 +169,7 @@ function doInit (app, lang) {
         {
           label: lang.check_update,
           click () {
-            //m_chk_update.check()
-            // todo
+            checkUpdate.check()
           }
         }, {
           type: 'separator'
