@@ -181,7 +181,7 @@ function doInit (app, lang) {
         }, {
           label: lang.homepage,
           click () {
-            shell.openExternal('http://oldj.github.io/SwitchHosts/')
+            shell.openExternal('https://oldj.github.io/SwitchHosts/')
           }
         }]
     }

@@ -21592,8 +21592,12 @@ var Editor = function (_React$Component) {
       var _this4 = this;
 
       // console.log(next_props);
-      this.codemirror.getDoc().setValue(next_props.code);
-      this.codemirror.setOption('readOnly', next_props.readonly);
+      var cm = this.codemirror;
+      var v = cm.getDoc().getValue();
+      if (v !== next_props.code) {
+        cm.getDoc().setValue(next_props.code);
+      }
+      cm.setOption('readOnly', next_props.readonly);
       setTimeout(function () {
         _this4.highlightKeyword();
       }, 100);
