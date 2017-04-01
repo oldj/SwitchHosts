@@ -16629,7 +16629,7 @@ module.exports = "data:application/vnd.ms-fontobject;base64,pj8AAIw+AAABAAIAAAAA
 "use strict";
 
 
-exports.version = [3, 3, 0, 4570];
+exports.version = [3, 3, 0, 4582];
 
 /***/ }),
 /* 71 */
@@ -21172,6 +21172,7 @@ var App = function (_React$Component) {
       just_added_id: null
     };
 
+    _this.is_dragging = false;
     _this.loadHosts();
 
     _Agent2.default.pact('getPref').then(function (pref) {
@@ -21184,10 +21185,21 @@ var App = function (_React$Component) {
 
     (0, _index.reg)(_this);
 
+    _Agent2.default.on('drag_start', function () {
+      _this.is_dragging = true;
+      console.log('drag_start');
+    });
+
+    _Agent2.default.on('drag_end', function () {
+      _this.is_dragging = false;
+      console.log('drag_end');
+    });
+
     setInterval(function () {
       var list = _this.state.list;
-      if (!list || list.length === 0) return;
+      if (_this.is_dragging || !list || list.length === 0) return;
 
+      console.log('checkNeedRemoteRefresh');
       _Agent2.default.pact('checkNeedRemoteRefresh', list).then(function (list) {
         if (!list) return;
         _Agent2.default.emit('list_updated', list);
@@ -21268,6 +21280,10 @@ var App = function (_React$Component) {
           _Agent2.default.emit('esc');
         }
       }, false);
+
+      window.addEventListener('mouseup', function () {
+        _Agent2.default.emit('drag_end');
+      });
     }
   }, {
     key: 'render',
@@ -24205,10 +24221,11 @@ var List = function (_React$Component) {
         sort: true,
         animation: 150,
         onStart: function onStart() {
-          console.log('drag start..');
+          _Agent2.default.emit('drag_start');
         },
         onSort: function onSort() {
           _this3.getCurrentListFromDOM();
+          _Agent2.default.emit('drag_end');
           //console.log(evt)
           //console.log(evt.item)
           //console.log(evt.oldIndex, evt.newIndex)
