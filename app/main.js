@@ -14,10 +14,10 @@ const BrowserWindow = electron.BrowserWindow
 
 const pref = require('./server/pref')
 let user_language = pref.get('user_language') ||
-  (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
+                    (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
 global.user_language = user_language
 
-//const tray = require('./ui/modules/tray')
+const tray = require('./menu/tray')
 const SHServer = require('./server/Server')
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -75,7 +75,7 @@ function createWindow () {
 
   contents.on('did-finish-load', () => {
     if (!is_tray_initialized) {
-      //tray.makeTray(app, contents, user_language)
+      tray.makeTray(app, contents, user_language)
       is_tray_initialized = true
     }
   })
@@ -103,12 +103,11 @@ if (should_quit) {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   createWindow()
-  //require('./ui/modules/mainMenu').init(app, user_language)
   require('./menu/main_menu').init(app, user_language)
 
   setTimeout(() => {
     if (renderer) {
-      //require('./bg/check_for_update').check(true, renderer)
+      require('./server/checkUpdate').check(true)
     }
   }, 1000)
 })

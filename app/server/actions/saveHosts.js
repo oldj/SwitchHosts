@@ -54,6 +54,7 @@ module.exports = (svr, list) => {
       // try to update system hosts
       return tryToApply(svr, out)
         .then(() => io.pWriteFile(fn, cnt))
+        .then(() => svr.emit('hosts_saved'))
         .then(() => list)
     })
 }
