@@ -13,7 +13,7 @@ import { version as current_version } from '../../app/version'
 import formatVersion from '../../app/libs/formatVersion'
 import './preferences.less'
 
-const AUTO_LAUNCH = 'auto_launch'
+const pref_keys = ['after_cmd', 'auto_launch', 'choice_mode', 'hide_at_launch', 'is_dock_icon_hidden', 'user_language']
 
 export default class PreferencesPrompt extends React.Component {
   constructor (props) {
@@ -21,25 +21,25 @@ export default class PreferencesPrompt extends React.Component {
 
     this.state = {
       show: false,
-      lang_key: '',
+      user_language: '',
       after_cmd: '',
       choice_mode: '',
       auto_launch: false,
       hide_at_launch: false,
+      lang_list: [],
       update_found: false // 发现新版本
     }
 
-    Agent.pact('getPref')
-      .then(pref => {
-        this.setState(pref)
-      })
+    Agent.pact('getLangList')
+      .then(lang_list => this.setState({lang_list}))
   }
 
   componentDidMount () {
     Agent.on('show_preferences', () => {
-      this.setState({
-        show: true
-      })
+      Agent.pact('getPref')
+        .then(pref => {
+          this.setState(Object.assign({}, pref, {show: true}))
+        })
     })
 
     Agent.on('update_found', (v) => {
@@ -54,9 +54,20 @@ export default class PreferencesPrompt extends React.Component {
     this.setState({
       show: false
     }, () => {
-      setTimeout(() => {
-        Agent.pact('relaunch')
-      }, 200)
+      let prefs = {}
+      let d = this.state
+      pref_keys.map(k => {
+        if (d.hasOwnProperty(k)) {
+          prefs[k] = d[k]
+        }
+      })
+
+      Agent.pact('setPref', prefs)
+        .then(() => {
+          setTimeout(() => {
+            Agent.pact('relaunch')
+          }, 200)
+        })
     })
   }
 
@@ -67,8 +78,7 @@ export default class PreferencesPrompt extends React.Component {
   }
 
   getLanguageOptions () {
-    let {lang} = this.props
-    return lang.lang_list.map(({key, name}, idx) => {
+    return this.state.lang_list.map(({key, name}, idx) => {
       return (
         <option value={key} key={idx}>{name}</option>
       )
@@ -76,26 +86,22 @@ export default class PreferencesPrompt extends React.Component {
   }
 
   updateLangKey (v) {
-    Agent.pact('setPref', 'user_language', v)
-    this.setState({lang_key: v})
+    this.setState({user_language: v})
   }
 
   updateChoiceMode (v) {
-    Agent.pact('setPref', 'choice_mode', v)
     this.setState({
       choice_mode: v
     })
   }
 
   updateAfterCmd (v) {
-    Agent.pact('setPref', 'after_cmd', v)
     this.setState({
       after_cmd: v
     })
   }
 
   updateAutoLaunch (v) {
-    Agent.pact('setPref', AUTO_LAUNCH, v)
     this.setState({
       auto_launch: v
     })
@@ -104,7 +110,6 @@ export default class PreferencesPrompt extends React.Component {
   }
 
   updateMinimizeAtLaunch (v) {
-    Agent.pact('setPref', 'hide_at_launch', v)
     this.setState({
       hide_at_launch: v
     })
@@ -118,7 +123,7 @@ export default class PreferencesPrompt extends React.Component {
         <div className="title">{lang.language}</div>
         <div className="cnt">
           <select
-            value={this.state.lang_key || ''}
+            value={this.state.user_language || ''}
             onChange={(e) => this.updateLangKey(e.target.value)}
           >
             {this.getLanguageOptions()}
@@ -242,7 +247,7 @@ export default class PreferencesPrompt extends React.Component {
         body={this.body()}
         onOK={() => this.onOK()}
         onCancel={() => this.onCancel()}
-        cancel_title={lang.set_and_back}
+        cancel_title={lang.cancel}
         ok_title={lang.set_and_relaunch_app}
       />
     )

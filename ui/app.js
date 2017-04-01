@@ -29,9 +29,15 @@ export default class App extends React.Component {
 
     this.loadHosts()
 
-    Agent.pact('getLang').then(lang => {
-      this.setState({lang})
-    })
+    Agent.pact('getPref')
+      .then(pref => {
+        return pref.user_language || 'en'
+      })
+      .then(l => {
+        Agent.pact('getLang', l).then(lang => {
+          this.setState({lang})
+        })
+      })
 
     events_reg(this)
 

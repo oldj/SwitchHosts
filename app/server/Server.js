@@ -24,7 +24,11 @@ ipcMain.on('x', (e, d) => {
   if (typeof actions[action] === 'function') {
     actions[action](svr, ...(d.data || []))
       .then(v => {
-        sender.send(d.callback, [null, v])
+        try {
+          sender.send(d.callback, [null, v])
+        } catch (e) {
+          console.log(e)
+        }
       })
       .catch(e => {
         console.log('x:err', e)
