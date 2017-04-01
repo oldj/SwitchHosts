@@ -38,12 +38,15 @@ export default class App extends React.Component {
       let list = this.state.list
       if (!list || list.length === 0) return
 
-      //Agent.pact('checkNeedRemoteRefresh', list)
-      //  .then(list => {
-      //    if (!list) return
-      //    Agent.emit('list_updated', list)
-      //  })
-    }, 3000)
+      Agent.pact('checkNeedRemoteRefresh', list)
+        .then(list => {
+          if (!list) return
+          Agent.emit('list_updated', list)
+        })
+        .catch(e => {
+          console.log(e)
+        })
+    }, 60 * 1000)
   }
 
   loadHosts () {

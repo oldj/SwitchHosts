@@ -37,7 +37,7 @@ export default class Group extends React.Component {
           , 'icon-files': item.where === 'group'
         })}
         />
-        <span>{item.title}</span>
+        <span>{item.title || 'untitled'}</span>
       </div>
     )
   }

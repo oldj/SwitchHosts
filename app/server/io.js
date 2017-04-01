@@ -51,7 +51,7 @@ exports.pWriteFile = (fn, data) => {
 }
 
 let readFile = exports.readFile = (fn, callback) => {
-  if (!isFile) {
+  if (!isFile(fn)) {
     callback(null, '')
   } else {
     fs.readFile(fn, 'utf-8', callback)
