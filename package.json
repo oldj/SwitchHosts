@@ -7,7 +7,7 @@
     "test": "nyc ava",
     "start": "electron app",
     "dev": "ENV=dev electron app",
-    "build": "gulp ver && webpack -p",
+    "build": "gulp ver && webpack",
     "build-w": "webpack -w",
     "pack": "gulp pack",
     "pack-mac": "gulp pack --platform=macOS",
