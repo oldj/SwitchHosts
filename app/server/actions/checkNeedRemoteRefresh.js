@@ -5,7 +5,7 @@
 
 'use strict'
 
-const isExpired = require('./checkIsExpired')
+const isExpired = require('../checkIsExpired')
 const saveHosts = require('./saveHosts')
 
 module.exports = (svr, list, hosts = null) => {
