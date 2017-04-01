@@ -16,6 +16,7 @@ const version = require('../version').version
 
 function doInit (app, lang) {
   let last_path = null
+  let download_path = app.getPath('downloads')
 
   const template = [
     {
@@ -35,14 +36,15 @@ function doInit (app, lang) {
           click: () => {
             dialog.showOpenDialog({
               title: lang.import,
-              defaultPath: path.join(last_path || paths.home_path, 'sh.json'),
+              defaultPath: path.join(last_path || download_path ||
+                                     paths.home_path, 'sh.json'),
               filters: [
                 {name: 'JSON', extensions: ['json']},
                 {name: 'All Files', extensions: ['*']}
               ]
             }, (fns) => {
               if (fns && fns.length > 0) {
-                svr.emit('to_import', fns[0])
+                require('../server/actions/importData')(svr, fns[0])
                 last_path = path.dirname(fns[0])
               }
             })
@@ -53,14 +55,16 @@ function doInit (app, lang) {
           click: () => {
             dialog.showSaveDialog({
               title: lang.export,
-              defaultPath: path.join(last_path || paths.home_path, 'sh.json'),
+              defaultPath: path.join(last_path || download_path ||
+                                     paths.home_path, 'sh.json'),
               filters: [
                 {name: 'JSON', extensions: ['json']},
                 {name: 'All Files', extensions: ['*']}
               ]
             }, (fn) => {
               if (fn) {
-                svr.emit('to_export', fn)
+                //svr.emit('to_export', fn)
+                require('../server/actions/exportData')(svr, fn)
                 last_path = path.dirname(fn)
               }
             })
