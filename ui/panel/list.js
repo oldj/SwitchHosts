@@ -46,7 +46,8 @@ export default class List extends React.Component {
           idx={idx}
           current={this.props.current}
           setCurrent={this.props.setCurrent}
-          key={'hosts-' + idx}
+          lang={this.props.lang}
+          key={'hosts-' + idx + Math.random()}
           show={show}
         />
       )
@@ -72,8 +73,8 @@ export default class List extends React.Component {
       , onSort: (evt) => {
         this.getCurrentListFromDOM()
         //console.log(evt)
-        console.log(evt.item)
-        console.log(evt.oldIndex, evt.newIndex)
+        //console.log(evt.item)
+        //console.log(evt.oldIndex, evt.newIndex)
       }
     })
   }
