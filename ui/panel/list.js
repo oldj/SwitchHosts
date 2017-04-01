@@ -66,10 +66,11 @@ export default class List extends React.Component {
       , sort: true
       , animation: 150
       , onStart: () => {
-        console.log('drag start..')
+        Agent.emit('drag_start')
       }
       , onSort: () => {
         this.getCurrentListFromDOM()
+        Agent.emit('drag_end')
         //console.log(evt)
         //console.log(evt.item)
         //console.log(evt.oldIndex, evt.newIndex)

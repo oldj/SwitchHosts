@@ -27,6 +27,7 @@ export default class App extends React.Component {
       just_added_id: null
     }
 
+    this.is_dragging = false
     this.loadHosts()
 
     Agent.pact('getPref')
@@ -41,10 +42,21 @@ export default class App extends React.Component {
 
     events_reg(this)
 
+    Agent.on('drag_start', () => {
+      this.is_dragging = true
+      console.log('drag_start')
+    })
+
+    Agent.on('drag_end', () => {
+      this.is_dragging = false
+      console.log('drag_end')
+    })
+
     setInterval(() => {
       let list = this.state.list
-      if (!list || list.length === 0) return
+      if (this.is_dragging || !list || list.length === 0) return
 
+      console.log('checkNeedRemoteRefresh')
       Agent.pact('checkNeedRemoteRefresh', list)
         .then(list => {
           if (!list) return
@@ -118,6 +130,10 @@ export default class App extends React.Component {
         Agent.emit('esc')
       }
     }, false)
+
+    window.addEventListener('mouseup', () => {
+      Agent.emit('drag_end')
+    })
   }
 
   render () {
