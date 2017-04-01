@@ -59,7 +59,7 @@ export default class List extends React.Component {
     nodes = listToArray(nodes)
     let ids = nodes.map(el => el.getAttribute('data-id'))
 
-    Agent.emit('order', ids)
+    Agent.emit('sort', ids)
   }
 
   componentDidMount () {
@@ -70,7 +70,7 @@ export default class List extends React.Component {
       , onStart: () => {
         console.log('drag start..')
       }
-      , onSort: (evt) => {
+      , onSort: () => {
         this.getCurrentListFromDOM()
         //console.log(evt)
         //console.log(evt.item)

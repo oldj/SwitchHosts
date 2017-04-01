@@ -2859,18 +2859,26 @@ module.exports = function (app, new_list) {
   var hosts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
   var state = { list: new_list };
-  var current = app.state.current;
-  var item = new_list.find(function (i) {
-    return i.id === current.id;
-  });
-  if (item) {
-    state.current = item;
-  }
+  _Agent2.default.pact('getSysHosts').then(function (sys_hosts) {
+    state.sys_hosts = sys_hosts;
 
-  app.setState(state, function () {
-    if (hosts) {
-      _Agent2.default.emit('select', hosts.id);
+    var current = app.state.current;
+    if (current.is_sys) {
+      state.current = sys_hosts;
+    } else {
+      var item = new_list.find(function (i) {
+        return i.id === current.id;
+      });
+      if (item) {
+        state.current = item;
+      }
     }
+
+    app.setState(state, function () {
+      if (hosts) {
+        _Agent2.default.emit('select', hosts.id);
+      }
+    });
   });
 };
 
@@ -4502,47 +4510,7 @@ module.exports = function (app, callback) {
 };
 
 /***/ }),
-/* 40 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * @author oldj
- * @blog https://oldj.net
- */
-
-
-
-var _Agent = __webpack_require__(5);
-
-var _Agent2 = _interopRequireDefault(_Agent);
-
-var _list_updated = __webpack_require__(23);
-
-var _list_updated2 = _interopRequireDefault(_list_updated);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-module.exports = function (app, ids) {
-  var list = app.state.list;
-  var new_list = [];
-  ids.map(function (id) {
-    var item = list.find(function (i) {
-      return i.id === id;
-    });
-    if (item) {
-      new_list.push(item);
-    }
-  });
-
-  _Agent2.default.pact('saveHosts', new_list).then(function (list) {
-    (0, _list_updated2.default)(app, list);
-  }).catch(function (e) {
-    return console.log(e);
-  });
-};
-
-/***/ }),
+/* 40 */,
 /* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -4623,6 +4591,10 @@ var _Agent = __webpack_require__(5);
 
 var _Agent2 = _interopRequireDefault(_Agent);
 
+var _list_updated = __webpack_require__(23);
+
+var _list_updated2 = _interopRequireDefault(_list_updated);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = function (app, on, on_ids, callback) {
@@ -4636,7 +4608,8 @@ module.exports = function (app, on, on_ids, callback) {
   });
 
   _Agent2.default.pact('saveHosts', new_list).then(function () {
-    app.setState({ list: new_list });
+    //app.setState({list: new_list})
+    (0, _list_updated2.default)(app, new_list);
     //app.forceUpdate()
     callback();
   }).catch(function (e) {
@@ -22941,7 +22914,7 @@ var List = function (_React$Component) {
         return el.getAttribute('data-id');
       });
 
-      _Agent2.default.emit('order', ids);
+      _Agent2.default.emit('sort', ids);
     }
   }, {
     key: 'componentDidMount',
@@ -22955,7 +22928,7 @@ var List = function (_React$Component) {
         onStart: function onStart() {
           console.log('drag start..');
         },
-        onSort: function onSort(evt) {
+        onSort: function onSort() {
           _this3.getCurrentListFromDOM();
           //console.log(evt)
           //console.log(evt.item)
@@ -23874,10 +23847,10 @@ var map = {
 	"./index.js": 29,
 	"./list_updated": 23,
 	"./list_updated.js": 23,
-	"./order": 40,
-	"./order.js": 40,
 	"./save": 30,
 	"./save.js": 30,
+	"./sort": 236,
+	"./sort.js": 236,
 	"./sudo_cancel": 41,
 	"./sudo_cancel.js": 41,
 	"./sudo_pswd": 42,
@@ -23915,8 +23888,8 @@ var map = {
 	"./get_on_hosts.js": 39,
 	"./index.js": 29,
 	"./list_updated.js": 23,
-	"./order.js": 40,
 	"./save.js": 30,
+	"./sort.js": 236,
 	"./sudo_cancel.js": 41,
 	"./sudo_pswd.js": 42,
 	"./toggle_hosts.js": 43,
@@ -35406,6 +35379,47 @@ function traverseAllChildren(children, callback, traverseContext) {
 }
 
 module.exports = traverseAllChildren;
+
+/***/ }),
+/* 236 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var _Agent = __webpack_require__(5);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+var _list_updated = __webpack_require__(23);
+
+var _list_updated2 = _interopRequireDefault(_list_updated);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = function (app, ids) {
+  var list = app.state.list;
+  var new_list = [];
+  ids.map(function (id) {
+    var item = list.find(function (i) {
+      return i.id === id;
+    });
+    if (item) {
+      new_list.push(item);
+    }
+  });
+
+  _Agent2.default.pact('saveHosts', new_list).then(function (list) {
+    (0, _list_updated2.default)(app, list);
+  }).catch(function (e) {
+    return console.log(e);
+  });
+};
 
 /***/ })
 /******/ ]);
