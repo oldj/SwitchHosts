@@ -25,6 +25,10 @@ export default class Group extends React.Component {
   }
 
   makeItem (item) {
+    if (!item) {
+      return null
+    }
+
     let attrs = {
       'data-id': item.id || ''
     }

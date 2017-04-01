@@ -4650,13 +4650,41 @@ var _Agent = __webpack_require__(4);
 
 var _Agent2 = _interopRequireDefault(_Agent);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _save = __webpack_require__(30);
 
-var update = __webpack_require__(31);
+var _save2 = _interopRequireDefault(_save);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 module.exports = function (app, hosts) {
   hosts.on = !hosts.on;
-  update(app, hosts);
+
+  _Agent2.default.pact('getPref').then(function (pref) {
+    var list = app.state.list.slice(0);
+    var is_single = pref.choice_mode === 'single';
+
+    if (is_single && hosts.on) {
+      list.map(function (item) {
+        if (item.id !== hosts.id) {
+          item.on = false;
+        }
+      });
+    }
+
+    return list;
+  }).then(function (list) {
+    var idx = list.findIndex(function (item) {
+      return item.id === hosts.id;
+    });
+    if (idx === -1) {
+      list.push(Object.assign({}, hosts));
+    } else {
+      var old_hosts = list[idx];
+      list.splice(idx, 1, Object.assign({}, old_hosts, hosts));
+    }
+
+    (0, _save2.default)(app, list, hosts);
+  });
 
   _Agent2.default.pact('statRecord', 'switch');
 };
@@ -16635,7 +16663,7 @@ module.exports = "data:application/vnd.ms-fontobject;base64,pj8AAIw+AAABAAIAAAAA
 "use strict";
 
 
-exports.version = [3, 3, 0, 4596];
+exports.version = [3, 3, 0, 4603];
 
 /***/ }),
 /* 71 */
@@ -23029,6 +23057,10 @@ var Group = function (_React$Component) {
   _createClass(Group, [{
     key: 'makeItem',
     value: function makeItem(item) {
+      if (!item) {
+        return null;
+      }
+
       var attrs = {
         'data-id': item.id || ''
       };
