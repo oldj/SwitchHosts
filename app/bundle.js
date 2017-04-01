@@ -4646,13 +4646,19 @@ module.exports = function (app, pswd) {
 
 
 
-//import Agent from '../Agent'
+var _Agent = __webpack_require__(4);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var update = __webpack_require__(31);
 
 module.exports = function (app, hosts) {
   hosts.on = !hosts.on;
   update(app, hosts);
+
+  _Agent2.default.pact('statRecord', 'switch');
 };
 
 /***/ }),
@@ -16629,7 +16635,7 @@ module.exports = "data:application/vnd.ms-fontobject;base64,pj8AAIw+AAABAAIAAAAA
 "use strict";
 
 
-exports.version = [3, 3, 0, 4582];
+exports.version = [3, 3, 0, 4594];
 
 /***/ }),
 /* 71 */
