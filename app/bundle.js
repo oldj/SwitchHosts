@@ -16663,7 +16663,7 @@ module.exports = "data:application/vnd.ms-fontobject;base64,pj8AAIw+AAABAAIAAAAA
 "use strict";
 
 
-exports.version = [3, 3, 0, 5048];
+exports.version = [3, 3, 0, 5056];
 
 /***/ }),
 /* 71 */
@@ -22647,7 +22647,7 @@ var EditPrompt = function (_React$Component) {
             last_refresh: data.last_refresh,
             is_loading: false
           });
-          _Agent2.default.emit('host_refreshed', data, _this2.current_hosts);
+          _Agent2.default.emit('hosts_refreshed', data, _this2.current_hosts);
         }
       });
 
@@ -22938,7 +22938,7 @@ var EditPrompt = function (_React$Component) {
           _react2.default.createElement(
             'div',
             { className: 'title' },
-            lang.host_title
+            lang.hosts_title
           ),
           _react2.default.createElement(
             'div',
@@ -24031,7 +24031,7 @@ var ListItem = function (_React$Component) {
     value: function getTitle() {
       var lang = this.props.lang;
 
-      return this.is_sys ? lang.sys_host_title : this.props.data.title || lang.untitled;
+      return this.is_sys ? lang.sys_hosts_title : this.props.data.title || lang.untitled;
     }
   }, {
     key: 'beSelected',

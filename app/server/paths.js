@@ -10,7 +10,7 @@ const io = require('./io')
 const platform = process.platform
 
 // Windows 系统有可能不安装在 C 盘
-const sys_host_path = platform === 'win32' ? `${process.env.windir ||
+const sys_hosts_path = platform === 'win32' ? `${process.env.windir ||
   'C:\\WINDOWS'}\\system32\\drivers\\etc\\hosts` : '/etc/hosts'
 
 const home_path = io.getUserHome()
@@ -37,6 +37,6 @@ module.exports = {
   , work_path: work_path
   , data_path: data_path
   , preference_path: preference_path
-  , sys_host_path: sys_host_path
+  , sys_hosts_path: sys_hosts_path
   // ,current_app_path: getCurrentAppPath()
 }

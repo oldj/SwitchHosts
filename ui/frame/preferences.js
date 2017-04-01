@@ -220,7 +220,7 @@ export default class PreferencesPrompt extends React.Component {
   body () {
     return (
       <div ref="body">
-        {/*<div className="title">{SH_Agent.lang.host_title}</div>*/}
+        {/*<div className="title">{SH_Agent.lang.hosts_title}</div>*/}
         {/*<div className="cnt">*/}
         {/*</div>*/}
         <div
