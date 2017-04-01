@@ -21,7 +21,7 @@ export default class ListItem extends React.Component {
 
   getTitle () {
     let {lang} = this.props
-    return this.is_sys ? lang.sys_host_title : this.props.data.title ||
+    return this.is_sys ? lang.sys_hosts_title : this.props.data.title ||
                                                lang.untitled
   }
 

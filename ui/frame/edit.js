@@ -85,7 +85,7 @@ export default class EditPrompt extends React.Component {
           last_refresh: data.last_refresh,
           is_loading: false
         })
-        Agent.emit('host_refreshed', data, this.current_hosts)
+        Agent.emit('hosts_refreshed', data, this.current_hosts)
       }
     })
 
@@ -297,7 +297,7 @@ export default class EditPrompt extends React.Component {
           <label htmlFor="ipt-group">{lang.where_group}</label>
         </div>
         <div className="ln">
-          <div className="title">{lang.host_title}</div>
+          <div className="title">{lang.hosts_title}</div>
           <div className="cnt">
             <input
               type="text"

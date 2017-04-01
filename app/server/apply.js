@@ -13,7 +13,7 @@ const exec = require('child_process').exec
 const getPref = require('./actions/getPref')
 const getLang = require('./actions/getLang')
 const io = require('./io')
-const {sys_host_path, work_path} = require('./paths')
+const {sys_hosts_path, work_path} = require('./paths')
 const crypto = require('crypto')
 const md5File = require('md5-file')
 const applyAfter_Unix = require('./applyAfter_Unix')
@@ -50,15 +50,15 @@ function apply_Unix (content, callback) {
 
       if (!sudo_pswd) {
         cmd = [
-          `cat "${tmp_fn}" > ${sys_host_path}`
+          `cat "${tmp_fn}" > ${sys_hosts_path}`
           , `rm -rf ${tmp_fn}`
         ].join(' && ')
       } else {
         sudo_pswd = sudo_pswd.replace(/'/g, '\\x27')
         cmd = [
-          `echo '${sudo_pswd}' | sudo -S chmod 777 ${sys_host_path}`
-          , `cat "${tmp_fn}" > ${sys_host_path}`
-          , `echo '${sudo_pswd}' | sudo -S chmod 644 ${sys_host_path}`
+          `echo '${sudo_pswd}' | sudo -S chmod 777 ${sys_hosts_path}`
+          , `cat "${tmp_fn}" > ${sys_hosts_path}`
+          , `echo '${sudo_pswd}' | sudo -S chmod 644 ${sys_hosts_path}`
           // , 'rm -rf ' + tmp_fn
         ].join(' && ')
       }
@@ -82,7 +82,7 @@ function apply_Win32 (content, callback) {
   // todo 判断写入权限
 
   try {
-    fs.writeFileSync(sys_host_path, content, 'utf-8')
+    fs.writeFileSync(sys_hosts_path, content, 'utf-8')
   } catch (e) {
     console.log(e)
     let msg = e.message
@@ -132,7 +132,7 @@ module.exports = (cnt, pswd) => {
     })
     .then(() => {
       return new Promise((resolve, reject) => {
-        let file_md5 = md5File.sync(sys_host_path)
+        let file_md5 = md5File.sync(sys_hosts_path)
         let cnt_md5 = crypto.createHash('md5').update(cnt).digest('hex')
 
         if (file_md5 === cnt_md5) {
