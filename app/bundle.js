@@ -21039,6 +21039,10 @@ var _edit = __webpack_require__(105);
 
 var _edit2 = _interopRequireDefault(_edit);
 
+var _preferences = __webpack_require__(254);
+
+var _preferences2 = _interopRequireDefault(_preferences);
+
 var _Agent = __webpack_require__(5);
 
 var _Agent2 = _interopRequireDefault(_Agent);
@@ -21054,8 +21058,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-//import PreferencesPrompt from './frame/preferences'
-
 
 var App = function (_React$Component) {
   _inherits(App, _React$Component);
@@ -21192,9 +21194,13 @@ var App = function (_React$Component) {
           'div',
           { className: 'frames' },
           _react2.default.createElement(_sudo2.default, { lang: this.state.lang }),
-          _react2.default.createElement(_edit2.default, { lang: this.state.lang,
+          _react2.default.createElement(_edit2.default, {
+            lang: this.state.lang,
             list: this.state.list,
             justAdd: this.justAdd.bind(this)
+          }),
+          _react2.default.createElement(_preferences2.default, {
+            lang: this.state.lang
           })
         )
       );
@@ -35548,6 +35554,494 @@ module.exports = (element) => {
 
 module.exports = function (app) {
   app.loadHosts();
+};
+
+/***/ }),
+/* 252 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+exports.version = [3, 3, 0, 4521];
+
+/***/ }),
+/* 253 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+var m_ver = __webpack_require__(252).version;
+
+module.exports = {
+  PORT: 50761,
+  version: m_ver.slice(0, 3).join('.'),
+  version_full: m_ver.join('.'),
+  url_download: 'https://github.com/oldj/SwitchHosts/releases'
+};
+
+/***/ }),
+/* 254 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog http://oldj.net
+ */
+
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(8);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _frame = __webpack_require__(66);
+
+var _frame2 = _interopRequireDefault(_frame);
+
+var _classnames = __webpack_require__(16);
+
+var _classnames2 = _interopRequireDefault(_classnames);
+
+var _Agent = __webpack_require__(5);
+
+var _Agent2 = _interopRequireDefault(_Agent);
+
+var _version = __webpack_require__(252);
+
+var _formatVersion = __webpack_require__(257);
+
+var _formatVersion2 = _interopRequireDefault(_formatVersion);
+
+__webpack_require__(256);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var AUTO_LAUNCH = 'auto_launch';
+
+var PreferencesPrompt = function (_React$Component) {
+  _inherits(PreferencesPrompt, _React$Component);
+
+  function PreferencesPrompt(props) {
+    _classCallCheck(this, PreferencesPrompt);
+
+    var _this = _possibleConstructorReturn(this, (PreferencesPrompt.__proto__ || Object.getPrototypeOf(PreferencesPrompt)).call(this, props));
+
+    _this.state = {
+      show: false,
+      lang_key: '',
+      after_cmd: '',
+      choice_mode: '',
+      auto_launch: false,
+      hide_at_launch: false,
+      update_found: false // 发现新版本
+    };
+
+    _Agent2.default.pact('getPref').then(function (pref) {
+      _this.setState(pref);
+    });
+    return _this;
+  }
+
+  _createClass(PreferencesPrompt, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      var _this2 = this;
+
+      _Agent2.default.on('show_preferences', function () {
+        _this2.setState({
+          show: true
+        });
+      });
+
+      _Agent2.default.on('update_found', function (v) {
+        console.log(v);
+        _this2.setState({
+          update_found: true
+        });
+      });
+    }
+  }, {
+    key: 'onOK',
+    value: function onOK() {
+      this.setState({
+        show: false
+      }, function () {
+        setTimeout(function () {
+          _Agent2.default.pact('relaunch');
+        }, 200);
+      });
+    }
+  }, {
+    key: 'onCancel',
+    value: function onCancel() {
+      this.setState({
+        show: false
+      });
+    }
+  }, {
+    key: 'getLanguageOptions',
+    value: function getLanguageOptions() {
+      var lang = this.props.lang;
+
+      return lang.lang_list.map(function (_ref, idx) {
+        var key = _ref.key,
+            name = _ref.name;
+
+        return _react2.default.createElement(
+          'option',
+          { value: key, key: idx },
+          name
+        );
+      });
+    }
+  }, {
+    key: 'updateLangKey',
+    value: function updateLangKey(v) {
+      _Agent2.default.pact('setPref', 'user_language', v);
+      this.setState({ lang_key: v });
+    }
+  }, {
+    key: 'updateChoiceMode',
+    value: function updateChoiceMode(v) {
+      _Agent2.default.pact('setPref', 'choice_mode', v);
+      this.setState({
+        choice_mode: v
+      });
+    }
+  }, {
+    key: 'updateAfterCmd',
+    value: function updateAfterCmd(v) {
+      _Agent2.default.pact('setPref', 'after_cmd', v);
+      this.setState({
+        after_cmd: v
+      });
+    }
+  }, {
+    key: 'updateAutoLaunch',
+    value: function updateAutoLaunch(v) {
+      _Agent2.default.pact('setPref', AUTO_LAUNCH, v);
+      this.setState({
+        auto_launch: v
+      });
+
+      // todo set auto launch
+    }
+  }, {
+    key: 'updateMinimizeAtLaunch',
+    value: function updateMinimizeAtLaunch(v) {
+      _Agent2.default.pact('setPref', 'hide_at_launch', v);
+      this.setState({
+        hide_at_launch: v
+      });
+    }
+  }, {
+    key: 'prefLanguage',
+    value: function prefLanguage() {
+      var _this3 = this;
+
+      var lang = this.props.lang;
+
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'ln' },
+        _react2.default.createElement(
+          'div',
+          { className: 'title' },
+          lang.language
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: 'cnt' },
+          _react2.default.createElement(
+            'select',
+            {
+              value: this.state.lang_key || '',
+              onChange: function onChange(e) {
+                return _this3.updateLangKey(e.target.value);
+              }
+            },
+            this.getLanguageOptions()
+          ),
+          _react2.default.createElement(
+            'div',
+            {
+              className: 'inform' },
+            lang.should_restart_after_change_language
+          )
+        )
+      );
+    }
+  }, {
+    key: 'prefChoiceMode',
+    value: function prefChoiceMode() {
+      var _this4 = this;
+
+      var lang = this.props.lang;
+
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'ln' },
+        _react2.default.createElement(
+          'div',
+          { className: 'title' },
+          lang.pref_choice_mode
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: 'cnt' },
+          _react2.default.createElement('input', { type: 'radio', id: 'pref-choice-mode-single', name: 'choice_mode',
+            value: 'single',
+            defaultChecked: this.state.choice_mode === 'single',
+            onChange: function onChange(e) {
+              return _this4.updateChoiceMode(e.target.value);
+            }
+          }),
+          _react2.default.createElement(
+            'label',
+            {
+              htmlFor: 'pref-choice-mode-single' },
+            lang.pref_choice_mode_single
+          ),
+          _react2.default.createElement('input', { type: 'radio', id: 'pref-choice-mode-multiple', name: 'choice_mode',
+            value: 'multiple',
+            defaultChecked: this.state.choice_mode === 'multiple',
+            onChange: function onChange(e) {
+              return _this4.updateChoiceMode(e.target.value);
+            }
+          }),
+          _react2.default.createElement(
+            'label',
+            {
+              htmlFor: 'pref-choice-mode-multiple' },
+            lang.pref_choice_mode_multiple
+          )
+        )
+      );
+    }
+  }, {
+    key: 'prefAfterCmd',
+    value: function prefAfterCmd() {
+      var _this5 = this;
+
+      var lang = this.props.lang;
+
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'ln' },
+        _react2.default.createElement(
+          'div',
+          { className: 'title' },
+          lang.pref_after_cmd
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: 'cnt' },
+          _react2.default.createElement(
+            'div',
+            { className: 'inform' },
+            lang.pref_after_cmd_info
+          ),
+          _react2.default.createElement('textarea', {
+            name: '',
+            defaultValue: this.state.after_cmd,
+            placeholder: lang.pref_after_cmd_placeholder,
+            onChange: function onChange(e) {
+              return _this5.updateAfterCmd(e.target.value);
+            }
+          })
+        )
+      );
+    }
+  }, {
+    key: 'prefAutoLaunch',
+    value: function prefAutoLaunch() {
+      var _this6 = this;
+
+      var lang = this.props.lang;
+
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'ln' },
+        _react2.default.createElement(
+          'div',
+          { className: 'title' },
+          lang.auto_launch
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: 'cnt' },
+          _react2.default.createElement('input', { type: 'checkbox', name: '',
+            defaultChecked: this.state.auto_launch,
+            onChange: function onChange(e) {
+              return _this6.updateAutoLaunch(e.target.checked);
+            }
+          })
+        )
+      );
+    }
+  }, {
+    key: 'prefMinimizeAtLaunch',
+    value: function prefMinimizeAtLaunch() {
+      var _this7 = this;
+
+      var lang = this.props.lang;
+
+
+      return _react2.default.createElement(
+        'div',
+        { className: 'ln' },
+        _react2.default.createElement(
+          'div',
+          { className: 'title' },
+          lang.hide_at_launch
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: 'cnt' },
+          _react2.default.createElement('input', { type: 'checkbox', name: '',
+            defaultChecked: this.state.hide_at_launch,
+            onChange: function onChange(e) {
+              return _this7.updateMinimizeAtLaunch(e.target.checked);
+            }
+          })
+        )
+      );
+    }
+  }, {
+    key: 'body',
+    value: function body() {
+      return _react2.default.createElement(
+        'div',
+        { ref: 'body' },
+        _react2.default.createElement(
+          'div',
+          {
+            className: (0, _classnames2.default)('current-version', { 'update-found': this.state.update_found }) },
+          _react2.default.createElement(
+            'a',
+            { href: '#',
+              onClick: PreferencesPrompt.openDownloadPage },
+            (0, _formatVersion2.default)(_version.version)
+          )
+        ),
+        this.prefLanguage(),
+        this.prefChoiceMode(),
+        this.prefAfterCmd(),
+        this.prefMinimizeAtLaunch()
+      );
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _this8 = this;
+
+      var lang = this.props.lang;
+
+
+      return _react2.default.createElement(_frame2.default, {
+        show: this.state.show,
+        head: lang.preferences,
+        body: this.body(),
+        onOK: function onOK() {
+          return _this8.onOK();
+        },
+        onCancel: function onCancel() {
+          return _this8.onCancel();
+        },
+        cancel_title: lang.set_and_back,
+        ok_title: lang.set_and_relaunch_app
+      });
+    }
+  }], [{
+    key: 'openDownloadPage',
+    value: function openDownloadPage() {
+      _Agent2.default.pact('openUrl', __webpack_require__(253).url_download);
+    }
+  }]);
+
+  return PreferencesPrompt;
+}(_react2.default.Component);
+
+exports.default = PreferencesPrompt;
+
+/***/ }),
+/* 255 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(6)();
+// imports
+
+
+// module
+exports.push([module.i, ".frame textarea {\n  width: 300px;\n  height: 80px;\n  padding: 2px 4px;\n  outline: none;\n  border: solid 1px #ccc;\n}\n.frame .current-version {\n  float: right;\n  margin-top: -60px;\n  color: #999;\n}\n.frame .current-version a {\n  color: #999;\n}\n.frame .current-version a:hover {\n  color: #000;\n}\n.frame .current-version.update-found:after {\n  content: '';\n  display: block;\n  float: right;\n  width: 6px;\n  height: 6px;\n  background: #f00;\n  border-radius: 3px;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 256 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(255);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// add the styles to the DOM
+var update = __webpack_require__(9)(content, {});
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../../node_modules/css-loader/index.js!../../node_modules/less-loader/dist/index.js!./preferences.less", function() {
+			var newContent = require("!!../../node_modules/css-loader/index.js!../../node_modules/less-loader/dist/index.js!./preferences.less");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 257 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+module.exports = function (v) {
+  return 'v' + v.slice(0, 3).join('.') + (' (' + v[3] + ')');
 };
 
 /***/ })

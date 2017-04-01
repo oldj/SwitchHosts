@@ -8,7 +8,7 @@
 
 const fs = require('fs')
 const path = require('path')
-const {Menu, Tray, ipcMain, shell} = require('electron')
+const {Menu, Tray, shell} = require('electron')
 const m_lang = require('../server/lang')
 const checkUpdate = require('../server/checkUpdate')
 const pref = require('../server/pref')

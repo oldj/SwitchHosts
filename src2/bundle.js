@@ -11324,7 +11324,7 @@ var PreferencesPrompt = function (_React$Component) {
                     { className: (0, _classnames2.default)("current-version", { "update-found": this.state.update_found }) },
                     _react2.default.createElement(
                         'a',
-                        { href: '#', onClick: this.openDownloadPage },
+                        { href: '#', onClick: PreferencesPrompt.openDownloadPage },
                         _util2.default.formatVersion(current_version)
                     )
                 ),

@@ -116,6 +116,11 @@ electron.ipcMain.on('reg_renderer', (e) => {
   renderer = e.sender
 })
 
+electron.ipcMain.on('relaunch', () => {
+  app.relaunch({args: process.argv.slice(1) + ['--relaunch']});
+  app.exit(0);
+})
+
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
   // if (process.platform !== 'darwin') {
