@@ -12,14 +12,11 @@ const current_version = require('../version').version
 const m_lang = require('../server/lang')
 const lang = m_lang.getLang(global.user_language)
 const svr = require('./svr')
+const formatVersion = require('../libs/formatVersion')
 
 function convertStrVersion (v) {
   let a = v.match(/\d+/g)
   return a.map(i => parseInt(i))
-}
-
-function formatVersion (v) {
-  return 'v' + v.slice(0, 3).join('.') + ` (${v[3]})`
 }
 
 function compareVersion (a, b) {
@@ -53,7 +50,7 @@ function compareVersion (a, b) {
   }
 }
 
-exports.check = (is_silent = false, renderer = null) => {
+exports.check = (is_silent = false) => {
   let release_url = require('../configs').url_download
   console.log('start check updates..')
 
