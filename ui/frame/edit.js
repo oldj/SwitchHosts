@@ -64,6 +64,7 @@ export default class EditPrompt extends React.Component {
       include = Array.from(new Set(include))
 
       this.setState({
+        id: hosts.id,
         show: true,
         is_add: false,
         where: hosts.where || 'local',
@@ -85,6 +86,15 @@ export default class EditPrompt extends React.Component {
           is_loading: false
         })
         Agent.emit('host_refreshed', data, this.current_hosts)
+      }
+    })
+
+    Agent.on('list_updated', list => {
+      let hosts = list.find(i => i.id === this.state.id)
+      if (hosts) {
+        this.setState({
+          last_refresh: hosts.last_refresh
+        })
       }
     })
   }
@@ -184,7 +194,7 @@ export default class EditPrompt extends React.Component {
   refresh () {
     if (this.state.is_loading) return
 
-    Agent.emit('check_host_refresh', this.current_hosts, true)
+    Agent.emit('check_hosts_refresh', this.current_hosts)
     this.setState({
       is_loading: true
     }, () => {
