@@ -23,7 +23,8 @@ export default class App extends React.Component {
       list: [], // 用户的 hosts 列表
       sys_hosts: {}, // 系统 hosts
       current: {}, // 当前 hosts
-      lang: {} // 语言
+      lang: {}, // 语言
+      just_added_id: null
     }
 
     this.loadHosts()
@@ -98,6 +99,12 @@ export default class App extends React.Component {
     this.toSave()
   }
 
+  justAdd(id) {
+    this.setState({
+      just_added_id: id
+    })
+  }
+
   componentDidMount () {
     window.addEventListener('keydown', (e) => {
       if (e.keyCode === 27) {
@@ -116,6 +123,8 @@ export default class App extends React.Component {
           current={current}
           setCurrent={this.setCurrent.bind(this)}
           lang={this.state.lang}
+          just_added_id={this.state.just_added_id}
+          justAdd={this.justAdd.bind(this)}
         />
         <Content
           current={current}
@@ -125,7 +134,10 @@ export default class App extends React.Component {
         />
         <div className="frames">
           <SudoPrompt lang={this.state.lang}/>
-          <EditPrompt lang={this.state.lang} list={this.state.list}/>
+          <EditPrompt lang={this.state.lang}
+                      list={this.state.list}
+                      justAdd={this.justAdd.bind(this)}
+          />
           {/*<PreferencesPrompt/>*/}
         </div>
       </div>

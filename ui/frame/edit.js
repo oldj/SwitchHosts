@@ -115,14 +115,18 @@ export default class EditPrompt extends React.Component {
       return false
     }
 
+    let new_id = makeId()
     let data = Object.assign({}, this.current_hosts, this.state,
       this.state.is_add ? {
-        id: makeId(),
+        id: new_id,
         content: `# ${this.state.title}`,
         on: false
       } : {})
 
-    if (!data.id) data.id = makeId()
+    if (!data.id) data.id = new_id
+    if (this.state.is_add) {
+      this.props.justAdd(new_id)
+    }
 
     delete data['is_add']
     Agent.emit('update_hosts', data)

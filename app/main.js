@@ -104,6 +104,7 @@ if (should_quit) {
 app.on('ready', () => {
   createWindow()
   //require('./ui/modules/mainMenu').init(app, user_language)
+  require('./menu/main_menu').init(app, user_language)
 
   setTimeout(() => {
     if (renderer) {
