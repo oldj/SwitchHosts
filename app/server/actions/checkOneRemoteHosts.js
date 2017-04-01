@@ -6,7 +6,7 @@
 'use strict'
 
 const getUrl = require('./getUrl')
-const isExpired = require('./checkIsExpired')
+const isExpired = require('../checkIsExpired')
 
 function now () {
   let dt = new Date()

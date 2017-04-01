@@ -8,4 +8,3 @@
 module.exports = () => {
   return Promise.resolve().then(() => 'ttt33')
 }
-
