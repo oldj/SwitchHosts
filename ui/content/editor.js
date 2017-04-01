@@ -112,8 +112,12 @@ export default class Editor extends React.Component {
 
   componentWillReceiveProps (next_props) {
     // console.log(next_props);
-    this.codemirror.getDoc().setValue(next_props.code)
-    this.codemirror.setOption('readOnly', next_props.readonly)
+    let cm = this.codemirror
+    let v = cm.getDoc().getValue()
+    if (v !== next_props.code) {
+      cm.getDoc().setValue(next_props.code)
+    }
+    cm.setOption('readOnly', next_props.readonly)
     setTimeout(() => {
       this.highlightKeyword()
     }, 100)
