@@ -23,7 +23,6 @@ module.exports = (svr, k_or_data, v = null) => {
       })
   } else {
     // object mode
-    console.log(2666, k_or_data)
     p = p.then(() => Object.assign({}, k_or_data))
   }
 
