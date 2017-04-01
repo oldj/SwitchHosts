@@ -10,7 +10,7 @@ import Panel from './panel/panel'
 import Content from './content/content'
 import SudoPrompt from './frame/sudo'
 import EditPrompt from './frame/edit'
-//import PreferencesPrompt from './frame/preferences'
+import PreferencesPrompt from './frame/preferences'
 import Agent from './Agent'
 import { reg as events_reg } from './events/index'
 import './app.less'
@@ -57,7 +57,8 @@ export default class App extends React.Component {
         sys_hosts: data.sys_hosts
       }
       let current = this.state.current
-      state.current = data.list.find(item => item.id === current.id) || data.sys_hosts
+      state.current = data.list.find(item => item.id === current.id) ||
+                      data.sys_hosts
 
       this.setState(state)
     })
@@ -99,7 +100,7 @@ export default class App extends React.Component {
     this.toSave()
   }
 
-  justAdd(id) {
+  justAdd (id) {
     this.setState({
       just_added_id: id
     })
@@ -134,11 +135,14 @@ export default class App extends React.Component {
         />
         <div className="frames">
           <SudoPrompt lang={this.state.lang}/>
-          <EditPrompt lang={this.state.lang}
-                      list={this.state.list}
-                      justAdd={this.justAdd.bind(this)}
+          <EditPrompt
+            lang={this.state.lang}
+            list={this.state.list}
+            justAdd={this.justAdd.bind(this)}
           />
-          {/*<PreferencesPrompt/>*/}
+          <PreferencesPrompt
+            lang={this.state.lang}
+          />
         </div>
       </div>
     )
