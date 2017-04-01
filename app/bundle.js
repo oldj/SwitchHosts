@@ -23872,6 +23872,8 @@ var map = {
 	"./index.js": 29,
 	"./list_updated": 23,
 	"./list_updated.js": 23,
+	"./reload": 251,
+	"./reload.js": 251,
 	"./save": 30,
 	"./save.js": 30,
 	"./sort": 236,
@@ -23914,6 +23916,7 @@ var map = {
 	"./get_on_hosts.js": 39,
 	"./index.js": 29,
 	"./list_updated.js": 23,
+	"./reload.js": 251,
 	"./save.js": 30,
 	"./sort.js": 236,
 	"./sudo_cancel.js": 41,
@@ -35530,6 +35533,22 @@ module.exports = (element) => {
   )
 }
 
+
+/***/ }),
+/* 251 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @author oldj
+ * @blog https://oldj.net
+ */
+
+
+
+module.exports = function (app) {
+  app.loadHosts();
+};
 
 /***/ })
 /******/ ]);
