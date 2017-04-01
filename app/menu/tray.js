@@ -12,6 +12,7 @@ const {Menu, Tray, shell} = require('electron')
 const m_lang = require('../server/lang')
 const checkUpdate = require('../server/checkUpdate')
 const pref = require('../server/pref')
+const setPref = require('../server/actions/setPref')
 const os = process.platform
 const current_version = require('../version').version
 const svr = require('../server/svr')
@@ -88,7 +89,7 @@ function makeMenu (app, list, contents, sys_lang) {
         } else {
           app.dock.show()
         }
-        pref.set('is_dock_icon_hidden', is_dock_visible)
+        setPref(svr, 'is_dock_icon_hidden', is_dock_visible)
       }
     })
   }
