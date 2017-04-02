@@ -8,7 +8,7 @@
 exports.content = {
   _lang_name: '简体中文'
   , add: '添加'
-  , add_hosts: '添加 host 规则'
+  , add_hosts: '添加 hosts 规则'
   , auto_launch: '随系统一起启动'
   , auto_refresh: '自动更新'
   , bad_url: 'URL 地址有误。'
