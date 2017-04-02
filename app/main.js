@@ -19,6 +19,7 @@ global.user_language = user_language
 
 const tray = require('./menu/tray')
 const SHServer = require('./server/Server')
+const svr = require('./server/svr')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -81,6 +82,8 @@ function createWindow () {
   })
 
   //require('./bg/events').init(app, contents)
+
+  svr.win = mainWindow
 }
 
 const should_quit = app.makeSingleInstance((commandLine, workingDirectory) => {
