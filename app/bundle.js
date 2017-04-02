@@ -16679,7 +16679,7 @@ module.exports = "data:application/vnd.ms-fontobject;base64,pj8AAIw+AAABAAIAAAAA
 "use strict";
 
 
-exports.version = [3, 3, 0, 5073];
+exports.version = [3, 3, 0, 5088];
 
 /***/ }),
 /* 72 */
@@ -22672,6 +22672,7 @@ var EditPrompt = function (_React$Component) {
           return i.id === _this2.state.id;
         });
         if (hosts) {
+          _this2.current_hosts = hosts;
           _this2.setState({
             last_refresh: hosts.last_refresh
           });
