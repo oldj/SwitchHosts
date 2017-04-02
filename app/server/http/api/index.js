@@ -2,43 +2,10 @@
 
 const express = require('express')
 const router = express.Router()
-const paths = require('../../paths')
-const getUserHosts = require('../../actions/getUserHosts')
-const saveHosts = require('../../actions/saveHosts')
-const svr = require('../../svr')
+const list = require('./list')
+const toggle = require('./toggle')
 
-router.get('/list', (req, res) => {
-  getUserHosts()
-    .then(list => {
-      let data = {
-        success: true,
-        data: list
-      }
-      res.end(JSON.stringify(data))
-    })
-    .catch(e => {
-      res.end(e.toString())
-    })
-})
-
-router.get('/toggle', (req, res) => {
-  let id = req.param('id')
-
-  getUserHosts()
-    .then(list => {
-      let item = list.find(i => i.id === id)
-      if (!item) {
-        res.end('not-found:' + id)
-        return
-      }
-
-      item.on = !item.on
-      saveHosts(svr, list)
-        .then(() => {
-          svr.broadcast('reload')
-          res.end('toggle:' + id)
-        })
-    })
-})
+router.get('/list', list)
+router.get('/toggle', toggle)
 
 module.exports = router
