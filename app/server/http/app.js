@@ -22,7 +22,9 @@ app.get('/remote-test', function (req, res) {
   res.send(`# remote-test\n# ${(new Date()).toString()}`)
 })
 
-app.listen(PORT, function () {
+app.use('/api', require('./api/index'))
+
+app.listen(PORT, '127.0.0.1', function () {
   console.log(`SwitchHosts! HTTP server listening on port ${PORT}!`)
 })
 

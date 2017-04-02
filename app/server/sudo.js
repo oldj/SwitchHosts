@@ -32,6 +32,11 @@ module.exports = svr => {
 
   return new Promise((resolve, reject) => {
     svr.broadcast('sudo_prompt')
+    try {
+      svr.win.show()
+    } catch (e) {
+      console.log(e)
+    }
 
     _resolve = resolve
     _reject = reject
