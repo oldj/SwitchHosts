@@ -87,7 +87,8 @@ function apply_Win32 (content, callback) {
     console.log(e)
     let msg = e.message
     msg = `${msg}\n\n${lang.please_run_as_admin}`
-    alert(msg)
+    console.log(msg)
+    svr.broadcast('alert', msg)
     return
   }
 
