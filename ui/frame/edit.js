@@ -92,6 +92,7 @@ export default class EditPrompt extends React.Component {
     Agent.on('list_updated', list => {
       let hosts = list.find(i => i.id === this.state.id)
       if (hosts) {
+        this.current_hosts = hosts
         this.setState({
           last_refresh: hosts.last_refresh
         })

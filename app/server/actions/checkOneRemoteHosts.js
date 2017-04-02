@@ -15,14 +15,15 @@ function now () {
                                 1}-${dt.getDate()} ${dt.getHours()}:${dt.getMinutes()}:${dt.getSeconds()}`
 }
 
-module.exports = (svr, hosts) => {
+module.exports = (svr, hosts, force = false) => {
   return new Promise((resolve, reject) => {
     if (hosts.where !== 'remote' || !hosts.url) {
       resolve(hosts)
       return
     }
 
-    if (isExpired(svr, hosts)) {
+    if (force || isExpired(svr, hosts)) {
+      console.log('check', hosts.title, force, isExpired(svr, hosts))
       getUrl(svr, hosts.url)
         .then(content => {
           hosts.content = content

@@ -13,7 +13,7 @@ const apply = require('../apply')
 const sudo = require('../sudo')
 const makeOutHosts = require('../makeOutHosts')
 const cleanData = require('../cleanData')
-const checkAllRemoteHostses = require('./checkAllRemoteHostses')
+//const checkAllRemoteHostses = require('./checkAllRemoteHostses')
 
 function tryToApply (svr, cnt, pswd) {
   return new Promise((resolve, reject) => {
@@ -37,8 +37,9 @@ function tryToApply (svr, cnt, pswd) {
 }
 
 module.exports = (svr, list) => {
-  return checkAllRemoteHostses(svr, list)
-    .then(list => cleanData(list))
+  //return checkAllRemoteHostses(svr, list, cfg)
+  return Promise.resolve()
+    .then(() => cleanData(list))
     .then(list => {
       let fn = paths.data_path
       let data = {

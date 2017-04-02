@@ -7,6 +7,7 @@
 
 module.exports = (svr, hosts) => {
   let {refresh_interval, last_refresh} = hosts
+  if (!refresh_interval || refresh_interval <= 0) return false // never expired
   if (!last_refresh) return true
 
   let dt
