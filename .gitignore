@@ -1,18 +1,10 @@
 .idea
+*.iml
 *.pyc
 *.swp
-src/build
-src/dist
 dist
-projectFilesBackup
 .DS_Store
 
-*.hosts
-
-src/configs.json
-
-*.swh
-
-*.iml
 node_modules
-*.map
+*.js.map
+*.css.map
