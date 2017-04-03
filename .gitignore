@@ -15,3 +15,4 @@ src/configs.json
 
 *.iml
 node_modules
+*.map
