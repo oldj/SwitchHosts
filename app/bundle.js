@@ -1869,6 +1869,13 @@ module.exports = function (app, new_list) {
 
     if (hosts) {
       state.current = hosts;
+    } else if (app.state.current) {
+      var c = new_list.find(function (i) {
+        return i.id === app.state.current.id;
+      });
+      if (c) {
+        state.current = c;
+      }
     }
     var current = app.state.current;
     if (current.is_sys) {
@@ -16679,7 +16686,7 @@ module.exports = "data:application/vnd.ms-fontobject;base64,pj8AAIw+AAABAAIAAAAA
 "use strict";
 
 
-exports.version = [3, 3, 0, 5088];
+exports.version = [3, 3, 0, 5089];
 
 /***/ }),
 /* 72 */
@@ -22657,25 +22664,16 @@ var EditPrompt = function (_React$Component) {
         }, 100);
       });
 
-      _Agent2.default.on('loading_done', function (old_hosts, data) {
-        if (old_hosts === _this2.current_hosts) {
-          _this2.setState({
-            last_refresh: data.last_refresh,
-            is_loading: false
-          });
-          _Agent2.default.emit('hosts_refreshed', data, _this2.current_hosts);
-        }
-      });
-
       _Agent2.default.on('list_updated', function (list) {
         var hosts = list.find(function (i) {
           return i.id === _this2.state.id;
         });
         if (hosts) {
           _this2.current_hosts = hosts;
-          _this2.setState({
-            last_refresh: hosts.last_refresh
-          });
+          _this2.setState({ last_refresh: hosts.last_refresh });
+          setTimeout(function () {
+            return _this2.setState({ is_loading: false });
+          }, 500);
         }
       });
     }
@@ -22795,19 +22793,11 @@ var EditPrompt = function (_React$Component) {
   }, {
     key: 'refresh',
     value: function refresh() {
-      var _this3 = this;
-
       if (this.state.is_loading) return;
 
       _Agent2.default.emit('check_hosts_refresh', this.current_hosts);
       this.setState({
         is_loading: true
-      }, function () {
-        setTimeout(function () {
-          _this3.setState({
-            is_loading: false
-          });
-        }, 1000);
       });
     }
   }, {
@@ -22824,7 +22814,7 @@ var EditPrompt = function (_React$Component) {
   }, {
     key: 'renderRemoteInputs',
     value: function renderRemoteInputs() {
-      var _this4 = this;
+      var _this3 = this;
 
       if (this.state.where !== 'remote') return null;
 
@@ -22851,10 +22841,10 @@ var EditPrompt = function (_React$Component) {
               value: this.state.url,
               placeholder: 'http://',
               onChange: function onChange(e) {
-                return _this4.setState({ url: e.target.value });
+                return _this3.setState({ url: e.target.value });
               },
               onKeyDown: function onKeyDown(e) {
-                return e.keyCode === 13 && _this4.onOK() || e.keyCode === 27 && _this4.onCancel();
+                return e.keyCode === 13 && _this3.onOK() || e.keyCode === 27 && _this3.onCancel();
               }
             })
           )
@@ -22875,7 +22865,7 @@ var EditPrompt = function (_React$Component) {
               {
                 value: this.state.refresh_interval,
                 onChange: function onChange(e) {
-                  return _this4.setState({ refresh_interval: parseFloat(e.target.value) || 0 });
+                  return _this3.setState({ refresh_interval: parseFloat(e.target.value) || 0 });
                 }
               },
               this.getRefreshOptions()
@@ -22889,7 +22879,7 @@ var EditPrompt = function (_React$Component) {
               }),
               title: lang.refresh,
               onClick: function onClick() {
-                return _this4.refresh();
+                return _this3.refresh();
               }
             }),
             _react2.default.createElement(
@@ -22905,7 +22895,7 @@ var EditPrompt = function (_React$Component) {
   }, {
     key: 'body',
     value: function body() {
-      var _this5 = this;
+      var _this4 = this;
 
       var lang = this.props.lang;
 
@@ -22918,7 +22908,7 @@ var EditPrompt = function (_React$Component) {
           _react2.default.createElement('input', { id: 'ipt-local', type: 'radio', name: 'where', value: 'local',
             checked: this.state.where === 'local',
             onChange: function onChange(e) {
-              return _this5.setState({ where: e.target.value });
+              return _this4.setState({ where: e.target.value });
             }
           }),
           _react2.default.createElement(
@@ -22929,7 +22919,7 @@ var EditPrompt = function (_React$Component) {
           _react2.default.createElement('input', { id: 'ipt-remote', type: 'radio', name: 'where', value: 'remote',
             checked: this.state.where === 'remote',
             onChange: function onChange(e) {
-              return _this5.setState({ where: e.target.value });
+              return _this4.setState({ where: e.target.value });
             }
           }),
           _react2.default.createElement(
@@ -22940,7 +22930,7 @@ var EditPrompt = function (_React$Component) {
           _react2.default.createElement('input', { id: 'ipt-group', type: 'radio', name: 'where', value: 'group',
             checked: this.state.where === 'group',
             onChange: function onChange(e) {
-              return _this5.setState({ where: e.target.value });
+              return _this4.setState({ where: e.target.value });
             }
           }),
           _react2.default.createElement(
@@ -22966,10 +22956,10 @@ var EditPrompt = function (_React$Component) {
               name: 'text',
               value: this.state.title,
               onChange: function onChange(e) {
-                return _this5.setState({ title: e.target.value });
+                return _this4.setState({ title: e.target.value });
               },
               onKeyDown: function onKeyDown(e) {
-                return e.keyCode === 13 && _this5.onOK() || e.keyCode === 27 && _this5.onCancel();
+                return e.keyCode === 13 && _this4.onOK() || e.keyCode === 27 && _this4.onCancel();
               }
             })
           )
@@ -22982,7 +22972,7 @@ var EditPrompt = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
-      var _this6 = this;
+      var _this5 = this;
 
       var lang = this.props.lang;
 
@@ -22992,10 +22982,10 @@ var EditPrompt = function (_React$Component) {
         head: lang[this.state.is_add ? 'add_hosts' : 'edit_hosts'],
         body: this.body(),
         onOK: function onOK() {
-          return _this6.onOK();
+          return _this5.onOK();
         },
         onCancel: function onCancel() {
-          return _this6.onCancel();
+          return _this5.onCancel();
         },
         lang: this.props.lang
       });

@@ -79,23 +79,12 @@ export default class EditPrompt extends React.Component {
       }, 100)
     })
 
-    Agent.on('loading_done', (old_hosts, data) => {
-      if (old_hosts === this.current_hosts) {
-        this.setState({
-          last_refresh: data.last_refresh,
-          is_loading: false
-        })
-        Agent.emit('hosts_refreshed', data, this.current_hosts)
-      }
-    })
-
     Agent.on('list_updated', list => {
       let hosts = list.find(i => i.id === this.state.id)
       if (hosts) {
         this.current_hosts = hosts
-        this.setState({
-          last_refresh: hosts.last_refresh
-        })
+        this.setState({last_refresh: hosts.last_refresh})
+        setTimeout(() => this.setState({is_loading: false}), 500)
       }
     })
   }
@@ -202,12 +191,6 @@ export default class EditPrompt extends React.Component {
     Agent.emit('check_hosts_refresh', this.current_hosts)
     this.setState({
       is_loading: true
-    }, () => {
-      setTimeout(() => {
-        this.setState({
-          is_loading: false
-        })
-      }, 1000)
     })
 
   }
