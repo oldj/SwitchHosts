@@ -15,7 +15,8 @@ Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHos
  - 快速切换 hosts
  - hosts 文件语法高亮
  - 在线 hosts 方案
- - 系统托盘图标
+ - 系统托盘图标快速切换
+ - macOS: 支持 [Alfred workflow](http://www.packal.org/workflow/switchhosts) 快速切换
 
 
 ## 下载地址：
