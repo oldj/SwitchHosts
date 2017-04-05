@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-# the workflow package below is download from:
+# the workflow package below can be downloaded from:
 # https://github.com/deanishe/alfred-workflow/releases
 from workflow import Workflow, ICON_WEB, web
 
