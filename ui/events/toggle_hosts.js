@@ -11,7 +11,7 @@ import save from './save'
 module.exports = (app, hosts) => {
   hosts.on = !hosts.on
 
-  Agent.pact('getPref')
+  return Agent.pact('getPref')
     .then(pref => {
       let list = app.state.list.slice(0)
       let is_single = pref.choice_mode === 'single'
@@ -35,8 +35,11 @@ module.exports = (app, hosts) => {
         list.splice(idx, 1, Object.assign({}, old_hosts, hosts))
       }
 
-      save(app, list, hosts)
+      return save(app, list, hosts)
+    })
+    .then(() => {
+      Agent.pact('statRecord', 'switch')
+      return Agent.pact('notify', 'SwitchHosts!', 'OK')
     })
 
-  Agent.pact('statRecord', 'switch')
 }

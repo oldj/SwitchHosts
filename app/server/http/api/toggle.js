@@ -8,6 +8,7 @@
 const getUserHosts = require('../../actions/getUserHosts')
 const saveHosts = require('../../actions/saveHosts')
 const getPref = require('../../actions/getPref')
+const notify = require('../../actions/notify')
 const svr = require('../../svr')
 
 module.exports = (req, res) => {
@@ -39,6 +40,7 @@ module.exports = (req, res) => {
 
       saveHosts(svr, list)
         .then(() => {
+          notify(svr, 'SwitchHosts!', 'OK')
           svr.broadcast('reload')
           res.end('toggle:' + id)
         })
