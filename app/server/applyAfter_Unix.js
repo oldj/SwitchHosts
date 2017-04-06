@@ -16,22 +16,22 @@ function forMac(sudo_pswd, callback) {
   let cmd = `
 p1=/System/Library/LaunchDaemons/com.apple.mDNSResponder.plist
 if [ -f $p1 ]; then
-    echo '${sudo_pswd}' | sudo -S launchctl unload -w $p1
-    echo '${sudo_pswd}' | sudo -S launchctl load -w $p1
+    launchctl unload -w $p1
+    launchctl load -w $p1
 fi
 
 p2=/System/Library/LaunchDaemons/com.apple.discoveryd.plist
 if [ -f p2 ]; then
-    echo '${sudo_pswd}' | sudo -S launchctl unload -w $p2
-    echo '${sudo_pswd}' | sudo -S launchctl load -w $p2
+    launchctl unload -w $p2
+    launchctl load -w $p2
 fi
 
-echo '${sudo_pswd}' | sudo -S killall -HUP mDNSResponder
+killall -HUP mDNSResponder
 `;
 
   fs.writeFileSync(cmd_fn, cmd, 'utf-8');
 
-  exec(`/bin/sh ${cmd_fn}`, function (error, stdout, stderr) {
+  exec(`echo '${sudo_pswd}' | sudo -S /bin/sh ${cmd_fn}`, function (error, stdout, stderr) {
     fs.unlink(cmd_fn)
 
     // command output is in stdout
