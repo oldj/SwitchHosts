@@ -9,7 +9,7 @@ import Agent from '../Agent'
 
 module.exports = (app, new_list, hosts = null) => {
   let state = {list: new_list}
-  Agent.pact('getSysHosts')
+  return Agent.pact('getSysHosts')
     .then(sys_hosts => {
       state.sys_hosts = sys_hosts
 
