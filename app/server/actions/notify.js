@@ -15,6 +15,10 @@ module.exports = (svr, title, message) => {
         title,
         message,
         icon: path.join(__dirname, '..', '..', 'assets', 'logo_512.png')
+      }, (e) => {
+        if (e) {
+          console.log(e)
+        }
       })
     })
 }
