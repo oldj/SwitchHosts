@@ -18,6 +18,10 @@ const work_path = path.join(home_path, '.SwitchHosts')
 const data_path = path.join(work_path, 'data.json')
 const preference_path = path.join(work_path, 'preferences.json')
 
+if (!io.isDirectory(work_path) || !io.isFile(path.join(work_path, 'data.json'))) {
+  require('./initWorkPath')(work_path, sys_hosts_path)
+}
+
 //function getCurrentAppPath () {
 //  let a = __dirname.split(path.sep)
 //  // console.log(a);
