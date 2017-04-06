@@ -35,6 +35,7 @@ exports.content = {
   , homepage: '主页'
   , hosts_title: 'Hosts 方案名'
   , hosts_title_cant_be_empty: 'Hosts 方案名不能为空！'
+  , hosts_switched: 'Hosts 方案已切换。'
   , hour: '小时'
   , hours: '小时'
   , import: '导入'

@@ -39,12 +39,10 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
  - 安装 [Node.js](https://nodejs.org/) 环境；
  - 在根目录 `./` 下，运行 `npm install` 命令，安装开发依赖库；
  - 在 `./app` 目录下，运行 `npm install` 命令，安装 App 运行依赖库；
- - 在 `./ui` 目录下，运行 `npm install` 命令，安装 UI 开发依赖库。
 
     ```bash
     npm install
     cd app && npm install && cd ..
-    cd ui && npm install && cd ..
     ```
 
 ### 构建及运行
@@ -78,7 +76,7 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
     ```bash
     # pack
     npm run pack  # the packed files will be in ./dist
- 
+
     # 也可以只打包特定平台的版本，如
     npm run pack-mac  # pack for macOS, the packed files will be in ./dist
     npm run pack-win  # pack for Windows, the packed files will be in ./dist

@@ -35,6 +35,7 @@ exports.content = {
   , homepage: 'Homepage'
   , hosts_title: 'Hosts title'
   , hosts_title_cant_be_empty: 'Hosts title could not be empty!'
+  , hosts_switched: 'Hosts has been switched.'
   , hour: 'hour'
   , hours: 'hours'
   , import: 'Import'
