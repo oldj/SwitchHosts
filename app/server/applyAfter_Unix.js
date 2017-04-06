@@ -32,6 +32,8 @@ echo '${sudo_pswd}' | sudo -S killall -HUP mDNSResponder
   fs.writeFileSync(cmd_fn, cmd, 'utf-8');
 
   exec(`/bin/sh ${cmd_fn}`, function (error, stdout, stderr) {
+    fs.unlink(cmd_fn)
+
     // command output is in stdout
     if (error) {
       console.log(error);
