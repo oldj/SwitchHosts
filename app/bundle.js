@@ -16495,7 +16495,7 @@ module.exports = ReactNoopUpdateQueue;
 "use strict";
 
 
-exports.version = [3, 3, 1, 5093];
+exports.version = [3, 3, 1, 5122];
 
 /***/ }),
 /* 70 */
