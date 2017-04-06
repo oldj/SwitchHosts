@@ -10,6 +10,7 @@ import save from './save'
 
 module.exports = (app, hosts) => {
   hosts.on = !hosts.on
+  let lang = app.state.lang
 
   return Agent.pact('getPref')
     .then(pref => {
@@ -39,7 +40,7 @@ module.exports = (app, hosts) => {
     })
     .then(() => {
       Agent.pact('statRecord', 'switch')
-      return Agent.pact('notify', 'SwitchHosts!', 'OK')
+      return Agent.pact('notify', 'SwitchHosts!', lang.hosts_switched)
     })
 
 }

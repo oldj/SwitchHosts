@@ -4644,6 +4644,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 module.exports = function (app, hosts) {
   hosts.on = !hosts.on;
+  var lang = app.state.lang;
 
   return _Agent2.default.pact('getPref').then(function (pref) {
     var list = app.state.list.slice(0);
@@ -4672,7 +4673,7 @@ module.exports = function (app, hosts) {
     return (0, _save2.default)(app, list, hosts);
   }).then(function () {
     _Agent2.default.pact('statRecord', 'switch');
-    return _Agent2.default.pact('notify', 'SwitchHosts!', 'OK');
+    return _Agent2.default.pact('notify', 'SwitchHosts!', lang.hosts_switched);
   });
 };
 
@@ -16495,7 +16496,7 @@ module.exports = ReactNoopUpdateQueue;
 "use strict";
 
 
-exports.version = [3, 3, 1, 5122];
+exports.version = [3, 3, 1, 5123];
 
 /***/ }),
 /* 70 */
