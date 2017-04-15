@@ -18,8 +18,8 @@ const path = require('path')
 // const util = require('util');
 const exec = require('child_process').exec
 const gulp = require('gulp')
-const shell = require('gulp-shell')
-const webpack = require('webpack')
+// const shell = require('gulp-shell')
+// const webpack = require('webpack')
 const beautify = require('js-beautify').js_beautify
 
 const args = require('yargs').argv
