@@ -1864,24 +1864,24 @@ module.exports = function (app, new_list) {
   var hosts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
   var state = { list: new_list };
-  return _Agent2.default.pact('getSysHosts').then(function (sys_hosts) {
-    state.sys_hosts = sys_hosts;
-
-    if (hosts) {
+  return Promise.resolve().then(function () {
+    var current = app.state.current;
+    if (current && current.is_sys) {
+      return _Agent2.default.pact('getSysHosts').then(function (sys_hosts) {
+        state.sys_hosts = sys_hosts;
+        state.current = sys_hosts;
+      });
+    } else if (hosts) {
       state.current = hosts;
-    } else if (app.state.current) {
+    } else if (current) {
       var c = new_list.find(function (i) {
-        return i.id === app.state.current.id;
+        return i.id === current.id;
       });
       if (c) {
         state.current = c;
       }
     }
-    var current = app.state.current;
-    if (current.is_sys) {
-      state.current = sys_hosts;
-    }
-
+  }).then(function () {
     app.setState(state, function () {
       if (hosts) {
         _Agent2.default.emit('select', hosts.id);
@@ -16496,7 +16496,7 @@ module.exports = ReactNoopUpdateQueue;
 "use strict";
 
 
-exports.version = [3, 3, 1, 5128];
+exports.version = [3, 3, 2, 5133];
 
 /***/ }),
 /* 70 */
