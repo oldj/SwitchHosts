@@ -1,6 +1,6 @@
 {
   "name": "switchhosts",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)",
   "main": "",
   "scripts": {
@@ -91,29 +91,16 @@
     "yargs": "^6.5.0"
   },
   "ava": {
-    "files": [
-      "src/**/*.ava.js",
-      "test/*.js",
-      "!**/node_modules/**/*.*"
-    ],
-    "source": [
-      "**/*.{js,jsx}",
-      "!dist/**/*"
-    ],
+    "files": ["src/**/*.ava.js", "test/*.js", "!**/node_modules/**/*.*"],
+    "source": ["**/*.{js,jsx}", "!dist/**/*"],
     "match": [],
     "concurrency": 5,
     "failFast": true,
     "tap": true,
     "powerAssert": false,
-    "require": [
-      "babel-polyfill",
-      "babel-register"
-    ],
+    "require": ["babel-polyfill", "babel-register"],
     "babel": {
-      "presets": [
-        "latest",
-        "stage-0"
-      ]
+      "presets": ["latest", "stage-0"]
     }
   }
 }
