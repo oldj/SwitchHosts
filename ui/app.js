@@ -114,8 +114,21 @@ export default class App extends React.Component {
   setHostsContent (v) {
     if (this.state.current.content === v) return // not changed
 
-    this.state.current.content = v || ''
-    this.toSave()
+    let current = Object.assign({}, this.state.current, {
+      content: v || ''
+    })
+    let list = this.state.list.slice(0)
+    let idx = list.findIndex(i => i.id === current.id)
+    if (idx !== -1) {
+      list.splice(idx, 1, current)
+    }
+
+    this.setState({
+      current,
+      list
+    }, () => {
+      this.toSave()
+    })
   }
 
   justAdd (id) {
