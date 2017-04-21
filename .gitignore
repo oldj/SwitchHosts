@@ -19,6 +19,6 @@ src/configs.json
 node_modules
 UserInterfaceState.xcuserstate
 xcdebugger
-npm-debug.log
+npm-debug.log*
 .nyc_output
 coverage/
