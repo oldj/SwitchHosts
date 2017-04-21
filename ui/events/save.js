@@ -6,7 +6,7 @@
 'use strict'
 
 import Agent from '../Agent'
-import updated from './list_updated'
+const updated = require('./list_updated')
 
 module.exports = (app, list, hosts = null) => {
   return Agent.pact('saveHosts', list)

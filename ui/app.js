@@ -76,7 +76,7 @@ export default class App extends React.Component {
       }
       let current = this.state.current
       state.current = data.list.find(item => item.id === current.id) ||
-                      data.sys_hosts
+        data.sys_hosts
 
       this.setState(state)
     })
@@ -100,7 +100,7 @@ export default class App extends React.Component {
 
   static isReadOnly (hosts) {
     return !hosts || hosts.is_sys || hosts.where === 'remote' ||
-           hosts.where === 'group'
+      hosts.where === 'group'
   }
 
   toSave () {

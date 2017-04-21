@@ -7,7 +7,7 @@
 
 //import Agent from '../Agent'
 //import cleanData from '../../app/server/cleanData'
-import save from './save'
+const save = require('./save')
 
 module.exports = (app, hosts) => {
   let list = app.state.list.slice(0)
