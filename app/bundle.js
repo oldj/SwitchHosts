@@ -2924,8 +2924,12 @@ module.exports = function (app, list) {
   var hosts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
   return _Agent2.default.pact('saveHosts', list).then(function (new_list) {
-    updated(app, new_list, hosts);
-  }).catch(function (e) {
+    return updated(app, new_list, hosts);
+  })
+  //.then(() => {
+  //  console.log('saved.', hosts && hosts.content.substring(0, 50))
+  //})
+  .catch(function (e) {
     console.log(e);
   });
 };
@@ -16506,7 +16510,7 @@ module.exports = ReactNoopUpdateQueue;
 "use strict";
 
 
-exports.version = [3, 3, 2, 5169];
+exports.version = [3, 3, 2, 5190];
 
 /***/ }),
 /* 70 */
@@ -21282,10 +21286,27 @@ var App = function (_React$Component) {
   }, {
     key: 'setHostsContent',
     value: function setHostsContent(v) {
+      var _this5 = this;
+
       if (this.state.current.content === v) return; // not changed
 
-      this.state.current.content = v || '';
-      this.toSave();
+      var current = Object.assign({}, this.state.current, {
+        content: v || ''
+      });
+      var list = this.state.list.slice(0);
+      var idx = list.findIndex(function (i) {
+        return i.id === current.id;
+      });
+      if (idx !== -1) {
+        list.splice(idx, 1, current);
+      }
+
+      this.setState({
+        current: current,
+        list: list
+      }, function () {
+        _this5.toSave();
+      });
     }
   }, {
     key: 'justAdd',
