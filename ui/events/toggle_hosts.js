@@ -6,7 +6,7 @@
 'use strict'
 
 import Agent from '../Agent'
-import save from './save'
+const save  = require('./save')
 
 module.exports = (app, hosts) => {
   hosts.on = !hosts.on
