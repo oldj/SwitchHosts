@@ -54,7 +54,11 @@ function apply_Unix (content, callback) {
           , `rm -rf ${tmp_fn}`
         ].join(' && ')
       } else {
-        sudo_pswd = sudo_pswd.replace(/'/g, '\\x27')
+
+        sudo_pswd = sudo_pswd
+          .replace(/'/g, '\\x27')
+          .replace(/\\/g, '\\\\')
+
         cmd = [
           `echo '${sudo_pswd}' | sudo -S chmod 777 ${sys_hosts_path}`
           , `cat "${tmp_fn}" > ${sys_hosts_path}`
