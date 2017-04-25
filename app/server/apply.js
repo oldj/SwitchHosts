@@ -19,6 +19,7 @@ const md5File = require('md5-file')
 const applyAfter_Unix = require('./applyAfter_Unix')
 const platform = process.platform
 const svr = require('./svr')
+const version = require('../version').version.join('.')
 
 let sudo_pswd = ''
 let lang = null
@@ -117,11 +118,19 @@ function tryToApply (content, callback) {
   }
 }
 
+function wrapContent(cnt) {
+  return `# SwitchHosts! v${version}
+
+${cnt}`
+}
+
 module.exports = (cnt, pswd) => {
   if (pswd) {
     sudo_pswd = pswd
   }
   let pref
+
+  cnt = wrapContent(cnt)
 
   return Promise.resolve()
     .then(() => {
