@@ -23,7 +23,7 @@ export default class PreferencesPrompt extends React.Component {
       show: false,
       user_language: '',
       after_cmd: '',
-      choice_mode: '',
+      choice_mode: 'multiple',
       auto_launch: false,
       hide_at_launch: false,
       lang_list: [],
