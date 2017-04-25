@@ -16510,7 +16510,7 @@ module.exports = ReactNoopUpdateQueue;
 "use strict";
 
 
-exports.version = [3, 3, 2, 5192];
+exports.version = [3, 3, 2, 5193];
 
 /***/ }),
 /* 70 */
@@ -22556,7 +22556,7 @@ var PreferencesPrompt = function (_React$Component) {
       show: false,
       user_language: '',
       after_cmd: '',
-      choice_mode: '',
+      choice_mode: 'multiple',
       auto_launch: false,
       hide_at_launch: false,
       lang_list: [],
