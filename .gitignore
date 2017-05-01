@@ -8,3 +8,4 @@ dist
 node_modules
 *.js.map
 *.css.map
+npm-debug.log*
