@@ -7,6 +7,8 @@
 
 const path = require('path')
 const webpack = require('webpack')
+const moment = require('moment')
+const version = require('./app/version').version.join('.')
 
 module.exports = {
   entry: './ui/index.js',
@@ -23,7 +25,7 @@ module.exports = {
     rules: [
       {
         test: /\.jsx?$/,
-        exclude: [/node_modules/],
+        //exclude: [/node_modules/],
         use: ['babel-loader?presets[]=react,presets[]=latest']
       }, {
         test: /\.less$/,
@@ -47,16 +49,17 @@ module.exports = {
         NODE_ENV: JSON.stringify('production')
       }
     })
-    //, new webpack.optimize.UglifyJsPlugin({
-    //  sourceMap: true,
-    //  compress: {
-    //    warnings: false
-    //    , drop_console: false
-    //  }
-    //  , output: {
-    //    comments: false
-    //  }
-    //})
+    , new webpack.optimize.UglifyJsPlugin({
+      sourceMap: true,
+      compress: {
+        warnings: false
+        , drop_console: false
+      }
+      , output: {
+        comments: false
+      }
+    })
     , new webpack.IgnorePlugin(new RegExp('^(electron|fs|path)$'))
+    , new webpack.BannerPlugin(`SwitchHosts! v${version}, ${moment().format('YYYY-MM-DD HH:mm:ss')}`)
   ]
 }
