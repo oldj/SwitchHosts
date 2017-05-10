@@ -15,7 +15,7 @@ app.use(function (req, res, next) {
 })
 
 app.get('/', function (req, res) {
-  res.send('Hello SwitchHost!')
+  res.send('Hello SwitchHosts!')
 })
 
 app.get('/remote-test', function (req, res) {
