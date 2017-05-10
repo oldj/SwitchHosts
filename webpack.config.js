@@ -11,7 +11,7 @@ const moment = require('moment')
 const version = require('./app/version').version.join('.')
 
 module.exports = {
-  entry: './ui/index.js',
+  entry: './ui/index.jsx',
   devtool: 'source-map',
   output: {
     path: path.join(__dirname, 'app')
@@ -37,10 +37,7 @@ module.exports = {
         test: /\.(eot|woff|woff2|ttf|svg|png|jpg)$/,
         use: 'url-loader?limit=30000&name=[name]-[hash].[ext]'
       }
-    ]//,
-    // query: {
-    // presets: ['es2015', 'stage-0', 'react']
-    // }
+    ]
     , noParse: [/\bAgent\b/]
   },
   plugins: [

@@ -23,13 +23,15 @@ module.exports = (svr, hosts, force = false) => {
     }
 
     if (force || isExpired(svr, hosts)) {
-      console.log('check', hosts.title, force, isExpired(svr, hosts))
-      getUrl(svr, hosts.url)
+      let hosts2 = Object.assign({}, hosts)
+
+      console.log('check', hosts2.title, force, isExpired(svr, hosts2))
+      getUrl(svr, hosts2.url)
         .then(content => {
-          hosts.content = content
-          hosts.last_refresh = now()
+          hosts2.content = content
+          hosts2.last_refresh = now()
         })
-        .then(() => resolve(hosts))
+        .then(() => resolve(hosts2))
         .catch(e => resolve(e))
     } else {
       resolve(hosts)
