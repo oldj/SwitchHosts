@@ -151,7 +151,7 @@ module.exports = (cnt, pswd) => {
 
         if (file_md5 === cnt_md5) {
           // 文件相同
-          resolve()
+          resolve(true)
           return
         }
 
@@ -159,8 +159,10 @@ module.exports = (cnt, pswd) => {
         //reject('need_sudo')
       })
     })
-    .then(() => {
-      return new Promise((resolve, reject) => {
+    .then(eq => {
+      // eq 为 true 表示新内容与系统 hosts 内容相同，hosts 没有变化，不需要执行自定义命令
+
+      return eq ? null : new Promise((resolve, reject) => {
         let after_cmd = pref.after_cmd
 
         if (after_cmd) {
