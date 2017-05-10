@@ -118,7 +118,7 @@ function tryToApply (content, callback) {
   }
 }
 
-function wrapContent(cnt) {
+function wrapContent (cnt) {
   return `# SwitchHosts! v${version}
 
 ${cnt}`
@@ -169,7 +169,7 @@ module.exports = (cnt, pswd) => {
           exec(after_cmd, (error, stdout, stderr) => {
             // command output is in stdout
             if (error) {
-              reject(`AfterCmdError:\n\n${stderr}`)
+              reject({title: 'After CMD Error', content: stderr})
             } else {
               resolve()
             }
@@ -179,5 +179,9 @@ module.exports = (cnt, pswd) => {
           resolve()
         }
       })
+        .catch(e => {
+          console.log(e)
+          svr.broadcast('err', e)
+        })
     })
 }
