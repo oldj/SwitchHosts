@@ -1,6 +1,6 @@
 {
   "name": "switchhosts",
-  "version": "3.3.2",
+  "version": "3.3.3",
   "description": "Switch hosts quickly!",
   "main": "main.js",
   "scripts": {
