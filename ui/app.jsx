@@ -11,6 +11,7 @@ import Content from './content/content'
 import SudoPrompt from './frame/sudo'
 import EditPrompt from './frame/edit'
 import PreferencesPrompt from './frame/preferences'
+import NotificationSystem from 'react-notification-system'
 import Agent from './Agent'
 import { reg as events_reg } from './events/index'
 import './app.less'
@@ -28,6 +29,7 @@ export default class App extends React.Component {
     }
 
     this.is_dragging = false
+    this._notificationSystem = null
     this.loadHosts()
 
     Agent.pact('getPref')
@@ -50,6 +52,16 @@ export default class App extends React.Component {
     Agent.on('drag_end', () => {
       this.is_dragging = false
       console.log('drag_end')
+    })
+
+    Agent.on('err', e => {
+      console.log(e)
+      this._notificationSystem.addNotification({
+        title: e.title,
+        message: e.content,
+        position: 'tr',
+        level: 'error'
+      })
     })
 
     setInterval(() => {
@@ -138,6 +150,8 @@ export default class App extends React.Component {
   }
 
   componentDidMount () {
+    this._notificationSystem = this.refs.notificationSystem
+
     window.addEventListener('keydown', (e) => {
       if (e.keyCode === 27) {
         Agent.emit('esc')
@@ -153,6 +167,7 @@ export default class App extends React.Component {
     let current = this.state.current
     return (
       <div id="app" className={'platform-' + Agent.platform}>
+        <NotificationSystem ref="notificationSystem"/>
         <Panel
           list={this.state.list}
           sys_hosts={this.state.sys_hosts}
