@@ -14,6 +14,7 @@ import PreferencesPrompt from './frame/preferences'
 import NotificationSystem from 'react-notification-system'
 import Agent from './Agent'
 import { reg as events_reg } from './events/index'
+import notificationStyle from './misc/notificationStyle'
 import './app.less'
 
 export default class App extends React.Component {
@@ -60,6 +61,7 @@ export default class App extends React.Component {
         title: e.title,
         message: e.content,
         position: 'tr',
+        autoDismiss: 10,
         level: 'error'
       })
     })
@@ -167,7 +169,7 @@ export default class App extends React.Component {
     let current = this.state.current
     return (
       <div id="app" className={'platform-' + Agent.platform}>
-        <NotificationSystem ref="notificationSystem"/>
+        <NotificationSystem ref="notificationSystem" style={notificationStyle}/>
         <Panel
           list={this.state.list}
           sys_hosts={this.state.sys_hosts}
