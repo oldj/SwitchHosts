@@ -5,7 +5,7 @@
 
 'use strict'
 
-const request = require('superagent')
+const request = require('request')
 const cheerio = require('cheerio')
 const {shell, dialog} = require('electron')
 const current_version = require('../version').version
@@ -54,11 +54,8 @@ exports.check = (is_silent = false) => {
   let release_url = require('../configs').url_download
   console.log('start check updates..')
 
-  request
-    .get(release_url)
-    .end((err, res) => {
+  request(release_url, (err, res, body) => {
       let buttons = [lang.ok]
-
       if (err) {
         console.log(err)
 
@@ -72,7 +69,7 @@ exports.check = (is_silent = false) => {
         return
       }
 
-      let body = res.text
+      //let body = res.text
 
       let $ = cheerio.load(body)
       let a = $('.release-meta .css-truncate-target')

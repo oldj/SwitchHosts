@@ -1,6 +1,6 @@
 {
   "name": "switchhosts",
-  "version": "3.3.3",
+  "version": "3.3.4",
   "description": "Switch hosts quickly!",
   "main": "main.js",
   "scripts": {
@@ -14,6 +14,6 @@
     "js-beautify": "^1.6.12",
     "md5-file": "^3.1.1",
     "node-notifier": "^5.1.2",
-    "superagent": "^3.5.2"
+    "request": "^2.81.0"
   }
 }

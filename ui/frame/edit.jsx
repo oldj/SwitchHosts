@@ -87,6 +87,14 @@ export default class EditPrompt extends React.Component {
         setTimeout(() => this.setState({is_loading: false}), 500)
       }
     })
+
+    Agent.on('refresh_end', id => {
+      if (this.state.is_loading) {
+        this.setState({
+          is_loading: false
+        })
+      }
+    })
   }
 
   onOK () {
@@ -221,8 +229,7 @@ export default class EditPrompt extends React.Component {
               value={this.state.url}
               placeholder="http://"
               onChange={(e) => this.setState({url: e.target.value})}
-              onKeyDown={(e) => (e.keyCode === 13 && this.onOK()) ||
-                                (e.keyCode === 27 && this.onCancel())}
+              onKeyDown={(e) => (e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
             />
           </div>
         </div>
@@ -241,8 +248,7 @@ export default class EditPrompt extends React.Component {
               className={classnames({
                 iconfont: 1,
                 'icon-refresh': 1,
-                'invisible': !this.current_hosts ||
-                             this.state.url !== this.current_hosts.url,
+                'invisible': !this.current_hosts || this.state.url !== this.current_hosts.url,
                 'loading': this.state.is_loading
               })}
               title={lang.refresh}
@@ -289,8 +295,7 @@ export default class EditPrompt extends React.Component {
               name="text"
               value={this.state.title}
               onChange={(e) => this.setState({title: e.target.value})}
-              onKeyDown={(e) => (e.keyCode === 13 && this.onOK() ||
-                                 e.keyCode === 27 && this.onCancel())}
+              onKeyDown={(e) => (e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
             />
           </div>
         </div>
