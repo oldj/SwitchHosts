@@ -11,8 +11,7 @@ const isExpired = require('../checkIsExpired')
 function now () {
   let dt = new Date()
 
-  return `${dt.getFullYear()}-${dt.getMonth() +
-                                1}-${dt.getDate()} ${dt.getHours()}:${dt.getMinutes()}:${dt.getSeconds()}`
+  return `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()} ${dt.getHours()}:${dt.getMinutes()}:${dt.getSeconds()}`
 }
 
 module.exports = (svr, hosts, force = false) => {
@@ -25,14 +24,17 @@ module.exports = (svr, hosts, force = false) => {
     if (force || isExpired(svr, hosts)) {
       let hosts2 = Object.assign({}, hosts)
 
-      console.log('check', hosts2.title, force, isExpired(svr, hosts2))
+      console.log('checkRemote', `'${hosts2.title}'`, force, isExpired(svr, hosts2))
       getUrl(svr, hosts2.url)
         .then(content => {
           hosts2.content = content
           hosts2.last_refresh = now()
         })
         .then(() => resolve(hosts2))
-        .catch(e => resolve(e))
+        .catch(e => {
+          console.log(e)
+          reject(e)
+        })
     } else {
       resolve(hosts)
     }

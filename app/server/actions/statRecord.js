@@ -5,7 +5,7 @@
 
 'use strict'
 
-const request = require('superagent')
+const request = require('request')
 const version = require('../../configs').version_full
 
 const url = 'http://lab.oldj.net/s.gif'
@@ -24,11 +24,10 @@ function log (actions) {
     ].join('&')
 
   console.log('stat: ' + actions)
-  request.get(u)
-    .end((err) => {
-      if (err) {
-        console.log(err)
-      }
+  request
+    .get(u)
+    .on('error', err => {
+      console.log(err)
     })
 }
 

@@ -13,8 +13,14 @@ module.exports = (app, hosts) => {
     .then(list => {
       if (!list) return
       Agent.emit('list_updated', list)
+      Agent.emit('refresh_end', hosts.id)
     })
     .catch(e => {
       console.log(e)
+      Agent.emit('refresh_end', hosts.id)
+      Agent.emit('err', {
+        title: 'Remote Hosts Refresh Error',
+        content: e.code
+      })
     })
 }
