@@ -5,12 +5,12 @@ Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHos
 
 这是一个用于快速切换 hosts 文件的小程序，基于 [Electron](http://electron.atom.io/) 开发，同时使用了 [React](https://facebook.github.io/react/) 以及 [CodeMirror](http://codemirror.net/) 等框架/库。
 
-## 软件截图：
+## 截图
 
 <img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/assets/capture.png" alt="Capture" width="980" style="border:1px solid #979797;">
 
 
-## 功能特性：
+## 功能特性
 
  - 快速切换 hosts
  - hosts 文件语法高亮
@@ -19,12 +19,25 @@ Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHos
  - macOS: 支持 [Alfred workflow](http://www.packal.org/workflow/switchhosts) 快速切换
 
 
-## 下载地址：
+## 安装
+
+### 下载安装
 
 你可以直接下载源码到本地运行或编辑，或者在下面下载可执行版本：
 
  - [SwitchHosts! 下载地址1（GitHub release）](https://github.com/oldj/SwitchHosts/releases)
  - [SwitchHosts! 下载地址2（百度网盘）](http://pan.baidu.com/share/link?shareid=150951&uk=3607385901)
+
+### brew
+
+在 macOS 上，也可以使用 `brew cast` 安装，命令如下：
+
+```bash
+brew cask install switchhosts
+```
+
+感谢 [@gobinathm](https://github.com/gobinathm)、[@iamybj](https://github.com/iamybj) 更新 `brew cask` 版本。
+
 
 
 ## 文件备份
