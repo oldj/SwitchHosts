@@ -20,6 +20,9 @@ global.user_language = user_language
 const tray = require('./menu/tray')
 const SHServer = require('./server/Server')
 const svr = require('./server/svr')
+const main_menu = require('./menu/main_menu')
+const checkUpdate = require('./server/checkUpdate')
+
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -106,11 +109,11 @@ if (should_quit) {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   createWindow()
-  require('./menu/main_menu').init(app, user_language)
+  main_menu.init(app, user_language)
 
   setTimeout(() => {
     if (renderer) {
-      require('./server/checkUpdate').check(true)
+      checkUpdate.check(true)
     }
   }, 1000)
 })
