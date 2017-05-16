@@ -191,7 +191,8 @@ function doInit (app, lang) {
     }
   ]
 
-  const name = require('electron').app.getName()
+  //const name = require('electron').app.getName()
+  const name = 'SwitchHosts!'
   const os = process.platform
   if (os === 'darwin') {
     template.unshift({
@@ -267,6 +268,7 @@ function doInit (app, lang) {
       type: 'separator'
     })
     template[0].submenu.unshift({
+      label: `About ${name}`,
       role: 'about',
       click: () => {
         dialog.showMessageBox({

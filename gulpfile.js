@@ -27,7 +27,7 @@ const args = require('yargs').argv
 // const IS_DEBUG = !!args.debug;
 // const TPL_FILE_INFO = "echo '> (DEBUG " + (IS_DEBUG ? "on" : "off") + ") <%= file.path %>'";
 
-gulp.task('ver', () => {
+gulp.task('ver', (done) => {
   let fn = path.join(__dirname, 'app', 'version.js')
   let version = require('./app/version').version
   version[3]++
@@ -48,6 +48,8 @@ gulp.task('ver', () => {
   // update package.json
   updatePackage(path.join(__dirname, 'package.json'))
   updatePackage(path.join(__dirname, 'app', 'package.json'))
+
+  done()
 })
 
 gulp.task('pack', (done) => {

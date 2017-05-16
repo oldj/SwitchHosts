@@ -13,8 +13,7 @@ const app = electron.app
 const BrowserWindow = electron.BrowserWindow
 
 const pref = require('./server/pref')
-let user_language = pref.get('user_language') ||
-                    (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
+let user_language = pref.get('user_language') || (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
 global.user_language = user_language
 
 const tray = require('./menu/tray')
@@ -22,7 +21,6 @@ const SHServer = require('./server/Server')
 const svr = require('./server/svr')
 const main_menu = require('./menu/main_menu')
 const checkUpdate = require('./server/checkUpdate')
-
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -123,8 +121,8 @@ electron.ipcMain.on('reg_renderer', (e) => {
 })
 
 electron.ipcMain.on('relaunch', () => {
-  app.relaunch({args: process.argv.slice(1) + ['--relaunch']});
-  app.exit(0);
+  app.relaunch({args: process.argv.slice(1) + ['--relaunch']})
+  app.exit(0)
 })
 
 // Quit when all windows are closed.
