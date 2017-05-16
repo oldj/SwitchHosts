@@ -1,1 +1,2 @@
 legacy/* linguist-vendored
+*.jsx linguist-language=JavaScript
