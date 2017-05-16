@@ -263,7 +263,7 @@ function doInit (app, lang) {
         role: 'front'
       }
     ]
-  } else if (os === 'win32') {
+  } else if (os === 'win32' || os === 'linux') {
     template[0].submenu.unshift({
       type: 'separator'
     })
