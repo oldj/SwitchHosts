@@ -7,6 +7,7 @@
 
 const getUrl = require('./getUrl')
 const isExpired = require('../checkIsExpired')
+const lineBreakTransform = require('../../libs/lineBreakTransform')
 
 function now () {
   let dt = new Date()
@@ -27,7 +28,7 @@ module.exports = (svr, hosts, force = false) => {
       console.log('checkRemote', `'${hosts2.title}'`, force, isExpired(svr, hosts2))
       getUrl(svr, hosts2.url)
         .then(content => {
-          hosts2.content = content
+          hosts2.content = lineBreakTransform(content)
           hosts2.last_refresh = now()
         })
         .then(() => resolve(hosts2))
