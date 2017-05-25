@@ -9,7 +9,7 @@ const saveHosts = require('./saveHosts')
 const checkOne = require('./checkOneRemoteHosts')
 
 function isHostsEqual(hosts1, hosts2) {
-  return hosts1.id === hosts2.id && hosts1.content === hosts2.content
+  return hosts1.id === hosts2.id && hosts1.content === hosts2.content && hosts1.last_refresh === hosts2.last_refresh
 }
 
 function isListEqual (list1, list2) {
