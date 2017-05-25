@@ -7,6 +7,7 @@
 
 import React from 'react'
 import Agent from '../Agent'
+import { Modal, Button } from 'antd'
 import './frame.less'
 
 export default class MyFrame extends React.Component {
@@ -59,16 +60,27 @@ export default class MyFrame extends React.Component {
     if (!this.props.show) {
       return null
     }
+    let {show} = this.props
 
     return (
-      <div className="frame" ref="frame">
-        <div className="overlay"/>
+      <Modal
+        visible={show}
+        title="Title"
+        onOk={this.onOK.bind(this)}
+        onCancel={this.onCancel.bind(this)}
+        footer={[
+          <Button key="back" size="large" onClick={this.onCancel.bind(this)}>Return</Button>,
+          <Button key="submit" type="primary" size="large" loading={false} onClick={this.onOK.bind(this)}>
+            Submit
+          </Button>
+        ]}
+      >
         <div className="prompt">
           <div className="head">{this.props.head}</div>
           <div className="body">{this.props.body}</div>
           <div className="foot">{this.renderFootButtons()}</div>
         </div>
-      </div>
+      </Modal>
     )
   }
 }

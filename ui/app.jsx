@@ -15,6 +15,8 @@ import NotificationSystem from 'react-notification-system'
 import Agent from './Agent'
 import { reg as events_reg } from './events/index'
 import notificationStyle from './misc/notificationStyle'
+
+import 'antd/dist/antd.less'
 import './app.less'
 
 export default class App extends React.Component {
