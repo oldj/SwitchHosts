@@ -6,7 +6,7 @@
 'use strict'
 
 const {ipcMain} = require('electron')
-const actions = require('./actions/index')
+const actions = require('./actions')
 const app = require('./http/app')
 const svr = require('./svr')
 
