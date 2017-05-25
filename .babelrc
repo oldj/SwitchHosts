@@ -1,0 +1,14 @@
+{
+  "presets": [
+    "react",
+    "latest"
+  ],
+  "plugins": [
+    [
+      "import",
+      {
+        "libraryName": "antd"
+      }
+    ]
+  ]
+}
