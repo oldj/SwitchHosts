@@ -88,11 +88,17 @@ export default class EditPrompt extends React.Component {
       }
     })
 
-    Agent.on('refresh_end', id => {
+    Agent.on('refresh_end', (id) => {
       if (this.state.is_loading) {
         this.setState({
           is_loading: false
         })
+
+        if (id && id === this.current_hosts.id) {
+          this.setState({
+            last_refresh: this.current_hosts.last_refresh
+          })
+        }
       }
     })
   }

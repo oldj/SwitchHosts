@@ -73,6 +73,7 @@ export default class App extends React.Component {
       console.log('checkNeedRemoteRefresh')
       Agent.pact('checkNeedRemoteRefresh', list)
         .then(list => {
+          Agent.emit('refresh_end')
           if (!list) return
           Agent.emit('list_updated', list)
         })
