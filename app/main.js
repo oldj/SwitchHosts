@@ -2,7 +2,7 @@
  * SwitchHosts!
  *
  * @author oldj
- * @blog http://oldj.net
+ * @blog https://oldj.net
  * @homepage https://oldj.github.io/SwitchHosts/
  * @source https://github.com/oldj/SwitchHosts
  */
