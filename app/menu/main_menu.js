@@ -37,7 +37,7 @@ function doInit (app, lang) {
             dialog.showOpenDialog({
               title: lang.import,
               defaultPath: path.join(last_path || download_path ||
-                                     paths.home_path, 'sh.json'),
+                paths.home_path, 'sh.json'),
               filters: [
                 {name: 'JSON', extensions: ['json']},
                 {name: 'All Files', extensions: ['*']}
@@ -56,7 +56,7 @@ function doInit (app, lang) {
             dialog.showSaveDialog({
               title: lang.export,
               defaultPath: path.join(last_path || download_path ||
-                                     paths.home_path, 'sh.json'),
+                paths.home_path, 'sh.json'),
               filters: [
                 {name: 'JSON', extensions: ['json']},
                 {name: 'All Files', extensions: ['*']}
@@ -85,22 +85,27 @@ function doInit (app, lang) {
       label: lang.edit,
       submenu: [
         {
+          label: lang.undo,
           role: 'undo'
         }, {
+          label: lang.redo,
           role: 'redo'
         }, {
           type: 'separator'
         }, {
+          label: lang.menu_cut,
           role: 'cut'
         }, {
+          label: lang.menu_copy,
           role: 'copy'
         }, {
+          label: lang.menu_paste,
           role: 'paste'
         }, {
-          role: 'pasteandmatchstyle'
-        }, {
+          label: lang.menu_delete,
           role: 'delete'
         }, {
+          label: lang.menu_selectall,
           role: 'selectall'
         }, {
           type: 'separator'
@@ -142,30 +147,35 @@ function doInit (app, lang) {
         //     type: 'separator'
         // },
         {
+          label: lang.menu_resetzoom,
           role: 'resetzoom'
         },
         {
+          label: lang.menu_zoomin,
           role: 'zoomin'
         },
         {
+          label: lang.menu_zoomout,
           role: 'zoomout'
         },
         {
           type: 'separator'
         },
         {
+          label: lang.menu_togglefullscreen,
           role: 'togglefullscreen'
         }
       ]
     }, {
       label: lang.window,
       role: 'window',
-      submenu: [
-        {
-          role: 'minimize'
-        }, {
-          role: 'close'
-        }]
+      submenu: [{
+        label: lang.menu_minimize,
+        role: 'minimize'
+      }, {
+        label: lang.menu_close,
+        role: 'close'
+      }]
     }, {
       label: lang.help,
       role: 'help',
@@ -199,6 +209,7 @@ function doInit (app, lang) {
       label: name,
       submenu: [
         {
+          label: lang.menu_about,
           role: 'about'
         }, {
           type: 'separator'
@@ -211,14 +222,18 @@ function doInit (app, lang) {
         //     type: 'separator'
         // },
         {
+          label: lang.menu_hide,
           role: 'hide'
         }, {
+          label: lang.menu_hideothers,
           role: 'hideothers'
         }, {
+          label: lang.menu_unhide,
           role: 'unhide'
         }, {
           type: 'separator'
         }, {
+          label: lang.menu_quit,
           role: 'quit'
         }]
     })
@@ -242,24 +257,24 @@ function doInit (app, lang) {
     // Window menu.
     template[4].submenu = [
       {
-        label: 'Close',
+        label: lang.menu_close,
         accelerator: 'CmdOrCtrl+W',
         role: 'close'
       },
       {
-        label: 'Minimize',
+        label: lang.menu_minimize,
         accelerator: 'CmdOrCtrl+M',
         role: 'minimize'
       },
       {
-        label: 'Zoom',
+        label: lang.menu_zoom,
         role: 'zoom'
       },
       {
         type: 'separator'
       },
       {
-        label: 'Bring All to Front',
+        label: lang.menu_bringalltofront,// 'Bring All to Front',
         role: 'front'
       }
     ]
@@ -268,13 +283,13 @@ function doInit (app, lang) {
       type: 'separator'
     })
     template[0].submenu.unshift({
-      label: `About ${name}`,
+      label: `${lang.menu_about} ${name}`,
       role: 'about',
       click: () => {
         dialog.showMessageBox({
           type: 'info',
           buttons: [],
-          title: 'About',
+          title: lang.menu_about,
           message: `${name} v${version.slice(0, 3).join('.')} (${version[3]})`
         })
       }
@@ -284,7 +299,7 @@ function doInit (app, lang) {
       type: 'separator'
     })
     template[0].submenu.push({
-      label: 'Quit',
+      label: lang.menu_quit,
       role: 'quit',
       accelerator: 'CmdOrCtrl+Q'
     })
@@ -297,14 +312,14 @@ function doInit (app, lang) {
     // VIEW
     template[3].submenu = [
       {
-        label: 'Reload',
+        label: lang.menu_reload,
         accelerator: 'CmdOrCtrl+R',
         click (item, focusedWindow) {
           if (focusedWindow) focusedWindow.reload()
         }
       },
       {
-        label: 'Toggle Developer Tools',
+        label: lang.menu_toggle_developer_tools,// 'Toggle Developer Tools',
         accelerator: process.platform === 'darwin'
           ? 'Alt+Command+I'
           : 'Ctrl+Shift+I',
