@@ -8,10 +8,15 @@
 import React from 'react'
 import MyFrame from './frame'
 import classnames from 'classnames'
+import { Icon, Input, Radio, Select } from 'antd'
 import Group from './group'
 import Agent from '../Agent'
 import makeId from '../../app/libs/make-id'
 import './edit.less'
+
+const RadioButton = Radio.Button
+const RadioGroup = Radio.Group
+const Option = Select.Option
 
 export default class EditPrompt extends React.Component {
   constructor (props) {
@@ -175,7 +180,7 @@ export default class EditPrompt extends React.Component {
     }
     return k.map(([v, n], idx) => {
       return (
-        <option value={v} key={idx}>{n}</option>
+        <Option value={v} key={idx}>{n}</Option>
       )
     })
   }
@@ -229,30 +234,30 @@ export default class EditPrompt extends React.Component {
         <div className="ln">
           <div className="title">{lang.url}</div>
           <div className="cnt">
-            <input
-              type="text"
+            <Input
               ref="url"
               value={this.state.url}
               placeholder="http://"
-              onChange={(e) => this.setState({url: e.target.value})}
-              onKeyDown={(e) => (e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
+              onChange={e => this.setState({url: e.target.value})}
+              onKeyDown={e => (e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
             />
           </div>
         </div>
         <div className="ln">
           <div className="title">{lang.auto_refresh}</div>
           <div className="cnt">
-            <select
+            <Select
               value={this.state.refresh_interval}
-              onChange={(e) => this.setState(
-                {refresh_interval: parseFloat(e.target.value) || 0})}
+              style={{width: 120}}
+              onChange={v => this.setState({refresh_interval: parseFloat(v) || 0})}
             >
               {this.getRefreshOptions()}
-            </select>
+            </Select>
 
-            <i
+            <Icon
+              type="reload"
               className={classnames({
-                iconfont: 1,
+                'iconfont': 1,
                 'icon-refresh': 1,
                 'invisible': !this.current_hosts || this.state.url !== this.current_hosts.url,
                 'loading': this.state.is_loading
@@ -276,29 +281,18 @@ export default class EditPrompt extends React.Component {
     return (
       <div ref="body">
         <div className="ln">
-          <input id="ipt-local" type="radio" name="where" value="local"
-                 checked={this.state.where === 'local'}
-                 onChange={(e) => this.setState({where: e.target.value})}
-          />
-          <label htmlFor="ipt-local">{lang.where_local}</label>
-          <input id="ipt-remote" type="radio" name="where" value="remote"
-                 checked={this.state.where === 'remote'}
-                 onChange={(e) => this.setState({where: e.target.value})}
-          />
-          <label htmlFor="ipt-remote">{lang.where_remote}</label>
-          <input id="ipt-group" type="radio" name="where" value="group"
-                 checked={this.state.where === 'group'}
-                 onChange={(e) => this.setState({where: e.target.value})}
-          />
-          <label htmlFor="ipt-group">{lang.where_group}</label>
+          <RadioGroup onChange={e => this.setState({where: e.target.value})} value={this.state.where}>
+            <RadioButton value="local">{lang.where_local}</RadioButton>
+            <RadioButton value="remote">{lang.where_remote}</RadioButton>
+            <RadioButton value="group">{lang.where_group}</RadioButton>
+          </RadioGroup>
         </div>
+
         <div className="ln">
           <div className="title">{lang.hosts_title}</div>
           <div className="cnt">
-            <input
-              type="text"
+            <Input
               ref="title"
-              name="text"
               value={this.state.title}
               onChange={(e) => this.setState({title: e.target.value})}
               onKeyDown={(e) => (e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
@@ -318,7 +312,7 @@ export default class EditPrompt extends React.Component {
     return (
       <MyFrame
         show={this.state.show}
-        head={lang[this.state.is_add ? 'add_hosts' : 'edit_hosts']}
+        title={lang[this.state.is_add ? 'add_hosts' : 'edit_hosts']}
         body={this.body()}
         onOK={() => this.onOK()}
         onCancel={() => this.onCancel()}

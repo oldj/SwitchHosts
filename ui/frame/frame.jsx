@@ -60,26 +60,30 @@ export default class MyFrame extends React.Component {
     if (!this.props.show) {
       return null
     }
-    let {show} = this.props
+    let {show, title, body, lang} = this.props
 
     return (
       <Modal
         visible={show}
-        title="Title"
+        title={title}
         onOk={this.onOK.bind(this)}
         onCancel={this.onCancel.bind(this)}
+        wrapClassName="frame"
         footer={[
-          <Button key="back" size="large" onClick={this.onCancel.bind(this)}>Return</Button>,
+          <Button key="back" size="large" onClick={this.onCancel.bind(this)}>
+            {lang.cancel}
+          </Button>,
           <Button key="submit" type="primary" size="large" loading={false} onClick={this.onOK.bind(this)}>
-            Submit
+            {lang.ok}
           </Button>
         ]}
       >
-        <div className="prompt">
-          <div className="head">{this.props.head}</div>
-          <div className="body">{this.props.body}</div>
-          <div className="foot">{this.renderFootButtons()}</div>
-        </div>
+        <div className="prompt-body">{body}</div>
+        {/*<div className="prompt">*/}
+          {/*<div className="head">{this.props.head}</div>*/}
+          {/*<div className="body">{this.props.body}</div>*/}
+          {/*<div className="foot">{this.renderFootButtons()}</div>*/}
+        {/*</div>*/}
       </Modal>
     )
   }
