@@ -4,6 +4,7 @@
   "description": "Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)",
   "main": "",
   "scripts": {
+    "_ln": "./scripts/ln.sh",
     "test": "nyc ava",
     "start": "electron app",
     "dev": "ENV=dev electron app",
