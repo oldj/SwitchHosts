@@ -1,7 +1,7 @@
 .frame {
   @bg: #f5f5f5;
   @btn_default: #05a;
-  @lh: 24px;
+  @lh: 28px;
 
   &:before {
     content: '';
@@ -9,6 +9,12 @@
     height: 100%;
     vertical-align: middle;
     width: 0;
+  }
+
+  h3 {
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
   }
 
   .ant-modal {
@@ -22,13 +28,13 @@
     //max-width: 600px;
     //background: #fff;
     //box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);
-    line-height: 30px;
+    line-height: @lh;
 
     .prompt-body {
       //padding: 20px 20px;
 
       .ln {
-        line-height: 30px;
+        line-height: @lh;
         padding: 2px 0;
         margin-bottom: 10px;
 
@@ -39,7 +45,7 @@
         }
         .cnt {
           margin-left: 100px;
-          line-height: 30px;
+          line-height: @lh;
           //input[type=text] {
           //  width: 240px;
           //  outline: none;

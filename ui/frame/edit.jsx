@@ -56,7 +56,8 @@ export default class EditPrompt extends React.Component {
     Agent.on('add_hosts', () => {
       this.setState({
         show: true,
-        is_add: true
+        is_add: true,
+        include: []
       })
       setTimeout(() => {
         this.tryToFocus()
@@ -135,6 +136,9 @@ export default class EditPrompt extends React.Component {
     if (!data.id) data.id = new_id
     if (this.state.is_add) {
       this.props.justAdd(new_id)
+    }
+    if (this.state.where !== 'group') {
+      data.include = []
     }
 
     delete data['is_add']

@@ -7,7 +7,6 @@
 
 import React from 'react'
 import { Icon } from 'antd'
-import classnames from 'classnames'
 import Sortable from 'sortablejs'
 import listToArray from 'wheel-js/src/common/listToArray'
 import './group.less'
@@ -33,14 +32,21 @@ export default class Group extends React.Component {
     let attrs = {
       'data-id': item.id || ''
     }
+
+    let icon_type
+    if (item.where === 'remote') {
+      icon_type = 'global'
+    } else if (item.where === 'group') {
+      icon_type = 'copy'
+    } else {
+      icon_type = 'file-text'
+    }
+
     return (
       <div className="hosts-item" {...attrs}>
-        <i className={classnames({
-          'iconfont': 1
-          , 'item-icon': 1
-          , 'icon-file': item.where !== 'group'
-          , 'icon-files': item.where === 'group'
-        })}
+        <Icon
+          type={icon_type}
+          className="iconfont"
         />
         <span>{item.title || 'untitled'}</span>
       </div>
