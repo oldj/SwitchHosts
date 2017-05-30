@@ -6,6 +6,7 @@
 'use strict'
 
 import React from 'react'
+import { Icon } from 'antd'
 import classnames from 'classnames'
 import Editor from './editor'
 import './content.less'
@@ -19,7 +20,7 @@ export default class Content extends React.Component {
     }
   }
 
-  setValue(v) {
+  setValue (v) {
     this.props.setHostsContent(v)
   }
 
@@ -29,13 +30,14 @@ export default class Content extends React.Component {
     return (
       <div id="sh-content">
         <div className="inform">
-                    <span
-                      className={classnames({
-                        loading: 1,
-                        show: this.state.is_loading
-                      })}
-                    >loading...</span>
-          <i
+          <span
+            className={classnames({
+              loading: 1,
+              show: this.state.is_loading
+            })}
+          >loading...</span>
+          <Icon
+            type="global"
             className={classnames({
               show: current.where === 'remote',
               iconfont: 1,
@@ -43,7 +45,8 @@ export default class Content extends React.Component {
             })}
             title={lang.remote_hosts}
           />
-          <i
+          <Icon
+            type="lock"
             className={classnames({
               show: this.props.readonly,
               iconfont: 1,

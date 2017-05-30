@@ -7,6 +7,7 @@
 
 import React from 'react'
 import classnames from 'classnames'
+import { Icon } from 'antd'
 import Agent from '../Agent'
 import isInViewport from 'wheel-js/src/browser/isInViewport'
 import './list-item.less'
@@ -22,7 +23,7 @@ export default class ListItem extends React.Component {
   getTitle () {
     let {lang} = this.props
     return this.is_sys ? lang.sys_hosts_title : this.props.data.title ||
-                                               lang.untitled
+      lang.untitled
   }
 
   beSelected () {
@@ -66,6 +67,17 @@ export default class ListItem extends React.Component {
       'data-id': data.id || ''
     }
 
+    let icon_type
+    if (sys) {
+      icon_type = 'desktop'
+    } else if (data.where === 'remote') {
+      icon_type = 'global'
+    } else if (data.where === 'group') {
+      icon_type = 'copy'
+    } else {
+      icon_type = 'file-text'
+    }
+
     return (
       <div className={classnames({
         'list-item': 1
@@ -94,15 +106,20 @@ export default class ListItem extends React.Component {
             />
           </div>
         )}
-        <i className={classnames({
-          'iconfont': 1
-          , 'item-icon': 1
-          , 'icon-warn': !!data.error
-          , 'icon-file': !sys && !data.error && data.where !== 'group'
-          , 'icon-files': data.where === 'group'
-          , 'icon-sysserver': sys && !data.error
-        })}
-           title={data.error || ''}
+        {/*<i className={classnames({*/}
+          {/*'iconfont': 1*/}
+          {/*, 'item-icon': 1*/}
+          {/*, 'icon-warn': !!data.error*/}
+          {/*, 'icon-file': !sys && !data.error && data.where !== 'group'*/}
+          {/*, 'icon-files': data.where === 'group'*/}
+          {/*, 'icon-sysserver': sys && !data.error*/}
+        {/*})}*/}
+           {/*title={data.error || ''}*/}
+        {/*/>*/}
+        <Icon
+          type={icon_type}
+          className="iconfont item-icon"
+          title={data.error || ''}
         />
         <span>{this.getTitle()}</span>
       </div>

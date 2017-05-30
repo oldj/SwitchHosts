@@ -1,46 +1,42 @@
 .frame {
   @bg: #f5f5f5;
   @btn_default: #05a;
-  @lh: 24px;
+  @lh: 28px;
 
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-
-  .overlay {
-    position: absolute;
-    z-index: -1;
-    width: 100%;
+  &:before {
+    content: '';
+    display: inline-block;
     height: 100%;
-    background: #000;
-    opacity: 0.5;
+    vertical-align: middle;
+    width: 0;
   }
 
-  .prompt {
-    position: absolute;
+  h3 {
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ant-modal {
+    //display: inline-block;
+    //vertical-align: middle;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    min-width: 300px;
-    max-width: 600px;
-    background: #fff;
-    box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);
+    //min-width: 520px;
+    //max-width: 600px;
+    //background: #fff;
+    //box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);
+    line-height: @lh;
 
-    .head {
-      padding: 20px;
-      font-size: 16px;
-      background: @bg;
-      //border-bottom: solid 1px #ccc;
-    }
-
-    .body {
-      padding: 20px 20px;
+    .prompt-body {
+      //padding: 20px 20px;
 
       .ln {
-        line-height: 30px;
+        line-height: @lh;
         padding: 2px 0;
+        margin-bottom: 10px;
 
         .title {
           float: left;
@@ -49,12 +45,12 @@
         }
         .cnt {
           margin-left: 100px;
-          line-height: 30px;
-          input[type=text] {
-            width: 240px;
-            outline: none;
-            padding: 4px 10px;
-          }
+          line-height: @lh;
+          //input[type=text] {
+          //  width: 240px;
+          //  outline: none;
+          //  padding: 4px 10px;
+          //}
           textarea {
             font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
           }
@@ -66,43 +62,16 @@
         }
       }
 
-      input {
-        padding: 4px 4px;
-      }
-
       input[type=password] {
         letter-spacing: 8px;
-        width: 240px;
-        outline: none;
-        padding: 4px 10px;
       }
     }
+  }
+}
 
-    .foot {
-      padding: 20px;
-      background: @bg;
-      text-align: right;
 
-      .button {
-        display: inline-block;
-        background: #ccc;
-        padding: 8px 20px;
-        margin-left: 1em;
-        cursor: pointer;
-
-        &:hover {
-          background: #ddd;
-        }
-
-        &.btn-default {
-          background: @btn_default;
-          color: #fff;
-
-          &:hover {
-            background: @btn_default * 1.4;
-          }
-        }
-      }
-    }
+.frame.sudo-prompt {
+  .ant-modal {
+    width: 300px;
   }
 }

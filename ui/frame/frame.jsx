@@ -7,6 +7,7 @@
 
 import React from 'react'
 import Agent from '../Agent'
+import { Modal, Button } from 'antd'
 import './frame.less'
 
 export default class MyFrame extends React.Component {
@@ -59,16 +60,32 @@ export default class MyFrame extends React.Component {
     if (!this.props.show) {
       return null
     }
+    let {show, title, body, lang, width, okText} = this.props
 
     return (
-      <div className="frame" ref="frame">
-        <div className="overlay"/>
-        <div className="prompt">
-          <div className="head">{this.props.head}</div>
-          <div className="body">{this.props.body}</div>
-          <div className="foot">{this.renderFootButtons()}</div>
-        </div>
-      </div>
+      <Modal
+        visible={show}
+        title={(<h3>{title}</h3>)}
+        onOk={this.onOK.bind(this)}
+        onCancel={this.onCancel.bind(this)}
+        wrapClassName="frame"
+        width={width}
+        footer={[
+          <Button key="back" size="large" onClick={this.onCancel.bind(this)}>
+            {lang.cancel}
+          </Button>,
+          <Button key="submit" type="primary" size="large" loading={false} onClick={this.onOK.bind(this)}>
+            {okText || lang.ok}
+          </Button>
+        ]}
+      >
+        <div className="prompt-body">{body}</div>
+        {/*<div className="prompt">*/}
+        {/*<div className="head">{this.props.head}</div>*/}
+        {/*<div className="body">{this.props.body}</div>*/}
+        {/*<div className="foot">{this.renderFootButtons()}</div>*/}
+        {/*</div>*/}
+      </Modal>
     )
   }
 }
