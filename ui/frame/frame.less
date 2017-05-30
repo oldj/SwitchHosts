@@ -2,6 +2,8 @@
   @bg: #f5f5f5;
   @btn_default: #05a;
   @lh: 28px;
+  text-align: center;
+  white-space: nowrap;
 
   &:before {
     content: '';
@@ -18,17 +20,14 @@
   }
 
   .ant-modal {
-    //display: inline-block;
-    //vertical-align: middle;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    //min-width: 520px;
-    //max-width: 600px;
-    //background: #fff;
-    //box-shadow: 0 0 4px 4px rgba(0, 0, 0, 0.1);
-    line-height: @lh;
+    display: inline-block;
+    vertical-align: middle;
+    top: 0;
+    //top: 50%;
+    //left: 50%;
+    //transform: translate(-50%, -50%);
+    padding-bottom: 0;
+    text-align: left;
 
     .prompt-body {
       //padding: 20px 20px;

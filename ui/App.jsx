@@ -172,6 +172,15 @@ export default class App extends React.Component {
     return (
       <div id="app" className={'platform-' + Agent.platform}>
         <NotificationSystem ref="notificationSystem" style={notificationStyle}/>
+        <SudoPrompt lang={this.state.lang}/>
+        <EditPrompt
+          lang={this.state.lang}
+          list={this.state.list}
+          justAdd={this.justAdd.bind(this)}
+        />
+        <PreferencesPrompt
+          lang={this.state.lang}
+        />
         <Panel
           list={this.state.list}
           sys_hosts={this.state.sys_hosts}
@@ -187,17 +196,6 @@ export default class App extends React.Component {
           setHostsContent={this.setHostsContent.bind(this)}
           lang={this.state.lang}
         />
-        <div className="frames">
-          <SudoPrompt lang={this.state.lang}/>
-          <EditPrompt
-            lang={this.state.lang}
-            list={this.state.list}
-            justAdd={this.justAdd.bind(this)}
-          />
-          <PreferencesPrompt
-            lang={this.state.lang}
-          />
-        </div>
       </div>
     )
   }
