@@ -119,7 +119,7 @@ function tryToApply (content, callback) {
 }
 
 function wrapContent (cnt) {
-  return `# SwitchHosts! v${version}
+  return `# SwitchHosts!
 
 ${cnt}`
 }
