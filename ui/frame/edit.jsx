@@ -282,9 +282,9 @@ export default class EditPrompt extends React.Component {
       <div ref="body">
         <div className="ln">
           <RadioGroup onChange={e => this.setState({where: e.target.value})} value={this.state.where}>
-            <RadioButton value="local">{lang.where_local}</RadioButton>
-            <RadioButton value="remote">{lang.where_remote}</RadioButton>
-            <RadioButton value="group">{lang.where_group}</RadioButton>
+            <RadioButton value="local"><Icon type="file-text" /> {lang.where_local}</RadioButton>
+            <RadioButton value="remote"><Icon type="global" /> {lang.where_remote}</RadioButton>
+            <RadioButton value="group"><Icon type="copy" /> {lang.where_group}</RadioButton>
           </RadioGroup>
         </div>
 
