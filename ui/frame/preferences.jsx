@@ -6,6 +6,7 @@
 'use strict'
 
 import React from 'react'
+import { Checkbox, Input, Radio, Select } from 'antd'
 import MyFrame from './frame'
 import classnames from 'classnames'
 import Agent from '../Agent'
@@ -13,6 +14,8 @@ import { version as current_version } from '../../app/version'
 import formatVersion from '../../app/libs/formatVersion'
 import './preferences.less'
 
+const RadioGroup = Radio.Group
+const Option = Select.Option
 const pref_keys = ['after_cmd', 'auto_launch', 'choice_mode', 'hide_at_launch', 'is_dock_icon_hidden', 'user_language']
 
 export default class PreferencesPrompt extends React.Component {
@@ -80,7 +83,7 @@ export default class PreferencesPrompt extends React.Component {
   getLanguageOptions () {
     return this.state.lang_list.map(({key, name}, idx) => {
       return (
-        <option value={key} key={idx}>{name}</option>
+        <Option value={key} key={idx}>{name}</Option>
       )
     })
   }
@@ -122,15 +125,14 @@ export default class PreferencesPrompt extends React.Component {
       <div className="ln">
         <div className="title">{lang.language}</div>
         <div className="cnt">
-          <select
+          <Select
             value={this.state.user_language || ''}
-            onChange={(e) => this.updateLangKey(e.target.value)}
+            onChange={v => this.updateLangKey(v)}
           >
             {this.getLanguageOptions()}
-          </select>
+          </Select>
 
-          <div
-            className="inform">{lang.should_restart_after_change_language}</div>
+          <div className="inform">{lang.should_restart_after_change_language}</div>
         </div>
       </div>
     )
@@ -143,20 +145,13 @@ export default class PreferencesPrompt extends React.Component {
       <div className="ln">
         <div className="title">{lang.pref_choice_mode}</div>
         <div className="cnt">
-          <input type="radio" id="pref-choice-mode-single" name="choice_mode"
-                 value="single"
-                 defaultChecked={this.state.choice_mode === 'single'}
-                 onChange={(e) => this.updateChoiceMode(e.target.value)}
-          />
-          <label
-            htmlFor="pref-choice-mode-single">{lang.pref_choice_mode_single}</label>
-          <input type="radio" id="pref-choice-mode-multiple" name="choice_mode"
-                 value="multiple"
-                 defaultChecked={this.state.choice_mode === 'multiple'}
-                 onChange={(e) => this.updateChoiceMode(e.target.value)}
-          />
-          <label
-            htmlFor="pref-choice-mode-multiple">{lang.pref_choice_mode_multiple}</label>
+          <RadioGroup
+            onChange={e => this.updateChoiceMode(e.target.value)}
+            value={this.state.choice_mode}
+          >
+            <Radio value="single">{lang.pref_choice_mode_single}</Radio>
+            <Radio value="multiple">{lang.pref_choice_mode_multiple}</Radio>
+          </RadioGroup>
         </div>
       </div>
     )
@@ -170,8 +165,9 @@ export default class PreferencesPrompt extends React.Component {
         <div className="title">{lang.pref_after_cmd}</div>
         <div className="cnt">
           <div className="inform">{lang.pref_after_cmd_info}</div>
-          <textarea
-            name=""
+          <Input
+            type="textarea"
+            rows={4}
             defaultValue={this.state.after_cmd}
             placeholder={lang.pref_after_cmd_placeholder}
             onChange={(e) => this.updateAfterCmd(e.target.value)}
@@ -188,9 +184,9 @@ export default class PreferencesPrompt extends React.Component {
       <div className="ln">
         <div className="title">{lang.auto_launch}</div>
         <div className="cnt">
-          <input type="checkbox" name=""
-                 defaultChecked={this.state.auto_launch}
-                 onChange={(e) => this.updateAutoLaunch(e.target.checked)}
+          <Checkbox
+            defaultValue={this.state.auto_launch}
+            onChange={(e) => this.updateAutoLaunch(e.target.checked)}
           />
         </div>
       </div>
@@ -204,9 +200,9 @@ export default class PreferencesPrompt extends React.Component {
       <div className="ln">
         <div className="title">{lang.hide_at_launch}</div>
         <div className="cnt">
-          <input type="checkbox" name=""
-                 defaultChecked={this.state.hide_at_launch}
-                 onChange={(e) => this.updateMinimizeAtLaunch(e.target.checked)}
+          <Checkbox
+            defaultValue={this.state.hide_at_launch}
+            onChange={(e) => this.updateMinimizeAtLaunch(e.target.checked)}
           />
         </div>
       </div>
@@ -243,12 +239,13 @@ export default class PreferencesPrompt extends React.Component {
     return (
       <MyFrame
         show={this.state.show}
-        head={lang.preferences}
+        title={lang.preferences}
         body={this.body()}
         onOK={() => this.onOK()}
         onCancel={() => this.onCancel()}
         cancel_title={lang.cancel}
-        ok_title={lang.set_and_relaunch_app}
+        okText={lang.set_and_relaunch_app}
+        lang={lang}
       />
     )
   }

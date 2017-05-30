@@ -60,7 +60,7 @@ export default class MyFrame extends React.Component {
     if (!this.props.show) {
       return null
     }
-    let {show, title, body, lang, width} = this.props
+    let {show, title, body, lang, width, okText} = this.props
 
     return (
       <Modal
@@ -75,7 +75,7 @@ export default class MyFrame extends React.Component {
             {lang.cancel}
           </Button>,
           <Button key="submit" type="primary" size="large" loading={false} onClick={this.onOK.bind(this)}>
-            {lang.ok}
+            {okText || lang.ok}
           </Button>
         ]}
       >
