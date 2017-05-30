@@ -6,15 +6,14 @@
 'use strict'
 
 import React from 'react'
+import { notification } from 'antd'
 import Panel from './panel/panel'
 import Content from './content/content'
 import SudoPrompt from './frame/sudo'
 import EditPrompt from './frame/edit'
 import PreferencesPrompt from './frame/preferences'
-import NotificationSystem from 'react-notification-system'
 import Agent from './Agent'
 import { reg as events_reg } from './events/index'
-import notificationStyle from './misc/notificationStyle'
 
 import './App.less'
 
@@ -31,7 +30,6 @@ export default class App extends React.Component {
     }
 
     this.is_dragging = false
-    this._notificationSystem = null
     this.loadHosts()
 
     Agent.pact('getPref')
@@ -58,12 +56,11 @@ export default class App extends React.Component {
 
     Agent.on('err', e => {
       console.log(e)
-      this._notificationSystem.addNotification({
-        title: e.title,
-        message: e.content,
-        position: 'tr',
-        autoDismiss: 10,
-        level: 'error'
+      notification.error({
+        message: e.title,
+        description: e.content,
+        duration: 10,
+        style: {backgroundColor: '#fff0f0'}
       })
     })
 
@@ -154,7 +151,6 @@ export default class App extends React.Component {
   }
 
   componentDidMount () {
-    this._notificationSystem = this.refs.notificationSystem
 
     window.addEventListener('keydown', (e) => {
       if (e.keyCode === 27) {
@@ -171,7 +167,6 @@ export default class App extends React.Component {
     let current = this.state.current
     return (
       <div id="app" className={'platform-' + Agent.platform}>
-        <NotificationSystem ref="notificationSystem" style={notificationStyle}/>
         <SudoPrompt lang={this.state.lang}/>
         <EditPrompt
           lang={this.state.lang}
