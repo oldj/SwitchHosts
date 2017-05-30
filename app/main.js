@@ -43,7 +43,7 @@ function createWindow () {
   app.mainWindow = mainWindow
 
   // and load the index.html of the app.
-  mainWindow.loadURL(`file://${__dirname}/index.html?lang=${user_language}`)
+  mainWindow.loadURL(`file://${__dirname}/ui/index.html?lang=${user_language}`)
 
   if (process.env && process.env.ENV === 'dev') {
     // Open the DevTools.

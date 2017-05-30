@@ -60,17 +60,21 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
 
 ### 构建及运行
 
+ - 在 `./` 目录下，运行 `npm run dll` 命令，构建公共文件（仅在第一次构建或公共库发生改变时执行）；
  - 在 `./` 目录下，运行 `npm run build` 命令，构建所需文件；
  - 在 `./` 目录下，运行 `npm start` 命令，即可运行程序。
 
     ```bash
+    # create dll file
+    npm run dll
+ 
     # build
     npm run build
 
     # start
     npm start
 
-    # start in developer mode
+    # or start in developer mode
     npm run dev
     ```
 
