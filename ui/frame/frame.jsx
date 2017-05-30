@@ -65,7 +65,7 @@ export default class MyFrame extends React.Component {
     return (
       <Modal
         visible={show}
-        title={title}
+        title={(<h3>{title}</h3>)}
         onOk={this.onOK.bind(this)}
         onCancel={this.onCancel.bind(this)}
         wrapClassName="frame"
