@@ -51,6 +51,13 @@ export default class SearchBar extends React.Component {
     this.refs.keyword.focus()
   }
 
+  onBlur () {
+    if (!this.state.keyword) {
+      this.clearSearch()
+      this.onCancel()
+    }
+  }
+
   doSearch (kw) {
     this.setState({
       keyword: kw
@@ -62,7 +69,7 @@ export default class SearchBar extends React.Component {
     }, 300)
   }
 
-  static onCancel () {
+  onCancel () {
     Agent.emit('cancel_search')
   }
 
@@ -78,8 +85,9 @@ export default class SearchBar extends React.Component {
           //placeholder="keyword"
           suffix={this.state.keyword ? <Icon type="close-circle" onClick={this.emptySearch.bind(this)}/> : null}
           value={this.state.keyword}
+          onBlur={this.onBlur.bind(this)}
           onChange={(e) => this.doSearch(e.target.value)}
-          onKeyDown={(e) => (e.keyCode === 27 && SearchBar.onCancel())}
+          onKeyDown={(e) => (e.keyCode === 27 && this.onCancel())}
         />
       </div>
     )
