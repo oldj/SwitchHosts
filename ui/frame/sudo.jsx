@@ -34,16 +34,16 @@ export default class SudoPrompt extends React.Component {
   }
 
   onOK () {
-    let pswd = this.refs.pswd.value
+    let {pswd} = this.state
     if (!pswd) {
-      let el = this.refs.body
-      el && el.querySelector('input').focus()
+      //let el = body
+      //el && el.querySelector('input').focus()
+      this.refs.pswd.focus()
       return
     }
 
     this.setState({
-      show: false,
-      pswd: pswd
+      show: false
     })
 
     Agent.emit('sudo_pswd', pswd)
@@ -72,6 +72,7 @@ export default class SudoPrompt extends React.Component {
               type="password"
               ref="pswd"
               onKeyDown={e => (e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
+              onChange={e => this.setState({pswd: e.target.value})}
             />
           </div>
         </div>
