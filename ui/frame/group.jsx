@@ -6,6 +6,7 @@
 'use strict'
 
 import React from 'react'
+import { Icon } from 'antd'
 import classnames from 'classnames'
 import Sortable from 'sortablejs'
 import listToArray from 'wheel-js/src/common/listToArray'
@@ -113,7 +114,7 @@ export default class Group extends React.Component {
     return (
       <div id="hosts-group">
         {this.makeList()}
-        <div className="arrow"/>
+        <Icon className="arrow" type="arrow-right" />
         {this.currentList()}
       </div>
     )
