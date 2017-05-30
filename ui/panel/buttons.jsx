@@ -84,6 +84,8 @@ export default class Buttons extends React.Component {
         this.btnSearch()
       }
     })
+
+    Agent.on('cancel_search', () => this.setState({search_on: false}))
   }
 
   render () {
