@@ -25,7 +25,7 @@ export default class Content extends React.Component {
   }
 
   render () {
-    let {current, lang} = this.props
+    let {current, readonly, lang} = this.props
 
     return (
       <div id="sh-content">
@@ -36,19 +36,19 @@ export default class Content extends React.Component {
               show: this.state.is_loading
             })}
           >loading...</span>
-          <Icon
-            type="global"
-            className={classnames({
-              show: current.where === 'remote',
-              iconfont: 1,
-              'icon-earth': 1
-            })}
-            title={lang.remote_hosts}
-          />
+          {/*<Icon*/}
+            {/*type="global"*/}
+            {/*className={classnames({*/}
+              {/*show: current.where === 'remote',*/}
+              {/*iconfont: 1,*/}
+              {/*'icon-earth': 1*/}
+            {/*})}*/}
+            {/*title={lang.remote_hosts}*/}
+          {/*/>*/}
           <Icon
             type="lock"
             className={classnames({
-              show: this.props.readonly,
+              show: readonly,
               iconfont: 1,
               'icon-lock2': 1
             })}
@@ -57,11 +57,11 @@ export default class Content extends React.Component {
         </div>
         <div className={classnames({
           errorMessage: 1,
-          show: !!this.props.current.error
-        })}>{this.props.current.error}</div>
+          show: !!current.error
+        })}>{current.error}</div>
         <Editor
-          readonly={this.props.readonly}
-          code={this.props.current.content || ''}
+          readonly={readonly}
+          code={current.content || ''}
           setValue={this.setValue.bind(this)}
         />
       </div>
