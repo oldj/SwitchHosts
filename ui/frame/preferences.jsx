@@ -42,6 +42,7 @@ export default class PreferencesPrompt extends React.Component {
       Agent.pact('getPref')
         .then(pref => {
           this.setState(Object.assign({}, pref, {show: true}))
+          console.log(pref)
         })
     })
 
@@ -185,7 +186,7 @@ export default class PreferencesPrompt extends React.Component {
         <div className="title">{lang.auto_launch}</div>
         <div className="cnt">
           <Checkbox
-            defaultValue={this.state.auto_launch}
+            value={this.state.auto_launch}
             onChange={(e) => this.updateAutoLaunch(e.target.checked)}
           />
         </div>
@@ -201,7 +202,7 @@ export default class PreferencesPrompt extends React.Component {
         <div className="title">{lang.hide_at_launch}</div>
         <div className="cnt">
           <Checkbox
-            defaultValue={this.state.hide_at_launch}
+            checked={this.state.hide_at_launch}
             onChange={(e) => this.updateMinimizeAtLaunch(e.target.checked)}
           />
         </div>
