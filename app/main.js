@@ -16,8 +16,9 @@ const pref = require('./server/pref')
 let user_language = pref.get('user_language') || (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
 global.user_language = user_language
 
+require('./server/Server')
+
 const tray = require('./menu/tray')
-const SHServer = require('./server/Server')
 const svr = require('./server/svr')
 const main_menu = require('./menu/main_menu')
 const checkUpdate = require('./server/checkUpdate')
@@ -38,6 +39,7 @@ function createWindow () {
     , minWidth: 400
     , minHeight: 250
     , fullscreenable: true
+    //, autoHideMenuBar: true
   })
   contents = mainWindow.webContents
   app.mainWindow = mainWindow
