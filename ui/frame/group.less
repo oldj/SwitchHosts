@@ -21,19 +21,21 @@
     text-align: center;
     transform: translate(-50%, -50%);
 
-    &::after {
-      content: '→';
-    }
+    //&::after {
+    //  content: '→';
+    //}
   }
 
   .hosts-group-list {
     height: @h;
     overflow: auto;
     border: solid 1px #ccc;
+    border-radius: 2px;
 
     .hosts-item {
       cursor: move;
       padding: 2px 6px;
+      line-height: 24px;
 
       &:hover {
         background: #f5f5f5;

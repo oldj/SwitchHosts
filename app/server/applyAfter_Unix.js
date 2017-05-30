@@ -32,7 +32,13 @@ killall -HUP mDNSResponder
   fs.writeFileSync(cmd_fn, cmd, 'utf-8');
 
   exec(`echo '${sudo_pswd}' | sudo -S /bin/sh ${cmd_fn}`, function (error, stdout, stderr) {
-    fs.unlink(cmd_fn)
+    if (fs.existsSync(cmd_fn)) {
+      try {
+        fs.unlink(cmd_fn)
+      } catch (e) {
+        alert(e.message)
+      }
+    }
 
     // command output is in stdout
     if (error) {

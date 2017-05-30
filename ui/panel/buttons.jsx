@@ -6,6 +6,7 @@
 'use strict'
 
 import React from 'react'
+import { Icon } from 'antd'
 import classnames from 'classnames'
 import Agent from '../Agent'
 import './buttons.less'
@@ -93,14 +94,16 @@ export default class Buttons extends React.Component {
             className="btn-add"
             href="#"
             onClick={() => Buttons.btnAdd()}
-          >+</a>
+          >
+            <Icon type="plus" className="iconfont" />
+          </a>
         </div>
 
         <div className="right">
-          <i
+          <Icon
+            type="search"
             className={classnames({
               iconfont: 1,
-              'icon-search': 1,
               'on': this.state.search_on
             })}
             onClick={() => this.btnSearch()}

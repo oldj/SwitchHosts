@@ -6,6 +6,7 @@
 'use strict'
 
 import React from 'react'
+import { Input, Icon } from 'antd'
 import Agent from '../Agent'
 import './searchbar.less'
 
@@ -44,6 +45,12 @@ export default class SearchBar extends React.Component {
     Agent.emit('search', '')
   }
 
+  emptySearch () {
+    this.setState({keyword: ''})
+    Agent.emit('search', '')
+    this.refs.keyword.focus()
+  }
+
   doSearch (kw) {
     this.setState({
       keyword: kw
@@ -65,10 +72,11 @@ export default class SearchBar extends React.Component {
     }
     return (
       <div id="sh-searchbar">
-        <input
+        <Input
           ref="keyword"
-          type="text"
-          placeholder="keyword"
+          size="large"
+          //placeholder="keyword"
+          suffix={this.state.keyword ? <Icon type="close-circle" onClick={this.emptySearch.bind(this)}/> : null}
           value={this.state.keyword}
           onChange={(e) => this.doSearch(e.target.value)}
           onKeyDown={(e) => (e.keyCode === 27 && SearchBar.onCancel())}
