@@ -60,7 +60,7 @@ export default class MyFrame extends React.Component {
     if (!this.props.show) {
       return null
     }
-    let {show, title, body, lang} = this.props
+    let {show, title, body, lang, width} = this.props
 
     return (
       <Modal
@@ -69,6 +69,7 @@ export default class MyFrame extends React.Component {
         onOk={this.onOK.bind(this)}
         onCancel={this.onCancel.bind(this)}
         wrapClassName="frame"
+        width={width}
         footer={[
           <Button key="back" size="large" onClick={this.onCancel.bind(this)}>
             {lang.cancel}
@@ -80,9 +81,9 @@ export default class MyFrame extends React.Component {
       >
         <div className="prompt-body">{body}</div>
         {/*<div className="prompt">*/}
-          {/*<div className="head">{this.props.head}</div>*/}
-          {/*<div className="body">{this.props.body}</div>*/}
-          {/*<div className="foot">{this.renderFootButtons()}</div>*/}
+        {/*<div className="head">{this.props.head}</div>*/}
+        {/*<div className="body">{this.props.body}</div>*/}
+        {/*<div className="foot">{this.renderFootButtons()}</div>*/}
         {/*</div>*/}
       </Modal>
     )

@@ -6,6 +6,7 @@
 'use strict'
 
 import React from 'react'
+import {Input} from 'antd'
 import Agent from '../Agent'
 import MyFrame from './frame'
 import './sudo.less'
@@ -67,11 +68,10 @@ export default class SudoPrompt extends React.Component {
         <div className="ln">
           <div className="title">{lang.sudo_pswd}</div>
           <div className="cnt">
-            <input
+            <Input
               type="password"
               ref="pswd"
-              onKeyDown={e => (e.keyCode === 13 && this.onOK() ||
-                                 e.keyCode === 27 && this.onCancel())}
+              onKeyDown={e => (e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
             />
           </div>
         </div>
@@ -84,11 +84,12 @@ export default class SudoPrompt extends React.Component {
     return (
       <MyFrame
         show={this.state.show}
-        head={lang.input_sudo_pswd}
+        title={lang.input_sudo_pswd}
         body={this.body()}
         onOK={() => this.onOK()}
         onCancel={() => this.onCancel()}
         lang={lang}
+        width="400"
       />
     )
   }
