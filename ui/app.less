@@ -30,5 +30,8 @@ a {
 /**
  * 把 iconfont 地址改为本地，否则总是会从 alicdn 上读取
  * 参见：https://github.com/ant-design/antd-init/tree/master/examples/local-iconfont
+ *
+ * 注意，可能需要先执行 `npm run _ln` 命令，将对应的 iconfont 目录链接到 node_modules 目录下，否则 .less 文件编译时可能会
+ * 出现找不到 iconfont 文件的错误。
  */
 @icon-url: "./iconfont/iconfont";
