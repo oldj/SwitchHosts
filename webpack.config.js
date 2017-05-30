@@ -12,12 +12,12 @@ const version = require('./app/version').version.join('.')
 
 module.exports = {
   entry: {
-    app: './ui/index.jsx',
-    vendor: ['react', 'antd']
+    app: './ui/index.jsx'
+    //, vendor: ['react', 'antd']
   },
   devtool: 'source-map',
   output: {
-    path: path.join(__dirname, 'app', 'static')
+    path: path.join(__dirname, 'app', 'ui')
     , filename: 'bundle.js'
     , sourceMapFilename: 'bundle.js.map'
   },
@@ -49,7 +49,7 @@ module.exports = {
         NODE_ENV: JSON.stringify('production')
       }
     })
-    , new webpack.optimize.CommonsChunkPlugin({name: 'vendor', filename: 'common.js'})
+    //, new webpack.optimize.CommonsChunkPlugin({name: 'vendor', filename: 'common.js'})
     , new webpack.optimize.UglifyJsPlugin({
       sourceMap: true,
       compress: {
@@ -59,6 +59,10 @@ module.exports = {
       , output: {
         comments: false
       }
+    })
+    , new webpack.DllReferencePlugin({
+      context: __dirname,
+      manifest: require('./tmp/manifest.json')
     })
     , new webpack.IgnorePlugin(new RegExp('^(electron|fs|path)$'))
     , new webpack.BannerPlugin(`SwitchHosts! [file] v${version}, ${moment().format('YYYY-MM-DD HH:mm:ss')}`)

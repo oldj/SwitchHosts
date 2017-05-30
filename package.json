@@ -7,6 +7,7 @@
     "_ln": "./scripts/ln.sh",
     "test": "nyc ava",
     "start": "electron app",
+    "dll": "webpack --config scripts/webpack.dll.js --progress --profile --colors",
     "dev": "ENV=dev electron app",
     "build": "gulp ver && webpack --progress --profile --colors",
     "pack": "gulp pack",
