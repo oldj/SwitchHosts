@@ -3,7 +3,7 @@
 Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)
 
 
-这是一个用于快速切换 hosts 文件的小程序，基于 [Electron](http://electron.atom.io/) 开发，同时使用了 [React](https://facebook.github.io/react/) 以及 [CodeMirror](http://codemirror.net/) 等框架/库。
+这是一个用于快速切换 hosts 文件的小程序，基于 [Electron](http://electron.atom.io/) 开发，同时使用了 [React](https://facebook.github.io/react/)、[Ant Design](https://ant.design) 以及 [CodeMirror](http://codemirror.net/) 等框架/库。
 
 ## 截图
 
