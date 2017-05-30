@@ -6,7 +6,7 @@
   left: 0;
   bottom: 30px;
   background: @bg_left_search;
-  padding: 6px 20px 5px 18px;
+  padding: 3px 10px 5px 10px;
   border-top: solid 1px @bg_left * 0.9;
 
   input {
@@ -15,5 +15,14 @@
     outline: 0;
     color: #fff;
     font-size: 13px;
+
+    &::placeholder {
+      color: #333;
+    }
+  }
+
+  i {
+    color: @font_color_left;
+    cursor: pointer;
   }
 }
