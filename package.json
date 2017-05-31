@@ -8,7 +8,7 @@
     "test": "nyc ava",
     "start": "electron app",
     "dll": "webpack --config scripts/webpack.dll.js --progress --profile --colors",
-    "dev": "ENV=dev electron app",
+    "dev": "cross-env ENV=dev electron app",
     "build": "gulp ver && webpack --progress --profile --colors",
     "pack": "gulp pack",
     "pack-mac": "gulp pack --platform=macOS",
@@ -52,6 +52,7 @@
     "codemirror": "^5.25.0",
     "connect-history-api-fallback": "^1.3.0",
     "copy-webpack-plugin": "^4.0.1",
+    "cross-env": "^5.0.0",
     "css-loader": "^0.26.1",
     "electron": "^1.6.2",
     "eslint": "^3.14.1",
@@ -98,16 +99,29 @@
     "yargs": "^6.5.0"
   },
   "ava": {
-    "files": ["src/**/*.ava.js", "test/*.js", "!**/node_modules/**/*.*"],
-    "source": ["**/*.{js,jsx}", "!dist/**/*"],
+    "files": [
+      "src/**/*.ava.js",
+      "test/*.js",
+      "!**/node_modules/**/*.*"
+    ],
+    "source": [
+      "**/*.{js,jsx}",
+      "!dist/**/*"
+    ],
     "match": [],
     "concurrency": 5,
     "failFast": true,
     "tap": true,
     "powerAssert": false,
-    "require": ["babel-polyfill", "babel-register"],
+    "require": [
+      "babel-polyfill",
+      "babel-register"
+    ],
     "babel": {
-      "presets": ["latest", "stage-0"]
+      "presets": [
+        "latest",
+        "stage-0"
+      ]
     }
   }
 }
