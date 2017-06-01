@@ -17,6 +17,7 @@ exports.content = {
   , check_update_err: 'Something went wrong while checking updates, please try again later. :-('
   , check_update_found: 'New version ${0} is avaliable, download it now?'
   , check_update_nofound: 'Current version ${0} is the latest version.'
+  , close: 'Close'
   , comment: 'Comment'
   , confirm_del: 'Are you sure you want to delete this hosts?'
   , confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.'

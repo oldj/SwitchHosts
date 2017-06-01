@@ -11,6 +11,7 @@ import Panel from './panel/panel'
 import Content from './content/content'
 import SudoPrompt from './frame/sudo'
 import EditPrompt from './frame/edit'
+import About from './about/About'
 import PreferencesPrompt from './frame/preferences'
 import Agent from './Agent'
 import { reg as events_reg } from './events/index'
@@ -191,6 +192,7 @@ export default class App extends React.Component {
           setHostsContent={this.setHostsContent.bind(this)}
           lang={this.state.lang}
         />
+        <About lang={this.state.lang}/>
       </div>
     )
   }
