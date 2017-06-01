@@ -17,6 +17,7 @@ exports.content = {
   , check_update_err: '检查更新出错，请稍后再试。:-('
   , check_update_found: '发现新版本 ${0}，前往下载？'
   , check_update_nofound: '当前版本 ${0} 已是最新版本。'
+  , close: '关闭'
   , comment: '注释'
   , confirm_del: '确定要删除此 hosts 方案吗？'
   , confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。'

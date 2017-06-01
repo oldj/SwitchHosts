@@ -210,7 +210,10 @@ function doInit (app, lang) {
       submenu: [
         {
           label: lang.menu_about,
-          role: 'about'
+          //role: 'about',
+          click: () => {
+            svr.broadcast('show-about')
+          }
         }, {
           type: 'separator'
         },
@@ -284,14 +287,9 @@ function doInit (app, lang) {
     })
     template[0].submenu.unshift({
       label: `${lang.menu_about} ${name}`,
-      role: 'about',
+      //role: 'about',
       click: () => {
-        dialog.showMessageBox({
-          type: 'info',
-          buttons: [],
-          title: lang.menu_about,
-          message: `${name} v${version.slice(0, 3).join('.')} (${version[3]})`
-        })
+        svr.broadcast('show-about')
       }
     })
 
