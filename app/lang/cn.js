@@ -7,6 +7,7 @@
 
 exports.content = {
   _lang_name: '简体中文'
+  , acknowledgement: '特别感谢'
   , add: '添加'
   , add_hosts: '添加 hosts 规则'
   , auto_launch: '随系统一起启动'
@@ -88,6 +89,7 @@ exports.content = {
   , set_and_relaunch_app: '确定并重启程序'
   , should_restart_after_change_language: '修改语言后需要重启应用方可生效。'
   , show_dock_icon: '显示 Dock 图标'
+  , source_code: '源码'
   , sudo_pswd: '密码'
   , sys_hosts_title: '系统 Hosts'
   , tmp_clean: '临时去掉所有绑定'

@@ -7,6 +7,7 @@
 
 exports.content = {
   _lang_name: 'English'
+  , acknowledgement: 'Acknowledgement'
   , add: 'Add'
   , add_hosts: 'Add new rules'
   , auto_launch: 'Run at login'
@@ -88,6 +89,7 @@ exports.content = {
   , set_and_relaunch_app: 'Set and Relaunch'
   , should_restart_after_change_language: 'Relaunch to enable the new language interface.'
   , show_dock_icon: 'Show Dock Icon'
+  , source_code: 'Source Code'
   , sudo_pswd: 'Password'
   , sys_hosts_title: 'System Hosts'
   , tmp_clean: 'Temporarily turn off all rules.'
