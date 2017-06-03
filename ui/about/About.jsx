@@ -30,6 +30,15 @@ export default class About extends React.Component {
   show () {
     this.setState({
       visible: true
+    }, () => {
+      let links = this.refs.content.querySelectorAll('a')
+      links = Array.from(links)
+      links.map(a => {
+        a.onclick = () => {
+          this.openUrl(a.href)
+          return false
+        }
+      })
     })
   }
 
@@ -40,15 +49,6 @@ export default class About extends React.Component {
   componentDidMount () {
     Agent.on('show-about', () => {
       this.show()
-    })
-
-    let links = this.refs.content.querySelectorAll('a')
-    links = Array.from(links)
-    links.map(a => {
-      a.onclick = () => {
-        this.openUrl(a.href)
-        return false
-      }
     })
   }
 

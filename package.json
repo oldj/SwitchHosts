@@ -15,7 +15,7 @@
     "pack-win": "gulp pack --platform=win64",
     "pack-win32": "gulp pack --platform=win32",
     "zip": "gulp zip",
-    "make": "webpack -p && gulp pack && gulp zip"
+    "make": "webpack -p --progress && gulp pack && gulp zip"
   },
   "repository": {
     "type": "git",
