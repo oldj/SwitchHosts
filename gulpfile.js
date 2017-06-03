@@ -11,7 +11,7 @@
  * 也可手动从 https://github.com/electron/electron/releases 下载最新版本，放到 ~/.electron 目录下
  * 淘宝镜像：https://npm.taobao.org/mirrors/electron/
  */
-const ELECTRON_VERSION = '1.6.7'
+const ELECTRON_VERSION = '1.6.10'
 
 const fs = require('fs')
 const path = require('path')
@@ -61,7 +61,6 @@ gulp.task('pack', (done) => {
   pack.macOS = `
 # for macOS
 electron-packager ./app 'SwitchHosts!' --platform=darwin --arch=x64 --electron-version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.icns --ignore=node_modules/.bin --ignore=.git --ignore=dist --ignore=node_modules/electron-* --out=dist --app-version=${v1} --build-version=${v2}
-cp ./assets/Credits.rtf dist/SwitchHosts\!-darwin-x64/SwitchHosts\!.app/Contents/Resources/en.lproj
 `
   pack.win64 = `
 # for windows x64

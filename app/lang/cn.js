@@ -7,6 +7,7 @@
 
 exports.content = {
   _lang_name: '简体中文'
+  , acknowledgement: '特别感谢'
   , add: '添加'
   , add_hosts: '添加 hosts 规则'
   , auto_launch: '随系统一起启动'
@@ -17,6 +18,7 @@ exports.content = {
   , check_update_err: '检查更新出错，请稍后再试。:-('
   , check_update_found: '发现新版本 ${0}，前往下载？'
   , check_update_nofound: '当前版本 ${0} 已是最新版本。'
+  , close: '关闭'
   , comment: '注释'
   , confirm_del: '确定要删除此 hosts 方案吗？'
   , confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。'
@@ -87,6 +89,7 @@ exports.content = {
   , set_and_relaunch_app: '确定并重启程序'
   , should_restart_after_change_language: '修改语言后需要重启应用方可生效。'
   , show_dock_icon: '显示 Dock 图标'
+  , source_code: '源码'
   , sudo_pswd: '密码'
   , sys_hosts_title: '系统 Hosts'
   , tmp_clean: '临时去掉所有绑定'
