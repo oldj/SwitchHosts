@@ -7,6 +7,7 @@
 
 exports.content = {
   _lang_name: 'English'
+  , acknowledgement: 'Acknowledgement'
   , add: 'Add'
   , add_hosts: 'Add new rules'
   , auto_launch: 'Run at login'
@@ -17,6 +18,7 @@ exports.content = {
   , check_update_err: 'Something went wrong while checking updates, please try again later. :-('
   , check_update_found: 'New version ${0} is avaliable, download it now?'
   , check_update_nofound: 'Current version ${0} is the latest version.'
+  , close: 'Close'
   , comment: 'Comment'
   , confirm_del: 'Are you sure you want to delete this hosts?'
   , confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.'
@@ -87,6 +89,7 @@ exports.content = {
   , set_and_relaunch_app: 'Set and Relaunch'
   , should_restart_after_change_language: 'Relaunch to enable the new language interface.'
   , show_dock_icon: 'Show Dock Icon'
+  , source_code: 'Source Code'
   , sudo_pswd: 'Password'
   , sys_hosts_title: 'System Hosts'
   , tmp_clean: 'Temporarily turn off all rules.'
