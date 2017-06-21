@@ -121,9 +121,9 @@ export default class PreferencesPrompt extends React.Component {
 
     return (
       <div className="ln">
-        <div className="title">{lang.language}</div>
+        <div>{lang.language}</div>
         <div className="inform">{lang.should_restart_after_change_language}</div>
-        <div className="cnt">
+        <div>
           <Select
             value={this.state.user_language || ''}
             onChange={v => this.updateLangKey(v)}
@@ -140,8 +140,8 @@ export default class PreferencesPrompt extends React.Component {
 
     return (
       <div className="ln">
-        <div className="title">{lang.pref_choice_mode}</div>
-        <div className="cnt">
+        <div>{lang.pref_choice_mode}</div>
+        <div>
           <RadioGroup
             onChange={e => this.updateChoiceMode(e.target.value)}
             value={this.state.choice_mode}
@@ -159,8 +159,8 @@ export default class PreferencesPrompt extends React.Component {
 
     return (
       <div className="ln">
-        <div className="title">{lang.pref_after_cmd}</div>
-        <div className="cnt">
+        <div>{lang.pref_after_cmd}</div>
+        <div>
           <div className="inform">{lang.pref_after_cmd_info}</div>
           <Input
             type="textarea"
@@ -209,9 +209,9 @@ export default class PreferencesPrompt extends React.Component {
 
     return (
       <div className="ln">
-        <div className="title">{lang.pref_tab_usage_data_title}</div>
-        <div className="cnt">
-          <div className="inform">{lang.pref_tab_usage_data_desc}</div>
+        <div>{lang.pref_tab_usage_data_title}</div>
+        <div className="inform">{lang.pref_tab_usage_data_desc}</div>
+        <div>
           <Checkbox
             checked={this.state.send_usage_data}
             onChange={(e) => this.setState({send_usage_data: e.target.checked})}
