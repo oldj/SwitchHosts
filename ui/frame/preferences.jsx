@@ -13,6 +13,8 @@ import classnames from 'classnames'
 import Agent from '../Agent'
 import { version as current_version } from '../../app/version'
 import formatVersion from '../../app/libs/formatVersion'
+import CodeMirror from 'react-codemirror'
+import 'codemirror/mode/shell/shell'
 import './preferences.less'
 
 const RadioGroup = Radio.Group
@@ -156,18 +158,27 @@ export default class PreferencesPrompt extends React.Component {
 
   prefAfterCmd () {
     let {lang} = this.props
+    let options = {
+      mode: 'shell'
+    }
 
     return (
       <div className="ln">
         <div>{lang.pref_after_cmd}</div>
         <div>
           <div className="inform">{lang.pref_after_cmd_info}</div>
-          <Input
-            type="textarea"
-            rows={8}
-            defaultValue={this.state.after_cmd}
-            placeholder={lang.pref_after_cmd_placeholder}
-            onChange={(e) => this.updateAfterCmd(e.target.value)}
+          {/*<Input*/}
+            {/*type="textarea"*/}
+            {/*rows={8}*/}
+            {/*defaultValue={this.state.after_cmd}*/}
+            {/*placeholder={lang.pref_after_cmd_placeholder}*/}
+            {/*onChange={(e) => this.updateAfterCmd(e.target.value)}*/}
+          {/*/>*/}
+          <CodeMirror
+            className="pref-cm"
+            value={this.state.after_cmd}
+            onChange={v => this.updateAfterCmd(v)}
+            options={options}
           />
         </div>
       </div>
@@ -229,6 +240,7 @@ export default class PreferencesPrompt extends React.Component {
 
   body () {
     let {lang} = this.props
+    let height = 240
 
     return (
       <div ref="body">
@@ -246,18 +258,18 @@ export default class PreferencesPrompt extends React.Component {
         <Tabs
           defaultActiveKey="1"
           tabPosition="left"
-          style={{minHeight: 240}}
+          style={{minHeight: height}}
         >
-          <TabPane tab={lang.pref_tab_general} key="1">
+          <TabPane tab={lang.pref_tab_general} key="1" style={{height}}>
             {this.prefLanguage()}
             {this.prefChoiceMode()}
             {/*{this.prefAutoLaunch()}*/}
             {this.prefMinimizeAtLaunch()}
           </TabPane>
-          <TabPane tab={lang.pref_tab_custom_cmd} key="2">
+          <TabPane tab={lang.pref_tab_custom_cmd} key="2" style={{height}}>
             {this.prefAfterCmd()}
           </TabPane>
-          <TabPane tab={lang.pref_tab_advanced} key="3">
+          <TabPane tab={lang.pref_tab_advanced} key="3" style={{height}}>
             {this.prefAdvanced()}
           </TabPane>
         </Tabs>

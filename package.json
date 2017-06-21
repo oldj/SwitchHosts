@@ -83,6 +83,7 @@
     "ora": "^1.1.0",
     "ramda": "^0.24.1",
     "react": "^15.5.4",
+    "react-codemirror": "^1.0.0",
     "react-dom": "^15.5.4",
     "rimraf": "^2.6.0",
     "semver": "^5.3.0",
@@ -100,16 +101,29 @@
     "yargs": "^6.5.0"
   },
   "ava": {
-    "files": ["src/**/*.ava.js", "test/*.js", "!**/node_modules/**/*.*"],
-    "source": ["**/*.{js,jsx}", "!dist/**/*"],
+    "files": [
+      "src/**/*.ava.js",
+      "test/*.js",
+      "!**/node_modules/**/*.*"
+    ],
+    "source": [
+      "**/*.{js,jsx}",
+      "!dist/**/*"
+    ],
     "match": [],
     "concurrency": 5,
     "failFast": true,
     "tap": true,
     "powerAssert": false,
-    "require": ["babel-polyfill", "babel-register"],
+    "require": [
+      "babel-polyfill",
+      "babel-register"
+    ],
     "babel": {
-      "presets": ["latest", "stage-0"]
+      "presets": [
+        "latest",
+        "stage-0"
+      ]
     }
   }
 }
