@@ -1,3 +1,5 @@
+@import "../cfg.less";
+
 .frame {
   .current-version {
     float: right;
@@ -34,6 +36,11 @@
     .CodeMirror {
       height: 160px;
       line-height: 20px;
+      font-family: @font-editor;
+    }
+
+    .cm-s-default .cm-comment {
+      color: #090;
     }
   }
 }

@@ -11,7 +11,7 @@
  * 也可手动从 https://github.com/electron/electron/releases 下载最新版本，放到 ~/.electron 目录下
  * 淘宝镜像：https://npm.taobao.org/mirrors/electron/
  */
-const ELECTRON_VERSION = '1.6.10'
+const ELECTRON_VERSION = '1.6.11'
 
 const fs = require('fs')
 const path = require('path')

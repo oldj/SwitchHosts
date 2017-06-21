@@ -1,8 +1,15 @@
+@import "../cfg.less";
+
 #sh-editor {
   height: 100%;
-  font-family: Menlo, "Source Code Pro", Monaco, "Courier New", sans-serif;
+  font-family: @font-editor;
 
   // CodeMirror
+
+  .CodeMirror {
+    font-family: @font-editor;
+  }
+
   .cm-s-default .cm-comment {
     color: #090;
   }
