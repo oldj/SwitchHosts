@@ -7,11 +7,13 @@
 
 const request = require('request')
 const version = require('../../configs').version_full
+const getPref = require('./getPref')
 
 const url = 'http://lab.oldj.net/s.gif'
 const session_id = (new Date()).getTime() + ':' + Math.random()
 const queue = []
 let is_initialized = false
+let send_usage_data = null
 
 function log (actions) {
   let u = url + '?' + [
@@ -39,12 +41,26 @@ function send () {
   if (queue.length === 0) return
 
   let action = queue.splice(0).join(',')
-  log(action)
+  if (send_usage_data) {
+    log(action)
+  } else {
+    console.log('send_usage_data:false')
+  }
+}
+
+function initGetPrefCfg () {
+  return getPref()
+    .then(v => v.send_usage_data)
+    .then(v => {
+      send_usage_data = (v !== false)
+    })
 }
 
 function init () {
   if (is_initialized) return
   is_initialized = true
+
+  initGetPrefCfg()
 
   record('launch')
   //SH_event.on('toggle_host', () => {
