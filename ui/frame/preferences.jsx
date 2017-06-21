@@ -129,6 +129,7 @@ export default class PreferencesPrompt extends React.Component {
           <Select
             value={this.state.user_language || ''}
             onChange={v => this.updateLangKey(v)}
+            style={{minWidth: 120}}
           >
             {this.getLanguageOptions()}
           </Select>
