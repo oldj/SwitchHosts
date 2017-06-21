@@ -36,6 +36,7 @@
         line-height: @lh;
         padding: 2px 0;
         margin-bottom: 10px;
+        white-space: normal;
 
         .title {
           float: left;
@@ -45,11 +46,11 @@
         .cnt {
           margin-left: 100px;
           line-height: @lh;
-          //input[type=text] {
-          //  width: 240px;
-          //  outline: none;
-          //  padding: 4px 10px;
-          //}
+          input[type=text] {
+            width: 240px;
+            outline: none;
+            padding: 4px 10px;
+          }
           textarea {
             font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
           }
@@ -57,7 +58,8 @@
 
         .inform {
           color: #999;
-          line-height: @lh;
+          line-height: 20px;
+          margin-bottom: 5px;
         }
       }
 
