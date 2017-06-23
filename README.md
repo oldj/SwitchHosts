@@ -110,10 +110,10 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
 
 ### v3.3
 
- - 2017-04-01 代码重构，增加「分组」功能
- - 2017-04-03 支持通过 Alfred 快速切换（[下载 workflow](http://www.packal.org/workflow/switchhosts)）
  - 2017-05-30 引入 [Ant Design](https://ant.design) 重写部分 UI 组件
- 
+ - 2017-04-03 支持通过 Alfred 快速切换（[下载 workflow](http://www.packal.org/workflow/switchhosts)）
+ - 2017-04-01 代码重构，增加「分组」功能
+
 ### v3.2
 
  - 2016-09-06 使用 Electron 打包，增加 Windows 版[下载](https://github.com/oldj/SwitchHosts/releases)。
