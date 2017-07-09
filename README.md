@@ -106,7 +106,7 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
     npm run zip  # the zipped files will be in ./dist
     ```
 
-## 更新历史：
+## 更新历史
 
 ### v3.3
 
