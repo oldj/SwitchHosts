@@ -17,6 +17,11 @@ module.exports = (req, res) => {
   let is_single
   let lang
 
+  if (!id || !id.match(/^[\d\-]+$/)) {
+    res.end('bad id.')
+    return
+  }
+
   getPref()
     .then(pref => {
       is_single = pref.choice_mode === 'single'
