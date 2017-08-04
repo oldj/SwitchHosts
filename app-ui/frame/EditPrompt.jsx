@@ -6,13 +6,13 @@
 'use strict'
 
 import React from 'react'
-import MyFrame from './frame'
+import MyFrame from './MyFrame'
 import classnames from 'classnames'
 import { Icon, Input, Radio, Select } from 'antd'
-import Group from './group'
+import Group from './Group'
 import Agent from '../Agent'
 import makeId from '../../app/libs/make-id'
-import './edit.less'
+import './EditPrompt.less'
 
 const RadioButton = Radio.Button
 const RadioGroup = Radio.Group

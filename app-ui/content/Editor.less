@@ -1,11 +1,26 @@
 @import "../cfg.less";
 
-#sh-editor {
+.root {
   height: 100%;
   font-family: @font-editor;
 
   // CodeMirror
 
+  &.readonly {
+    :global {
+      .CodeMirror {
+        .CodeMirror-linenumber {
+          cursor: default;
+        }
+        .CodeMirror-cursors {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+:global {
   .CodeMirror {
     font-family: @font-editor;
   }
@@ -29,12 +44,4 @@
     cursor: pointer;
   }
 
-  &.readonly .CodeMirror {
-    .CodeMirror-linenumber {
-      cursor: default;
-    }
-    .CodeMirror-cursors {
-      display: none;
-    }
-  }
 }

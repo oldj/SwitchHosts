@@ -9,7 +9,7 @@ import React from 'react'
 import { Icon } from 'antd'
 import Sortable from 'sortablejs'
 import listToArray from 'wheel-js/src/common/listToArray'
-import './group.less'
+import './Group.less'
 
 export default class Group extends React.Component {
   constructor (props) {

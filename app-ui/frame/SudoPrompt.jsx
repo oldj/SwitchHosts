@@ -8,8 +8,8 @@
 import React from 'react'
 import {Input} from 'antd'
 import Agent from '../Agent'
-import MyFrame from './frame'
-import './sudo.less'
+import MyFrame from './MyFrame'
+import styles from './SudoPrompt.less'
 
 export default class SudoPrompt extends React.Component {
   constructor (props) {

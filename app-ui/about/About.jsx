@@ -8,9 +8,9 @@
 import React from 'react'
 import { Modal, Button } from 'antd'
 import Agent from '../Agent'
-import './About.less'
 import logo from '../../app/assets/logo@w512.png'
 import { version } from '../../app/version'
+import styles from './About.less'
 
 export default class About extends React.Component {
   constructor (props) {
@@ -67,18 +67,18 @@ export default class About extends React.Component {
           <Button key="back" size="large" onClick={this.hide.bind(this)}>{lang.close}</Button>
         ]}
       >
-        <div className="about-content">
-          <div className="logo">
+        <div>
+          <div className={styles.logo}>
             <img src={logo} alt=""/>
           </div>
-          <div className="content" ref="content">
+          <div className={styles.content} ref="content">
             <h2>SwitchHosts!</h2>
-            <div className="version">{ver}</div>
+            <div className={styles.version}>{ver}</div>
             <div>
               <a href="https://oldj.github.io/SwitchHosts/" target="_blank">{lang.homepage}</a>
               <a href="https://github.com/oldj/SwitchHosts" target="_blank">{lang.source_code}</a>
             </div>
-            <p className="br"/>
+            <p className={styles.br}/>
             <div>
               <h3>{lang.acknowledgement}:</h3>
               <div>
