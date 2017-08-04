@@ -7,12 +7,12 @@
 
 import React from 'react'
 import { notification } from 'antd'
-import Panel from './panel/panel'
-import Content from './content/content'
-import SudoPrompt from './frame/sudo'
-import EditPrompt from './frame/edit'
+import Panel from './panel/Panel'
+import Content from './content/Content'
+import SudoPrompt from './frame/SudoPrompt'
+import EditPrompt from './frame/EditPrompt'
 import About from './about/About'
-import PreferencesPrompt from './frame/preferences'
+import PreferencesPrompt from './frame/PreferencesPrompt'
 import Agent from './Agent'
 import { reg as events_reg } from './events/index'
 

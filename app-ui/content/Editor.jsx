@@ -13,7 +13,7 @@ import classnames from 'classnames'
 import m_kw from './kw'
 import Agent from '../Agent'
 import 'codemirror/lib/codemirror.css'
-import './editor.less'
+import styles from './Editor.less'
 
 import modeHosts from './cm_hl'
 modeHosts()
@@ -128,6 +128,7 @@ export default class Editor extends React.Component {
       <div
         id="sh-editor"
         className={classnames({
+          [styles.root]: 1,
           readonly: this.props.readonly
         })}>
                 <textarea

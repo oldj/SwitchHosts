@@ -32,7 +32,11 @@ module.exports = {
         use: ['babel-loader']
       }, {
         test: /\.less$/,
-        use: ['style-loader', 'css-loader', 'less-loader']
+        use: [
+          'style-loader',
+          'css-loader?minimize&modules&sourceMap&localIdentName=[name]--[local]--[hash:base64:5]',
+          'less-loader'
+        ]
       }, {
         test: /\.css$/,
         use: ['style-loader', 'css-loader']

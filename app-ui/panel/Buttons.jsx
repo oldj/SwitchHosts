@@ -9,7 +9,7 @@ import React from 'react'
 import { Icon } from 'antd'
 import classnames from 'classnames'
 import Agent from '../Agent'
-import './buttons.less'
+import styles from './Buttons.less'
 
 export default class Buttons extends React.Component {
   constructor (props) {
@@ -90,10 +90,10 @@ export default class Buttons extends React.Component {
 
   render () {
     return (
-      <div id="sh-buttons">
-        <div className="left">
+      <div id="sh-buttons" className={styles.root}>
+        <div className={styles.left}>
           <a
-            className="btn-add"
+            className={styles["btn-add"]}
             href="#"
             onClick={() => Buttons.btnAdd()}
           >
@@ -101,12 +101,12 @@ export default class Buttons extends React.Component {
           </a>
         </div>
 
-        <div className="right">
+        <div className={styles.right}>
           <Icon
             type="search"
             className={classnames({
               iconfont: 1,
-              'on': this.state.search_on
+              on: this.state.search_on
             })}
             onClick={() => this.btnSearch()}
           />

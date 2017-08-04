@@ -6,12 +6,12 @@
 'use strict'
 
 import React from 'react'
-import ListItem from './list-item'
+import ListItem from './ListItem'
 import Sortable from 'sortablejs'
 import listToArray from 'wheel-js/src/common/listToArray'
 import Agent from '../Agent'
-import {findPositions} from '../content/kw'
-import './list.less'
+import { findPositions } from '../content/kw'
+import styles from './List.less'
 
 export default class List extends React.Component {
 
@@ -30,7 +30,7 @@ export default class List extends React.Component {
   customItems () {
     let kw = this.state.kw
 
-    function match(kw, item) {
+    function match (kw, item) {
       return findPositions(kw, item.content).length > 0 || findPositions(kw, item.title).length > 0
     }
 
@@ -80,12 +80,12 @@ export default class List extends React.Component {
 
   render () {
     return (
-      <div id="sh-list">
+      <div id="sh-list" className={styles.root}>
         <ListItem
           data={this.props.sys_hosts}
           {...this.props}
           sys="1"/>
-        <div ref="items" className="custom-items">
+        <div ref="items" className={styles['custom-items']}>
           {this.customItems()}
         </div>
       </div>
