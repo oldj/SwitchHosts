@@ -12,7 +12,7 @@ const version = require('./app/version').version.join('.')
 
 module.exports = {
   entry: {
-    app: './ui/index.jsx'
+    app: './app-ui/index.jsx'
     //, vendor: ['react', 'antd']
   },
   devtool: 'source-map',
