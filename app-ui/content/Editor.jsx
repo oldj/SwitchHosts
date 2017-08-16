@@ -12,6 +12,7 @@ import 'codemirror/addon/comment/comment'
 import classnames from 'classnames'
 import m_kw from './kw'
 import Agent from '../Agent'
+import * as func from '../libs/search'
 import 'codemirror/lib/codemirror.css'
 import styles from './Editor.less'
 
@@ -25,28 +26,54 @@ export default class Editor extends React.Component {
 
     this.codemirror = null
 
-    this.marks = []
-    this.kw = ''
-
-    this.state = {}
-
-    Agent.on('search:kw', kw => {
-      this.kw = kw
-      this.highlightKeyword()
-    })
-  }
-
-  highlightKeyword () {
-    while (this.marks.length > 0) {
-      this.marks.shift().clear()
+    this.state = {
+      marks: [],
+      pos: [],
+      search_kw: ''
     }
 
-    let code = this.props.code
-    let pos = m_kw.findPositions(this.kw, code) || []
-    // this.codemirror.markText({line: 6, ch: 16}, {line: 6, ch: 22}, {className: 'cm-hl'});
+  }
 
-    pos.map((p) => {
-      this.marks.push(this.codemirror.markText(p[0], p[1], {className: 'cm-hl'}))
+  //highlightKeyword () {
+  //  while (this.marks.length > 0) {
+  //    this.marks.shift().clear()
+  //  }
+  //
+  //  let code = this.props.code
+  //  let pos = m_kw.findPositions(this.kw, code) || []
+  //  // this.codemirror.markText({line: 6, ch: 16}, {line: 6, ch: 22}, {className: 'cm-hl'});
+  //
+  //  pos.map((p) => {
+  //    this.marks.push(this.codemirror.markText(p[0], p[1], {className: 'cm-hl'}))
+  //  })
+  //}
+
+  doSearch () {
+    let {marks, search_kw} = this.state
+    while (marks.length > 0) {
+      marks.shift().clear()
+    }
+    let pos = []
+
+    let {code} = this.props
+    if (search_kw && code) {
+      pos = m_kw.findPositions(search_kw, code)
+      pos.map(p => {
+        marks.push(this.codemirror.markText(p[0], p[1], {className: 'cm-hl'}))
+      })
+    }
+
+    let doc = this.codemirror.getDoc()
+    let cursor = doc.getCursor()
+
+    this.setState({marks, pos}, () => {
+      Agent.emit('search:state', {
+        count: marks.length,
+        pos: pos.slice(0),
+        has_next: !!this.getNext(),
+        has_previous: !!this.getPrevious(),
+        cursor
+      })
     })
   }
 
@@ -65,6 +92,45 @@ export default class Editor extends React.Component {
     }, {
       line: line,
       cur: info.text.length
+    })
+  }
+
+  getNext () {
+    let doc = this.codemirror.getDoc()
+    let cursor = doc.getCursor()
+    let {pos} = this.state
+    let next_pos = func.getNextPos(pos, cursor)
+    //console.log(next_pos)
+    return next_pos
+  }
+
+  gotoNext () {
+    this.docSelect(this.getNext())
+  }
+
+  getPrevious () {
+    let doc = this.codemirror.getDoc()
+    let cursor = doc.getCursor()
+    let {pos} = this.state
+    let prev_pos = func.getPreviousPos(pos, cursor)
+    //console.log(next_pos)
+    return prev_pos
+  }
+
+  gotoPrevious () {
+    this.docSelect(this.getPrevious())
+  }
+
+  docSelect (pos) {
+    console.log(pos)
+    if (!pos || !Array.isArray(pos)) return
+    let doc = this.codemirror.getDoc()
+    doc.setCursor(pos[1])
+    doc.setSelection(pos[0], pos[1])
+
+    Agent.emit('search:state', {
+      has_next: !!this.getNext(),
+      has_previous: !!this.getPrevious()
     })
   }
 
@@ -108,6 +174,15 @@ export default class Editor extends React.Component {
     Agent.on('to_comment', () => {
       this.toComment()
     })
+
+    Agent.on('search:goto_previous', () => this.gotoPrevious())
+    Agent.on('search:goto_next', () => this.gotoNext())
+    Agent.on('editor:select', pos => this.docSelect(pos))
+
+    Agent.on('search:kw', kw => {
+      //this.highlightKeyword()
+      this.setState({search_kw: kw}, () => this.doSearch())
+    })
   }
 
   componentWillReceiveProps (next_props) {
@@ -119,7 +194,8 @@ export default class Editor extends React.Component {
     }
     cm.setOption('readOnly', next_props.readonly)
     setTimeout(() => {
-      this.highlightKeyword()
+      //this.highlightKeyword()
+      this.doSearch()
     }, 100)
   }
 
