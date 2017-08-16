@@ -62,7 +62,7 @@ export default class Buttons extends React.Component {
     this.setState({
       search_on: !this.state.search_on
     }, () => {
-      Agent.emit(this.state.search_on ? 'search_on' : 'search_off')
+      Agent.emit(this.state.search_on ? 'search:start' : 'search:end')
     })
   }
 

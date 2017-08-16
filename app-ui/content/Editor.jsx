@@ -30,7 +30,7 @@ export default class Editor extends React.Component {
 
     this.state = {}
 
-    Agent.on('search', (kw) => {
+    Agent.on('search:kw', kw => {
       this.kw = kw
       this.highlightKeyword()
     })
@@ -129,7 +129,8 @@ export default class Editor extends React.Component {
         id="sh-editor"
         className={classnames({
           [styles.root]: 1,
-          readonly: this.props.readonly
+          readonly: this.props.readonly,
+          [styles.show_search]: this.props.show_search
         })}>
                 <textarea
                   ref={(c) => this.cnt_node = c}

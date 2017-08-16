@@ -26,20 +26,23 @@ export default class SearchBar extends React.Component {
   }
 
   gotoPrevious () {
-    Agent.xemit('search:goto_previous')
+    Agent.emit('search:goto_previous')
   }
 
   gotoNext () {
-    Agent.xemit('search:goto_next')
+    Agent.emit('search:goto_next')
   }
 
   doSearch () {
-    Agent.xemit('search:kw', this.state.kw)
+    clearTimeout(this._t)
+    this._t = setTimeout(() => {
+      Agent.emit('search:kw', this.state.kw)
+    }, 300)
   }
 
   searchEnd () {
-    Agent.xemit('search:kw', '')
-    Agent.xemit('search:end')
+    Agent.emit('search:kw', '')
+    Agent.emit('search:end')
     this.setState({kw: undefined})
   }
 

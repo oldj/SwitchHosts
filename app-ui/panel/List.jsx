@@ -22,7 +22,7 @@ export default class List extends React.Component {
       kw: ''
     }
 
-    Agent.on('search', kw => {
+    Agent.on('search:kw', kw => {
       this.setState({kw})
     })
   }

@@ -28,8 +28,12 @@ export default class Content extends React.Component {
   }
 
   componentDidMount () {
-    Agent.on('to_search', () => {
+    Agent.on('search:start', () => {
       this.setState({show_search: true})
+    })
+
+    Agent.on('search:end', () => {
+      this.setState({show_search: false})
     })
   }
 
