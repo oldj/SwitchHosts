@@ -8,14 +8,14 @@
 import React from 'react'
 import R from 'ramda'
 import { Checkbox, Input, Radio, Select, Tabs } from 'antd'
-import MyFrame from './frame'
+import MyFrame from './MyFrame'
 import classnames from 'classnames'
 import Agent from '../Agent'
 import { version as current_version } from '../../app/version'
 import formatVersion from '../../app/libs/formatVersion'
 import CodeMirror from 'react-codemirror'
 import 'codemirror/mode/shell/shell'
-import './preferences.less'
+import './PreferencesPrompt.less'
 
 const RadioGroup = Radio.Group
 const Option = Select.Option
