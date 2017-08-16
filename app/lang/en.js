@@ -46,6 +46,7 @@ exports.content = {
   , is_updated_title: 'You are up to date!'
   , language: 'Language'
   , last_refresh: 'Last refresh: '
+  , matches: 'matches'
   , menu_about: 'About'
   , menu_bringalltofront: 'Bring All to Front'
   , menu_close: 'Close'

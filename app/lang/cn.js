@@ -46,6 +46,7 @@ exports.content = {
   , is_updated_title: '已是最新'
   , language: '语言'
   , last_refresh: '上次更新：'
+  , matches: '匹配'
   , menu_about: '关于'
   , menu_bringalltofront: '所有窗口移至最前'
   , menu_close: '关闭'

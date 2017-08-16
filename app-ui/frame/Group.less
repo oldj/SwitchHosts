@@ -1,0 +1,70 @@
+:global {
+  #hosts-group {
+    @h: 160px;
+
+    position: relative;
+    margin-top: 20px;
+    height: @h + 2px;
+    overflow: auto;
+
+    &::after {
+      content: '';
+      clear: both;
+    }
+
+    .arrow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      text-align: center;
+      transform: translate(-50%, -50%);
+
+      //&::after {
+      //  content: '→';
+      //}
+    }
+
+    .hosts-group-list {
+      height: @h;
+      overflow: auto;
+      border: solid 1px #ccc;
+      border-radius: 2px;
+
+      &:hover {
+        border-color: #49a9ee;
+      }
+
+      .hosts-item {
+        cursor: move;
+        padding: 2px 6px;
+        line-height: 24px;
+
+        &:hover {
+          background: #f5f5f5;
+        }
+
+        i {
+          font-size: 12px;
+          color: #999;
+        }
+
+        & > span {
+          padding-left: 6px;
+        }
+      }
+    }
+  }
+
+  #hosts-group-valid {
+    width: 45%;
+    float: left;
+  }
+
+  #hosts-group-current {
+    width: 45%;
+    float: right;
+  }
+}

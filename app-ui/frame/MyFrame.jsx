@@ -8,7 +8,7 @@
 import React from 'react'
 import Agent from '../Agent'
 import { Modal, Button } from 'antd'
-import './frame.less'
+import './MyFrame.less'
 
 export default class MyFrame extends React.Component {
   constructor (props) {
