@@ -166,6 +166,7 @@ module.exports = (cnt, pswd) => {
         let after_cmd = pref.after_cmd
 
         if (after_cmd) {
+          // todo 传入当前应用的模块名作为参数
           exec(after_cmd, (error, stdout, stderr) => {
             // command output is in stdout
             if (error) {

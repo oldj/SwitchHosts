@@ -18,8 +18,10 @@ module.exports = (app, new_list, hosts = null) => {
             state.sys_hosts = sys_hosts
             state.current = sys_hosts
           })
+
       } else if (hosts) {
         state.current = hosts
+
       } else if (current) {
         let c = new_list.find(i => i.id === current.id)
         if (c) {
