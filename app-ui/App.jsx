@@ -126,12 +126,13 @@ export default class App extends React.Component {
   }
 
   setHostsContent (v) {
-    if (this.state.current.content === v) return // not changed
+    let {current, list} = this.state
+    if (current.content === v) return // not changed
 
-    let current = Object.assign({}, this.state.current, {
+    current = Object.assign({}, current, {
       content: v || ''
     })
-    let list = this.state.list.slice(0)
+    list = list.slice(0)
     let idx = list.findIndex(i => i.id === current.id)
     if (idx !== -1) {
       list.splice(idx, 1, current)
