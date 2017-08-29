@@ -19,7 +19,7 @@ const md5File = require('md5-file')
 const applyAfter_Unix = require('./applyAfter_Unix')
 const platform = process.platform
 const svr = require('./svr')
-const version = require('../version').version.join('.')
+//const version = require('../version').version.join('.')
 
 let sudo_pswd = ''
 let lang = null
@@ -54,12 +54,8 @@ function apply_Unix (content, callback) {
           `cat "${tmp_fn}" > ${sys_hosts_path}`
           , `rm -rf ${tmp_fn}`
         ].join(' && ')
+
       } else {
-
-        sudo_pswd = sudo_pswd
-          .replace(/'/g, '\\x27')
-          .replace(/\\/g, '\\\\')
-
         cmd = [
           `echo '${sudo_pswd}' | sudo -S chmod 777 ${sys_hosts_path}`
           , `cat "${tmp_fn}" > ${sys_hosts_path}`
@@ -71,6 +67,7 @@ function apply_Unix (content, callback) {
       return cmd
     })
     .then(cmd => {
+      //console.log('cmd: ' + cmd)
       exec(cmd, function (error, stdout, stderr) {
         // command output is in stdout
         if (!error) {
@@ -166,6 +163,7 @@ module.exports = (cnt, pswd) => {
         let after_cmd = pref.after_cmd
 
         if (after_cmd) {
+          // todo 传入当前应用的模块名作为参数
           exec(after_cmd, (error, stdout, stderr) => {
             // command output is in stdout
             if (error) {

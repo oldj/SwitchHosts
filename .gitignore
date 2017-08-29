@@ -5,7 +5,7 @@ src/build
 src/dist
 dist
 projectFilesBackup
-.DS_Store
+*.DS_Store
 tmp
 *.js.map
 
