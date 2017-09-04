@@ -33,6 +33,7 @@ module.exports = {
         use: ['babel-loader']
       }, {
         test: /\.less$/,
+        //exclude: [/node_modules/, /antd/],
         use: [
           'style-loader',
           'css-loader?minimize&modules&sourceMap&localIdentName=[name]--[local]--[hash:base64:5]',

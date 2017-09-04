@@ -9,7 +9,7 @@ import React from 'react'
 import ReactDom from 'react-dom'
 import App from './App'
 
-import '../node_modules/antd/dist/antd.min.css'
+import './styles/main.css'
 
 ReactDom.render(
   <App/>
