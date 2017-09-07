@@ -20,6 +20,7 @@ exports.content = {
   , check_update_nofound: 'Current version ${0} is the latest version.'
   , close: 'Close'
   , comment: 'Comment'
+  , comment_current_line: 'Comment current line'
   , confirm_del: 'Are you sure you want to delete this hosts?'
   , confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.'
   // , current_version: 'Current version: '
