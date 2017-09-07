@@ -66,6 +66,7 @@ export default class Content extends React.Component {
         })}>{current.error}</div>
         <Editor
           readonly={readonly}
+          id={current.id}
           code={current.content || ''}
           setValue={this.setValue.bind(this)}
           show_search={show_search}

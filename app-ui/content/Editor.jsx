@@ -17,6 +17,7 @@ import 'codemirror/lib/codemirror.css'
 import styles from './Editor.less'
 
 import modeHosts from './cm_hl'
+
 modeHosts()
 
 export default class Editor extends React.Component {
@@ -186,11 +187,14 @@ export default class Editor extends React.Component {
   }
 
   componentWillReceiveProps (next_props) {
-    // console.log(next_props);
+    //console.log(next_props);
     let cm = this.codemirror
-    let v = cm.getDoc().getValue()
+    let doc = cm.getDoc()
+    let v = doc.getValue()
     if (v !== next_props.code) {
-      cm.getDoc().setValue(next_props.code)
+      let cursor_pos = doc.getCursor()
+      doc.setValue(next_props.code)
+      doc.setCursor(cursor_pos)
     }
     cm.setOption('readOnly', next_props.readonly)
     setTimeout(() => {
@@ -207,11 +211,12 @@ export default class Editor extends React.Component {
           [styles.root]: 1,
           readonly: this.props.readonly,
           [styles.show_search]: this.props.show_search
-        })}>
-                <textarea
-                  ref={(c) => this.cnt_node = c}
-                  defaultValue={this.props.code || ''}
-                />
+        })}
+      >
+        <textarea
+          ref={(c) => this.cnt_node = c}
+          defaultValue={this.props.code || ''}
+        />
       </div>
     )
   }
