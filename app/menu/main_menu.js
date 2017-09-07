@@ -118,7 +118,7 @@ function doInit (app, lang) {
             svr.broadcast('search:start')
           }
         }, {
-          label: lang.comment,
+          label: lang.comment_current_line,
           accelerator: 'CommandOrControl+/',
           click () {
             // ipcMain.emit('to_search');
