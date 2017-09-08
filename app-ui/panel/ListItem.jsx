@@ -80,6 +80,7 @@ export default class ListItem extends React.Component {
 
     return (
       <div className={classnames({
+        'list-item': 1, // 用于排序选择
         [styles['list-item']]: 1,
         //, 'hidden': !this.isMatched()
         [styles['sys-hosts']]: sys,
