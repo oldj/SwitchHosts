@@ -7,14 +7,18 @@
 
 'use strict'
 
+const safePSWD = require('../libs/safe-pswd')
+
 module.exports = svr => {
 
   let _resolve
   let _reject
 
-  svr.once('sudo_pswd', (pswd) => {
+  svr.once('sudo_pswd', pswd => {
     svr.removeAllListeners('sudo_cancel')
+
     try {
+      pswd = safePSWD(pswd)
       _resolve(pswd)
     } catch (e) {
       console.log(e)

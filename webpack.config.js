@@ -8,11 +8,12 @@
 const path = require('path')
 const webpack = require('webpack')
 const moment = require('moment')
+const WebpackNotifierPlugin = require('webpack-notifier')
 const version = require('./app/version').version.join('.')
 
 module.exports = {
   entry: {
-    app: './ui/index.jsx'
+    app: './app-ui/index.jsx'
     //, vendor: ['react', 'antd']
   },
   devtool: 'source-map',
@@ -32,7 +33,12 @@ module.exports = {
         use: ['babel-loader']
       }, {
         test: /\.less$/,
-        use: ['style-loader', 'css-loader', 'less-loader']
+        //exclude: [/node_modules/, /antd/],
+        use: [
+          'style-loader',
+          'css-loader?minimize&modules&sourceMap&localIdentName=[name]--[local]--[hash:base64:5]',
+          'less-loader'
+        ]
       }, {
         test: /\.css$/,
         use: ['style-loader', 'css-loader']
@@ -65,6 +71,10 @@ module.exports = {
       manifest: require('./tmp/manifest.json')
     })
     , new webpack.IgnorePlugin(new RegExp('^(electron|fs|path)$'))
+    , new WebpackNotifierPlugin({
+      title: 'SwitchHosts!',
+      alwaysNotify: true
+    })
     , new webpack.BannerPlugin(`SwitchHosts! [file] v${version}, ${moment().format('YYYY-MM-DD HH:mm:ss')}`)
   ]
 }

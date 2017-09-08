@@ -134,8 +134,8 @@ gulp.task('default', () => {
     , '!app/package.json'
     , '!app/version.js'
 
-    , 'ui/**/*.*'
-    , '!ui/node_modules/*'
+    , 'app-ui/**/*.*'
+    , '!app-ui/node_modules/*'
   ], ['ver'])
 })
 
