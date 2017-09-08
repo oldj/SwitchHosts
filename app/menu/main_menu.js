@@ -115,10 +115,10 @@ function doInit (app, lang) {
           click () {
             // ipcMain.emit('to_search');
             //app.mainWindow.webContents.send('to_search')
-            svr.broadcast('to_search')
+            svr.broadcast('search:start')
           }
         }, {
-          label: lang.comment,
+          label: lang.comment_current_line,
           accelerator: 'CommandOrControl+/',
           click () {
             // ipcMain.emit('to_search');
