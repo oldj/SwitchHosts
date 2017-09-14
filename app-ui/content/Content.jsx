@@ -11,6 +11,7 @@ import classnames from 'classnames'
 import SearchBar from './SearchBar'
 import Agent from '../Agent'
 import Editor from './Editor'
+
 import styles from './Content.less'
 
 export default class Content extends React.Component {

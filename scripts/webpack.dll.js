@@ -17,7 +17,7 @@ const vendors = [
 
 module.exports = {
   entry: {
-    'lib': vendors
+    'common': vendors
   },
   output: {
     path: path.join(basedir, 'app', 'ui'),
@@ -39,6 +39,6 @@ module.exports = {
       name: '[name]',
       context: basedir
     }),
-    new webpack.BannerPlugin(`SwitchHosts! lib.js, ${moment().format('YYYY-MM-DD HH:mm:ss')}`)
+    new webpack.BannerPlugin(`SwitchHosts! common.js, ${moment().format('YYYY-MM-DD HH:mm:ss')}`)
   ]
 }
