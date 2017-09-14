@@ -9,6 +9,8 @@ const path = require('path')
 const webpack = require('webpack')
 const moment = require('moment')
 const WebpackNotifierPlugin = require('webpack-notifier')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const LSSPluginLists = require('less-plugin-lists')
 const version = require('./app/version').version.join('.')
 
 module.exports = {
@@ -19,8 +21,8 @@ module.exports = {
   devtool: 'source-map',
   output: {
     path: path.join(__dirname, 'app', 'ui')
-    , filename: 'bundle.js'
-    , sourceMapFilename: 'bundle.js.map'
+    , filename: '[name].js'
+    , sourceMapFilename: '[name].js.map'
   },
   resolve: {
     extensions: ['.js', '.jsx']
@@ -34,14 +36,26 @@ module.exports = {
       }, {
         test: /\.less$/,
         //exclude: [/node_modules/, /antd/],
-        use: [
-          'style-loader',
-          'css-loader?minimize&modules&sourceMap&localIdentName=[name]--[local]--[hash:base64:5]',
-          'less-loader'
-        ]
+        loader: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: [
+            'css-loader?minimize&modules&sourceMap&localIdentName=[name]--[local]--[hash:base64:5]',
+            {
+              loader: 'less-loader?outputStyle=expanded',
+              options: {
+                plugins: [
+                  new LSSPluginLists({advanced: true})
+                ]
+              }
+            }
+          ]
+        })
       }, {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader']
+        loader: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: 'css-loader?importLoaders=1&minimize&sourceMap'
+        })
       }, {
         test: /\.(eot|woff|woff2|ttf|svg|png|jpg)$/,
         use: 'url-loader?limit=30000&name=[name]-[hash].[ext]'
@@ -65,6 +79,10 @@ module.exports = {
       , output: {
         comments: false
       }
+    })
+    , new ExtractTextPlugin({
+      filename: '[name].css',
+      allChunks: true
     })
     , new webpack.DllReferencePlugin({
       context: __dirname,
