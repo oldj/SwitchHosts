@@ -61,7 +61,7 @@ export default class Group extends React.Component {
 
     return (
       <div id="hosts-group-valid">
-        <div ref="group_valid" className="hosts-group-list">
+        <div ref={c => this.el_group_valid = c} className="hosts-group-list">
           {items}
         </div>
       </div>
@@ -76,7 +76,7 @@ export default class Group extends React.Component {
 
     return (
       <div id="hosts-group-current">
-        <div ref="group_current" className="hosts-group-list">
+        <div ref={c => this.el_group_current = c} className="hosts-group-list">
           {items}
         </div>
       </div>
@@ -85,7 +85,7 @@ export default class Group extends React.Component {
 
   getCurrentListFromDOM () {
     let {updateInclude} = this.props
-    let nodes = this.refs.group_current.getElementsByClassName('hosts-item')
+    let nodes = this.el_group_current.getElementsByClassName('hosts-item')
     nodes = listToArray(nodes)
     let ids = nodes.map(item => item.getAttribute('data-id'))
     this.ids = ids
@@ -100,13 +100,13 @@ export default class Group extends React.Component {
   }
 
   componentDidMount () {
-    Sortable.create(this.refs.group_valid, {
+    Sortable.create(this.el_group_valid, {
       group: 'sorting'
       , animation: 150
       , sort: false
     })
 
-    Sortable.create(this.refs.group_current, {
+    Sortable.create(this.el_group_current, {
       group: 'sorting'
       , animation: 150
       , sort: true
