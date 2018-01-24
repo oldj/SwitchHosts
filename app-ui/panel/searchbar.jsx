@@ -27,7 +27,7 @@ export default class SearchBar extends React.Component {
         show: true
       }, () => {
         setTimeout(() => {
-          this.refs.keyword.focus()
+          this.el_keyword.focus()
         }, 100)
       })
     })
@@ -48,7 +48,7 @@ export default class SearchBar extends React.Component {
   emptySearch () {
     this.setState({keyword: ''})
     Agent.emit('search', '')
-    this.refs.keyword.focus()
+    this.el_keyword.focus()
   }
 
   onBlur () {
@@ -80,7 +80,7 @@ export default class SearchBar extends React.Component {
     return (
       <div id="sh-searchbar">
         <Input
-          ref="keyword"
+          ref={c => this.el_keyword = c}
           size="large"
           //placeholder="keyword"
           suffix={this.state.keyword ? <Icon type="close-circle" onClick={this.emptySearch.bind(this)}/> : null}

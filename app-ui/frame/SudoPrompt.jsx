@@ -27,7 +27,7 @@ export default class SudoPrompt extends React.Component {
       this.setState({show: true})
       this.onSuccess = success
       setTimeout(() => {
-        let el = this.refs.body
+        let el = this.el_body
         el && el.querySelector('input').focus()
       }, 100)
     })
@@ -38,7 +38,7 @@ export default class SudoPrompt extends React.Component {
     if (!pswd) {
       //let el = body
       //el && el.querySelector('input').focus()
-      this.refs.pswd.focus()
+      this.el_pswd.focus()
       return
     }
 
@@ -64,13 +64,13 @@ export default class SudoPrompt extends React.Component {
   body () {
     let {lang} = this.props
     return (
-      <div ref="body">
+      <div ref={c => this.el_body = c}>
         <div className="ln">
           <div className="title">{lang.sudo_pswd}</div>
           <div className="cnt">
             <Input
               type="password"
-              ref="pswd"
+              ref={c => this.el_pswd = c}
               onKeyDown={e => (e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
               onChange={e => this.setState({pswd: e.target.value})}
             />
