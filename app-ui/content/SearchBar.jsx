@@ -47,10 +47,10 @@ export default class SearchBar extends React.Component {
   }
 
   componentDidMount () {
-    this.refs.ipt.focus()
+    this.el_ipt.focus()
     Agent.on('search:state', d => this.setState({...d}))
     Agent.on('search:start', () => {
-      let ipt = this.refs.ipt
+      let ipt = this.el_ipt
       ipt && ipt.focus()
     })
   }
@@ -64,7 +64,7 @@ export default class SearchBar extends React.Component {
         <Row gutter={16}>
           <Col span={12}>
             <Input
-              ref="ipt"
+              ref={c => this.el_ipt = c}
               value={kw}
               onChange={e => this.setState({kw: e.target.value}, () => this.doSearch())}
               placeholder={lang.search_placeholder}

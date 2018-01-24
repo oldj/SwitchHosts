@@ -53,7 +53,7 @@ export default class List extends React.Component {
   }
 
   getCurrentListFromDOM () {
-    let nodes = this.refs.items.getElementsByClassName('list-item')
+    let nodes = this.el_items.getElementsByClassName('list-item')
     nodes = listToArray(nodes)
     let ids = nodes.map(el => el.getAttribute('data-id'))
 
@@ -61,7 +61,7 @@ export default class List extends React.Component {
   }
 
   componentDidMount () {
-    Sortable.create(this.refs.items, {
+    Sortable.create(this.el_items, {
       group: 'list-sorting'
       , sort: true
       , animation: 150
@@ -85,7 +85,7 @@ export default class List extends React.Component {
           data={this.props.sys_hosts}
           {...this.props}
           sys="1"/>
-        <div ref="items" className={styles['custom-items']}>
+        <div ref={c => this.el_items = c} className={styles['custom-items']}>
           {this.customItems()}
         </div>
       </div>

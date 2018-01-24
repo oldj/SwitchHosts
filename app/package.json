@@ -1,6 +1,6 @@
 {
   "name": "switchhosts",
-  "version": "3.3.8",
+  "version": "3.3.9",
   "description": "Switch hosts quickly!",
   "main": "main.js",
   "scripts": {
@@ -10,10 +10,10 @@
   "license": "MIT",
   "dependencies": {
     "cheerio": "^0.22.0",
-    "express": "^4.15.2",
-    "js-beautify": "^1.6.12",
-    "md5-file": "^3.1.1",
-    "node-notifier": "^5.1.2",
-    "request": "^2.81.0"
+    "express": "^4.16.2",
+    "js-beautify": "^1.7.5",
+    "md5-file": "^3.2.3",
+    "node-notifier": "^5.2.1",
+    "request": "^2.83.0"
   }
 }
