@@ -1,15 +1,15 @@
-### 操作系统
+### System (Mac/Windows/Linux)
 
 
 
-### SwitchHosts! 版本
+### SwitchHosts! Version
 
 
 
-### 问题描述
+### Description
 
 
 
-### 重现步骤
+### How to reproduce
 
 
