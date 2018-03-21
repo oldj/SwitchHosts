@@ -10,10 +10,10 @@
   "license": "MIT",
   "dependencies": {
     "cheerio": "^0.22.0",
-    "express": "^4.16.2",
+    "express": "^4.16.3",
     "js-beautify": "^1.7.5",
     "md5-file": "^3.2.3",
     "node-notifier": "^5.2.1",
-    "request": "^2.83.0"
+    "request": "^2.85.0"
   }
 }
