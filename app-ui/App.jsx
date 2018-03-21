@@ -121,7 +121,7 @@ export default class App extends React.Component {
     clearTimeout(this._t)
 
     this._t = setTimeout(() => {
-      Agent.emit('save', this.state.list)
+      Agent.emit('save', this.state.list, null, true)
     }, 1000)
   }
 
@@ -129,14 +129,15 @@ export default class App extends React.Component {
     let {current, list} = this.state
     if (current.content === v) return // not changed
 
-    current = Object.assign({}, current, {
-      content: v || ''
-    })
-    list = list.slice(0)
-    let idx = list.findIndex(i => i.id === current.id)
-    if (idx !== -1) {
-      list.splice(idx, 1, current)
-    }
+    //current = Object.assign({}, current, {
+    //  content: v || ''
+    //})
+    //list = list.slice(0)
+    //let idx = list.findIndex(i => i.id === current.id)
+    //if (idx !== -1) {
+    //  list.splice(idx, 1, current)
+    //}
+    current.content = v
 
     this.setState({
       current,
