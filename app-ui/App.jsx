@@ -133,11 +133,11 @@ export default class App extends React.Component {
     //  content: v || ''
     //})
     //list = list.slice(0)
-    //let idx = list.findIndex(i => i.id === current.id)
-    //if (idx !== -1) {
-    //  list.splice(idx, 1, current)
-    //}
     current.content = v
+    let idx = list.findIndex(i => i.id === current.id)
+    if (idx !== -1) {
+      list.splice(idx, 1, current)
+    }
 
     this.setState({
       current,
