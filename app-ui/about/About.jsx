@@ -94,6 +94,8 @@ export default class About extends React.Component {
                 <a href="https://github.com/ElfSundae" target="_blank">Elf Sundae</a>
                 <a href="https://github.com/codeyu" target="_blank">zhu yu</a>
                 <a href="https://github.com/pangliang" target="_blank">胖梁</a>
+                <a href="https://github.com/CaffreySun" target="_blank">CaffreySun</a>
+                <a href="https://github.com/Xmader" target="_blank">Xmader</a>
               </div>
             </div>
           </div>
