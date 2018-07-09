@@ -8,6 +8,7 @@
  */
 
 const electron = require('electron')
+const path = require("path")
 //const fs = require('fs')
 const app = electron.app
 const BrowserWindow = electron.BrowserWindow
@@ -39,6 +40,7 @@ function createWindow () {
     , minWidth: 400
     , minHeight: 250
     , fullscreenable: true
+    , icon: path.join(__dirname,'assets','logo_512.png')
     //, autoHideMenuBar: true
   })
   contents = mainWindow.webContents
