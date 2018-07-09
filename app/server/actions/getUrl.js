@@ -7,22 +7,22 @@
 
 const request = require('request')
 const fs = require('fs')
-const { URL } = require('url');
+const {URL} = require('url')
 const {version} = require('../../version')
 //process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
 
 module.exports = (svr, url) => {
-  if(url.indexOf('file:/') == 0) {
+  if (url.indexOf('file:/') === 0) {
     //fs
     return new Promise((resolve, reject) => {
-      const fileUrl = new URL(url);
+      const fileUrl = new URL(url)
       fs.stat(fileUrl, (err, stats) => {
         if (err) {
           console.log(err)
           reject(err)
         } else {
-          if(stats.isFile()){
-            fs.readFile(fileUrl,(error, data) => {
+          if (stats.isFile()) {
+            fs.readFile(fileUrl, (error, data) => {
               if (err) {
                 console.log(err)
                 reject(err)
@@ -34,7 +34,7 @@ module.exports = (svr, url) => {
             reject(err)
           }
         }
-      });
+      })
     })
   } else {
     //request
