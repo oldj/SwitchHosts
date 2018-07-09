@@ -110,4 +110,4 @@ SwitchHosts! stores data at `~/.SwitchHosts` (Or folder `.SwitchHosts` under the
 
 ## Copyright
 
-SwitchHosts! is a free and open source software based on the MIT license.
+SwitchHosts! is a free and open source software, it is released under the MIT license.
