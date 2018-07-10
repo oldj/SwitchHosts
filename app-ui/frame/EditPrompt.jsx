@@ -241,7 +241,7 @@ export default class EditPrompt extends React.Component {
             <Input
               ref={c => this.el_url = c}
               value={this.state.url}
-              placeholder="http://"
+              placeholder="http:// or file:///"
               onChange={e => this.setState({url: e.target.value})}
               onKeyDown={e => (e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
             />
