@@ -15,7 +15,7 @@ module.exports = (svr, url) => {
   if (url.indexOf('file:/') === 0) {
     //fs
     return new Promise((resolve, reject) => {
-      const fileUrl = new URL(url)
+      const fileUrl = new URL(encodeURI(url))
       fs.stat(fileUrl, (err, stats) => {
         if (err) {
           console.log(err)
