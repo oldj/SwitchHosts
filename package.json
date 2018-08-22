@@ -32,6 +32,7 @@
   "dependencies": {
     "antd": "^3.6.5",
     "codemirror": "^5.39.0",
+    "electron-window-state": "^4.1.1",
     "express": "^4.16.3",
     "ramda": "^0.24.1",
     "react": "^16.4.1",

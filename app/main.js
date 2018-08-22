@@ -13,6 +13,7 @@ const path = require('path')
 const app = electron.app
 const BrowserWindow = electron.BrowserWindow
 
+const paths = require('./server/paths')
 const pref = require('./server/pref')
 let user_language = pref.get('user_language') || (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
 global.user_language = user_language
@@ -23,6 +24,7 @@ const tray = require('./menu/tray')
 const svr = require('./server/svr')
 const main_menu = require('./menu/main_menu')
 const checkUpdate = require('./server/checkUpdate')
+const windowStateKeeper = require('electron-window-state');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -33,16 +35,32 @@ let is_tray_initialized
 let renderer
 
 function createWindow () {
+
+  // Load the previous state with fallback to defaults
+  let mainWindowState = windowStateKeeper({
+      defaultWidth: 800,
+      defaultHeight: 600,
+      path: paths.work_path
+  });
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 800
-    , height: 500
+    width: mainWindowState.width
+    , height: mainWindowState.height
+    , x: mainWindowState.x
+    , y: mainWindowState.y
     , minWidth: 400
     , minHeight: 250
     , fullscreenable: true
     , icon: path.join(__dirname, 'assets', 'logo_512.png')
     //, autoHideMenuBar: true
   })
+
+  // Let us register listeners on the window, so we can update the state
+  // automatically (the listeners will be removed when the window is closed)
+  // and restore the maximized or full screen state
+  mainWindowState.manage(mainWindow);
+
   contents = mainWindow.webContents
   app.mainWindow = mainWindow
 
