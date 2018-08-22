@@ -14,6 +14,7 @@
     "js-beautify": "^1.7.5",
     "md5-file": "^3.2.3",
     "node-notifier": "^5.2.1",
+    "electron-window-state": "^4.1.1",
     "request": "^2.87.0"
   }
 }
