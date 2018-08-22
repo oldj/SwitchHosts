@@ -32,7 +32,6 @@
   "dependencies": {
     "antd": "^3.6.5",
     "codemirror": "^5.39.0",
-    "electron-window-state": "^4.1.1",
     "express": "^4.16.3",
     "ramda": "^0.24.1",
     "react": "^16.4.1",
@@ -63,7 +62,7 @@
     "copy-webpack-plugin": "^4.5.2",
     "cross-env": "^5.2.0",
     "css-loader": "^0.28.11",
-    "electron": "^1.8.7",
+    "electron": "^2.0.7",
     "electron-packager": "^9.1.0",
     "eslint": "^3.14.1",
     "eslint-config-standard": "^6.2.1",
