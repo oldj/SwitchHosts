@@ -53,11 +53,18 @@ export default class EditPrompt extends React.Component {
   }
 
   componentDidMount () {
-    Agent.on('add_hosts', () => {
+    Agent.on('add_hosts', (title, uri) => {
+      var goWhere = ''
+      if (uri) {
+        goWhere = 'remote'
+      }
       this.setState({
         show: true,
         is_add: true,
-        include: []
+        include: [],
+        title: title,
+        where: goWhere,
+        url: uri
       })
       setTimeout(() => {
         this.tryToFocus()
