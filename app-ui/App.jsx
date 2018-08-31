@@ -153,6 +153,18 @@ export default class App extends React.Component {
     })
   }
 
+  handleOndragenter (events) {
+    events.preventDefault()
+  }
+
+  handleOndragover (events) {
+    events.preventDefault()
+  }
+
+  handleOndrop (events) {
+    events.preventDefault()
+  }
+
   componentDidMount () {
 
     window.addEventListener('keydown', (e) => {
@@ -169,7 +181,7 @@ export default class App extends React.Component {
   render () {
     let current = this.state.current
     return (
-      <div id="app" className={'platform-' + Agent.platform}>
+      <div id="app" className={'platform-' + Agent.platform}  onDragEnter={this.handleOndragenter} onDragOver={this.handleOndragover} onDrop={this.handleOndrop}>
         <SudoPrompt lang={this.state.lang}/>
         <EditPrompt
           lang={this.state.lang}
