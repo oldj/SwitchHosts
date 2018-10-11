@@ -10,7 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "cheerio": "^0.22.0",
-    "chrome-dns-clear": "^1.0.4",
+    "chrome-remote-interface": "^0.26.1",
     "electron-window-state": "^4.1.1",
     "express": "^4.16.3",
     "js-beautify": "^1.7.5",

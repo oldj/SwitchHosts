@@ -13,7 +13,7 @@ const apply = require('../apply')
 const sudo = require('../sudo')
 const makeOutHosts = require('../makeOutHosts')
 const cleanData = require('../cleanData')
-const chromeDnsClear = require('chrome-dns-clear')
+const chromeDnsClear = require('../../libs/chrome-dns-clear')
 //const checkAllRemoteHostses = require('./checkAllRemoteHostses')
 
 function tryToApply (svr, cnt, pswd) {
