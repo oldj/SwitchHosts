@@ -10,11 +10,7 @@ const path = require('path')
 const version = require('../version').version
 
 module.exports = (work_path, sys_hosts_path) => {
-  try {
-    fs.mkdirSync(work_path)
-  } catch (e) {
-    console.log(e)
-  }
+  fs.mkdirSync(work_path)
 
   let cnt = fs.readFileSync(sys_hosts_path, 'utf-8')
   let fn_data = path.join(work_path, 'data.json')
