@@ -69,6 +69,8 @@ function createWindow () {
   mainWindow.loadURL(`file://${__dirname}/ui/index.html?lang=${user_language}`)
 
   if (process.env && process.env.ENV === 'dev') {
+    require('devtron').install()
+
     // Open the DevTools.
     mainWindow.webContents.openDevTools()
   }
@@ -110,19 +112,22 @@ function createWindow () {
   svr.win = mainWindow
 }
 
-const should_quit = app.makeSingleInstance((commandLine, workingDirectory) => {
-  // Someone tried to run a second instance, we should focus our window.
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) {
-      mainWindow.restore()
-    }
-    mainWindow.show()
-    // mainWindow.focus();
-  }
-})
-
-if (should_quit) {
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
   app.quit()
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
+      }
+      mainWindow.focus()
+    }
+  })
+
+  // Create myWindow, load the rest of the app, etc...
+  app.on('ready', () => {
+  })
 }
 
 // This method will be called when Electron has finished

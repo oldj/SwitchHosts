@@ -1,6 +1,6 @@
 {
   "name": "switchhosts",
-  "version": "3.3.12",
+  "version": "3.3.14",
   "description": "Switch hosts quickly!",
   "main": "main.js",
   "scripts": {
@@ -13,9 +13,9 @@
     "chrome-remote-interface": "^0.26.1",
     "electron-window-state": "^4.1.1",
     "express": "^4.16.3",
-    "js-beautify": "^1.7.5",
+    "js-beautify": "^1.8.8",
     "md5-file": "^3.2.3",
-    "node-notifier": "^5.2.1",
+    "node-notifier": "^5.3.0",
     "request": "^2.87.0"
   }
 }

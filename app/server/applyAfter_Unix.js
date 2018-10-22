@@ -7,6 +7,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const {dialog} = require('electron')
 const {work_path} = require('./paths')
 const exec = require('child_process').exec
 const platform = process.platform
@@ -35,9 +36,14 @@ killall -HUP mDNSResponder
   exec(`echo '${sudo_pswd}' | sudo -S /bin/sh ${cmd_fn}`, function (error, stdout, stderr) {
     if (fs.existsSync(cmd_fn)) {
       try {
-        fs.unlink(cmd_fn)
+        fs.unlink(cmd_fn, () => 0)
       } catch (e) {
-        alert(e.message)
+        //alert(e.message)
+        dialog.showMessageBox({
+          type: 'error',
+          title: 'Error',
+          message: e.message
+        })
       }
     }
 
