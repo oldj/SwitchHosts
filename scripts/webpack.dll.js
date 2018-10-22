@@ -8,6 +8,7 @@
 const path = require('path')
 const webpack = require('webpack')
 const moment = require('moment')
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 const basedir = path.dirname(__dirname)
 
 const vendors = [
@@ -16,6 +17,7 @@ const vendors = [
 ]
 
 module.exports = {
+  mode: 'production',
   entry: {
     'common': vendors
   },
@@ -24,16 +26,24 @@ module.exports = {
     filename: '[name].js',
     library: '[name]'
   },
+  optimization: {
+    minimizer: [
+      new UglifyJsPlugin({
+        cache: true,
+        parallel: true,
+        uglifyOptions: {
+          compress: true,
+          ecma: 6,
+          mangle: true,
+          output: {
+            ascii_only: true
+          }
+        },
+        sourceMap: true
+      })
+    ]
+  },
   plugins: [
-    new webpack.optimize.UglifyJsPlugin({
-      sourceMap: true,
-      compress: {
-        warnings: false,
-        screw_ie8: true,
-        drop_console: true,
-        drop_debugger: true
-      }
-    }),
     new webpack.DllPlugin({
       path: path.join(basedir, 'tmp', 'manifest.json'),
       name: '[name]',
