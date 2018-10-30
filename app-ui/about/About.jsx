@@ -28,10 +28,12 @@ export default class About extends React.Component {
   }
 
   show () {
-    this.setState({
-      visible: true
-    }, () => {
-      let links = this.refs.content.querySelectorAll('a')
+    const updateLink = () => {
+      if (!this.el_content) {
+        setTimeout(updateLink, 500)
+        return
+      }
+      let links = this.el_content.querySelectorAll('a')
       links = Array.from(links)
       links.map(a => {
         a.onclick = () => {
@@ -39,7 +41,11 @@ export default class About extends React.Component {
           return false
         }
       })
-    })
+    }
+
+    this.setState({
+      visible: true
+    }, updateLink)
   }
 
   openUrl (url) {
@@ -71,7 +77,7 @@ export default class About extends React.Component {
           <div className={styles.logo}>
             <img src={logo} alt=""/>
           </div>
-          <div className={styles.content} ref="content">
+          <div className={styles.content} ref={c => this.el_content = c}>
             <h2>SwitchHosts!</h2>
             <div className={styles.version}>{ver}</div>
             <div>
@@ -88,6 +94,10 @@ export default class About extends React.Component {
                 <a href="https://github.com/ElfSundae" target="_blank">Elf Sundae</a>
                 <a href="https://github.com/codeyu" target="_blank">zhu yu</a>
                 <a href="https://github.com/pangliang" target="_blank">胖梁</a>
+                <a href="https://github.com/CaffreySun" target="_blank">CaffreySun</a>
+                <a href="https://github.com/Xmader" target="_blank">Xmader</a>
+                <a href="https://github.com/zhanggang807" target="_blank">Dean Zhang</a>
+                <a href="https://github.com/CloverNet" target="_blank">CloverNet</a>
               </div>
             </div>
           </div>

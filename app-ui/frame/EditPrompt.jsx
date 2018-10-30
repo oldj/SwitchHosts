@@ -38,7 +38,7 @@ export default class EditPrompt extends React.Component {
   }
 
   tryToFocus () {
-    let el = this.refs.body && this.refs.body.querySelector('input[type=text]')
+    let el = this.el_body && this.el_body.querySelector('input[type=text]')
     el && el.focus()
   }
 
@@ -53,11 +53,18 @@ export default class EditPrompt extends React.Component {
   }
 
   componentDidMount () {
-    Agent.on('add_hosts', () => {
+    Agent.on('add_hosts', (title, uri) => {
+      var goWhere = ''
+      if (uri) {
+        goWhere = 'remote'
+      }
       this.setState({
         show: true,
         is_add: true,
-        include: []
+        include: [],
+        title: title,
+        where: goWhere,
+        url: uri
       })
       setTimeout(() => {
         this.tryToFocus()
@@ -116,12 +123,12 @@ export default class EditPrompt extends React.Component {
     })
 
     if (this.state.title === '') {
-      this.refs.title.focus()
+      this.el_title.focus()
       return false
     }
 
     if (this.state.where === 'remote' && this.state.url === '') {
-      this.refs.url.focus()
+      this.el_url.focus()
       return false
     }
 
@@ -239,9 +246,9 @@ export default class EditPrompt extends React.Component {
           <div className="title">{lang.url}</div>
           <div className="cnt">
             <Input
-              ref="url"
+              ref={c => this.el_url = c}
               value={this.state.url}
-              placeholder="http://"
+              placeholder="http:// or file:///"
               onChange={e => this.setState({url: e.target.value})}
               onKeyDown={e => (e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
             />
@@ -283,7 +290,7 @@ export default class EditPrompt extends React.Component {
   body () {
     let {lang} = this.props
     return (
-      <div ref="body">
+      <div ref={c => this.el_body = c}>
         <div className="ln">
           <RadioGroup onChange={e => this.setState({where: e.target.value})} value={this.state.where}>
             <RadioButton value="local"><Icon type="file-text" /> {lang.where_local}</RadioButton>
@@ -296,7 +303,7 @@ export default class EditPrompt extends React.Component {
           <div className="title">{lang.hosts_title}</div>
           <div className="cnt">
             <Input
-              ref="title"
+              ref={c => this.el_title = c}
               value={this.state.title}
               onChange={(e) => this.setState({title: e.target.value})}
               onKeyDown={(e) => (e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
