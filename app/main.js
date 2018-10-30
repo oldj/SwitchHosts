@@ -14,14 +14,14 @@ const app = electron.app
 const BrowserWindow = electron.BrowserWindow
 
 const paths = require('./server/paths')
-const pref = require('./server/pref')
-let user_language = pref.get('user_language') || (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
+const pref = require('./server/pref') // 读取和设置一些界面相关的配置, 该配置在 ~/.Switchhosts/preferences.json 中执行(该路径在 server/paths.js 中配置)
+let user_language = pref.get('user_language') || (app.getLocale()/*当前应用程序的语言环境*/ || '').split('-')[0].toLowerCase() || 'en'
 global.user_language = user_language
 
 require('./server/Server')
 
 const tray = require('./menu/tray')
-const svr = require('./server/svr')
+const svr = require('./server/svr') // 接受渲染进程发送的消息, 执行消息中指定的 action, 该 action 在 server/actions 文件夹中列出
 const main_menu = require('./menu/main_menu')
 const checkUpdate = require('./server/checkUpdate')
 const windowStateKeeper = require('electron-window-state')
