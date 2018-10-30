@@ -22,3 +22,4 @@ xcdebugger
 npm-debug.log*
 .nyc_output
 coverage/
+package-lock.json
