@@ -1,1 +1,1 @@
-exports.version = [3,3,12,5356];
+exports.version = [3, 3, 12, 5356];
