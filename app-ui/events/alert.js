@@ -6,5 +6,5 @@
 'use strict';
 
 module.exports = (app, msg) => {
-  alert(msg)
+    alert(msg)
 }

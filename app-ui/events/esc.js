@@ -8,6 +8,6 @@
 import Agent from '../Agent'
 
 module.exports = () => {
-  Agent.pact('esc')
-  Agent.pact('sudoCancel')
+    Agent.pact('esc')
+    Agent.pact('sudoCancel')
 }

@@ -8,5 +8,5 @@
 import Agent from '../Agent'
 
 module.exports = (app, pswd) => {
-  Agent.pact('sudoPSWD', pswd)
+    Agent.pact('sudoPSWD', pswd)
 }

@@ -6,5 +6,5 @@
 'use strict'
 
 module.exports = (app) => {
-  app.loadHosts()
+    app.loadHosts()
 }
