@@ -8,8 +8,8 @@
 const {shell} = require('electron')
 
 module.exports = (svr, url) => {
-  return Promise.resolve()
-    .then(() => {
-      shell.openExternal(url)
-    })
+    return Promise.resolve()
+        .then(() => {
+            shell.openExternal(url)
+        })
 }

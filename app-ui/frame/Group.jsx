@@ -12,117 +12,117 @@ import listToArray from 'wheel-js/src/common/listToArray'
 import './Group.less'
 
 export default class Group extends React.Component {
-  constructor (props) {
-    super(props)
+    constructor (props) {
+        super(props)
 
-    this.state = {
-      list: [],
-      include: []
+        this.state = {
+            list: [],
+            include: []
+        }
+
+        this.current_hosts = null
+        this.ids = []
     }
 
-    this.current_hosts = null
-    this.ids = []
-  }
+    makeItem (item) {
+        if (!item) {
+            return null
+        }
 
-  makeItem (item) {
-    if (!item) {
-      return null
+        let attrs = {
+            'data-id': item.id || ''
+        }
+
+        let icon_type
+        if (item.where === 'remote') {
+            icon_type = 'global'
+        } else if (item.where === 'group') {
+            icon_type = 'copy'
+        } else {
+            icon_type = 'file-text'
+        }
+
+        return (
+            <div className="hosts-item" {...attrs}>
+                <Icon
+                    type={icon_type}
+                    className="iconfont"
+                />
+                <span>{item.title || 'untitled'}</span>
+            </div>
+        )
     }
 
-    let attrs = {
-      'data-id': item.id || ''
+    makeList () {
+        let include = this.state.include
+        let items = this.state.list
+            .filter(item => item.where !== 'group' && !include.includes(item.id))
+            .map(item => this.makeItem(item))
+
+        return (
+            <div id="hosts-group-valid">
+                <div ref={c => this.el_group_valid = c} className="hosts-group-list">
+                    {items}
+                </div>
+            </div>
+        )
     }
 
-    let icon_type
-    if (item.where === 'remote') {
-      icon_type = 'global'
-    } else if (item.where === 'group') {
-      icon_type = 'copy'
-    } else {
-      icon_type = 'file-text'
+    currentList () {
+        let list = this.state.list
+        let items = this.state.include
+            .map(id => list.find(item => item.id === id))
+            .map(item => this.makeItem(item))
+
+        return (
+            <div id="hosts-group-current">
+                <div ref={c => this.el_group_current = c} className="hosts-group-list">
+                    {items}
+                </div>
+            </div>
+        )
     }
 
-    return (
-      <div className="hosts-item" {...attrs}>
-        <Icon
-          type={icon_type}
-          className="iconfont"
-        />
-        <span>{item.title || 'untitled'}</span>
-      </div>
-    )
-  }
+    getCurrentListFromDOM () {
+        let {updateInclude} = this.props
+        let nodes = this.el_group_current.getElementsByClassName('hosts-item')
+        nodes = listToArray(nodes)
+        let ids = nodes.map(item => item.getAttribute('data-id'))
+        this.ids = ids
+        updateInclude(ids)
+    }
 
-  makeList () {
-    let include = this.state.include
-    let items = this.state.list
-      .filter(item => item.where !== 'group' && !include.includes(item.id))
-      .map(item => this.makeItem(item))
+    componentWillMount () {
+        this.setState({
+            list: this.props.list,
+            include: this.props.include
+        })
+    }
 
-    return (
-      <div id="hosts-group-valid">
-        <div ref={c => this.el_group_valid = c} className="hosts-group-list">
-          {items}
-        </div>
-      </div>
-    )
-  }
+    componentDidMount () {
+        Sortable.create(this.el_group_valid, {
+            group: 'sorting'
+            , animation: 150
+            , sort: false
+        })
 
-  currentList () {
-    let list = this.state.list
-    let items = this.state.include
-      .map(id => list.find(item => item.id === id))
-      .map(item => this.makeItem(item))
+        Sortable.create(this.el_group_current, {
+            group: 'sorting'
+            , animation: 150
+            , sort: true
+            , onSort: () => {
+                this.getCurrentListFromDOM()
+            }
+        })
+    }
 
-    return (
-      <div id="hosts-group-current">
-        <div ref={c => this.el_group_current = c} className="hosts-group-list">
-          {items}
-        </div>
-      </div>
-    )
-  }
-
-  getCurrentListFromDOM () {
-    let {updateInclude} = this.props
-    let nodes = this.el_group_current.getElementsByClassName('hosts-item')
-    nodes = listToArray(nodes)
-    let ids = nodes.map(item => item.getAttribute('data-id'))
-    this.ids = ids
-    updateInclude(ids)
-  }
-
-  componentWillMount () {
-    this.setState({
-      list: this.props.list,
-      include: this.props.include
-    })
-  }
-
-  componentDidMount () {
-    Sortable.create(this.el_group_valid, {
-      group: 'sorting'
-      , animation: 150
-      , sort: false
-    })
-
-    Sortable.create(this.el_group_current, {
-      group: 'sorting'
-      , animation: 150
-      , sort: true
-      , onSort: () => {
-        this.getCurrentListFromDOM()
-      }
-    })
-  }
-
-  render () {
-    return (
-      <div id="hosts-group">
-        {this.makeList()}
-        <Icon className="arrow" type="arrow-right" />
-        {this.currentList()}
-      </div>
-    )
-  }
+    render () {
+        return (
+            <div id="hosts-group">
+                {this.makeList()}
+                <Icon className="arrow" type="arrow-right"/>
+                {this.currentList()}
+            </div>
+        )
+    }
 }

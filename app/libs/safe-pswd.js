@@ -7,8 +7,8 @@
 'use strict'
 
 module.exports = pswd => {
-  return pswd
-    .replace(/\\/g, '\\\\')
-    //.replace(/'/g, "\\''")
-    .replace(/'/g, '\\x27')
+    return pswd
+        .replace(/\\/g, '\\\\')
+        //.replace(/'/g, "\\''")
+        .replace(/'/g, '\\x27')
 }

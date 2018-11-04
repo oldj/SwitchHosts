@@ -7,17 +7,17 @@
 
 'use strict'
 
-function getHostsContent(item) {
-  return item.content || ''
+function getHostsContent (item) {
+    return item.content || ''
 }
 
 module.exports = (list) => {
-  let items = []
-  list.map(item => {
-    if (item.on) {
-      items.push(item)
-    }
-  })
+    let items = []
+    list.map(item => {
+        if (item.on) {
+            items.push(item)
+        }
+    })
 
-  return items.map(item => getHostsContent(item, list)).join('\n\n')
+    return items.map(item => getHostsContent(item, list)).join('\n\n')
 }

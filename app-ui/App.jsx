@@ -19,7 +19,7 @@ import { reg as events_reg } from './events/index' // 注册渲染进程的 even
 import './App.less'
 
 export default class App extends React.Component {
-    constructor(props) {
+    constructor (props) {
         super(props)
 
         this.state = {
@@ -39,7 +39,7 @@ export default class App extends React.Component {
             })
             .then(l => {
                 Agent.pact('getLang', l).then(lang => {
-                    this.setState({ lang })
+                    this.setState({lang})
                 })
             })
 
@@ -61,7 +61,7 @@ export default class App extends React.Component {
                 message: e.title,
                 description: e.content,
                 duration: 10,
-                style: { backgroundColor: '#fff0f0' }
+                style: {backgroundColor: '#fff0f0'}
             })
         })
 
@@ -82,7 +82,7 @@ export default class App extends React.Component {
         }, 60 * 1000)
     }
 
-    loadHosts() {
+    loadHosts () {
         Agent.pact('getHosts').then(data => {
             let state = {
                 list: data.list,
@@ -96,7 +96,7 @@ export default class App extends React.Component {
         })
     }
 
-    setCurrent(hosts) {
+    setCurrent (hosts) {
         if (hosts.is_sys) {
             Agent.pact('getSysHosts')
                 .then(_hosts => {
@@ -112,12 +112,12 @@ export default class App extends React.Component {
         }
     }
 
-    static isReadOnly(hosts) {
+    static isReadOnly (hosts) {
         return !hosts || hosts.is_sys || hosts.where === 'remote' ||
             hosts.where === 'group'
     }
 
-    toSave() {
+    toSave () {
         clearTimeout(this._t)
 
         this._t = setTimeout(() => {
@@ -125,8 +125,8 @@ export default class App extends React.Component {
         }, 1000)
     }
 
-    setHostsContent(v) {
-        let { current, list } = this.state
+    setHostsContent (v) {
+        let {current, list} = this.state
         if (current.content === v) return // not changed
 
         //current = Object.assign({}, current, {
@@ -147,25 +147,25 @@ export default class App extends React.Component {
         })
     }
 
-    justAdd(id) {
+    justAdd (id) {
         this.setState({
             just_added_id: id
         })
     }
 
-    handleOndragenter(events) {
+    handleOndragenter (events) {
         events.preventDefault()
     }
 
-    handleOndragover(events) {
+    handleOndragover (events) {
         events.preventDefault()
     }
 
-    handleOndrop(events) {
+    handleOndrop (events) {
         events.preventDefault()
     }
 
-    componentDidMount() {
+    componentDidMount () {
 
         window.addEventListener('keydown', (e) => {
             if (e.keyCode === 27) {
@@ -178,11 +178,12 @@ export default class App extends React.Component {
         })
     }
 
-    render() {
+    render () {
         let current = this.state.current
         return (
-            <div id="app" className={'platform-' + Agent.platform} onDragEnter={this.handleOndragenter} onDragOver={this.handleOndragover} onDrop={this.handleOndrop}>
-                <SudoPrompt lang={this.state.lang} />
+            <div id="app" className={'platform-' + Agent.platform} onDragEnter={this.handleOndragenter}
+                 onDragOver={this.handleOndragover} onDrop={this.handleOndrop}>
+                <SudoPrompt lang={this.state.lang}/>
                 <EditPrompt
                     lang={this.state.lang}
                     list={this.state.list}
@@ -206,7 +207,7 @@ export default class App extends React.Component {
                     setHostsContent={this.setHostsContent.bind(this)}
                     lang={this.state.lang}
                 />
-                <About lang={this.state.lang} />
+                <About lang={this.state.lang}/>
             </div>
         )
     }

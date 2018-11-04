@@ -9,17 +9,17 @@ const paths = require('../paths')
 const io = require('../io')
 
 module.exports = () => {
-  let fn = paths.preference_path
-  return io
-    .pReadFile(fn)
-    .then(cnt => {
-      let data
-      try {
-        data = JSON.parse(cnt)
-      } catch (e) {
-        console.log(e)
-        data = {}
-      }
-      return data
-    })
+    let fn = paths.preference_path
+    return io
+        .pReadFile(fn)
+        .then(cnt => {
+            let data
+            try {
+                data = JSON.parse(cnt)
+            } catch (e) {
+                console.log(e)
+                data = {}
+            }
+            return data
+        })
 }

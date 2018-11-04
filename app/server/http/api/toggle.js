@@ -13,49 +13,49 @@ const getLang = require('../../actions/getLang')
 const svr = require('../../svr')
 
 module.exports = (req, res) => {
-  let id = req.param('id')
-  let is_single
-  let lang
+    let id = req.param('id')
+    let is_single
+    let lang
 
-  if (!id || !id.match(/^[\d\-]+$/)) {
-    res.end('bad id.')
-    return
-  }
-
-  getPref()
-    .then(pref => {
-      is_single = pref.choice_mode === 'single'
-      let user_language = pref.user_language
-      return getLang(svr, user_language)
-    })
-    .then(v => lang = v)
-    .then(() => getUserHosts())
-    .then(list => {
-      let item = list.find(i => i.id === id)
-      if (!item) {
-        res.end('not-found:' + id)
+    if (!id || !id.match(/^[\d\-]+$/)) {
+        res.end('bad id.')
         return
-      }
+    }
 
-      item.on = !item.on
-
-      if (item.on && is_single) {
-        // 单选模式
-        list.map(i => {
-          if (i.id !== id) {
-            i.on = false
-          }
+    getPref()
+        .then(pref => {
+            is_single = pref.choice_mode === 'single'
+            let user_language = pref.user_language
+            return getLang(svr, user_language)
         })
-      }
+        .then(v => lang = v)
+        .then(() => getUserHosts())
+        .then(list => {
+            let item = list.find(i => i.id === id)
+            if (!item) {
+                res.end('not-found:' + id)
+                return
+            }
 
-      saveHosts(svr, list)
-        .then(() => {
-          notify(svr, 'SwitchHosts!', lang.hosts_switched)
-          svr.broadcast('reload')
-          res.end('toggle:' + id)
+            item.on = !item.on
+
+            if (item.on && is_single) {
+                // 单选模式
+                list.map(i => {
+                    if (i.id !== id) {
+                        i.on = false
+                    }
+                })
+            }
+
+            saveHosts(svr, list)
+                .then(() => {
+                    notify(svr, 'SwitchHosts!', lang.hosts_switched)
+                    svr.broadcast('reload')
+                    res.end('toggle:' + id)
+                })
         })
-    })
-    .catch(e => {
-      res.end(e.toString())
-    })
+        .catch(e => {
+            res.end(e.toString())
+        })
 }

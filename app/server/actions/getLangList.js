@@ -8,5 +8,5 @@
 const lang = require('../lang')
 
 module.exports = () => {
-  return Promise.resolve().then(() => lang.lang_list)
+    return Promise.resolve().then(() => lang.lang_list)
 }

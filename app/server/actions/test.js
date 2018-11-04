@@ -6,5 +6,5 @@
 'use strict'
 
 module.exports = () => {
-  return Promise.resolve().then(() => 'ttt33')
+    return Promise.resolve().then(() => 'ttt33')
 }

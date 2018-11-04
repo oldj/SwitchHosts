@@ -6,5 +6,5 @@
 'use strict'
 
 module.exports = (v) => {
-  return 'v' + v.slice(0, 3).join('.') + ` (${v[3]})`
+    return 'v' + v.slice(0, 3).join('.') + ` (${v[3]})`
 }

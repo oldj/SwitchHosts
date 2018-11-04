@@ -12,6 +12,6 @@ import App from './App'
 import './styles/main.css'
 
 ReactDom.render(
-  <App/>
-  , document.getElementById('app')
+    <App/>
+    , document.getElementById('app')
 )

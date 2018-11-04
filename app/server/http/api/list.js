@@ -8,15 +8,15 @@
 const getUserHosts = require('../../actions/getUserHosts')
 
 module.exports = (req, res) => {
-  getUserHosts()
-    .then(list => {
-      let data = {
-        success: true,
-        data: list
-      }
-      res.end(JSON.stringify(data))
-    })
-    .catch(e => {
-      res.end(e.toString())
-    })
+    getUserHosts()
+        .then(list => {
+            let data = {
+                success: true,
+                data: list
+            }
+            res.end(JSON.stringify(data))
+        })
+        .catch(e => {
+            res.end(e.toString())
+        })
 }

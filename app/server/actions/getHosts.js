@@ -11,12 +11,12 @@ const getSysHosts = require('./getSysHosts')
 const getUserHosts = require('./getUserHosts')
 
 module.exports = () => {
-  return Promise
-    .all([getSysHosts(), getUserHosts()])
-    .then(([sys_hosts, user_hosts]) => {
-      return {
-        sys_hosts: sys_hosts,
-        list: user_hosts
-      }
-    })
+    return Promise
+        .all([getSysHosts(), getUserHosts()])
+        .then(([sys_hosts, user_hosts]) => {
+            return {
+                sys_hosts: sys_hosts,
+                list: user_hosts
+            }
+        })
 }

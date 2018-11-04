@@ -11,26 +11,26 @@ const getPref = require('./getPref')
 const jsbeautify = require('js-beautify').js_beautify
 
 module.exports = (svr, k_or_data, v = null) => {
-  let fn = paths.preference_path
-  let p = Promise.resolve()
+    let fn = paths.preference_path
+    let p = Promise.resolve()
 
-  if (typeof k_or_data === 'string') {
-    // k/v mode
-    p = p.then(() => getPref())
-      .then(prefs => {
-        prefs[k_or_data] = v
-        return prefs
-      })
-  } else {
-    // object mode
-    p = p.then(() => Object.assign({}, k_or_data))
-  }
+    if (typeof k_or_data === 'string') {
+        // k/v mode
+        p = p.then(() => getPref())
+            .then(prefs => {
+                prefs[k_or_data] = v
+                return prefs
+            })
+    } else {
+        // object mode
+        p = p.then(() => Object.assign({}, k_or_data))
+    }
 
-  return p
-    .then(prefs => {
-      return jsbeautify(JSON.stringify(prefs), {
-        indent_size: 2
-      })
-    })
-    .then(cnt => io.pWriteFile(fn, cnt))
+    return p
+        .then(prefs => {
+            return jsbeautify(JSON.stringify(prefs), {
+                indent_size: 2
+            })
+        })
+        .then(cnt => io.pWriteFile(fn, cnt))
 }

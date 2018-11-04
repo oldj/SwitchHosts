@@ -8,7 +8,7 @@
 const {ipcMain} = require('electron')
 
 module.exports = () => {
-  return Promise.resolve().then(() => {
-    ipcMain.emit('relaunch')
-  })
+    return Promise.resolve().then(() => {
+        ipcMain.emit('relaunch')
+    })
 }

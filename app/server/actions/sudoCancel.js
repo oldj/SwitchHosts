@@ -6,9 +6,9 @@
 'use strict'
 
 module.exports = (svr) => {
-  return Promise.resolve()
-    .then(() => {
-      svr.emit('sudo_cancel')
-    })
+    return Promise.resolve()
+        .then(() => {
+            svr.emit('sudo_cancel')
+        })
 }
 
