@@ -100,7 +100,7 @@ SwitchHosts! stores data at `~/.SwitchHosts` (Or folder `.SwitchHosts` under the
     npm run pack-win  # pack for Windows, the packed files will be in ./dist
     ```
 
- - After packaging, you can make a zip file by run the following command.
+ - After packaging, you can make a zip file by running the following command.
 
     ```bash
     # zip
