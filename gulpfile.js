@@ -60,17 +60,17 @@ gulp.task('pack', (done) => {
   let pack = {}
   pack.macOS = `
 # for macOS
-electron-packager ./app 'SwitchHosts!' --platform=darwin --arch=x64 --electron-version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.icns --ignore=node_modules/.bin --ignore=.git --ignore=${__dirname}/dist --ignore="node_modules/electron-(?!(?:window-state))." --out=dist --app-version=${v1} --build-version=${v2}
+electron-packager ./app 'SwitchHosts!' --platform=darwin --arch=x64 --electron-version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.icns --ignore=node_modules/.bin --ignore=.git --ignore=${__dirname}/dist --ignore="node_modules/electron-(?!(?:window-state)).*" --out=dist --app-version=${v1} --build-version=${v2}
 `
-    pack.win64 = `
+  pack.win64 = `
 # for windows x64
 electron-packager ./app 'SwitchHosts!' --platform=win32  --arch=x64 --electron-version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=${__dirname}/dist --ignore="node_modules/electron-(?!(?:window-state)).*" --out=dist --app-version=${v1} --build-version=${v2}
 `
-    pack.win32 = `
+  pack.win32 = `
 # for windows ia32
 electron-packager ./app 'SwitchHosts!' --platform=win32  --arch=ia32 --electron-version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=${__dirname}/dist --ignore="node_modules/electron-(?!(?:window-state)).*" --out=dist --app-version=${v1} --build-version=${v2}
 `
-    pack.linux = `
+  pack.linux = `
 # for linux x86_64
 electron-packager ./app 'SwitchHosts!' --platform=linux  --arch=x64 --electron-version=${ELECTRON_VERSION} --overwrite --asar=true --prune --icon=./assets/app.ico  --ignore=node_modules/.bin --ignore=.git --ignore=${__dirname}/dist --ignore="node_modules/electron-(?!(?:window-state)).*" --out=dist --app-version=${v1} --build-version=${v2}
 `
