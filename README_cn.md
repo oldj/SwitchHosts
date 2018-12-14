@@ -39,7 +39,15 @@ brew cask install switchhosts
 
 感谢 [@gobinathm](https://github.com/gobinathm)、[@iamybj](https://github.com/iamybj) 更新 `brew cask` 版本。
 
+### scoop
 
+在 Windows 上，也可以使用 [scoop](https://scoop.sh/) 安装，命令如下：
+
+```
+scoop install switchhosts
+```
+
+感谢 [@batkiz](https://github.com/batkiz) 更新 `scoop` 版本。
 
 ## 文件备份
 
