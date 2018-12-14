@@ -39,7 +39,13 @@ brew cask install switchhosts
 
 Thanks to [@gobinathm](https://github.com/gobinathm) and [@iamybj](https://github.com/iamybj) for updating the `brew cask` version.
 
+### scoop
 
+```
+scoop install switchhosts
+```
+
+Thanks to [@batkiz](https://github.com/batkiz) for updating the `scoop` version.
 
 ## Backup
 
