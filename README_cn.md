@@ -31,7 +31,7 @@
 
 ### brew
 
-在 macOS 上，也可以使用 `brew cast` 安装，命令如下：
+在 macOS 上，也可以使用 `brew cask` 安装，命令如下：
 
 ```bash
 brew cask install switchhosts
