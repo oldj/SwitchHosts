@@ -31,7 +31,7 @@ You can download the source code and build it yourself, or download the built ve
 
 ### brew
 
-On macOS you can install SwitchHosts! by `brew cast`:
+On macOS you can install SwitchHosts! by `brew cask`:
 
 ```bash
 brew cask install switchhosts
