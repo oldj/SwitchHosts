@@ -39,6 +39,7 @@ killall -HUP mDNSResponder
         fs.unlink(cmd_fn, () => 0)
       } catch (e) {
         //alert(e.message)
+        console.log(e)
         dialog.showMessageBox({
           type: 'error',
           title: 'Error',

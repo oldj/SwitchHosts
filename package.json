@@ -10,8 +10,9 @@
     "dll": "webpack --config scripts/webpack.dll.js --progress --profile --colors",
     "dev": "cross-env ENV=dev electron app",
     "less": "npm run _ln && lessc app-ui/styles/main.less app-ui/styles/main.css",
-    "build": "gulp ver && npm run less && webpack --progress --profile --colors",
-    "w": "npm run build -- -w",
+    "build": "gulp ver && npm run less && npm run dll && npm run build2",
+    "build2": "webpack --progress --profile --colors",
+    "w": "npm run build2 -- -w",
     "pack": "gulp pack",
     "pack-mac": "gulp pack --platform=macOS",
     "pack-win": "gulp pack --platform=win64",
@@ -66,7 +67,7 @@
     "@babel/preset-react": "^7.0.0",
     "@babel/register": "^7.0.0",
     "autoprefixer": "^6.7.2",
-    "ava": "^0.22.0",
+    "ava": "^1.4.1",
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.4",
     "babel-plugin-import": "^1.10.0",
@@ -77,7 +78,7 @@
     "cross-env": "^5.2.0",
     "css-loader": "^0.28.11",
     "devtron": "^1.4.0",
-    "electron": "^3.0.5",
+    "electron": "^3.1.8",
     "electron-packager": "^9.1.0",
     "eslint": "^3.14.1",
     "eslint-config-standard": "^6.2.1",
@@ -125,16 +126,29 @@
     "yargs": "^6.5.0"
   },
   "ava": {
-    "files": ["src/**/*.ava.js", "test/*.js", "!**/node_modules/**/*.*"],
-    "source": ["**/*.{js,jsx}", "!dist/**/*"],
+    "files": [
+      "src/**/*.ava.js",
+      "test/*.js",
+      "!**/node_modules/**/*.*"
+    ],
+    "source": [
+      "**/*.{js,jsx}",
+      "!dist/**/*"
+    ],
     "match": [],
     "concurrency": 5,
     "failFast": true,
     "tap": true,
     "powerAssert": false,
-    "require": ["babel-polyfill", "babel-register"],
+    "require": [
+      "babel-polyfill",
+      "babel-register"
+    ],
     "babel": {
-      "presets": ["latest", "stage-0"]
+      "presets": [
+        "latest",
+        "stage-0"
+      ]
     }
   }
 }
