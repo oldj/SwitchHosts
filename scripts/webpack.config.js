@@ -22,7 +22,7 @@ module.exports = {
   },
   devtool: 'source-map',
   output: {
-    path: path.join(__dirname, 'app', 'ui'),
+    path: path.join(__dirname, '..', 'app', 'ui'),
     filename: '[name].js',
     sourceMapFilename: '[name].js.map'
   },
