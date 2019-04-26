@@ -80,7 +80,7 @@
     "cross-env": "^5.2.0",
     "css-loader": "^0.28.11",
     "devtron": "^1.4.0",
-    "electron": "^3.1.8",
+    "electron": "^5.0.0",
     "electron-packager": "^13.1.1",
     "eslint": "^5.16.0",
     "eslint-config-standard": "^6.2.1",
@@ -127,16 +127,29 @@
     "yargs": "^6.5.0"
   },
   "ava": {
-    "files": ["src/**/*.ava.js", "test/*.js", "!**/node_modules/**/*.*"],
-    "source": ["**/*.{js,jsx}", "!dist/**/*"],
+    "files": [
+      "src/**/*.ava.js",
+      "test/*.js",
+      "!**/node_modules/**/*.*"
+    ],
+    "source": [
+      "**/*.{js,jsx}",
+      "!dist/**/*"
+    ],
     "match": [],
     "concurrency": 5,
     "failFast": true,
     "tap": true,
     "powerAssert": false,
-    "require": ["babel-polyfill", "babel-register"],
+    "require": [
+      "babel-polyfill",
+      "babel-register"
+    ],
     "babel": {
-      "presets": ["latest", "stage-0"]
+      "presets": [
+        "latest",
+        "stage-0"
+      ]
     }
   }
 }

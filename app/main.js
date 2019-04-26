@@ -45,16 +45,19 @@ function createWindow () {
 
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: mainWindowState.width
-    , height: mainWindowState.height
-    , x: mainWindowState.x
-    , y: mainWindowState.y
-    , minWidth: 400
-    , minHeight: 250
-    , fullscreenable: true
-    , icon: path.join(__dirname, 'assets', 'logo_512.png')
-    //, autoHideMenuBar: true
-    //, titleBarStyle: 'hiddenInset'
+    width: mainWindowState.width,
+    height: mainWindowState.height,
+    x: mainWindowState.x,
+    y: mainWindowState.y,
+    minWidth: 400,
+    minHeight: 250,
+    fullscreenable: true,
+    icon: path.join(__dirname, 'assets', 'logo_512.png'),
+    webPreferences: {
+      nodeIntegration: true
+    }
+    // autoHideMenuBar: true,
+    // titleBarStyle: 'hiddenInset'
   })
 
   // Let us register listeners on the window, so we can update the state
