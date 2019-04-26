@@ -12,7 +12,7 @@ const WebpackNotifierPlugin = require('webpack-notifier')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const LESSPluginLists = require('less-plugin-lists')
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
-const version = require('./app/version').version.join('.')
+const version = require('../app/version').version.join('.')
 
 module.exports = {
   mode: 'production',
@@ -98,12 +98,13 @@ module.exports = {
     }),
     new webpack.DllReferencePlugin({
       context: __dirname,
-      manifest: require('./tmp/manifest.json')
+      manifest: require('../tmp/manifest.json')
     }),
     new webpack.IgnorePlugin(new RegExp('^(electron|fs|path)$')),
     new WebpackNotifierPlugin({
       title: 'SwitchHosts!',
-      alwaysNotify: true
+      alwaysNotify: true,
+      excludeWarnings: true
     }),
     new webpack.BannerPlugin(`SwitchHosts! [file] v${version}, ${moment().format('YYYY-MM-DD HH:mm:ss')}`)
   ]
