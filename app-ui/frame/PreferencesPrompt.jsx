@@ -6,7 +6,7 @@
 'use strict'
 
 import React from 'react'
-import R from 'ramda'
+import lodash from 'lodash'
 import { Checkbox, Input, Radio, Select, Tabs } from 'antd'
 import MyFrame from './MyFrame'
 import classnames from 'classnames'
@@ -63,7 +63,7 @@ export default class PreferencesPrompt extends React.Component {
     this.setState({
       show: false
     }, () => {
-      let prefs = R.pick(pref_keys, this.state)
+      let prefs = lodash.pick(this.state, pref_keys)
 
       Agent.pact('setPref', prefs)
         .then(() => {
@@ -124,7 +124,8 @@ export default class PreferencesPrompt extends React.Component {
     return (
       <div className="ln">
         <div>{lang.language}</div>
-        <div className="inform">{lang.should_restart_after_change_language}</div>
+        <div
+          className="inform">{lang.should_restart_after_change_language}</div>
         <div>
           <Select
             value={this.state.user_language || ''}
@@ -169,11 +170,11 @@ export default class PreferencesPrompt extends React.Component {
         <div>
           <div className="inform">{lang.pref_after_cmd_info}</div>
           {/*<Input*/}
-            {/*type="textarea"*/}
-            {/*rows={8}*/}
-            {/*defaultValue={this.state.after_cmd}*/}
-            {/*placeholder={lang.pref_after_cmd_placeholder}*/}
-            {/*onChange={(e) => this.updateAfterCmd(e.target.value)}*/}
+          {/*type="textarea"*/}
+          {/*rows={8}*/}
+          {/*defaultValue={this.state.after_cmd}*/}
+          {/*placeholder={lang.pref_after_cmd_placeholder}*/}
+          {/*onChange={(e) => this.updateAfterCmd(e.target.value)}*/}
           {/*/>*/}
           <CodeMirror
             className="pref-cm"
