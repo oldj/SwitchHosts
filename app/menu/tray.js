@@ -107,20 +107,50 @@ function makeMenu (app, list, contents, sys_lang) {
   return menu
 }
 
+function makeTitle(list = []) {
+  const currItems = (list || []).filter(item => item.on) || []
+
+  const appendTitleEvt = function(lis = [], opr = ',') {
+    let _str = ''
+    if(lis.length) {
+      const appendTitle = (prev, curr) => {
+        return {
+          title: `${prev.title}${prev.title ? `${opr}` : ''}${curr.title}`
+        }
+      }
+      _str = currItems.reduce(appendTitle, { title: '' }).title || ''
+    }
+    return _str;
+  };
+
+  const _ori = appendTitleEvt(list)
+
+  return {
+    ori: _ori,
+    show: _ori.length > 20 ? `${_ori.substr(0, 20)}...` : _ori,
+    tips: `${appendTitleEvt(list, '\n')}`
+  }
+}
+
+
 function makeTray (app, contents, sys_lang = 'en') {
+  const lang = m_lang.getLang(sys_lang)
+
   let icon = 'logo.png'
   if (process.platform === 'darwin') {
     icon = 'ilogoTemplate.png'
   }
 
   tray = new Tray(path.join(__dirname, '..', 'assets', icon))
-  tray.setToolTip('SwitchHosts!')
 
   svr.on('update_tray', () => {
     getUserHosts()
       .then(list => {
         let contextMenu = Menu.buildFromTemplate(makeMenu(app, list, contents, sys_lang))
         tray.setContextMenu(contextMenu)
+        const { ori = '', show = '', tips = '' } = makeTitle(list)
++       tray.setTitle(show)
++       tray.setToolTip(ori ? `\n${lang.current_active_hosts}: \n\n${tips}\n` : 'SwitchHosts!')
       })
   })
 

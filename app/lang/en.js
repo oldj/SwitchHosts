@@ -24,6 +24,7 @@ exports.content = {
   , confirm_del: 'Are you sure you want to delete this hosts?'
   , confirm_import: 'You sure you want to import it? The original rules will be overwriten, this operation can not be undone.'
   // , current_version: 'Current version: '
+  , current_active_hosts: 'Current effective config'
   , day: 'day'
   , days: 'days'
   , del_hosts: 'Delete current hosts'
