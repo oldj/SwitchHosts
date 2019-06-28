@@ -24,6 +24,7 @@ exports.content = {
   , confirm_del: '确定要删除此 hosts 方案吗？'
   , confirm_import: '确定要导入吗？原方案列表将被覆盖，此操作不可撤销。'
   // , current_version: '当前版本：'
+  , current_active_hosts: '当前生效配置'
   , day: '天'
   , days: '天'
   , del_hosts: '删除当前 hosts 方案'
