@@ -31,7 +31,7 @@ You can download the source code and build it yourself, or download the built ve
 
 ### brew
 
-If you are using macOS, you can install SwitchHosts! by `brew cast`:
+On macOS you can install SwitchHosts! by `brew cask`:
 
 ```bash
 brew cask install switchhosts
@@ -39,7 +39,15 @@ brew cask install switchhosts
 
 Thanks to [@gobinathm](https://github.com/gobinathm) and [@iamybj](https://github.com/iamybj) for updating the `brew cask` version.
 
+### scoop
 
+On Windows you can install SwitchHosts! by [scoop](https://scoop.sh/):
+
+```
+scoop install switchhosts
+```
+
+Thanks to [@batkiz](https://github.com/batkiz) for updating the `scoop` version.
 
 ## Backup
 
@@ -100,7 +108,7 @@ SwitchHosts! stores data at `~/.SwitchHosts` (Or folder `.SwitchHosts` under the
     npm run pack-win  # pack for Windows, the packed files will be in ./dist
     ```
 
- - After packaging, you can make a zip file by run the following command.
+ - After packaging, you can make a zip file by running the following command.
 
     ```bash
     # zip
