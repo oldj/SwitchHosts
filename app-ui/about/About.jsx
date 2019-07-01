@@ -88,6 +88,7 @@ export default class About extends React.Component {
             <div>
               <h3>{lang.acknowledgement}:</h3>
               <div>
+                <a href="https://github.com/oldj" target="_blank">oldj</a>
                 <a href="https://github.com/allenm" target="_blank">Allen.M</a>
                 <a href="https://github.com/charlestang" target="_blank">Charles Tang</a>
                 <a href="https://github.com/stotem" target="_blank">WuJianjun</a>
@@ -98,6 +99,7 @@ export default class About extends React.Component {
                 <a href="https://github.com/Xmader" target="_blank">Xmader</a>
                 <a href="https://github.com/zhanggang807" target="_blank">Dean Zhang</a>
                 <a href="https://github.com/CloverNet" target="_blank">CloverNet</a>
+                <a href="https://github.com/ReAlign" target="_blank">ReAlign</a>
               </div>
             </div>
           </div>
