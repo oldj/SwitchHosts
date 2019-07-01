@@ -34,7 +34,7 @@ gulp.task('ver', (done) => {
 
   console.log(`version -> ${version.join('.')}`)
 
-  let cnt = `exports.version = ${JSON.stringify(version)};`
+  let cnt = `exports.version = [${version.join(', ')}]`
   fs.writeFileSync(fn, cnt, 'utf-8')
 
   function updatePackage (fn) {

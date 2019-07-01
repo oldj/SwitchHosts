@@ -107,21 +107,21 @@ function makeMenu (app, list, contents, sys_lang) {
   return menu
 }
 
-function makeTitle(list = []) {
+function makeTitle (list = []) {
   const currItems = (list || []).filter(item => item.on) || []
 
-  const appendTitleEvt = function(lis = [], opr = ',') {
+  const appendTitleEvt = function (lis = [], opr = ',') {
     let _str = ''
-    if(lis.length) {
+    if (lis.length) {
       const appendTitle = (prev, curr) => {
         return {
           title: `${prev.title}${prev.title ? `${opr}` : ''}${curr.title}`
         }
       }
-      _str = currItems.reduce(appendTitle, { title: '' }).title || ''
+      _str = currItems.reduce(appendTitle, {title: ''}).title || ''
     }
-    return _str;
-  };
+    return _str
+  }
 
   const _ori = appendTitleEvt(list)
 
@@ -131,7 +131,6 @@ function makeTitle(list = []) {
     tips: `${appendTitleEvt(list, '\n')}`
   }
 }
-
 
 function makeTray (app, contents, sys_lang = 'en') {
   const lang = m_lang.getLang(sys_lang)
@@ -148,9 +147,9 @@ function makeTray (app, contents, sys_lang = 'en') {
       .then(list => {
         let contextMenu = Menu.buildFromTemplate(makeMenu(app, list, contents, sys_lang))
         tray.setContextMenu(contextMenu)
-        const { ori = '', show = '', tips = '' } = makeTitle(list)
-+       tray.setTitle(show)
-+       tray.setToolTip(ori ? `\n${lang.current_active_hosts}: \n\n${tips}\n` : 'SwitchHosts!')
+        const {ori = '', show = '', tips = ''} = makeTitle(list)
+        tray.setTitle(show)
+        tray.setToolTip(ori ? `\n${lang.current_active_hosts}: \n\n${tips}\n` : 'SwitchHosts!')
       })
   })
 

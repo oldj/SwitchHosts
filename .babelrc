@@ -7,11 +7,7 @@
         "useBuiltIns": false,
         "targets": {
           "browsers": [
-            "Chrome >= 60",
-            "Safari >= 10.1",
-            "iOS >= 10.3",
-            "Firefox >= 54",
-            "Edge >= 15"
+            "Chrome >= 60"
           ]
         }
       }
@@ -20,7 +16,6 @@
     "@babel/flow"
   ],
   "plugins": [
-    "@babel/plugin-transform-async-to-generator",
     [
       "@babel/plugin-proposal-decorators",
       {
