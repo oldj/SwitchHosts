@@ -1,10 +1,17 @@
 .idea
 *.pyc
 *.swp
+src/build
+src/dist
+dist
+projectFilesBackup
 *.DS_Store
+tmp
 *.js.map
 
 *.hosts
+
+src/configs.json
 
 *.swh
 *.iml
@@ -15,5 +22,3 @@ xcdebugger
 npm-debug.log*
 .nyc_output
 coverage/
-tmp
-dist
