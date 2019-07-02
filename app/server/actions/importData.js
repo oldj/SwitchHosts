@@ -7,7 +7,7 @@
 
 const paths = require('../paths')
 const io = require('../io')
-const version = require('../../version').version
+const version = require('../../version')
 const saveHosts = require('./saveHosts')
 
 module.exports = (svr, fn) => {

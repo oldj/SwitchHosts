@@ -1,0 +1,85 @@
+/**
+ * build
+ * @author: oldj
+ * @homepage: https://oldj.net
+ */
+
+const path = require('path')
+const builder = require('electron-builder')
+const homedir = require('os').homedir()
+const moment = require('moment')
+//const Platform = builder.Platform
+const version = require('../app/version')
+//const dist_dir = path.normalize(path.join(__dirname, '..', 'dist'))
+
+const cfg_common = {
+  appId: 'SwitchHosts',
+  productName: 'SwitchHosts!',
+  copyright: moment().format('Y'),
+  buildVersion: version[3],
+  directories: {
+    buildResources: 'app',
+    app: 'app'
+  },
+  electronDownload: {
+    cache: path.join(homedir, '.electron'),
+    mirror: 'https://npm.taobao.org/mirrors/electron/'
+  }
+}
+
+const makeApp = async () => {
+  await builder.build({
+    //targets: Platform.MAC.createTarget(),
+    mac: ['default'], // ['default', 'mas'],
+    win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
+    linux: ['tar.gz:ia32', 'tar.gz:x64'],
+    config: {
+      ...cfg_common,
+      mac: {
+        category: 'public.app-category.productivity',
+        icon: 'assets/app.icns',
+        gatekeeperAssess: false,
+        identity: 'oldj',
+        artifactName: '${productName}_macOS_${version}(${buildVersion}).${ext}'
+      },
+      dmg: {
+        backgroundColor: '#f1f1f6',
+        //background: 'assets/dmg-bg.png',
+        //icon: 'assets/dmg-icon.icns',
+        iconSize: 160,
+        window: {
+          width: 600,
+          height: 420
+        },
+        contents: [{
+          x: 150,
+          y: 200
+        }, {
+          x: 450,
+          y: 200,
+          type: 'link',
+          path: '/Applications'
+        }],
+        artifactName: '${productName}_macOS_${version}(${buildVersion}).${ext}'
+      },
+      win: {
+        icon: 'assets/app.ico'
+      },
+      nsis: {
+        //installerIcon: 'assets/installer-icon.ico',
+        oneClick: false,
+        allowToChangeInstallationDirectory: true,
+        artifactName: '${productName}_Installer_${version}(${buildVersion}).${ext}'
+      },
+      portable: {
+        artifactName: '${productName}_Portable_${version}(${buildVersion}).${ext}'
+      }
+    }
+  })
+
+  console.log('done!')
+}
+
+(async () => {
+  await makeApp()
+})()

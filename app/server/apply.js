@@ -19,7 +19,7 @@ const md5File = require('md5-file')
 const applyAfter_Unix = require('./applyAfter_Unix')
 const platform = process.platform
 const svr = require('./svr')
-//const version = require('../version').version.join('.')
+//const version = require('../version').join('.')
 
 let sudo_pswd = ''
 let lang = null

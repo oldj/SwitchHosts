@@ -8,18 +8,15 @@
 const path = require('path')
 const webpack = require('webpack')
 const moment = require('moment')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const TerserPlugin = require('terser-webpack-plugin')
 const basedir = path.dirname(__dirname)
 
-const vendors = [
-  'react', 'react-dom', 'antd', 'lodash',
-  'moment', 'classnames', 'codemirror'
-]
+const dependencies = Object.assign({}, require('../package.json').dependencies)
 
 module.exports = {
   mode: 'production',
   entry: {
-    'common': vendors
+    common: Object.keys(dependencies)
   },
   output: {
     path: path.join(basedir, 'app', 'ui'),
@@ -28,17 +25,16 @@ module.exports = {
   },
   optimization: {
     minimizer: [
-      new UglifyJsPlugin({
-        cache: true,
-        parallel: true,
-        uglifyOptions: {
-          compress: true,
-          ecma: 6,
-          mangle: true,
+      new TerserPlugin({
+        terserOptions: {
           output: {
+            ecma: 5,
+            comments: false,
             ascii_only: true
           }
         },
+        parallel: true,
+        cache: true,
         sourceMap: true
       })
     ]

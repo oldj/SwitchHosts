@@ -5,7 +5,7 @@
 
 'use strict'
 
-const version = require('../../version').version
+const version = require('../../version')
 const paths = require('../paths')
 const io = require('../io')
 const jsbeautify = require('js-beautify').js_beautify

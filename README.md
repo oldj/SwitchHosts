@@ -4,7 +4,7 @@
 
 Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)
 
-SwitchHosts! is an App for managing hosts file, it is based on [Electron](http://electron.atom.io/), [React](https://facebook.github.io/react/), and [Ant Design](https://ant.design), [CodeMirror](http://codemirror.net/), etc.
+SwitchHosts! is an App for managing hosts file, it is based on [Electron](http://electron.atom.io/), [React](https://facebook.github.io/react/), [Ant Design](https://ant.design), [CodeMirror](http://codemirror.net/), etc.
 
 ## Screenshot
 
