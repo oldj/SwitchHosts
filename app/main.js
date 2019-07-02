@@ -72,7 +72,7 @@ function createWindow () {
   mainWindow.loadURL(`file://${__dirname}/ui/index.html?lang=${user_language}`)
 
   if (process.env && process.env.ENV === 'dev') {
-    require('devtron').install()
+    //require('devtron').install()
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools()
