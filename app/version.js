@@ -1,1 +1,1 @@
-exports.version = [3, 3, 13, 5392]
+module.exports = [3, 3, 13, 5396]

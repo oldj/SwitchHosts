@@ -5,7 +5,7 @@
 
 'use strict'
 
-const m_ver = require('./version').version
+const m_ver = require('./version')
 
 module.exports = {
   PORT: 50761,

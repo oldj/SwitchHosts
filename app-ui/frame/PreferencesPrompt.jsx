@@ -11,7 +11,7 @@ import { Checkbox, Input, Radio, Select, Tabs } from 'antd'
 import MyFrame from './MyFrame'
 import classnames from 'classnames'
 import Agent from '../Agent'
-import { version as current_version } from '../../app/version'
+import version from '../../app/version'
 import formatVersion from '../../app/libs/formatVersion'
 import CodeMirror from 'react-codemirror'
 import 'codemirror/mode/shell/shell'
@@ -255,7 +255,7 @@ export default class PreferencesPrompt extends React.Component {
           <a
             href="#"
             onClick={PreferencesPrompt.openDownloadPage}
-          >{formatVersion(current_version)}</a>
+          >{formatVersion(version)}</a>
         </div>
         <Tabs
           defaultActiveKey="1"

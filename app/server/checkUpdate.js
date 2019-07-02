@@ -8,7 +8,7 @@
 const request = require('request')
 const cheerio = require('cheerio')
 const {shell, dialog} = require('electron')
-const current_version = require('../version').version
+const current_version = require('../version')
 const m_lang = require('../server/lang')
 const lang = m_lang.getLang(global.user_language)
 const svr = require('./svr')

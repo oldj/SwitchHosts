@@ -7,7 +7,7 @@
 
 const paths = require('../paths')
 const io = require('../io')
-const version = require('../../version').version
+const version = require('../../version')
 
 module.exports = (svr, fn) => {
   let data_path = paths.data_path
