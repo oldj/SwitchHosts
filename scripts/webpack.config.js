@@ -13,7 +13,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const LESSPluginLists = require('less-plugin-lists')
 const TerserPlugin = require('terser-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
-const version = require('../app/version').version.join('.')
+const version = require('../app/version').join('.')
 
 const mini_css_loader = {
   loader: MiniCssExtractPlugin.loader,

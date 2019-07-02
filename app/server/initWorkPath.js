@@ -7,7 +7,7 @@
 
 const fs = require('fs')
 const path = require('path')
-const version = require('../version').version
+const version = require('../version')
 
 module.exports = (work_path, sys_hosts_path) => {
   fs.mkdirSync(work_path)

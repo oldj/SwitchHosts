@@ -1,10 +1,9 @@
 {
   "name": "switchhosts",
   "version": "3.3.13",
-  "description": "Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)",
+  "description": "A tool for managing and switching hosts.",
   "main": "",
   "scripts": {
-    "_ln": "./scripts/ln.sh",
     "test": "nyc ava",
     "start": "electron app",
     "dll": "webpack --config scripts/webpack.dll.js --progress --profile --colors",
@@ -12,12 +11,7 @@
     "build": "gulp ver && npm run dll && npm run build2",
     "build2": "webpack --config scripts/webpack.config.js --progress --profile --colors",
     "w": "npm run build2 -- -w",
-    "pack": "gulp pack",
-    "pack-mac": "gulp pack --platform=macOS",
-    "pack-win": "gulp pack --platform=win64",
-    "pack-win32": "gulp pack --platform=win32",
-    "zip": "gulp zip",
-    "make": "gulp pack && gulp zip",
+    "make": "rm -rf dist/* && node scripts/make.js",
     "build-and-make": "npm run build && npm run make"
   },
   "repository": {
@@ -79,7 +73,7 @@
     "cross-env": "^5.2.0",
     "css-loader": "^3.0.0",
     "electron": "^5.0.6",
-    "electron-packager": "^14.0.0",
+    "electron-builder": "^20.44.4",
     "eslint": "^6.0.1",
     "eslint-config-standard": "^12.0.0",
     "eslint-friendly-formatter": "^4.0.1",

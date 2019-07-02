@@ -12,7 +12,7 @@ const m_lang = require('../server/lang')
 const getPref = require('../server/actions/getPref')
 const checkUpdate = require('../server/checkUpdate')
 const svr = require('../server/svr')
-const version = require('../version').version
+const version = require('../version')
 
 function doInit (app, lang) {
   let last_path = null

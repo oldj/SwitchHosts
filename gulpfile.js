@@ -29,12 +29,12 @@ const args = require('yargs').argv
 
 gulp.task('ver', (done) => {
   let fn = path.join(__dirname, 'app', 'version.js')
-  let version = require('./app/version').version
+  let version = require('./app/version')
   version[3]++
 
   console.log(`version -> ${version.join('.')}`)
 
-  let cnt = `exports.version = [${version.join(', ')}]`
+  let cnt = `module.exports = [${version.join(', ')}]`
   fs.writeFileSync(fn, cnt, 'utf-8')
 
   function updatePackage (fn) {
@@ -53,7 +53,7 @@ gulp.task('ver', (done) => {
 })
 
 gulp.task('pack', (done) => {
-  let version = require('./app/version').version
+  let version = require('./app/version')
   let v1 = version.slice(0, 3).join('.')
   let v2 = version[3]
 
@@ -98,7 +98,7 @@ electron-packager ./app 'SwitchHosts!' --platform=linux  --arch=x64 --electron-v
 })
 
 gulp.task('zip', (done) => {
-  let version = require('./app/version').version
+  let version = require('./app/version')
   let v = version.join('.')
 
   let cmds = `
