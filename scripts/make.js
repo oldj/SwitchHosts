@@ -14,7 +14,7 @@ const version = require('../app/version')
 
 const cfg_common = {
   appId: 'SwitchHosts',
-  productName: 'SwitchHosts!',
+  productName: 'SwitchHosts',
   copyright: moment().format('Y'),
   buildVersion: version[3],
   directories: {
@@ -32,7 +32,7 @@ const makeApp = async () => {
     //targets: Platform.MAC.createTarget(),
     mac: ['default'], // ['default', 'mas'],
     win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
-    linux: ['tar.gz:ia32', 'tar.gz:x64'],
+    linux: ['zip:x64'],
     config: {
       ...cfg_common,
       mac: {
@@ -69,10 +69,13 @@ const makeApp = async () => {
         //installerIcon: 'assets/installer-icon.ico',
         oneClick: false,
         allowToChangeInstallationDirectory: true,
-        artifactName: '${productName}_Installer_${version}(${buildVersion}).${ext}'
+        artifactName: '${productName}_windows_installer_${version}(${buildVersion}).${ext}'
       },
       portable: {
-        artifactName: '${productName}_Portable_${version}(${buildVersion}).${ext}'
+        artifactName: '${productName}_windows_portable_${version}(${buildVersion}).${ext}'
+      },
+      linux: {
+        artifactName: '${productName}_linux_${arch}_${version}(${buildVersion}).${ext}'
       }
     }
   })
