@@ -8,7 +8,7 @@
     "start": "electron app",
     "dll": "webpack --config scripts/webpack.dll.js --progress --profile --colors",
     "dev": "cross-env ENV=dev electron app",
-    "build": "gulp ver && npm run dll && npm run build2",
+    "build": "npm run dll && npm run build2",
     "build2": "webpack --config scripts/webpack.config.js --progress --profile --colors",
     "w": "npm run build2 -- -w",
     "make": "rm -rf dist/* && node scripts/make.js",
@@ -87,8 +87,6 @@
     "file-loader": "^4.0.0",
     "friendly-errors-webpack-plugin": "^1.7.0",
     "function-bind": "^1.1.1",
-    "gulp": "^4.0.2",
-    "gulp-shell": "^0.7.1",
     "html-webpack-plugin": "^3.2.0",
     "http-proxy-middleware": "^0.19.1",
     "js-beautify": "^1.10.0",
@@ -121,16 +119,29 @@
     "yargs": "^13.2.4"
   },
   "ava": {
-    "files": ["src/**/*.ava.js", "test/*.js", "!**/node_modules/**/*.*"],
-    "source": ["**/*.{js,jsx}", "!dist/**/*"],
+    "files": [
+      "src/**/*.ava.js",
+      "test/*.js",
+      "!**/node_modules/**/*.*"
+    ],
+    "source": [
+      "**/*.{js,jsx}",
+      "!dist/**/*"
+    ],
     "match": [],
     "concurrency": 5,
     "failFast": true,
     "tap": true,
     "powerAssert": false,
-    "require": ["babel-polyfill", "babel-register"],
+    "require": [
+      "babel-polyfill",
+      "babel-register"
+    ],
     "babel": {
-      "presets": ["latest", "stage-0"]
+      "presets": [
+        "latest",
+        "stage-0"
+      ]
     }
   }
 }

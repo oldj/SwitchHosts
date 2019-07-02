@@ -9,10 +9,10 @@ const path = require('path')
 const paths = require('../server/paths')
 const {Menu, shell, dialog} = require('electron')
 const m_lang = require('../server/lang')
-const getPref = require('../server/actions/getPref')
+//const getPref = require('../server/actions/getPref')
 const checkUpdate = require('../server/checkUpdate')
 const svr = require('../server/svr')
-const version = require('../version')
+//const version = require('../version')
 
 function doInit (app, lang) {
   let last_path = null
@@ -191,11 +191,13 @@ function doInit (app, lang) {
           label: lang.feedback,
           click () {
             shell.openExternal('https://github.com/oldj/SwitchHosts/issues')
+              .catch(e => console.log(e))
           }
         }, {
           label: lang.homepage,
           click () {
             shell.openExternal('https://oldj.github.io/SwitchHosts/')
+              .catch(e => console.log(e))
           }
         }]
     }

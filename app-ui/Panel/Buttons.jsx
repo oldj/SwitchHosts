@@ -93,11 +93,11 @@ export default class Buttons extends React.Component {
       <div id="sh-buttons" className={styles.root}>
         <div className={styles.left}>
           <a
-            className={styles["btn-add"]}
+            className={styles['btn-add']}
             href="#"
             onClick={() => Buttons.btnAdd()}
           >
-            <Icon type="plus" className="iconfont" />
+            <Icon type="plus"/>
           </a>
         </div>
 
@@ -105,19 +105,19 @@ export default class Buttons extends React.Component {
           <Icon
             type="search"
             className={classnames({
-              iconfont: 1,
               on: this.state.search_on
             })}
             onClick={() => this.btnSearch()}
           />
-          <i
-            className={classnames({
-              iconfont: 1,
-              'icon-switchon': this.state.top_toggle_on,
-              'icon-switchoff': !this.state.top_toggle_on
-            })}
-            onClick={() => this.btnToggle()}
-          />
+          {/*<i*/}
+          {/*  className={classnames({*/}
+          {/*    iconfont: 1,*/}
+          {/*    'icon-switchon': this.state.top_toggle_on,*/}
+          {/*    'icon-switchoff': !this.state.top_toggle_on*/}
+          {/*  })}*/}
+          {/*  onClick={() => this.btnToggle()}*/}
+          {/*/>*/}
+          <Icon type="setting" onClick={() => Agent.emit('show_preferences')}/>
         </div>
       </div>
     )

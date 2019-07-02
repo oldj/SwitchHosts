@@ -10,6 +10,8 @@ import classnames from 'classnames'
 import { Icon } from 'antd'
 import Agent from '../Agent'
 import isInViewport from 'wheel-js/src/browser/isInViewport'
+import IconOn from './images/on.svg'
+import IconOff from './images/off.svg'
 import styles from './ListItem.less'
 
 export default class ListItem extends React.Component {
@@ -93,39 +95,23 @@ export default class ListItem extends React.Component {
       >
         {sys ? null : (
           <div className={styles['item-buttons']}>
-            <i
-              className={classnames({
-                iconfont: 1,
-                'icon-edit': 1
-              })}
-              onClick={this.toEdit.bind(this)}
-            />
-            <i className={classnames({
-              iconfont: 1,
-              switch: 1,
-              'icon-on': data.on,
-              'icon-off': !data.on
-            })}
-               onClick={this.toggle.bind(this)}
+            {is_selected ? (
+              <Icon
+                type="form"
+                onClick={this.toEdit.bind(this)}
+                className={styles['icon-edit']}
+              />
+            ) : null}
+            <Icon
+              className={styles.switcher}
+              component={data.on ? IconOn : IconOff}
+              onClick={this.toggle.bind(this)}
             />
           </div>
         )}
-        {/*<i className={classnames({*/}
-        {/*'iconfont': 1*/}
-        {/*, 'item-icon': 1*/}
-        {/*, 'icon-warn': !!data.error*/}
-        {/*, 'icon-file': !sys && !data.error && data.where !== 'group'*/}
-        {/*, 'icon-files': data.where === 'group'*/}
-        {/*, 'icon-sysserver': sys && !data.error*/}
-        {/*})}*/}
-        {/*title={data.error || ''}*/}
-        {/*/>*/}
         <Icon
           type={icon_type}
-          className={classnames({
-            iconfont: 1,
-            'item-icon': 1
-          })}
+          className={styles['item-icon']}
           title={data.error || ''}
         />
         <span>{this.getTitle()}</span>

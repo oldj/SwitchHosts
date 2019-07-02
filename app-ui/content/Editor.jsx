@@ -186,7 +186,7 @@ export default class Editor extends React.Component {
     })
   }
 
-  componentWillReceiveProps (next_props) {
+  componentWillReceiveProps (next_props) { // todo ...
     //console.log(next_props);
     let cm = this.codemirror
     let doc = cm.getDoc()

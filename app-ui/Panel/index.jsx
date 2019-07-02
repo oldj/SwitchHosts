@@ -9,11 +9,11 @@ import React from 'react'
 import Buttons from './Buttons'
 //import SearchBar from './searchbar'
 import List from './List'
-import styles from './Panel.less'
+import styles from './index.less'
 import Agent from '../Agent'
 
-export default class Panel extends React.Component {
-  
+export default class Index extends React.Component {
+
   handleOndragenter (events) {
     events.preventDefault()
   }
