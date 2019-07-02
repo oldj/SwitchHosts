@@ -14,7 +14,7 @@ const version = require('../app/version')
 
 const cfg_common = {
   appId: 'SwitchHosts',
-  productName: 'SwitchHosts',
+  productName: 'SwitchHosts!',
   copyright: moment().format('Y'),
   buildVersion: version[3],
   directories: {

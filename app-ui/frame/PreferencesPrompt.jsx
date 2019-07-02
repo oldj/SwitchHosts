@@ -262,17 +262,23 @@ export default class PreferencesPrompt extends React.Component {
           tabPosition="left"
           style={{minHeight: height}}
         >
-          <TabPane tab={lang.pref_tab_general} key="1" style={{height}}>
-            {this.prefLanguage()}
-            {this.prefChoiceMode()}
-            {/*{this.prefAutoLaunch()}*/}
-            {this.prefMinimizeAtLaunch()}
+          <TabPane tab={lang.pref_tab_general} key="1">
+            <div style={{minHeight: height}}>
+              {this.prefLanguage()}
+              {this.prefChoiceMode()}
+              {/*{this.prefAutoLaunch()}*/}
+              {this.prefMinimizeAtLaunch()}
+            </div>
           </TabPane>
-          <TabPane tab={lang.pref_tab_custom_cmd} key="2" style={{height}}>
-            {this.prefAfterCmd()}
+          <TabPane tab={lang.pref_tab_custom_cmd} key="2">
+            <div style={{minHeight: height}}>
+              {this.prefAfterCmd()}
+            </div>
           </TabPane>
-          <TabPane tab={lang.pref_tab_advanced} key="3" style={{height}}>
-            {this.prefAdvanced()}
+          <TabPane tab={lang.pref_tab_advanced} key="3">
+            <div style={{minHeight: height}}>
+              {this.prefAdvanced()}
+            </div>
           </TabPane>
         </Tabs>
       </div>
