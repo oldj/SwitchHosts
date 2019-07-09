@@ -8,7 +8,7 @@
 const request = require('request')
 const fs = require('fs')
 const {URL} = require('url')
-const {version} = require('../../version')
+const version = require('../../version')
 //process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'
 
 module.exports = (svr, url) => {
