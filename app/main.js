@@ -12,6 +12,7 @@ const path = require('path')
 //const fs = require('fs')
 const app = electron.app
 const BrowserWindow = electron.BrowserWindow
+const platform = process.platform
 
 const paths = require('./server/paths')
 const pref = require('./server/pref')
@@ -55,9 +56,9 @@ function createWindow () {
     icon: path.join(__dirname, 'assets', 'logo_512.png'),
     webPreferences: {
       nodeIntegration: true
-    }
+    },
     // autoHideMenuBar: true,
-    // titleBarStyle: 'hiddenInset'
+     titleBarStyle: platform === 'darwin' ? 'hiddenInset' : 'default'
   })
 
   // Let us register listeners on the window, so we can update the state

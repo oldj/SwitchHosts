@@ -26,13 +26,19 @@ export default class Index extends React.Component {
     events.preventDefault()
     let file = events.dataTransfer.files[0]
     if (file) {
-      Agent.emit('add_hosts', file.name, 'file://'+file.path)
+      Agent.emit('add_hosts', file.name, 'file://' + file.path)
     }
   }
 
   render () {
+    let {platform} = Agent
+
     return (
-      <div id="panel" className={styles.root} onDragEnter={this.handleOndragenter} onDragOver={this.handleOndragover} onDrop={this.handleOndrop}>
+      <div id="panel" className={styles.root} onDragEnter={this.handleOndragenter} onDragOver={this.handleOndragover}
+           onDrop={this.handleOndrop}>
+        {platform === 'darwin' ? (
+          <div className={styles.mac_handler}/>
+        ) : null}
         <List {...this.props}/>
         {/*<SearchBar/>*/}
         <Buttons/>
