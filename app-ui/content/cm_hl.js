@@ -19,12 +19,12 @@ export default function () {
         stream.skipToEnd()
         return 'comment'
       }
-      if (!s.match(/^\s*([\d\.]+|[\da-f:\.%lo]+)\s+\w/i)) {
+      if (!s.match(/^\s*([\d.]+|[\da-f:.%lo]+)\s+\w/i)) {
         return 'error'
       }
 
-      if (sol && ch.match(/[\w\.:%]/)) {
-        stream.eatWhile(/[\w\.:%]/)
+      if (sol && ch.match(/[\w.:%]/)) {
+        stream.eatWhile(/[\w.:%]/)
         return 'ip'
       }
 

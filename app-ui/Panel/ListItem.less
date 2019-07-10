@@ -2,12 +2,13 @@
   position: relative;
   padding: 7px 10px 7px 12px;
   cursor: pointer;
+  -webkit-app-region: no-drag;
 
   &.sys-hosts {
     font-size: 14px;
     padding: 8px 10px 8px 10px;
 
-    i.item-icon {
+    .item-icon {
       width: 22px;
       font-size: 12px;
     }
@@ -20,47 +21,38 @@
       color: #fff;
     }
 
-    i.item-icon {
+    .item-icon {
       color: #fff;
     }
 
     &:hover {
-      :global(i.icon-edit) {
+      .icon-edit {
         display: inline-block;
         color: #fff;
       }
     }
   }
+}
 
-  :global {
-    i {
-      display: inline-block;
-      width: 20px;
-      text-align: center;
-      margin-right: 5px;
+.item-icon {
+  margin-right: 0.5em;
+  width: 1.5em;
+}
 
-      &.item-icon {
-        font-size: 10px;
-      }
+.icon-edit {
+  margin-right: 0.5em;
+  font-size: 1.5em;
+  transform: scale(0.7);
+  cursor: pointer;
+}
 
-      &.switch {
-        cursor: pointer;
-        line-height: 23px;
-
-        &.icon-on {
-          color: #af9;
-        }
-      }
-
-      &.icon-edit {
-        display: none;
-      }
-    }
-  }
+.switcher {
+  cursor: pointer;
+  font-size: 1.5em;
 }
 
 .item-buttons {
   position: absolute;
   right: 10px;
-  margin-top: -2px;
+  margin-top: -1px;
 }

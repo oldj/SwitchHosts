@@ -84,7 +84,8 @@ export default class List extends React.Component {
         <ListItem
           data={this.props.sys_hosts}
           {...this.props}
-          sys="1"/>
+          sys="1"
+        />
         <div ref={c => this.el_items = c} className={styles['custom-items']}>
           {this.customItems()}
         </div>

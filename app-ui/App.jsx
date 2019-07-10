@@ -7,7 +7,7 @@
 
 import React from 'react'
 import { notification } from 'antd'
-import Panel from './panel/Panel'
+import Panel from './Panel'
 import Content from './content/Content'
 import SudoPrompt from './frame/SudoPrompt'
 import EditPrompt from './frame/EditPrompt'
