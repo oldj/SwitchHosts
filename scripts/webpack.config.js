@@ -7,13 +7,15 @@
 
 const path = require('path')
 const webpack = require('webpack')
-const moment = require('moment')
+//const moment = require('moment')
 const WebpackNotifierPlugin = require('webpack-notifier')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const LESSPluginLists = require('less-plugin-lists')
 const TerserPlugin = require('terser-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
-const version = require('../app/version').join('.')
+//const version = require('../app/version').join('.')
+const UpVersionPlugin = require('./webpack_up_version')
+const basedir = path.dirname(__dirname)
 
 const mini_css_loader = {
   loader: MiniCssExtractPlugin.loader,
@@ -187,6 +189,10 @@ module.exports = {
         NODE_ENV: JSON.stringify('production')
       }
     }),
+    new UpVersionPlugin({
+      fn: path.join(basedir, 'app', 'version.js'),
+      packages: [path.join(basedir, 'package.json'), path.join(basedir, 'app', 'package.json')],
+    }),
     new MiniCssExtractPlugin({
       // Options similar to the same options in webpackOptions.output
       // both options are optional
@@ -202,7 +208,7 @@ module.exports = {
       title: 'SwitchHosts!',
       alwaysNotify: true,
       excludeWarnings: true
-    }),
-    new webpack.BannerPlugin(`SwitchHosts! [file] v${version}, ${moment().format('YYYY-MM-DD HH:mm:ss')}`)
+    })
+    //new webpack.BannerPlugin(`SwitchHosts! [file] v${version}, ${moment().format('YYYY-MM-DD HH:mm:ss')}`)
   ]
 }

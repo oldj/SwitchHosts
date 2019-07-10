@@ -54,7 +54,7 @@ export default class EditPrompt extends React.Component {
 
   componentDidMount () {
     Agent.on('add_hosts', (title, uri) => {
-      var goWhere = ''
+      let goWhere = ''
       if (uri) {
         goWhere = 'remote'
       }
@@ -207,7 +207,7 @@ export default class EditPrompt extends React.Component {
           <a href="#" className="del"
              onClick={this.confirmDel.bind(this)}
           >
-            <i className="iconfont icon-delete"/>
+            <Icon type="delete"/>
             <span>{lang.del_hosts}</span>
           </a>
         </div>
