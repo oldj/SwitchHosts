@@ -32,7 +32,7 @@ const makeApp = async () => {
     //targets: Platform.MAC.createTarget(),
     mac: ['default'], // ['default', 'mas'],
     win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
-    linux: ['zip:x64'],
+    linux: ['zip:x64', 'AppImage:x64'],
     config: {
       ...cfg_common,
       mac: {
