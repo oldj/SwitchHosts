@@ -1,8 +1,6 @@
 @import '../cfg.less';
 
 .root {
-  @bg_left: #373d47;
-
   position: absolute;
   bottom: 0;
   width: 240px;
@@ -53,5 +51,15 @@
     &.on {
       background: @bg_left_search;
     }
+  }
+}
+
+:global(.theme-dark) {
+  .root {
+    background: @bg_left_dark;
+  }
+
+  .btn-add {
+    color: @font_color_left_dark;
   }
 }
