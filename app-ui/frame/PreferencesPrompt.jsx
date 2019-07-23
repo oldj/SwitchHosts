@@ -7,7 +7,7 @@
 
 import React from 'react'
 import lodash from 'lodash'
-import { Checkbox, Input, Radio, Select, Tabs } from 'antd'
+import { Checkbox, Row, Col, Radio, Select, Tabs } from 'antd'
 import MyFrame from './MyFrame'
 import classnames from 'classnames'
 import Agent from '../Agent'
@@ -22,7 +22,7 @@ const Option = Select.Option
 const TabPane = Tabs.TabPane
 const pref_keys = [
   'after_cmd', 'auto_launch', 'choice_mode', 'hide_at_launch', 'is_dock_icon_hidden',
-  'user_language', 'send_usage_data', 'show_title_on_tray'
+  'user_language', 'send_usage_data', 'show_title_on_tray', 'theme'
 ]
 
 export default class PreferencesPrompt extends React.Component {
@@ -108,18 +108,46 @@ export default class PreferencesPrompt extends React.Component {
 
     return (
       <div className="ln">
-        <div>{lang.language}</div>
-        <div
-          className="inform">{lang.should_restart_after_change_language}</div>
-        <div>
-          <Select
-            value={this.state.user_language || ''}
-            onChange={v => this.updatePref({user_language: v})}
-            style={{minWidth: 120}}
-          >
-            {this.getLanguageOptions()}
-          </Select>
-        </div>
+        <Row gutter={16}>
+          <Col span={6}>
+            <span>{lang.language}</span>
+          </Col>
+          <Col span={18}>
+            <Select
+              value={this.state.user_language || ''}
+              onChange={v => this.updatePref({user_language: v})}
+              style={{minWidth: 120}}
+            >
+              {this.getLanguageOptions()}
+            </Select>
+          </Col>
+        </Row>
+      </div>
+    )
+  }
+
+  prefTheme () {
+    let {lang} = this.props
+    let themes = ['light', 'dark']
+
+    return (
+      <div className="ln">
+        <Row gutter={16}>
+          <Col span={6}>
+            <span>{lang.theme}</span>
+          </Col>
+          <Col span={18}>
+            <Select
+              value={this.state.theme || 'light'}
+              onChange={v => this.updatePref({theme: v})}
+              style={{minWidth: 120}}
+            >
+              {themes.map(t => (
+                <Option value={t} key={t}>{lang['theme_' + t]}</Option>
+              ))}
+            </Select>
+          </Col>
+        </Row>
       </div>
     )
   }
@@ -129,16 +157,20 @@ export default class PreferencesPrompt extends React.Component {
 
     return (
       <div className="ln">
-        <div>{lang.pref_choice_mode}</div>
-        <div>
-          <RadioGroup
-            onChange={e => this.updatePref({choice_mode: e.target.value})}
-            value={this.state.choice_mode}
-          >
-            <Radio value="single">{lang.pref_choice_mode_single}</Radio>
-            <Radio value="multiple">{lang.pref_choice_mode_multiple}</Radio>
-          </RadioGroup>
-        </div>
+        <Row gutter={16}>
+          <Col span={6}>
+            <span>{lang.pref_choice_mode}</span>
+          </Col>
+          <Col span={18}>
+            <RadioGroup
+              onChange={e => this.updatePref({choice_mode: e.target.value})}
+              value={this.state.choice_mode}
+            >
+              <Radio.Button value="single">{lang.pref_choice_mode_single}</Radio.Button>
+              <Radio.Button value="multiple">{lang.pref_choice_mode_multiple}</Radio.Button>
+            </RadioGroup>
+          </Col>
+        </Row>
       </div>
     )
   }
@@ -266,6 +298,7 @@ export default class PreferencesPrompt extends React.Component {
           <TabPane tab={lang.pref_tab_general} key="1">
             <div style={{minHeight: height}}>
               {this.prefLanguage()}
+              {this.prefTheme()}
               {this.prefChoiceMode()}
               {/*{this.prefAutoLaunch()}*/}
               {is_mac ? this.prefShowTitleOnTray() : null}

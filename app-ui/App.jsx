@@ -7,6 +7,7 @@
 
 import React from 'react'
 import { notification } from 'antd'
+import classnames from 'classnames'
 import Panel from './Panel'
 import Content from './content/Content'
 import SudoPrompt from './frame/SudoPrompt'
@@ -27,7 +28,8 @@ export default class App extends React.Component {
       sys_hosts: {}, // 系统 hosts
       current: {}, // 当前 hosts
       lang: {}, // 语言
-      just_added_id: null
+      just_added_id: null,
+      theme: 'light'
     }
 
     this.is_dragging = false
@@ -35,6 +37,7 @@ export default class App extends React.Component {
 
     Agent.pact('getPref')
       .then(pref => {
+        this.setState({theme: pref.theme || 'light'})
         return pref.user_language || 'en'
       })
       .then(l => {
@@ -179,9 +182,18 @@ export default class App extends React.Component {
   }
 
   render () {
-    let current = this.state.current
+    let {current, theme} = this.state
+
     return (
-      <div id="app" className={'platform-' + Agent.platform}  onDragEnter={this.handleOndragenter} onDragOver={this.handleOndragover} onDrop={this.handleOndrop}>
+      <div
+        className={classnames({
+          ['platform-' + Agent.platform]: 1,
+          ['theme-' + theme]: 1
+        })}
+        onDragEnter={this.handleOndragenter}
+        onDragOver={this.handleOndragover}
+        onDrop={this.handleOndrop}
+      >
         <SudoPrompt lang={this.state.lang}/>
         <EditPrompt
           lang={this.state.lang}
