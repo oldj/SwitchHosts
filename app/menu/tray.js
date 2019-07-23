@@ -6,7 +6,7 @@
 
 'use strict'
 
-const fs = require('fs')
+//const fs = require('fs')
 const path = require('path')
 const {Menu, Tray, shell} = require('electron')
 const m_lang = require('../server/lang')
@@ -148,8 +148,10 @@ function makeTray (app, contents, sys_lang = 'en') {
         let contextMenu = Menu.buildFromTemplate(makeMenu(app, list, contents, sys_lang))
         tray.setContextMenu(contextMenu)
         const {ori = '', show = '', tips = ''} = makeTitle(list)
-        tray.setTitle(show)
-        tray.setToolTip(ori ? `\n${lang.current_active_hosts}: \n\n${tips}\n` : 'SwitchHosts!')
+        if (pref.get('show_title_on_tray')) {
+          tray.setTitle(show)
+          tray.setToolTip(ori ? `\n${lang.current_active_hosts}: \n\n${tips}\n` : 'SwitchHosts!')
+        }
       })
   })
 

@@ -97,6 +97,7 @@ exports.content = {
   , set_and_back: '设置并返回'
   , set_and_relaunch_app: '确定并重启程序'
   , should_restart_after_change_language: '修改语言后需要重启应用方可生效。'
+  , show_title_on_tray: '在系统托盘显示标题'
   , show_dock_icon: '显示 Dock 图标'
   , source_code: '源码'
   , sudo_pswd: '密码'

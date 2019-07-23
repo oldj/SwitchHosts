@@ -97,6 +97,7 @@ exports.content = {
   , set_and_back: 'Set and back'
   , set_and_relaunch_app: 'Set and Relaunch'
   , should_restart_after_change_language: 'Relaunch to enable the new language interface.'
+  , show_title_on_tray: 'Show title on tray'
   , show_dock_icon: 'Show Dock Icon'
   , source_code: 'Source Code'
   , sudo_pswd: 'Password'
