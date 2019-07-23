@@ -1,6 +1,6 @@
 {
   "name": "switchhosts",
-  "version": "3.3.14",
+  "version": "3.3.15",
   "description": "A tool for managing and switching hosts.",
   "main": "",
   "scripts": {
