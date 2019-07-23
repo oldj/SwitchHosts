@@ -19,18 +19,18 @@
   &.selected {
     background: @bg_left * 1.1;
 
-    span {
-      color: #fff;
-    }
-
-    .item-icon {
-      color: #fff;
-    }
+    //span {
+    //  color: #fff;
+    //}
+    //
+    //.item-icon {
+    //  color: #fff;
+    //}
 
     &:hover {
       .icon-edit {
         display: inline-block;
-        color: #fff;
+        //color: #fff;
       }
     }
   }
@@ -63,6 +63,20 @@
   .list-item {
     &.selected {
       background: @bg_left_dark * 1.1;
+
+      span {
+        color: #fff;
+      }
+
+      .item-icon {
+        color: #fff;
+      }
+
+      &:hover {
+        .icon-edit {
+          color: #fff;
+        }
+      }
     }
   }
 }
