@@ -38,6 +38,8 @@ export default class App extends React.Component {
     Agent.pact('getPref')
       .then(pref => {
         this.setState({theme: pref.theme || 'light'})
+        document.body.className += ' theme-' + pref.theme
+
         return pref.user_language || 'en'
       })
       .then(l => {
@@ -169,7 +171,6 @@ export default class App extends React.Component {
   }
 
   componentDidMount () {
-
     window.addEventListener('keydown', (e) => {
       if (e.keyCode === 27) {
         Agent.emit('esc')
@@ -187,8 +188,8 @@ export default class App extends React.Component {
     return (
       <div
         className={classnames({
-          ['platform-' + Agent.platform]: 1,
-          ['theme-' + theme]: 1
+          //['theme-' + theme]: 1,
+          ['platform-' + Agent.platform]: 1
         })}
         onDragEnter={this.handleOndragenter}
         onDragOver={this.handleOndragover}
