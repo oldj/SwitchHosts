@@ -1,8 +1,6 @@
-@import '../cfg.less';
+@import '../styles/cfg.less';
 
 .root {
-  @bg_left: #373d47;
-
   position: absolute;
   bottom: 0;
   width: 240px;
@@ -15,7 +13,6 @@
 .left {
   float: left;
   padding-left: 10px;
-
 }
 
 .btn-add {
@@ -32,7 +29,7 @@
 
 .right {
   float: right;
-  padding-right: 17px;
+  padding-right: 12px;
   height: 30px;
 
   i {
@@ -53,5 +50,15 @@
     &.on {
       background: @bg_left_search;
     }
+  }
+}
+
+:global(.theme-dark) {
+  .root {
+    background: @bg_left_dark;
+  }
+
+  .btn-add {
+    color: @font_color_left_dark;
   }
 }

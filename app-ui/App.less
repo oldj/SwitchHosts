@@ -1,5 +1,7 @@
 //@import "../node_modules/antd/dist/antd.less";
-@import "./cfg.less";
+@import "styles/cfg";
+@import "./styles/themes/light";
+@import "./styles/themes/dark";
 
 html, body {
   margin: 0;
@@ -16,11 +18,12 @@ a {
   text-decoration: none;
 }
 
-#app {
-  height: 100%;
-}
+:global {
+  #app {
+    height: 100%;
+  }
 
-:global(.hidden) {
-  display: none;
+  .hidden {
+    display: none;
+  }
 }
-
