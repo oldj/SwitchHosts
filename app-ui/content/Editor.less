@@ -7,7 +7,7 @@
   padding: 4px 4px 4px 0;
   background: @bg_left;
 
-  &>:global(.CodeMirror) {
+  & > :global(.CodeMirror) {
     border-radius: 4px;
   }
 
@@ -19,6 +19,7 @@
         .CodeMirror-linenumber {
           cursor: default;
         }
+
         .CodeMirror-cursors {
           display: none;
         }
@@ -39,16 +40,20 @@
   .cm-s-default .cm-comment {
     color: #090;
   }
+
   .cm-s-default .cm-ip {
     color: #00a;
     font-weight: bold;
   }
+
   .cm-s-default .cm-hl {
     background: #ff0;
   }
+
   .CodeMirror-gutters {
     border-right: none;
     padding-right: 6px;
+    background: #fafafa;
   }
 
   .CodeMirror-linenumber {
@@ -60,14 +65,20 @@
 :global(.theme-dark) {
   .root {
     background: @bg_left_dark;
+
+    & > :global(.CodeMirror) {
+      border: 1px solid #444;
+    }
   }
 
   .cm-s-default .cm-comment {
     //color: #090;
   }
+
   .cm-s-default .cm-ip {
     color: #096dd9;
   }
+
   .cm-s-default .cm-hl {
     //background: #ff0;
   }
