@@ -12,6 +12,7 @@ import { Icon, Input, Radio, Select } from 'antd'
 import Group from './Group'
 import Agent from '../Agent'
 import makeId from '../../app/libs/make-id'
+import {WHERE_LOCAL, WHERE_REMOTE, WHERE_GROUP} from '../configs/contants'
 import './EditPrompt.less'
 
 const RadioButton = Radio.Button
@@ -25,7 +26,7 @@ export default class EditPrompt extends React.Component {
     this.state = {
       show: false,
       is_add: true,
-      where: 'local',
+      where: WHERE_LOCAL,
       title: '',
       url: '',
       last_refresh: null,
@@ -44,7 +45,7 @@ export default class EditPrompt extends React.Component {
 
   clear () {
     this.setState({
-      where: 'local',
+      where: WHERE_LOCAL,
       title: '',
       url: '',
       last_refresh: null,
@@ -54,9 +55,9 @@ export default class EditPrompt extends React.Component {
 
   componentDidMount () {
     Agent.on('add_hosts', (title, uri) => {
-      let goWhere = ''
+      let goWhere = WHERE_LOCAL
       if (uri) {
-        goWhere = 'remote'
+        goWhere = WHERE_REMOTE
       }
       this.setState({
         show: true,
@@ -80,7 +81,7 @@ export default class EditPrompt extends React.Component {
         id: hosts.id,
         show: true,
         is_add: false,
-        where: hosts.where || 'local',
+        where: hosts.where || WHERE_LOCAL,
         title: hosts.title || '',
         url: hosts.url || '',
         last_refresh: hosts.last_refresh || null,
@@ -127,7 +128,7 @@ export default class EditPrompt extends React.Component {
       return false
     }
 
-    if (this.state.where === 'remote' && this.state.url === '') {
+    if (this.state.where === WHERE_REMOTE && this.state.url === '') {
       this.el_url.focus()
       return false
     }
@@ -144,7 +145,7 @@ export default class EditPrompt extends React.Component {
     if (this.state.is_add) {
       this.props.justAdd(new_id)
     }
-    if (this.state.where !== 'group') {
+    if (this.state.where !== WHERE_GROUP) {
       data.include = []
     }
 
@@ -226,7 +227,7 @@ export default class EditPrompt extends React.Component {
   }
 
   renderGroup () {
-    if (this.state.where !== 'group') return null
+    if (this.state.where !== WHERE_GROUP) return null
 
     return <Group
       list={this.props.list}
@@ -236,7 +237,7 @@ export default class EditPrompt extends React.Component {
   }
 
   renderRemoteInputs () {
-    if (this.state.where !== 'remote') return null
+    if (this.state.where !== WHERE_REMOTE) return null
 
     let {lang} = this.props
 
@@ -289,13 +290,15 @@ export default class EditPrompt extends React.Component {
 
   body () {
     let {lang} = this.props
+    let {where, title} = this.state
+
     return (
       <div ref={c => this.el_body = c}>
         <div className="ln">
-          <RadioGroup onChange={e => this.setState({where: e.target.value})} value={this.state.where}>
-            <RadioButton value="local"><Icon type="file-text" /> {lang.where_local}</RadioButton>
-            <RadioButton value="remote"><Icon type="global" /> {lang.where_remote}</RadioButton>
-            <RadioButton value="group"><Icon type="copy" /> {lang.where_group}</RadioButton>
+          <RadioGroup onChange={e => this.setState({where: e.target.value})} value={where}>
+            <RadioButton value={WHERE_LOCAL}><Icon type="file-text" /> {lang.where_local}</RadioButton>
+            <RadioButton value={WHERE_REMOTE}><Icon type="global" /> {lang.where_remote}</RadioButton>
+            <RadioButton value={WHERE_GROUP}><Icon type="copy" /> {lang.where_group}</RadioButton>
           </RadioGroup>
         </div>
 
@@ -304,7 +307,7 @@ export default class EditPrompt extends React.Component {
           <div className="cnt">
             <Input
               ref={c => this.el_title = c}
-              value={this.state.title}
+              value={title}
               onChange={(e) => this.setState({title: e.target.value})}
               onKeyDown={(e) => (e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
             />
