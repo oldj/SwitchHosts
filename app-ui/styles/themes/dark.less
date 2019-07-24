@@ -27,5 +27,52 @@
     .cm-ip {
       color: #096dd9;
     }
+
+    // antd
+    .ant-input {
+      background: @ipt_bg_dark;
+      color: @font_color_dark;
+      border-color: @bd_color_dark;
+    }
+
+    .ant-input-prefix {
+      i {
+        color: @font_color_dark;
+      }
+    }
+
+    .ant-btn {
+      background-color: @dark-hl;
+      border-color: @bd_color_dark;
+      color: @font_color_dark;
+
+      &:hover {
+        background-color: @dark-hl * 1.2;
+        border-color: @bd_color_dark;
+        color: @font_color_dark * 1.5;
+      }
+    }
+
+    .ant-btn-primary {
+      background-color: @dark-blue;
+      border-color: @dark-blue * 0.8;
+
+      &:hover {
+        background-color: @dark-blue * 1.2;
+        border-color: @dark-blue;
+        color: @font_color_dark * 1.2;
+      }
+    }
+
+    .ant-btn[disabled] {
+      background-color: @dark-hl * 0.6;
+      color: @dark-hl* 0.8;
+      border-color: @bd_color_dark;
+
+      &:hover {
+        border-color: @bd_color_dark;
+        background-color: @dark-hl * 0.8;
+      }
+    }
   }
 }
