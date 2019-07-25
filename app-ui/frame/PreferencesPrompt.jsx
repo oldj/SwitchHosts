@@ -22,7 +22,8 @@ const Option = Select.Option
 const TabPane = Tabs.TabPane
 const pref_keys = [
   'after_cmd', 'auto_launch', 'choice_mode', 'hide_at_launch', 'is_dock_icon_hidden',
-  'user_language', 'send_usage_data', 'show_title_on_tray', 'theme'
+  'user_language', 'send_usage_data', 'show_title_on_tray', 'theme',
+  'env'
 ]
 
 export default class PreferencesPrompt extends React.Component {
@@ -109,10 +110,10 @@ export default class PreferencesPrompt extends React.Component {
     return (
       <div className="ln">
         <Row gutter={16}>
-          <Col span={6}>
+          <Col span={7}>
             <span>{lang.language}</span>
           </Col>
-          <Col span={18}>
+          <Col span={17}>
             <Select
               value={this.state.user_language || ''}
               onChange={v => this.updatePref({user_language: v})}
@@ -133,10 +134,10 @@ export default class PreferencesPrompt extends React.Component {
     return (
       <div className="ln">
         <Row gutter={16}>
-          <Col span={6}>
+          <Col span={7}>
             <span>{lang.theme}</span>
           </Col>
-          <Col span={18}>
+          <Col span={17}>
             <Select
               value={this.state.theme || 'light'}
               onChange={v => this.updatePref({theme: v})}
@@ -158,10 +159,10 @@ export default class PreferencesPrompt extends React.Component {
     return (
       <div className="ln">
         <Row gutter={16}>
-          <Col span={6}>
+          <Col span={7}>
             <span>{lang.pref_choice_mode}</span>
           </Col>
-          <Col span={18}>
+          <Col span={17}>
             <RadioGroup
               onChange={e => this.updatePref({choice_mode: e.target.value})}
               value={this.state.choice_mode}

@@ -33,6 +33,10 @@
   padding: 4px 10px;
   line-height: 2.2em;
   cursor: pointer;
+
+  &:hover {
+    color: @font_color * 1.2;
+  }
 }
 
 .sep {
@@ -62,7 +66,7 @@
   margin-top: -1px;
   margin-left: @menu_width - @w;
   //text-align: center;
-  line-height: 18px;
+  line-height: 20px;
   cursor: pointer;
 
   i {
@@ -76,6 +80,12 @@
     background-color: @editor_bg_dark;
     border-color: @bd_color_dark;
     color: @font_color_dark;
+  }
+
+  .item {
+    &:hover {
+      color: @font_color_dark * 1.2;
+    }
   }
 
   .sep {

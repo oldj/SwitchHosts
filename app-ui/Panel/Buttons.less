@@ -1,18 +1,20 @@
 @import '../styles/cfg.less';
 
 .root {
+  @m: 8px;
   position: absolute;
   bottom: 0;
-  width: 240px;
+  width: @panel-width - @m * 2;
   height: 30px;
   line-height: 30px;
   background: @bg_left;
-
+  margin: 0 @m;
+  border-top: 1px solid @bd_color * 1.1;
 }
 
 .left {
   float: left;
-  padding-left: 10px;
+  padding-left: 2px;
 }
 
 .btn-add {
@@ -29,7 +31,7 @@
 
 .right {
   float: right;
-  padding-right: 12px;
+  padding-right: 4px;
   height: 30px;
 
   i {
@@ -56,6 +58,7 @@
 :global(.theme-dark) {
   .root {
     background: @bg_left_dark;
+    border-top-color: @bd_color_dark;
   }
 
   .btn-add {
