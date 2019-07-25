@@ -13,9 +13,9 @@
     "chrome-remote-interface": "^0.27.2",
     "electron-window-state": "^5.0.3",
     "express": "^4.17.1",
-    "js-beautify": "^1.10.0",
+    "js-beautify": "^1.10.1",
     "md5-file": "^4.0.0",
-    "node-notifier": "^5.3.0",
-    "request": "^2.87.0"
+    "node-notifier": "^5.4.0",
+    "request": "^2.88.0"
   }
 }
