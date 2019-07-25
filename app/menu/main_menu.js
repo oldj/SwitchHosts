@@ -5,18 +5,16 @@
 
 'use strict'
 
-const path = require('path')
-const paths = require('../server/paths')
-const {Menu, shell, dialog} = require('electron')
+const {Menu, shell} = require('electron')
 const m_lang = require('../server/lang')
 //const getPref = require('../server/actions/getPref')
 const checkUpdate = require('../server/checkUpdate')
 const svr = require('../server/svr')
+const {url_home, url_feedback} = require('../configs')
+
 //const version = require('../version')
 
 function doInit (app, lang) {
-  let last_path = null
-  let download_path = app.getPath('downloads')
 
   const template = [
     {
@@ -34,40 +32,13 @@ function doInit (app, lang) {
           label: lang.import,
           accelerator: 'Alt+CommandOrControl+I',
           click: () => {
-            dialog.showOpenDialog({
-              title: lang.import,
-              defaultPath: path.join(last_path || download_path ||
-                paths.home_path, 'sh.json'),
-              filters: [
-                {name: 'JSON', extensions: ['json']},
-                {name: 'All Files', extensions: ['*']}
-              ]
-            }, (fns) => {
-              if (fns && fns.length > 0) {
-                require('../server/actions/importData')(svr, fns[0])
-                last_path = path.dirname(fns[0])
-              }
-            })
+            require('../server/actions/toImport')(svr)
           }
         }, {
           label: lang.export,
           accelerator: 'Alt+CommandOrControl+E',
           click: () => {
-            dialog.showSaveDialog({
-              title: lang.export,
-              defaultPath: path.join(last_path || download_path ||
-                paths.home_path, 'sh.json'),
-              filters: [
-                {name: 'JSON', extensions: ['json']},
-                {name: 'All Files', extensions: ['*']}
-              ]
-            }, (fn) => {
-              if (fn) {
-                //svr.emit('to_export', fn)
-                require('../server/actions/exportData')(svr, fn)
-                last_path = path.dirname(fn)
-              }
-            })
+            require('../server/actions/toExport')(svr)
           }
         }, {
           type: 'separator'
@@ -190,13 +161,13 @@ function doInit (app, lang) {
         }, {
           label: lang.feedback,
           click () {
-            shell.openExternal('https://github.com/oldj/SwitchHosts/issues')
+            shell.openExternal(url_feedback)
               .catch(e => console.log(e))
           }
         }, {
           label: lang.homepage,
           click () {
-            shell.openExternal('https://oldj.github.io/SwitchHosts/')
+            shell.openExternal(url_home)
               .catch(e => console.log(e))
           }
         }]

@@ -16,8 +16,10 @@ const platform = process.platform
 
 const paths = require('./server/paths')
 const pref = require('./server/pref')
+const m_lang = require('./server/lang')
 let user_language = pref.get('user_language') || (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
 global.user_language = user_language
+global.lang = m_lang.getLang(user_language)
 
 require('./server/Server')
 
@@ -57,8 +59,8 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: true
     },
-    // autoHideMenuBar: true,
-     titleBarStyle: platform === 'darwin' ? 'hiddenInset' : 'default'
+    autoHideMenuBar: true,
+    titleBarStyle: platform === 'darwin' ? 'hiddenInset' : 'default'
   })
 
   // Let us register listeners on the window, so we can update the state

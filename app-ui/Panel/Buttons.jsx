@@ -9,6 +9,7 @@ import React from 'react'
 import { Icon } from 'antd'
 import classnames from 'classnames'
 import Agent from '../Agent'
+import Menu from './Menu'
 import styles from './Buttons.less'
 
 export default class Buttons extends React.Component {
@@ -17,7 +18,8 @@ export default class Buttons extends React.Component {
 
     this.state = {
       top_toggle_on: true,
-      search_on: false
+      search_on: false,
+      show_menu: false
     }
 
     this.on_ids = []
@@ -74,6 +76,10 @@ export default class Buttons extends React.Component {
     })
   }
 
+  toggleMenu () {
+    this.setState({show_menu: !this.state.show_menu})
+  }
+
   componentDidMount () {
     Agent.on('to_search', () => {
       this.btnSearch()
@@ -89,6 +95,8 @@ export default class Buttons extends React.Component {
   }
 
   render () {
+    let {show_menu} = this.state
+
     return (
       <div id="sh-buttons" className={styles.root}>
         <div className={styles.left}>
@@ -117,8 +125,15 @@ export default class Buttons extends React.Component {
           {/*  })}*/}
           {/*  onClick={() => this.btnToggle()}*/}
           {/*/>*/}
-          <Icon type="setting" onClick={() => Agent.emit('show_preferences')}/>
+          {/*<Icon type="setting" onClick={() => Agent.emit('show_preferences')}/>*/}
+          <Icon type="tool" onClick={this.toggleMenu.bind(this)}/>
         </div>
+
+        <Menu
+          {...this.props}
+          show_menu={show_menu}
+          toggleMenu={this.toggleMenu.bind(this)}
+        />
       </div>
     )
   }
