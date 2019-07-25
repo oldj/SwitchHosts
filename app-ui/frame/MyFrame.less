@@ -1,3 +1,5 @@
+@import "../styles/cfg";
+
 :global {
   .frame {
     @bg: #f5f5f5;
@@ -53,7 +55,8 @@
               padding: 4px 10px;
             }
             textarea {
-              font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+              //font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+              font-family: @font-editor;
             }
           }
 
@@ -67,6 +70,10 @@
         input[type=password] {
           letter-spacing: 8px;
         }
+
+        .ant-tabs-left-bar {
+          min-width: 120px;
+        }
       }
     }
   }
@@ -76,4 +83,17 @@
       width: 300px;
     }
   }
+
+  .theme-dark {
+    .frame {
+      .ant-modal {
+        .prompt-body {
+          .CodeMirror-scroll {
+            background: @ipt_bg_dark;
+          }
+        }
+      }
+    }
+  }
 }
+
