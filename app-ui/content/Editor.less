@@ -6,12 +6,13 @@
   font-family: @font-editor;
   padding: 4px 4px 4px 0;
   background: @bg_left;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.6em;
 
   & > :global(.CodeMirror) {
     border-radius: 4px;
     border: 1px solid @bd_color * 1.1;
+    z-index: 4; // 修复代码行数的背景与左下角圆角冲突的问题
 
     :global {
       .CodeMirror-scrollbar-filler {
@@ -97,6 +98,7 @@
     border-right: none;
     padding-right: 6px;
     background: #fafafa;
+    border-radius: 4px 0 0 4px;
   }
 
   .CodeMirror-linenumber {
