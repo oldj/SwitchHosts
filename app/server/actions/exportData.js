@@ -5,34 +5,35 @@
 
 'use strict'
 
+const {Notification} = require('electron')
 const paths = require('../paths')
 const io = require('../io')
 const version = require('../../version')
 
-module.exports = (svr, fn) => {
+module.exports = async (svr, fn) => {
+  let {lang} = global
   let data_path = paths.data_path
+  let cnt = '{}'
 
-  return Promise
-    .resolve()
-    .then(() => {
-      if (io.isFile(data_path)) {
-        return io.pReadFile(data_path)
-      } else {
-        return '{}'
-      }
-    })
-    .then(cnt => {
-      let data
-      try {
-        data = JSON.parse(cnt)
-      } catch (e) {
-        console.log(e)
-      }
-      data.version = version
+  if (io.isFile(data_path)) {
+    cnt = await io.pReadFile(data_path)
+  }
 
-      return JSON.stringify(data)
-    })
-    .then(cnt => {
-      return io.pWriteFile(fn, cnt)
-    })
+  let data
+  try {
+    data = JSON.parse(cnt)
+  } catch (e) {
+    console.log(e)
+  }
+  data.version = version
+
+  cnt = JSON.stringify(data)
+  await io.pWriteFile(fn, cnt)
+
+  let notify = new Notification({
+    title: lang.export,
+    body: lang.export_finish
+  })
+
+  notify.show()
 }

@@ -31,6 +31,7 @@ exports.content = {
   , edit: 'Edit'
   , edit_hosts: 'Edit hosts'
   , export: 'Export'
+  , export_finish: 'The export is complete.'
   , feedback: 'Feedback'
   , file: 'File'
   , help: 'Help'

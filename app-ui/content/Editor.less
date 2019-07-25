@@ -9,6 +9,26 @@
 
   & > :global(.CodeMirror) {
     border-radius: 4px;
+
+    :global {
+      .CodeMirror-vscrollbar {
+        &::-webkit-scrollbar {
+          width: 8px;
+          height: 0;
+        }
+
+        .my-scroll-0();
+      }
+
+      .CodeMirror-hscrollbar {
+        &::-webkit-scrollbar {
+          width: 0;
+          height: 8px;
+        }
+
+        .my-scroll-0();
+      }
+    }
   }
 
   // CodeMirror

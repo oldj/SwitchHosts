@@ -2,30 +2,34 @@
 
 .list-item {
   position: relative;
-  padding: 7px 10px 7px 12px;
+  padding: 7px 10px 7px 10px;
   cursor: pointer;
   -webkit-app-region: no-drag;
 
   &.sys-hosts {
-    font-size: 14px;
-    padding: 8px 10px 8px 10px;
+    //font-size: 14px;
+    //padding: 8px 10px 8px 10px;
 
     .item-icon {
       width: 22px;
       font-size: 12px;
+      margin-left: 1px;
     }
   }
 
   &.selected {
-    background: @bg_left * 1.1;
+    //background: @bg_left * 1.1;
 
-    //span {
-    //  color: #fff;
-    //}
-    //
-    //.item-icon {
-    //  color: #fff;
-    //}
+    &:before {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 30px;
+      background: #09f;
+      position: absolute;
+      z-index: 1;
+      margin: -7px 0 0 -10px;
+    }
 
     &:hover {
       .icon-edit {
@@ -37,6 +41,7 @@
 }
 
 .item-icon {
+  margin-left: 2px;
   margin-right: 0.5em;
   width: 1.5em;
 }
@@ -62,7 +67,7 @@
 :global(.theme-dark) {
   .list-item {
     &.selected {
-      background: @bg_left_dark * 1.1;
+      //background: @bg_left_dark * 1.1;
 
       span {
         color: #fff;
