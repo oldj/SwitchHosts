@@ -31,6 +31,7 @@ exports.content = {
   , edit: '编辑'
   , edit_hosts: '修改 hosts'
   , export: '导出'
+  , export_finish: '导出成功！'
   , feedback: '意见反馈'
   , file: '文件'
   , help: '帮助'

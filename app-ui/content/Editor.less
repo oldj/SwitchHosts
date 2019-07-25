@@ -6,9 +6,52 @@
   font-family: @font-editor;
   padding: 4px 4px 4px 0;
   background: @bg_left;
+  font-size: 14px;
+  line-height: 1.6em;
 
   & > :global(.CodeMirror) {
     border-radius: 4px;
+    border: 1px solid @bd_color * 1.1;
+
+    :global {
+      .CodeMirror-scrollbar-filler {
+        opacity: 0;
+      }
+
+      .CodeMirror-vscrollbar,
+      .CodeMirror-hscrollbar {
+        &::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+        }
+      }
+    }
+  }
+
+  &:hover {
+    :global {
+      .CodeMirror-vscrollbar {
+        & > div {
+          width: 8px;
+        }
+
+        &::-webkit-scrollbar {
+          width: 8px;
+          height: 0;
+        }
+
+        .my-scroll-0();
+      }
+
+      .CodeMirror-hscrollbar {
+        &::-webkit-scrollbar {
+          width: 0;
+          height: 8px;
+        }
+
+        .my-scroll-0();
+      }
+    }
   }
 
   // CodeMirror
@@ -58,6 +101,7 @@
 
   .CodeMirror-linenumber {
     cursor: pointer;
+    font-size: 12px;
   }
 
 }

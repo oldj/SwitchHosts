@@ -1,0 +1,31 @@
+.my-scroll-0() {
+  &::-webkit-scrollbar {
+    position: absolute;
+    //width: 8px;
+    //height: 8px;
+    //height: 0;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    //border-radius: 16px;
+  }
+  &::-webkit-scrollbar-corner {
+    background: rgba(0, 0, 0, 0.05);
+    //background: #f00;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.5);
+    //border-radius: 16px;
+  }
+}
+
+.my-scroll() {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 0;
+  }
+
+  &:hover {
+    .my-scroll-0();
+  }
+}

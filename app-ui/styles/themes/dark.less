@@ -16,12 +16,11 @@
       }
     }
 
-    .CodeMirror-scroll {
-      background: @editor_bg_dark;
-    }
-
+    .CodeMirror-gutter-filler,
+    .CodeMirror-scrollbar-filler,
+    .CodeMirror-scroll,
     .CodeMirror-gutters {
-      background: @editor_bg_dark;
+      background-color: @editor_bg_dark;
     }
 
     .CodeMirror-linenumber {
@@ -53,6 +52,10 @@
     .cm-s-default {
       .cm-builtin {
         color: @dark-blue * 1.2;
+      }
+
+      .cm-error {
+        color: #c36;
       }
     }
 
