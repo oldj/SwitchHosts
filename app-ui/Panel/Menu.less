@@ -1,0 +1,98 @@
+@import "../styles/cfg";
+
+@menu_width: 160px;
+@menu_handler_size: 24px;
+
+.root {
+  position: fixed;
+  left: @left_width - @menu_width;
+  bottom: 0;
+  z-index: 100;
+  width: @menu_width;
+  box-sizing: border-box;
+  padding-bottom: @menu_handler_size;
+
+  //&:after {
+  //  content: '';
+  //  display: block;
+  //  width: @menu_handler_size;
+  //  height: @menu_handler_size;
+  //  border: 1px solid @bd_color;
+  //  background: #fff;
+  //}
+}
+
+.items {
+  min-height: 100px;
+  background: #fff;
+  border: 1px solid @bd_color;
+  padding: 0 4px;
+}
+
+.item {
+  padding: 4px 10px;
+  line-height: 2.2em;
+  cursor: pointer;
+
+  &:hover {
+    color: @font_color * 1.2;
+  }
+}
+
+.sep {
+  height: 1px;
+  cursor: default;
+  background: @bd_color * 1.2;
+}
+
+.item_icon {
+  display: inline-block;
+  width: 20px;
+}
+
+.item_label {
+
+}
+
+.handler {
+  @w: @menu_handler_size + 6px;
+  @h: @menu_handler_size - 4px;
+  background: #fff;
+  border: 1px solid @bd_color;
+  border-top-color: #fff;
+  position: absolute;
+  width: @w;
+  height: @h;
+  margin-top: -1px;
+  margin-left: @menu_width - @w;
+  //text-align: center;
+  line-height: 20px;
+  cursor: pointer;
+
+  i {
+    margin-left: 5px;
+  }
+}
+
+:global(.theme-dark) {
+  .items,
+  .handler {
+    background-color: @editor_bg_dark;
+    border-color: @bd_color_dark;
+    color: @font_color_dark;
+  }
+
+  .item {
+    &:hover {
+      color: @font_color_dark * 1.2;
+    }
+  }
+
+  .sep {
+    background-color: @bd_color_dark * 0.8;
+  }
+
+  .handler {
+    border-top-color: @editor_bg_dark;
+  }
+}

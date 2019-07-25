@@ -2,16 +2,16 @@
 @bg_prompt: #f5f5f5;
 @color_hover: #09f;
 @color_on: #af9;
-@color_danger: #f03;
+@color_danger: #c36;
 @bg_left: #eef0f5;
 @bg_left_search: @bg_left * 0.9;
 @font_color_left: #333;
 @color_off: @font_color_left;
-@bd_color: @bg_left;
+@bd_color: @bg_left * 0.8;
 
 @left_width: 240px;
 
-@font-editor: "Source Code Pro", Monaco, "Courier New", sans-serif;
+@font-editor: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
 @panel-width: 240px;
 
 
@@ -27,33 +27,4 @@
 @dark-hl: #555;
 @dark-blue: #4c8098;
 
-.my-scroll-0() {
-  &::-webkit-scrollbar {
-    position: absolute;
-    width: 8px;
-    //height: 8px;
-    height: 0;
-  }
-  &::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-    //border-radius: 16px;
-  }
-  &::-webkit-scrollbar-corner {
-    background: rgba(0, 0, 0, 0.05);
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(128, 128, 128, 0.5);
-    //border-radius: 16px;
-  }
-}
-
-.my-scroll() {
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 0;
-  }
-
-  &:hover {
-    .my-scroll-0();
-  }
-}
+@import "./scroll";

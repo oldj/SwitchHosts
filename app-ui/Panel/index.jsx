@@ -41,7 +41,7 @@ export default class Index extends React.Component {
         ) : null}
         <List {...this.props}/>
         {/*<SearchBar/>*/}
-        <Buttons/>
+        <Buttons {...this.props}/>
       </div>
     )
   }
