@@ -8,7 +8,7 @@ SwitchHosts! is an App for managing hosts file, it is based on [Electron](http:/
 
 ## Screenshot
 
-<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/assets/capture.png" alt="Capture" width="980" style="border:1px solid #979797;">
+<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/screenshots/sh_light.png" alt="Capture" width="960">
 
 
 ## Features
