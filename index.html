@@ -4,17 +4,24 @@
 	<meta charset="UTF-8">
 	<title>SwitchHosts!</title>
 	<link rel="icon" href="images/icon_32x32.png">
-	<link rel="stylesheet" href="css/main.css">
+	<link rel="stylesheet" href="css/main.css?t=176353">
 </head>
 
 <body>
 <script>
-	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-				(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-	ga('create', 'UA-307069-20', 'auto');
-	ga('send', 'pageview');
+  (function (i, s, o, g, r, a, m) {
+    i['GoogleAnalyticsObject'] = r
+    i[r] = i[r] || function () {
+      (i[r].q = i[r].q || []).push(arguments)
+    }, i[r].l = 1 * new Date()
+    a = s.createElement(o),
+      m = s.getElementsByTagName(o)[0]
+    a.async = 1
+    a.src = g
+    m.parentNode.insertBefore(a, m)
+  })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga')
+  ga('create', 'UA-307069-20', 'auto')
+  ga('send', 'pageview')
 </script>
 
 <div id="wrapper">
@@ -39,7 +46,7 @@
 	</div>
 
 	<div id="capture">
-		<img src="images/capture.png" alt="capture">
+		<img src="images/sh_light.png" alt="capture">
 	</div>
 
 	<div id="detail">
@@ -108,7 +115,9 @@
 
 	<div id="foot">
 		<p style="line-height: 30px;">
-			<iframe style="vertical-align: middle;" src="https://ghbtns.com/github-btn.html?user=oldj&repo=SwitchHosts&type=star&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+			<iframe style="vertical-align: middle;"
+					src="https://ghbtns.com/github-btn.html?user=oldj&repo=SwitchHosts&type=star&count=true"
+					allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
 			<a href="https://github.com/oldj/SwitchHosts">Fork</a>
 			or
 			<a href="https://github.com/oldj/SwitchHosts/issues">Feedback</a>
@@ -119,39 +128,39 @@
 </div>
 
 <script>
-	(function () {
-		// language
-		var el_wrapper = document.getElementById('wrapper');
-		document.getElementById('lang-cn').onclick = function () {
-			el_wrapper.className = 'lang-cn';
-		};
-		document.getElementById('lang-en').onclick = function () {
-			el_wrapper.className = 'lang-en';
-		};
+  (function () {
+    // language
+    var el_wrapper = document.getElementById('wrapper')
+    document.getElementById('lang-cn').onclick = function () {
+      el_wrapper.className = 'lang-cn'
+    }
+    document.getElementById('lang-en').onclick = function () {
+      el_wrapper.className = 'lang-en'
+    }
 
-		var h = (location.hash || '').replace(/#/, '');
-		var nav_lang;
-		if (h != 'cn' && h != 'en') {
-			nav_lang = (navigator.browserLanguage ? navigator.browserLanguage : navigator.language) || '';
-			if (nav_lang.indexOf('zh') > 0) {
-				h = 'cn';
-			} else {
-				h = 'en';
-			}
-		}
-		el_wrapper.className = 'lang-' + h;
+    var h = (location.hash || '').replace(/#/, '')
+    var nav_lang
+    if (h != 'cn' && h != 'en') {
+      nav_lang = (navigator.browserLanguage ? navigator.browserLanguage : navigator.language) || ''
+      if (nav_lang.indexOf('zh') > 0) {
+        h = 'cn'
+      } else {
+        h = 'en'
+      }
+    }
+    el_wrapper.className = 'lang-' + h
 
-		// ga events
-		document.getElementById('btn-download').onclick = function () {
-			ga('send', 'event', 'download', 'click', 'btn-main');
-		};
-		document.getElementById('btn-download-a1').onclick = function () {
-			ga('send', 'event', 'download', 'click', 'btn-a1');
-		};
-		document.getElementById('btn-download-a2').onclick = function () {
-			ga('send', 'event', 'download', 'click', 'btn-a2');
-		};
-	})();
+    // ga events
+    document.getElementById('btn-download').onclick = function () {
+      ga('send', 'event', 'download', 'click', 'btn-main')
+    }
+    document.getElementById('btn-download-a1').onclick = function () {
+      ga('send', 'event', 'download', 'click', 'btn-a1')
+    }
+    document.getElementById('btn-download-a2').onclick = function () {
+      ga('send', 'event', 'download', 'click', 'btn-a2')
+    }
+  })()
 </script>
 </body>
 </html>
