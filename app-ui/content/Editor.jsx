@@ -30,7 +30,10 @@ export default class Editor extends React.Component {
     this.state = {
       marks: [],
       pos: [],
-      search_kw: ''
+      search_kw: '',
+      id: null,
+      code: '',
+      readonly: false
     }
 
   }
@@ -186,17 +189,51 @@ export default class Editor extends React.Component {
     })
   }
 
-  componentWillReceiveProps (next_props) { // todo ...
-    //console.log(next_props);
+  //componentWillReceiveProps (next_props) { // todo ...
+  //  //console.log(next_props);
+  //  let cm = this.codemirror
+  //  let doc = cm.getDoc()
+  //  let v = doc.getValue()
+  //  if (v !== next_props.code) {
+  //    let cursor_pos = doc.getCursor()
+  //    doc.setValue(next_props.code)
+  //    doc.setCursor(cursor_pos)
+  //  }
+  //  cm.setOption('readOnly', next_props.readonly)
+  //  setTimeout(() => {
+  //    //this.highlightKeyword()
+  //    this.doSearch()
+  //  }, 100)
+  //}
+
+  static getDerivedStateFromProps (nextProps, prevState) {
+    let state = {}
+
+    ;(['code', 'readonly', 'id']).map(k => {
+      if (prevState[k] !== nextProps[k]) {
+        state[k] = nextProps[k]
+      }
+    })
+
+    return state
+  }
+
+  componentDidUpdate (prevProps, prevState) {
     let cm = this.codemirror
     let doc = cm.getDoc()
-    let v = doc.getValue()
-    if (v !== next_props.code) {
+
+    let {code, readonly, id} = this.state
+    if (doc.getValue() !== code) {
       let cursor_pos = doc.getCursor()
-      doc.setValue(next_props.code)
+      doc.setValue(code)
       doc.setCursor(cursor_pos)
     }
-    cm.setOption('readOnly', next_props.readonly)
+
+    if (id !== prevState.id) {
+      setTimeout(() => doc.clearHistory(), 300)
+    }
+
+    cm.setOption('readOnly', readonly)
     setTimeout(() => {
       //this.highlightKeyword()
       this.doSearch()
