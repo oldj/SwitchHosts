@@ -32,7 +32,7 @@ export default class PreferencesPrompt extends React.Component {
 
     this.state = {
       show: false,
-      user_language: '',
+      user_language: 'en',
       after_cmd: '',
       choice_mode: 'multiple',
       auto_launch: false,
@@ -115,7 +115,7 @@ export default class PreferencesPrompt extends React.Component {
           </Col>
           <Col span={17}>
             <Select
-              value={this.state.user_language || ''}
+              value={this.state.user_language}
               onChange={v => this.updatePref({user_language: v})}
               style={{minWidth: 120}}
             >

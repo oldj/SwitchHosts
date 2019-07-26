@@ -42,7 +42,7 @@ function createWindow () {
   // Load the previous state with fallback to defaults
   let mainWindowState = windowStateKeeper({
     defaultWidth: 800,
-    defaultHeight: 600,
+    defaultHeight: 480,
     path: paths.work_path
   })
 

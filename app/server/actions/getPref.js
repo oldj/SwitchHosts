@@ -13,6 +13,8 @@ module.exports = () => {
   return io
     .pReadFile(fn)
     .then(cnt => {
+      if (!cnt) return {}
+
       let data
       try {
         data = JSON.parse(cnt)
