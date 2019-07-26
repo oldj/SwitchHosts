@@ -8,7 +8,7 @@
 
 ## 截图
 
-<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/assets/capture.png" alt="Capture" width="980" style="border:1px solid #979797;">
+<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/screenshots/sh_light.png" alt="Capture" width="960">
 
 
 ## 功能特性
@@ -102,6 +102,10 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
     ```
 
 ## 更新历史
+
+### v3.4
+
+ - 2019-07-26 发布 v3.4，样式改进，部分细节重新设计，增加【亮色】、【暗色】主题
 
 ### v3.3
 
