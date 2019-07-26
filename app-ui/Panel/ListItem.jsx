@@ -10,8 +10,10 @@ import classnames from 'classnames'
 import { Icon } from 'antd'
 import Agent from '../Agent'
 import isInViewport from 'wheel-js/src/browser/isInViewport'
-import IconOn from './images/on.svg'
-import IconOff from './images/off.svg'
+import IconOnLight from './images/on.svg'
+import IconOffLight from './images/off.svg'
+import IconOnDark from './images/on_dark.svg'
+import IconOffDark from './images/off_dark.svg'
 import styles from './ListItem.less'
 
 export default class ListItem extends React.Component {
@@ -61,8 +63,11 @@ export default class ListItem extends React.Component {
   }
 
   render () {
-    let {data, sys, current, show} = this.props
+    let {data, sys, current, show, theme} = this.props
     if (!data) return null
+
+    const IconOn = theme === 'dark' ? IconOnDark : IconOnLight
+    const IconOff = theme === 'dark' ? IconOffDark : IconOffLight
 
     let is_selected = data.id === current.id || (data.is_sys && current.is_sys)
     let attrs = {
@@ -114,7 +119,7 @@ export default class ListItem extends React.Component {
           className={styles['item-icon']}
           title={data.error || ''}
         />
-        <span>{this.getTitle()}</span>
+        <span className={styles.title}>{this.getTitle()}</span>
       </div>
     )
   }
