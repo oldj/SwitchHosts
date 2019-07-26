@@ -212,6 +212,7 @@ export default class App extends React.Component {
           lang={this.state.lang}
           just_added_id={this.state.just_added_id}
           justAdd={this.justAdd.bind(this)}
+          theme={theme}
         />
         <Content
           current={current}

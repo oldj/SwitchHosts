@@ -6,16 +6,16 @@
   cursor: pointer;
   -webkit-app-region: no-drag;
 
-  &.sys-hosts {
-    //font-size: 14px;
-    //padding: 8px 10px 8px 10px;
+  // &.sys-hosts {
+  //font-size: 14px;
+  //padding: 8px 10px 8px 10px;
 
-    .item-icon {
-      width: 22px;
-      font-size: 12px;
-      margin-left: 1px;
-    }
-  }
+  // .item-icon {
+  // width: 22px;
+  // font-size: 12px;
+  // margin: 0 3px 0 1px;
+  // }
+  // }
 
   &.selected {
     //background: @bg_left * 1.1;
@@ -51,17 +51,27 @@
   font-size: 1.5em;
   transform: scale(0.7);
   cursor: pointer;
+  vertical-align: baseline !important;
 }
 
 .switcher {
   cursor: pointer;
-  font-size: 1.5em;
+  font-size: 2em;
 }
 
 .item-buttons {
   position: absolute;
   right: 4px;
   margin-top: -1px;
+}
+
+.title {
+  display: inline-block;
+  width: @left_width - 110px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
 
 :global(.theme-dark) {

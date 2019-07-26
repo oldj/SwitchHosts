@@ -252,6 +252,7 @@ export default class EditPrompt extends React.Component {
               placeholder="http:// or file:///"
               onChange={e => this.setState({url: e.target.value})}
               onKeyDown={e => (e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
+              maxLength={1024}
             />
           </div>
         </div>
@@ -310,6 +311,7 @@ export default class EditPrompt extends React.Component {
               value={title}
               onChange={(e) => this.setState({title: e.target.value})}
               onKeyDown={(e) => (e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
+              maxLength={50}
             />
           </div>
         </div>
