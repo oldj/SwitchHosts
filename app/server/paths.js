@@ -6,7 +6,6 @@
 'use strict'
 
 const path = require('path')
-const {dialog} = require('electron')
 const io = require('./io')
 const platform = process.platform
 
@@ -23,11 +22,13 @@ if (!io.isDirectory(work_path) || !io.isFile(path.join(work_path, 'data.json')))
     require('./initWorkPath')(work_path, sys_hosts_path)
   } catch (e) {
     console.log(e)
-    dialog.showMessageBox({
-      type: 'error',
-      title: 'Error',
-      message: e.message
-    })
+    //dialog.showMessageBox({
+    //  type: 'error',
+    //  title: 'Error',
+    //  message: e.message
+    //})
+
+    global.error = e
   }
 }
 

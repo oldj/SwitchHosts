@@ -10,7 +10,7 @@
 const electron = require('electron')
 const path = require('path')
 //const fs = require('fs')
-const app = electron.app
+const {app, dialog} = electron
 const BrowserWindow = electron.BrowserWindow
 const platform = process.platform
 
@@ -140,6 +140,16 @@ if (!gotTheLock) {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
+  if (global.error) {
+    dialog.showMessageBox({
+      type: 'error',
+      title: 'Error',
+      message: global.error.message
+    }, () => {
+      app.exit()
+    })
+  }
+
   createWindow()
   main_menu.init(app, user_language)
 
