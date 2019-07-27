@@ -137,7 +137,7 @@ function makeTray (app, contents, sys_lang = 'en') {
 
   let icon = 'logo.png'
   if (process.platform === 'darwin') {
-    icon = 'ilogoTemplate.png'
+    icon = 'logoTemplate.png'
   }
 
   tray = new Tray(path.join(__dirname, '..', 'assets', icon))
