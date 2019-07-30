@@ -1,6 +1,6 @@
 {
   "name": "switchhosts",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "description": "A tool for managing and switching hosts.",
   "main": "",
   "scripts": {
@@ -25,7 +25,7 @@
   },
   "homepage": "https://oldj.github.io/SwitchHosts/",
   "dependencies": {
-    "antd": "^3.20.6",
+    "antd": "^3.20.7",
     "classnames": "^2.2.6",
     "codemirror": "^5.48.2",
     "lodash": "^4.17.15",
@@ -69,7 +69,7 @@
     "babel-plugin-import": "^1.12.0",
     "chalk": "^2.4.2",
     "connect-history-api-fallback": "^1.6.0",
-    "copy-webpack-plugin": "^5.0.3",
+    "copy-webpack-plugin": "^5.0.4",
     "cross-env": "^5.2.0",
     "css-loader": "^3.1.0",
     "electron": "^5.0.8",
@@ -108,8 +108,8 @@
     "uglify-loader": "^3.0.0",
     "uglifyjs-webpack-plugin": "^2.1.3",
     "url-loader": "^2.1.0",
-    "webpack": "^4.37.0",
-    "webpack-bundle-analyzer": "^3.3.2",
+    "webpack": "^4.38.0",
+    "webpack-bundle-analyzer": "^3.4.1",
     "webpack-cli": "^3.3.6",
     "webpack-dev-middleware": "^3.7.0",
     "webpack-hot-middleware": "^2.25.0",
