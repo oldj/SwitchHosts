@@ -210,7 +210,7 @@ export default class EditPrompt extends React.Component {
              onClick={this.confirmDel.bind(this)}
           >
             <Icon type="delete"/>
-            <span>{lang.del_hosts}</span>
+            <span>{lang.del_scheme}</span>
           </a>
         </div>
       </div>
@@ -313,12 +313,16 @@ export default class EditPrompt extends React.Component {
 
   body () {
     let {lang} = this.props
-    let {where, title} = this.state
+    let {where, title, is_add} = this.state
 
     return (
       <div className={styles.tab} ref={c => this.el_body = c}>
         <div className="ln">
-          <RadioGroup onChange={e => this.setState({where: e.target.value})} value={where}>
+          <RadioGroup
+            disabled={!is_add}
+            onChange={e => this.setState({where: e.target.value})}
+            value={where}
+          >
             <RadioButton value={WHERE_LOCAL}><Icon type="file-text"/> {lang.where_local}</RadioButton>
             <RadioButton value={WHERE_REMOTE}><Icon type="global"/> {lang.where_remote}</RadioButton>
             <RadioButton value={WHERE_GROUP}><Icon type="copy"/> {lang.where_group}</RadioButton>

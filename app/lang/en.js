@@ -28,7 +28,7 @@ exports.content = {
   , day: 'day'
   , days: 'days'
   , default: 'Default'
-  , del_hosts: 'Delete current hosts'
+  , del_scheme: 'Delete current scheme'
   , edit: 'Edit'
   , edit_hosts: 'Edit hosts'
   , export: 'Export'

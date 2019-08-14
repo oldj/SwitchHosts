@@ -139,7 +139,7 @@ export default class ListItem extends React.Component {
           'list-item': 1, // 用于排序选择
           [styles['list-item']]: 1,
           //, 'hidden': !this.isMatched()
-          //[styles['sys-hosts']]: sys,
+          [styles['sys-hosts']]: sys,
           [styles['selected']]: is_selected,
           'hidden': show === false,
           [styles['sort-bg']]: drag_target_id && data.id === drag_target_id

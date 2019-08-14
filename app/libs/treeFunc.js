@@ -81,6 +81,9 @@ const updateTree = (tree, updates) => {
 
   if (where_to === 0) {
     // in
+    if (!Array.isArray(item.children)) {
+      item.children = []
+    }
     item.children.push(source_item)
   } else if (where_to === -1) {
     // before
@@ -95,5 +98,6 @@ const updateTree = (tree, updates) => {
 
 module.exports = {
   flatTree,
-  updateTree
+  updateTree,
+  getItemById
 }
