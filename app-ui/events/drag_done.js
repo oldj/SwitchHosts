@@ -13,6 +13,6 @@ module.exports = async (app, updates) => {
   list = updateTree(list, updates)
   app.setState({list})
 
-  await Agent.pact('saveHosts', list)
+  list = await Agent.pact('saveHosts', list)
   await updated(app, list)
 }

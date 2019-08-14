@@ -6,10 +6,11 @@
 'use strict'
 
 import React from 'react'
-import { Tree, Icon } from 'antd'
+import { Tree } from 'antd'
 import ListItem from './ListItem'
 import Agent from '../Agent'
 import { findPositions } from '../content/kw'
+import treeFunc from '../../app/libs/treeFunc'
 //import makeSortable from './makeSortable'
 import { WHERE_FOLDER, WHERE_GROUP, WHERE_REMOTE } from '../configs/contants'
 import styles from './List.less'
@@ -74,13 +75,18 @@ export default class List extends React.Component {
   }
 
   onDrop (info) {
-    console.log(info)
+    //console.log(info)
     const source_id = info.dragNode.props.eventKey.split('_')[1]
     const target_id = info.node.props.eventKey.split('_')[1]
     const drop_pos = info.node.props.pos.split('-')
     const where_to = info.dropPosition - Number(drop_pos[drop_pos.length - 1])
 
-    console.log(source_id, target_id, where_to)
+    //console.log(source_id, target_id, where_to)
+    let {list} = this.props
+    let target_item = treeFunc.getItemById(list, target_id)
+    if (!target_item || (where_to === 0 && target_item.where !== WHERE_FOLDER)) {
+      return false
+    }
 
     Agent.emit('drag_done', {
       source_id,
