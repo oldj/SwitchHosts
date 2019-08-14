@@ -6,11 +6,12 @@
 'use strict'
 
 import React from 'react'
-import { Tree } from 'antd'
+import { Tree, Icon } from 'antd'
 import ListItem from './ListItem'
 import Agent from '../Agent'
 import { findPositions } from '../content/kw'
 //import makeSortable from './makeSortable'
+import { WHERE_FOLDER, WHERE_GROUP, WHERE_REMOTE } from '../configs/contants'
 import styles from './List.less'
 
 export default class List extends React.Component {
@@ -21,7 +22,8 @@ export default class List extends React.Component {
     this.state = {
       kw: '',
       drag_target_id: null,
-      drag_where_to: null
+      drag_where_to: null,
+      expanded_keys: []
     }
 
     Agent.on('search:kw', kw => {
@@ -42,9 +44,11 @@ export default class List extends React.Component {
         show = false
       }
 
+      let {id} = item
+
       return (
         <Tree.TreeNode
-          key={'hosts_' + item.id + '_' + idx}
+          key={'hosts_' + id + '_' + idx}
           title={
             <ListItem
               {...this.props}
@@ -53,6 +57,7 @@ export default class List extends React.Component {
               //show={show}
             />
           }
+          //isLeaf={item.where !== WHERE_FOLDER}
         >
           {(item.children || []).length > 0 ? this.customItems(item.children) : null}
         </Tree.TreeNode>
@@ -84,6 +89,12 @@ export default class List extends React.Component {
     })
   }
 
+  onExpand (keys) {
+    //console.log(keys)
+    //console.log(o)
+    this.setState({expanded_keys: keys})
+  }
+
   componentDidMount () {
     //makeSortable(this.el_items)
 
@@ -104,6 +115,7 @@ export default class List extends React.Component {
 
   render () {
     let {list, sys_hosts} = this.props
+    let {expanded_keys} = this.state
 
     return (
       <div id="sh-list" className={styles.root}>
@@ -121,6 +133,8 @@ export default class List extends React.Component {
           defaultExpandAll
           onDragEnter={this.onDragEnter.bind(this)}
           onDrop={this.onDrop.bind(this)}
+          onExpand={this.onExpand.bind(this)}
+          expandedKeys={expanded_keys}
         >
           {this.customItems(list)}
         </Tree>
