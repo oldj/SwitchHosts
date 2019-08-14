@@ -7,17 +7,12 @@
 
 'use strict'
 
-function getHostsContent(item) {
+const treeFunc = require('../libs/treeFunc')
+
+function getHostsContent (item) {
   return item.content || ''
 }
 
-module.exports = (list) => {
-  let items = []
-  list.map(item => {
-    if (item.on) {
-      items.push(item)
-    }
-  })
-
-  return items.map(item => getHostsContent(item, list)).join('\n\n')
-}
+module.exports = (list) => treeFunc.flatTree(list)
+  .filter(item => item.on)
+  .map(item => getHostsContent(item, list)).join('\n\n')
