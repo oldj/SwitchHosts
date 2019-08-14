@@ -21,10 +21,12 @@ module.exports = (list) => {
       'content',
       'on',
       'where',
+      'choice_mode',
       'url',
       'last_refresh',
       'refresh_interval',
-      'include'
+      'include',
+      'children'
     ]
     valid_keys.map(k => {
       if (item.hasOwnProperty(k)) {
@@ -34,6 +36,10 @@ module.exports = (list) => {
 
     if (new_item.where === 'group') {
       new_item.content = makeGroupContent(new_item, list)
+    }
+
+    if (new_item.where === 'folder') {
+      // todo...
     }
 
     return new_item

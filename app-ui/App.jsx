@@ -15,6 +15,7 @@ import EditPrompt from './frame/EditPrompt'
 import About from './about/About'
 import PreferencesPrompt from './frame/PreferencesPrompt'
 import Agent from './Agent'
+import { WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER } from './configs/contants'
 import { reg as events_reg } from './events/index'
 
 import './App.less'
@@ -118,8 +119,7 @@ export default class App extends React.Component {
   }
 
   static isReadOnly (hosts) {
-    return !hosts || hosts.is_sys || hosts.where === 'remote' ||
-      hosts.where === 'group'
+    return !hosts || hosts.is_sys || ([WHERE_FOLDER, WHERE_GROUP, WHERE_REMOTE]).includes(hosts.where)
   }
 
   toSave () {
@@ -177,9 +177,9 @@ export default class App extends React.Component {
       }
     }, false)
 
-    window.addEventListener('mouseup', () => {
-      Agent.emit('drag_end')
-    })
+    //window.addEventListener('mouseup', () => {
+    //  Agent.emit('drag_end')
+    //})
   }
 
   render () {
