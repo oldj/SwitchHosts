@@ -17,6 +17,7 @@ import PreferencesPrompt from './frame/PreferencesPrompt'
 import Agent from './Agent'
 import { WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER } from './configs/contants'
 import { reg as events_reg } from './events/index'
+import treeFunc from '../app/libs/treeFunc'
 
 import './App.less'
 
@@ -88,33 +89,33 @@ export default class App extends React.Component {
     }, 60 * 1000)
   }
 
-  loadHosts () {
-    Agent.pact('getHosts').then(data => {
-      let state = {
-        list: data.list,
-        sys_hosts: data.sys_hosts
-      }
-      let current = this.state.current
-      state.current = data.list.find(item => item.id === current.id) ||
-        data.sys_hosts
+  async loadHosts (current_id) {
+    let data = await Agent.pact('getHosts')
+    let state = {
+      list: data.list,
+      sys_hosts: data.sys_hosts
+    }
 
-      this.setState(state)
-    })
+    if (!current_id) {
+      current_id = this.state.current.id
+    }
+    state.current = treeFunc.getItemById(data.list, current_id) || data.sys_hosts
+
+    this.setState(state)
   }
 
-  setCurrent (hosts) {
+  async setCurrent (hosts) {
     if (hosts.is_sys) {
-      Agent.pact('getSysHosts')
-        .then(_hosts => {
-          this.setState({
-            sys_hosts: _hosts,
-            current: _hosts
-          })
-        })
-    } else {
+      let _hosts = await Agent.pact('getSysHosts')
       this.setState({
-        current: hosts
+        sys_hosts: _hosts,
+        current: _hosts
       })
+    } else {
+      let {current} = this.state
+      if (current && current.id !== hosts.id) {
+        await this.loadHosts(hosts.id)
+      }
     }
   }
 
