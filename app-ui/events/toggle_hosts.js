@@ -17,10 +17,16 @@ module.exports = async (app, hosts) => {
   let pref = await Agent.pact('getPref')
   let list = app.state.list.slice(0)
   let flat_list = treeFunc.flatTree(list)
-  let is_single = pref.choice_mode === 'single'
+  let {parent_list, parent} = treeFunc.getItemDetailById(list, id)
+  let pref_is_single = pref.choice_mode === 'single'
 
-  if (is_single && hosts.on) {
-    flat_list.map(item => {
+  let choice_mode = pref_is_single ? 1 : 2
+  if (parent) {
+    choice_mode = parent.folder_mode === 0 ? choice_mode : parent.folder_mode
+  }
+
+  if (choice_mode === 1 && hosts.on) {
+    parent_list.map(item => {
       if (item.id !== id) {
         item.on = false
       }

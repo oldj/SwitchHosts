@@ -41,6 +41,7 @@ function tryToApply (svr, cnt, pswd) {
 module.exports = async (svr, list) => {
   //return checkAllRemoteHostses(svr, list, cfg)
   list = cleanData(list)
+
   let fn = paths.data_path
   let data = {
     list,

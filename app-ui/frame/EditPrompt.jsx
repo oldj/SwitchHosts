@@ -318,22 +318,7 @@ export default class EditPrompt extends React.Component {
     return (
       <div className={styles.tab} ref={c => this.el_body = c}>
         <div className="ln">
-          <RadioGroup
-            disabled={!is_add}
-            onChange={e => this.setState({where: e.target.value})}
-            value={where}
-          >
-            <RadioButton value={WHERE_LOCAL}><Icon type="file-text"/> {lang.where_local}</RadioButton>
-            <RadioButton value={WHERE_REMOTE}><Icon type="global"/> {lang.where_remote}</RadioButton>
-            <RadioButton value={WHERE_GROUP}><Icon type="copy"/> {lang.where_group}</RadioButton>
-            <RadioButton value={WHERE_FOLDER}><Icon type="folder"/> {lang.where_folder}</RadioButton>
-          </RadioGroup>
-        </div>
-
-        <div className="ln">
-          <div className="title">{
-            where !== WHERE_FOLDER ? lang.hosts_title : lang.folder_name
-          }</div>
+          <div className="title">{lang.hosts_title}</div>
           <div className="cnt">
             <Input
               ref={c => this.el_title = c}
@@ -344,6 +329,23 @@ export default class EditPrompt extends React.Component {
             />
           </div>
         </div>
+
+        <div className="ln">
+          <div className="title">{lang.hosts_type}</div>
+          <div className="cnt">
+            <RadioGroup
+              disabled={!is_add}
+              onChange={e => this.setState({where: e.target.value})}
+              value={where}
+            >
+              <RadioButton value={WHERE_LOCAL}><Icon type="file-text"/> {lang.where_local}</RadioButton>
+              <RadioButton value={WHERE_REMOTE}><Icon type="global"/> {lang.where_remote}</RadioButton>
+              <RadioButton value={WHERE_GROUP}><Icon type="copy"/> {lang.where_group}</RadioButton>
+              <RadioButton value={WHERE_FOLDER}><Icon type="folder"/> {lang.where_folder}</RadioButton>
+            </RadioGroup>
+          </div>
+        </div>
+
         {this.renderRemoteInputs()}
         {this.renderGroup()}
         {this.renderFolder()}

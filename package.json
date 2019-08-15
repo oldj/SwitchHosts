@@ -33,7 +33,7 @@
     "react": "^16.9.0",
     "react-codemirror": "^1.0.0",
     "react-dom": "^16.9.0",
-    "react-sortable-tree": "^2.6.2"
+    "sortablejs": "^1.9.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.5",
@@ -102,7 +102,6 @@
     "ora": "^3.4.0",
     "rimraf": "^2.6.3",
     "semver": "^6.3.0",
-    "sortablejs": "^1.9.0",
     "style-loader": "^1.0.0",
     "terser-webpack-plugin": "^1.4.1",
     "uglify-loader": "^3.0.0",
