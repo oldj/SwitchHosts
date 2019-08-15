@@ -39,7 +39,7 @@ let writeFile = exports.writeFile = (fn, data, callback) => {
   if (isFile(fn) && md5File.sync(fn) === cnt_md5) {
     callback()
   } else {
-    console.log('md5 not match..')
+    console.log(`md5 not match, save new content to: [${fn}].`)
     fs.writeFile(fn, data, 'utf-8', callback)
   }
 }

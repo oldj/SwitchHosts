@@ -13,7 +13,8 @@ const apply = require('../apply')
 const sudo = require('../sudo')
 const makeOutHosts = require('../makeOutHosts')
 const cleanData = require('../cleanData')
-const chromeDnsClear = require('../../libs/chrome-dns-clear')
+//const chromeDnsClear = require('../../libs/chrome-dns-clear')
+
 //const checkAllRemoteHostses = require('./checkAllRemoteHostses')
 
 function tryToApply (svr, cnt, pswd) {
@@ -37,30 +38,29 @@ function tryToApply (svr, cnt, pswd) {
   })
 }
 
-module.exports = (svr, list) => {
+module.exports = async (svr, list) => {
   //return checkAllRemoteHostses(svr, list, cfg)
-  return Promise.resolve()
-    .then(() => cleanData(list))
-    .then(list => {
-      let fn = paths.data_path
-      let data = {
-        list,
-        version
-      }
-      let cnt = JSON.stringify(data)
-      cnt = jsbeautify(cnt, {
-        indent_size: 2
-      })
+  list = cleanData(list)
 
-      let out = makeOutHosts(list)
+  let fn = paths.data_path
+  let data = {
+    list,
+    version
+  }
+  let cnt = JSON.stringify(data)
+  cnt = jsbeautify(cnt, {
+    indent_size: 2
+  })
 
-      // clear chrome dns cache by remote debugger
-      chromeDnsClear();
+  let out = makeOutHosts(list)
 
-      // try to update system hosts
-      return tryToApply(svr, out)
-        .then(() => io.pWriteFile(fn, cnt))
-        .then(() => svr.emit('hosts_saved'))
-        .then(() => list)
-    })
+  // clear chrome dns cache by remote debugger
+  //chromeDnsClear()
+
+  // try to update system hosts
+  await tryToApply(svr, out)
+  await io.pWriteFile(fn, cnt)
+  svr.emit('hosts_saved')
+
+  return list
 }

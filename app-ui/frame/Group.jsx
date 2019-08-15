@@ -8,6 +8,8 @@
 import React from 'react'
 import { Icon } from 'antd'
 import Sortable from 'sortablejs'
+import treeFunc from '../../app/libs/treeFunc'
+import { WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
 import listToArray from 'wheel-js/src/common/listToArray'
 import './Group.less'
 
@@ -29,15 +31,19 @@ export default class Group extends React.Component {
       return null
     }
 
+    let {where, title} = item
+
     let attrs = {
       'data-id': item.id || ''
     }
 
     let icon_type
-    if (item.where === 'remote') {
+    if (where === 'remote') {
       icon_type = 'global'
-    } else if (item.where === 'group') {
-      icon_type = 'copy'
+      //} else if (where === 'group') {
+      //  icon_type = 'copy'
+      //} else if (where === 'folder') {
+      //  icon_type = 'folder'
     } else {
       icon_type = 'file-text'
     }
@@ -48,15 +54,15 @@ export default class Group extends React.Component {
           type={icon_type}
           className="iconfont"
         />
-        <span>{item.title || 'untitled'}</span>
+        <span>{title || 'untitled'}</span>
       </div>
     )
   }
 
   makeList () {
     let include = this.state.include
-    let items = this.state.list
-      .filter(item => item.where !== 'group' && !include.includes(item.id))
+    let items = treeFunc.flatTree(this.state.list)
+      .filter(item => !([WHERE_FOLDER, WHERE_GROUP]).includes(item.where) && !include.includes(item.id))
       .map(item => this.makeItem(item))
 
     return (
@@ -69,7 +75,7 @@ export default class Group extends React.Component {
   }
 
   currentList () {
-    let list = this.state.list
+    let list = treeFunc.flatTree(this.state.list)
     let items = this.state.include
       .map(id => list.find(item => item.id === id))
       .map(item => this.makeItem(item))
@@ -120,7 +126,7 @@ export default class Group extends React.Component {
     return (
       <div id="hosts-group">
         {this.makeList()}
-        <Icon className="arrow" type="arrow-right" />
+        <Icon className="arrow" type="arrow-right"/>
         {this.currentList()}
       </div>
     )
