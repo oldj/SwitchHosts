@@ -45,41 +45,6 @@ export default class ListItem extends React.Component {
     Agent.emit('edit_hosts', Object.assign({}, this.props.data))
   }
 
-  renderChildren () {
-    let {data, kw} = this.props
-    if (data.where !== WHERE_FOLDER) return
-    let {children} = data
-
-    function match (kw, item) {
-      return findPositions(kw, item.content).length > 0 || findPositions(kw, item.title).length > 0
-    }
-
-    return (
-      <div
-        className={styles.children}
-        ref={c => this.el_children = c}
-        data-role="children"
-      >
-        {children.map((item, idx) => {
-          let show = true
-          if (kw && !match(kw, item)) {
-            show = false
-          }
-
-          return (
-            <ListItem
-              {...this.props}
-              idx={idx}
-              key={'hosts-' + idx + Math.random()}
-              show={show}
-              data={item}
-            />
-          )
-        })}
-      </div>
-    )
-  }
-
   componentDidMount () {
     let {just_added_id, data} = this.props
     //Agent.on('select_hosts', id => {
@@ -106,7 +71,7 @@ export default class ListItem extends React.Component {
 
   render () {
     let {
-      data, sys, current, show, theme,
+      data, sys, current, theme, not_match,
       drag_target_id, drag_where_to
     } = this.props
     if (!data) return null
@@ -120,14 +85,15 @@ export default class ListItem extends React.Component {
       draggable: !sys
     }
 
+    let {where} = data
     let icon_type
     if (sys) {
       icon_type = 'desktop'
-    } else if (data.where === WHERE_REMOTE) {
+    } else if (where === WHERE_REMOTE) {
       icon_type = 'global'
-    } else if (data.where === WHERE_GROUP) {
+    } else if (where === WHERE_GROUP) {
       icon_type = 'copy'
-    } else if (data.where === WHERE_FOLDER) {
+    } else if (where === WHERE_FOLDER) {
       icon_type = 'folder'
     } else {
       icon_type = 'file-text'
@@ -141,7 +107,7 @@ export default class ListItem extends React.Component {
           //, 'hidden': !this.isMatched()
           [styles['sys-hosts']]: sys,
           [styles['selected']]: is_selected,
-          'hidden': show === false,
+          [styles['not-match']]: not_match,
           [styles['sort-bg']]: drag_target_id && data.id === drag_target_id
         })}
         onClick={this.beSelected.bind(this)}

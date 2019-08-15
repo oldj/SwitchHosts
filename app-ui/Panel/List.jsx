@@ -12,7 +12,7 @@ import Agent from '../Agent'
 import { findPositions } from '../content/kw'
 import treeFunc from '../../app/libs/treeFunc'
 //import makeSortable from './makeSortable'
-import { WHERE_FOLDER, WHERE_GROUP, WHERE_REMOTE } from '../configs/contants'
+import { WHERE_FOLDER } from '../configs/contants'
 import styles from './List.less'
 
 export default class List extends React.Component {
@@ -40,9 +40,9 @@ export default class List extends React.Component {
     }
 
     return tree_data.map((item, idx) => {
-      let show = true
+      let not_match = false
       if (kw && !match(kw, item)) {
-        show = false
+        not_match = true
       }
 
       let {id} = item
@@ -53,9 +53,8 @@ export default class List extends React.Component {
           title={
             <ListItem
               {...this.props}
-              {...{kw, drag_target_id, drag_where_to}}
+              {...{kw, drag_target_id, drag_where_to, not_match}}
               data={item}
-              //show={show}
             />
           }
           //isLeaf={item.where !== WHERE_FOLDER}

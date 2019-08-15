@@ -22,13 +22,14 @@ const getItemById = (tree, id) => {
   return flatTree(tree).find(item => item.id === id)
 }
 
-const getItemDetailById = (tree, id) => {
+const getItemDetailById = (tree, id, parent = null) => {
   let idx = tree.findIndex(i => i.id === id)
   if (idx >= 0) {
     return {
       idx,
       item: tree[idx],
-      parent: tree
+      parent_list: tree,
+      parent
     }
   }
 
@@ -36,7 +37,7 @@ const getItemDetailById = (tree, id) => {
     if (!Array.isArray(i.children)) {
       i.children = []
     }
-    let d = getItemDetailById(i.children, id)
+    let d = getItemDetailById(i.children, id, i)
     if (d) {
       return d
     }
@@ -72,7 +73,7 @@ const updateTree = (tree, updates) => {
 
   let source_item = getItemById(tree, source_id)
   tree = removeItemFromTreeById(tree, source_id)
-  let {item, parent, idx} = getItemDetailById(tree, target_id) || {}
+  let {item, parent_list, idx} = getItemDetailById(tree, target_id) || {}
   if (!item) {
     console.log('no item!')
     console.log(source_id, target_id)
@@ -87,10 +88,10 @@ const updateTree = (tree, updates) => {
     item.children.push(source_item)
   } else if (where_to === -1) {
     // before
-    parent.splice(idx, 0, source_item)
+    parent_list.splice(idx, 0, source_item)
   } else {
     // after
-    parent.splice(idx + 1, 0, source_item)
+    parent_list.splice(idx + 1, 0, source_item)
   }
 
   return tree
@@ -99,5 +100,6 @@ const updateTree = (tree, updates) => {
 module.exports = {
   flatTree,
   updateTree,
-  getItemById
+  getItemById,
+  getItemDetailById
 }
