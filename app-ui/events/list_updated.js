@@ -6,34 +6,32 @@
 'use strict'
 
 import Agent from '../Agent'
+import {flatTree} from '../../app/libs/treeFunc'
 
-module.exports = (app, new_list, hosts = null) => {
-  let state = {list: new_list}
-  return Promise.resolve()
-    .then(() => {
-      let current = app.state.current
-      if (current && current.is_sys) {
-        return Agent.pact('getSysHosts')
-          .then(sys_hosts => {
-            state.sys_hosts = sys_hosts
-            state.current = sys_hosts
-          })
+module.exports = async (app, new_list, hosts = null) => {
+  let state = {
+    list: new_list
+  }
 
-      } else if (hosts) {
-        state.current = hosts
+  let current = app.state.current
+  if (current && current.is_sys) {
+    let sys_hosts = await Agent.pact('getSysHosts')
+    state.sys_hosts = sys_hosts
+    state.current = sys_hosts
 
-      } else if (current) {
-        let c = new_list.find(i => i.id === current.id)
-        if (c) {
-          state.current = c
-        }
-      }
-    })
-    .then(() => {
-      app.setState(state, () => {
-        if (hosts) {
-          Agent.emit('select', hosts.id)
-        }
-      })
-    })
+  } else if (hosts) {
+    state.current = hosts
+
+  } else if (current) {
+    let c = flatTree(new_list).find(i => i.id === current.id)
+    if (c) {
+      state.current = c
+    }
+  }
+
+  app.setState(state, () => {
+    if (hosts) {
+      Agent.emit('select', hosts.id)
+    }
+  })
 }

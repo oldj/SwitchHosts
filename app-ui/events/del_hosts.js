@@ -17,7 +17,7 @@ module.exports = (app, hosts) => {
   list.splice(idx, 1)
 
   Agent.pact('saveHosts', list)
-    .then(() => {
+    .then(list => {
       app.setState({list}, () => {
         // 选中下一个 hosts
         let next_hosts = list[idx] || list[idx - 1] || null

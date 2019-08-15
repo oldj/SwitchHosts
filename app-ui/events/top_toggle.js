@@ -19,9 +19,9 @@ module.exports = (app, on, on_ids, callback) => {
   })
 
   Agent.pact('saveHosts', new_list)
-    .then(() => {
+    .then(list => {
       //app.setState({list: new_list})
-      updated(app, new_list)
+      updated(app, list)
       //app.forceUpdate()
       callback()
     })
