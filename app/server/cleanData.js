@@ -12,13 +12,15 @@ const valid_keys = [
   'title',
   'content',
   'on',
-  'where',
+  'where', // type
   'folder_mode',
   'url',
   'last_refresh',
   'refresh_interval',
   'include',
-  'children'
+  'children',
+  'memo',
+  'meta_info'
 ]
 
 function makeGroupContent (item, flat_tree) {
