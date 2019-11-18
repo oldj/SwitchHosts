@@ -4,18 +4,29 @@
  * @homepage: https://oldj.net
  */
 
-const flatTree = tree => {
-  let list = []
+/**
+ * 将 tree_list 树状对象变成一个平的数组
+ * @param tree_list {Array} 树状对象
+ * @param ignore_collapsed {Boolean} 是否忽略折叠起来的对象
+ * @returns {Array}
+ */
+function flatTree(tree_list, ignore_collapsed = false) {
+  let arr = []
 
-  tree.map(t => {
-    list.push(t)
-    let {children} = t
-    if (Array.isArray(children) && children.length > 0) {
-      list = [...list, ...flatTree(children)]
+  Array.isArray(tree_list) && tree_list.map((item) => {
+    if (!item) return
+
+    arr.push(item)
+
+    if (ignore_collapsed && item.collapsed) return
+
+    if (item.children) {
+      let a2 = flatTree(item.children, ignore_collapsed)
+      arr = arr.concat(a2)
     }
   })
 
-  return list
+  return arr
 }
 
 const getItemById = (tree, id) => {
@@ -97,9 +108,46 @@ const updateTree = (tree, updates) => {
   return tree
 }
 
+function getParentList (list, id) {
+  if (list.findIndex(i => i.id === id) > -1) return list
+
+  let fl = flatTree(list)
+  let found = false
+  let parent_list = []
+
+  fl.map((i) => {
+    if (found) return
+
+    if (i.id === id) {
+      found = true
+      parent_list = list
+    } else if (i.children && i.children.find((i2) => i2.id === id)) {
+      found = true
+      parent_list = i.children
+    }
+  })
+
+  return parent_list
+}
+
+function getUpItemWithCollapseState (list, id) {
+  let f_list = flatTree(list, true)
+  let idx = f_list.findIndex(i => i.id === id)
+  return idx > 0 ? f_list[idx - 1] : null
+}
+
+function getDownItemWithCollapseState (list, id) {
+  let f_list = flatTree(list, true)
+  let idx = f_list.findIndex(i => i.id === id)
+  return f_list[idx + 1] || null
+}
+
 module.exports = {
   flatTree,
   updateTree,
   getItemById,
-  getItemDetailById
+  getItemDetailById,
+  removeItemFromTreeById,
+  getUpItemWithCollapseState,
+  getDownItemWithCollapseState
 }

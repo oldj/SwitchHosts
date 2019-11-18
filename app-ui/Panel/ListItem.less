@@ -90,6 +90,7 @@
 }
 
 .sys-hosts {
+  margin-top: 10px;
   .item-icon {
     margin-left: 21px;
   }
@@ -97,6 +98,12 @@
 
 .not-match {
   opacity: 0.5;
+}
+
+:global(.platform-darwin) {
+  .sys-hosts {
+    margin-top: 0;
+  }
 }
 
 :global(.theme-dark) {
