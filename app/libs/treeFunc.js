@@ -4,18 +4,29 @@
  * @homepage: https://oldj.net
  */
 
-const flatTree = tree => {
-  let list = []
+/**
+ * 将 tree_list 树状对象变成一个平的数组
+ * @param tree_list {Array} 树状对象
+ * @param ignore_collapsed {Boolean} 是否忽略折叠起来的对象
+ * @returns {Array}
+ */
+function flatTree(tree_list, ignore_collapsed = false) {
+  let arr = []
 
-  tree.map(t => {
-    list.push(t)
-    let {children} = t
-    if (Array.isArray(children) && children.length > 0) {
-      list = [...list, ...flatTree(children)]
+  Array.isArray(tree_list) && tree_list.map((item) => {
+    if (!item) return
+
+    arr.push(item)
+
+    if (ignore_collapsed && item.collapsed) return
+
+    if (item.children) {
+      let a2 = flatTree(item.children, ignore_collapsed)
+      arr = arr.concat(a2)
     }
   })
 
-  return list
+  return arr
 }
 
 const getItemById = (tree, id) => {
@@ -119,27 +130,16 @@ function getParentList (list, id) {
   return parent_list
 }
 
-function getNeighbors (list, id) {
-  let parent_list = getParentList(list, id)
-  //if (!parent_list) return {}
+function getUpItemWithCollapseState (list, id) {
+  let f_list = flatTree(list, true)
+  let idx = f_list.findIndex(i => i.id === id)
+  return idx > 0 ? f_list[idx - 1] : null
+}
 
-  let neighbors = {}
-  let idx = parent_list.findIndex(i => i.id === id)
-
-  let n
-  if (idx > 0) {
-    n = parent_list[idx - 1]
-    if (n) {
-      neighbors.previous = n
-    }
-  }
-
-  n = parent_list[idx + 1]
-  if (n) {
-    neighbors.next = n
-  }
-
-  return neighbors
+function getDownItemWithCollapseState (list, id) {
+  let f_list = flatTree(list, true)
+  let idx = f_list.findIndex(i => i.id === id)
+  return f_list[idx + 1] || null
 }
 
 module.exports = {
@@ -148,5 +148,6 @@ module.exports = {
   getItemById,
   getItemDetailById,
   removeItemFromTreeById,
-  getNeighbors
+  getUpItemWithCollapseState,
+  getDownItemWithCollapseState
 }
