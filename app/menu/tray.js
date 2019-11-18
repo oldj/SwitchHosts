@@ -27,6 +27,7 @@ function formatTitle (title) {
   }
 
   let max_len = 30
+  title = title.trim()
   if (title.length < max_len) {
     return title
   }
@@ -54,18 +55,25 @@ function makeMenu (app, list, contents, sys_lang) {
   menu.push({label: '-', type: 'separator'})
 
   let ac = '1234567890abcdefghijklmnopqrstuvwxyz'.split('')
-  list.map((item, idx) => {
+  let item_idx = 0
+
+  const addItem = (item, level = 0) => {
     menu.push({
-      label: formatTitle(item.title),
+      label: (''.padStart(level, '\u3000')) + formatTitle(item.title),
       type: 'checkbox',
       checked: item.on,
-      accelerator: ac[idx],
+      accelerator: ac[item_idx],
       click: () => {
         svr.broadcast('toggle_hosts', Object.assign({}, item))
         //svr.emit('update_tray')
       }
     })
-  })
+    item_idx++
+
+    (item.children || []).map(i => addItem(i, level + 1))
+  }
+
+  list.map(i => addItem(i))
 
   menu.push({type: 'separator'})
   menu.push({
@@ -137,7 +145,7 @@ function makeTray (app, contents, sys_lang = 'en') {
 
   let icon = 'logo.png'
   if (process.platform === 'darwin') {
-    icon = 'ilogoTemplate.png'
+    icon = 'logoTemplate.png'
   }
 
   tray = new Tray(path.join(__dirname, '..', 'assets', icon))

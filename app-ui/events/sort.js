@@ -6,21 +6,27 @@
 'use strict'
 
 import Agent from '../Agent'
-const updated  = require('./list_updated')
+import updated from './list_updated'
+import {flatTree} from '../../app/libs/treeFunc'
+//const updated = require('./list_updated')
 
-module.exports = (app, ids) => {
-  let list = app.state.list
-  let new_list = []
-  ids.map(id => {
-    let item = list.find(i => i.id === id)
-    if (item) {
-      new_list.push(item)
-    }
-  })
+module.exports = async (app, tree = []) => {
+  let list = flatTree(app.state.list)
 
-  Agent.pact('saveHosts', new_list)
-    .then(list => {
-      updated(app, list)
+  function updateTree (list2, tree2) {
+    tree2.map(({id, children}) => {
+      let item = list.find(i => i.id === id)
+      if (item) {
+        list2.push(item)
+        item.children = updateTree([], children)
+      }
     })
-    .catch(e => console.log(e))
+
+    return list2
+  }
+
+  let new_list = updateTree([], tree)
+
+  list = await Agent.pact('saveHosts', new_list)
+  await updated(app, list)
 }

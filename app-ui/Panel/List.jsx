@@ -6,11 +6,13 @@
 'use strict'
 
 import React from 'react'
+import { Tree } from 'antd'
 import ListItem from './ListItem'
-import Sortable from 'sortablejs'
-import listToArray from 'wheel-js/src/common/listToArray'
 import Agent from '../Agent'
 import { findPositions } from '../content/kw'
+import treeFunc from '../../app/libs/treeFunc'
+//import makeSortable from './makeSortable'
+import { WHERE_FOLDER } from '../configs/contants'
 import styles from './List.less'
 
 export default class List extends React.Component {
@@ -19,7 +21,10 @@ export default class List extends React.Component {
     super(props)
 
     this.state = {
-      kw: ''
+      kw: '',
+      drag_target_id: null,
+      drag_where_to: null,
+      expanded_keys: []
     }
 
     Agent.on('search:kw', kw => {
@@ -27,68 +32,117 @@ export default class List extends React.Component {
     })
   }
 
-  customItems () {
-    let kw = this.state.kw
+  customItems (tree_data) {
+    let {kw, drag_target_id, drag_where_to} = this.state
 
     function match (kw, item) {
       return findPositions(kw, item.content).length > 0 || findPositions(kw, item.title).length > 0
     }
 
-    return this.props.list.map((item, idx) => {
-      let show = true
+    return tree_data.map((item, idx) => {
+      let not_match = false
       if (kw && !match(kw, item)) {
-        show = false
+        not_match = true
       }
 
+      let {id} = item
+
       return (
-        <ListItem
-          data={item}
-          idx={idx}
-          key={'hosts-' + idx + Math.random()}
-          show={show}
-          {...this.props}
-        />
+        <Tree.TreeNode
+          key={'hosts_' + id + '_' + idx}
+          title={
+            <ListItem
+              {...this.props}
+              {...{kw, drag_target_id, drag_where_to, not_match}}
+              data={item}
+            />
+          }
+          //isLeaf={item.where !== WHERE_FOLDER}
+        >
+          {(item.children || []).length > 0 ? this.customItems(item.children) : null}
+        </Tree.TreeNode>
       )
     })
   }
 
-  getCurrentListFromDOM () {
-    let nodes = this.el_items.getElementsByClassName('list-item')
-    nodes = listToArray(nodes)
-    let ids = nodes.map(el => el.getAttribute('data-id'))
+  onDragEnter (info) {
+    console.log(info)
+    // expandedKeys 需要受控时设置
+    // this.setState({
+    //   expandedKeys: info.expandedKeys,
+    // });
+  }
 
-    Agent.emit('sort', ids)
+  onDrop (info) {
+    //console.log(info)
+    const source_id = info.dragNode.props.eventKey.split('_')[1]
+    const target_id = info.node.props.eventKey.split('_')[1]
+    const drop_pos = info.node.props.pos.split('-')
+    const where_to = info.dropPosition - Number(drop_pos[drop_pos.length - 1])
+
+    //console.log(source_id, target_id, where_to)
+    let {list} = this.props
+    let target_item = treeFunc.getItemById(list, target_id)
+    if (!target_item || (where_to === 0 && target_item.where !== WHERE_FOLDER)) {
+      return false
+    }
+
+    Agent.emit('drag_done', {
+      source_id,
+      target_id,
+      where_to
+    })
+  }
+
+  onExpand (keys) {
+    //console.log(keys)
+    //console.log(o)
+    this.setState({expanded_keys: keys})
   }
 
   componentDidMount () {
-    Sortable.create(this.el_items, {
-      group: 'list-sorting'
-      , sort: true
-      , animation: 150
-      , onStart: () => {
-        Agent.emit('drag_start')
-      }
-      , onSort: () => {
-        this.getCurrentListFromDOM()
-        Agent.emit('drag_end')
-        //console.log(evt)
-        //console.log(evt.item)
-        //console.log(evt.oldIndex, evt.newIndex)
-      }
+    //makeSortable(this.el_items)
+
+    Agent.on('drag_move', (drag_target_id, drag_where_to) => {
+      this.setState({
+        drag_target_id,
+        drag_where_to
+      })
+    })
+
+    Agent.on('drag_done', () => {
+      this.setState({
+        drag_target_id: null,
+        drag_where_to: null
+      })
     })
   }
 
   render () {
+    let {list, sys_hosts} = this.props
+    let {expanded_keys} = this.state
+
     return (
       <div id="sh-list" className={styles.root}>
         <ListItem
-          data={this.props.sys_hosts}
+          data={sys_hosts}
           {...this.props}
           sys="1"
         />
-        <div ref={c => this.el_items = c} className={styles['custom-items']}>
-          {this.customItems()}
-        </div>
+        {/*<div ref={c => this.el_items = c} className={styles['custom-items']}>*/}
+        {/*  {this.customItems()}*/}
+        {/*</div>*/}
+        <Tree
+          blockNode
+          draggable
+          defaultExpandAll
+          onDragEnter={this.onDragEnter.bind(this)}
+          onDrop={this.onDrop.bind(this)}
+          onExpand={this.onExpand.bind(this)}
+          expandedKeys={expanded_keys}
+        >
+          {this.customItems(list)}
+        </Tree>
       </div>
     )
   }
