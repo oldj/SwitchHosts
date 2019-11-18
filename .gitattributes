@@ -1,2 +1,4 @@
 legacy/* linguist-vendored
 scripts/alfred/workflow/* linguist-vendored
+
+*.css linguist-language=javascript
