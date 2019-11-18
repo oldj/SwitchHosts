@@ -97,9 +97,56 @@ const updateTree = (tree, updates) => {
   return tree
 }
 
+function getParentList (list, id) {
+  if (list.findIndex(i => i.id === id) > -1) return list
+
+  let fl = flatTree(list)
+  let found = false
+  let parent_list = []
+
+  fl.map((i) => {
+    if (found) return
+
+    if (i.id === id) {
+      found = true
+      parent_list = list
+    } else if (i.children && i.children.find((i2) => i2.id === id)) {
+      found = true
+      parent_list = i.children
+    }
+  })
+
+  return parent_list
+}
+
+function getNeighbors (list, id) {
+  let parent_list = getParentList(list, id)
+  //if (!parent_list) return {}
+
+  let neighbors = {}
+  let idx = parent_list.findIndex(i => i.id === id)
+
+  let n
+  if (idx > 0) {
+    n = parent_list[idx - 1]
+    if (n) {
+      neighbors.previous = n
+    }
+  }
+
+  n = parent_list[idx + 1]
+  if (n) {
+    neighbors.next = n
+  }
+
+  return neighbors
+}
+
 module.exports = {
   flatTree,
   updateTree,
   getItemById,
-  getItemDetailById
+  getItemDetailById,
+  removeItemFromTreeById,
+  getNeighbors
 }
