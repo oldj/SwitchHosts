@@ -129,20 +129,20 @@ export default class List extends React.Component {
           {...this.props}
           sys="1"
         />
-        {/*<div ref={c => this.el_items = c} className={styles['custom-items']}>*/}
-        {/*  {this.customItems()}*/}
-        {/*</div>*/}
-        <Tree
-          blockNode
-          draggable
-          defaultExpandAll
-          onDragEnter={this.onDragEnter.bind(this)}
-          onDrop={this.onDrop.bind(this)}
-          onExpand={this.onExpand.bind(this)}
-          expandedKeys={expanded_keys}
-        >
-          {this.customItems(list)}
-        </Tree>
+        <div ref={c => this.el_items = c} className={styles['custom-items']}>
+          {/*  {this.customItems()}*/}
+          <Tree
+            blockNode
+            draggable
+            defaultExpandAll
+            onDragEnter={this.onDragEnter.bind(this)}
+            onDrop={this.onDrop.bind(this)}
+            onExpand={this.onExpand.bind(this)}
+            expandedKeys={expanded_keys}
+          >
+            {this.customItems(list)}
+          </Tree>
+        </div>
       </div>
     )
   }
