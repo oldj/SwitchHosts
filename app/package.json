@@ -15,6 +15,7 @@
     "express": "^4.17.1",
     "js-beautify": "^1.10.2",
     "md5-file": "^4.0.0",
+    "moment": "^2.24.0",
     "node-notifier": "^6.0.0",
     "request": "^2.88.0"
   }
