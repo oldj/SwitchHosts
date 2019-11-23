@@ -75,6 +75,10 @@
       background: @ipt_bg_dark;
       color: @font_color_dark;
       border-color: @bd_color_dark;
+
+      &::placeholder {
+        color: #666;
+      }
     }
 
     .ant-input-prefix {
@@ -208,12 +212,14 @@
       color: @font_color_dark;
     }
 
-    .ant-select-dropdown-menu-item-selected, .ant-select-dropdown-menu-item-selected:hover {
+    .ant-select-dropdown-menu-item-selected,
+    .ant-select-dropdown-menu-item-selected:hover {
       background: @dark-hl;
       color: @font_color_dark;
     }
 
-    .ant-input-number-handler-down-inner, .ant-input-number-handler-up-inner,
+    .ant-input-number-handler-down-inner,
+    .ant-input-number-handler-up-inner,
     .ant-select-dropdown-menu-item {
       color: @font_color_dark;
     }
@@ -228,19 +234,39 @@
       color: @font_color_dark;
 
       &:first-child {
-        border-color: @bd_color_dark;
+        border-left-color: @bd_color_dark;
+      }
+    }
+
+    .ant-radio-button-wrapper-disabled,
+    .ant-radio-button-wrapper-disabled:hover,
+    .ant-radio-button-wrapper-disabled:first-child {
+      //opacity: 0.5;
+      border-color: @bd_color_dark * 0.618;
+      background: @ipt_bg_dark * 0.618;
+      color: @font_color_dark * 0.618;
+    }
+
+    .ant-radio-button-wrapper-checked,
+    .ant-radio-button-wrapper-checked:hover,
+    .ant-radio-button-wrapper-checked:first-child {
+      box-shadow: -1px 0 0 0 @dark-blue;
+      border-color: @dark-blue;
+      background-color: @dark-hl;
+      color: @font_color_dark * 1.5;
+
+      &.ant-radio-button-wrapper-disabled {
+        box-shadow: none;
+        border-color: @bd_color_dark * 1.2;
+        background: @ipt_bg_dark * 1.2;
+        color: @font_color_dark * 1.2;
       }
     }
 
     .ant-radio-button-wrapper-checked {
-      box-shadow: -1px 0 0 0 @dark-blue;
-    }
-
-    .ant-radio-button-wrapper-checked,
-    .ant-radio-button-wrapper-checked:first-child {
-      border-color: @dark-blue;
-      background-color: @dark-hl;
-      color: @font_color_dark * 1.5;
+      &.ant-radio-button-wrapper-disabled {
+        border-left: 1px solid (@bd_color_dark * 1.2);
+      }
     }
 
     .ant-radio-button-wrapper:not(:first-child):before {
