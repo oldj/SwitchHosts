@@ -8,11 +8,10 @@
 const getUrl = require('./getUrl')
 const isExpired = require('../checkIsExpired')
 const lineBreakTransform = require('../../libs/lineBreakTransform')
+const moment = require('moment')
 
 function now () {
-  let dt = new Date()
-
-  return `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()} ${dt.getHours()}:${dt.getMinutes()}:${dt.getSeconds()}`
+  return moment().format('YYYY-MM-DD HH:mm:ss')
 }
 
 module.exports = (svr, hosts, force = false) => {
