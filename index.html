@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<title>SwitchHosts!</title>
-	<link rel="icon" href="images/icon_32x32.png">
+	<link rel="icon" href="images/favicon.png">
 	<link rel="stylesheet" href="css/main.css?t=176353">
 </head>
 
@@ -140,7 +140,7 @@
 
     var h = (location.hash || '').replace(/#/, '')
     var nav_lang
-    if (h != 'cn' && h != 'en') {
+    if (h !== 'cn' && h !== 'en') {
       nav_lang = (navigator.browserLanguage ? navigator.browserLanguage : navigator.language) || ''
       if (nav_lang.indexOf('zh') > 0) {
         h = 'cn'
