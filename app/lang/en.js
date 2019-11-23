@@ -73,6 +73,8 @@ exports.content = {
   , menu_zoom: 'Zoom'
   , menu_zoomin: 'Zoom In'
   , menu_zoomout: 'Zoom Out'
+  , minute: 'minute'
+  , minutes: 'minutes'
   , never: 'never'
   , new: 'New'
   , new_version_available: 'New version available, download now?'

@@ -184,12 +184,15 @@ export default class EditPrompt extends React.Component {
     let {lang} = this.props
     let k = [
       [0, `${lang.never}`],
+      [1 / 60, `1 ${lang.minute}`],
+      [5 / 60, `5 ${lang.minutes}`],
+      [15 / 60, `15 ${lang.minutes}`],
       [1, `1 ${lang.hour}`],
       [24, `24 ${lang.hours}`],
       [168, `7 ${lang.days}`]
     ]
     if (Agent.IS_DEV) {
-      k.splice(1, 0, [0.002778, `10s (for DEV)`]) // dev test only
+      k.splice(1, 0, [10 / 3600, `10s (for DEV)`]) // dev test only
     }
     return k.map(([v, n], idx) => {
       return (

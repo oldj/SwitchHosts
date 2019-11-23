@@ -73,6 +73,8 @@ exports.content = {
   , menu_zoom: '缩放'
   , menu_zoomin: '放大'
   , menu_zoomout: '缩小'
+  , minute: '分钟'
+  , minutes: '分钟'
   , never: '从不'
   , new: '新建'
   , new_version_available: '检测到新版本，立刻下载？'
