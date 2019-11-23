@@ -86,6 +86,8 @@ export default class Editor extends React.Component {
   }
 
   toComment () {
+    if (this.props.readonly === true) return
+
     let doc = this.codemirror.getDoc()
     let cur = doc.getCursor()
     let line = cur.line
