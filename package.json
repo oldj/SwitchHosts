@@ -1,6 +1,6 @@
 {
   "name": "switchhosts",
-  "version": "3.5.2",
+  "version": "3.5.3",
   "description": "A tool for managing and switching hosts.",
   "main": "",
   "scripts": {
@@ -25,7 +25,7 @@
   },
   "homepage": "https://oldj.github.io/SwitchHosts/",
   "dependencies": {
-    "antd": "^3.25.2",
+    "antd": "^3.25.3",
     "classnames": "^2.2.6",
     "codemirror": "^5.49.2",
     "lodash": "^4.17.15",
@@ -73,9 +73,9 @@
     "copy-webpack-plugin": "^5.0.5",
     "cross-env": "^6.0.3",
     "css-loader": "^3.2.0",
-    "electron": "^6.1.5",
+    "electron": "^7.1.2",
     "electron-builder": "^21.2.0",
-    "eslint": "^6.7.0",
+    "eslint": "^6.7.1",
     "eslint-config-standard": "^14.1.0",
     "eslint-friendly-formatter": "^4.0.1",
     "eslint-loader": "^3.0.2",
