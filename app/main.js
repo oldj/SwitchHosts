@@ -55,7 +55,7 @@ function createWindow () {
     minWidth: 400,
     minHeight: 250,
     fullscreenable: true,
-    icon: path.join(__dirname, 'assets', 'logo_512.png'),
+    icon: path.join(__dirname, 'assets', 'logo@512w.png'),
     webPreferences: {
       nodeIntegration: true
     },

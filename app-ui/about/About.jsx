@@ -8,7 +8,7 @@
 import React from 'react'
 import { Modal, Button } from 'antd'
 import Agent from '../Agent'
-import logo from '../../app/assets/logo@w512.png'
+import logo from '../../app/assets/logo@512w.png'
 import version from '../../app/version'
 import styles from './About.less'
 

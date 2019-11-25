@@ -1,6 +1,7 @@
 @import "../styles/cfg";
 
 .root {
+  -webkit-app-region: no-drag;
 }
 
 .custom-items {
@@ -13,8 +14,12 @@
   .my-scroll();
 }
 
+.sort-bg {
+  background: @sorg-bg-color;
+}
+
 :global(.platform-darwin) {
   .custom-items {
-    top: 72px;
+    top: 56px;
   }
 }

@@ -12,8 +12,8 @@ import { Icon, Input, Radio, Select } from 'antd'
 import Group from './Group'
 import Agent from '../Agent'
 import makeId from '../../app/libs/make-id'
-import {WHERE_LOCAL, WHERE_REMOTE, WHERE_GROUP} from '../configs/contants'
-import './EditPrompt.less'
+import { WHERE_LOCAL, WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
+import styles from './EditPrompt.less'
 
 const RadioButton = Radio.Button
 const RadioGroup = Radio.Group
@@ -32,7 +32,8 @@ export default class EditPrompt extends React.Component {
       last_refresh: null,
       refresh_interval: 0,
       is_loading: false,
-      include: []
+      include: [],
+      folder_mode: 0 // 文件夹模式，0 默认，1 单选，2 多选
     }
 
     this.current_hosts = null
@@ -183,12 +184,15 @@ export default class EditPrompt extends React.Component {
     let {lang} = this.props
     let k = [
       [0, `${lang.never}`],
+      [1 / 60, `1 ${lang.minute}`],
+      [5 / 60, `5 ${lang.minutes}`],
+      [15 / 60, `15 ${lang.minutes}`],
       [1, `1 ${lang.hour}`],
       [24, `24 ${lang.hours}`],
       [168, `7 ${lang.days}`]
     ]
     if (Agent.IS_DEV) {
-      k.splice(1, 0, [0.002778, `10s (for DEV)`]) // dev test only
+      k.splice(1, 0, [10 / 3600, `10s (for DEV)`]) // dev test only
     }
     return k.map(([v, n], idx) => {
       return (
@@ -209,7 +213,7 @@ export default class EditPrompt extends React.Component {
              onClick={this.confirmDel.bind(this)}
           >
             <Icon type="delete"/>
-            <span>{lang.del_hosts}</span>
+            <span>{lang.del_scheme}</span>
           </a>
         </div>
       </div>
@@ -289,20 +293,33 @@ export default class EditPrompt extends React.Component {
     )
   }
 
-  body () {
+  renderFolder () {
+    if (this.state.where !== WHERE_FOLDER) return null
     let {lang} = this.props
-    let {where, title} = this.state
+    let {folder_mode} = this.state
 
     return (
-      <div ref={c => this.el_body = c}>
+      <div>
         <div className="ln">
-          <RadioGroup onChange={e => this.setState({where: e.target.value})} value={where}>
-            <RadioButton value={WHERE_LOCAL}><Icon type="file-text" /> {lang.where_local}</RadioButton>
-            <RadioButton value={WHERE_REMOTE}><Icon type="global" /> {lang.where_remote}</RadioButton>
-            <RadioButton value={WHERE_GROUP}><Icon type="copy" /> {lang.where_group}</RadioButton>
-          </RadioGroup>
+          <div className="title">{lang.pref_choice_mode}</div>
+          <div className="cnt">
+            <RadioGroup onChange={e => this.setState({folder_mode: e.target.value})} value={folder_mode}>
+              <RadioButton value={0}><Icon type="border-outer"/> {lang.default}</RadioButton>
+              <RadioButton value={1}><Icon type="check-circle"/> {lang.pref_choice_mode_single}</RadioButton>
+              <RadioButton value={2}><Icon type="check-square"/> {lang.pref_choice_mode_multiple}</RadioButton>
+            </RadioGroup>
+          </div>
         </div>
+      </div>
+    )
+  }
 
+  body () {
+    let {lang} = this.props
+    let {where, title, is_add} = this.state
+
+    return (
+      <div className={styles.tab} ref={c => this.el_body = c}>
         <div className="ln">
           <div className="title">{lang.hosts_title}</div>
           <div className="cnt">
@@ -315,8 +332,26 @@ export default class EditPrompt extends React.Component {
             />
           </div>
         </div>
+
+        <div className="ln">
+          <div className="title">{lang.hosts_type}</div>
+          <div className="cnt">
+            <RadioGroup
+              disabled={!is_add}
+              onChange={e => this.setState({where: e.target.value})}
+              value={where}
+            >
+              <RadioButton value={WHERE_LOCAL}><Icon type="file-text"/> {lang.where_local}</RadioButton>
+              <RadioButton value={WHERE_REMOTE}><Icon type="global"/> {lang.where_remote}</RadioButton>
+              <RadioButton value={WHERE_GROUP}><Icon type="copy"/> {lang.where_group}</RadioButton>
+              <RadioButton value={WHERE_FOLDER}><Icon type="folder"/> {lang.where_folder}</RadioButton>
+            </RadioGroup>
+          </div>
+        </div>
+
         {this.renderRemoteInputs()}
         {this.renderGroup()}
+        {this.renderFolder()}
         {this.getEditOperations()}
       </div>
     )

@@ -1,5 +1,10 @@
 @import "../styles/cfg";
 
+.tab {
+  user-select: none;
+  -webkit-app-region: no-drag;
+}
+
 :global {
   @keyframes loading {
     from {
@@ -60,6 +65,12 @@
       span {
         padding-left: 0.5em;
       }
+    }
+  }
+
+  .theme-dark {
+    .frame .ln i.icon-refresh:hover {
+      color: @dark-hl;
     }
   }
 }

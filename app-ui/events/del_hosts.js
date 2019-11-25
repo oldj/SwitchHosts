@@ -6,25 +6,25 @@
 'use strict'
 
 import Agent from '../Agent'
+import treeFunc from '../../app/libs/treeFunc'
 
 module.exports = (app, hosts) => {
   let list = app.state.list
-  let idx = list.findIndex(item => item.id === hosts.id)
-  if (idx === -1) {
-    return
-  }
+  let id = hosts.id
+  let neighbors = [treeFunc.getUpItemWithCollapseState(list, id), treeFunc.getDownItemWithCollapseState(list, id)]
+  list = treeFunc.removeItemFromTreeById(list, hosts.id)
+  let next_hosts = neighbors[1] || neighbors[0] || null
 
-  list.splice(idx, 1)
+  //let idx = list.findIndex(item => item.id === hosts.id)
+  //if (idx === -1) {
+  //  return
+  //}
+  //
+  //list.splice(idx, 1)
 
   Agent.pact('saveHosts', list)
-    .then(() => {
-      app.setState({list}, () => {
-        // 选中下一个 hosts
-        let next_hosts = list[idx] || list[idx - 1] || null
-        if (next_hosts) {
-          app.setState({current: next_hosts})
-        }
-      })
+    .then(list => {
+      app.setState({list, current: next_hosts})
     })
     .catch(e => console.log(e))
 }

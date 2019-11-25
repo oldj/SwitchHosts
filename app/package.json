@@ -1,6 +1,6 @@
 {
   "name": "switchhosts",
-  "version": "3.4.0",
+  "version": "3.5.2",
   "description": "Switch hosts quickly!",
   "main": "main.js",
   "scripts": {
@@ -10,12 +10,13 @@
   "license": "MIT",
   "dependencies": {
     "cheerio": "^0.22.0",
-    "chrome-remote-interface": "^0.27.2",
+    "chrome-remote-interface": "^0.28.0",
     "electron-window-state": "^5.0.3",
     "express": "^4.17.1",
-    "js-beautify": "^1.10.1",
+    "js-beautify": "^1.10.2",
     "md5-file": "^4.0.0",
-    "node-notifier": "^5.4.0",
+    "moment": "^2.24.0",
+    "node-notifier": "^6.0.0",
     "request": "^2.88.0"
   }
 }
