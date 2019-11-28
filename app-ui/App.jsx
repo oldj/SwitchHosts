@@ -12,6 +12,7 @@ import Panel from './Panel'
 import Content from './content/Content'
 import SudoPrompt from './frame/SudoPrompt'
 import EditPrompt from './frame/EditPrompt'
+import StatConfirm from './frame/StatConfirm'
 import About from './about/About'
 import PreferencesPrompt from './frame/PreferencesPrompt'
 import Agent from './Agent'
@@ -196,6 +197,7 @@ export default class App extends React.Component {
         onDragOver={this.handleOndragover}
         onDrop={this.handleOndrop}
       >
+        <StatConfirm lang={this.state.lang}/>
         <SudoPrompt lang={this.state.lang}/>
         <EditPrompt
           lang={this.state.lang}

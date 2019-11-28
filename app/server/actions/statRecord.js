@@ -17,13 +17,13 @@ let send_usage_data = null
 
 function log (actions) {
   let u = url + '?' + [
-      'app=sh3',
-      'action=' + encodeURIComponent(actions),
-      'v=' + encodeURIComponent(version),
-      'os=' + process.platform,
-      'sid=' + encodeURIComponent(session_id),
-      '_r=' + Math.random()
-    ].join('&')
+    'app=sh3',
+    'action=' + encodeURIComponent(actions),
+    'v=' + encodeURIComponent(version),
+    'os=' + process.platform,
+    'sid=' + encodeURIComponent(session_id),
+    '_r=' + Math.random()
+  ].join('&')
 
   console.log('stat: ' + actions)
   request
@@ -52,7 +52,7 @@ function initGetPrefCfg () {
   return getPref()
     .then(v => v.send_usage_data)
     .then(v => {
-      send_usage_data = (v !== false)
+      send_usage_data = (v === true)
     })
 }
 

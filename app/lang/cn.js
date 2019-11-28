@@ -100,6 +100,8 @@ exports.content = {
   , refresh: '刷新'
   , remote_hosts: '远程方案'
   , search: '搜索'
+  , send_usage_data_ok: '好的'
+  , send_usage_data_cancel: '不发送'
   , set_and_back: '设置并返回'
   , set_and_relaunch_app: '确定并重启程序'
   , show_title_on_tray: '在系统托盘显示标题'

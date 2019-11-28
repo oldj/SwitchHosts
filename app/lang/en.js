@@ -100,6 +100,8 @@ exports.content = {
   , refresh: 'Refresh'
   , remote_hosts: 'Remote hosts'
   , search: 'Search'
+  , send_usage_data_ok: 'Ok'
+  , send_usage_data_cancel: 'Don\'t send'
   , set_and_back: 'Set and back'
   , set_and_relaunch_app: 'Set and Relaunch'
   , show_title_on_tray: 'Show title on tray'
