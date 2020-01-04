@@ -51,7 +51,7 @@ Thanks to [@batkiz](https://github.com/batkiz) for updating the `scoop` version.
 
 ## Backup
 
-SwitchHosts! stores data at `~/.SwitchHosts` (Or folder `.SwitchHosts` under the current user's home path on Windows), the `~/.SwitchHosts/data.json` contains data, while the `~/.SwitchHosts/prefereces.json` contains preferences info.
+SwitchHosts! stores data at `~/.SwitchHosts` (Or folder `.SwitchHosts` under the current user's home path on Windows), the `~/.SwitchHosts/data.json` contains data, while the `~/.SwitchHosts/preferences.json` contains preferences info.
 
 
 ## Run and Build
