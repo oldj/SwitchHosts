@@ -16,7 +16,7 @@ exports.content = {
   , cancel: 'Cancel'
   , check_update: 'Check for updates'
   , check_update_err: 'Something went wrong while checking updates, please try again later. :-('
-  , check_update_found: 'New version ${0} is avaliable, download it now?'
+  , check_update_found: 'New version ${0} is available, download it now?'
   , check_update_nofound: 'Current version ${0} is the latest version.'
   , close: 'Close'
   , comment: 'Comment'
