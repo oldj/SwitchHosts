@@ -51,7 +51,7 @@ scoop install switchhosts
 
 ## 文件备份
 
-SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为个人主目录下的 `.SwitchHosts` 目录下），其中 `~/.SwitchHosts/data.json` 是 hosts 数据文件，`~/.SwitchHosts/prefereces.json` 是配置信息。
+SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为个人主目录下的 `.SwitchHosts` 目录下），其中 `~/.SwitchHosts/data.json` 是 hosts 数据文件，`~/.SwitchHosts/preferences.json` 是配置信息。
 
 
 ## 运行/打包方法
@@ -102,6 +102,10 @@ SwitchHosts! 的数据文件在 `~/.SwitchHosts` 目录下（Windows 用户为�
     ```
 
 ## 更新历史
+
+### v3.5
+
+ - 2019-08-19 发布 v3.5，启用新 logo，方案列表中增加文件夹支持
 
 ### v3.4
 
