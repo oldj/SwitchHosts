@@ -73,8 +73,10 @@
     "copy-webpack-plugin": "^5.0.5",
     "cross-env": "^6.0.3",
     "css-loader": "^3.2.0",
+    "dotenv": "^8.2.0",
     "electron": "^7.1.2",
     "electron-builder": "^21.2.0",
+    "electron-notarize": "^0.2.1",
     "eslint": "^6.7.1",
     "eslint-config-standard": "^14.1.0",
     "eslint-friendly-formatter": "^4.0.1",
@@ -142,5 +144,8 @@
         "stage-0"
       ]
     }
+  },
+  "build": {
+    "afterSign": "scripts/notarize.js"
   }
 }

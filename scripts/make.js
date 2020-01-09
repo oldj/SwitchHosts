@@ -39,7 +39,9 @@ const makeApp = async () => {
         category: 'public.app-category.productivity',
         icon: 'assets/app.icns',
         gatekeeperAssess: false,
-        identity: 'oldj',
+        hardenedRuntime: true,
+        entitlements: 'scripts/entitlements.mac.plist',
+        entitlementsInherit: 'scripts/entitlements.mac.plist',
         artifactName: '${productName}_macOS_${version}(${buildVersion}).${ext}'
       },
       dmg: {
@@ -60,6 +62,7 @@ const makeApp = async () => {
           type: 'link',
           path: '/Applications'
         }],
+        sign: false,
         artifactName: '${productName}_macOS_${version}(${buildVersion}).${ext}'
       },
       win: {
@@ -75,6 +78,7 @@ const makeApp = async () => {
         artifactName: '${productName}_windows_portable_${version}(${buildVersion}).${ext}'
       },
       linux: {
+        category: 'Development',
         artifactName: '${productName}_linux_${arch}_${version}(${buildVersion}).${ext}'
       }
     }
