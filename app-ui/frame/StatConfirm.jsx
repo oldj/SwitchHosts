@@ -33,12 +33,13 @@ const StatConfirm = (props) => {
       show={show}
       title={lang.pref_tab_usage_data_title}
       body={<div className="ln">{lang.pref_tab_usage_data_desc}</div>}
-      onOK={() => setShow(true)}
+      onOK={() => setSend(true)}
       onCancel={() => setSend(false)}
       lang={lang}
       width={400}
       okText={lang.send_usage_data_ok}
       cancelText={lang.send_usage_data_cancel}
+      maskClosable={false}
     />
   )
 }

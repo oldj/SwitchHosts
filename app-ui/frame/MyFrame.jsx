@@ -60,7 +60,7 @@ export default class MyFrame extends React.Component {
     if (!this.props.show) {
       return null
     }
-    let {show, title, body, lang, width, okText, cancelText} = this.props
+    let {show, title, body, lang, width, okText, cancelText, maskClosable} = this.props
 
     return (
       <Modal
@@ -78,6 +78,7 @@ export default class MyFrame extends React.Component {
             {okText || lang.ok}
           </Button>
         ]}
+        maskClosable={maskClosable}
       >
         <div className="prompt-body">{body}</div>
         {/*<div className="prompt">*/}
