@@ -33,14 +33,14 @@ killall -HUP mDNSResponder
 
   fs.writeFileSync(cmd_fn, cmd, 'utf-8')
 
-  exec(`echo '${sudo_pswd}' | sudo -S /bin/sh ${cmd_fn}`, function (error, stdout, stderr) {
+  exec(`echo '${sudo_pswd}' | sudo -S /bin/sh ${cmd_fn}`, async (error, stdout, stderr) => {
     if (fs.existsSync(cmd_fn)) {
       try {
         fs.unlink(cmd_fn, () => 0)
       } catch (e) {
         //alert(e.message)
         console.log(e)
-        dialog.showMessageBox({
+        await dialog.showMessageBox({
           type: 'error',
           title: 'Error',
           message: e.message

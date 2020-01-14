@@ -12,17 +12,16 @@ module.exports = async (svr) => {
   let download_path = app.getPath('downloads')
   let {lang} = global
 
-  dialog.showOpenDialog({
+  let {filePaths} = await dialog.showOpenDialog({
     title: lang.import,
     defaultPath: path.join(global.last_path || download_path || paths.home_path, 'sh.json'),
     filters: [
       {name: 'JSON', extensions: ['json']},
       {name: 'All Files', extensions: ['*']}
     ]
-  }, (fns) => {
-    if (fns && fns.length > 0) {
-      require('./importData')(svr, fns[0])
-      global.last_path = path.dirname(fns[0])
-    }
   })
+  if (filePaths && filePaths.length > 0) {
+    require('./importData')(svr, filePaths[0])
+    global.last_path = path.dirname(filePaths[0])
+  }
 }

@@ -47,6 +47,7 @@ exports.content = {
   , hour: '小时'
   , hours: '小时'
   , import: '导入'
+  , import_finish: '导入成功！'
   , input_sudo_pswd: '请输入您的开机密码（sudo 密码）'
   , is_updated: '当前版本是最新版本。'
   , is_updated_title: '已是最新'

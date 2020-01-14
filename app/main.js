@@ -139,15 +139,14 @@ if (!gotTheLock) {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => {
+app.on('ready', async () => {
   if (global.error) {
-    dialog.showMessageBox({
+    await dialog.showMessageBox({
       type: 'error',
       title: 'Error',
       message: global.error.message
-    }, () => {
-      app.exit()
     })
+    app.exit()
   }
 
   createWindow()
