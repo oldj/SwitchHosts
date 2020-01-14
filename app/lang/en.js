@@ -47,6 +47,7 @@ exports.content = {
   , hour: 'hour'
   , hours: 'hours'
   , import: 'Import'
+  , import_finish: 'The import is complete.'
   , input_sudo_pswd: 'Input your sudo password'
   , is_updated: 'You already have the latest version of SwitchHosts! installed.'
   , is_updated_title: 'You are up to date!'
