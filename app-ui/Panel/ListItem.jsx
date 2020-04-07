@@ -7,17 +7,16 @@
 
 import React from 'react'
 import classnames from 'classnames'
-import { Icon, Tree } from 'antd'
+import Icon, { FormOutlined } from '@ant-design/icons'
+import { Icon as LegacyIcon } from '@ant-design/compatible'
 import Agent from '../Agent'
 import isInViewport from 'wheel-js/src/browser/isInViewport'
 import { WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
-import makeSortable from './makeSortable'
 import IconOnLight from './images/on.svg'
 import IconOffLight from './images/off.svg'
 import IconOnDark from './images/on_dark.svg'
 import IconOffDark from './images/off_dark.svg'
 import styles from './ListItem.less'
-import { findPositions } from '../content/kw'
 
 export default class ListItem extends React.Component {
   constructor (props) {
@@ -117,11 +116,7 @@ export default class ListItem extends React.Component {
         {sys ? null : (
           <div className={styles['item-buttons']}>
             {is_selected ? (
-              <Icon
-                type="form"
-                onClick={this.toEdit.bind(this)}
-                className={styles['icon-edit']}
-              />
+              <FormOutlined onClick={this.toEdit.bind(this)} className={styles['icon-edit']}/>
             ) : null}
             <Icon
               className={styles.switcher}
@@ -130,7 +125,7 @@ export default class ListItem extends React.Component {
             />
           </div>
         )}
-        <Icon
+        <LegacyIcon
           type={icon_type}
           className={styles['item-icon']}
           title={data.error || ''}

@@ -6,7 +6,7 @@
 'use strict'
 
 import React from 'react'
-import { Icon } from 'antd'
+import { LockOutlined } from '@ant-design/icons'
 import classnames from 'classnames'
 import SearchBar from './SearchBar'
 import Agent from '../Agent'
@@ -51,8 +51,7 @@ export default class Content extends React.Component {
               [styles.show]: this.state.is_loading
             })}
           >loading...</span>
-          <Icon
-            type="lock"
+          <LockOutlined
             className={classnames({
               [styles.show]: readonly,
               iconfont: 1,

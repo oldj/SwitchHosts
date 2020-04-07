@@ -6,8 +6,8 @@
   "scripts": {
     "test": "nyc ava",
     "start": "electron app",
-    "dll": "webpack --config scripts/webpack.dll.js --progress --profile --colors",
     "dev": "cross-env ENV=dev electron app",
+    "dll": "webpack --config scripts/webpack.dll.js --progress --profile --colors",
     "build": "npm run dll && npm run build2",
     "build2": "webpack --config scripts/webpack.config.js --progress --profile --colors",
     "w": "npm run build2 -- -w",
@@ -25,6 +25,8 @@
   },
   "homepage": "https://oldj.github.io/SwitchHosts/",
   "dependencies": {
+    "@ant-design/compatible": "^1.0.2",
+    "@ant-design/icons": "^4.0.5",
     "antd": "^4.1.1",
     "classnames": "^2.2.6",
     "codemirror": "^5.52.2",
