@@ -8,7 +8,6 @@
 import React from 'react'
 import classnames from 'classnames'
 import Icon, { FormOutlined } from '@ant-design/icons'
-import { Icon as LegacyIcon } from '@ant-design/compatible'
 import Agent from '../Agent'
 import isInViewport from 'wheel-js/src/browser/isInViewport'
 import { WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
@@ -28,8 +27,7 @@ export default class ListItem extends React.Component {
 
   getTitle () {
     let {lang} = this.props
-    return this.is_sys ? lang.sys_hosts_title : this.props.data.title ||
-      lang.untitled
+    return this.is_sys ? lang.sys_hosts_title : (this.props.data.title || lang.untitled)
   }
 
   beSelected () {
@@ -125,11 +123,6 @@ export default class ListItem extends React.Component {
             />
           </div>
         )}
-        <LegacyIcon
-          type={icon_type}
-          className={styles['item-icon']}
-          title={data.error || ''}
-        />
         <span className={styles.title}>{this.getTitle()}</span>
 
         {/*{this.renderChildren()}*/}

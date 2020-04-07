@@ -12,8 +12,9 @@ import Agent from '../Agent'
 import { findPositions } from '../content/kw'
 import treeFunc from '../../app/libs/treeFunc'
 //import makeSortable from './makeSortable'
-import { WHERE_FOLDER } from '../configs/contants'
+import { WHERE_FOLDER, WHERE_GROUP, WHERE_REMOTE } from '../configs/contants'
 import styles from './List.less'
+import { CopyOutlined, DesktopOutlined, FileTextOutlined, FolderAddOutlined, FolderOutlined, GlobalOutlined } from '@ant-design/icons'
 
 export default class List extends React.Component {
 
@@ -33,6 +34,7 @@ export default class List extends React.Component {
   }
 
   customItems (tree_data) {
+    let {lang} = this.props
     let {kw, drag_target_id, drag_where_to} = this.state
 
     function match (kw, item) {
@@ -45,23 +47,52 @@ export default class List extends React.Component {
         not_match = true
       }
 
-      let {id} = item
+      let {id, where} = item
+      let icon
+      switch (where) {
+        case 'global':
+          icon = <GlobalOutlined/>
+          break
+        case 'copy':
+          icon = <CopyOutlined/>
+          break
+        case 'folder':
+          icon = <FolderOutlined/>
+          break
+        default:
+          icon = <FileTextOutlined/>
+      }
 
-      return (
-        <Tree.TreeNode
-          key={'hosts_' + id + '_' + idx}
-          title={
-            <ListItem
-              {...this.props}
-              {...{kw, drag_target_id, drag_where_to, not_match}}
-              data={item}
-            />
-          }
-          //isLeaf={item.where !== WHERE_FOLDER}
-        >
-          {(item.children || []).length > 0 ? this.customItems(item.children) : null}
-        </Tree.TreeNode>
-      )
+      //return (
+      //  <Tree.TreeNode
+      //    key={'hosts_' + id + '_' + idx}
+      //    title={
+      //      <ListItem
+      //        {...this.props}
+      //        {...{kw, drag_target_id, drag_where_to, not_match}}
+      //        data={item}
+      //      />
+      //    }
+      //    //isLeaf={item.where !== WHERE_FOLDER}
+      //  >
+      //    {(item.children || []).length > 0 ? this.customItems(item.children) : null}
+      //  </Tree.TreeNode>
+      //)
+
+      return {
+        title: (
+          <ListItem
+            {...this.props}
+            {...{kw, drag_target_id, drag_where_to, not_match}}
+            data={item}
+          />
+        ),
+        //title: item.title || lang.untitled,
+        key: 'hosts_' + id,
+        icon,
+        isLeaf: where !== WHERE_FOLDER,
+        children: (item.children || []).length > 0 ? this.customItems(item.children) : []
+      }
     })
   }
 
@@ -139,9 +170,8 @@ export default class List extends React.Component {
             onDrop={this.onDrop.bind(this)}
             onExpand={this.onExpand.bind(this)}
             expandedKeys={expanded_keys}
-          >
-            {this.customItems(list)}
-          </Tree>
+            treeData={this.customItems(list)}
+          />
         </div>
       </div>
     )

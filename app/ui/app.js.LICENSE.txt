@@ -19,8 +19,6 @@ object-assign
  * Licensed under MIT License
  */
 
-/*! SwitchHosts! common.js, 2020-04-07 23:53:13 */
-
 /**
  * @license
  * Lodash <https://lodash.com/>
