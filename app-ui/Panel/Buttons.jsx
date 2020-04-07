@@ -6,7 +6,7 @@
 'use strict'
 
 import React from 'react'
-import { Icon } from 'antd'
+import { PlusOutlined, SearchOutlined, ToolOutlined } from '@ant-design/icons'
 import classnames from 'classnames'
 import Agent from '../Agent'
 import Menu from './Menu'
@@ -105,18 +105,16 @@ export default class Buttons extends React.Component {
             href="#"
             onClick={() => Buttons.btnAdd()}
           >
-            <Icon type="plus"/>
+            <PlusOutlined/>
           </a>
         </div>
 
         <div className={styles.right}>
-          <Icon
-            type="search"
+          <SearchOutlined
             className={classnames({
               on: this.state.search_on
             })}
-            onClick={() => this.btnSearch()}
-          />
+            onClick={() => this.btnSearch()}/>
           {/*<i*/}
           {/*  className={classnames({*/}
           {/*    iconfont: 1,*/}
@@ -126,7 +124,7 @@ export default class Buttons extends React.Component {
           {/*  onClick={() => this.btnToggle()}*/}
           {/*/>*/}
           {/*<Icon type="setting" onClick={() => Agent.emit('show_preferences')}/>*/}
-          <Icon type="tool" onClick={this.toggleMenu.bind(this)}/>
+          <ToolOutlined onClick={this.toggleMenu.bind(this)}/>
         </div>
 
         <Menu

@@ -6,7 +6,8 @@
 'use strict'
 
 import React from 'react'
-import { Icon } from 'antd'
+import { Icon as LegacyIcon } from '@ant-design/compatible'
+import { ArrowRightOutlined } from '@ant-design/icons'
 import Sortable from 'sortablejs'
 import treeFunc from '../../app/libs/treeFunc'
 import { WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
@@ -50,7 +51,7 @@ export default class Group extends React.Component {
 
     return (
       <div className="hosts-item" {...attrs}>
-        <Icon
+        <LegacyIcon
           type={icon_type}
           className="iconfont"
         />
@@ -126,7 +127,7 @@ export default class Group extends React.Component {
     return (
       <div id="hosts-group">
         {this.makeList()}
-        <Icon className="arrow" type="arrow-right"/>
+        <ArrowRightOutlined className="arrow"/>
         {this.currentList()}
       </div>
     )

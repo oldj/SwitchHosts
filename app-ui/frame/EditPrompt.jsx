@@ -8,7 +8,18 @@
 import React from 'react'
 import MyFrame from './MyFrame'
 import classnames from 'classnames'
-import { Icon, Input, Radio, Select } from 'antd'
+import {
+  BorderOuterOutlined,
+  CheckCircleOutlined,
+  CheckSquareOutlined,
+  CopyOutlined,
+  DeleteOutlined,
+  FileTextOutlined,
+  FolderOutlined,
+  GlobalOutlined,
+  ReloadOutlined
+} from '@ant-design/icons'
+import { Input, Radio, Select } from 'antd'
 import Group from './Group'
 import Agent from '../Agent'
 import makeId from '../../app/libs/make-id'
@@ -212,7 +223,7 @@ export default class EditPrompt extends React.Component {
           <a href="#" className="del"
              onClick={this.confirmDel.bind(this)}
           >
-            <Icon type="delete"/>
+            <DeleteOutlined/>
             <span>{lang.del_scheme}</span>
           </a>
         </div>
@@ -271,8 +282,7 @@ export default class EditPrompt extends React.Component {
               {this.getRefreshOptions()}
             </Select>
 
-            <Icon
-              type="reload"
+            <ReloadOutlined
               className={classnames({
                 'iconfont': 1,
                 'icon-refresh': 1,
@@ -304,9 +314,9 @@ export default class EditPrompt extends React.Component {
           <div className="title">{lang.pref_choice_mode}</div>
           <div className="cnt">
             <RadioGroup onChange={e => this.setState({folder_mode: e.target.value})} value={folder_mode}>
-              <RadioButton value={0}><Icon type="border-outer"/> {lang.default}</RadioButton>
-              <RadioButton value={1}><Icon type="check-circle"/> {lang.pref_choice_mode_single}</RadioButton>
-              <RadioButton value={2}><Icon type="check-square"/> {lang.pref_choice_mode_multiple}</RadioButton>
+              <RadioButton value={0}><BorderOuterOutlined/> {lang.default}</RadioButton>
+              <RadioButton value={1}><CheckCircleOutlined/> {lang.pref_choice_mode_single}</RadioButton>
+              <RadioButton value={2}><CheckSquareOutlined/> {lang.pref_choice_mode_multiple}</RadioButton>
             </RadioGroup>
           </div>
         </div>
@@ -341,10 +351,10 @@ export default class EditPrompt extends React.Component {
               onChange={e => this.setState({where: e.target.value})}
               value={where}
             >
-              <RadioButton value={WHERE_LOCAL}><Icon type="file-text"/> {lang.where_local}</RadioButton>
-              <RadioButton value={WHERE_REMOTE}><Icon type="global"/> {lang.where_remote}</RadioButton>
-              <RadioButton value={WHERE_GROUP}><Icon type="copy"/> {lang.where_group}</RadioButton>
-              <RadioButton value={WHERE_FOLDER}><Icon type="folder"/> {lang.where_folder}</RadioButton>
+              <RadioButton value={WHERE_LOCAL}><FileTextOutlined/> {lang.where_local}</RadioButton>
+              <RadioButton value={WHERE_REMOTE}><GlobalOutlined/> {lang.where_remote}</RadioButton>
+              <RadioButton value={WHERE_GROUP}><CopyOutlined/> {lang.where_group}</RadioButton>
+              <RadioButton value={WHERE_FOLDER}><FolderOutlined/> {lang.where_folder}</RadioButton>
             </RadioGroup>
           </div>
         </div>

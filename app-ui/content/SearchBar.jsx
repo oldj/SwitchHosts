@@ -6,7 +6,8 @@
 'use strict'
 
 import React from 'react'
-import { Icon, Input, Button, Row, Col } from 'antd'
+import { CloseOutlined, DownOutlined, SearchOutlined, UpOutlined } from '@ant-design/icons'
+import { Input, Button, Row, Col } from 'antd'
 import Agent from '../Agent'
 import styles from './SearchBar.less'
 
@@ -70,7 +71,7 @@ export default class SearchBar extends React.Component {
               placeholder={lang.search_placeholder}
               allowClear={true}
               //onPressEnter={this.gotoNext.bind(this)}
-              prefix={<Icon type="search"/>}
+              prefix={<SearchOutlined/>}
               onKeyDown={e => {
                 let ne = e.nativeEvent
                 if (ne.keyCode === 27) {
@@ -86,8 +87,8 @@ export default class SearchBar extends React.Component {
           </Col>
           <Col span={4}>
             <Button.Group style={{minWidth: '60px'}}>
-              <Button disabled={!has_previous} onClick={this.gotoPrevious.bind(this)} icon="up"/>
-              <Button disabled={!has_next} onClick={this.gotoNext.bind(this)} icon="down"/>
+              <Button disabled={!has_previous} onClick={this.gotoPrevious.bind(this)} icon={<UpOutlined/>}/>
+              <Button disabled={!has_next} onClick={this.gotoNext.bind(this)} icon={<DownOutlined/>}/>
             </Button.Group>
           </Col>
           <Col className={styles.count_wrapper} span={7}>
@@ -96,9 +97,8 @@ export default class SearchBar extends React.Component {
             ) : null}
           </Col>
           <Col span={1}>
-            <Icon
+            <CloseOutlined
               className={styles.btn_close}
-              type="close"
               title={lang.close}
               onClick={this.searchEnd.bind(this)}
             />
