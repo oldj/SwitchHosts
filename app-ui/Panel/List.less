@@ -2,6 +2,26 @@
 
 .root {
   -webkit-app-region: no-drag;
+  line-height: 24px;
+
+  :global {
+    .ant-tree {
+      background: transparent;
+
+      .ant-tree-treenode {
+        padding: 2px 0 0 0;
+        height: 30px;
+      }
+
+      .ant-tree-node-content-wrapper.ant-tree-node-selected {
+        background: transparent;
+      }
+
+      .ant-tree-node-content-wrapper:hover {
+        background: transparent;
+      }
+    }
+  }
 }
 
 .custom-items {
@@ -20,6 +40,6 @@
 
 :global(.platform-darwin) {
   .custom-items {
-    top: 56px;
+    top: 66px;
   }
 }

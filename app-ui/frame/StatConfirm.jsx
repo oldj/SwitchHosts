@@ -16,7 +16,7 @@ const StatConfirm = (props) => {
   useEffect(() => {
     Agent.pact('getPref')
       .then(pref => {
-        console.log(pref)
+        //console.log(pref)
         if (typeof pref[send_usage_data] !== 'boolean') {
           setShow(true)
         }

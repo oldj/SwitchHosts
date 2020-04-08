@@ -138,15 +138,14 @@ export default class PreferencesPrompt extends React.Component {
             <span>{lang.theme}</span>
           </Col>
           <Col span={17}>
-            <Select
+            <Radio.Group
               value={this.state.theme || 'light'}
-              onChange={v => this.updatePref({theme: v})}
-              style={{minWidth: 120}}
+              onChange={e => this.updatePref({theme: e.target.value})}
             >
               {themes.map(t => (
-                <Option value={t} key={t}>{lang['theme_' + t]}</Option>
+                <Radio.Button value={t} key={t}>{lang['theme_' + t]}</Radio.Button>
               ))}
-            </Select>
+            </Radio.Group>
           </Col>
         </Row>
       </div>

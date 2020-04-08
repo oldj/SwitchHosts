@@ -7,17 +7,15 @@
 
 import React from 'react'
 import classnames from 'classnames'
-import { Icon, Tree } from 'antd'
+import Icon, { CopyOutlined, DesktopOutlined, FileTextOutlined, FolderOutlined, FormOutlined, GlobalOutlined } from '@ant-design/icons'
 import Agent from '../Agent'
 import isInViewport from 'wheel-js/src/browser/isInViewport'
 import { WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
-import makeSortable from './makeSortable'
 import IconOnLight from './images/on.svg'
 import IconOffLight from './images/off.svg'
 import IconOnDark from './images/on_dark.svg'
 import IconOffDark from './images/off_dark.svg'
 import styles from './ListItem.less'
-import { findPositions } from '../content/kw'
 
 export default class ListItem extends React.Component {
   constructor (props) {
@@ -29,8 +27,7 @@ export default class ListItem extends React.Component {
 
   getTitle () {
     let {lang} = this.props
-    return this.is_sys ? lang.sys_hosts_title : this.props.data.title ||
-      lang.untitled
+    return this.is_sys ? lang.sys_hosts_title : (this.props.data.title || lang.untitled)
   }
 
   beSelected () {
@@ -76,27 +73,33 @@ export default class ListItem extends React.Component {
     } = this.props
     if (!data) return null
 
+    let {id, where, is_sys} = data
     const IconOn = theme === 'dark' ? IconOnDark : IconOnLight
     const IconOff = theme === 'dark' ? IconOffDark : IconOffLight
 
-    let is_selected = data.id === current.id || (data.is_sys && current.is_sys)
+    let is_selected = id === current.id || (is_sys && current.is_sys)
     let attrs = {
-      'data-id': data.id || '',
+      'data-id': id || '',
       draggable: !sys
     }
 
-    let {where} = data
-    let icon_type
-    if (sys) {
-      icon_type = 'desktop'
-    } else if (where === WHERE_REMOTE) {
-      icon_type = 'global'
-    } else if (where === WHERE_GROUP) {
-      icon_type = 'copy'
-    } else if (where === WHERE_FOLDER) {
-      icon_type = 'folder'
+    let icon
+    if (is_sys) {
+      icon = <DesktopOutlined/>
     } else {
-      icon_type = 'file-text'
+      switch (where) {
+        case 'remote':
+          icon = <GlobalOutlined/>
+          break
+        case 'group':
+          icon = <CopyOutlined/>
+          break
+        case 'folder':
+          icon = <FolderOutlined/>
+          break
+        default:
+          icon = <FileTextOutlined/>
+      }
     }
 
     return (
@@ -117,11 +120,7 @@ export default class ListItem extends React.Component {
         {sys ? null : (
           <div className={styles['item-buttons']}>
             {is_selected ? (
-              <Icon
-                type="form"
-                onClick={this.toEdit.bind(this)}
-                className={styles['icon-edit']}
-              />
+              <FormOutlined onClick={this.toEdit.bind(this)} className={styles['icon-edit']}/>
             ) : null}
             <Icon
               className={styles.switcher}
@@ -130,14 +129,8 @@ export default class ListItem extends React.Component {
             />
           </div>
         )}
-        <Icon
-          type={icon_type}
-          className={styles['item-icon']}
-          title={data.error || ''}
-        />
+        <span className={styles['item-icon']}>{icon}</span>
         <span className={styles.title}>{this.getTitle()}</span>
-
-        {/*{this.renderChildren()}*/}
       </div>
     )
   }
