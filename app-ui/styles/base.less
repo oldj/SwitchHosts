@@ -1,0 +1,121 @@
+@import "../../node_modules/antd/dist/antd.less";
+@import "../../node_modules/codemirror/lib/codemirror.css";
+
+
+body {
+  color: var(--swh-font-color);
+  caret-color: var(--swh-font-color);
+}
+
+a {
+  color: var(--swh-link-color);
+
+  &:hover {
+    color: var(--swh-link-color-hover);
+  }
+}
+
+body {
+  .CodeMirror,
+  .CodeMirror-gutter-filler,
+  .CodeMirror-scrollbar-filler,
+  .CodeMirror-scroll,
+  .CodeMirror-gutters {
+    color: var(--swh-font-color);
+    background-color: var(--swh-editor-bg-color);
+  }
+
+  .CodeMirror-linenumber {
+    color: var(--swh-font-color-weak);
+  }
+
+  .CodeMirror-cursor {
+    border-color: var(--swh-font-color);
+  }
+
+  .CodeMirror-line,
+  pre.CodeMirror-line {
+    color: var(--swh-font-color);
+  }
+
+  .cm-ip {
+    color: var(--swh-editor-ip);
+  }
+
+  .frame {
+    .current-version a:hover {
+      color: var(--swh-font-color-weak);
+    }
+
+    .pref-cm {
+      border-color: var(--swh-border-color);
+    }
+  }
+
+  .cm-s-default {
+    .cm-builtin {
+      color: var(--swh-editor-keyword);
+    }
+
+    .cm-error {
+      color: var(--swh-editor-error);
+    }
+  }
+}
+
+// for antd
+@border-radius-base: 2px;
+@border-radius-sm: 1px;
+@font-size-base: 12px;
+
+@shadow-1-up: 0 -2px 0 var(--swh-shadow-color);
+@shadow-1-down: 0 2px 0 var(--swh-shadow-color);
+@shadow-1-left: -2px 0 0 var(--swh-shadow-color);
+@shadow-1-right: 2px 0 0 var(--swh-shadow-color);
+@shadow-2: 0 4px 0 var(--swh-shadow-color);
+
+@checkbox-check-bg: var(--swh-bg-color);
+@input-placeholder-color: var(--swh-placeholder-color);
+
+.shadow {
+  box-shadow: 2px 2px 0 0 var(--swh-shadow-color);
+}
+
+.ant-popover-inner,
+.ant-message-notice-content,
+.ant-select-dropdown,
+.ant-notification-notice {
+  //border-radius: 0;
+  .shadow();
+  border: 1px solid var(--swh-border-color);
+}
+
+textarea.ant-input {
+  line-height: 1.5em;
+}
+
+.ant-message {
+  top: 60px;
+}
+
+.ant-tooltip .ant-tooltip-content {
+  a {
+    color: var(--swh-font-color-weak);
+
+    &:hover {
+      color: var(--swh-bg-color);
+    }
+  }
+}
+
+.ant-divider {
+  background: var(--swh-border-color);
+}
+
+.ant-radio-button-wrapper-disabled.ant-radio-button-wrapper-checked {
+  background: var(--swh-bg-color-selected);
+}
+
+.ant-modal-close:focus, .ant-modal-close:hover {
+  color: var(--swh-font-color-weak);
+}

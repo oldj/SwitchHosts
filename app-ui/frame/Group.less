@@ -30,11 +30,11 @@
     .hosts-group-list {
       height: @h;
       overflow: auto;
-      border: solid 1px #ccc;
+      border: solid 1px var(--swh-border-color);
       border-radius: 2px;
 
       &:hover {
-        border-color: #49a9ee;
+        border-color: var(--swh-border-color-hover);
       }
 
       .hosts-item {
@@ -43,12 +43,12 @@
         line-height: 24px;
 
         &:hover {
-          background: #f5f5f5;
+          background: var(--swh-bg-color-hover);
         }
 
         span[role=img] {
           font-size: 12px;
-          color: #999;
+          color: var(--swh-font-color-weak);
         }
 
         & > span {

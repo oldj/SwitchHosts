@@ -5,13 +5,13 @@
   box-sizing: border-box;
   font-family: @font-editor;
   padding: 4px 4px 4px 0;
-  background: @bg_left;
+  background: var(--swh-bg-color);
   font-size: 13px;
   line-height: 1.6em;
 
   & > :global(.CodeMirror) {
     border-radius: 4px;
-    border: 1px solid @bd_color * 1.1;
+    border: 1px solid var(--swh-border-color);
     z-index: 4; // 修复代码行数的背景与左下角圆角冲突的问题
 
     :global {
@@ -82,22 +82,22 @@
   }
 
   .cm-s-default .cm-comment {
-    color: #090;
+    color: var(--swh-editor-comment);
   }
 
   .cm-s-default .cm-ip {
-    color: #00a;
+    color: var(--swh-editor-ip);
     font-weight: bold;
   }
 
   .cm-s-default .cm-hl {
-    background: #ff0;
+    background: var(--swh-editor-hl-bg);
   }
 
   .CodeMirror-gutters {
     border-right: none;
     padding-right: 6px;
-    background: #fafafa;
+    background: var(--swh-editor-gutter-bg);
     border-radius: 4px 0 0 4px;
   }
 
@@ -106,26 +106,4 @@
     font-size: 12px;
   }
 
-}
-
-:global(.theme-dark) {
-  .root {
-    background: @bg_left_dark;
-
-    & > :global(.CodeMirror) {
-      border: 1px solid #444;
-    }
-  }
-
-  .cm-s-default .cm-comment {
-    //color: #090;
-  }
-
-  .cm-s-default .cm-ip {
-    color: #096dd9;
-  }
-
-  .cm-s-default .cm-hl {
-    //background: #ff0;
-  }
 }

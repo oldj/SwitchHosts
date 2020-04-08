@@ -7,7 +7,7 @@
     "test": "nyc ava",
     "start": "electron app",
     "dev": "cross-env ENV=dev electron app",
-    "less": "lessc --js --clean-css app-ui/styles/main.less app/ui/main.css",
+    "less": "./scripts/less.sh",
     "dll": "webpack --config scripts/webpack.dll.js --progress --profile --colors",
     "build": "npm run dll && nr less && npm run build2",
     "build2": "webpack --config scripts/webpack.config.js --progress --profile --colors",

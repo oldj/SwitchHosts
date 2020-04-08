@@ -2,8 +2,6 @@
 
 :global {
   .frame {
-    @bg: #f5f5f5;
-    @btn_default: #05a;
     @lh: 28px;
     text-align: center;
     white-space: nowrap;
@@ -61,7 +59,7 @@
           }
 
           .inform {
-            color: #aaa;
+            color: var(--swh-font-color-weak);
             line-height: 20px;
             margin-bottom: 5px;
           }
@@ -89,7 +87,7 @@
       .ant-modal {
         .prompt-body {
           .CodeMirror-scroll {
-            background: @ipt_bg_dark;
+            background: var(--swh-bg-color);
           }
         }
       }

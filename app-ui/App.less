@@ -1,7 +1,5 @@
 //@import "../node_modules/antd/dist/antd.less";
 @import "styles/cfg";
-@import "./styles/themes/light";
-@import "./styles/themes/dark";
 
 html, body {
   margin: 0;
@@ -9,9 +7,13 @@ html, body {
   height: 100%;
   font-size: 12px;
   font-family: Arial, Helvetica, sans-serif;
-  color: @font_color;
   line-height: 20px;
-  background: #fff;
+  color: var(--swh-font-color);
+  background: var(--swh-bg-color);
+}
+
+body {
+  visibility: hidden;
 }
 
 a {

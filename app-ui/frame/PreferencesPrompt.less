@@ -6,13 +6,13 @@
       float: right;
       margin-top: -61px;
       margin-right: 30px;
-      color: #999;
+      color: var(--swh-font-color);
 
       a {
-        color: #999;
+        color: var(--swh-font-color-weak);
 
         &:hover {
-          color: #000;
+          color: var(--swh-link-color-hover);
         }
       }
 
@@ -23,14 +23,14 @@
           float: right;
           width: 6px;
           height: 6px;
-          background: #f00;
+          background: var(--swh-danger-color);
           border-radius: 3px;
         }
       }
     }
 
     .pref-cm {
-      border: 1px solid #d9d9d9;
+      border: 1px solid var(--swh-border-color);
       width: 95%;
       box-sizing: border-box;
 
@@ -38,10 +38,12 @@
         height: 160px;
         line-height: 20px;
         font-family: @font-editor;
+        background: var(--swh-editor-bg-color);
+        color: var(--swh-font-color-weak);
       }
 
       .cm-s-default .cm-comment {
-        color: #090;
+        color: var(--swh-font-color-weak);
       }
     }
   }

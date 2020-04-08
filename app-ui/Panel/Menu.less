@@ -17,8 +17,8 @@
 
 .items {
   min-height: 100px;
-  background: #fff;
-  border: 1px solid @bd_color;
+  background: var(--swh-bg-color);
+  border: 1px solid var(--swh-border-color);
   padding: 0 4px;
 }
 
@@ -28,14 +28,14 @@
   cursor: pointer;
 
   &:hover {
-    color: @font_color * 1.2;
+    color: var(--swh-font-color-hl);
   }
 }
 
 .sep {
   height: 1px;
   cursor: default;
-  background: @bd_color * 1.2;
+  background: var(--swh-border-color);
 }
 
 .item_icon {
@@ -50,9 +50,9 @@
 .handler {
   @w: @menu_handler_size + 6px;
   @h: @menu_handler_size - 4px;
-  background: #fff;
-  border: 1px solid @bd_color;
-  border-top-color: #fff;
+  background: var(--swh-bg-color);
+  border: 1px solid var(--swh-border-color);
+  border-top-color: var(--swh-bg-color);
   position: absolute;
   width: @w;
   height: @h;
@@ -64,28 +64,5 @@
 
   span[role=img] {
     margin-left: 5px;
-  }
-}
-
-:global(.theme-dark) {
-  .items,
-  .handler {
-    background-color: @editor_bg_dark;
-    border-color: @bd_color_dark;
-    color: @font_color_dark;
-  }
-
-  .item {
-    &:hover {
-      color: @font_color_dark * 1.2;
-    }
-  }
-
-  .sep {
-    background-color: @bd_color_dark * 0.8;
-  }
-
-  .handler {
-    border-top-color: @editor_bg_dark;
   }
 }
