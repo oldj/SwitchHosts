@@ -15,11 +15,11 @@
   top: 5px;
   right: 10px;
   opacity: 0.5;
-  background: #fff;
+  background: var(--swh-bg-color);
 
   span[role=img] {
     display: none;
-    color: #666;
+    color: var(--swh-font-color-weak);
     margin-left: 5px;
 
     &.show {
@@ -38,7 +38,7 @@
 }
 
 .loading {
-  color: #f00;
+  color: var(--swh-font-color);
   padding: 10px;
 }
 
@@ -51,7 +51,7 @@
   right: 0;
   padding: 4px 40px;
   text-align: center;
-  background: rgba(153, 0, 0, 0.5);
+  background: var(--swh-editor-error);
   color: #fff;
   transition: 0.5s;
 
@@ -65,27 +65,12 @@
   left: @panel-width;
   right: 0;
   bottom: 0;
-  background-color: #fff;
+  background-color: var(--swh-bg-color);
   z-index: 10;
 }
 
 :global(.platform-win32) {
   .inform {
     right: 20px;
-  }
-}
-
-:global(.theme-dark) {
-  .inform {
-    background: @editor_bg_dark;
-
-    span[role=img] {
-      color: #aaa;
-    }
-  }
-
-  .search-bar-wrapper {
-    background-color: @editor_bg_dark * 1.1;
-    box-shadow: 0 -1px 0 0 rgba(255, 255, 255, 0.2);
   }
 }

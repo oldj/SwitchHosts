@@ -22,7 +22,7 @@
     display: block;
     width: 800px;
     height: 30px;
-    background: @bg_color_selected;
+    background: var(--swh-bg-color-selected);
     //opacity: 0.5;
     position: absolute;
     right: -5px;
@@ -86,7 +86,7 @@
 }
 
 .sort-bg {
-  background: @sorg-bg-color;
+  //background: @sorg-bg-color;
 }
 
 .sys-hosts {
@@ -103,27 +103,5 @@
 :global(.platform-darwin) {
   .sys-hosts {
     margin-top: 0;
-  }
-}
-
-:global(.theme-dark) {
-  .list-item {
-    &.selected {
-      //background: @bg_left_dark * 1.1;
-
-      span {
-        color: #fff;
-      }
-
-      .item-icon {
-        color: #fff;
-      }
-
-      &:hover {
-        .icon-edit {
-          color: #fff;
-        }
-      }
-    }
   }
 }

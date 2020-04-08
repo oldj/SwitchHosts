@@ -10,8 +10,8 @@
   z-index: 10;
   //height: 100%;
   overflow: hidden;
-  background: @bg_left;
-  color: @font_color_left;
+  //background: @bg_left;
+  //color: @font_color_left;
   user-select: none;
   -webkit-app-region: drag;
 
@@ -29,21 +29,4 @@
 .mac_handler {
   height: 36px;
   -webkit-app-region: drag;
-}
-
-:global(.theme-dark) {
-  .root {
-    background: @bg_left_dark;
-    color: @font_color_left_dark;
-  }
-
-  :global {
-    .ant-tree {
-      color: @font_color_left_dark;
-
-      li .ant-tree-node-content-wrapper {
-        color: @font_color_left_dark;
-      }
-    }
-  }
 }

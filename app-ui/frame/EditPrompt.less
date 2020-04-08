@@ -28,9 +28,9 @@
     }
 
     .ln {
-      i.icon-refresh {
+      span.icon-refresh {
         display: inline-block;
-        color: #999;
+        color: var(--swh-font-color-weak);
         margin: 0 5px;
         cursor: pointer;
         width: 20px;
@@ -41,7 +41,7 @@
         vertical-align: middle;
 
         &:hover {
-          color: #333;
+          color: var(--swh-link-color-hover);
         }
 
         &.loading {
@@ -56,11 +56,11 @@
 
     .last-refresh {
       //padding-left: 1em;
-      color: #999;
+      color: var(--swh-font-color-weak);
     }
 
     a.del {
-      color: @color_danger;
+      color: var(--swh-danger-color);
 
       span {
         padding-left: 0.5em;
@@ -70,7 +70,7 @@
 
   .theme-dark {
     .frame .ln i.icon-refresh:hover {
-      color: @dark-hl;
+      color: var(--swh-font-color-hl);
     }
   }
 }

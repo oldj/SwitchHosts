@@ -40,8 +40,11 @@ export default class App extends React.Component {
 
     Agent.pact('getPref')
       .then(pref => {
-        this.setState({theme: pref.theme || 'light'})
-        document.body.className += ' theme-' + pref.theme
+        let theme = pref.theme || 'light'
+        this.setState({theme})
+        document.body.className += ' theme-' + theme
+        document.querySelector(`link[data-theme=${theme}]`).disabled = false
+        document.body.style.visibility = 'visible'
 
         return pref.user_language || 'en'
       })
