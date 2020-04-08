@@ -7,7 +7,7 @@
 
 import React from 'react'
 import classnames from 'classnames'
-import Icon, { FormOutlined } from '@ant-design/icons'
+import Icon, { CopyOutlined, DesktopOutlined, FileTextOutlined, FolderOutlined, FormOutlined, GlobalOutlined } from '@ant-design/icons'
 import Agent from '../Agent'
 import isInViewport from 'wheel-js/src/browser/isInViewport'
 import { WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
@@ -73,27 +73,33 @@ export default class ListItem extends React.Component {
     } = this.props
     if (!data) return null
 
+    let {id, where, is_sys} = data
     const IconOn = theme === 'dark' ? IconOnDark : IconOnLight
     const IconOff = theme === 'dark' ? IconOffDark : IconOffLight
 
-    let is_selected = data.id === current.id || (data.is_sys && current.is_sys)
+    let is_selected = id === current.id || (is_sys && current.is_sys)
     let attrs = {
-      'data-id': data.id || '',
+      'data-id': id || '',
       draggable: !sys
     }
 
-    let {where} = data
-    let icon_type
-    if (sys) {
-      icon_type = 'desktop'
-    } else if (where === WHERE_REMOTE) {
-      icon_type = 'global'
-    } else if (where === WHERE_GROUP) {
-      icon_type = 'copy'
-    } else if (where === WHERE_FOLDER) {
-      icon_type = 'folder'
+    let icon
+    if (is_sys) {
+      icon = <DesktopOutlined/>
     } else {
-      icon_type = 'file-text'
+      switch (where) {
+        case 'remote':
+          icon = <GlobalOutlined/>
+          break
+        case 'group':
+          icon = <CopyOutlined/>
+          break
+        case 'folder':
+          icon = <FolderOutlined/>
+          break
+        default:
+          icon = <FileTextOutlined/>
+      }
     }
 
     return (
@@ -123,9 +129,8 @@ export default class ListItem extends React.Component {
             />
           </div>
         )}
+        <span className={styles['item-icon']}>{icon}</span>
         <span className={styles.title}>{this.getTitle()}</span>
-
-        {/*{this.renderChildren()}*/}
       </div>
     )
   }

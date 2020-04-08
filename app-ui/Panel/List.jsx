@@ -11,10 +11,8 @@ import ListItem from './ListItem'
 import Agent from '../Agent'
 import { findPositions } from '../content/kw'
 import treeFunc from '../../app/libs/treeFunc'
-//import makeSortable from './makeSortable'
 import { WHERE_FOLDER, WHERE_GROUP, WHERE_REMOTE } from '../configs/contants'
 import styles from './List.less'
-import { CopyOutlined, DesktopOutlined, FileTextOutlined, FolderAddOutlined, FolderOutlined, GlobalOutlined } from '@ant-design/icons'
 
 export default class List extends React.Component {
 
@@ -34,7 +32,6 @@ export default class List extends React.Component {
   }
 
   customItems (tree_data) {
-    let {lang} = this.props
     let {kw, drag_target_id, drag_where_to} = this.state
 
     function match (kw, item) {
@@ -48,20 +45,6 @@ export default class List extends React.Component {
       }
 
       let {id, where} = item
-      let icon
-      switch (where) {
-        case 'global':
-          icon = <GlobalOutlined/>
-          break
-        case 'copy':
-          icon = <CopyOutlined/>
-          break
-        case 'folder':
-          icon = <FolderOutlined/>
-          break
-        default:
-          icon = <FileTextOutlined/>
-      }
 
       //return (
       //  <Tree.TreeNode
@@ -89,7 +72,7 @@ export default class List extends React.Component {
         ),
         //title: item.title || lang.untitled,
         key: 'hosts_' + id,
-        icon,
+        disabled: item.is_sys,
         isLeaf: where !== WHERE_FOLDER,
         children: (item.children || []).length > 0 ? this.customItems(item.children) : []
       }
