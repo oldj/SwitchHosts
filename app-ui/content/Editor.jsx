@@ -13,7 +13,7 @@ import classnames from 'classnames'
 import m_kw from './kw'
 import Agent from '../Agent'
 import * as func from '../libs/search'
-//import 'codemirror/lib/codemirror.css'
+import 'codemirror/lib/codemirror.css'
 import styles from './Editor.less'
 
 import modeHosts from './cm_hl'
