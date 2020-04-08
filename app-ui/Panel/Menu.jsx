@@ -3,7 +3,8 @@
  */
 
 import React from 'react'
-import { Icon } from 'antd'
+import { Icon as LegacyIcon } from '@ant-design/compatible'
+import { ToolOutlined } from '@ant-design/icons'
 import Agent from '../Agent'
 import { url_feedback, url_home } from '../../app/configs'
 import styles from './Menu.less'
@@ -115,7 +116,7 @@ export default class Menu extends React.Component {
         onClick={() => this.onMenuItemClick(item)}
         key={idx}
       >
-        <span className={styles.item_icon}><Icon type={item.icon}/></span>
+        <span className={styles.item_icon}><LegacyIcon type={item.icon}/></span>
         <span className={styles.item_label}>{lang[item.label]}</span>
       </div>
     )
@@ -130,7 +131,7 @@ export default class Menu extends React.Component {
         <div className={styles.items}>
           {menu.map((item, idx) => this.menuItem(item, idx))}
         </div>
-        <div className={styles.handler} onClick={toggleMenu}><Icon type="tool"/></div>
+        <div className={styles.handler} onClick={toggleMenu}><ToolOutlined/></div>
       </div>
     )
   }
