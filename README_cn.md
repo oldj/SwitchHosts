@@ -27,7 +27,7 @@
 你可以直接下载源码到本地运行或编辑，或者在下面下载可执行版本：
 
  - [SwitchHosts! 下载地址1（GitHub release）](https://github.com/oldj/SwitchHosts/releases)
- - [SwitchHosts! 下载地址2（百度网盘）](http://pan.baidu.com/share/link?shareid=150951&uk=3607385901)
+ - [SwitchHosts! 下载地址2（百度网盘）](https://pan.baidu.com/s/1inED1)
 
 ### brew
 
