@@ -100,6 +100,7 @@ export default class About extends React.Component {
                 <a href="https://github.com/zhanggang807" target="_blank">Dean Zhang</a>
                 <a href="https://github.com/CloverNet" target="_blank">CloverNet</a>
                 <a href="https://github.com/ReAlign" target="_blank">ReAlign</a>
+                <a href="https://github.com/cuikangyi" target="_blank">Kangyi Cui</a>
               </div>
             </div>
           </div>
