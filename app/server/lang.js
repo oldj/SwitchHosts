@@ -7,7 +7,8 @@
 
 const languages = {
   'en': require('../lang/en').content,
-  'cn': require('../lang/cn').content
+  'cn': require('../lang/cn').content,
+  'ja': require('../lang/ja').content
 }
 
 module.exports = {
@@ -28,6 +29,8 @@ module.exports = {
     lang = lang.toLowerCase()
     if (lang === 'cn' || lang === 'zh-cn') {
       lang = 'cn'
+    } else if (lang === 'ja') {
+      lang = 'ja'
     } else {
       lang = 'en'
     }
