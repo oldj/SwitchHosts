@@ -26,8 +26,7 @@ SwitchHosts! is an App for managing hosts file, it is based on [Electron](http:/
 
 You can download the source code and build it yourself, or download the built version from following links:
 
- - [SwitchHosts! Download Page 1 (GitHub release)](https://github.com/oldj/SwitchHosts/releases)
- - [SwitchHosts! Download Page 2 (Baidu Yunpan)](https://pan.baidu.com/s/1inED1)
+ - [SwitchHosts! Download Page (GitHub release)](https://github.com/oldj/SwitchHosts/releases)
 
 ### brew
 
