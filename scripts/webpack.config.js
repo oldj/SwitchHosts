@@ -90,10 +90,12 @@ module.exports = {
           {
             loader: 'less-loader?outputStyle=expanded',
             options: {
-              javascriptEnabled: true,
-              plugins: [
-                new LESSPluginLists({advanced: true})
-              ]
+              lessOptions: {
+                javascriptEnabled: true,
+                plugins: [
+                  new LESSPluginLists({advanced: true})
+                ]
+              }
             }
           }
         ]
