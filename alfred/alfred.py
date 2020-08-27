@@ -27,11 +27,13 @@ def main(wf):
     # the list of results for Alfred
     for item in items:
         on = item.get('on', False)
-        wf.add_item(title=item['title'],
-                    subtitle=get_subtitle(item),
-                    arg=item['id'],
-                    valid=True,
-                    icon='on.png' if on else 'off.png')
+        wf.add_item(
+            title=item.get('title', 'untitled'),
+            subtitle=get_subtitle(item),
+            arg=item.get('id'),
+            valid=True,
+            icon='on.png' if on else 'off.png',
+        )
 
     # Send the results to Alfred as XML
     wf.send_feedback()

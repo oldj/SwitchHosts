@@ -11,9 +11,10 @@
 # TODO: Exclude this module from test and code coverage in py2.6
 
 """
-Post notifications via the OS X Notification Center. This feature
-is only available on Mountain Lion (10.8) and later. It will
-silently fail on older systems.
+Post notifications via the macOS Notification Center.
+
+This feature is only available on Mountain Lion (10.8) and later.
+It will silently fail on older systems.
 
 The main API is a single function, :func:`~workflow.notify.notify`.
 
@@ -60,10 +61,10 @@ SOUNDS = (
 
 
 def wf():
-    """Return `Workflow` object for this module.
+    """Return Workflow object for this module.
 
     Returns:
-        workflow.Workflow: `Workflow` object for current workflow.
+        workflow.Workflow: Workflow object for current workflow.
     """
     global _wf
     if _wf is None:
@@ -87,7 +88,7 @@ def notifier_program():
     """Return path to notifier applet executable.
 
     Returns:
-        unicode: Path to Notify.app `applet` executable.
+        unicode: Path to Notify.app ``applet`` executable.
     """
     return wf().datafile('Notify.app/Contents/MacOS/applet')
 
@@ -96,13 +97,13 @@ def notifier_icon_path():
     """Return path to icon file in installed Notify.app.
 
     Returns:
-        unicode: Path to `applet.icns` within the app bundle.
+        unicode: Path to ``applet.icns`` within the app bundle.
     """
     return wf().datafile('Notify.app/Contents/Resources/applet.icns')
 
 
 def install_notifier():
-    """Extract `Notify.app` from the workflow to data directory.
+    """Extract ``Notify.app`` from the workflow to data directory.
 
     Changes the bundle ID of the installed app and gives it the
     workflow's icon.
@@ -111,13 +112,13 @@ def install_notifier():
     destdir = wf().datadir
     app_path = os.path.join(destdir, 'Notify.app')
     n = notifier_program()
-    log().debug("Installing Notify.app to %r ...", destdir)
+    log().debug('installing Notify.app to %r ...', destdir)
     # z = zipfile.ZipFile(archive, 'r')
     # z.extractall(destdir)
     tgz = tarfile.open(archive, 'r:gz')
     tgz.extractall(destdir)
-    assert os.path.exists(n), (
-        "Notify.app could not be installed in {0!r}.".format(destdir))
+    if not os.path.exists(n):  # pragma: nocover
+        raise RuntimeError('Notify.app could not be installed in ' + destdir)
 
     # Replace applet icon
     icon = notifier_icon_path()
@@ -144,29 +145,29 @@ def install_notifier():
     ip_path = os.path.join(app_path, 'Contents/Info.plist')
     bundle_id = '{0}.{1}'.format(wf().bundleid, uuid.uuid4().hex)
     data = plistlib.readPlist(ip_path)
-    log().debug('Changing bundle ID to {0!r}'.format(bundle_id))
+    log().debug('changing bundle ID to %r', bundle_id)
     data['CFBundleIdentifier'] = bundle_id
     plistlib.writePlist(data, ip_path)
 
 
 def validate_sound(sound):
-    """Coerce `sound` to valid sound name.
+    """Coerce ``sound`` to valid sound name.
 
-    Returns `None` for invalid sounds. Sound names can be found
-    in `System Preferences > Sound > Sound Effects`.
+    Returns ``None`` for invalid sounds. Sound names can be found
+    in ``System Preferences > Sound > Sound Effects``.
 
     Args:
         sound (str): Name of system sound.
 
     Returns:
-        str: Proper name of sound or `None`.
+        str: Proper name of sound or ``None``.
     """
     if not sound:
         return None
 
     # Case-insensitive comparison of `sound`
     if sound.lower() in [s.lower() for s in SOUNDS]:
-        # Title-case is correct for all system sounds as of OS X 10.11
+        # Title-case is correct for all system sounds as of macOS 10.11
         return sound.title()
     return None
 
@@ -180,10 +181,10 @@ def notify(title='', text='', sound=None):
         sound (str, optional): Name of sound to play.
 
     Raises:
-        ValueError: Raised if both `title` and `text` are empty.
+        ValueError: Raised if both ``title`` and ``text`` are empty.
 
     Returns:
-        bool: `True` if notification was posted, else `False`.
+        bool: ``True`` if notification was posted, else ``False``.
     """
     if title == text == '':
         raise ValueError('Empty notification')
@@ -198,7 +199,7 @@ def notify(title='', text='', sound=None):
     env = os.environ.copy()
     enc = 'utf-8'
     env['NOTIFY_TITLE'] = title.encode(enc)
-    env['NOTIFY_MESSAGE'] =  text.encode(enc)
+    env['NOTIFY_MESSAGE'] = text.encode(enc)
     env['NOTIFY_SOUND'] = sound.encode(enc)
     cmd = [n]
     retcode = subprocess.call(cmd, env=env)
@@ -210,7 +211,7 @@ def notify(title='', text='', sound=None):
 
 
 def convert_image(inpath, outpath, size):
-    """Convert an image file using `sips`.
+    """Convert an image file using ``sips``.
 
     Args:
         inpath (str): Path of source file.
@@ -218,11 +219,11 @@ def convert_image(inpath, outpath, size):
         size (int): Width and height of destination image in pixels.
 
     Raises:
-        RuntimeError: Raised if `sips` exits with non-zero status.
+        RuntimeError: Raised if ``sips`` exits with non-zero status.
     """
     cmd = [
         b'sips',
-        b'-z', b'{0}'.format(size), b'{0}'.format(size),
+        b'-z', str(size), str(size),
         inpath,
         b'--out', outpath]
     # log().debug(cmd)
@@ -230,14 +231,14 @@ def convert_image(inpath, outpath, size):
         retcode = subprocess.call(cmd, stdout=pipe, stderr=subprocess.STDOUT)
 
     if retcode != 0:
-        raise RuntimeError('sips exited with {0}'.format(retcode))
+        raise RuntimeError('sips exited with %d' % retcode)
 
 
 def png_to_icns(png_path, icns_path):
-    """Convert PNG file to ICNS using `iconutil`.
+    """Convert PNG file to ICNS using ``iconutil``.
 
     Create an iconset from the source PNG file. Generate PNG files
-    in each size required by OS X, then call `iconutil` to turn
+    in each size required by macOS, then call ``iconutil`` to turn
     them into a single ICNS file.
 
     Args:
@@ -245,15 +246,16 @@ def png_to_icns(png_path, icns_path):
         icns_path (str): Path to destination ICNS file.
 
     Raises:
-        RuntimeError: Raised if `iconutil` or `sips` fail.
+        RuntimeError: Raised if ``iconutil`` or ``sips`` fail.
     """
     tempdir = tempfile.mkdtemp(prefix='aw-', dir=wf().datadir)
 
     try:
         iconset = os.path.join(tempdir, 'Icon.iconset')
 
-        assert not os.path.exists(iconset), (
-            "Iconset path already exists : {0!r}".format(iconset))
+        if os.path.exists(iconset):  # pragma: nocover
+            raise RuntimeError('iconset already exists: ' + iconset)
+
         os.makedirs(iconset)
 
         # Copy source icon to icon set and generate all the other
@@ -261,7 +263,7 @@ def png_to_icns(png_path, icns_path):
         configs = []
         for i in (16, 32, 128, 256, 512):
             configs.append(('icon_{0}x{0}.png'.format(i), i))
-            configs.append((('icon_{0}x{0}@2x.png'.format(i), i*2)))
+            configs.append((('icon_{0}x{0}@2x.png'.format(i), i * 2)))
 
         shutil.copy(png_path, os.path.join(iconset, 'icon_256x256.png'))
         shutil.copy(png_path, os.path.join(iconset, 'icon_128x128@2x.png'))
@@ -280,45 +282,16 @@ def png_to_icns(png_path, icns_path):
 
         retcode = subprocess.call(cmd)
         if retcode != 0:
-            raise RuntimeError("iconset exited with {0}".format(retcode))
+            raise RuntimeError('iconset exited with %d' % retcode)
 
-        assert os.path.exists(icns_path), (
-            "Generated ICNS file not found : {0!r}".format(icns_path))
+        if not os.path.exists(icns_path):  # pragma: nocover
+            raise ValueError(
+                'generated ICNS file not found: ' + repr(icns_path))
     finally:
         try:
             shutil.rmtree(tempdir)
         except OSError:  # pragma: no cover
             pass
-
-
-# def notify_native(title='', text='', sound=''):
-#     """Post notification via the native API (via pyobjc).
-
-#     At least one of `title` or `text` must be specified.
-
-#     This method will *always* show the Python launcher icon (i.e. the
-#     rocket with the snakes on it).
-
-#     Args:
-#         title (str, optional): Notification title.
-#         text (str, optional): Notification body text.
-#         sound (str, optional): Name of sound to play.
-
-#     """
-
-#     if title == text == '':
-#         raise ValueError('Empty notification')
-
-#     import Foundation
-
-#     sound = sound or Foundation.NSUserNotificationDefaultSoundName
-
-#     n = Foundation.NSUserNotification.alloc().init()
-#     n.setTitle_(title)
-#     n.setInformativeText_(text)
-#     n.setSoundName_(sound)
-#     nc = Foundation.NSUserNotificationCenter.defaultUserNotificationCenter()
-#     nc.deliverNotification_(n)
 
 
 if __name__ == '__main__':  # pragma: nocover
@@ -329,21 +302,20 @@ if __name__ == '__main__':  # pragma: nocover
 
     from unicodedata import normalize
 
-    def uni(s):
+    def ustr(s):
         """Coerce `s` to normalised Unicode."""
-        ustr = s.decode('utf-8')
-        return normalize('NFD', ustr)
+        return normalize('NFD', s.decode('utf-8'))
 
     p = argparse.ArgumentParser()
     p.add_argument('-p', '--png', help="PNG image to convert to ICNS.")
     p.add_argument('-l', '--list-sounds', help="Show available sounds.",
                    action='store_true')
     p.add_argument('-t', '--title',
-                   help="Notification title.", type=uni,
+                   help="Notification title.", type=ustr,
                    default='')
-    p.add_argument('-s', '--sound', type=uni,
+    p.add_argument('-s', '--sound', type=ustr,
                    help="Optional notification sound.", default='')
-    p.add_argument('text', type=uni,
+    p.add_argument('text', type=ustr,
                    help="Notification body text.", default='', nargs='?')
     o = p.parse_args()
 
@@ -357,21 +329,20 @@ if __name__ == '__main__':  # pragma: nocover
     if o.png:
         icns = os.path.join(
             os.path.dirname(o.png),
-            b'{0}{1}'.format(os.path.splitext(os.path.basename(o.png))[0],
-                             '.icns'))
+            os.path.splitext(os.path.basename(o.png))[0] + '.icns')
 
-        print('Converting {0!r} to {1!r} ...'.format(o.png, icns),
+        print('converting {0!r} to {1!r} ...'.format(o.png, icns),
               file=sys.stderr)
 
-        assert not os.path.exists(icns), (
-            "Destination file already exists : {0}".format(icns))
+        if os.path.exists(icns):
+            raise ValueError('destination file already exists: ' + icns)
 
         png_to_icns(o.png, icns)
         sys.exit(0)
 
     # Post notification
     if o.title == o.text == '':
-        print('ERROR: Empty notification.', file=sys.stderr)
+        print('ERROR: empty notification.', file=sys.stderr)
         sys.exit(1)
     else:
         notify(o.title, o.text, o.sound)
