@@ -6,15 +6,6 @@
 }
 
 :global {
-  @keyframes loading {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
   .frame {
     //label {
     //  padding: 0 4em 0 0.5em;
@@ -45,7 +36,7 @@
         }
 
         &.loading {
-          animation: loading 1s infinite linear;
+          animation: spin 1s infinite linear;
         }
 
         &.invisible {
