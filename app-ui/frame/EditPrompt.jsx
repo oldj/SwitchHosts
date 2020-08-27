@@ -255,6 +255,7 @@ export default class EditPrompt extends React.Component {
     if (this.state.where !== WHERE_REMOTE) return null
 
     let {lang} = this.props
+    let {is_loading} = this.state
 
     return (
       <div className="remote-ipts">
@@ -287,15 +288,14 @@ export default class EditPrompt extends React.Component {
                 'iconfont': 1,
                 'icon-refresh': 1,
                 'invisible': !this.current_hosts || this.state.url !== this.current_hosts.url,
-                'loading': this.state.is_loading
+                'loading': is_loading
               })}
               title={lang.refresh}
               onClick={() => this.refresh()}
             />
 
             <span className="last-refresh">
-              {lang.last_refresh}
-              {this.state.last_refresh || 'N/A'}
+              {is_loading ? 'loading...' : lang.last_refresh + (this.state.last_refresh || 'N/A')}
             </span>
           </div>
         </div>
