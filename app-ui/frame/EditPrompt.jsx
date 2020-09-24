@@ -12,7 +12,7 @@ import { Icon, Input, Radio, Select } from 'antd'
 import Group from './Group'
 import Agent from '../Agent'
 import makeId from '../../app/libs/make-id'
-import { WHERE_LOCAL, WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
+import {WHERE_LOCAL, WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER, WHERE_CLOUD} from '../configs/contants'
 import styles from './EditPrompt.less'
 
 const RadioButton = Radio.Button
@@ -314,6 +314,69 @@ export default class EditPrompt extends React.Component {
     )
   }
 
+  renderCloud () {
+    if (this.state.where !== WHERE_CLOUD) return null
+    let {lang} = this.props
+    let {folder_mode} = this.state
+
+    return (
+        <div>
+          <div className="ln">
+            <div className="title">{lang.pref_choice_mode}</div>
+            <div className="cnt">
+              <RadioGroup onChange={e => this.setState({folder_mode: e.target.value})} value={folder_mode}>
+                <RadioButton value={0}><Icon type="border-outer"/> {lang.default}</RadioButton>
+                <RadioButton value={1}><Icon type="check-circle"/> {lang.pref_choice_mode_single}</RadioButton>
+                <RadioButton value={2}><Icon type="check-square"/> {lang.pref_choice_mode_multiple}</RadioButton>
+              </RadioGroup>
+            </div>
+            <div className="ln">
+              <div className="title">{lang.url}</div>
+              <div className="cnt">
+                <Input
+                    ref={c => this.el_url = c}
+                    value={this.state.url}
+                    placeholder="http:// or file:///"
+                    onChange={e => this.setState({url: e.target.value})}
+                    onKeyDown={e => (e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
+                    maxLength={1024}
+                />
+              </div>
+            </div>
+            <div className="ln">
+              <div className="title">{lang.auto_refresh}</div>
+              <div className="cnt">
+                <Select
+                    value={this.state.refresh_interval}
+                    style={{width: 120}}
+                    onChange={v => this.setState({refresh_interval: parseFloat(v) || 0})}
+                >
+                  {this.getRefreshOptions()}
+                </Select>
+
+                <Icon
+                    type="reload"
+                    className={classnames({
+                      'iconfont': 1,
+                      'icon-refresh': 1,
+                      'invisible': !this.current_hosts || this.state.url !== this.current_hosts.url,
+                      'loading': this.state.is_loading
+                    })}
+                    title={lang.refresh}
+                    onClick={() => this.refresh()}
+                />
+
+                <span className="last-refresh">
+              {lang.last_refresh}
+                  {this.state.last_refresh || 'N/A'}
+            </span>
+              </div>
+            </div>
+          </div>
+        </div>
+    )
+  }
+
   body () {
     let {lang} = this.props
     let {where, title, is_add} = this.state
@@ -345,6 +408,7 @@ export default class EditPrompt extends React.Component {
               <RadioButton value={WHERE_REMOTE}><Icon type="global"/> {lang.where_remote}</RadioButton>
               <RadioButton value={WHERE_GROUP}><Icon type="copy"/> {lang.where_group}</RadioButton>
               <RadioButton value={WHERE_FOLDER}><Icon type="folder"/> {lang.where_folder}</RadioButton>
+              <RadioButton value={WHERE_CLOUD}><Icon type="cloud"/> {lang.where_cloud}</RadioButton>
             </RadioGroup>
           </div>
         </div>
@@ -352,6 +416,7 @@ export default class EditPrompt extends React.Component {
         {this.renderRemoteInputs()}
         {this.renderGroup()}
         {this.renderFolder()}
+        {this.renderCloud()}
         {this.getEditOperations()}
       </div>
     )
@@ -362,6 +427,7 @@ export default class EditPrompt extends React.Component {
 
     return (
       <MyFrame
+        width={"550px"}
         show={this.state.show}
         title={lang[this.state.is_add ? 'add_hosts' : 'edit_hosts']}
         body={this.body()}

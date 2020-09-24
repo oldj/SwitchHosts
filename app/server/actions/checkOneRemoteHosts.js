@@ -16,7 +16,7 @@ function now () {
 
 module.exports = (svr, hosts, force = false) => {
   return new Promise((resolve, reject) => {
-    if (hosts.where !== 'remote' || !hosts.url) {
+    if ((hosts.where !== 'remote' && hosts.where !== 'cloud')|| !hosts.url) {
       resolve(hosts)
       return
     }

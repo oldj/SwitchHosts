@@ -80,6 +80,7 @@ export default class ListItem extends React.Component {
     const IconOff = theme === 'dark' ? IconOffDark : IconOffLight
 
     let is_selected = data.id === current.id || (data.is_sys && current.is_sys)
+    let showSwitch = data.where !== "cloud"
     let attrs = {
       'data-id': data.id || '',
       draggable: !sys
@@ -123,11 +124,13 @@ export default class ListItem extends React.Component {
                 className={styles['icon-edit']}
               />
             ) : null}
-            <Icon
-              className={styles.switcher}
-              component={data.on ? IconOn : IconOff}
-              onClick={this.toggle.bind(this)}
-            />
+            {showSwitch ? (
+                <Icon
+                  className={styles.switcher}
+                  component={data.on ? IconOn : IconOff}
+                  onClick={this.toggle.bind(this)}
+                />
+                ) : null}
           </div>
         )}
         <Icon
