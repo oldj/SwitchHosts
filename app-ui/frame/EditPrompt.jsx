@@ -146,7 +146,7 @@ export default class EditPrompt extends React.Component {
     if (this.state.is_add) {
       this.props.justAdd(new_id)
     }
-    if (this.state.where !== WHERE_GROUP) {
+    if (this.state.where !== WHERE_GROUP && this.state.where !== WHERE_CLOUD) {
       data.include = []
     }
 
