@@ -16,7 +16,7 @@ import StatConfirm from './frame/StatConfirm'
 import About from './about/About'
 import PreferencesPrompt from './frame/PreferencesPrompt'
 import Agent from './Agent'
-import {WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER, WHERE_CLOUD} from './configs/contants'
+import { WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER, WHERE_CLOUD, WHERE_CLOUD_LOCAL } from './configs/contants'
 import { reg as events_reg } from './events/index'
 import treeFunc from '../app/libs/treeFunc'
 
@@ -121,7 +121,7 @@ export default class App extends React.Component {
   }
 
   static isReadOnly (hosts) {
-    return !hosts || hosts.is_sys || ([WHERE_FOLDER, WHERE_GROUP, WHERE_REMOTE, WHERE_CLOUD]).includes(hosts.where)
+    return !hosts || hosts.is_sys || ([WHERE_FOLDER, WHERE_GROUP, WHERE_REMOTE, WHERE_CLOUD, WHERE_CLOUD_LOCAL]).includes(hosts.where)
   }
 
   toSave () {

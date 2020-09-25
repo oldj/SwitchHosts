@@ -121,6 +121,7 @@ exports.content = {
   , url: 'URL 地址'
   , view: '视图'
   , where_folder: '文件夹'
+  , where_cloud: '云'
   , where_group: '组合'
   , where_local: '本地'
   , where_remote: '远程'

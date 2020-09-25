@@ -121,6 +121,7 @@ exports.content = {
   , url: 'URL'
   , view: '表示'
   , where_folder: 'フォルダ'
+  , where_cloud: '雲'
   , where_group: 'グループ'
   , where_local: 'ローカル'
   , where_remote: 'リモート'

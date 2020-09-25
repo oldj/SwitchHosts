@@ -11,11 +11,11 @@ const isExpired = require('../checkIsExpired')
 const lineBreakTransform = require('../../libs/lineBreakTransform')
 const moment = require('moment')
 
-function now() {
+function now () {
   return moment().format('YYYY-MM-DD HH:mm:ss')
 }
 
-function makeCloudData(host, data) {
+function makeCloudData (host, data) {
   data = JSON.parse(data)
   if (!data instanceof Array) {
     return host
@@ -28,7 +28,7 @@ function makeCloudData(host, data) {
       "title": item.title,
       "content": lineBreakTransform(makeContent(item.description, item.rules)),
       "on": false,
-      "where": "local-cloud",
+      "where": "cloud-local",
       "folder_mode": 0,
       "last_refresh": null,
       "refresh_interval": 0,
@@ -41,7 +41,7 @@ function makeCloudData(host, data) {
   return host
 }
 
-function makeContent(description, rules) {
+function makeContent (description, rules) {
   let content = "# " + description + "\n"
   rules.forEach(item => {
     content = content + item.ip + "\xa0\xa0\xa0" + item.host + "\n"
