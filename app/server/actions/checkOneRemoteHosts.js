@@ -10,6 +10,7 @@ const getUrl = require('./getUrl')
 const isExpired = require('../checkIsExpired')
 const lineBreakTransform = require('../../libs/lineBreakTransform')
 const moment = require('moment')
+const crypto = require('crypto')
 
 function now () {
   return moment().format('YYYY-MM-DD HH:mm:ss')
@@ -17,27 +18,46 @@ function now () {
 
 function makeCloudData (host, data) {
   data = JSON.parse(data)
+  let obj = {};
+  data = data.reduce((prevArr, currentItem) => {
+    obj[currentItem.title] ? '' : obj[currentItem.title] = true && prevArr.push(currentItem);
+    return prevArr;
+  }, [])
+
   if (!data instanceof Array) {
     return host
   }
+
+  const childMap = new Map()
+  host.children.forEach(item => {
+    childMap.set(makeMd5(item.title, item.content), item)
+  })
+
   host.children = []
   data.forEach(item => {
-    const id = makeId()
-    const child = {
-      id,
-      "title": item.title,
-      "content": lineBreakTransform(makeContent(item.description, item.rules)),
-      "on": false,
-      "where": "cloud-local",
-      "folder_mode": 0,
-      "last_refresh": null,
-      "refresh_interval": 0,
-      "include": [],
-      "children": []
+    let child
+    const content = makeContent(item.description, item.rules)
+    const md5 = makeMd5(item.title, content)
+    if (childMap.get(md5) !== undefined) {
+      child = childMap.get(md5)
+    } else {
+      const id = makeId()
+      child = {
+        id,
+        "title": item.title,
+        "content": lineBreakTransform(content),
+        "on": false,
+        "where": "cloud-local",
+        "folder_mode": 0,
+        "last_refresh": null,
+        "refresh_interval": 0,
+        "include": [],
+        "children": []
+      }
     }
-    host.last_refresh = now()
     host.children.push(child)
   })
+  host.last_refresh = now()
   return host
 }
 
@@ -47,6 +67,11 @@ function makeContent (description, rules) {
     content = content + item.ip + "\xa0\xa0\xa0" + item.host + "\n"
   })
   return content
+}
+
+function makeMd5 (title, content) {
+  const md5key = title + content
+  return crypto.createHash('md5').update(md5key).digest('hex')
 }
 
 module.exports = (svr, hosts, force = false) => {
