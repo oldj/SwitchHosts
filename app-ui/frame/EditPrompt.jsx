@@ -12,7 +12,7 @@ import { Icon, Input, Radio, Select } from 'antd'
 import Group from './Group'
 import Agent from '../Agent'
 import makeId from '../../app/libs/make-id'
-import {WHERE_LOCAL, WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER, WHERE_CLOUD} from '../configs/contants'
+import { WHERE_LOCAL, WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER, WHERE_CLOUD } from '../configs/contants'
 import styles from './EditPrompt.less'
 
 const RadioButton = Radio.Button
@@ -129,13 +129,24 @@ export default class EditPrompt extends React.Component {
       return false
     }
 
-    if (this.state.where === WHERE_REMOTE && this.state.url === '') {
+    if (this.state.where === WHERE_REMOTE && (this.state.url === '' || this.state.url === undefined)) {
+      this.el_url.focus()
+      return false
+    }
+
+    if (this.state.where === WHERE_CLOUD && (this.state.url === '' || this.state.url === undefined)) {
       this.el_url.focus()
       return false
     }
 
     let new_id = makeId()
-    let data = Object.assign({}, this.current_hosts, this.state,
+
+    let cur = this.current_hosts
+    if (cur !== null && this.state.is_add) {
+      cur.children = []
+    }
+
+    let data = Object.assign({}, cur, this.state,
       this.state.is_add ? {
         id: new_id,
         content: `# ${this.state.title}`,
@@ -320,60 +331,60 @@ export default class EditPrompt extends React.Component {
     let {folder_mode} = this.state
 
     return (
-        <div>
+      <div>
+        <div className="ln">
+          <div className="title">{lang.pref_choice_mode}</div>
+          <div className="cnt">
+            <RadioGroup onChange={e => this.setState({folder_mode: e.target.value})} value={folder_mode}>
+              <RadioButton value={0}><Icon type="border-outer"/> {lang.default}</RadioButton>
+              <RadioButton value={1}><Icon type="check-circle"/> {lang.pref_choice_mode_single}</RadioButton>
+              <RadioButton value={2}><Icon type="check-square"/> {lang.pref_choice_mode_multiple}</RadioButton>
+            </RadioGroup>
+          </div>
           <div className="ln">
-            <div className="title">{lang.pref_choice_mode}</div>
+            <div className="title">{lang.url}</div>
             <div className="cnt">
-              <RadioGroup onChange={e => this.setState({folder_mode: e.target.value})} value={folder_mode}>
-                <RadioButton value={0}><Icon type="border-outer"/> {lang.default}</RadioButton>
-                <RadioButton value={1}><Icon type="check-circle"/> {lang.pref_choice_mode_single}</RadioButton>
-                <RadioButton value={2}><Icon type="check-square"/> {lang.pref_choice_mode_multiple}</RadioButton>
-              </RadioGroup>
+              <Input
+                ref={c => this.el_url = c}
+                value={this.state.url}
+                placeholder="http:// or file:///"
+                onChange={e => this.setState({url: e.target.value})}
+                onKeyDown={e => (e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
+                maxLength={1024}
+              />
             </div>
-            <div className="ln">
-              <div className="title">{lang.url}</div>
-              <div className="cnt">
-                <Input
-                    ref={c => this.el_url = c}
-                    value={this.state.url}
-                    placeholder="http:// or file:///"
-                    onChange={e => this.setState({url: e.target.value})}
-                    onKeyDown={e => (e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
-                    maxLength={1024}
-                />
-              </div>
-            </div>
-            <div className="ln">
-              <div className="title">{lang.auto_refresh}</div>
-              <div className="cnt">
-                <Select
-                    value={this.state.refresh_interval}
-                    style={{width: 120}}
-                    onChange={v => this.setState({refresh_interval: parseFloat(v) || 0})}
-                >
-                  {this.getRefreshOptions()}
-                </Select>
+          </div>
+          <div className="ln">
+            <div className="title">{lang.auto_refresh}</div>
+            <div className="cnt">
+              <Select
+                value={this.state.refresh_interval}
+                style={{width: 120}}
+                onChange={v => this.setState({refresh_interval: parseFloat(v) || 0})}
+              >
+                {this.getRefreshOptions()}
+              </Select>
 
-                <Icon
-                    type="reload"
-                    className={classnames({
-                      'iconfont': 1,
-                      'icon-refresh': 1,
-                      'invisible': !this.current_hosts || this.state.url !== this.current_hosts.url,
-                      'loading': this.state.is_loading
-                    })}
-                    title={lang.refresh}
-                    onClick={() => this.refresh()}
-                />
+              <Icon
+                type="reload"
+                className={classnames({
+                  'iconfont': 1,
+                  'icon-refresh': 1,
+                  'invisible': !this.current_hosts || this.state.url !== this.current_hosts.url,
+                  'loading': this.state.is_loading
+                })}
+                title={lang.refresh}
+                onClick={() => this.refresh()}
+              />
 
-                <span className="last-refresh">
+              <span className="last-refresh">
               {lang.last_refresh}
-                  {this.state.last_refresh || 'N/A'}
+                {this.state.last_refresh || 'N/A'}
             </span>
-              </div>
             </div>
           </div>
         </div>
+      </div>
     )
   }
 

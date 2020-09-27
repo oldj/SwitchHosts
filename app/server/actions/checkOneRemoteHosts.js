@@ -64,7 +64,7 @@ function makeCloudData (host, data) {
 function makeContent (description, rules) {
   let content = "# " + description + "\n"
   rules.forEach(item => {
-    content = content + item.ip + "\xa0\xa0\xa0" + item.host + "\n"
+    content = content + item.ip + "    " + item.host + "\n"
   })
   return content
 }

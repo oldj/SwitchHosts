@@ -97,6 +97,8 @@ export default class ListItem extends React.Component {
       icon_type = 'copy'
     } else if (where === WHERE_FOLDER) {
       icon_type = 'folder'
+    } else if (where === WHERE_CLOUD) {
+      icon_type = 'cloud'
     } else {
       icon_type = 'file-text'
     }
