@@ -9,7 +9,7 @@ import React from 'react'
 import { Icon } from 'antd'
 import Sortable from 'sortablejs'
 import treeFunc from '../../app/libs/treeFunc'
-import { WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
+import {WHERE_GROUP, WHERE_FOLDER, WHERE_CLOUD} from '../configs/contants'
 import listToArray from 'wheel-js/src/common/listToArray'
 import './Group.less'
 
@@ -62,7 +62,7 @@ export default class Group extends React.Component {
   makeList () {
     let include = this.state.include
     let items = treeFunc.flatTree(this.state.list)
-      .filter(item => !([WHERE_FOLDER, WHERE_GROUP]).includes(item.where) && !include.includes(item.id))
+      .filter(item => !([WHERE_FOLDER, WHERE_GROUP, WHERE_CLOUD]).includes(item.where) && !include.includes(item.id))
       .map(item => this.makeItem(item))
 
     return (

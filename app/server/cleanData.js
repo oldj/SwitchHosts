@@ -54,6 +54,8 @@ const doClean = (tree, flat_tree = null) => {
       new_item.content = makeGroupContent(new_item, flat_tree)
     } else if (new_item.where === 'folder') {
       new_item.content = makeFolderContent(new_item, tree)
+    } else if (new_item.where === 'cloud') {
+      new_item.content = makeFolderContent(new_item, tree)
     }
 
     return new_item

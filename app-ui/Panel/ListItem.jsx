@@ -10,7 +10,7 @@ import classnames from 'classnames'
 import { Icon, Tree } from 'antd'
 import Agent from '../Agent'
 import isInViewport from 'wheel-js/src/browser/isInViewport'
-import { WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
+import { WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER, WHERE_CLOUD_LOCAL, WHERE_CLOUD } from '../configs/contants'
 import makeSortable from './makeSortable'
 import IconOnLight from './images/on.svg'
 import IconOffLight from './images/off.svg'
@@ -80,6 +80,8 @@ export default class ListItem extends React.Component {
     const IconOff = theme === 'dark' ? IconOffDark : IconOffLight
 
     let is_selected = data.id === current.id || (data.is_sys && current.is_sys)
+    let showSwitch = data.where !== WHERE_CLOUD
+    let showEdit = data.where !== WHERE_CLOUD_LOCAL && is_selected
     let attrs = {
       'data-id': data.id || '',
       draggable: !sys
@@ -116,18 +118,20 @@ export default class ListItem extends React.Component {
       >
         {sys ? null : (
           <div className={styles['item-buttons']}>
-            {is_selected ? (
+            {showEdit ? (
               <Icon
                 type="form"
                 onClick={this.toEdit.bind(this)}
                 className={styles['icon-edit']}
               />
             ) : null}
-            <Icon
-              className={styles.switcher}
-              component={data.on ? IconOn : IconOff}
-              onClick={this.toggle.bind(this)}
-            />
+            {showSwitch ? (
+              <Icon
+                className={styles.switcher}
+                component={data.on ? IconOn : IconOff}
+                onClick={this.toggle.bind(this)}
+              />
+            ) : null}
           </div>
         )}
         <Icon
