@@ -8,5 +8,7 @@ module.exports = {
   WHERE_LOCAL: 'local',
   WHERE_REMOTE: 'remote',
   WHERE_GROUP: 'group',
-  WHERE_FOLDER: 'folder'
+  WHERE_FOLDER: 'folder',
+  WHERE_CLOUD: 'cloud',
+  WHERE_CLOUD_LOCAL: "cloud-local"
 }

@@ -121,6 +121,7 @@ exports.content = {
   , url: 'URL'
   , view: 'View'
   , where_folder: 'Folder'
+  , where_cloud: 'Cloud'
   , where_group: 'Group'
   , where_local: 'Local'
   , where_remote: 'Remote'
