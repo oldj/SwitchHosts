@@ -18,6 +18,7 @@ SwitchHosts! is an App for managing hosts file, it is based on [Electron](http:/
  - Remote hosts
  - Switch from system tray
  - macOS only: [Alfred workflow](http://www.packal.org/workflow/switchhosts) support
+ - Cloud hosts（see it in README_cloud.md）
 
 
 ## Install
