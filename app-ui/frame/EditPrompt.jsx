@@ -24,6 +24,7 @@ import Group from './Group'
 import Agent from '../Agent'
 import makeId from '../../app/libs/make-id'
 import { WHERE_LOCAL, WHERE_REMOTE, WHERE_GROUP, WHERE_FOLDER } from '../configs/contants'
+import treeFunc from '../../app/libs/treeFunc'
 import styles from './EditPrompt.less'
 
 const RadioButton = Radio.Button
@@ -31,7 +32,7 @@ const RadioGroup = Radio.Group
 const Option = Select.Option
 
 export default class EditPrompt extends React.Component {
-  constructor (props) {
+  constructor(props) {
     super(props)
 
     this.state = {
@@ -50,12 +51,12 @@ export default class EditPrompt extends React.Component {
     this.current_hosts = null
   }
 
-  tryToFocus () {
+  tryToFocus() {
     let el = this.el_body && this.el_body.querySelector('input[type=text]')
     el && el.focus()
   }
 
-  clear () {
+  clear() {
     this.setState({
       where: WHERE_LOCAL,
       title: '',
@@ -65,7 +66,7 @@ export default class EditPrompt extends React.Component {
     })
   }
 
-  componentDidMount () {
+  componentDidMount() {
     Agent.on('add_hosts', (title, uri) => {
       let goWhere = WHERE_LOCAL
       if (uri) {
@@ -106,11 +107,12 @@ export default class EditPrompt extends React.Component {
     })
 
     Agent.on('list_updated', list => {
-      let hosts = list.find(i => i.id === this.state.id)
+      //let hosts = list.find(i => i.id === this.state.id)
+      let hosts = treeFunc.getItemById(list, this.state.id)
       if (hosts) {
         this.current_hosts = hosts
-        this.setState({last_refresh: hosts.last_refresh})
-        setTimeout(() => this.setState({is_loading: false}), 500)
+        this.setState({ last_refresh: hosts.last_refresh })
+        setTimeout(() => this.setState({ is_loading: false }), 500)
       }
     })
 
@@ -129,7 +131,7 @@ export default class EditPrompt extends React.Component {
     })
   }
 
-  onOK () {
+  onOK() {
     this.setState({
       title: (this.state.title || '').replace(/^\s+|\s+$/g, ''),
       url: (this.state.url || '').replace(/^\s+|\s+$/g, '')
@@ -170,15 +172,15 @@ export default class EditPrompt extends React.Component {
     this.clear()
   }
 
-  onCancel () {
+  onCancel() {
     this.setState({
       show: false
     })
     this.clear()
   }
 
-  confirmDel () {
-    let {lang} = this.props
+  confirmDel() {
+    let { lang } = this.props
     if (!confirm(lang.confirm_del)) return
     Agent.emit('del_hosts', this.current_hosts)
     this.setState({
@@ -187,12 +189,12 @@ export default class EditPrompt extends React.Component {
     this.clear()
   }
 
-  updateInclude (include) {
-    this.setState({include})
+  updateInclude(include) {
+    this.setState({ include })
   }
 
-  getRefreshOptions () {
-    let {lang} = this.props
+  getRefreshOptions() {
+    let { lang } = this.props
     let k = [
       [0, `${lang.never}`],
       [1 / 60, `1 ${lang.minute}`],
@@ -212,10 +214,10 @@ export default class EditPrompt extends React.Component {
     })
   }
 
-  getEditOperations () {
+  getEditOperations() {
     if (this.state.is_add) return null
 
-    let {lang} = this.props
+    let { lang } = this.props
 
     return (
       <div>
@@ -231,7 +233,7 @@ export default class EditPrompt extends React.Component {
     )
   }
 
-  refresh () {
+  refresh() {
     if (this.state.is_loading) return
 
     Agent.emit('check_hosts_refresh', this.current_hosts)
@@ -241,7 +243,7 @@ export default class EditPrompt extends React.Component {
 
   }
 
-  renderGroup () {
+  renderGroup() {
     if (this.state.where !== WHERE_GROUP) return null
 
     return <Group
@@ -251,11 +253,11 @@ export default class EditPrompt extends React.Component {
     />
   }
 
-  renderRemoteInputs () {
+  renderRemoteInputs() {
     if (this.state.where !== WHERE_REMOTE) return null
 
-    let {lang} = this.props
-    let {is_loading} = this.state
+    let { lang } = this.props
+    let { is_loading } = this.state
 
     return (
       <div className="remote-ipts">
@@ -266,7 +268,7 @@ export default class EditPrompt extends React.Component {
               ref={c => this.el_url = c}
               value={this.state.url}
               placeholder="http:// or file:///"
-              onChange={e => this.setState({url: e.target.value})}
+              onChange={e => this.setState({ url: e.target.value })}
               onKeyDown={e => (e.keyCode === 13 && this.onOK()) || (e.keyCode === 27 && this.onCancel())}
               maxLength={1024}
             />
@@ -277,8 +279,8 @@ export default class EditPrompt extends React.Component {
           <div className="cnt">
             <Select
               value={this.state.refresh_interval}
-              style={{width: 120}}
-              onChange={v => this.setState({refresh_interval: parseFloat(v) || 0})}
+              style={{ width: 120 }}
+              onChange={v => this.setState({ refresh_interval: parseFloat(v) || 0 })}
             >
               {this.getRefreshOptions()}
             </Select>
@@ -303,17 +305,17 @@ export default class EditPrompt extends React.Component {
     )
   }
 
-  renderFolder () {
+  renderFolder() {
     if (this.state.where !== WHERE_FOLDER) return null
-    let {lang} = this.props
-    let {folder_mode} = this.state
+    let { lang } = this.props
+    let { folder_mode } = this.state
 
     return (
       <div>
         <div className="ln">
           <div className="title">{lang.pref_choice_mode}</div>
           <div className="cnt">
-            <RadioGroup onChange={e => this.setState({folder_mode: e.target.value})} value={folder_mode}>
+            <RadioGroup onChange={e => this.setState({ folder_mode: e.target.value })} value={folder_mode}>
               <RadioButton value={0}><BorderOuterOutlined/> {lang.default}</RadioButton>
               <RadioButton value={1}><CheckCircleOutlined/> {lang.pref_choice_mode_single}</RadioButton>
               <RadioButton value={2}><CheckSquareOutlined/> {lang.pref_choice_mode_multiple}</RadioButton>
@@ -324,9 +326,9 @@ export default class EditPrompt extends React.Component {
     )
   }
 
-  body () {
-    let {lang} = this.props
-    let {where, title, is_add} = this.state
+  body() {
+    let { lang } = this.props
+    let { where, title, is_add } = this.state
 
     return (
       <div className={styles.tab} ref={c => this.el_body = c}>
@@ -336,7 +338,7 @@ export default class EditPrompt extends React.Component {
             <Input
               ref={c => this.el_title = c}
               value={title}
-              onChange={(e) => this.setState({title: e.target.value})}
+              onChange={(e) => this.setState({ title: e.target.value })}
               onKeyDown={(e) => (e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
               maxLength={50}
             />
@@ -348,7 +350,7 @@ export default class EditPrompt extends React.Component {
           <div className="cnt">
             <RadioGroup
               disabled={!is_add}
-              onChange={e => this.setState({where: e.target.value})}
+              onChange={e => this.setState({ where: e.target.value })}
               value={where}
             >
               <RadioButton value={WHERE_LOCAL}><FileTextOutlined/> {lang.where_local}</RadioButton>
@@ -367,8 +369,8 @@ export default class EditPrompt extends React.Component {
     )
   }
 
-  render () {
-    let {lang} = this.props
+  render() {
+    let { lang } = this.props
 
     return (
       <MyFrame
