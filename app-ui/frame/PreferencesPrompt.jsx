@@ -7,7 +7,7 @@
 
 import React from 'react'
 import lodash from 'lodash'
-import { Checkbox, Row, Col, Radio, Select, Tabs } from 'antd'
+import { Input, Checkbox, Row, Col, Radio, Select, Tabs } from 'antd'
 import MyFrame from './MyFrame'
 import classnames from 'classnames'
 import Agent from '../Agent'
@@ -39,7 +39,8 @@ export default class PreferencesPrompt extends React.Component {
       hide_at_launch: false,
       lang_list: [],
       send_usage_data: true,
-      update_found: false // 发现新版本
+      update_found: false, // 发现新版本
+      pref_editor_font_size: '13'
     }
 
     Agent.pact('getLangList')
@@ -102,6 +103,13 @@ export default class PreferencesPrompt extends React.Component {
     })
 
     // todo set auto launch
+  }
+
+  // ################## 配置：编辑器相关 ##################
+  // ## 字体大小
+  // ## TODO：暂未处理编辑器相关配置的存储问题
+  updateEditorFontSize(v) {
+    document.getElementById('sh-editor').setAttribute('style','font-size:' + v + 'px')
   }
 
   prefLanguage () {
@@ -249,6 +257,38 @@ export default class PreferencesPrompt extends React.Component {
     )
   }
 
+  // ################## 配置：编辑器相关 ##################
+  // ## 字体大小
+  prefPrefEditorFontSize () {
+    let {lang} = this.props
+
+    return (
+      <div className="ln">
+        <Row gutter={16}>
+          <Col span={7}>
+            <span>{lang.pref_editor_font_size}</span>
+          </Col>
+          <Col span={17}>
+            <Input
+              value={this.state.pref_editor_font_size}
+              onChange={(e) => {
+                let value = e.target.value
+                console.log("配置：编辑器相关（字体大小） => " + value)
+                // TODO：配置：编辑器相关（字体大小）暂未处理输入非数值问题
+                this.setState({ pref_editor_font_size: value })
+                // 配置：编辑器相关（字体大小）修改字体大小
+                this.updateEditorFontSize(value)
+              }}
+              onKeyDown={(e) => (e.keyCode === 13 && this.onOK() || e.keyCode === 27 && this.onCancel())}
+              maxLength={2}
+              width={80}
+            />
+          </Col>
+        </Row>
+      </div>
+    )
+  }
+
   prefAdvanced () {
     let {lang} = this.props
 
@@ -300,6 +340,8 @@ export default class PreferencesPrompt extends React.Component {
               {this.prefLanguage()}
               {this.prefTheme()}
               {this.prefChoiceMode()}
+              {/* ###### 配置：编辑器相关（字体大小）###### */}
+              {this.prefPrefEditorFontSize()}
               {/*{this.prefAutoLaunch()}*/}
               {is_mac ? this.prefShowTitleOnTray() : null}
               {this.prefMinimizeAtLaunch()}

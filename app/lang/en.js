@@ -125,4 +125,7 @@ exports.content = {
   , where_local: 'Local'
   , where_remote: 'Remote'
   , window: 'Window'
+  // ################## Config：Editor ##################
+  , pref_editor: 'Editor'
+  , pref_editor_font_size: 'Font size'
 }

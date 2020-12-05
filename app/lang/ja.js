@@ -125,4 +125,7 @@ exports.content = {
   , where_local: 'ローカル'
   , where_remote: 'リモート'
   , window: 'ウィンドウ'
+  // ################## 構成:エディタ ##################
+  , pref_editor: 'エディタ'
+  , pref_editor_font_size: 'フォントサイズ'
 }

@@ -125,4 +125,7 @@ exports.content = {
   , where_local: '本地'
   , where_remote: '远程'
   , window: '窗口'
+  // ################## 配置：编辑器相关 ##################
+  , pref_editor: '编辑器'
+  , pref_editor_font_size: '字体大小'
 }
