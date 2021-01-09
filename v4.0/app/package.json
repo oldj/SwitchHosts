@@ -1,0 +1,15 @@
+{
+  "name": "SwitchHosts",
+  "version": "4.0.0",
+  "description": "Switch hosts quickly!",
+  "main": "./main.js",
+  "author": {
+    "name": "oldj",
+    "email": "oldj.wu@gmail.com",
+    "url": "https://github.com/oldj/SwitchHosts"
+  },
+  "scripts": {
+  },
+  "license": "MIT",
+  "dependencies": {}
+}

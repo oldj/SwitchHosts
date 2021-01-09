@@ -1,0 +1,14 @@
+{
+  "name": "Electron-Hat",
+  "version": "1.0.0",
+  "description": "a template for electron app",
+  "main": "./main.js",
+  "author": {
+    "name": "oldj",
+    "email": "oldj.wu@gmail.com",
+    "url": "https://github.com/oldj/electron-hat"
+  },
+  "scripts": {},
+  "license": "MIT",
+  "dependencies": {}
+}
