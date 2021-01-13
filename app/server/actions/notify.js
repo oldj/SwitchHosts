@@ -14,7 +14,8 @@ module.exports = (svr, title, message) => {
       notifier.notify({
         title,
         message,
-        icon: path.join(__dirname, '..', '..', 'assets', 'logo@512w.png')
+        icon: path.join(__dirname, '..', '..', 'assets', 'logo@512w.png'),
+        appName: 'SwitchHosts!'
       }, (e) => {
         if (e) {
           console.log(e)
