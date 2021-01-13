@@ -19,7 +19,7 @@ object-assign
  * Licensed under MIT License
  */
 
-/*! SwitchHosts! common.js, 2020-08-23 00:37:06 */
+/*! SwitchHosts! common.js, 2021-01-13 15:35:08 */
 
 /**
  * @license

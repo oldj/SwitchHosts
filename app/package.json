@@ -1,6 +1,6 @@
 {
   "name": "switchhosts",
-  "version": "3.5.6",
+  "version": "3.5.7",
   "description": "Switch hosts quickly!",
   "main": "main.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "lodash": "^4.17.20",
     "md5-file": "^5.0.0",
     "moment": "^2.27.0",
-    "node-notifier": "^8.0.0",
+    "node-notifier": "^8.0.1",
     "request": "^2.88.2"
   }
 }

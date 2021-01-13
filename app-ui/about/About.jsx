@@ -102,6 +102,8 @@ export default class About extends React.Component {
                 <a href="https://github.com/ReAlign" target="_blank">ReAlign</a>
                 <a href="https://github.com/cuikangyi" target="_blank">Kangyi Cui</a>
                 <a href="https://github.com/akrha" target="_blank">AKIRA</a>
+                <a href="https://github.com/Constaline" target="_blank">Constaline</a>
+                <a href="https://github.com/TooBug" target="_blank">TooBug</a>
               </div>
             </div>
           </div>
