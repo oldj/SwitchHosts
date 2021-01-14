@@ -66,7 +66,8 @@ const makeApp = async () => {
         artifactName: '${productName}_macOS_${version}(${buildVersion}).${ext}'
       },
       win: {
-        icon: 'assets/app.ico'
+        icon: 'assets/app.ico',
+        requestedExecutionLevel: 'requireAdministrator'
       },
       nsis: {
         //installerIcon: 'assets/installer-icon.ico',
