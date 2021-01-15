@@ -30,12 +30,18 @@ const cfg_common = {
 const makeApp = async () => {
   await builder.build({
     //targets: Platform.MAC.createTarget(),
-    mac: ['default'], // ['default', 'mas'],
-    win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
-    linux: ['zip:x64', 'AppImage:x64'],
     config: {
       ...cfg_common,
       mac: {
+        target: [
+          {
+            target: 'dmg',
+            arch: [
+              'arm64',
+              'x64'
+            ]
+          }
+        ],
         category: 'public.app-category.productivity',
         icon: 'assets/app.icns',
         gatekeeperAssess: false,
@@ -66,6 +72,7 @@ const makeApp = async () => {
         artifactName: '${productName}_macOS_${version}(${buildVersion}).${ext}'
       },
       win: {
+        target: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
         icon: 'assets/app.ico',
         requestedExecutionLevel: 'requireAdministrator'
       },
@@ -79,6 +86,7 @@ const makeApp = async () => {
         artifactName: '${productName}_windows_portable_${version}(${buildVersion}).${ext}'
       },
       linux: {
+        target: ['zip:x64', 'AppImage:x64'],
         category: 'Development',
         artifactName: '${productName}_linux_${arch}_${version}(${buildVersion}).${ext}'
       }
