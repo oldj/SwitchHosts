@@ -32,14 +32,17 @@ function normalize(content){
     // if can not parse as hosts, leave it as it is.
     if(!hosts) return line;
 
+    const ipv = /:/.test(hosts.ip) ? 6 : 4;
+
     hosts.domain.forEach(domain => {
-      if (usedDomain.indexOf(domain) === -1){
+      const domainV = domain + '_' + ipv;
+      if (usedDomain.indexOf(domainV) === -1){
         if (!validLineContent){
           validLineContent = hosts.ip;
         }
 
         validLineContent += '\t' + domain;
-        usedDomain.push(domain);
+        usedDomain.push(domainV);
       }else{
         if (!invalidLineContent) {
           invalidLineContent = '# ' + hosts.ip;
