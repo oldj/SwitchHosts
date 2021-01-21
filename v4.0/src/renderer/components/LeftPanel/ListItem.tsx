@@ -5,6 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
+import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/LeftPanel/SwitchButton'
 import { flattern, updateOneItem } from '@renderer/libs/hostsFn'
 import { HostsObjectType } from '@root/common/data'
@@ -28,19 +29,6 @@ const ListItem = (props: Props) => {
 
   const onSelect = () => {
     setCurrentHosts(data)
-  }
-
-  const getIcon = () => {
-    switch (data.where) {
-      case 'folder':
-        return folder_open ? <BiFolderOpen/> : <BiFolder/>
-      case 'remote':
-        return <BiGlobe/>
-      case 'group':
-        return <BiOutline/>
-      default:
-        return <BiFile/>
-    }
   }
 
   const toggleFolderOpen = () => {
@@ -69,7 +57,7 @@ const ListItem = (props: Props) => {
       <div
         ref={el_item}
         className={clsx(styles.item, is_selected && styles.selected, folder_open && styles.folder_open)}
-        style={{ paddingLeft: `${level}em` }}
+        style={{ paddingLeft: `${1.3 * level}em` }}
       >
         <div className={styles.title} onClick={onSelect}>
           {is_folder ? (
@@ -80,7 +68,7 @@ const ListItem = (props: Props) => {
           <span
             className={clsx(styles.icon, is_folder && styles.folder)}
             onClick={toggleFolderOpen}
-          >{getIcon()}</span>
+          ><ItemIcon data={data}/></span>
           {data.title || i18n.lang.untitled}
         </div>
         <div className={styles.status}>
