@@ -60,13 +60,6 @@ const off = (event: string, handler: EventHandler) => {
   ee.off(event, handler)
 }
 
-const useOn = (event: string, handler: EventHandler) => {
-  useEffect(() => {
-    on(event, handler)
-    return () => off(event, handler)
-  }, [])
-}
-
 ipcRenderer.on('y_broadcast', (e, d) => {
   // 接收其他（包括当前） render 窗口广播的消息
   ee.emit(d.event, d.data)
@@ -84,7 +77,6 @@ const _agent = {
   broadcast,
   on,
   off,
-  useOn,
   platform: process.platform,
 }
 

@@ -35,12 +35,16 @@
 }
 
 .without_left_panel {
-  padding-left: 80px;
-
   .toggle_left_panel {
     display: inline-block;
     margin: auto 0;
     height: 18px;
+  }
+}
+
+:global(.platform-darwin) {
+  .without_left_panel {
+    padding-left: 80px;
   }
 }
 

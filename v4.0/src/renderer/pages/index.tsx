@@ -1,9 +1,9 @@
 import { useModel } from '@@/plugin-model/useModel'
-import { EventHandler } from '@main/preload'
 import { actions, agent } from '@renderer/agent'
 import LeftPanel from '@renderer/components/LeftPanel'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
+import useOn from '@renderer/libs/hooks/useOn'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import styles from './index.less'
@@ -30,10 +30,6 @@ export default () => {
 
       return show
     })
-  }
-
-  const useOn = (event: string, handler: EventHandler) => {
-    useEffect(() => agent.on(event, handler), [])
   }
 
   useEffect(() => {

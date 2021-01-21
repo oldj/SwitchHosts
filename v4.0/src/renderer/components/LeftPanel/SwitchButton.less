@@ -1,0 +1,44 @@
+@import "../../styles/common";
+
+@swh-btn-width: 1.2em;
+@swh-btn-height: 0.6em;
+
+.root {
+  position: relative;
+  width: @swh-btn-width;
+  height: @swh-btn-height;
+  border-radius: @swh-btn-height / 2;
+  background: var(--swh-switch-button-bg-color-off);
+  box-shadow: 0 0 0 1px var(--swh-switch-button-main-color-off);
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.handler {
+  position: absolute;
+  right: unset;
+  width: @swh-btn-height;
+  height: @swh-btn-height;
+  border-radius: @swh-btn-height / 2;
+  background: var(--swh-switch-button-main-color-off);
+  border: 1px solid var(--swh-switch-button-bg-color-off);
+  transition: 0.3s;
+}
+
+.on {
+  &.root {
+    background: var(--swh-switch-button-bg-color-on);
+    box-shadow: 0 0 0 1px var(--swh-switch-button-main-color-on);
+  }
+
+  .handler {
+    right: 0;
+    background: var(--swh-switch-button-main-color-on);
+    border: 1px solid var(--swh-switch-button-bg-color-on);
+  }
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
