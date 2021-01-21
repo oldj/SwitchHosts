@@ -97,19 +97,17 @@
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron */ "electron");
 /* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var events__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! events */ "events");
+/* harmony import */ var events__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(events__WEBPACK_IMPORTED_MODULE_1__);
 /**
  * preload
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-let x_get_idx = 0;
 
-const reg = name => {
-  electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].send('reg', {
-    name
-  });
-};
+const ee = new events__WEBPACK_IMPORTED_MODULE_1__["EventEmitter"]();
+let x_get_idx = 0;
 
 const callAction = (action, ...params) => {
   const callback = ['_cb', new Date().getTime(), x_get_idx++].join('_');
@@ -129,9 +127,33 @@ const callAction = (action, ...params) => {
   });
 };
 
+const broadcast = (event, data) => {
+  // 广播消息给所有 render 窗口
+  electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].send('x_broadcast', {
+    event,
+    data
+  });
+};
+
+const on = (event, handler) => {
+  ee.on(event, (d, ...args) => {
+    handler(d, ...args);
+  });
+};
+
+electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('y_broadcast', (e, d) => {
+  // 接收其他（包括当前） render 窗口广播的消息
+  ee.emit(d.event, d.data);
+});
+electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].send('x_reg'); // 窗口销毁时 unreg
+
+window.addEventListener('beforeunload', () => {
+  electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].send('x_unreg');
+});
 const _agent = {
-  reg,
-  call: callAction
+  call: callAction,
+  broadcast,
+  on
 };
 electron__WEBPACK_IMPORTED_MODULE_0__["contextBridge"].exposeInMainWorld('_agent', _agent);
 
@@ -145,6 +167,17 @@ electron__WEBPACK_IMPORTED_MODULE_0__["contextBridge"].exposeInMainWorld('_agent
 /***/ (function(module, exports) {
 
 module.exports = require("electron");
+
+/***/ }),
+
+/***/ "events":
+/*!*************************!*\
+  !*** external "events" ***!
+  \*************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("events");
 
 /***/ })
 

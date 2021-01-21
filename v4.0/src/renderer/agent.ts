@@ -11,3 +11,5 @@ export const actions: Actions = new Proxy({}, {
     return (...params: any[]) => window._agent.call(key, ...params)
   },
 }) as Actions
+
+export const agent = window._agent

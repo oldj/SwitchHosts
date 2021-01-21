@@ -13,7 +13,9 @@
     "build:renderer": "APP_ROOT=src/renderer umi build",
     "make": "node scripts/make.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "electron-store": "^6.0.1"
+  },
   "devDependencies": {
     "@ant-design/pro-layout": "^6.10.3",
     "@babel/plugin-proposal-class-properties": "^7.12.1",

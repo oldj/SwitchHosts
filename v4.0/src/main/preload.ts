@@ -4,14 +4,19 @@
  * @homepage: https://oldj.net
  */
 
-import { contextBridge, ipcRenderer } from 'electron'
 import { Actions } from '@main/types'
+import { contextBridge, ipcRenderer } from 'electron'
+import { EventEmitter } from 'events'
+
+declare global {
+  interface Window {
+    _agent: typeof _agent;
+  }
+}
+
+const ee = new EventEmitter()
 
 let x_get_idx = 0
-
-const reg = (name: string) => {
-  ipcRenderer.send('reg', { name })
-}
 
 const callAction = (action: keyof Actions, ...params: any[]) => {
   const callback = ['_cb', (new Date()).getTime(), x_get_idx++].join('_')
@@ -33,15 +38,33 @@ const callAction = (action: keyof Actions, ...params: any[]) => {
   })
 }
 
+const broadcast = <T>(event: string, data: T) => {
+  // 广播消息给所有 render 窗口
+  ipcRenderer.send('x_broadcast', { event, data })
+}
+
+const on = (event: string, handler: (...args: any[]) => void) => {
+  ee.on(event, (d, ...args) => {
+    handler(d, ...args)
+  })
+}
+
+ipcRenderer.on('y_broadcast', (e, d) => {
+  // 接收其他（包括当前） render 窗口广播的消息
+  ee.emit(d.event, d.data)
+})
+
+ipcRenderer.send('x_reg')
+
+// 窗口销毁时 unreg
+window.addEventListener('beforeunload', () => {
+  ipcRenderer.send('x_unreg')
+})
+
 const _agent = {
-  reg,
   call: callAction,
+  broadcast,
+  on,
 }
 
 contextBridge.exposeInMainWorld('_agent', _agent)
-
-declare global {
-  interface Window {
-    _agent: typeof _agent;
-  }
-}
