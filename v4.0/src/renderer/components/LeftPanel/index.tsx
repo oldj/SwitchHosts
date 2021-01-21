@@ -6,6 +6,7 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import { agent } from '@renderer/agent'
+import List from '@renderer/components/LeftPanel/List'
 import React from 'react'
 import { BiDockLeft } from 'react-icons/bi'
 import styles from './index.less'
@@ -30,47 +31,7 @@ const Index = (props: Props) => {
       </div>
 
       <div className={styles.list}>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
-        <div>list</div>
+        <List/>
       </div>
 
       <div className={styles.status_bar} style={{ width: width - 1 }}>

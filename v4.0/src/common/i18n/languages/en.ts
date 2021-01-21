@@ -7,4 +7,5 @@
 export default {
   _name: 'English',
   test: 'Test',
+  untitled: 'Untitled',
 }

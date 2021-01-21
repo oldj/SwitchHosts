@@ -14503,11 +14503,37 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/main/actions/getDataFolder.ts":
+/*!*******************************************!*\
+  !*** ./src/main/actions/getDataFolder.ts ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path */ "path");
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var os__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! os */ "os");
+/* harmony import */ var os__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(os__WEBPACK_IMPORTED_MODULE_1__);
+/**
+ * @author: oldj
+ * @homepage: https://oldj.net
+ */
+
+
+/* harmony default export */ __webpack_exports__["default"] = (async () => {
+  // todo data folder should be current portable version
+  return path__WEBPACK_IMPORTED_MODULE_0__["join"](Object(os__WEBPACK_IMPORTED_MODULE_1__["homedir"])(), '.SwitchHosts');
+});
+
+/***/ }),
+
 /***/ "./src/main/actions/index.ts":
 /*!***********************************!*\
   !*** ./src/main/actions/index.ts ***!
   \***********************************/
-/*! exports provided: ping, configGet, configSet */
+/*! exports provided: ping, configGet, configSet, getDataFolder, localDataLoad */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -14521,6 +14547,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _configSet__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./configSet */ "./src/main/actions/configSet.ts");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "configSet", function() { return _configSet__WEBPACK_IMPORTED_MODULE_2__["default"]; });
 
+/* harmony import */ var _getDataFolder__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./getDataFolder */ "./src/main/actions/getDataFolder.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "getDataFolder", function() { return _getDataFolder__WEBPACK_IMPORTED_MODULE_3__["default"]; });
+
+/* harmony import */ var _localDataLoad__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./localDataLoad */ "./src/main/actions/localDataLoad.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "localDataLoad", function() { return _localDataLoad__WEBPACK_IMPORTED_MODULE_4__["default"]; });
+
 /**
  * index
  * @author: oldj
@@ -14529,6 +14561,48 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
+/***/ }),
+
+/***/ "./src/main/actions/localDataLoad.ts":
+/*!*******************************************!*\
+  !*** ./src/main/actions/localDataLoad.ts ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path */ "path");
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! fs */ "fs");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @main/actions/getDataFolder */ "./src/main/actions/getDataFolder.ts");
+/**
+ * @author: oldj
+ * @homepage: https://oldj.net
+ */
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = (async () => {
+  const fn = path__WEBPACK_IMPORTED_MODULE_0__["join"](await Object(_main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_2__["default"])(), 'data.json');
+
+  if (!fs__WEBPACK_IMPORTED_MODULE_1__["existsSync"](fn)) {
+    return {};
+  }
+
+  let content = await fs__WEBPACK_IMPORTED_MODULE_1__["promises"].readFile(fn, 'utf-8');
+
+  try {
+    return JSON.parse(content);
+  } catch (e) {
+    console.error(e);
+    return {};
+  }
+});
 
 /***/ }),
 
