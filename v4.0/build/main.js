@@ -14626,6 +14626,7 @@ electron__WEBPACK_IMPORTED_MODULE_0__["ipcMain"].on('x_action', async (e, action
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 const configs = {
+  left_panel_show: true,
   left_panel_width: 270,
   locale: 'zh',
   theme: 'light'
@@ -14638,11 +14639,12 @@ const configs = {
 /*!*********************************!*\
   !*** ./src/main/libs/config.ts ***!
   \*********************************/
-/*! exports provided: get, set, del */
+/*! exports provided: store, get, set, del */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "store", function() { return store; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "get", function() { return get; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "set", function() { return set; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "del", function() { return del; });
@@ -14661,6 +14663,7 @@ const get = key => {
   return store.get(key, _main_default_configs__WEBPACK_IMPORTED_MODULE_0__["default"][key]);
 };
 const set = (key, value) => {
+  console.log(`config:store.set [${key}]: ${value}`);
   store.set(key, value);
 };
 const del = key => {
@@ -14688,6 +14691,8 @@ var _root_version_json__WEBPACK_IMPORTED_MODULE_0___namespace = /*#__PURE__*/__w
 /* harmony import */ var url__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(url__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _agent__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./agent */ "./src/main/agent.ts");
 /* harmony import */ var _message__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./message */ "./src/main/message.ts");
+/* harmony import */ var _libs_config__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./libs/config */ "./src/main/libs/config.ts");
+
 
 
 
@@ -14714,6 +14719,7 @@ const createWindow = async () => {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1'; // eslint-disable-line require-atomic-updates
 
     win.loadURL(`http://127.0.0.1:8084`);
+    console.log(`config file: ${_libs_config__WEBPACK_IMPORTED_MODULE_6__["store"].path}`);
   } else {}
 
   if (true) {

@@ -4,6 +4,7 @@ import * as path from 'path'
 import * as url from 'url'
 import './agent'
 import './message'
+import { store } from './libs/config'
 
 let win: BrowserWindow | null
 
@@ -24,6 +25,7 @@ const createWindow = async () => {
   if (process.env.NODE_ENV !== 'production') {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1' // eslint-disable-line require-atomic-updates
     win.loadURL(`http://127.0.0.1:8084`)
+    console.log(`config file: ${store.path}`)
   } else {
     win.loadURL(
       url.format({

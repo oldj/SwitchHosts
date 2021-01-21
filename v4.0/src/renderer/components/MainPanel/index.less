@@ -8,6 +8,7 @@
   height: var(--swh-top-bar-height);
   border-bottom: 1px solid var(--swh-border-color-1);
   -webkit-app-region: drag;
+  user-select: none;
 
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -26,6 +27,20 @@
 
   .right {
     margin-left: auto;
+  }
+}
+
+.toggle_left_panel {
+  display: none;
+}
+
+.without_left_panel {
+  padding-left: 80px;
+
+  .toggle_left_panel {
+    display: inline-block;
+    margin: auto 0;
+    height: 18px;
   }
 }
 

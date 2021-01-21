@@ -14,7 +14,8 @@
     "make": "node scripts/make.js"
   },
   "dependencies": {
-    "electron-store": "^6.0.1"
+    "electron-store": "^6.0.1",
+    "react-icons": "^4.1.0"
   },
   "devDependencies": {
     "@ant-design/pro-layout": "^6.10.3",
@@ -25,6 +26,7 @@
     "@types/react-dom": "^17.0.0",
     "@umijs/preset-react": "1.x",
     "@umijs/test": "^3.3.3",
+    "clsx": "^1.1.1",
     "concurrently": "^5.3.0",
     "cross-env": "^7.0.3",
     "electron": "^11.1.1",
