@@ -14533,7 +14533,7 @@ __webpack_require__.r(__webpack_exports__);
 /*!***********************************!*\
   !*** ./src/main/actions/index.ts ***!
   \***********************************/
-/*! exports provided: ping, configGet, configSet, getDataFolder, localDataLoad */
+/*! exports provided: ping, configGet, configSet, getDataFolder, localDataLoad, localDataSave */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -14553,11 +14553,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _localDataLoad__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./localDataLoad */ "./src/main/actions/localDataLoad.ts");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "localDataLoad", function() { return _localDataLoad__WEBPACK_IMPORTED_MODULE_4__["default"]; });
 
+/* harmony import */ var _localDataSave__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./localDataSave */ "./src/main/actions/localDataSave.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "localDataSave", function() { return _localDataSave__WEBPACK_IMPORTED_MODULE_5__["default"]; });
+
 /**
  * index
  * @author: oldj
  * @homepage: https://oldj.net
  */
+
 
 
 
@@ -14575,11 +14579,13 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path */ "path");
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! fs */ "fs");
-/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @main/actions/getDataFolder */ "./src/main/actions/getDataFolder.ts");
+/* harmony import */ var _main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/actions/getDataFolder */ "./src/main/actions/getDataFolder.ts");
+/* harmony import */ var _root_version_json__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @root/version.json */ "./src/version.json");
+var _root_version_json__WEBPACK_IMPORTED_MODULE_1___namespace = /*#__PURE__*/__webpack_require__.t(/*! @root/version.json */ "./src/version.json", 1);
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! fs */ "fs");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! path */ "path");
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_3__);
 /**
  * @author: oldj
  * @homepage: https://oldj.net
@@ -14587,21 +14593,54 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ __webpack_exports__["default"] = (async () => {
-  const fn = path__WEBPACK_IMPORTED_MODULE_0__["join"](await Object(_main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_2__["default"])(), 'data.json');
 
-  if (!fs__WEBPACK_IMPORTED_MODULE_1__["existsSync"](fn)) {
-    return {};
+/* harmony default export */ __webpack_exports__["default"] = (async () => {
+  const fn = path__WEBPACK_IMPORTED_MODULE_3__["join"](await Object(_main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_0__["default"])(), 'data.json');
+  const default_data = {
+    list: [],
+    version: _root_version_json__WEBPACK_IMPORTED_MODULE_1__
+  };
+
+  if (!fs__WEBPACK_IMPORTED_MODULE_2__["existsSync"](fn)) {
+    return default_data;
   }
 
-  let content = await fs__WEBPACK_IMPORTED_MODULE_1__["promises"].readFile(fn, 'utf-8');
+  let content = await fs__WEBPACK_IMPORTED_MODULE_2__["promises"].readFile(fn, 'utf-8');
 
   try {
     return JSON.parse(content);
   } catch (e) {
     console.error(e);
-    return {};
+    return default_data;
   }
+});
+
+/***/ }),
+
+/***/ "./src/main/actions/localDataSave.ts":
+/*!*******************************************!*\
+  !*** ./src/main/actions/localDataSave.ts ***!
+  \*******************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/actions/getDataFolder */ "./src/main/actions/getDataFolder.ts");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! fs */ "fs");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! path */ "path");
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_2__);
+/**
+ * @author: oldj
+ * @homepage: https://oldj.net
+ */
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = (async data => {
+  const fn = path__WEBPACK_IMPORTED_MODULE_2__["join"](await Object(_main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_0__["default"])(), 'data.json');
+  await fs__WEBPACK_IMPORTED_MODULE_1__["promises"].writeFile(fn, JSON.stringify(data, null, 2), 'utf-8');
 });
 
 /***/ }),

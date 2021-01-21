@@ -11,6 +11,7 @@ import styles from './index.less'
 export default () => {
   const [loading, setLoading] = useState(true)
   const { setLocale } = useModel('useI18n')
+  const { getData } = useModel('useHostsData')
   const [left_width, setLeftWidth] = useState(0)
   const [left_show, setLeftShow] = useState(true)
 
@@ -21,6 +22,8 @@ export default () => {
 
     let theme = await actions.configGet('theme')
     document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
+
+    await getData()
   }
 
   const toggleLeftPannel = async () => {

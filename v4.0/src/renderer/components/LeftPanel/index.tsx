@@ -17,7 +17,6 @@ interface Props {
 
 const Index = (props: Props) => {
   const { width } = props
-  const { i18n } = useModel('useI18n')
 
   return (
     <div className={styles.root}>
