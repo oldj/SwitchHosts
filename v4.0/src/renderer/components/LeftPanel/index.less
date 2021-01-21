@@ -1,12 +1,12 @@
 @import "../../styles/common";
 
 .root {
-
+  position: relative;
 }
 
 .topbar {
   height: var(--swh-top-bar-height);
-  border-bottom: 1px solid var(--swh-border-color-1);
+  //border-bottom: 1px solid var(--swh-border-color-1);
   -webkit-app-region: drag;
   user-select: none;
 
@@ -18,7 +18,7 @@
 
     & > span {
       display: inline-block;
-      margin: auto 10px;
+      margin: auto 20px;
       cursor: pointer;
     }
   }
@@ -34,20 +34,21 @@
 
 :global(.platform-darwin) {
   .topbar .left {
-    margin-left: 70px;
+    margin-left: 60px;
   }
 }
 
 .list {
   height: calc(100vh - var(--swh-top-bar-height) - var(--swh-status-bar-height));
   overflow: auto;
-  padding: 0 10px;
+  padding: 5px 10px;
 }
 
 .status_bar {
   position: fixed;
+  left: 10px;
   bottom: 0;
-  width: calc(100% - 20px);
+  //width: calc(100% - 20px);
   height: var(--swh-status-bar-height);
   border-top: 1px solid var(--swh-border-color-1);
   //background: var(--swh-left-panel-status-bar-bg);
@@ -59,7 +60,7 @@
     display: flex;
 
     span {
-      margin: auto 10px;
+      margin: auto 0px;
     }
   }
 

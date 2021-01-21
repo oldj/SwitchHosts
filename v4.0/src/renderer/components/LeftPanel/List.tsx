@@ -4,14 +4,13 @@
  * @homepage: https://oldj.net
  */
 
-import { actions, agent } from '@renderer/agent'
+import { actions } from '@renderer/agent'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import { HostsDataType } from '@root/common/data'
 import React, { useEffect, useState } from 'react'
 import styles from './List.less'
 
 interface Props {
-
 }
 
 const List = (props: Props) => {
