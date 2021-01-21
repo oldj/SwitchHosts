@@ -15,6 +15,6 @@ export type HostsObjectType = {
 }
 
 export type HostsDataType = {
-  list?: HostsObjectType[];
-  version?: [number, number, number, number];
+  list: HostsObjectType[];
+  version: [number, number, number, number];
 }

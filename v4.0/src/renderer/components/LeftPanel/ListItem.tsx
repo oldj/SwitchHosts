@@ -6,10 +6,11 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import SwitchButton from '@renderer/components/LeftPanel/SwitchButton'
+import { updateOneItem } from '@renderer/libs/hostsFn'
 import { HostsObjectType } from '@root/common/data'
 import clsx from 'clsx'
 import React, { useState } from 'react'
-import { BiFile, BiFolder, BiFolderOpen, BiGlobe, BiOutline, BiChevronRight } from 'react-icons/bi'
+import { BiChevronRight, BiFile, BiFolder, BiFolderOpen, BiGlobe, BiOutline } from 'react-icons/bi'
 import styles from './ListItem.less'
 
 interface Props {
@@ -21,6 +22,7 @@ const ListItem = (props: Props) => {
   const { data } = props
   const { i18n } = useModel('useI18n')
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
+  const { hosts_data, setList } = useModel('useHostsData')
   const [folder_open, setFolderOpen] = useState(!!data.folder_open)
 
   const onSelect = () => {
@@ -40,6 +42,16 @@ const ListItem = (props: Props) => {
     }
   }
 
+  const toggleFolderOpen = () => {
+    if (!is_folder) return
+
+    const is_open = !folder_open
+    setFolderOpen(is_open)
+
+    setList(updateOneItem(hosts_data.list, { ...data, folder_open: is_open }))
+      .catch(e => console.error(e))
+  }
+
   if (!data) return null
 
   let level = props.level || 0
@@ -54,15 +66,13 @@ const ListItem = (props: Props) => {
       >
         <div className={styles.title} onClick={onSelect}>
           {is_folder ? (
-            <span className={styles.folder_arrow} onClick={() => setFolderOpen(!folder_open)}>
+            <span className={styles.folder_arrow} onClick={toggleFolderOpen}>
               <BiChevronRight/>
             </span>
           ) : null}
           <span
             className={clsx(styles.icon, is_folder && styles.folder)}
-            onClick={() => {
-              is_folder && setFolderOpen(!folder_open)
-            }}
+            onClick={toggleFolderOpen}
           >{getIcon()}</span>
           {data.title || i18n.lang.untitled}
         </div>
