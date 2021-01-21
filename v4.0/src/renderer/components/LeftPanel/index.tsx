@@ -23,7 +23,7 @@ const Index = (props: Props) => {
     <div className={styles.root}>
       <div className={styles.topbar}>
         <div className={styles.left}>
-          <span>SwitchHosts!</span>
+          {/*<span>SwitchHosts!</span>*/}
         </div>
         <div className={styles.right}>
           <span><BiDockLeft onClick={() => agent.broadcast('toggle_left_pannel')}/></span>
@@ -34,7 +34,7 @@ const Index = (props: Props) => {
         <List/>
       </div>
 
-      <div className={styles.status_bar} style={{ width: width - 1 }}>
+      <div className={styles.status_bar} style={{ width: width - 21 }}>
         <div>
           <span>left</span>
         </div>
