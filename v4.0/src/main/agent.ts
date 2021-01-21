@@ -28,6 +28,7 @@ ipcMain.on('x_action', async (e, action_data: ActionData) => {
     }
 
     try {
+      // @ts-ignore
       let v = await fn(...params)
       sendBack(sender, callback, [null, v])
     } catch (e) {

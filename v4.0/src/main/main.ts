@@ -1,15 +1,19 @@
-import './agent'
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
 import * as path from 'path'
 import * as url from 'url'
+import './agent'
+import './message'
 
 let win: BrowserWindow | null
 
 const createWindow = async () => {
   win = new BrowserWindow({
-    width: 800,
+    width: 960,
     height: 600,
+    minWidth: 200,
+    minHeight: 100,
+    titleBarStyle: 'hiddenInset',
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
