@@ -17,12 +17,16 @@
     display: flex;
 
     span {
-      margin: auto 20px;
+      margin: auto 0;
+
+      &.icon {
+        height: 18px;
+      }
     }
   }
 
   .left {
-
+    padding-left: 20px;
   }
 
   .right {
@@ -37,9 +41,16 @@
 .without_left_panel {
   .toggle_left_panel {
     display: inline-block;
-    margin: auto 0;
-    height: 18px;
+    margin: auto 20px auto 0;
   }
+}
+
+.hosts_icon {
+  padding-right: 0.5em;
+  display: inline-block;
+}
+
+.hosts_title {
 }
 
 :global(.platform-darwin) {
