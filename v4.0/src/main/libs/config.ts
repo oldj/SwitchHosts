@@ -7,7 +7,7 @@
 import default_configs from '@main/default_configs'
 import Store from 'electron-store'
 
-const store = new Store()
+export const store = new Store()
 
 export type ConfigsType = typeof default_configs
 
@@ -16,6 +16,7 @@ export const get = <K extends keyof ConfigsType>(key: K) => {
 }
 
 export const set = <K extends keyof ConfigsType>(key: K, value: ConfigsType[K]) => {
+  console.log(`config:store.set [${key}]: ${value}`)
   store.set(key, value)
 }
 

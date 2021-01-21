@@ -5,7 +5,9 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
+import { agent } from '@renderer/agent'
 import React from 'react'
+import { BiDockLeft } from 'react-icons/bi'
 import styles from './index.less'
 
 interface Props {
@@ -23,7 +25,7 @@ const Index = (props: Props) => {
           <span>SwitchHosts!</span>
         </div>
         <div className={styles.right}>
-          <span>H</span>
+          <span><BiDockLeft onClick={() => agent.broadcast('toggle_left_pannel')}/></span>
         </div>
       </div>
 
