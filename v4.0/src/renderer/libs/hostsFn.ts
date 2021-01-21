@@ -8,7 +8,7 @@ import lodash from 'lodash'
 
 type PartHostsObjectType = Partial<HostsObjectType> & { id: string }
 
-const flattern = (list: HostsObjectType[]): HostsObjectType[] => {
+export const flattern = (list: HostsObjectType[]): HostsObjectType[] => {
   let new_list: HostsObjectType[] = []
 
   list.map(item => {

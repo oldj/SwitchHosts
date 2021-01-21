@@ -6,10 +6,10 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import SwitchButton from '@renderer/components/LeftPanel/SwitchButton'
-import { updateOneItem } from '@renderer/libs/hostsFn'
+import { flattern, updateOneItem } from '@renderer/libs/hostsFn'
 import { HostsObjectType } from '@root/common/data'
 import clsx from 'clsx'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { BiChevronRight, BiFile, BiFolder, BiFolderOpen, BiGlobe, BiOutline } from 'react-icons/bi'
 import styles from './ListItem.less'
 
@@ -24,6 +24,7 @@ const ListItem = (props: Props) => {
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, setList } = useModel('useHostsData')
   const [folder_open, setFolderOpen] = useState(!!data.folder_open)
+  const el_item = useRef<HTMLDivElement>(null)
 
   const onSelect = () => {
     setCurrentHosts(data)
@@ -52,15 +53,21 @@ const ListItem = (props: Props) => {
       .catch(e => console.error(e))
   }
 
+  const getElItemHeight = () => {
+    return el_item.current ? el_item.current.offsetHeight : 0
+  }
+
   if (!data) return null
 
   let level = props.level || 0
   const is_selected = current_hosts?.id === data.id
   const is_folder = data.where === 'folder'
+  const children_count = flattern(data.children || []).length
 
   return (
     <div className={styles.root}>
       <div
+        ref={el_item}
         className={clsx(styles.item, is_selected && styles.selected, folder_open && styles.folder_open)}
         style={{ paddingLeft: `${level}em` }}
       >
@@ -80,10 +87,10 @@ const ListItem = (props: Props) => {
           <SwitchButton on={data.on}/>
         </div>
       </div>
-      <div className={styles.children}>
-        {folder_open ? (data.children || []).map(item => (
+      <div className={styles.children} style={{ height: folder_open ? getElItemHeight() * children_count : 0 }}>
+        {(data.children || []).map(item => (
           <ListItem data={item} key={item.id} level={level + 1}/>
-        )) : null}
+        ))}
       </div>
     </div>
   )
