@@ -33,7 +33,7 @@ You can download the source code and build it yourself, or download the built ve
 On macOS you can install SwitchHosts! by `brew cask`:
 
 ```bash
-brew cask install switchhosts
+brew install --cask switchhosts
 ```
 
 Thanks to [@gobinathm](https://github.com/gobinathm) and [@iamybj](https://github.com/iamybj) for updating the `brew cask` version.
