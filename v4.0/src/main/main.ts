@@ -9,10 +9,10 @@ let win: BrowserWindow | null
 
 const createWindow = async () => {
   win = new BrowserWindow({
-    width: 960,
-    height: 600,
-    minWidth: 200,
-    minHeight: 100,
+    width: 800,
+    height: 480,
+    minWidth: 300,
+    minHeight: 200,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       contextIsolation: true,

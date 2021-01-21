@@ -14616,6 +14616,24 @@ electron__WEBPACK_IMPORTED_MODULE_0__["ipcMain"].on('x_action', async (e, action
 
 /***/ }),
 
+/***/ "./src/main/default_configs.ts":
+/*!*************************************!*\
+  !*** ./src/main/default_configs.ts ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+const configs = {
+  left_panel_width: 270,
+  locale: 'zh',
+  theme: 'light'
+};
+/* harmony default export */ __webpack_exports__["default"] = (configs);
+
+/***/ }),
+
 /***/ "./src/main/libs/config.ts":
 /*!*********************************!*\
   !*** ./src/main/libs/config.ts ***!
@@ -14628,22 +14646,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "get", function() { return get; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "set", function() { return set; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "del", function() { return del; });
-/* harmony import */ var electron_store__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! electron-store */ "./node_modules/electron-store/index.js");
-/* harmony import */ var electron_store__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(electron_store__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _main_default_configs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/default_configs */ "./src/main/default_configs.ts");
+/* harmony import */ var electron_store__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! electron-store */ "./node_modules/electron-store/index.js");
+/* harmony import */ var electron_store__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(electron_store__WEBPACK_IMPORTED_MODULE_1__);
 /**
  * config
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-const store = new electron_store__WEBPACK_IMPORTED_MODULE_0___default.a();
-const default_configs = {
-  left_panel_width: 270,
-  locale: 'zh',
-  theme: 'light'
-};
+
+const store = new electron_store__WEBPACK_IMPORTED_MODULE_1___default.a();
 const get = key => {
-  return store.get(key, default_configs[key]);
+  return store.get(key, _main_default_configs__WEBPACK_IMPORTED_MODULE_0__["default"][key]);
 };
 const set = (key, value) => {
   store.set(key, value);
@@ -14683,10 +14698,10 @@ let win;
 
 const createWindow = async () => {
   win = new electron__WEBPACK_IMPORTED_MODULE_1__["BrowserWindow"]({
-    width: 960,
-    height: 600,
-    minWidth: 200,
-    minHeight: 100,
+    width: 800,
+    height: 480,
+    minWidth: 300,
+    minHeight: 200,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       contextIsolation: true,

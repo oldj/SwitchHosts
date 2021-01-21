@@ -1,0 +1,35 @@
+@import "../../styles/common";
+
+.root {
+
+}
+
+.topbar {
+  height: var(--swh-top-bar-height);
+  border-bottom: 1px solid var(--swh-border-color-1);
+  -webkit-app-region: drag;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  & > div {
+    display: flex;
+
+    span {
+      margin: auto 20px;
+    }
+  }
+
+  .left {
+
+  }
+
+  .right {
+    margin-left: auto;
+  }
+}
+
+.main {
+  width: 100%;
+  height: calc(100vh - var(--swh-top-bar-height));
+}
