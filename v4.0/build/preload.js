@@ -153,7 +153,8 @@ window.addEventListener('beforeunload', () => {
 const _agent = {
   call: callAction,
   broadcast,
-  on
+  on,
+  platform: process.platform
 };
 electron__WEBPACK_IMPORTED_MODULE_0__["contextBridge"].exposeInMainWorld('_agent', _agent);
 

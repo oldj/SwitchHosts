@@ -1,0 +1,68 @@
+@import "../../styles/common";
+
+.root {
+
+}
+
+.topbar {
+  height: var(--swh-top-bar-height);
+  border-bottom: 1px solid var(--swh-border-color-1);
+  -webkit-app-region: drag;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  & > div {
+    display: flex;
+
+    span {
+      margin: auto 10px;
+    }
+  }
+
+  .left {
+
+  }
+
+  .right {
+    margin-left: auto;
+  }
+}
+
+:global(.platform-darwin) {
+  .topbar .left {
+    margin-left: 80px;
+  }
+}
+
+.list {
+  height: calc(100vh - var(--swh-top-bar-height) - var(--swh-status-bar-height));
+  overflow: auto;
+  padding: 0 10px;
+}
+
+.status_bar {
+  position: fixed;
+  bottom: 0;
+  width: calc(100% - 20px);
+  height: var(--swh-status-bar-height);
+  border-top: 1px solid var(--swh-border-color-1);
+  //background: var(--swh-left-panel-status-bar-bg);
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  & > div {
+    display: flex;
+
+    span {
+      margin: auto 10px;
+    }
+  }
+
+  .right {
+    span {
+      margin-left: auto;
+    }
+  }
+}

@@ -4,16 +4,10 @@
  * @homepage: https://oldj.net
  */
 
-import { LocaleName } from '@root/common/i18n'
+import default_configs from '@main/default_configs'
 import Store from 'electron-store'
 
 const store = new Store()
-
-const default_configs = {
-  left_panel_width: 270,
-  locale: 'zh' as LocaleName,
-  theme: 'light' as 'light' | 'dark' | 'auto',
-}
 
 export type ConfigsType = typeof default_configs
 

@@ -65,6 +65,7 @@ const _agent = {
   call: callAction,
   broadcast,
   on,
+  platform: process.platform,
 }
 
 contextBridge.exposeInMainWorld('_agent', _agent)
