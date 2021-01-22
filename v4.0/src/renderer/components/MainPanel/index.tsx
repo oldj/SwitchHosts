@@ -31,8 +31,6 @@ const MainPanel = (props: Props) => {
     }
   }, [current_hosts])
 
-  let is_read_only = !current_hosts || current_hosts.where !== 'local'
-
   return (
     <div className={styles.root}>
       <div className={clsx(styles.topbar, !has_left_panel && styles.without_left_panel)}>
@@ -75,10 +73,6 @@ const MainPanel = (props: Props) => {
         ) : (
           <HostsViewer content={system_hosts}/>
         )}
-      </div>
-
-      <div className={styles.status_bar}>
-        <span>{is_read_only ? i18n.lang.read_only : ''}</span>
       </div>
     </div>
   )

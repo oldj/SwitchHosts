@@ -1,6 +1,32 @@
 @import "../styles/common";
 
 .root {
+  .code;
   width: 100%;
   height: 100%;
+}
+
+.editor {
+  height: calc(100% - var(--swh-status-bar-height));
+
+  textarea {
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 10px;
+    resize: none;
+    outline: none;
+  }
+}
+
+.status_bar {
+  height: var(--swh-status-bar-height);
+  line-height: var(--swh-status-bar-height);
+  border-top: 1px solid var(--swh-border-color-1);
+  padding: 0 10px;
+  font-size: 12px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  color: var(--swh-font-color-weak);
 }

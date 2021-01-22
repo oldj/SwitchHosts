@@ -5,6 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
+import StatusBar from '@renderer/components/StatusBar'
 import { updateOneItem } from '@renderer/libs/hostsFn'
 import { HostsObjectType } from '@root/common/data'
 import lodash from 'lodash'
@@ -17,6 +18,7 @@ interface Props {
 
 const HostsEditor = (props: Props) => {
   const { hosts } = props
+  const { i18n } = useModel('useI18n')
   const { hosts_data, setList } = useModel('useHostsData')
   const [hosts_id, setHostsId] = useState(hosts.id)
   const [content, setContent] = useState(hosts.content || '')
@@ -36,9 +38,18 @@ const HostsEditor = (props: Props) => {
     toSave(hosts_id, content)
   }
 
+  let is_read_only = !hosts || (['group', 'remote', 'folder']).includes(hosts.where)
+
   return (
     <div className={styles.root}>
-      <textarea value={content} onChange={e => onChange(e.target.value)}/>
+      <div className={styles.editor}>
+        <textarea value={content} onChange={e => onChange(e.target.value)}/>
+      </div>
+
+      <StatusBar
+        line_count={content.split('\n').length}
+        read_only={is_read_only}
+      />
     </div>
   )
 }
