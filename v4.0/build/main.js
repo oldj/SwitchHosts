@@ -31710,7 +31710,6 @@ const getContentOfHosts = (list, hosts) => {
   if (where === 'group') {
     return hosts.include.map(id => {
       let item = findItemById(list, id);
-      console.log(id, item);
       if (!item) return '';
       return `# file: ${item.title}\n` + getContentOfHosts(list, item);
     }).join('\n\n');
@@ -32006,17 +32005,48 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _main_actions_getSystemHostsPath__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/actions/getSystemHostsPath */ "./src/main/actions/getSystemHostsPath.ts");
-/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! fs */ "fs");
-/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _main_agent__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/agent */ "./src/main/agent.ts");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! fs */ "fs");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_2__);
 /**
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
 
+
 /* harmony default export */ __webpack_exports__["default"] = (async (content, options) => {
   const fn = await Object(_main_actions_getSystemHostsPath__WEBPACK_IMPORTED_MODULE_0__["default"])();
-  await fs__WEBPACK_IMPORTED_MODULE_1__["promises"].writeFile(fn, content, 'utf-8');
+  let has_access = false;
+
+  try {
+    await fs__WEBPACK_IMPORTED_MODULE_2__["promises"].access(fn, fs__WEBPACK_IMPORTED_MODULE_2__["constants"].W_OK);
+    has_access = true;
+  } catch (e) {
+    console.error(e);
+  }
+
+  if (!has_access) {
+    return {
+      success: false,
+      code: 'no_access'
+    };
+  }
+
+  try {
+    await fs__WEBPACK_IMPORTED_MODULE_2__["promises"].writeFile(fn, content, 'utf-8');
+  } catch (e) {
+    return {
+      success: false,
+      code: 'fail',
+      message: e.message
+    };
+  }
+
+  Object(_main_agent__WEBPACK_IMPORTED_MODULE_1__["broadcast"])('system_hosts_updated');
+  return {
+    success: true
+  };
 });
 
 /***/ }),
@@ -32039,7 +32069,7 @@ __webpack_require__.r(__webpack_exports__);
  * @homepage: https://oldj.net
  */
 
-const broadcast = async (event, ...args) => {
+const broadcast = (event, ...args) => {
   electron__WEBPACK_IMPORTED_MODULE_0__["ipcMain"].emit('x_broadcast', null, {
     event,
     args

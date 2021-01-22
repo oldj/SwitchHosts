@@ -40,6 +40,12 @@ const MainPanel = (props: Props) => {
     }
   }, [current_hosts])
 
+  useOnBroadcast('system_hosts_updated', () => {
+    if (!current_hosts) {
+      actions.systemHostsRead().then(value => setSystemHosts(value))
+    }
+  }, [current_hosts])
+
   return (
     <div className={styles.root}>
       <div className={clsx(styles.topbar, !has_left_panel && styles.without_left_panel)}>
