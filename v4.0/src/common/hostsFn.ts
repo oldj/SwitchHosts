@@ -83,3 +83,11 @@ export const getContentOfHosts = (list: HostsObjectType[], hosts: HostsObjectTyp
   return ''
 }
 
+export const getHostsOutput = (list: HostsObjectType[]): string => {
+  const content = flatten(list).filter(item => item.on).map(item => getContentOfHosts(list, item))
+    .join('\n\n')
+
+  // 去重
+
+  return content
+}

@@ -127,19 +127,17 @@ const callAction = (action, ...params) => {
   });
 };
 
-const broadcast = (event, data) => {
+const broadcast = (event, ...args) => {
   // 广播消息给所有 render 窗口
   electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].send('x_broadcast', {
     event,
-    data
+    args
   });
 };
 
 const on = (event, handler) => {
-  ee.on(event, (d, ...args) => {
-    console.log(`on [${event}]`);
-    handler(d, ...args);
-  });
+  console.log(`on [${event}]`);
+  ee.on(event, handler);
   return () => off(event, handler);
 };
 
@@ -150,7 +148,7 @@ const off = (event, handler) => {
 
 electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('y_broadcast', (e, d) => {
   // 接收其他（包括当前） render 窗口广播的消息
-  ee.emit(d.event, d.data);
+  ee.emit(d.event, ...d.args);
 });
 electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].send('x_reg'); // 窗口销毁时 unreg
 

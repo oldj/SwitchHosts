@@ -3,7 +3,7 @@ import { actions, agent } from '@renderer/agent'
 import LeftPanel from '@renderer/components/LeftPanel'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
-import useOn from '@renderer/libs/hooks/useOn'
+import useOnBroadcast from '@renderer/libs/hooks/useOnBroadcast'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import styles from './index.less'
@@ -26,20 +26,11 @@ export default () => {
     await getData()
   }
 
-  const toggleLeftPannel = async () => {
-    setLeftShow(left_show => {
-      let show = !left_show
-      actions.configSet('left_panel_show', show)
-
-      return show
-    })
-  }
-
   useEffect(() => {
     init().then(() => setLoading(false))
   }, [])
 
-  useOn('toggle_left_pannel', toggleLeftPannel)
+  useOnBroadcast('toggle_left_pannel', () => setLeftShow(!left_show), [left_show])
 
   if (loading) {
     return <Loading/>

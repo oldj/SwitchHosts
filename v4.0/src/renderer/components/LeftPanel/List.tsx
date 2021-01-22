@@ -5,8 +5,11 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
+import { actions } from '@renderer/agent'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import SystemHostsItem from '@renderer/components/LeftPanel/SystemHostsItem'
+import useOnBroadcast from '@renderer/libs/hooks/useOnBroadcast'
+import { getHostsOutput, updateOneItem } from '@root/common/hostsFn'
 import React from 'react'
 import styles from './List.less'
 
@@ -14,7 +17,19 @@ interface Props {
 }
 
 const List = (props: Props) => {
-  const { hosts_data } = useModel('useHostsData')
+  const { hosts_data, setList } = useModel('useHostsData')
+
+  const onToggleItem = (id: string, on: boolean) => {
+    const new_list = updateOneItem(hosts_data.list, { id, on })
+    setList(new_list)
+      .catch(e => console.error(e))
+
+    const content = getHostsOutput(new_list)
+    actions.systemHostsWrite(content)
+      .catch(e => console.error(e))
+  }
+
+  useOnBroadcast('toggle_item', onToggleItem, [hosts_data])
 
   return (
     <div className={styles.root}>

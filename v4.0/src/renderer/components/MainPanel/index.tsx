@@ -10,6 +10,7 @@ import HostsEditor from '@renderer/components/HostsEditor'
 import HostsViewer from '@renderer/components/HostsViewer'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
+import useOnBroadcast from '@renderer/libs/hooks/useOnBroadcast'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import { BiDockLeft, BiSliderAlt } from 'react-icons/bi'
@@ -24,10 +25,18 @@ const MainPanel = (props: Props) => {
   const { i18n } = useModel('useI18n')
   const { current_hosts } = useModel('useCurrentHosts')
   const [system_hosts, setSystemHosts] = useState('')
+  const [is_on, setIsOn] = useState(!!current_hosts?.on)
 
   useEffect(() => {
     if (!current_hosts) {
       actions.systemHostsRead().then(value => setSystemHosts(value))
+    }
+    setIsOn(!!current_hosts?.on)
+  }, [current_hosts])
+
+  useOnBroadcast('toggle_item', (id: string, on: boolean) => {
+    if (current_hosts && current_hosts.id === id) {
+      setIsOn(on)
     }
   }, [current_hosts])
 
@@ -59,7 +68,9 @@ const MainPanel = (props: Props) => {
 
         <div>
           {current_hosts ? (
-            <SwitchButton on={current_hosts.on}/>
+            <SwitchButton on={is_on} onChange={on => {
+              agent.broadcast('toggle_item', current_hosts.id, on)
+            }}/>
           ) : null}
         </div>
         <div>

@@ -5,12 +5,13 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
+import { agent } from '@renderer/agent'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { HostsObjectType } from '@root/common/data'
 import { flatten, updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
 import styles from './ListItem.less'
 
@@ -25,7 +26,12 @@ const ListItem = (props: Props) => {
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, setList } = useModel('useHostsData')
   const [folder_open, setFolderOpen] = useState(!!data.folder_open)
+  const [is_on, setIsOn] = useState(data.on)
   const el_item = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setIsOn(data.on)
+  }, [data])
 
   const onSelect = () => {
     setCurrentHosts(data)
@@ -37,8 +43,15 @@ const ListItem = (props: Props) => {
     const is_open = !folder_open
     setFolderOpen(is_open)
 
-    setList(updateOneItem(hosts_data.list, { ...data, folder_open: is_open }))
+    setList(updateOneItem(hosts_data.list, { id: data.id, folder_open: is_open }))
       .catch(e => console.error(e))
+  }
+
+  const toggleOn = (on?: boolean) => {
+    on = typeof on === 'boolean' ? on : !is_on
+    setIsOn(on)
+
+    agent.broadcast('toggle_item', data.id, on)
   }
 
   const getElItemHeight = () => {
@@ -72,7 +85,7 @@ const ListItem = (props: Props) => {
           {data.title || i18n.lang.untitled}
         </div>
         <div className={styles.status}>
-          <SwitchButton on={data.on}/>
+          <SwitchButton on={is_on} onChange={(on) => toggleOn(on)}/>
         </div>
       </div>
       <div className={styles.children} style={{ height: folder_open ? getElItemHeight() * children_count : 0 }}>

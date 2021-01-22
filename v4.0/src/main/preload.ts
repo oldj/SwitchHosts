@@ -7,7 +7,6 @@
 import { Actions } from '@main/types'
 import { contextBridge, ipcRenderer } from 'electron'
 import { EventEmitter } from 'events'
-import { useEffect, useRef } from 'react'
 
 declare global {
   interface Window {
@@ -41,17 +40,14 @@ const callAction = (action: keyof Actions, ...params: any[]) => {
   })
 }
 
-const broadcast = <T>(event: string, data?: T) => {
+const broadcast = <T>(event: string, ...args: any) => {
   // 广播消息给所有 render 窗口
-  ipcRenderer.send('x_broadcast', { event, data })
+  ipcRenderer.send('x_broadcast', { event, args })
 }
 
 const on = (event: string, handler: EventHandler) => {
-  ee.on(event, (d, ...args) => {
-    console.log(`on [${event}]`)
-    handler(d, ...args)
-  })
-
+  console.log(`on [${event}]`)
+  ee.on(event, handler)
   return () => off(event, handler)
 }
 
@@ -62,7 +58,7 @@ const off = (event: string, handler: EventHandler) => {
 
 ipcRenderer.on('y_broadcast', (e, d) => {
   // 接收其他（包括当前） render 窗口广播的消息
-  ee.emit(d.event, d.data)
+  ee.emit(d.event, ...d.args)
 })
 
 ipcRenderer.send('x_reg')
