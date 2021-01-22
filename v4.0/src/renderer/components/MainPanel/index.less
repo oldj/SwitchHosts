@@ -1,7 +1,9 @@
 @import "../../styles/common";
 
 .root {
-
+  height: 100vh;
+  display: grid;
+  grid-template-rows: var(--swh-top-bar-height) 1fr var(--swh-status-bar-height);
 }
 
 .topbar {
@@ -11,38 +13,23 @@
   user-select: none;
 
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 40px 1fr 40px;
 
   & > div {
-    display: flex;
-
-    span {
-      margin: auto 0;
-
-      &.icon {
-        height: 18px;
-      }
-    }
+    margin: auto;
+    line-height: var(--swh-top-bar-height);
   }
 
-  .left {
-    padding-left: 20px;
-  }
-
-  .right {
-    margin-left: auto;
+  svg {
+    position: relative;
+    top: 1px;
   }
 }
 
 .toggle_left_panel {
-  display: none;
 }
 
 .without_left_panel {
-  .toggle_left_panel {
-    display: inline-block;
-    margin: auto 20px auto 0;
-  }
 }
 
 .hosts_icon {
@@ -51,15 +38,32 @@
 }
 
 .hosts_title {
+  margin-left: 0 !important;
+
+  .sp {
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border-left: 1px solid var(--swh-border-color-1);
+  }
 }
 
 :global(.platform-darwin) {
   .without_left_panel {
-    padding-left: 80px;
+    padding-left: 70px;
   }
 }
 
 .main {
   width: 100%;
-  height: calc(100vh - var(--swh-top-bar-height));
+  //height: calc(100vh - var(--swh-top-bar-height));
+}
+
+.status_bar {
+  height: var(--swh-status-bar-height);
+  line-height: var(--swh-status-bar-height);
+  border-top: 1px solid var(--swh-border-color-1);
+  padding: 0 10px;
 }

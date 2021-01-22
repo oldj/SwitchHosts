@@ -9,7 +9,7 @@ import { agent } from '@renderer/agent'
 import ItemIcon from '@renderer/components/ItemIcon'
 import React from 'react'
 import styles from './index.less'
-import { BiDockLeft } from 'react-icons/bi'
+import { BiDockLeft, BiSliderAlt } from 'react-icons/bi'
 import clsx from 'clsx'
 
 interface Props {
@@ -23,13 +23,15 @@ const MainPanel = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      <div className={styles.topbar}>
-        <div className={clsx(styles.left, !has_left_panel && styles.without_left_panel)}>
-          <span className={clsx(styles.toggle_left_panel, styles.icon)}>
-            <BiDockLeft onClick={() => agent.broadcast('toggle_left_pannel')}/>
-          </span>
+      <div className={clsx(styles.topbar, !has_left_panel && styles.without_left_panel)}>
+        <div className={clsx(styles.toggle_left_panel, styles.icon)}>
+          <BiDockLeft onClick={() => agent.broadcast('toggle_left_pannel')}/>
+        </div>
+
+        <div className={styles.hosts_title}>
           {current_hosts ? (
             <>
+              <span className={styles.sp}/>
               <span className={clsx(styles.hosts_icon, styles.icon)}>
                 <ItemIcon data={current_hosts} ignore_folder_open={true}/>
               </span>
@@ -37,13 +39,18 @@ const MainPanel = (props: Props) => {
             </>
           ) : null}
         </div>
+
         <div className={styles.right}>
-          <span>Right buttons</span>
+          <BiSliderAlt/>
         </div>
       </div>
 
       <div className={styles.main}>
         <textarea value={current_hosts?.content}/>
+      </div>
+
+      <div className={styles.status_bar}>
+        status
       </div>
     </div>
   )
