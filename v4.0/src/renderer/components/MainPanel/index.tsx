@@ -5,12 +5,12 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { agent } from '@renderer/agent'
+import { actions, agent } from '@renderer/agent'
+import HostsEditor from '@renderer/components/HostsEditor'
+import HostsViewer from '@renderer/components/HostsViewer'
 import ItemIcon from '@renderer/components/ItemIcon'
-import SwitchButton from '@renderer/components/LeftPanel/SwitchButton'
-import { updateOneItem } from '@renderer/libs/hostsFn'
+import SwitchButton from '@renderer/components/SwitchButton'
 import clsx from 'clsx'
-import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
 import { BiDockLeft, BiSliderAlt } from 'react-icons/bi'
 import styles from './index.less'
@@ -23,23 +23,15 @@ const MainPanel = (props: Props) => {
   const { has_left_panel } = props
   const { i18n } = useModel('useI18n')
   const { current_hosts } = useModel('useCurrentHosts')
-  const { hosts_data, setList } = useModel('useHostsData')
-  const [content, setContent] = useState(current_hosts?.content || '')
-
-  const toSave = lodash.debounce((id: string, content: string) => {
-    setList(updateOneItem(hosts_data.list, { id, content }))
-      .catch(e => console.error(e))
-  }, 1000)
-
-  const onChange = (content: string) => {
-    if (!current_hosts) return
-    setContent(content)
-    toSave(current_hosts.id, content)
-  }
+  const [system_hosts, setSystemHosts] = useState('')
 
   useEffect(() => {
-    setContent(current_hosts?.content || '')
+    if (!current_hosts) {
+      actions.systemHostsRead().then(value => setSystemHosts(value))
+    }
   }, [current_hosts])
+
+  let is_read_only = !current_hosts || current_hosts.where !== 'local'
 
   return (
     <div className={styles.root}>
@@ -49,15 +41,22 @@ const MainPanel = (props: Props) => {
         </div>
 
         <div className={styles.hosts_title}>
+          <span className={styles.sp}/>
           {current_hosts ? (
             <>
-              <span className={styles.sp}/>
               <span className={clsx(styles.hosts_icon, styles.icon)}>
-                <ItemIcon data={current_hosts} ignore_folder_open={true}/>
+                <ItemIcon where={current_hosts.where}/>
               </span>
               <span className={styles.hosts_title}>{current_hosts.title || i18n.lang.untitled}</span>
             </>
-          ) : null}
+          ) : (
+            <>
+              <span className={clsx(styles.hosts_icon, styles.icon)}>
+                <ItemIcon where="system"/>
+              </span>
+              <span className={styles.hosts_title}>{i18n.lang.system_hosts}</span>
+            </>
+          )}
         </div>
 
         <div>
@@ -71,11 +70,15 @@ const MainPanel = (props: Props) => {
       </div>
 
       <div className={styles.main}>
-        <textarea value={content} onChange={e => onChange(e.target.value)}/>
+        {current_hosts ? (
+          <HostsEditor hosts={current_hosts}/>
+        ) : (
+          <HostsViewer content={system_hosts}/>
+        )}
       </div>
 
       <div className={styles.status_bar}>
-        status
+        <span>{is_read_only ? i18n.lang.read_only : ''}</span>
       </div>
     </div>
   )

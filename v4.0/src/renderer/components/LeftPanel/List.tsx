@@ -6,6 +6,7 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
+import SystemHostsItem from '@renderer/components/LeftPanel/SystemHostsItem'
 import React from 'react'
 import styles from './List.less'
 
@@ -17,6 +18,7 @@ const List = (props: Props) => {
 
   return (
     <div className={styles.root}>
+      <SystemHostsItem/>
       {hosts_data.list?.map(item => (
         <ListItem data={item} key={item.id}/>
       ))}

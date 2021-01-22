@@ -16,7 +16,7 @@ export default function useHostsData() {
   })
 
   const getData = async () => {
-    setHostsData(await actions.localDataLoad())
+    setHostsData(await actions.localDataRead())
   }
 
   const setList = async (list: HostsObjectType[]) => {
@@ -26,7 +26,7 @@ export default function useHostsData() {
     }
 
     setHostsData(data)
-    await actions.localDataSave(data)
+    await actions.localDataWrite(data)
   }
 
   return {

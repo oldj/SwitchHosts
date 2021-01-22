@@ -8,6 +8,9 @@ import { LanguageDict } from '@root/common/i18n/types'
 
 const lang: LanguageDict = {
   _name: '中文',
+  loading: '加载中...',
+  read_only: '只读',
+  system_hosts: '系统 Hosts',
   test: '测试',
   untitled: '未命名',
 }

@@ -6,12 +6,12 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import ItemIcon from '@renderer/components/ItemIcon'
-import SwitchButton from '@renderer/components/LeftPanel/SwitchButton'
+import SwitchButton from '@renderer/components/SwitchButton'
 import { flattern, updateOneItem } from '@renderer/libs/hostsFn'
 import { HostsObjectType } from '@root/common/data'
 import clsx from 'clsx'
 import React, { useRef, useState } from 'react'
-import { BiChevronRight, BiFile, BiFolder, BiFolderOpen, BiGlobe, BiOutline } from 'react-icons/bi'
+import { BiChevronRight } from 'react-icons/bi'
 import styles from './ListItem.less'
 
 interface Props {
@@ -68,7 +68,7 @@ const ListItem = (props: Props) => {
           <span
             className={clsx(styles.icon, is_folder && styles.folder)}
             onClick={toggleFolderOpen}
-          ><ItemIcon data={data}/></span>
+          ><ItemIcon where={data.where} folder_open={data.folder_open}/></span>
           {data.title || i18n.lang.untitled}
         </div>
         <div className={styles.status}>
