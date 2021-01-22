@@ -4,6 +4,7 @@
  * @homepage: https://oldj.net
  */
 
+import StatusBar from '@renderer/components/StatusBar'
 import React from 'react'
 import styles from './HostsViewer.less'
 
@@ -23,9 +24,12 @@ const HostsViewer = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      {lines.map((line, idx) => (
-        <Line line={line} key={idx}/>
-      ))}
+      <div className={styles.content}>
+        {lines.map((line, idx) => (
+          <Line line={line} key={idx}/>
+        ))}
+      </div>
+      <StatusBar line_count={lines.length} read_only={true}/>
     </div>
   )
 }

@@ -6,6 +6,8 @@
 
 export default {
   _name: 'English',
+  line: 'line',
+  lines: 'lines',
   loading: 'Loading...',
   read_only: 'Read only',
   system_hosts: 'System Hosts',
