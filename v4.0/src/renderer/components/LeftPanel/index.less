@@ -39,34 +39,8 @@
 }
 
 .list {
-  height: calc(100vh - var(--swh-top-bar-height) - var(--swh-status-bar-height));
+  height: calc(100vh - var(--swh-top-bar-height));
   overflow: auto;
   padding: 5px 10px;
 }
 
-.status_bar {
-  position: fixed;
-  left: 10px;
-  bottom: 0;
-  //width: calc(100% - 20px);
-  height: var(--swh-status-bar-height);
-  border-top: 1px solid var(--swh-border-color-1);
-  //background: var(--swh-left-panel-status-bar-bg);
-
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-
-  & > div {
-    display: flex;
-
-    span {
-      margin: auto 0px;
-    }
-  }
-
-  .right {
-    span {
-      margin-left: auto;
-    }
-  }
-}

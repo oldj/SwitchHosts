@@ -4,11 +4,10 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import { agent } from '@renderer/agent'
 import List from '@renderer/components/LeftPanel/List'
 import React from 'react'
-import { BiDockLeft } from 'react-icons/bi'
+import { BiPlus } from 'react-icons/bi'
 import styles from './index.less'
 
 interface Props {
@@ -16,8 +15,6 @@ interface Props {
 }
 
 const Index = (props: Props) => {
-  const { width } = props
-
   return (
     <div className={styles.root}>
       <div className={styles.topbar}>
@@ -25,21 +22,12 @@ const Index = (props: Props) => {
           {/*<span>SwitchHosts!</span>*/}
         </div>
         <div className={styles.right}>
-          <span><BiDockLeft onClick={() => agent.broadcast('toggle_left_pannel')}/></span>
+          <span><BiPlus onClick={() => agent.broadcast('add_new')}/></span>
         </div>
       </div>
 
       <div className={styles.list}>
         <List/>
-      </div>
-
-      <div className={styles.status_bar} style={{ width: width - 21 }}>
-        <div>
-          <span>left</span>
-        </div>
-        <div className={styles.right}>
-          <span>right</span>
-        </div>
       </div>
     </div>
   )
