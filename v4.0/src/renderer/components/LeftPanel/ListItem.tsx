@@ -7,8 +7,8 @@
 import { useModel } from '@@/plugin-model/useModel'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
-import { flattern, updateOneItem } from '@renderer/libs/hostsFn'
 import { HostsObjectType } from '@root/common/data'
+import { flatten, updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useRef, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
@@ -50,7 +50,7 @@ const ListItem = (props: Props) => {
   let level = props.level || 0
   const is_selected = current_hosts?.id === data.id
   const is_folder = data.where === 'folder'
-  const children_count = flattern(data.children || []).length
+  const children_count = flatten(data.children || []).length
 
   return (
     <div className={styles.root}>

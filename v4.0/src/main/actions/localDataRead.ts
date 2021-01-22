@@ -5,6 +5,7 @@
 
 import getDataFolder from '@main/actions/getDataFolder'
 import { HostsDataType } from '@root/common/data'
+import { cleanHostsList } from '@root/common/hostsFn'
 import version from '@root/version.json'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -22,7 +23,8 @@ export default async (): Promise<HostsDataType> => {
 
   let content = await fs.promises.readFile(fn, 'utf-8')
   try {
-    return JSON.parse(content) as HostsDataType
+    let data = JSON.parse(content) as HostsDataType
+    return cleanHostsList(data)
   } catch (e) {
     console.error(e)
     return default_data
