@@ -46,6 +46,12 @@ const MainPanel = (props: Props) => {
     }
   }, [current_hosts])
 
+  useOnBroadcast('set_hosts_on_status', (id: string, on: boolean) => {
+    if (current_hosts && current_hosts.id === id) {
+      setIsOn(on)
+    }
+  }, [current_hosts])
+
   return (
     <div className={styles.root}>
       <div className={clsx(styles.topbar, !has_left_panel && styles.without_left_panel)}>

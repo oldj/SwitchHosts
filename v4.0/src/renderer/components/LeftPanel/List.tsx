@@ -5,7 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { actions } from '@renderer/agent'
+import { actions, agent } from '@renderer/agent'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import SystemHostsItem from '@renderer/components/LeftPanel/SystemHostsItem'
 import useOnBroadcast from '@renderer/libs/hooks/useOnBroadcast'
@@ -18,23 +18,34 @@ interface Props {
 
 const List = (props: Props) => {
   const { hosts_data, getData, setList } = useModel('useHostsData')
+  const { i18n } = useModel('useI18n')
 
-  const onToggleItem = (id: string, on: boolean) => {
+  const onToggleItem = async (id: string, on: boolean) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
-    // setList(new_list)
-    //   .catch(e => console.error(e))
 
     const content = getHostsOutput(new_list)
-    actions.systemHostsWrite(content)
-      .then((result) => {
-        if (result.success) {
-          setList(new_list).catch(e => console.error(e))
-        } else {
-          console.log(result)
-          getData().catch(e => console.log(e))
-        }
+    const result = await actions.systemHostsWrite(content)
+    if (result.success) {
+      setList(new_list).catch(e => console.error(e))
+      new Notification(i18n.lang.success, {
+        body: i18n.lang.hosts_updated,
       })
-      .catch(e => console.error(e))
+
+    } else {
+      console.log(result)
+      getData().catch(e => console.log(e))
+
+      let body = i18n.lang.no_access_to_hosts
+      if (result.code !== 'no_access') {
+        body = result.message || 'Unknow error!'
+      }
+
+      new Notification(i18n.lang.fail, {
+        body,
+      })
+
+      agent.broadcast('set_hosts_on_status', id, !on)
+    }
   }
 
   useOnBroadcast('toggle_item', onToggleItem, [hosts_data])
