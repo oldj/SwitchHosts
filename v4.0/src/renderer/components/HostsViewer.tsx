@@ -18,7 +18,7 @@ const HostsViewer = (props: Props) => {
 
   const Line = (p: { line: string }) => {
     return (
-      <div>{p.line}</div>
+      <div className={styles.line}>{p.line}</div>
     )
   }
 

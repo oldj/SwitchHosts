@@ -7,7 +7,14 @@
 
 .content {
   height: calc(100% - var(--swh-status-bar-height));
+  background: var(--swh-editor-read-only-bg);
+  font-size: var(--swh-editor-font-size);
+  line-height: var(--swh-editor-line-height);
+  color: var(--swh-editor-text-color);
   overflow: auto;
   padding: 10px;
-  background: var(--swh-editor-read-only-bg);
+}
+
+.line {
+  min-height: var(--swh-editor-line-height);
 }

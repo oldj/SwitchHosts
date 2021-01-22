@@ -73,7 +73,6 @@ export const getContentOfHosts = (list: HostsObjectType[], hosts: HostsObjectTyp
   if (where === 'group') {
     return hosts.include.map(id => {
       let item = findItemById(list, id)
-      console.log(id, item)
       if (!item) return ''
 
       return `# file: ${item.title}\n` + getContentOfHosts(list, item)

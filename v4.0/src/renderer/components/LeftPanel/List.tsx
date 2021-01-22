@@ -17,15 +17,23 @@ interface Props {
 }
 
 const List = (props: Props) => {
-  const { hosts_data, setList } = useModel('useHostsData')
+  const { hosts_data, getData, setList } = useModel('useHostsData')
 
   const onToggleItem = (id: string, on: boolean) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
-    setList(new_list)
-      .catch(e => console.error(e))
+    // setList(new_list)
+    //   .catch(e => console.error(e))
 
     const content = getHostsOutput(new_list)
     actions.systemHostsWrite(content)
+      .then((result) => {
+        if (result.success) {
+          setList(new_list).catch(e => console.error(e))
+        } else {
+          console.log(result)
+          getData().catch(e => console.log(e))
+        }
+      })
       .catch(e => console.error(e))
   }
 
