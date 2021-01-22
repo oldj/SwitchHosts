@@ -58,7 +58,8 @@
 
 .main {
   width: 100%;
-  //height: calc(100vh - var(--swh-top-bar-height));
+  height: calc(100vh - var(--swh-top-bar-height) - var(--swh-status-bar-height));
+  //overflow: auto;
 
   textarea {
     width: 100%;
@@ -75,4 +76,9 @@
   line-height: var(--swh-status-bar-height);
   border-top: 1px solid var(--swh-border-color-1);
   padding: 0 10px;
+  font-size: 12px;
+
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  color: var(--swh-font-color-weak);
 }
