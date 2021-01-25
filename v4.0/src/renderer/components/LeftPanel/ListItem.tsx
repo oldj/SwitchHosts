@@ -5,7 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { agent } from '@renderer/agent'
+import { agent } from '@renderer/core/agent'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { HostsObjectType } from '@root/common/data'

@@ -4,7 +4,7 @@
  */
 
 import getSystemHostsPath from '@main/actions/getSystemHostsPath'
-import { broadcast } from '@main/agent'
+import { broadcast } from '@main/core/agent'
 import * as fs from 'fs'
 
 interface IHostsWriteOptions {

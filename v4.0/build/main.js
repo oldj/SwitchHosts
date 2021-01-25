@@ -31734,14 +31734,14 @@ const getHostsOutput = list => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _main_libs_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/config */ "./src/main/libs/config.ts");
+/* harmony import */ var _main_core_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/core/config */ "./src/main/core/config.ts");
 /**
  * configGet
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-/* harmony default export */ __webpack_exports__["default"] = (async key => Object(_main_libs_config__WEBPACK_IMPORTED_MODULE_0__["get"])(key));
+/* harmony default export */ __webpack_exports__["default"] = (async key => Object(_main_core_config__WEBPACK_IMPORTED_MODULE_0__["get"])(key));
 
 /***/ }),
 
@@ -31754,14 +31754,14 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _main_libs_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/config */ "./src/main/libs/config.ts");
+/* harmony import */ var _main_core_config__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/core/config */ "./src/main/core/config.ts");
 /**
  * configGet
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-/* harmony default export */ __webpack_exports__["default"] = (async (key, value) => Object(_main_libs_config__WEBPACK_IMPORTED_MODULE_0__["set"])(key, value));
+/* harmony default export */ __webpack_exports__["default"] = (async (key, value) => Object(_main_core_config__WEBPACK_IMPORTED_MODULE_0__["set"])(key, value));
 
 /***/ }),
 
@@ -32005,7 +32005,7 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _main_actions_getSystemHostsPath__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/actions/getSystemHostsPath */ "./src/main/actions/getSystemHostsPath.ts");
-/* harmony import */ var _main_agent__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/agent */ "./src/main/agent.ts");
+/* harmony import */ var _main_core_agent__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/core/agent */ "./src/main/core/agent.ts");
 /* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! fs */ "fs");
 /* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_2__);
 /**
@@ -32043,7 +32043,7 @@ __webpack_require__.r(__webpack_exports__);
     };
   }
 
-  Object(_main_agent__WEBPACK_IMPORTED_MODULE_1__["broadcast"])('system_hosts_updated');
+  Object(_main_core_agent__WEBPACK_IMPORTED_MODULE_1__["broadcast"])('system_hosts_updated');
   return {
     success: true
   };
@@ -32051,10 +32051,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/main/agent.ts":
-/*!***************************!*\
-  !*** ./src/main/agent.ts ***!
-  \***************************/
+/***/ "./src/main/core/agent.ts":
+/*!********************************!*\
+  !*** ./src/main/core/agent.ts ***!
+  \********************************/
 /*! exports provided: broadcast */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -32078,28 +32078,9 @@ const broadcast = (event, ...args) => {
 
 /***/ }),
 
-/***/ "./src/main/default_configs.ts":
-/*!*************************************!*\
-  !*** ./src/main/default_configs.ts ***!
-  \*************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-const configs = {
-  left_panel_show: true,
-  left_panel_width: 270,
-  locale: 'zh',
-  theme: 'light'
-};
-/* harmony default export */ __webpack_exports__["default"] = (configs);
-
-/***/ }),
-
-/***/ "./src/main/libs/config.ts":
+/***/ "./src/main/core/config.ts":
 /*!*********************************!*\
-  !*** ./src/main/libs/config.ts ***!
+  !*** ./src/main/core/config.ts ***!
   \*********************************/
 /*! exports provided: store, get, set, del */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
@@ -32134,89 +32115,10 @@ const del = key => {
 
 /***/ }),
 
-/***/ "./src/main/main.ts":
-/*!**************************!*\
-  !*** ./src/main/main.ts ***!
-  \**************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _root_version_json__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @root/version.json */ "./src/version.json");
-var _root_version_json__WEBPACK_IMPORTED_MODULE_0___namespace = /*#__PURE__*/__webpack_require__.t(/*! @root/version.json */ "./src/version.json", 1);
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! path */ "path");
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! url */ "url");
-/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(url__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _agent__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./agent */ "./src/main/agent.ts");
-/* harmony import */ var _message__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./message */ "./src/main/message.ts");
-/* harmony import */ var _libs_config__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./libs/config */ "./src/main/libs/config.ts");
-
-
-
-
-
-
-
-let win;
-
-const createWindow = async () => {
-  win = new electron__WEBPACK_IMPORTED_MODULE_1__["BrowserWindow"]({
-    width: 800,
-    height: 480,
-    minWidth: 300,
-    minHeight: 200,
-    titleBarStyle: 'hiddenInset',
-    webPreferences: {
-      contextIsolation: true,
-      preload: path__WEBPACK_IMPORTED_MODULE_2__["join"](__dirname, 'preload.js'),
-      spellcheck: true
-    }
-  });
-
-  if (true) {
-    process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1'; // eslint-disable-line require-atomic-updates
-
-    win.loadURL(`http://127.0.0.1:8084`);
-    console.log(`config file: ${_libs_config__WEBPACK_IMPORTED_MODULE_6__["store"].path}`);
-  } else {}
-
-  if (true) {
-    // Open DevTools, see https://github.com/electron/electron/issues/12438 for why we wait for dom-ready
-    win.webContents.once('dom-ready', () => {
-      win.webContents.openDevTools();
-    });
-  }
-
-  win.on('closed', () => {
-    win = null;
-  });
-};
-
-electron__WEBPACK_IMPORTED_MODULE_1__["app"].on('ready', async () => {
-  console.log(`VERSION: ${_root_version_json__WEBPACK_IMPORTED_MODULE_0__.join('.')}`);
-  await createWindow();
-});
-electron__WEBPACK_IMPORTED_MODULE_1__["app"].on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    electron__WEBPACK_IMPORTED_MODULE_1__["app"].quit();
-  }
-});
-electron__WEBPACK_IMPORTED_MODULE_1__["app"].on('activate', () => {
-  if (win === null) {
-    createWindow();
-  }
-});
-
-/***/ }),
-
-/***/ "./src/main/message.ts":
-/*!*****************************!*\
-  !*** ./src/main/message.ts ***!
-  \*****************************/
+/***/ "./src/main/core/message.ts":
+/*!**********************************!*\
+  !*** ./src/main/core/message.ts ***!
+  \**********************************/
 /*! exports provided: on */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -32322,6 +32224,104 @@ const on = (event, handler) => {
     handler(d, ...args);
   });
 };
+
+/***/ }),
+
+/***/ "./src/main/default_configs.ts":
+/*!*************************************!*\
+  !*** ./src/main/default_configs.ts ***!
+  \*************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+const configs = {
+  left_panel_show: true,
+  left_panel_width: 270,
+  locale: 'zh',
+  theme: 'light'
+};
+/* harmony default export */ __webpack_exports__["default"] = (configs);
+
+/***/ }),
+
+/***/ "./src/main/main.ts":
+/*!**************************!*\
+  !*** ./src/main/main.ts ***!
+  \**************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _main_core_agent__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/core/agent */ "./src/main/core/agent.ts");
+/* harmony import */ var _main_core_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/core/config */ "./src/main/core/config.ts");
+/* harmony import */ var _main_core_message__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @main/core/message */ "./src/main/core/message.ts");
+/* harmony import */ var _root_version_json__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @root/version.json */ "./src/version.json");
+var _root_version_json__WEBPACK_IMPORTED_MODULE_3___namespace = /*#__PURE__*/__webpack_require__.t(/*! @root/version.json */ "./src/version.json", 1);
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! path */ "path");
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! url */ "url");
+/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(url__WEBPACK_IMPORTED_MODULE_6__);
+
+
+
+
+
+
+
+let win;
+
+const createWindow = async () => {
+  win = new electron__WEBPACK_IMPORTED_MODULE_4__["BrowserWindow"]({
+    width: 800,
+    height: 480,
+    minWidth: 300,
+    minHeight: 200,
+    titleBarStyle: 'hiddenInset',
+    webPreferences: {
+      contextIsolation: true,
+      preload: path__WEBPACK_IMPORTED_MODULE_5__["join"](__dirname, 'preload.js'),
+      spellcheck: true
+    }
+  });
+
+  if (true) {
+    process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1'; // eslint-disable-line require-atomic-updates
+
+    win.loadURL(`http://127.0.0.1:8084`);
+    console.log(`config file: ${_main_core_config__WEBPACK_IMPORTED_MODULE_1__["store"].path}`);
+  } else {}
+
+  if (true) {
+    // Open DevTools, see https://github.com/electron/electron/issues/12438 for why we wait for dom-ready
+    win.webContents.once('dom-ready', () => {
+      win.webContents.openDevTools();
+    });
+  }
+
+  win.on('closed', () => {
+    win = null;
+  });
+};
+
+electron__WEBPACK_IMPORTED_MODULE_4__["app"].on('ready', async () => {
+  console.log(`VERSION: ${_root_version_json__WEBPACK_IMPORTED_MODULE_3__.join('.')}`);
+  await createWindow();
+});
+electron__WEBPACK_IMPORTED_MODULE_4__["app"].on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    electron__WEBPACK_IMPORTED_MODULE_4__["app"].quit();
+  }
+});
+electron__WEBPACK_IMPORTED_MODULE_4__["app"].on('activate', () => {
+  if (win === null) {
+    createWindow();
+  }
+});
 
 /***/ }),
 
