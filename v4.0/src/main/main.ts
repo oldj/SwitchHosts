@@ -1,10 +1,10 @@
+import '@main/core/agent'
+import { store } from '@main/core/config'
+import '@main/core/message'
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
 import * as path from 'path'
 import * as url from 'url'
-import './agent'
-import './message'
-import { store } from './libs/config'
 
 let win: BrowserWindow | null
 

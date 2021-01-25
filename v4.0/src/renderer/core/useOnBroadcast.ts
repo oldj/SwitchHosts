@@ -1,5 +1,5 @@
 import { EventHandler } from '@main/preload'
-import { agent } from '@renderer/agent'
+import { agent } from '@renderer/core/agent'
 import { useEffect } from 'react'
 
 const useOnBroadcast = (event: string, handler: EventHandler, deps: any[] = []) => {

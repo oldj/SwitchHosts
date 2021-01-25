@@ -5,10 +5,10 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { actions, agent } from '@renderer/agent'
+import { actions, agent } from '@renderer/core/agent'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import SystemHostsItem from '@renderer/components/LeftPanel/SystemHostsItem'
-import useOnBroadcast from '@renderer/libs/hooks/useOnBroadcast'
+import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { getHostsOutput, updateOneItem } from '@root/common/hostsFn'
 import React from 'react'
 import styles from './List.less'

@@ -5,12 +5,12 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { actions, agent } from '@renderer/agent'
+import { actions, agent } from '@renderer/core/agent'
 import HostsEditor from '@renderer/components/HostsEditor'
 import HostsViewer from '@renderer/components/HostsViewer'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
-import useOnBroadcast from '@renderer/libs/hooks/useOnBroadcast'
+import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import { BiDockLeft, BiSliderAlt } from 'react-icons/bi'

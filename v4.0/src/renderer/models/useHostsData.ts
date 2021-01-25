@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { actions } from '@renderer/agent'
+import { actions } from '@renderer/core/agent'
 import { HostsDataType, HostsObjectType } from '@root/common/data'
 import version from '@root/version.json'
 import { useState } from 'react'

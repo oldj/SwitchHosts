@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { agent } from '@renderer/agent'
+import { agent } from '@renderer/core/agent'
 import List from '@renderer/components/LeftPanel/List'
 import React from 'react'
 import { BiPlus } from 'react-icons/bi'
