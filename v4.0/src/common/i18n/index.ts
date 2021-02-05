@@ -6,7 +6,7 @@
 
 import en from './languages/en'
 import zh from './languages/zh'
-import { LanguageDict, LanguageKey } from '@root/common/i18n/types'
+import { LanguageDict, LanguageKey } from '@root/common/types'
 
 export const languages = {
   en,

@@ -141,9 +141,19 @@ const on = (event, handler) => {
   return () => off(event, handler);
 };
 
+const once = (event, handler) => {
+  console.log(`once [${event}]`);
+  ee.once(event, handler);
+  return () => off(event, handler);
+};
+
 const off = (event, handler) => {
   console.log(`off [${event}]`);
   ee.off(event, handler);
+};
+
+const popupMenu = options => {
+  electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].send('x_popup_menu', options);
 };
 
 electron__WEBPACK_IMPORTED_MODULE_0__["ipcRenderer"].on('y_broadcast', (e, d) => {
@@ -159,7 +169,9 @@ const _agent = {
   call: callAction,
   broadcast,
   on,
+  once,
   off,
+  popupMenu,
   platform: process.platform
 };
 electron__WEBPACK_IMPORTED_MODULE_0__["contextBridge"].exposeInMainWorld('_agent', _agent);

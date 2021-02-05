@@ -5,6 +5,7 @@
  */
 
 import { Actions } from '@main/types'
+import { IPopupMenuOption } from '@root/common/types'
 import { contextBridge, ipcRenderer } from 'electron'
 import { EventEmitter } from 'events'
 
@@ -51,9 +52,19 @@ const on = (event: string, handler: EventHandler) => {
   return () => off(event, handler)
 }
 
+const once = (event: string, handler: EventHandler) => {
+  console.log(`once [${event}]`)
+  ee.once(event, handler)
+  return () => off(event, handler)
+}
+
 const off = (event: string, handler: EventHandler) => {
   console.log(`off [${event}]`)
   ee.off(event, handler)
+}
+
+const popupMenu = (options: IPopupMenuOption) => {
+  ipcRenderer.send('x_popup_menu', options)
 }
 
 ipcRenderer.on('y_broadcast', (e, d) => {
@@ -72,7 +83,9 @@ const _agent = {
   call: callAction,
   broadcast,
   on,
+  once,
   off,
+  popupMenu,
   platform: process.platform,
 }
 
