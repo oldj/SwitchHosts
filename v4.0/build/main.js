@@ -32227,6 +32227,49 @@ const on = (event, handler) => {
 
 /***/ }),
 
+/***/ "./src/main/core/popupMenu.ts":
+/*!************************************!*\
+  !*** ./src/main/core/popupMenu.ts ***!
+  \************************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _main_core_agent__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/core/agent */ "./src/main/core/agent.ts");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_1__);
+/**
+ * contextMenu
+ * @author: oldj
+ * @homepage: https://oldj.net
+ */
+
+
+electron__WEBPACK_IMPORTED_MODULE_1__["ipcMain"].on('x_popup_menu', (e, options) => {
+  // console.log(options)
+  const menu = new electron__WEBPACK_IMPORTED_MODULE_1__["Menu"]();
+  options.items.map(opt => {
+    if (typeof opt._click_evt === 'string') {
+      let evt = opt._click_evt;
+
+      opt.click = () => {
+        Object(_main_core_agent__WEBPACK_IMPORTED_MODULE_0__["broadcast"])(evt);
+      };
+    }
+
+    const item = new electron__WEBPACK_IMPORTED_MODULE_1__["MenuItem"](opt);
+    menu.append(item);
+  });
+  menu.on('menu-will-close', () => {
+    // console.log('menu-will-close')
+    Object(_main_core_agent__WEBPACK_IMPORTED_MODULE_0__["broadcast"])(`popup_menu_close:${options.menu_id}`);
+  });
+  menu.popup();
+});
+
+/***/ }),
+
 /***/ "./src/main/default_configs.ts":
 /*!*************************************!*\
   !*** ./src/main/default_configs.ts ***!
@@ -32258,14 +32301,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _main_core_agent__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/core/agent */ "./src/main/core/agent.ts");
 /* harmony import */ var _main_core_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/core/config */ "./src/main/core/config.ts");
 /* harmony import */ var _main_core_message__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @main/core/message */ "./src/main/core/message.ts");
-/* harmony import */ var _root_version_json__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @root/version.json */ "./src/version.json");
-var _root_version_json__WEBPACK_IMPORTED_MODULE_3___namespace = /*#__PURE__*/__webpack_require__.t(/*! @root/version.json */ "./src/version.json", 1);
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! path */ "path");
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! url */ "url");
-/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(url__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var _main_core_popupMenu__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @main/core/popupMenu */ "./src/main/core/popupMenu.ts");
+/* harmony import */ var _root_version_json__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @root/version.json */ "./src/version.json");
+var _root_version_json__WEBPACK_IMPORTED_MODULE_4___namespace = /*#__PURE__*/__webpack_require__.t(/*! @root/version.json */ "./src/version.json", 1);
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! path */ "path");
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! url */ "url");
+/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(url__WEBPACK_IMPORTED_MODULE_7__);
+
 
 
 
@@ -32276,7 +32321,7 @@ var _root_version_json__WEBPACK_IMPORTED_MODULE_3___namespace = /*#__PURE__*/__w
 let win;
 
 const createWindow = async () => {
-  win = new electron__WEBPACK_IMPORTED_MODULE_4__["BrowserWindow"]({
+  win = new electron__WEBPACK_IMPORTED_MODULE_5__["BrowserWindow"]({
     width: 800,
     height: 480,
     minWidth: 300,
@@ -32284,7 +32329,7 @@ const createWindow = async () => {
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       contextIsolation: true,
-      preload: path__WEBPACK_IMPORTED_MODULE_5__["join"](__dirname, 'preload.js'),
+      preload: path__WEBPACK_IMPORTED_MODULE_6__["join"](__dirname, 'preload.js'),
       spellcheck: true
     }
   });
@@ -32292,7 +32337,7 @@ const createWindow = async () => {
   if (true) {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1'; // eslint-disable-line require-atomic-updates
 
-    win.loadURL(`http://127.0.0.1:8084`);
+    win.loadURL(`http://127.0.0.1:8220`);
     console.log(`config file: ${_main_core_config__WEBPACK_IMPORTED_MODULE_1__["store"].path}`);
   } else {}
 
@@ -32308,16 +32353,16 @@ const createWindow = async () => {
   });
 };
 
-electron__WEBPACK_IMPORTED_MODULE_4__["app"].on('ready', async () => {
-  console.log(`VERSION: ${_root_version_json__WEBPACK_IMPORTED_MODULE_3__.join('.')}`);
+electron__WEBPACK_IMPORTED_MODULE_5__["app"].on('ready', async () => {
+  console.log(`VERSION: ${_root_version_json__WEBPACK_IMPORTED_MODULE_4__.join('.')}`);
   await createWindow();
 });
-electron__WEBPACK_IMPORTED_MODULE_4__["app"].on('window-all-closed', () => {
+electron__WEBPACK_IMPORTED_MODULE_5__["app"].on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    electron__WEBPACK_IMPORTED_MODULE_4__["app"].quit();
+    electron__WEBPACK_IMPORTED_MODULE_5__["app"].quit();
   }
 });
-electron__WEBPACK_IMPORTED_MODULE_4__["app"].on('activate', () => {
+electron__WEBPACK_IMPORTED_MODULE_5__["app"].on('activate', () => {
   if (win === null) {
     createWindow();
   }

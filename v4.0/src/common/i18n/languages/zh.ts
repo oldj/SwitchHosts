@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { LanguageDict } from '@root/common/i18n/types'
+import { LanguageDict } from '@root/common/types'
 
 const lang: LanguageDict = {
   _name: '中文',

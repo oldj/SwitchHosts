@@ -5,11 +5,11 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { agent } from '@renderer/core/agent'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
+import { agent } from '@renderer/core/agent'
 import { HostsObjectType } from '@root/common/data'
-import { flatten, updateOneItem } from '@root/common/hostsFn'
+import { updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
@@ -27,11 +27,18 @@ const ListItem = (props: Props) => {
   const { hosts_data, setList } = useModel('useHostsData')
   const [folder_open, setFolderOpen] = useState(!!data.folder_open)
   const [is_on, setIsOn] = useState(data.on)
+  // const [item_height, setItemHeight] = useState(0)
   const el_item = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setIsOn(data.on)
   }, [data])
+
+  // useEffect(() => {
+  //   if (folder_open) {
+  //     getElItemHeight()
+  //   }
+  // }, [folder_open])
 
   const onSelect = () => {
     setCurrentHosts(data)
@@ -54,16 +61,23 @@ const ListItem = (props: Props) => {
     agent.broadcast('toggle_item', data.id, on)
   }
 
-  const getElItemHeight = () => {
-    return el_item.current ? el_item.current.offsetHeight : 0
-  }
+  // const getElItemHeight = () => {
+  //   let h = el_item.current ? el_item.current.offsetHeight : 0
+  //   if (!h) {
+  //     setTimeout(getElItemHeight, 100)
+  //     return
+  //   }
+  //
+  //   setItemHeight(h)
+  // }
 
   if (!data) return null
 
   let level = props.level || 0
   const is_selected = current_hosts?.id === data.id
   const is_folder = data.where === 'folder'
-  const children_count = flatten(data.children || []).length
+  // const children_count = flatten(data.children || []).length
+  // const children_height = folder_open ? (item_height ? item_height * children_count : 0) : 0
 
   return (
     <div className={styles.root}>
@@ -88,7 +102,10 @@ const ListItem = (props: Props) => {
           <SwitchButton on={is_on} onChange={(on) => toggleOn(on)}/>
         </div>
       </div>
-      <div className={styles.children} style={{ height: folder_open ? getElItemHeight() * children_count : 0 }}>
+      <div
+        className={styles.children}
+        style={{ height: folder_open ? 'auto' : 0 }}
+      >
         {(data.children || []).map(item => (
           <ListItem data={item} key={item.id} level={level + 1}/>
         ))}
