@@ -3,11 +3,6 @@
  * @homepage: https://oldj.net
  */
 
-import * as path from 'path'
-import { homedir } from 'os'
+import getDataFolder from '@main/libs/getDataFolder'
 
-export default async () => {
-  // todo data folder should be current portable version
-
-  return path.join(homedir(), '.SwitchHosts')
-}
+export default async () => getDataFolder()

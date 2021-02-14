@@ -17,6 +17,7 @@
   "dependencies": {
     "electron-store": "^6.0.1",
     "lodash": "^4.17.20",
+    "mkdirp": "^1.0.4",
     "react-icons": "^4.1.0"
   },
   "devDependencies": {

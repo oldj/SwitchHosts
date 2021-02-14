@@ -4,6 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import SwhDb from '@main/libs/db/core/db'
+import SwhDb from '@main/utils/db/core/db'
 
 export default SwhDb

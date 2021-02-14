@@ -4,9 +4,9 @@
  * @homepage: https://oldj.net
  */
 
-import LatDb from '@main/libs/db/core/db'
-import { DataTypeDocument } from '@main/libs/db/typings'
-import { asInt } from '@main/libs/db/utils/asType'
+import LatDb from '@main/utils/db/core/db'
+import { DataTypeDocument } from '@main/utils/db/typings'
+import { asInt } from '@main/utils/db/utils/asType'
 import * as fs from 'fs'
 import lodash from 'lodash'
 import * as path from 'path'

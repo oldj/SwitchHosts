@@ -13,6 +13,7 @@ const lang: LanguageDict = {
   line: '行',
   lines: '行',
   loading: '加载中...',
+  migrate_confirm: '是否迁移数据为新格式？',
   no_access_to_hosts: '没有写入 Hosts 文件的权限。',
   read_only: '只读',
   success: '操作成功',

@@ -29453,105 +29453,297 @@ module.exports.default = mimicFn;
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-var path = __webpack_require__(/*! path */ "path");
-var fs = __webpack_require__(/*! fs */ "fs");
-var _0777 = parseInt('0777', 8);
+const optsArg = __webpack_require__(/*! ./lib/opts-arg.js */ "./node_modules/mkdirp/lib/opts-arg.js")
+const pathArg = __webpack_require__(/*! ./lib/path-arg.js */ "./node_modules/mkdirp/lib/path-arg.js")
 
-module.exports = mkdirP.mkdirp = mkdirP.mkdirP = mkdirP;
+const {mkdirpNative, mkdirpNativeSync} = __webpack_require__(/*! ./lib/mkdirp-native.js */ "./node_modules/mkdirp/lib/mkdirp-native.js")
+const {mkdirpManual, mkdirpManualSync} = __webpack_require__(/*! ./lib/mkdirp-manual.js */ "./node_modules/mkdirp/lib/mkdirp-manual.js")
+const {useNative, useNativeSync} = __webpack_require__(/*! ./lib/use-native.js */ "./node_modules/mkdirp/lib/use-native.js")
 
-function mkdirP (p, opts, f, made) {
-    if (typeof opts === 'function') {
-        f = opts;
-        opts = {};
-    }
-    else if (!opts || typeof opts !== 'object') {
-        opts = { mode: opts };
-    }
-    
-    var mode = opts.mode;
-    var xfs = opts.fs || fs;
-    
-    if (mode === undefined) {
-        mode = _0777
-    }
-    if (!made) made = null;
-    
-    var cb = f || function () {};
-    p = path.resolve(p);
-    
-    xfs.mkdir(p, mode, function (er) {
-        if (!er) {
-            made = made || p;
-            return cb(null, made);
-        }
-        switch (er.code) {
-            case 'ENOENT':
-                if (path.dirname(p) === p) return cb(er);
-                mkdirP(path.dirname(p), opts, function (er, made) {
-                    if (er) cb(er, made);
-                    else mkdirP(p, opts, cb, made);
-                });
-                break;
 
-            // In the case of any other error, just see if there's a dir
-            // there already.  If so, then hooray!  If not, then something
-            // is borked.
-            default:
-                xfs.stat(p, function (er2, stat) {
-                    // if the stat fails, then that's super weird.
-                    // let the original error be the failure reason.
-                    if (er2 || !stat.isDirectory()) cb(er, made)
-                    else cb(null, made);
-                });
-                break;
-        }
-    });
+const mkdirp = (path, opts) => {
+  path = pathArg(path)
+  opts = optsArg(opts)
+  return useNative(opts)
+    ? mkdirpNative(path, opts)
+    : mkdirpManual(path, opts)
 }
 
-mkdirP.sync = function sync (p, opts, made) {
-    if (!opts || typeof opts !== 'object') {
-        opts = { mode: opts };
-    }
-    
-    var mode = opts.mode;
-    var xfs = opts.fs || fs;
-    
-    if (mode === undefined) {
-        mode = _0777
-    }
-    if (!made) made = null;
+const mkdirpSync = (path, opts) => {
+  path = pathArg(path)
+  opts = optsArg(opts)
+  return useNativeSync(opts)
+    ? mkdirpNativeSync(path, opts)
+    : mkdirpManualSync(path, opts)
+}
 
-    p = path.resolve(p);
+mkdirp.sync = mkdirpSync
+mkdirp.native = (path, opts) => mkdirpNative(pathArg(path), optsArg(opts))
+mkdirp.manual = (path, opts) => mkdirpManual(pathArg(path), optsArg(opts))
+mkdirp.nativeSync = (path, opts) => mkdirpNativeSync(pathArg(path), optsArg(opts))
+mkdirp.manualSync = (path, opts) => mkdirpManualSync(pathArg(path), optsArg(opts))
 
+module.exports = mkdirp
+
+
+/***/ }),
+
+/***/ "./node_modules/mkdirp/lib/find-made.js":
+/*!**********************************************!*\
+  !*** ./node_modules/mkdirp/lib/find-made.js ***!
+  \**********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const {dirname} = __webpack_require__(/*! path */ "path")
+
+const findMade = (opts, parent, path = undefined) => {
+  // we never want the 'made' return value to be a root directory
+  if (path === parent)
+    return Promise.resolve()
+
+  return opts.statAsync(parent).then(
+    st => st.isDirectory() ? path : undefined, // will fail later
+    er => er.code === 'ENOENT'
+      ? findMade(opts, dirname(parent), parent)
+      : undefined
+  )
+}
+
+const findMadeSync = (opts, parent, path = undefined) => {
+  if (path === parent)
+    return undefined
+
+  try {
+    return opts.statSync(parent).isDirectory() ? path : undefined
+  } catch (er) {
+    return er.code === 'ENOENT'
+      ? findMadeSync(opts, dirname(parent), parent)
+      : undefined
+  }
+}
+
+module.exports = {findMade, findMadeSync}
+
+
+/***/ }),
+
+/***/ "./node_modules/mkdirp/lib/mkdirp-manual.js":
+/*!**************************************************!*\
+  !*** ./node_modules/mkdirp/lib/mkdirp-manual.js ***!
+  \**************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const {dirname} = __webpack_require__(/*! path */ "path")
+
+const mkdirpManual = (path, opts, made) => {
+  opts.recursive = false
+  const parent = dirname(path)
+  if (parent === path) {
+    return opts.mkdirAsync(path, opts).catch(er => {
+      // swallowed by recursive implementation on posix systems
+      // any other error is a failure
+      if (er.code !== 'EISDIR')
+        throw er
+    })
+  }
+
+  return opts.mkdirAsync(path, opts).then(() => made || path, er => {
+    if (er.code === 'ENOENT')
+      return mkdirpManual(parent, opts)
+        .then(made => mkdirpManual(path, opts, made))
+    if (er.code !== 'EEXIST' && er.code !== 'EROFS')
+      throw er
+    return opts.statAsync(path).then(st => {
+      if (st.isDirectory())
+        return made
+      else
+        throw er
+    }, () => { throw er })
+  })
+}
+
+const mkdirpManualSync = (path, opts, made) => {
+  const parent = dirname(path)
+  opts.recursive = false
+
+  if (parent === path) {
     try {
-        xfs.mkdirSync(p, mode);
-        made = made || p;
+      return opts.mkdirSync(path, opts)
+    } catch (er) {
+      // swallowed by recursive implementation on posix systems
+      // any other error is a failure
+      if (er.code !== 'EISDIR')
+        throw er
+      else
+        return
     }
-    catch (err0) {
-        switch (err0.code) {
-            case 'ENOENT' :
-                made = sync(path.dirname(p), opts, made);
-                sync(p, opts, made);
-                break;
+  }
 
-            // In the case of any other error, just see if there's a dir
-            // there already.  If so, then hooray!  If not, then something
-            // is borked.
-            default:
-                var stat;
-                try {
-                    stat = xfs.statSync(p);
-                }
-                catch (err1) {
-                    throw err0;
-                }
-                if (!stat.isDirectory()) throw err0;
-                break;
-        }
+  try {
+    opts.mkdirSync(path, opts)
+    return made || path
+  } catch (er) {
+    if (er.code === 'ENOENT')
+      return mkdirpManualSync(path, opts, mkdirpManualSync(parent, opts, made))
+    if (er.code !== 'EEXIST' && er.code !== 'EROFS')
+      throw er
+    try {
+      if (!opts.statSync(path).isDirectory())
+        throw er
+    } catch (_) {
+      throw er
     }
+  }
+}
 
-    return made;
-};
+module.exports = {mkdirpManual, mkdirpManualSync}
+
+
+/***/ }),
+
+/***/ "./node_modules/mkdirp/lib/mkdirp-native.js":
+/*!**************************************************!*\
+  !*** ./node_modules/mkdirp/lib/mkdirp-native.js ***!
+  \**************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const {dirname} = __webpack_require__(/*! path */ "path")
+const {findMade, findMadeSync} = __webpack_require__(/*! ./find-made.js */ "./node_modules/mkdirp/lib/find-made.js")
+const {mkdirpManual, mkdirpManualSync} = __webpack_require__(/*! ./mkdirp-manual.js */ "./node_modules/mkdirp/lib/mkdirp-manual.js")
+
+const mkdirpNative = (path, opts) => {
+  opts.recursive = true
+  const parent = dirname(path)
+  if (parent === path)
+    return opts.mkdirAsync(path, opts)
+
+  return findMade(opts, path).then(made =>
+    opts.mkdirAsync(path, opts).then(() => made)
+    .catch(er => {
+      if (er.code === 'ENOENT')
+        return mkdirpManual(path, opts)
+      else
+        throw er
+    }))
+}
+
+const mkdirpNativeSync = (path, opts) => {
+  opts.recursive = true
+  const parent = dirname(path)
+  if (parent === path)
+    return opts.mkdirSync(path, opts)
+
+  const made = findMadeSync(opts, path)
+  try {
+    opts.mkdirSync(path, opts)
+    return made
+  } catch (er) {
+    if (er.code === 'ENOENT')
+      return mkdirpManualSync(path, opts)
+    else
+      throw er
+  }
+}
+
+module.exports = {mkdirpNative, mkdirpNativeSync}
+
+
+/***/ }),
+
+/***/ "./node_modules/mkdirp/lib/opts-arg.js":
+/*!*********************************************!*\
+  !*** ./node_modules/mkdirp/lib/opts-arg.js ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const { promisify } = __webpack_require__(/*! util */ "util")
+const fs = __webpack_require__(/*! fs */ "fs")
+const optsArg = opts => {
+  if (!opts)
+    opts = { mode: 0o777, fs }
+  else if (typeof opts === 'object')
+    opts = { mode: 0o777, fs, ...opts }
+  else if (typeof opts === 'number')
+    opts = { mode: opts, fs }
+  else if (typeof opts === 'string')
+    opts = { mode: parseInt(opts, 8), fs }
+  else
+    throw new TypeError('invalid options argument')
+
+  opts.mkdir = opts.mkdir || opts.fs.mkdir || fs.mkdir
+  opts.mkdirAsync = promisify(opts.mkdir)
+  opts.stat = opts.stat || opts.fs.stat || fs.stat
+  opts.statAsync = promisify(opts.stat)
+  opts.statSync = opts.statSync || opts.fs.statSync || fs.statSync
+  opts.mkdirSync = opts.mkdirSync || opts.fs.mkdirSync || fs.mkdirSync
+  return opts
+}
+module.exports = optsArg
+
+
+/***/ }),
+
+/***/ "./node_modules/mkdirp/lib/path-arg.js":
+/*!*********************************************!*\
+  !*** ./node_modules/mkdirp/lib/path-arg.js ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const platform = process.env.__TESTING_MKDIRP_PLATFORM__ || process.platform
+const { resolve, parse } = __webpack_require__(/*! path */ "path")
+const pathArg = path => {
+  if (/\0/.test(path)) {
+    // simulate same failure that node raises
+    throw Object.assign(
+      new TypeError('path must be a string without null bytes'),
+      {
+        path,
+        code: 'ERR_INVALID_ARG_VALUE',
+      }
+    )
+  }
+
+  path = resolve(path)
+  if (platform === 'win32') {
+    const badWinChars = /[*|"<>?:]/
+    const {root} = parse(path)
+    if (badWinChars.test(path.substr(root.length))) {
+      throw Object.assign(new Error('Illegal characters in path.'), {
+        path,
+        code: 'EINVAL',
+      })
+    }
+  }
+
+  return path
+}
+module.exports = pathArg
+
+
+/***/ }),
+
+/***/ "./node_modules/mkdirp/lib/use-native.js":
+/*!***********************************************!*\
+  !*** ./node_modules/mkdirp/lib/use-native.js ***!
+  \***********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+const fs = __webpack_require__(/*! fs */ "fs")
+
+const version = process.env.__TESTING_MKDIRP_NODE_VERSION__ || process.version
+const versArr = version.replace(/^v/, '').split('.')
+const hasNative = +versArr[0] > 10 || +versArr[0] === 10 && +versArr[1] >= 12
+
+const useNative = !hasNative ? () => false : opts => opts.mkdir === fs.mkdir
+const useNativeSync = !hasNative ? () => false : opts => opts.mkdirSync === fs.mkdirSync
+
+module.exports = {useNative, useNativeSync}
 
 
 /***/ }),
@@ -31884,20 +32076,13 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path */ "path");
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var os__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! os */ "os");
-/* harmony import */ var os__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(os__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _main_libs_getDataFolder__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/getDataFolder */ "./src/main/libs/getDataFolder.ts");
 /**
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-
-/* harmony default export */ __webpack_exports__["default"] = (async () => {
-  // todo data folder should be current portable version
-  return path__WEBPACK_IMPORTED_MODULE_0__["join"](Object(os__WEBPACK_IMPORTED_MODULE_1__["homedir"])(), '.SwitchHosts');
-});
+/* harmony default export */ __webpack_exports__["default"] = (async () => Object(_main_libs_getDataFolder__WEBPACK_IMPORTED_MODULE_0__["default"])());
 
 /***/ }),
 
@@ -31925,7 +32110,7 @@ __webpack_require__.r(__webpack_exports__);
 /*!***********************************!*\
   !*** ./src/main/actions/index.ts ***!
   \***********************************/
-/*! exports provided: configGet, configSet, getDataFolder, getSystemHosts, localDataRead, localDataWrite, ping, systemHostsRead, systemHostsWrite */
+/*! exports provided: configGet, configSet, getDataFolder, getSystemHosts, localDataRead, localDataWrite, ping, systemHostsRead, systemHostsWrite, migrateCheck, migrateData */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -31957,11 +32142,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _systemHostsWrite__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./systemHostsWrite */ "./src/main/actions/systemHostsWrite.ts");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "systemHostsWrite", function() { return _systemHostsWrite__WEBPACK_IMPORTED_MODULE_8__["default"]; });
 
+/* harmony import */ var _migrate_checkIfMigration__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./migrate/checkIfMigration */ "./src/main/actions/migrate/checkIfMigration.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "migrateCheck", function() { return _migrate_checkIfMigration__WEBPACK_IMPORTED_MODULE_9__["default"]; });
+
+/* harmony import */ var _migrate_migrateData__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./migrate/migrateData */ "./src/main/actions/migrate/migrateData.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "migrateData", function() { return _migrate_migrateData__WEBPACK_IMPORTED_MODULE_10__["default"]; });
+
 /**
  * index
  * @author: oldj
  * @homepage: https://oldj.net
  */
+
+
 
 
 
@@ -32048,6 +32241,110 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async data => {
   const fn = path__WEBPACK_IMPORTED_MODULE_2__["join"](await Object(_main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_0__["default"])(), 'data.json');
   await fs__WEBPACK_IMPORTED_MODULE_1__["promises"].writeFile(fn, JSON.stringify(data, null, 2), 'utf-8');
+});
+
+/***/ }),
+
+/***/ "./src/main/actions/migrate/checkIfMigration.ts":
+/*!******************************************************!*\
+  !*** ./src/main/actions/migrate/checkIfMigration.ts ***!
+  \******************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _main_utils_fs2__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/utils/fs2 */ "./src/main/utils/fs2.ts");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! fs */ "fs");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! path */ "path");
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _main_libs_getDataFolder__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @main/libs/getDataFolder */ "./src/main/libs/getDataFolder.ts");
+/**
+ * checkIfMigration
+ * check if migration is required
+ * @author: oldj
+ * @homepage: https://oldj.net
+ */
+
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = (async () => {
+  let dir = Object(_main_libs_getDataFolder__WEBPACK_IMPORTED_MODULE_3__["default"])();
+  let old_data_file = path__WEBPACK_IMPORTED_MODULE_2__["join"](dir, 'data.json');
+  let new_data_dir = path__WEBPACK_IMPORTED_MODULE_2__["join"](dir, 'data');
+  return !(!fs__WEBPACK_IMPORTED_MODULE_1__["existsSync"](old_data_file) || Object(_main_utils_fs2__WEBPACK_IMPORTED_MODULE_0__["isDir"])(new_data_dir));
+});
+
+/***/ }),
+
+/***/ "./src/main/actions/migrate/migrateData.ts":
+/*!*************************************************!*\
+  !*** ./src/main/actions/migrate/migrateData.ts ***!
+  \*************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _main_data__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/data */ "./src/main/data/index.ts");
+/* harmony import */ var _main_libs_getDataFolder__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/libs/getDataFolder */ "./src/main/libs/getDataFolder.ts");
+/* harmony import */ var _root_common_hostsFn__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @root/common/hostsFn */ "./src/common/hostsFn.ts");
+/* harmony import */ var _root_version_json__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @root/version.json */ "./src/version.json");
+var _root_version_json__WEBPACK_IMPORTED_MODULE_3___namespace = /*#__PURE__*/__webpack_require__.t(/*! @root/version.json */ "./src/version.json", 1);
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! fs */ "fs");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! path */ "path");
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_5__);
+/**
+ * migrateData
+ * @author: oldj
+ * @homepage: https://oldj.net
+ */
+// migrate data from v3 to v4
+
+
+
+
+
+
+
+const readOldData = async () => {
+  const fn = path__WEBPACK_IMPORTED_MODULE_5___default.a.join(await Object(_main_libs_getDataFolder__WEBPACK_IMPORTED_MODULE_1__["default"])(), 'data.json');
+  const default_data = {
+    list: [],
+    version: _root_version_json__WEBPACK_IMPORTED_MODULE_3__
+  };
+
+  if (!fs__WEBPACK_IMPORTED_MODULE_4__["existsSync"](fn)) {
+    return default_data;
+  }
+
+  let content = await fs__WEBPACK_IMPORTED_MODULE_4__["promises"].readFile(fn, 'utf-8');
+
+  try {
+    let data = JSON.parse(content);
+    return Object(_root_common_hostsFn__WEBPACK_IMPORTED_MODULE_2__["cleanHostsList"])(data);
+  } catch (e) {
+    console.error(e);
+    return default_data;
+  }
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (async () => {
+  let old_data = await readOldData();
+  let {
+    list
+  } = old_data;
+  let hosts = Object(_root_common_hostsFn__WEBPACK_IMPORTED_MODULE_2__["flatten"])(list);
+
+  for (let h of hosts) {
+    await _main_data__WEBPACK_IMPORTED_MODULE_0__["swhdb"].collection.hosts.insert(h);
+    h.content = '';
+  }
+
+  await _main_data__WEBPACK_IMPORTED_MODULE_0__["swhdb"].dict.tree.update(list);
 });
 
 /***/ }),
@@ -32390,9 +32687,8 @@ electron__WEBPACK_IMPORTED_MODULE_1__["ipcMain"].on('x_popup_menu', (e, options)
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "swhdb", function() { return swhdb; });
-/* harmony import */ var _main_libs_db__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/db */ "./src/main/libs/db/index.ts");
-/* harmony import */ var os__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! os */ "os");
-/* harmony import */ var os__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(os__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _main_libs_getDataFolder__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/getDataFolder */ "./src/main/libs/getDataFolder.ts");
+/* harmony import */ var _main_utils_db__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/utils/db */ "./src/main/utils/db/index.ts");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! path */ "path");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_2__);
 /**
@@ -32406,10 +32702,12 @@ __webpack_require__.r(__webpack_exports__);
 let swhdb;
 
 if (!global.swhdb) {
-  let db_dir = path__WEBPACK_IMPORTED_MODULE_2__["join"](os__WEBPACK_IMPORTED_MODULE_1__["homedir"](), '.SwitchHosts', 'data');
-  swhdb = new _main_libs_db__WEBPACK_IMPORTED_MODULE_0__["default"](db_dir);
+  let db_dir = path__WEBPACK_IMPORTED_MODULE_2__["join"](Object(_main_libs_getDataFolder__WEBPACK_IMPORTED_MODULE_0__["default"])(), 'data');
+  swhdb = new _main_utils_db__WEBPACK_IMPORTED_MODULE_1__["default"](db_dir);
   console.log(`db: ${swhdb.dir}`);
   global.swhdb = swhdb;
+} else {
+  swhdb = global.swhdb;
 }
 
 
@@ -32435,23 +32733,132 @@ const configs = {
 
 /***/ }),
 
-/***/ "./src/main/libs/db/core/db.ts":
-/*!*************************************!*\
-  !*** ./src/main/libs/db/core/db.ts ***!
-  \*************************************/
+/***/ "./src/main/libs/getDataFolder.ts":
+/*!****************************************!*\
+  !*** ./src/main/libs/getDataFolder.ts ***!
+  \****************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path */ "path");
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var os__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! os */ "os");
+/* harmony import */ var os__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(os__WEBPACK_IMPORTED_MODULE_1__);
+/**
+ * @author: oldj
+ * @homepage: https://oldj.net
+ */
+
+
+/* harmony default export */ __webpack_exports__["default"] = (() => {
+  // todo data folder should be current portable version
+  return path__WEBPACK_IMPORTED_MODULE_0__["join"](Object(os__WEBPACK_IMPORTED_MODULE_1__["homedir"])(), '.SwitchHosts');
+});
+
+/***/ }),
+
+/***/ "./src/main/main.ts":
+/*!**************************!*\
+  !*** ./src/main/main.ts ***!
+  \**************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _main_core_agent__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/core/agent */ "./src/main/core/agent.ts");
+/* harmony import */ var _main_core_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/core/config */ "./src/main/core/config.ts");
+/* harmony import */ var _main_core_message__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @main/core/message */ "./src/main/core/message.ts");
+/* harmony import */ var _main_core_popupMenu__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @main/core/popupMenu */ "./src/main/core/popupMenu.ts");
+/* harmony import */ var _main_data__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @main/data */ "./src/main/data/index.ts");
+/* harmony import */ var _root_version_json__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @root/version.json */ "./src/version.json");
+var _root_version_json__WEBPACK_IMPORTED_MODULE_5___namespace = /*#__PURE__*/__webpack_require__.t(/*! @root/version.json */ "./src/version.json", 1);
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! electron */ "electron");
+/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! path */ "path");
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! url */ "url");
+/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(url__WEBPACK_IMPORTED_MODULE_8__);
+
+
+
+
+
+
+
+
+
+let win;
+
+const createWindow = async () => {
+  win = new electron__WEBPACK_IMPORTED_MODULE_6__["BrowserWindow"]({
+    width: 800,
+    height: 480,
+    minWidth: 300,
+    minHeight: 200,
+    titleBarStyle: 'hiddenInset',
+    webPreferences: {
+      contextIsolation: true,
+      preload: path__WEBPACK_IMPORTED_MODULE_7__["join"](__dirname, 'preload.js'),
+      spellcheck: true
+    }
+  });
+
+  if (true) {
+    process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1'; // eslint-disable-line require-atomic-updates
+
+    win.loadURL(`http://127.0.0.1:8220`);
+    console.log(`config file: ${_main_core_config__WEBPACK_IMPORTED_MODULE_1__["store"].path}`);
+  } else {}
+
+  if (true) {
+    // Open DevTools, see https://github.com/electron/electron/issues/12438 for why we wait for dom-ready
+    win.webContents.once('dom-ready', () => {
+      win.webContents.openDevTools();
+    });
+  }
+
+  win.on('closed', () => {
+    win = null;
+  });
+};
+
+electron__WEBPACK_IMPORTED_MODULE_6__["app"].on('ready', async () => {
+  console.log(`VERSION: ${_root_version_json__WEBPACK_IMPORTED_MODULE_5__.join('.')}`);
+  await createWindow();
+});
+electron__WEBPACK_IMPORTED_MODULE_6__["app"].on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    electron__WEBPACK_IMPORTED_MODULE_6__["app"].quit();
+  }
+});
+electron__WEBPACK_IMPORTED_MODULE_6__["app"].on('activate', () => {
+  if (win === null) {
+    createWindow();
+  }
+});
+
+/***/ }),
+
+/***/ "./src/main/utils/db/core/db.ts":
+/*!**************************************!*\
+  !*** ./src/main/utils/db/core/db.ts ***!
+  \**************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return LatDb; });
-/* harmony import */ var _main_libs_db_core_type_dict__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/db/core/type/dict */ "./src/main/libs/db/core/type/dict.ts");
-/* harmony import */ var _main_libs_db_core_type_list__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/libs/db/core/type/list */ "./src/main/libs/db/core/type/list.ts");
-/* harmony import */ var _main_libs_db_core_type_set__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @main/libs/db/core/type/set */ "./src/main/libs/db/core/type/set.ts");
-/* harmony import */ var _main_libs_db_core_type_collection__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @main/libs/db/core/type/collection */ "./src/main/libs/db/core/type/collection.ts");
+/* harmony import */ var _main_utils_db_core_type_dict__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/utils/db/core/type/dict */ "./src/main/utils/db/core/type/dict.ts");
+/* harmony import */ var _main_utils_db_core_type_list__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/utils/db/core/type/list */ "./src/main/utils/db/core/type/list.ts");
+/* harmony import */ var _main_utils_db_core_type_set__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @main/utils/db/core/type/set */ "./src/main/utils/db/core/type/set.ts");
+/* harmony import */ var _main_utils_db_core_type_collection__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @main/utils/db/core/type/collection */ "./src/main/utils/db/core/type/collection.ts");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! path */ "path");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _main_libs_db_settings__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @main/libs/db/settings */ "./src/main/libs/db/settings.ts");
+/* harmony import */ var _main_utils_db_settings__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @main/utils/db/settings */ "./src/main/utils/db/settings.ts");
 /**
  * db
  * @author: oldj
@@ -32487,7 +32894,7 @@ class LatDb {
         let name = key.toString();
 
         if (!this._dict.hasOwnProperty(name)) {
-          this._dict[name] = new _main_libs_db_core_type_dict__WEBPACK_IMPORTED_MODULE_0__["default"](name, path__WEBPACK_IMPORTED_MODULE_4__["join"](this.dir, 'dict'), this.options);
+          this._dict[name] = new _main_utils_db_core_type_dict__WEBPACK_IMPORTED_MODULE_0__["default"](name, path__WEBPACK_IMPORTED_MODULE_4__["join"](this.dir, 'dict'), this.options);
         }
 
         return this._dict[name];
@@ -32498,7 +32905,7 @@ class LatDb {
         let name = key.toString();
 
         if (!this._list.hasOwnProperty(name)) {
-          this._list[name] = new _main_libs_db_core_type_list__WEBPACK_IMPORTED_MODULE_1__["default"](name, path__WEBPACK_IMPORTED_MODULE_4__["join"](this.dir, 'list'), this.options);
+          this._list[name] = new _main_utils_db_core_type_list__WEBPACK_IMPORTED_MODULE_1__["default"](name, path__WEBPACK_IMPORTED_MODULE_4__["join"](this.dir, 'list'), this.options);
         }
 
         return this._list[name];
@@ -32509,7 +32916,7 @@ class LatDb {
         let name = key.toString();
 
         if (!this._set.hasOwnProperty(name)) {
-          this._set[name] = new _main_libs_db_core_type_set__WEBPACK_IMPORTED_MODULE_2__["default"](name, path__WEBPACK_IMPORTED_MODULE_4__["join"](this.dir, 'set'), this.options);
+          this._set[name] = new _main_utils_db_core_type_set__WEBPACK_IMPORTED_MODULE_2__["default"](name, path__WEBPACK_IMPORTED_MODULE_4__["join"](this.dir, 'set'), this.options);
         }
 
         return this._set[name];
@@ -32520,7 +32927,7 @@ class LatDb {
         let name = key.toString();
 
         if (!this._collection.hasOwnProperty(name)) {
-          this._collection[name] = new _main_libs_db_core_type_collection__WEBPACK_IMPORTED_MODULE_3__["default"](this, name);
+          this._collection[name] = new _main_utils_db_core_type_collection__WEBPACK_IMPORTED_MODULE_3__["default"](this, name);
         }
 
         return this._collection[name];
@@ -32531,7 +32938,7 @@ class LatDb {
   getDefaultOptions() {
     const options = {
       debug: false,
-      dump_delay: _main_libs_db_settings__WEBPACK_IMPORTED_MODULE_5__["default"].io_dump_delay,
+      dump_delay: _main_utils_db_settings__WEBPACK_IMPORTED_MODULE_5__["default"].io_dump_delay,
       ignore_error: true
     };
     return options;
@@ -32541,18 +32948,18 @@ class LatDb {
 
 /***/ }),
 
-/***/ "./src/main/libs/db/core/io.ts":
-/*!*************************************!*\
-  !*** ./src/main/libs/db/core/io.ts ***!
-  \*************************************/
+/***/ "./src/main/utils/db/core/io.ts":
+/*!**************************************!*\
+  !*** ./src/main/utils/db/core/io.ts ***!
+  \**************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return IO; });
-/* harmony import */ var _main_libs_db_utils_fsExt__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/db/utils/fsExt */ "./src/main/libs/db/utils/fsExt.ts");
-/* harmony import */ var _main_libs_db_utils_wait__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/libs/db/utils/wait */ "./src/main/libs/db/utils/wait.ts");
+/* harmony import */ var _main_utils_db_utils_fs2__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/utils/db/utils/fs2 */ "./src/main/utils/db/utils/fs2.ts");
+/* harmony import */ var _main_utils_db_utils_wait__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/utils/db/utils/wait */ "./src/main/utils/db/utils/wait.ts");
 /* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! fs */ "fs");
 /* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! path */ "path");
@@ -32653,7 +33060,7 @@ class IO {
 
     if (!this._is_dir_ensured) {
       let dir_path = path__WEBPACK_IMPORTED_MODULE_3__["dirname"](this.data_path);
-      await Object(_main_libs_db_utils_fsExt__WEBPACK_IMPORTED_MODULE_0__["ensureDir"])(dir_path);
+      await Object(_main_utils_db_utils_fs2__WEBPACK_IMPORTED_MODULE_0__["ensureDir"])(dir_path);
       this._is_dir_ensured = true;
     }
 
@@ -32681,6 +33088,7 @@ class IO {
 
     try {
       let out = this.options.formative ? JSON.stringify(data, null, 2) : JSON.stringify(data);
+      await Object(_main_utils_db_utils_fs2__WEBPACK_IMPORTED_MODULE_0__["ensureDir"])(path__WEBPACK_IMPORTED_MODULE_3__["dirname"](fn));
       await fs__WEBPACK_IMPORTED_MODULE_2__["promises"].writeFile(fn, out, 'utf-8');
 
       if (this.options.debug) {
@@ -32703,7 +33111,7 @@ class IO {
 
     this._last_dump_ts = ts;
     await this.dump_file(data, this.data_path);
-    await Object(_main_libs_db_utils_wait__WEBPACK_IMPORTED_MODULE_1__["default"])(50);
+    await Object(_main_utils_db_utils_wait__WEBPACK_IMPORTED_MODULE_1__["default"])(50);
     this._dump_status = 0;
   }
 
@@ -32721,25 +33129,25 @@ class IO {
 
 /***/ }),
 
-/***/ "./src/main/libs/db/core/type/collection.ts":
-/*!**************************************************!*\
-  !*** ./src/main/libs/db/core/type/collection.ts ***!
-  \**************************************************/
+/***/ "./src/main/utils/db/core/type/collection.ts":
+/*!***************************************************!*\
+  !*** ./src/main/utils/db/core/type/collection.ts ***!
+  \***************************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Collection; });
-/* harmony import */ var _main_libs_db_utils_asType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/db/utils/asType */ "./src/main/libs/db/utils/asType.ts");
+/* harmony import */ var _main_utils_db_utils_asType__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/utils/db/utils/asType */ "./src/main/utils/db/utils/asType.ts");
 /* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! fs */ "fs");
 /* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js");
 /* harmony import */ var lodash__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(lodash__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! path */ "path");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _dict__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./dict */ "./src/main/libs/db/core/type/dict.ts");
-/* harmony import */ var _list__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./list */ "./src/main/libs/db/core/type/list.ts");
+/* harmony import */ var _dict__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./dict */ "./src/main/utils/db/core/type/dict.ts");
+/* harmony import */ var _list__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./list */ "./src/main/utils/db/core/type/list.ts");
 /**
  * collection
  * @author: oldj
@@ -32776,7 +33184,7 @@ class Collection {
   }
 
   async makeId() {
-    let index = Object(_main_libs_db_utils_asType__WEBPACK_IMPORTED_MODULE_0__["asInt"])(await this._meta.get('index'), 0);
+    let index = Object(_main_utils_db_utils_asType__WEBPACK_IMPORTED_MODULE_0__["asInt"])(await this._meta.get('index'), 0);
     if (index < 0) index = 0;
     index++;
     await this._meta.set('index', index);
@@ -32899,18 +33307,18 @@ class Collection {
 
 /***/ }),
 
-/***/ "./src/main/libs/db/core/type/dict.ts":
-/*!********************************************!*\
-  !*** ./src/main/libs/db/core/type/dict.ts ***!
-  \********************************************/
+/***/ "./src/main/utils/db/core/type/dict.ts":
+/*!*********************************************!*\
+  !*** ./src/main/utils/db/core/type/dict.ts ***!
+  \*********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return Dict; });
-/* harmony import */ var _main_libs_db_core_io__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/db/core/io */ "./src/main/libs/db/core/io.ts");
-/* harmony import */ var _main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/libs/db/utils/clone */ "./src/main/libs/db/utils/clone.ts");
+/* harmony import */ var _main_utils_db_core_io__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/utils/db/core/io */ "./src/main/utils/db/core/io.ts");
+/* harmony import */ var _main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/utils/db/utils/clone */ "./src/main/utils/db/utils/clone.ts");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! path */ "path");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_2__);
 var _class, _temp;
@@ -32933,7 +33341,7 @@ let Dict = (_class = (_temp = class Dict {
     this.name = void 0;
     this._path = path__WEBPACK_IMPORTED_MODULE_2__["join"](dir, name + '.json');
     this.name = name;
-    this._io = new _main_libs_db_core_io__WEBPACK_IMPORTED_MODULE_0__["default"]({
+    this._io = new _main_utils_db_core_io__WEBPACK_IMPORTED_MODULE_0__["default"]({
       data_type: 'dict',
       data_path: this._path,
       debug: options.debug,
@@ -33003,23 +33411,23 @@ let Dict = (_class = (_temp = class Dict {
     await this._io.remove();
   }
 
-}, _temp), (_applyDecoratedDescriptor(_class.prototype, "get", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "get"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "set", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "set"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "update", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "update"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "toJSON", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "toJSON"), _class.prototype)), _class);
+}, _temp), (_applyDecoratedDescriptor(_class.prototype, "get", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "get"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "set", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "set"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "update", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "update"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "toJSON", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "toJSON"), _class.prototype)), _class);
 
 
 /***/ }),
 
-/***/ "./src/main/libs/db/core/type/list.ts":
-/*!********************************************!*\
-  !*** ./src/main/libs/db/core/type/list.ts ***!
-  \********************************************/
+/***/ "./src/main/utils/db/core/type/list.ts":
+/*!*********************************************!*\
+  !*** ./src/main/utils/db/core/type/list.ts ***!
+  \*********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return List; });
-/* harmony import */ var _main_libs_db_core_io__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/db/core/io */ "./src/main/libs/db/core/io.ts");
-/* harmony import */ var _main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/libs/db/utils/clone */ "./src/main/libs/db/utils/clone.ts");
+/* harmony import */ var _main_utils_db_core_io__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/utils/db/core/io */ "./src/main/utils/db/core/io.ts");
+/* harmony import */ var _main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/utils/db/utils/clone */ "./src/main/utils/db/utils/clone.ts");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! path */ "path");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_2__);
 var _class, _temp;
@@ -33042,7 +33450,7 @@ let List = (_class = (_temp = class List {
     this.name = void 0;
     this._path = path__WEBPACK_IMPORTED_MODULE_2__["join"](root_dir, name + '.json');
     this.name = name;
-    this._io = new _main_libs_db_core_io__WEBPACK_IMPORTED_MODULE_0__["default"]({
+    this._io = new _main_utils_db_core_io__WEBPACK_IMPORTED_MODULE_0__["default"]({
       data_type: 'list',
       data_path: this._path,
       debug: options.debug,
@@ -33205,22 +33613,22 @@ let List = (_class = (_temp = class List {
     await this._io.remove();
   }
 
-}, _temp), (_applyDecoratedDescriptor(_class.prototype, "rpush", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "rpush"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "rpop", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "rpop"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "rextend", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "rextend"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "lpush", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "lpush"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "lpop", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "lpop"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "lextend", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "lextend"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "all", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "all"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "find", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "find"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "filter", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "filter"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "map", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "map"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "index", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "index"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "slice", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "slice"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "splice", [_main_libs_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "splice"), _class.prototype)), _class);
+}, _temp), (_applyDecoratedDescriptor(_class.prototype, "rpush", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "rpush"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "rpop", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "rpop"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "rextend", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "rextend"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "lpush", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "lpush"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "lpop", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "lpop"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "lextend", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "lextend"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "all", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "all"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "find", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "find"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "filter", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "filter"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "map", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "map"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "index", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "index"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "slice", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "slice"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "splice", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "splice"), _class.prototype)), _class);
 
 
 /***/ }),
 
-/***/ "./src/main/libs/db/core/type/set.ts":
-/*!*******************************************!*\
-  !*** ./src/main/libs/db/core/type/set.ts ***!
-  \*******************************************/
+/***/ "./src/main/utils/db/core/type/set.ts":
+/*!********************************************!*\
+  !*** ./src/main/utils/db/core/type/set.ts ***!
+  \********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return LatSet; });
-/* harmony import */ var _main_libs_db_core_io__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/db/core/io */ "./src/main/libs/db/core/io.ts");
+/* harmony import */ var _main_utils_db_core_io__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/utils/db/core/io */ "./src/main/utils/db/core/io.ts");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! path */ "path");
 /* harmony import */ var path__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_1__);
 /**
@@ -33238,7 +33646,7 @@ class LatSet {
     this.name = void 0;
     this._path = path__WEBPACK_IMPORTED_MODULE_1__["join"](root_dir, name + '.json');
     this.name = name;
-    this._io = new _main_libs_db_core_io__WEBPACK_IMPORTED_MODULE_0__["default"]({
+    this._io = new _main_utils_db_core_io__WEBPACK_IMPORTED_MODULE_0__["default"]({
       data_type: 'set',
       data_path: this._path,
       debug: options.debug,
@@ -33295,30 +33703,30 @@ class LatSet {
 
 /***/ }),
 
-/***/ "./src/main/libs/db/index.ts":
-/*!***********************************!*\
-  !*** ./src/main/libs/db/index.ts ***!
-  \***********************************/
+/***/ "./src/main/utils/db/index.ts":
+/*!************************************!*\
+  !*** ./src/main/utils/db/index.ts ***!
+  \************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _main_libs_db_core_db__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/libs/db/core/db */ "./src/main/libs/db/core/db.ts");
+/* harmony import */ var _main_utils_db_core_db__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/utils/db/core/db */ "./src/main/utils/db/core/db.ts");
 /**
  * index
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-/* harmony default export */ __webpack_exports__["default"] = (_main_libs_db_core_db__WEBPACK_IMPORTED_MODULE_0__["default"]);
+/* harmony default export */ __webpack_exports__["default"] = (_main_utils_db_core_db__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 /***/ }),
 
-/***/ "./src/main/libs/db/settings.ts":
-/*!**************************************!*\
-  !*** ./src/main/libs/db/settings.ts ***!
-  \**************************************/
+/***/ "./src/main/utils/db/settings.ts":
+/*!***************************************!*\
+  !*** ./src/main/utils/db/settings.ts ***!
+  \***************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -33337,10 +33745,10 @@ const settings = {
 
 /***/ }),
 
-/***/ "./src/main/libs/db/utils/asType.ts":
-/*!******************************************!*\
-  !*** ./src/main/libs/db/utils/asType.ts ***!
-  \******************************************/
+/***/ "./src/main/utils/db/utils/asType.ts":
+/*!*******************************************!*\
+  !*** ./src/main/utils/db/utils/asType.ts ***!
+  \*******************************************/
 /*! exports provided: asInt */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -33359,10 +33767,10 @@ const asInt = (value, default_value) => {
 
 /***/ }),
 
-/***/ "./src/main/libs/db/utils/clone.ts":
-/*!*****************************************!*\
-  !*** ./src/main/libs/db/utils/clone.ts ***!
-  \*****************************************/
+/***/ "./src/main/utils/db/utils/clone.ts":
+/*!******************************************!*\
+  !*** ./src/main/utils/db/utils/clone.ts ***!
+  \******************************************/
 /*! exports provided: clone */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -33397,10 +33805,10 @@ const clone = (target, propertyName, descriptor) => {
 
 /***/ }),
 
-/***/ "./src/main/libs/db/utils/fsExt.ts":
-/*!*****************************************!*\
-  !*** ./src/main/libs/db/utils/fsExt.ts ***!
-  \*****************************************/
+/***/ "./src/main/utils/db/utils/fs2.ts":
+/*!****************************************!*\
+  !*** ./src/main/utils/db/utils/fs2.ts ***!
+  \****************************************/
 /*! exports provided: isDir, ensureDir */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -33419,20 +33827,20 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
-const isDir = async dir_path => {
+const isDir = dir_path => {
   return fs__WEBPACK_IMPORTED_MODULE_0___default.a.existsSync(dir_path) && fs__WEBPACK_IMPORTED_MODULE_0___default.a.lstatSync(dir_path).isDirectory();
 };
 const ensureDir = async dir_path => {
-  if (await isDir(dir_path)) return;
+  if (isDir(dir_path)) return;
   await mkdirp__WEBPACK_IMPORTED_MODULE_1___default()(dir_path);
 };
 
 /***/ }),
 
-/***/ "./src/main/libs/db/utils/wait.ts":
-/*!****************************************!*\
-  !*** ./src/main/libs/db/utils/wait.ts ***!
-  \****************************************/
+/***/ "./src/main/utils/db/utils/wait.ts":
+/*!*****************************************!*\
+  !*** ./src/main/utils/db/utils/wait.ts ***!
+  \*****************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -33447,86 +33855,27 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/main/main.ts":
-/*!**************************!*\
-  !*** ./src/main/main.ts ***!
-  \**************************/
-/*! no exports provided */
+/***/ "./src/main/utils/fs2.ts":
+/*!*******************************!*\
+  !*** ./src/main/utils/fs2.ts ***!
+  \*******************************/
+/*! exports provided: isDir */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _main_core_agent__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/core/agent */ "./src/main/core/agent.ts");
-/* harmony import */ var _main_core_config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @main/core/config */ "./src/main/core/config.ts");
-/* harmony import */ var _main_core_message__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @main/core/message */ "./src/main/core/message.ts");
-/* harmony import */ var _main_core_popupMenu__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @main/core/popupMenu */ "./src/main/core/popupMenu.ts");
-/* harmony import */ var _main_data__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @main/data */ "./src/main/data/index.ts");
-/* harmony import */ var _root_version_json__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @root/version.json */ "./src/version.json");
-var _root_version_json__WEBPACK_IMPORTED_MODULE_5___namespace = /*#__PURE__*/__webpack_require__.t(/*! @root/version.json */ "./src/version.json", 1);
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! electron */ "electron");
-/* harmony import */ var electron__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(electron__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! path */ "path");
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! url */ "url");
-/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(url__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isDir", function() { return isDir; });
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! fs */ "fs");
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_0__);
+/**
+ * fs2
+ * @author: oldj
+ * @homepage: https://oldj.net
+ */
 
-
-
-
-
-
-
-
-
-let win;
-
-const createWindow = async () => {
-  win = new electron__WEBPACK_IMPORTED_MODULE_6__["BrowserWindow"]({
-    width: 800,
-    height: 480,
-    minWidth: 300,
-    minHeight: 200,
-    titleBarStyle: 'hiddenInset',
-    webPreferences: {
-      contextIsolation: true,
-      preload: path__WEBPACK_IMPORTED_MODULE_7__["join"](__dirname, 'preload.js'),
-      spellcheck: true
-    }
-  });
-
-  if (true) {
-    process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1'; // eslint-disable-line require-atomic-updates
-
-    win.loadURL(`http://127.0.0.1:8220`);
-    console.log(`config file: ${_main_core_config__WEBPACK_IMPORTED_MODULE_1__["store"].path}`);
-  } else {}
-
-  if (true) {
-    // Open DevTools, see https://github.com/electron/electron/issues/12438 for why we wait for dom-ready
-    win.webContents.once('dom-ready', () => {
-      win.webContents.openDevTools();
-    });
-  }
-
-  win.on('closed', () => {
-    win = null;
-  });
+const isDir = dir_path => {
+  return fs__WEBPACK_IMPORTED_MODULE_0__["existsSync"](dir_path) && fs__WEBPACK_IMPORTED_MODULE_0__["lstatSync"](dir_path).isDirectory();
 };
-
-electron__WEBPACK_IMPORTED_MODULE_6__["app"].on('ready', async () => {
-  console.log(`VERSION: ${_root_version_json__WEBPACK_IMPORTED_MODULE_5__.join('.')}`);
-  await createWindow();
-});
-electron__WEBPACK_IMPORTED_MODULE_6__["app"].on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    electron__WEBPACK_IMPORTED_MODULE_6__["app"].quit();
-  }
-});
-electron__WEBPACK_IMPORTED_MODULE_6__["app"].on('activate', () => {
-  if (win === null) {
-    createWindow();
-  }
-});
 
 /***/ }),
 
