@@ -3,6 +3,7 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node",
+    "experimentalDecorators": true,
     "importHelpers": true,
     "jsx": "react",
     "esModuleInterop": true,

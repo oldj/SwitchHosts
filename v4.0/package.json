@@ -22,6 +22,7 @@
   "devDependencies": {
     "@ant-design/pro-layout": "^6.10.3",
     "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "@babel/plugin-proposal-decorators": "^7.12.13",
     "@babel/preset-env": "^7.12.11",
     "@babel/preset-typescript": "^7.12.7",
     "@types/react": "^17.0.0",
