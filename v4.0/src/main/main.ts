@@ -2,6 +2,7 @@ import '@main/core/agent'
 import { store } from '@main/core/config'
 import '@main/core/message'
 import '@main/core/popupMenu'
+import '@main/data'
 
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
