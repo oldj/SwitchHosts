@@ -10,7 +10,7 @@ import styles from './index.less'
 
 export default () => {
   const [loading, setLoading] = useState(true)
-  const { setLocale } = useModel('useI18n')
+  const { i18n, setLocale } = useModel('useI18n')
   const { getData } = useModel('useHostsData')
   const [left_width, setLeftWidth] = useState(0)
   const [left_show, setLeftShow] = useState(true)
@@ -22,6 +22,11 @@ export default () => {
 
     let theme = await actions.configGet('theme')
     document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
+
+    let if_migrate = await actions.migrateCheck()
+    if (if_migrate && confirm(i18n.lang.migrate_confirm)) {
+      await actions.migrateData()
+    }
 
     await getData()
   }

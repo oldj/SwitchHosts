@@ -4,9 +4,9 @@
  * @homepage: https://oldj.net
  */
 
-import IO from '@main/libs/db/core/io'
-import { DataTypeDict, IBasicOptions } from '@main/libs/db/typings'
-import { clone } from '@main/libs/db/utils/clone'
+import IO from '@main/utils/db/core/io'
+import { DataTypeDict, IBasicOptions } from '@main/utils/db/typings'
+import { clone } from '@main/utils/db/utils/clone'
 import * as path from 'path'
 
 interface Options extends IBasicOptions {

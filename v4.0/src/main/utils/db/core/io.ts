@@ -4,9 +4,9 @@
  * @homepage: https://oldj.net
  */
 
-import { DataTypeDict, DataTypeList, DataTypeSet } from '@main/libs/db/typings'
-import { ensureDir } from '@main/libs/db/utils/fsExt'
-import wait from '@main/libs/db/utils/wait'
+import { DataTypeDict, DataTypeList, DataTypeSet } from '@main/utils/db/typings'
+import { ensureDir } from '@main/utils/db/utils/fs2'
+import wait from '@main/utils/db/utils/wait'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -128,6 +128,7 @@ export default class IO {
       let out = this.options.formative ?
         JSON.stringify(data, null, 2) :
         JSON.stringify(data)
+      await ensureDir(path.dirname(fn))
       await fs.promises.writeFile(fn, out, 'utf-8')
       if (this.options.debug) {
         console.log(`io.dump_file: -> ${fn}`)

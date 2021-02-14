@@ -4,13 +4,13 @@
  * @homepage: https://oldj.net
  */
 
-import Dict from '@main/libs/db/core/type/dict'
-import List from '@main/libs/db/core/type/list'
-import LatSet from '@main/libs/db/core/type/set'
-import Collection from '@main/libs/db/core/type/collection'
-import { IBasicOptions } from '@main/libs/db/typings'
+import Dict from '@main/utils/db/core/type/dict'
+import List from '@main/utils/db/core/type/list'
+import LatSet from '@main/utils/db/core/type/set'
+import Collection from '@main/utils/db/core/type/collection'
+import { IBasicOptions } from '@main/utils/db/typings'
 import * as path from 'path'
-import settings from '@main/libs/db/settings'
+import settings from '@main/utils/db/settings'
 
 interface IDBOptions extends IBasicOptions {
 }
