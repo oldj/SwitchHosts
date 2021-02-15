@@ -1,4 +1,5 @@
 import { useModel } from '@@/plugin-model/useModel'
+
 import { createMuiTheme } from '@material-ui/core'
 import Button from '@material-ui/core/Button'
 import Dialog from '@material-ui/core/Dialog'
@@ -7,11 +8,13 @@ import DialogContent from '@material-ui/core/DialogContent'
 import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import { ThemeProvider } from '@material-ui/core/styles'
+
 import LeftPanel from '@renderer/components/LeftPanel'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import { getCssVar } from '@renderer/utils/css-var'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import styles from './index.less'
@@ -60,6 +63,11 @@ export default () => {
     props: {
       MuiButtonBase: {
         // disableRipple: true, // 在整个应用中禁用涟漪效果
+      },
+    },
+    palette: {
+      primary: {
+        main: getCssVar('--swh-primary-color'),
       },
     },
   })
