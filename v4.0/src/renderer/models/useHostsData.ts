@@ -26,7 +26,6 @@ export default function useHostsData() {
     }
 
     setHostsData(data)
-    await actions.localDataWrite(data)
   }
 
   return {

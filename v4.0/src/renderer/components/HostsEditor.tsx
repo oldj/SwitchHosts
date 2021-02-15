@@ -31,7 +31,7 @@ const HostsEditor = (props: Props) => {
   }, [hosts])
 
   const toSave = lodash.debounce((id: string, content: string) => {
-    setList(updateOneItem(hosts_data.list, { id, content }))
+    actions.localContentSet(id, content)
       .catch(e => console.error(e))
   }, 1000)
 
