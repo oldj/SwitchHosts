@@ -1,0 +1,59 @@
+@import "../../styles/common";
+
+.root {
+}
+
+.item {
+  line-height: var(--swh-tree-row-height);
+  display: grid;
+  grid-template-columns: 1fr 30px;
+  border-radius: 4px;
+
+  &.selected {
+    background: var(--swh-selected-bg);
+  }
+}
+
+.title {
+  position: relative;
+  padding-left: 10px;
+  height: var(--swh-tree-row-height);
+  overflow: hidden;
+  cursor: default;
+}
+
+.folder_open {
+  .folder_arrow {
+    transform: rotate(90deg);
+    margin-top: -1px;
+    margin-left: -16px;
+  }
+}
+
+.folder_arrow {
+  position: absolute;
+  margin-top: 1px;
+  margin-left: -14px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.icon {
+  margin-right: 0.5em;
+  display: inline-block;
+  vertical-align: middle;
+
+  &.folder {
+    cursor: pointer;
+  }
+}
+
+.status {
+  text-align: right;
+  margin: auto 10px auto auto;
+}
+
+.children {
+  overflow: hidden;
+  transition: 0.3s;
+}
