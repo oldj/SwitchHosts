@@ -1,6 +1,4 @@
 import { useModel } from '@@/plugin-model/useModel'
-
-import { createMuiTheme } from '@material-ui/core'
 import Button from '@material-ui/core/Button'
 import Dialog from '@material-ui/core/Dialog'
 import DialogActions from '@material-ui/core/DialogActions'
@@ -8,13 +6,14 @@ import DialogContent from '@material-ui/core/DialogContent'
 import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import { ThemeProvider } from '@material-ui/core/styles'
+import EditHostsInfo from '@renderer/components/EditHostsInfo'
 
 import LeftPanel from '@renderer/components/LeftPanel'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { getCssVar } from '@renderer/utils/css-var'
+import { theme } from '@renderer/libs/theme'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import styles from './index.less'
@@ -59,22 +58,9 @@ export default () => {
 
   useOnBroadcast('toggle_left_pannel', () => setLeftShow(!left_show), [left_show])
 
-  const theme = createMuiTheme({
-    props: {
-      MuiButtonBase: {
-        // disableRipple: true, // 在整个应用中禁用涟漪效果
-      },
-    },
-    palette: {
-      primary: {
-        main: getCssVar('--swh-primary-color'),
-      },
-    },
-  })
-
   if (loading) {
     return (
-      <>
+      <ThemeProvider theme={theme}>
         <Loading/>
         <Dialog
           open={show_migration}
@@ -96,7 +82,7 @@ export default () => {
             </Button>
           </DialogActions>
         </Dialog>
-      </>
+      </ThemeProvider>
     )
   }
 
@@ -115,6 +101,7 @@ export default () => {
         >
           <MainPanel has_left_panel={left_show}/>
         </div>
+        <EditHostsInfo/>
       </div>
     </ThemeProvider>
   )
