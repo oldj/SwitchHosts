@@ -1,7 +1,6 @@
-export type HostsObjectType = {
+export type HostsListObjectType = {
   id: string;
   title: string;
-  content: string;
   on: boolean;
   where: 'local' | 'remote' | 'group' | 'folder';
 
@@ -16,12 +15,19 @@ export type HostsObjectType = {
   // folder
   folder_mode: 0 | 1 | 2; // 0: 默认; 1: 单选; 2: 多选
   folder_open?: boolean;
-  children?: HostsObjectType[];
+  children?: HostsListObjectType[];
+
+  [key: string]: any;
+}
+
+export type HostsContentObjectType = {
+  id: string;
+  content: string;
 
   [key: string]: any;
 }
 
 export type HostsDataType = {
-  list: HostsObjectType[];
+  list: HostsListObjectType[];
   version: [number, number, number, number];
 }

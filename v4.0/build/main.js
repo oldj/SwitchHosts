@@ -32110,7 +32110,7 @@ __webpack_require__.r(__webpack_exports__);
 /*!***********************************!*\
   !*** ./src/main/actions/index.ts ***!
   \***********************************/
-/*! exports provided: configGet, configSet, getDataFolder, getSystemHosts, localDataRead, localDataWrite, ping, systemHostsRead, systemHostsWrite, migrateCheck, migrateData */
+/*! exports provided: configGet, configSet, getDataFolder, getSystemHosts, localContentGet, localBasicDataGet, localDataWrite, ping, systemHostsRead, systemHostsWrite, migrateCheck, migrateData */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -32127,26 +32127,29 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _getSystemHostsPath__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./getSystemHostsPath */ "./src/main/actions/getSystemHostsPath.ts");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "getSystemHosts", function() { return _getSystemHostsPath__WEBPACK_IMPORTED_MODULE_3__["default"]; });
 
-/* harmony import */ var _localDataRead__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./localDataRead */ "./src/main/actions/localDataRead.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "localDataRead", function() { return _localDataRead__WEBPACK_IMPORTED_MODULE_4__["default"]; });
+/* harmony import */ var _localContentGet__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./localContentGet */ "./src/main/actions/localContentGet.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "localContentGet", function() { return _localContentGet__WEBPACK_IMPORTED_MODULE_4__["default"]; });
 
-/* harmony import */ var _localDataWrite__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./localDataWrite */ "./src/main/actions/localDataWrite.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "localDataWrite", function() { return _localDataWrite__WEBPACK_IMPORTED_MODULE_5__["default"]; });
+/* harmony import */ var _localBasicDataGet__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./localBasicDataGet */ "./src/main/actions/localBasicDataGet.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "localBasicDataGet", function() { return _localBasicDataGet__WEBPACK_IMPORTED_MODULE_5__["default"]; });
 
-/* harmony import */ var _ping__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./ping */ "./src/main/actions/ping.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ping", function() { return _ping__WEBPACK_IMPORTED_MODULE_6__["default"]; });
+/* harmony import */ var _localDataWrite__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./localDataWrite */ "./src/main/actions/localDataWrite.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "localDataWrite", function() { return _localDataWrite__WEBPACK_IMPORTED_MODULE_6__["default"]; });
 
-/* harmony import */ var _systemHostsRead__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./systemHostsRead */ "./src/main/actions/systemHostsRead.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "systemHostsRead", function() { return _systemHostsRead__WEBPACK_IMPORTED_MODULE_7__["default"]; });
+/* harmony import */ var _ping__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./ping */ "./src/main/actions/ping.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ping", function() { return _ping__WEBPACK_IMPORTED_MODULE_7__["default"]; });
 
-/* harmony import */ var _systemHostsWrite__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./systemHostsWrite */ "./src/main/actions/systemHostsWrite.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "systemHostsWrite", function() { return _systemHostsWrite__WEBPACK_IMPORTED_MODULE_8__["default"]; });
+/* harmony import */ var _systemHostsRead__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./systemHostsRead */ "./src/main/actions/systemHostsRead.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "systemHostsRead", function() { return _systemHostsRead__WEBPACK_IMPORTED_MODULE_8__["default"]; });
 
-/* harmony import */ var _migrate_checkIfMigration__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./migrate/checkIfMigration */ "./src/main/actions/migrate/checkIfMigration.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "migrateCheck", function() { return _migrate_checkIfMigration__WEBPACK_IMPORTED_MODULE_9__["default"]; });
+/* harmony import */ var _systemHostsWrite__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./systemHostsWrite */ "./src/main/actions/systemHostsWrite.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "systemHostsWrite", function() { return _systemHostsWrite__WEBPACK_IMPORTED_MODULE_9__["default"]; });
 
-/* harmony import */ var _migrate_migrateData__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./migrate/migrateData */ "./src/main/actions/migrate/migrateData.ts");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "migrateData", function() { return _migrate_migrateData__WEBPACK_IMPORTED_MODULE_10__["default"]; });
+/* harmony import */ var _migrate_checkIfMigration__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./migrate/checkIfMigration */ "./src/main/actions/migrate/checkIfMigration.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "migrateCheck", function() { return _migrate_checkIfMigration__WEBPACK_IMPORTED_MODULE_10__["default"]; });
+
+/* harmony import */ var _migrate_migrateData__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./migrate/migrateData */ "./src/main/actions/migrate/migrateData.ts");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "migrateData", function() { return _migrate_migrateData__WEBPACK_IMPORTED_MODULE_11__["default"]; });
 
 /**
  * index
@@ -32165,25 +32168,53 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 /***/ }),
 
-/***/ "./src/main/actions/localDataRead.ts":
-/*!*******************************************!*\
-  !*** ./src/main/actions/localDataRead.ts ***!
-  \*******************************************/
+/***/ "./src/main/actions/localBasicDataGet.ts":
+/*!***********************************************!*\
+  !*** ./src/main/actions/localBasicDataGet.ts ***!
+  \***********************************************/
 /*! exports provided: default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/actions/getDataFolder */ "./src/main/actions/getDataFolder.ts");
+/* harmony import */ var _main_data__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/data */ "./src/main/data/index.ts");
+/* harmony import */ var _root_version_json__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @root/version.json */ "./src/version.json");
+var _root_version_json__WEBPACK_IMPORTED_MODULE_1___namespace = /*#__PURE__*/__webpack_require__.t(/*! @root/version.json */ "./src/version.json", 1);
+/**
+ * @author: oldj
+ * @homepage: https://oldj.net
+ */
+
+
+/* harmony default export */ __webpack_exports__["default"] = (async () => {
+  const default_data = {
+    list: [],
+    version: _root_version_json__WEBPACK_IMPORTED_MODULE_1__
+  };
+  let list = await _main_data__WEBPACK_IMPORTED_MODULE_0__["swhdb"].list.tree.all();
+  let v = await _main_data__WEBPACK_IMPORTED_MODULE_0__["swhdb"].dict.meta.get('version', _root_version_json__WEBPACK_IMPORTED_MODULE_1__);
+  return { ...default_data,
+    list,
+    version: v
+  };
+});
+
+/***/ }),
+
+/***/ "./src/main/actions/localContentGet.ts":
+/*!*********************************************!*\
+  !*** ./src/main/actions/localContentGet.ts ***!
+  \*********************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _main_data__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @main/data */ "./src/main/data/index.ts");
 /* harmony import */ var _root_common_hostsFn__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @root/common/hostsFn */ "./src/common/hostsFn.ts");
-/* harmony import */ var _root_version_json__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @root/version.json */ "./src/version.json");
-var _root_version_json__WEBPACK_IMPORTED_MODULE_2___namespace = /*#__PURE__*/__webpack_require__.t(/*! @root/version.json */ "./src/version.json", 1);
-/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! fs */ "fs");
-/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(fs__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! path */ "path");
-/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_4__);
 /**
  * @author: oldj
  * @homepage: https://oldj.net
@@ -32191,29 +32222,41 @@ var _root_version_json__WEBPACK_IMPORTED_MODULE_2___namespace = /*#__PURE__*/__w
 
 
 
+const getContentById = async id => {
+  let hosts_content = await _main_data__WEBPACK_IMPORTED_MODULE_0__["swhdb"].collection.hosts.find(i => i.id === id);
+  return (hosts_content === null || hosts_content === void 0 ? void 0 : hosts_content.content) || '';
+};
 
+const getContentOfHosts = async (list, hosts) => {
+  const {
+    where
+  } = hosts;
 
-/* harmony default export */ __webpack_exports__["default"] = (async () => {
-  const fn = path__WEBPACK_IMPORTED_MODULE_4__["join"](await Object(_main_actions_getDataFolder__WEBPACK_IMPORTED_MODULE_0__["default"])(), 'data.json');
-  const default_data = {
-    list: [],
-    version: _root_version_json__WEBPACK_IMPORTED_MODULE_2__
-  };
-
-  if (!fs__WEBPACK_IMPORTED_MODULE_3__["existsSync"](fn)) {
-    return default_data;
+  if (!where || where === 'local' || where === 'remote') {
+    return getContentById(hosts.id);
   }
 
-  let content = await fs__WEBPACK_IMPORTED_MODULE_3__["promises"].readFile(fn, 'utf-8');
-
-  try {
-    let data = JSON.parse(content);
-    return Object(_root_common_hostsFn__WEBPACK_IMPORTED_MODULE_1__["cleanHostsList"])(data);
-  } catch (e) {
-    console.error(e);
-    return default_data;
+  if (where === 'folder') {
+    const items = Object(_root_common_hostsFn__WEBPACK_IMPORTED_MODULE_1__["flatten"])(hosts.children || []);
+    let a = await Promise.all(items.map(async item => {
+      return `# file: ${item.title}\n` + (await getContentOfHosts(list, item));
+    }));
+    return a.join('\n\n');
   }
-});
+
+  if (where === 'group') {
+    let a = await Promise.all(hosts.include.map(async id => {
+      let item = Object(_root_common_hostsFn__WEBPACK_IMPORTED_MODULE_1__["findItemById"])(list, id);
+      if (!item) return '';
+      return `# file: ${item.title}\n` + (await getContentOfHosts(list, item));
+    }));
+    return a.join('\n\n');
+  }
+
+  return '';
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (getContentOfHosts);
 
 /***/ }),
 
@@ -32344,7 +32387,8 @@ const readOldData = async () => {
     h.content = '';
   }
 
-  await _main_data__WEBPACK_IMPORTED_MODULE_0__["swhdb"].dict.tree.update(list);
+  await _main_data__WEBPACK_IMPORTED_MODULE_0__["swhdb"].list.tree.extend(...list);
+  await _main_data__WEBPACK_IMPORTED_MODULE_0__["swhdb"].dict.meta.set('version', _root_version_json__WEBPACK_IMPORTED_MODULE_3__);
 });
 
 /***/ }),
@@ -33397,8 +33441,12 @@ let Dict = (_class = (_temp = class Dict {
     return Object.keys(this._data);
   }
 
-  async toJSON() {
+  async all() {
     return await this.ensure();
+  }
+
+  async toJSON() {
+    return await this.all();
   }
 
   async clear() {
@@ -33411,7 +33459,7 @@ let Dict = (_class = (_temp = class Dict {
     await this._io.remove();
   }
 
-}, _temp), (_applyDecoratedDescriptor(_class.prototype, "get", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "get"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "set", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "set"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "update", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "update"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "toJSON", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "toJSON"), _class.prototype)), _class);
+}, _temp), (_applyDecoratedDescriptor(_class.prototype, "get", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "get"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "set", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "set"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "update", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "update"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "all", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "all"), _class.prototype), _applyDecoratedDescriptor(_class.prototype, "toJSON", [_main_utils_db_utils_clone__WEBPACK_IMPORTED_MODULE_1__["clone"]], Object.getOwnPropertyDescriptor(_class.prototype, "toJSON"), _class.prototype)), _class);
 
 
 /***/ }),
@@ -33531,8 +33579,7 @@ let List = (_class = (_temp = class List {
   }
 
   async all() {
-    this._data = await this.ensure();
-    return [...this._data];
+    return await this.ensure();
   }
 
   async find(predicate) {

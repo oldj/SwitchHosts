@@ -82,8 +82,13 @@ export default class Dict {
   }
 
   @clone
+  async all(): Promise<DataTypeDict> {
+    return await this.ensure()
+  }
+
+  @clone
   async toJSON<T>(): Promise<T> {
-    return (await this.ensure()) as Promise<T>
+    return (await this.all()) as Promise<T>
   }
 
   async clear() {

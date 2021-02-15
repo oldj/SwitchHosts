@@ -3,13 +3,13 @@
  * @homepage: https://oldj.net
  */
 
-import { HostsDataType, HostsObjectType } from '@root/common/data'
+import { HostsDataType, HostsListObjectType } from '@root/common/data'
 import lodash from 'lodash'
 
-type PartHostsObjectType = Partial<HostsObjectType> & { id: string }
+type PartHostsObjectType = Partial<HostsListObjectType> & { id: string }
 
-export const flatten = (list: HostsObjectType[]): HostsObjectType[] => {
-  let new_list: HostsObjectType[] = []
+export const flatten = (list: HostsListObjectType[]): HostsListObjectType[] => {
+  let new_list: HostsListObjectType[] = []
 
   list.map(item => {
     new_list.push(item)
@@ -26,7 +26,7 @@ export const cleanHostsList = (data: HostsDataType): HostsDataType => {
 
   list.map(item => {
     if (item.where === 'folder' && !Array.isArray(item.children)) {
-      item.children = [] as HostsObjectType[]
+      item.children = [] as HostsListObjectType[]
     }
 
     if (item.where === 'group' && !Array.isArray(item.include)) {
@@ -41,12 +41,12 @@ export const cleanHostsList = (data: HostsDataType): HostsDataType => {
   return data
 }
 
-export const findItemById = (list: HostsObjectType[], id: string): HostsObjectType | undefined => {
+export const findItemById = (list: HostsListObjectType[], id: string): HostsListObjectType | undefined => {
   return flatten(list).find(item => item.id === id)
 }
 
-export const updateOneItem = (list: HostsObjectType[], item: PartHostsObjectType): HostsObjectType[] => {
-  let new_list: HostsObjectType[] = lodash.cloneDeep(list)
+export const updateOneItem = (list: HostsListObjectType[], item: PartHostsObjectType): HostsListObjectType[] => {
+  let new_list: HostsListObjectType[] = lodash.cloneDeep(list)
 
   let i = findItemById(new_list, item.id)
   if (i) {
@@ -56,7 +56,7 @@ export const updateOneItem = (list: HostsObjectType[], item: PartHostsObjectType
   return new_list
 }
 
-export const getContentOfHosts = (list: HostsObjectType[], hosts: HostsObjectType): string => {
+export const getContentOfHosts = (list: HostsListObjectType[], hosts: HostsListObjectType): string => {
   const { where } = hosts
   if (!where || where === 'local' || where === 'remote') {
     return hosts.content || ''
@@ -82,7 +82,7 @@ export const getContentOfHosts = (list: HostsObjectType[], hosts: HostsObjectTyp
   return ''
 }
 
-export const getHostsOutput = (list: HostsObjectType[]): string => {
+export const getHostsOutput = (list: HostsListObjectType[]): string => {
   const content = flatten(list).filter(item => item.on).map(item => getContentOfHosts(list, item))
     .join('\n\n')
 
