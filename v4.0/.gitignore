@@ -1,0 +1,25 @@
+.idea
+
+# dependencies
+node_modules
+npm-debug.log*
+yarn-error.log
+yarn.lock
+package-lock.json
+
+# production
+build
+dist
+
+# misc
+.DS_Store
+
+# umi
+src/.umi
+src/.umi-production
+src/.umi-test
+src/renderer/.umi
+src/renderer/.umi-production
+src/renderer/.umi-test
+src/renderer/dist
+.env.local
