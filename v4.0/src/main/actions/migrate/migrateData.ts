@@ -46,5 +46,6 @@ export default async () => {
     h.content = ''
   }
 
-  await swhdb.dict.tree.update(list)
+  await swhdb.list.tree.extend(...list)
+  await swhdb.dict.meta.set('version', version)
 }

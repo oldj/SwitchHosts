@@ -8,7 +8,7 @@ import { useModel } from '@@/plugin-model/useModel'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { agent } from '@renderer/core/agent'
-import { HostsObjectType } from '@root/common/data'
+import { HostsListObjectType } from '@root/common/data'
 import { updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
@@ -16,7 +16,7 @@ import { BiChevronRight } from 'react-icons/bi'
 import styles from './ListItem.less'
 
 interface Props {
-  data: HostsObjectType;
+  data: HostsListObjectType;
   level?: number;
 }
 

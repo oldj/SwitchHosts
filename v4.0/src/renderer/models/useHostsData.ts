@@ -5,7 +5,7 @@
  */
 
 import { actions } from '@renderer/core/agent'
-import { HostsDataType, HostsObjectType } from '@root/common/data'
+import { HostsDataType, HostsListObjectType } from '@root/common/data'
 import version from '@root/version.json'
 import { useState } from 'react'
 
@@ -16,10 +16,10 @@ export default function useHostsData() {
   })
 
   const getData = async () => {
-    setHostsData(await actions.localDataRead())
+    setHostsData(await actions.localBasicDataGet())
   }
 
-  const setList = async (list: HostsObjectType[]) => {
+  const setList = async (list: HostsListObjectType[]) => {
     let data: HostsDataType = {
       list,
       version,

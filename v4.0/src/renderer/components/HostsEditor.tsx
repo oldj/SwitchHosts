@@ -6,14 +6,15 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import StatusBar from '@renderer/components/StatusBar'
-import { HostsObjectType } from '@root/common/data'
+import { actions } from '@renderer/core/agent'
+import { HostsListObjectType } from '@root/common/data'
 import { getContentOfHosts, updateOneItem } from '@root/common/hostsFn'
 import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
 import styles from './HostsEditor.less'
 
 interface Props {
-  hosts: HostsObjectType;
+  hosts: HostsListObjectType;
 }
 
 const HostsEditor = (props: Props) => {
@@ -24,7 +25,9 @@ const HostsEditor = (props: Props) => {
 
   useEffect(() => {
     setHostsId(hosts.id)
-    setContent(getContentOfHosts(hosts_data.list, hosts))
+    // setContent(getContentOfHosts(hosts_data.list, hosts))
+    actions.localContentGet(hosts_data.list, hosts)
+      .then(setContent)
   }, [hosts])
 
   const toSave = lodash.debounce((id: string, content: string) => {

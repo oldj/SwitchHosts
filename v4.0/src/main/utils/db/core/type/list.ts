@@ -106,8 +106,7 @@ export default class List {
 
   @clone
   async all(): Promise<any[]> {
-    this._data = await this.ensure()
-    return [...this._data]
+    return await this.ensure()
   }
 
   @clone
