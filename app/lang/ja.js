@@ -37,6 +37,7 @@ exports.content = {
   , file: 'ファイル'
   , folder_name: 'フォルダ名'
   , help: 'ヘルプ'
+  , http_api_on: 'HTTP API サービスを有効にする'
   , hide_at_launch: '起動時に隠す'
   , hide_dock_icon: 'Dockのアイコンを隠す'
   , homepage: 'ホームページ'

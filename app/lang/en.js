@@ -39,6 +39,7 @@ exports.content = {
   , help: 'Help'
   , hide_at_launch: 'Hide at launch'
   , hide_dock_icon: 'Hide Dock Icon'
+  , http_api_on: 'Enable HTTP API server'
   , homepage: 'Homepage'
   , hosts_title: 'Title'
   , hosts_title_cant_be_empty: 'Hosts title could not be empty!'
