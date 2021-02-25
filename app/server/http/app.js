@@ -5,7 +5,7 @@
 
 'use strict'
 
-const {PORT} = require('../../configs')
+const { PORT } = require('../../configs')
 const express = require('express')
 const app = express()
 
@@ -24,9 +24,13 @@ app.get('/remote-test', function (req, res) {
 
 app.use('/api', require('./api/index'))
 
-app.listen(PORT, '127.0.0.1', function () {
-  console.log(`SwitchHosts! HTTP server is listening on port ${PORT}!`)
-  console.log(`-> http://127.0.0.1:${PORT}`)
-})
+try {
+  app.listen(PORT, '127.0.0.1', function () {
+    console.log(`SwitchHosts! HTTP server is listening on port ${PORT}!`)
+    console.log(`-> http://127.0.0.1:${PORT}`)
+  })
+} catch (e) {
+  console.error(e)
+}
 
 module.exports = app

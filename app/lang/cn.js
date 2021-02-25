@@ -39,6 +39,7 @@ exports.content = {
   , help: '帮助'
   , hide_at_launch: '启动时隐藏'
   , hide_dock_icon: '隐藏 Dock 图标'
+  , http_api_on: '开启 HTTP API'
   , homepage: '主页'
   , hosts_title: '方案名'
   , hosts_title_cant_be_empty: 'Hosts 方案名不能为空！'

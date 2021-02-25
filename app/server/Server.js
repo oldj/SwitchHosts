@@ -8,7 +8,10 @@
 const {ipcMain} = require('electron')
 const actions = require('./actions')
 const svr = require('./svr')
-require('./http/app')
+
+if (global.http_api_on) {
+  require('./http/app')
+}
 
 let renderer
 
