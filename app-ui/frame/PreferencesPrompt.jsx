@@ -15,6 +15,7 @@ import version from '../../app/version'
 import formatVersion from '../../app/libs/formatVersion'
 import CodeMirror from 'react-codemirror'
 import 'codemirror/mode/shell/shell'
+import { PORT } from '../../app/configs'
 import './PreferencesPrompt.less'
 
 const RadioGroup = Radio.Group
@@ -22,6 +23,7 @@ const Option = Select.Option
 const TabPane = Tabs.TabPane
 const pref_keys = [
   'after_cmd', 'auto_launch', 'choice_mode', 'hide_at_launch', 'is_dock_icon_hidden',
+  'http_api_on',
   'user_language', 'send_usage_data', 'show_title_on_tray', 'theme',
   'env'
 ]
@@ -249,6 +251,21 @@ export default class PreferencesPrompt extends React.Component {
     )
   }
 
+  prefToggleHttpAPIServer () {
+    let {lang} = this.props
+
+    return (
+      <div className="ln">
+        <Checkbox
+          checked={this.state.http_api_on}
+          onChange={(e) => this.updatePref({http_api_on: e.target.checked})}
+        >
+          {lang.http_api_on} <span className="inform">(PORT: {PORT})</span>
+        </Checkbox>
+      </div>
+    )
+  }
+
   prefAdvanced () {
     let {lang} = this.props
 
@@ -303,6 +320,7 @@ export default class PreferencesPrompt extends React.Component {
               {/*{this.prefAutoLaunch()}*/}
               {is_mac ? this.prefShowTitleOnTray() : null}
               {this.prefMinimizeAtLaunch()}
+              {this.prefToggleHttpAPIServer()}
             </div>
           </TabPane>
           <TabPane tab={lang.pref_tab_custom_cmd} key="2">

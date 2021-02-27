@@ -20,6 +20,7 @@ const m_lang = require('./server/lang')
 let user_language = pref.get('user_language') || (app.getLocale() || '').split('-')[0].toLowerCase() || 'en'
 global.user_language = user_language
 global.lang = m_lang.getLang(user_language)
+global.http_api_on = !!pref.get('http_api_on')
 
 require('./server/Server')
 
