@@ -13,6 +13,7 @@ export { default as localBasicDataGet } from './localBasicDataGet'
 export { default as localContentSet } from './localContentSet'
 export { default as localListSet } from './localListSet'
 export { default as ping } from './ping'
+export { default as refreshHosts } from './refreshHosts'
 export { default as systemHostsRead } from './systemHostsRead'
 export { default as systemHostsWrite } from './systemHostsWrite'
 

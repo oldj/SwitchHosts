@@ -7,25 +7,23 @@
 import { useModel } from '@@/plugin-model/useModel'
 import { BorderOuterOutlined, CheckCircleOutlined, CheckSquareOutlined } from '@ant-design/icons'
 import ItemIcon from '@renderer/components/ItemIcon'
+import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsListObjectType, HostsWhereType } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
-import { Input, Modal, Radio, Select, Transfer } from 'antd'
+import { Button, Input, message, Modal, Radio, Select, Transfer } from 'antd'
 import React, { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import styles from './EditHostsInfo.less'
 
-interface Props {
-  hosts?: HostsListObjectType | null;
-}
-
-const EditHostsInfo = (props: Props) => {
+const EditHostsInfo = () => {
   const { i18n } = useModel('useI18n')
   const { lang } = i18n
-  const [hosts, setHosts] = useState<HostsListObjectType | null>(props.hosts ? { ...props.hosts } : null)
-  const { hosts_data, setList } = useModel('useHostsData')
+  const [hosts, setHosts] = useState<HostsListObjectType | null>(null)
+  const { hosts_data, setList, getHostsData } = useModel('useHostsData')
   const [is_show, setIsShow] = useState(false)
-  const is_add = !props.hosts
+  const [is_add, setIsAdd] = useState(true)
+  const [is_refreshing, setIsRefreshing] = useState(false)
 
   const onCancel = async () => {
     setHosts(null)
@@ -34,12 +32,30 @@ const EditHostsInfo = (props: Props) => {
 
   const onSave = async () => {
     if (is_add) {
+      // add
       let h: HostsListObjectType = {
         ...(hosts || {}),
         id: uuidv4(),
       }
       let list: HostsListObjectType[] = [...hosts_data.list, h]
       await setList(list)
+
+    } else if (hosts) {
+      // edit
+      let h: HostsListObjectType | undefined = hostsFn.findItemById(hosts_data.list, hosts.id)
+      if (h) {
+        Object.assign(h, hosts)
+        await setList([...hosts_data.list])
+
+      } else {
+        // can not find by id
+        setIsAdd(true)
+        setTimeout(onSave, 300)
+      }
+
+    } else {
+      // unknow error
+      alert('unknow error!')
     }
 
     setIsShow(false)
@@ -52,6 +68,7 @@ const EditHostsInfo = (props: Props) => {
 
   useOnBroadcast('edit_hosts_info', (hosts?: HostsListObjectType) => {
     setHosts(hosts || null)
+    setIsAdd(!hosts)
     setIsShow(true)
   })
 
@@ -87,6 +104,39 @@ const EditHostsInfo = (props: Props) => {
               <Select.Option value={60 * 60 * 24 * 7}>7 {lang.days}</Select.Option>
             </Select>
           </div>
+          {is_add ? null : (
+            <div className={styles.refresh_info}>
+              <span>{lang.last_refresh}{hosts?.last_refresh || 'N/A'}</span>
+              <Button
+                size="small"
+                loading={is_refreshing}
+                disabled={is_refreshing}
+                onClick={() => {
+                  if (!hosts) return
+
+                  setIsRefreshing(true)
+                  actions.refreshHosts(hosts.id)
+                    .then(r => {
+                      console.log(r)
+                      if (!r.success) {
+                        message.error(r.message || r.code || 'Error!')
+                        return
+                      }
+
+                      message.success('ok')
+                      onUpdate({ last_refresh: r.data.last_refresh })
+                      agent.broadcast('reload_content', hosts.id)
+                      return getHostsData()
+                    })
+                    .catch(e => {
+                      console.log(e)
+                      message.error(e.message)
+                    })
+                    .finally(() => setIsRefreshing(false))
+                }}
+              >{lang.refresh}</Button>
+            </div>
+          )}
         </div>
       </>
     )
@@ -163,6 +213,7 @@ const EditHostsInfo = (props: Props) => {
         <div className={styles.label}>{lang.hosts_type}</div>
         <div>
           <Radio.Group
+            disabled={!is_add}
             value={hosts?.where || 'local'}
             onChange={e => onUpdate({ where: e.target.value })}
           >

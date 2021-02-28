@@ -17,7 +17,7 @@ interface Props {
 }
 
 const List = (props: Props) => {
-  const { hosts_data, getData, setList } = useModel('useHostsData')
+  const { hosts_data, getHostsData, setList } = useModel('useHostsData')
   const { i18n } = useModel('useI18n')
 
   const onToggleItem = async (id: string, on: boolean) => {
@@ -33,7 +33,7 @@ const List = (props: Props) => {
 
     } else {
       console.log(result)
-      getData().catch(e => console.log(e))
+      getHostsData().catch(e => console.log(e))
 
       let body = i18n.lang.no_access_to_hosts
       if (result.code !== 'no_access') {
