@@ -42,6 +42,7 @@ export default {
   no_access_to_hosts: 'No permission to write to the Hosts file.',
   password: 'Password',
   read_only: 'Read only',
+  refresh: 'Refresh',
   remote: 'Remote',
   success: 'Success',
   sudo_prompt_title: 'Input your sudo password',
