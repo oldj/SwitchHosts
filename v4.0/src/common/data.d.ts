@@ -33,3 +33,10 @@ export type HostsDataType = {
   list: HostsListObjectType[];
   version: [number, number, number, number];
 }
+
+export type OperationResultType = {
+  success: boolean;
+  message?: string;
+  data?: any;
+  code?: string | number;
+}

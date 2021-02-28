@@ -15,7 +15,7 @@ export default function useHostsData() {
     version,
   })
 
-  const getData = async () => {
+  const getHostsData = async () => {
     setHostsData(await actions.localBasicDataGet())
   }
 
@@ -32,7 +32,7 @@ export default function useHostsData() {
   return {
     hosts_data,
     setHostsData,
-    getData,
+    getHostsData,
     setList,
   }
 }
