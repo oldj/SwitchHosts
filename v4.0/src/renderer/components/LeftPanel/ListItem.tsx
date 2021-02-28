@@ -5,6 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
+import { RightOutlined } from '@ant-design/icons'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { agent } from '@renderer/core/agent'
@@ -12,7 +13,6 @@ import { HostsListObjectType } from '@root/common/data'
 import { updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
-import { BiChevronRight } from 'react-icons/bi'
 import styles from './ListItem.less'
 
 interface Props {
@@ -89,17 +89,17 @@ const ListItem = (props: Props) => {
         <div className={styles.title} onClick={onSelect}>
           {is_folder ? (
             <span className={styles.folder_arrow} onClick={toggleFolderOpen}>
-              <BiChevronRight/>
+              <RightOutlined/>
             </span>
           ) : null}
           <span
             className={clsx(styles.icon, is_folder && styles.folder)}
             onClick={toggleFolderOpen}
-          ><ItemIcon where={data.where} folder_open={data.folder_open} size={16}/></span>
+          ><ItemIcon where={data.where} folder_open={data.folder_open}/></span>
           {data.title || i18n.lang.untitled}
         </div>
         <div className={styles.status}>
-          <SwitchButton on={is_on} onChange={(on) => toggleOn(on)}/>
+          <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)}/>
         </div>
       </div>
       <div

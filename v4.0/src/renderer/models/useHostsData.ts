@@ -26,6 +26,7 @@ export default function useHostsData() {
     }
 
     setHostsData(data)
+    await actions.localListSet(list)
   }
 
   return {
