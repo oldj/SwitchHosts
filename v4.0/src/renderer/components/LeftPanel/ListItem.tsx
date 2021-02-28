@@ -99,7 +99,7 @@ const ListItem = (props: Props) => {
           {data.title || i18n.lang.untitled}
         </div>
         <div className={styles.status}>
-          <SwitchButton on={is_on} onChange={(on) => toggleOn(on)}/>
+          <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)}/>
         </div>
       </div>
       <div
