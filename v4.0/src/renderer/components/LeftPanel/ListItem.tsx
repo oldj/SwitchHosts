@@ -95,7 +95,7 @@ const ListItem = (props: Props) => {
           <span
             className={clsx(styles.icon, is_folder && styles.folder)}
             onClick={toggleFolderOpen}
-          ><ItemIcon where={data.where} folder_open={data.folder_open}/></span>
+          ><ItemIcon where={data.where} folder_open={data.folder_open} size={16}/></span>
           {data.title || i18n.lang.untitled}
         </div>
         <div className={styles.status}>
