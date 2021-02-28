@@ -7,6 +7,7 @@
 import { useModel } from '@@/plugin-model/useModel'
 import StatusBar from '@renderer/components/StatusBar'
 import { actions } from '@renderer/core/agent'
+import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsListObjectType } from '@root/common/data'
 import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
@@ -40,6 +41,12 @@ const HostsEditor = (props: Props) => {
   }
 
   let is_read_only = !hosts || (hosts.where && (['group', 'remote', 'folder']).includes(hosts.where))
+
+  useOnBroadcast('reload_content', (id: string) => {
+    if (id !== hosts.id) return
+    actions.localContentGet(hosts_data.list, hosts)
+      .then(setContent)
+  })
 
   return (
     <div className={styles.root}>
