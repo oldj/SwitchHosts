@@ -5,26 +5,14 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import Button from '@material-ui/core/Button'
-import Dialog from '@material-ui/core/Dialog'
-import DialogActions from '@material-ui/core/DialogActions'
-import DialogContent from '@material-ui/core/DialogContent'
-import DialogTitle from '@material-ui/core/DialogTitle'
-import FormControl from '@material-ui/core/FormControl'
-import FormHelperText from '@material-ui/core/FormHelperText'
-import InputLabel from '@material-ui/core/InputLabel'
-import MenuItem from '@material-ui/core/MenuItem'
-import Select from '@material-ui/core/Select'
-import { ThemeProvider } from '@material-ui/core/styles'
-import TextField from '@material-ui/core/TextField'
-import ToggleButton from '@material-ui/lab/ToggleButton'
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup'
+import { BorderOuterOutlined, CheckCircleOutlined, CheckSquareOutlined } from '@ant-design/icons'
 import ItemIcon from '@renderer/components/ItemIcon'
-import Transfer from '@renderer/components/Transfer'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { theme } from '@renderer/libs/theme'
-import { HostsListObjectType } from '@root/common/data'
+import { HostsListObjectType, HostsWhereType } from '@root/common/data'
+import * as hostsFn from '@root/common/hostsFn'
+import { Input, Modal, Radio, Select, Transfer } from 'antd'
 import React, { useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 import styles from './EditHostsInfo.less'
 
 interface Props {
@@ -33,7 +21,9 @@ interface Props {
 
 const EditHostsInfo = (props: Props) => {
   const { i18n } = useModel('useI18n')
-  const [hosts, setHosts] = useState<HostsListObjectType | null>(props.hosts || null)
+  const { lang } = i18n
+  const [hosts, setHosts] = useState<HostsListObjectType | null>(props.hosts ? { ...props.hosts } : null)
+  const { hosts_data, setList } = useModel('useHostsData')
   const [is_show, setIsShow] = useState(false)
   const is_add = !props.hosts
 
@@ -43,7 +33,16 @@ const EditHostsInfo = (props: Props) => {
   }
 
   const onSave = async () => {
+    if (is_add) {
+      let h: HostsListObjectType = {
+        ...(hosts || {}),
+        id: uuidv4(),
+      }
+      let list: HostsListObjectType[] = [...hosts_data.list, h]
+      await setList(list)
+    }
 
+    setIsShow(false)
   }
 
   const onUpdate = async (kv: Partial<HostsListObjectType>) => {
@@ -65,128 +64,130 @@ const EditHostsInfo = (props: Props) => {
     return (
       <>
         <div className={styles.ln}>
-          <FormControl component="fieldset" fullWidth={true}>
-            {/*<FormLabel component="legend">URL</FormLabel>*/}
-            <TextField
-              id="hosts_url"
-              variant="outlined"
-              size="small"
-              fullWidth={true}
-              label="URL"
-              placeholder={i18n.lang.url_placeholder}
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-          </FormControl>
+          <div className={styles.label}>URL</div>
+          <div>
+            <Input value={hosts?.url} onChange={e => onUpdate({ url: e.target.value })} placeholder={lang.url_placeholder}/>
+          </div>
         </div>
 
         <div className={styles.ln}>
-          <FormControl
-            component="fieldset"
-            fullWidth={true}
-            variant="outlined"
-            size="small"
-          >
-            <InputLabel htmlFor="outlined-age-native-simple">{i18n.lang.auto_refresh}</InputLabel>
+          <div className={styles.label}>{lang.auto_refresh}</div>
+          <div>
             <Select
               value={hosts?.refresh_interval || 0}
-              label={i18n.lang.auto_refresh}
-              inputProps={{
-                name: 'age',
-                id: 'outlined-age-native-simple',
-              }}
-              onChange={(e) => onUpdate({
-                refresh_interval: e.target.value as number,
-              })}
+              onChange={refresh_interval => onUpdate({ refresh_interval })}
+              style={{ minWidth: 120 }}
             >
-              <MenuItem value={0}>{i18n.lang.never}</MenuItem>
-              <MenuItem value={60}>1 {i18n.lang.minute}</MenuItem>
-              <MenuItem value={60 * 5}>5 {i18n.lang.minutes}</MenuItem>
-              <MenuItem value={60 * 15}>15 {i18n.lang.minutes}</MenuItem>
-              <MenuItem value={60 * 60}>1 {i18n.lang.hour}</MenuItem>
-              <MenuItem value={60 * 60 * 24}>24 {i18n.lang.hours}</MenuItem>
-              <MenuItem value={60 * 60 * 24 * 7}>7 {i18n.lang.days}</MenuItem>
+              <Select.Option value={0}>{lang.never}</Select.Option>
+              <Select.Option value={60}>1 {lang.minute}</Select.Option>
+              <Select.Option value={60 * 5}>5 {lang.minutes}</Select.Option>
+              <Select.Option value={60 * 15}>15 {lang.minutes}</Select.Option>
+              <Select.Option value={60 * 60}>1 {lang.hour}</Select.Option>
+              <Select.Option value={60 * 60 * 24}>24 {lang.hours}</Select.Option>
+              <Select.Option value={60 * 60 * 24 * 7}>7 {lang.days}</Select.Option>
             </Select>
-            <FormHelperText>
-              {i18n.lang.last_refresh}
-              {hosts?.last_refresh || 'N/A'}
-            </FormHelperText>
-          </FormControl>
+          </div>
         </div>
       </>
     )
   }
 
+  const renderTransferItem = (item: HostsListObjectType): React.ReactElement => {
+    return (
+      <div>
+        <ItemIcon where={item.where}/>
+        <span style={{ marginLeft: 4 }}>{item.title || lang.untitled}</span>
+      </div>
+    )
+  }
+
+  const forGroup = (): React.ReactElement => {
+    const list = hostsFn.flatten(hosts_data.list)
+
+    let source_list: HostsListObjectType[] = list
+      .filter(item => item.where === 'local' || item.where === 'remote')
+      .map(item => {
+        let o = { ...item }
+        o.key = o.id
+        return o
+      })
+
+    let target_keys: string[] = hosts?.include || []
+
+    return (
+      <div className={styles.ln}>
+        <Transfer
+          dataSource={source_list}
+          targetKeys={target_keys}
+          listStyle={{ width: '100%' }}
+          oneWay={true}
+          render={renderTransferItem}
+          onChange={(next_target_keys) => {
+            onUpdate({ include: next_target_keys })
+          }}
+        />
+      </div>
+    )
+  }
+
+  const forFolder = (): React.ReactElement => {
+    return (
+      <div className={styles.ln}>
+        <div className={styles.label}>{lang.choice_mode}</div>
+        <div>
+          <Radio.Group
+            value={hosts?.folder_mode || 0}
+            onChange={e => onUpdate({ folder_mode: e.target.value })}
+          >
+            <Radio.Button value={0}><BorderOuterOutlined/> {lang.choice_mode_default}</Radio.Button>
+            <Radio.Button value={1}><CheckCircleOutlined/> {lang.choice_mode_single}</Radio.Button>
+            <Radio.Button value={2}><CheckSquareOutlined/> {lang.choice_mode_multiple}</Radio.Button>
+          </Radio.Group>
+        </div>
+      </div>
+    )
+  }
+
+  const wheres: HostsWhereType[] = ['local', 'remote', 'group', 'folder']
+
   return (
-    <ThemeProvider theme={theme}>
-      <Dialog
-        open={is_show}
-        onClose={onCancel}
-        maxWidth="lg"
-      >
-        <DialogTitle id="alert-dialog-title">{is_add ? i18n.lang.hosts_add : i18n.lang.hosts_edit}</DialogTitle>
-        <DialogContent style={{ width: 400 }}>
-          <div className={styles.ln}>
-            <FormControl component="fieldset" fullWidth={true}>
-              {/*<FormLabel component="legend">{i18n.lang.hosts_type}</FormLabel>*/}
-              <ToggleButtonGroup
-                exclusive
-                size="small"
-                value={hosts?.where || 'local'}
-                onChange={(e, where) => onUpdate({ where })}
-              >
-                <ToggleButton value="local">
-                  <ItemIcon where="local"/> {i18n.lang.local}
-                </ToggleButton>
-                <ToggleButton value="remote">
-                  <ItemIcon where="remote"/> {i18n.lang.remote}
-                </ToggleButton>
-                <ToggleButton value="group">
-                  <ItemIcon where="group"/> {i18n.lang.group}
-                </ToggleButton>
-                <ToggleButton value="folder">
-                  <ItemIcon where="folder"/> {i18n.lang.folder}
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </FormControl>
-          </div>
+    <Modal
+      title={is_add ? lang.hosts_add : lang.hosts_edit}
+      visible={is_show}
+      okText={lang.btn_ok}
+      cancelText={lang.btn_cancel}
+      onCancel={onCancel}
+      onOk={onSave}
+    >
+      <div className={styles.ln}>
+        <div className={styles.label}>{lang.hosts_type}</div>
+        <div>
+          <Radio.Group
+            value={hosts?.where || 'local'}
+            onChange={e => onUpdate({ where: e.target.value })}
+          >
+            {
+              wheres.map(where => (
+                <Radio.Button value={where} key={where}>
+                  <ItemIcon where={where}/> {lang[where]}
+                </Radio.Button>
+              ))
+            }
+          </Radio.Group>
+        </div>
+      </div>
 
+      <div className={styles.ln}>
+        <div className={styles.label}>{lang.hosts_title}</div>
+        <div>
+          <Input value={hosts?.title} onChange={e => onUpdate({ title: e.target.value })}/>
+        </div>
+      </div>
 
-          <div className={styles.ln}>
-            <FormControl component="fieldset" fullWidth={true}>
-              {/*<FormLabel component="legend">{i18n.lang.hosts_title}</FormLabel>*/}
-              <TextField
-                id="hosts_title"
-                label={i18n.lang.hosts_title}
-                variant="outlined"
-                size="small"
-                fullWidth={true}
-                value={hosts?.title || ''}
-                onChange={(e) => onUpdate({
-                  title: e.target.value as string,
-                })}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-              />
-            </FormControl>
-          </div>
-
-          {hosts?.where === 'remote' ? forRemote() : null}
-          {hosts?.where === 'group' ? <Transfer/> : null}
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={onCancel} color="primary">
-            {i18n.lang.btn_cancel}
-          </Button>
-          <Button onClick={onSave} color="primary" autoFocus>
-            {i18n.lang.btn_ok}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </ThemeProvider>
+      {hosts?.where === 'remote' ? forRemote() : null}
+      {hosts?.where === 'group' ? forGroup() : null}
+      {hosts?.where === 'folder' ? forFolder() : null}
+    </Modal>
   )
 }
 

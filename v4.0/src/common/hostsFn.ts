@@ -71,7 +71,7 @@ export const getContentOfHosts = (list: HostsListObjectType[], hosts: HostsListO
   }
 
   if (where === 'group') {
-    return hosts.include.map(id => {
+    return (hosts.include || []).map(id => {
       let item = findItemById(list, id)
       if (!item) return ''
 
@@ -86,7 +86,7 @@ export const getHostsOutput = (list: HostsListObjectType[]): string => {
   const content = flatten(list).filter(item => item.on).map(item => getContentOfHosts(list, item))
     .join('\n\n')
 
-  // 去重
+  // todo 去重
 
   return content
 }
