@@ -15,6 +15,8 @@ const lang: LanguageDict = {
   choice_mode_default: '默认',
   choice_mode_multiple: '多选',
   choice_mode_single: '单选',
+  choices: '选项',
+  chosen: '已选',
   colon: '：',
   day: '天',
   days: '天',
