@@ -1,8 +1,10 @@
+export type HostsWhereType = 'local' | 'remote' | 'group' | 'folder';
+
 export type HostsListObjectType = {
   id: string;
   title: string;
   on: boolean;
-  where: 'local' | 'remote' | 'group' | 'folder';
+  where: HostsWhereType;
 
   // remote
   url: string;
