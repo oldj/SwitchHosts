@@ -42,6 +42,9 @@ export default async () => {
   let hosts = flatten(list)
 
   for (let h of hosts) {
+    if (h.refresh_interval) {
+      h.refresh_interval *= 3600000
+    }
     await swhdb.collection.hosts.insert(h)
     h.content = ''
   }

@@ -177,6 +177,12 @@ export default class List {
     return v
   }
 
+  @clone
+  async set(data: any[]) {
+    this._data = data
+    this.dump()
+  }
+
   async clear() {
     this._data = []
     this.dump()

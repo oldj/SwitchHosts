@@ -17,7 +17,8 @@
   "dependencies": {
     "electron-store": "^6.0.1",
     "lodash": "^4.17.20",
-    "mkdirp": "^1.0.4"
+    "mkdirp": "^1.0.4",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@ant-design/icons": "^4.5.0",
@@ -28,6 +29,7 @@
     "@babel/preset-typescript": "^7.12.7",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
+    "@types/uuid": "^8.3.0",
     "@umijs/preset-react": "1.x",
     "@umijs/test": "^3.3.3",
     "antd": "^4.12.3",

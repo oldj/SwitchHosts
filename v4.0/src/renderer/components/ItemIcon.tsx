@@ -8,7 +8,7 @@ import { BlockOutlined, FileTextOutlined, FolderOpenOutlined, FolderOutlined, Gl
 import React from 'react'
 
 interface Props {
-  where: string;
+  where?: string;
   folder_open?: boolean;
 }
 

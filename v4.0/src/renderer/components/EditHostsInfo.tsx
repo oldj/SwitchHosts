@@ -9,9 +9,10 @@ import { BorderOuterOutlined, CheckCircleOutlined, CheckSquareOutlined } from '@
 import ItemIcon from '@renderer/components/ItemIcon'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsListObjectType, HostsWhereType } from '@root/common/data'
+import * as hostsFn from '@root/common/hostsFn'
 import { Input, Modal, Radio, Select, Transfer } from 'antd'
 import React, { useState } from 'react'
-import * as hostsFn from '@root/common/hostsFn'
+import { v4 as uuidv4 } from 'uuid'
 import styles from './EditHostsInfo.less'
 
 interface Props {
@@ -22,7 +23,7 @@ const EditHostsInfo = (props: Props) => {
   const { i18n } = useModel('useI18n')
   const { lang } = i18n
   const [hosts, setHosts] = useState<HostsListObjectType | null>(props.hosts ? { ...props.hosts } : null)
-  const { hosts_data } = useModel('useHostsData')
+  const { hosts_data, setList } = useModel('useHostsData')
   const [is_show, setIsShow] = useState(false)
   const is_add = !props.hosts
 
@@ -32,7 +33,16 @@ const EditHostsInfo = (props: Props) => {
   }
 
   const onSave = async () => {
+    if (is_add) {
+      let h: HostsListObjectType = {
+        ...(hosts || {}),
+        id: uuidv4(),
+      }
+      let list: HostsListObjectType[] = [...hosts_data.list, h]
+      await setList(list)
+    }
 
+    setIsShow(false)
   }
 
   const onUpdate = async (kv: Partial<HostsListObjectType>) => {
