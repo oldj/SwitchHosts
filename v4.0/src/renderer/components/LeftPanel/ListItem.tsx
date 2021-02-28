@@ -5,7 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { RightOutlined } from '@ant-design/icons'
+import { FormOutlined, RightOutlined } from '@ant-design/icons'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { agent } from '@renderer/core/agent'
@@ -22,7 +22,7 @@ interface Props {
 
 const ListItem = (props: Props) => {
   const { data } = props
-  const { i18n } = useModel('useI18n')
+  const { lang } = useModel('useI18n')
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, setList } = useModel('useHostsData')
   const [folder_open, setFolderOpen] = useState(!!data.folder_open)
@@ -96,9 +96,17 @@ const ListItem = (props: Props) => {
             className={clsx(styles.icon, is_folder && styles.folder)}
             onClick={toggleFolderOpen}
           ><ItemIcon where={data.where} folder_open={data.folder_open}/></span>
-          {data.title || i18n.lang.untitled}
+          {data.title || lang.untitled}
         </div>
         <div className={styles.status}>
+          <div className={styles.edit}>
+            <FormOutlined
+              title={lang.edit}
+              onClick={() => {
+                agent.broadcast('edit_hosts_info', data)
+              }}
+            />
+          </div>
           <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)}/>
         </div>
       </div>

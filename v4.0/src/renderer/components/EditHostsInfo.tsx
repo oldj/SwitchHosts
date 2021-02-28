@@ -15,17 +15,13 @@ import React, { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import styles from './EditHostsInfo.less'
 
-interface Props {
-  hosts?: HostsListObjectType | null;
-}
-
-const EditHostsInfo = (props: Props) => {
+const EditHostsInfo = () => {
   const { i18n } = useModel('useI18n')
   const { lang } = i18n
-  const [hosts, setHosts] = useState<HostsListObjectType | null>(props.hosts ? { ...props.hosts } : null)
+  const [hosts, setHosts] = useState<HostsListObjectType | null>(null)
   const { hosts_data, setList } = useModel('useHostsData')
   const [is_show, setIsShow] = useState(false)
-  const is_add = !props.hosts
+  const [is_add, setIsAdd] = useState(true)
 
   const onCancel = async () => {
     setHosts(null)
@@ -34,12 +30,30 @@ const EditHostsInfo = (props: Props) => {
 
   const onSave = async () => {
     if (is_add) {
+      // add
       let h: HostsListObjectType = {
         ...(hosts || {}),
         id: uuidv4(),
       }
       let list: HostsListObjectType[] = [...hosts_data.list, h]
       await setList(list)
+
+    } else if (hosts) {
+      // edit
+      let h: HostsListObjectType | undefined = hostsFn.findItemById(hosts_data.list, hosts.id)
+      if (h) {
+        Object.assign(h, hosts)
+        await setList([...hosts_data.list])
+
+      } else {
+        // can not find by id
+        setIsAdd(true)
+        setTimeout(onSave, 300)
+      }
+
+    } else {
+      // unknow error
+      alert('unknow error!')
     }
 
     setIsShow(false)
@@ -52,6 +66,7 @@ const EditHostsInfo = (props: Props) => {
 
   useOnBroadcast('edit_hosts_info', (hosts?: HostsListObjectType) => {
     setHosts(hosts || null)
+    setIsAdd(!hosts)
     setIsShow(true)
   })
 
@@ -163,6 +178,7 @@ const EditHostsInfo = (props: Props) => {
         <div className={styles.label}>{lang.hosts_type}</div>
         <div>
           <Radio.Group
+            disabled={!is_add}
             value={hosts?.where || 'local'}
             onChange={e => onUpdate({ where: e.target.value })}
           >

@@ -20,6 +20,7 @@ const lang: LanguageDict = {
   colon: '：',
   day: '天',
   days: '天',
+  edit: '编辑',
   fail: '操作失败',
   folder: '文件夹',
   group: '组合',

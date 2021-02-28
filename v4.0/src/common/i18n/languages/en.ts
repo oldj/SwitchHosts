@@ -18,6 +18,7 @@ export default {
   colon: ': ',
   day: 'day',
   days: 'days',
+  edit: 'Edit',
   fail: 'Fail',
   folder: 'Folder',
   group: 'Group',
