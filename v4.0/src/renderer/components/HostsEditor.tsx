@@ -8,7 +8,6 @@ import { useModel } from '@@/plugin-model/useModel'
 import StatusBar from '@renderer/components/StatusBar'
 import { actions } from '@renderer/core/agent'
 import { HostsListObjectType } from '@root/common/data'
-import { getContentOfHosts, updateOneItem } from '@root/common/hostsFn'
 import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
 import styles from './HostsEditor.less'
@@ -40,7 +39,7 @@ const HostsEditor = (props: Props) => {
     toSave(hosts_id, content)
   }
 
-  let is_read_only = !hosts || (['group', 'remote', 'folder']).includes(hosts.where)
+  let is_read_only = !hosts || (hosts.where && (['group', 'remote', 'folder']).includes(hosts.where))
 
   return (
     <div className={styles.root}>
