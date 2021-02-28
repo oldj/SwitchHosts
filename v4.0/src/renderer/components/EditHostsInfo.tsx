@@ -20,6 +20,7 @@ import TextField from '@material-ui/core/TextField'
 import ToggleButton from '@material-ui/lab/ToggleButton'
 import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup'
 import ItemIcon from '@renderer/components/ItemIcon'
+import Transfer from '@renderer/components/Transfer'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { theme } from '@renderer/libs/theme'
 import { HostsListObjectType } from '@root/common/data'
@@ -173,6 +174,7 @@ const EditHostsInfo = (props: Props) => {
           </div>
 
           {hosts?.where === 'remote' ? forRemote() : null}
+          {hosts?.where === 'group' ? <Transfer/> : null}
         </DialogContent>
 
         <DialogActions>

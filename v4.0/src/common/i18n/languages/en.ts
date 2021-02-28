@@ -13,6 +13,8 @@ export default {
   choice_mode_default: 'Default',
   choice_mode_multiple: 'Multiple',
   choice_mode_single: 'Single',
+  choices: 'Choices',
+  chosen: 'Chosen',
   colon: ': ',
   day: 'day',
   days: 'days',
