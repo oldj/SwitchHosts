@@ -5,14 +5,14 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import TuneOutlinedIcon from '@material-ui/icons/TuneOutlined'
-import VerticalSplitOutlinedIcon from '@material-ui/icons/VerticalSplitOutlined'
+import { MenuOutlined, SettingOutlined } from '@ant-design/icons'
 import HostsEditor from '@renderer/components/HostsEditor'
 import HostsViewer from '@renderer/components/HostsViewer'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import { Divider } from 'antd'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import styles from './index.less'
@@ -27,7 +27,6 @@ const MainPanel = (props: Props) => {
   const { current_hosts } = useModel('useCurrentHosts')
   const [system_hosts, setSystemHosts] = useState('')
   const [is_on, setIsOn] = useState(!!current_hosts?.on)
-  const icon_size = 16
 
   useEffect(() => {
     if (!current_hosts) {
@@ -57,26 +56,25 @@ const MainPanel = (props: Props) => {
   return (
     <div className={styles.root}>
       <div className={clsx(styles.topbar, !has_left_panel && styles.without_left_panel)}>
-        <div className={clsx(styles.toggle_left_panel, styles.icon)}>
-          <VerticalSplitOutlinedIcon
-            style={{ fontSize: icon_size }}
+        <div className={clsx(styles.toggle_left_panel)}>
+          <MenuOutlined
             onClick={() => agent.broadcast('toggle_left_pannel')}
           />
         </div>
 
         <div className={styles.hosts_title}>
-          <span className={styles.sp}/>
+          <Divider type="vertical"/>
           {current_hosts ? (
             <>
-              <span className={clsx(styles.hosts_icon, styles.icon)}>
-                <ItemIcon where={current_hosts.where} size={icon_size}/>
+              <span className={clsx(styles.hosts_icon)}>
+                <ItemIcon where={current_hosts.where}/>
               </span>
               <span className={styles.hosts_title}>{current_hosts.title || i18n.lang.untitled}</span>
             </>
           ) : (
             <>
-              <span className={clsx(styles.hosts_icon, styles.icon)}>
-                <ItemIcon where="system" size={icon_size}/>
+              <span className={clsx(styles.hosts_icon)}>
+                <ItemIcon where="system"/>
               </span>
               <span className={styles.hosts_title}>{i18n.lang.system_hosts}</span>
             </>
@@ -91,8 +89,7 @@ const MainPanel = (props: Props) => {
           ) : null}
         </div>
         <div>
-          {/*<BiSliderAlt/>*/}
-          <TuneOutlinedIcon style={{ fontSize: icon_size }}/>
+          <SettingOutlined/>
         </div>
       </div>
 

@@ -29,7 +29,7 @@ const SystemHostsItem = (props: Props) => {
       className={clsx(styles.root, is_selected && styles.selected)}
       onClick={showSystemHosts}
     >
-      <span className={styles.icon}><ItemIcon where="system" size={16}/></span>
+      <span className={styles.icon}><ItemIcon where="system"/></span>
       <span>{i18n.lang.system_hosts}</span>
     </div>
   )
