@@ -16,5 +16,6 @@ export default function useI18n() {
     locale,
     setLocale,
     i18n,
+    lang: i18n.lang,
   }
 }
