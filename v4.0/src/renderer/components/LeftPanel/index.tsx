@@ -4,10 +4,10 @@
  * @homepage: https://oldj.net
  */
 
-import { agent } from '@renderer/core/agent'
+import { PlusOutlined } from '@ant-design/icons'
 import List from '@renderer/components/LeftPanel/List'
+import { agent } from '@renderer/core/agent'
 import React from 'react'
-import { BiPlus } from 'react-icons/bi'
 import styles from './index.less'
 
 interface Props {
@@ -22,7 +22,7 @@ const Index = (props: Props) => {
           {/*<span>SwitchHosts!</span>*/}
         </div>
         <div className={styles.right}>
-          <span><BiPlus onClick={() => agent.broadcast('add_new')}/></span>
+          <span><PlusOutlined onClick={() => agent.broadcast('add_new')}/></span>
         </div>
       </div>
 

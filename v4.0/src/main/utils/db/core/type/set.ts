@@ -64,6 +64,18 @@ export default class LatSet {
     return Array.from(this._data)
   }
 
+  async clear() {
+    this._data = new Set()
+    this.dump()
+  }
+
+  async set(data: any[]) {
+    let s = new Set<DataTypeSetItem>()
+    data.map(i => s.add(i))
+    this._data = s
+    this.dump()
+  }
+
   async remove() {
     this._data = new Set()
     await this._io.remove()

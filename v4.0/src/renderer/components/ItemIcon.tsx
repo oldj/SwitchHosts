@@ -4,11 +4,11 @@
  * @homepage: https://oldj.net
  */
 
+import { BlockOutlined, FileTextOutlined, FolderOpenOutlined, FolderOutlined, GlobalOutlined, HomeOutlined } from '@ant-design/icons'
 import React from 'react'
-import { BiFile, BiFolder, BiFolderOpen, BiGlobe, BiHome, BiOutline } from 'react-icons/bi'
 
 interface Props {
-  where: string;
+  where?: string;
   folder_open?: boolean;
 }
 
@@ -17,15 +17,17 @@ const ItemIcon = (props: Props) => {
 
   switch (where) {
     case 'folder':
-      return folder_open ? <BiFolderOpen/> : <BiFolder/>
+      return folder_open ?
+        <FolderOpenOutlined/> :
+        <FolderOutlined/>
     case 'remote':
-      return <BiGlobe/>
+      return <GlobalOutlined/>
     case 'group':
-      return <BiOutline/>
+      return <BlockOutlined/>
     case 'system':
-      return <BiHome/>
+      return <HomeOutlined/>
     default:
-      return <BiFile/>
+      return <FileTextOutlined/>
   }
 }
 

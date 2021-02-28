@@ -28,7 +28,7 @@ const getContentOfHosts = async (list: HostsListObjectType[], hosts: HostsListOb
   }
 
   if (where === 'group') {
-    let a = await Promise.all(hosts.include.map(async (id) => {
+    let a = await Promise.all((hosts.include || []).map(async (id) => {
       let item = findItemById(list, id)
       if (!item) return ''
 

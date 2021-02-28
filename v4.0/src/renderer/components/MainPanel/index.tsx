@@ -5,15 +5,16 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { actions, agent } from '@renderer/core/agent'
+import { MenuOutlined, SettingOutlined } from '@ant-design/icons'
 import HostsEditor from '@renderer/components/HostsEditor'
 import HostsViewer from '@renderer/components/HostsViewer'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
+import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import { Divider } from 'antd'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
-import { BiDockLeft, BiSliderAlt } from 'react-icons/bi'
 import styles from './index.less'
 
 interface Props {
@@ -55,22 +56,24 @@ const MainPanel = (props: Props) => {
   return (
     <div className={styles.root}>
       <div className={clsx(styles.topbar, !has_left_panel && styles.without_left_panel)}>
-        <div className={clsx(styles.toggle_left_panel, styles.icon)}>
-          <BiDockLeft onClick={() => agent.broadcast('toggle_left_pannel')}/>
+        <div className={clsx(styles.toggle_left_panel)}>
+          <MenuOutlined
+            onClick={() => agent.broadcast('toggle_left_pannel')}
+          />
         </div>
 
         <div className={styles.hosts_title}>
-          <span className={styles.sp}/>
+          <Divider type="vertical"/>
           {current_hosts ? (
             <>
-              <span className={clsx(styles.hosts_icon, styles.icon)}>
+              <span className={clsx(styles.hosts_icon)}>
                 <ItemIcon where={current_hosts.where}/>
               </span>
               <span className={styles.hosts_title}>{current_hosts.title || i18n.lang.untitled}</span>
             </>
           ) : (
             <>
-              <span className={clsx(styles.hosts_icon, styles.icon)}>
+              <span className={clsx(styles.hosts_icon)}>
                 <ItemIcon where="system"/>
               </span>
               <span className={styles.hosts_title}>{i18n.lang.system_hosts}</span>
@@ -86,7 +89,7 @@ const MainPanel = (props: Props) => {
           ) : null}
         </div>
         <div>
-          <BiSliderAlt/>
+          <SettingOutlined/>
         </div>
       </div>
 
