@@ -4,6 +4,7 @@
 }
 
 .item {
+  position: relative;
   line-height: var(--swh-tree-row-height);
   display: grid;
   grid-template-columns: 1fr 30px;
@@ -26,6 +27,12 @@
     background: var(--swh-selected-bg);
     display: none;
     cursor: pointer;
+    opacity: 0.5;
+    transition: 0.3s;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 }
 

@@ -5,7 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { BorderOuterOutlined, CheckCircleOutlined, CheckSquareOutlined } from '@ant-design/icons'
+import { BorderOuterOutlined, CheckCircleOutlined, CheckSquareOutlined, DeleteOutlined } from '@ant-design/icons'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -25,7 +25,7 @@ const EditHostsInfo = () => {
   const [is_add, setIsAdd] = useState(true)
   const [is_refreshing, setIsRefreshing] = useState(false)
 
-  const onCancel = async () => {
+  const onCancel = () => {
     setHosts(null)
     setIsShow(false)
   }
@@ -208,6 +208,22 @@ const EditHostsInfo = () => {
       cancelText={lang.btn_cancel}
       onCancel={onCancel}
       onOk={onSave}
+      footer={[
+        <Button
+          key="delete"
+          icon={<DeleteOutlined/>}
+          danger
+          style={{ float: 'left' }}
+          onClick={() => {
+            if (hosts && confirm(lang.hosts_delete_confirm)) {
+              agent.broadcast('delete_hosts', hosts.id)
+              onCancel()
+            }
+          }}
+        >{lang.hosts_delete}</Button>,
+        <Button key="cancel" onClick={onCancel}>{lang.btn_cancel}</Button>,
+        <Button key="ok" onClick={onSave} type="primary">{lang.btn_ok}</Button>,
+      ]}
     >
       <div className={styles.ln}>
         <div className={styles.label}>{lang.hosts_type}</div>
