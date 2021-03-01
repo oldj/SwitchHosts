@@ -9,7 +9,8 @@ import { actions, agent } from '@renderer/core/agent'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import SystemHostsItem from '@renderer/components/LeftPanel/SystemHostsItem'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { getHostsOutput, updateOneItem } from '@root/common/hostsFn'
+import { HostsListObjectType } from '@root/common/data'
+import { getHostsOutput, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
 import React from 'react'
 import styles from './List.less'
 
@@ -17,6 +18,7 @@ interface Props {
 }
 
 const List = (props: Props) => {
+  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, getHostsData, setList } = useModel('useHostsData')
   const { i18n } = useModel('useI18n')
 
@@ -49,6 +51,24 @@ const List = (props: Props) => {
   }
 
   useOnBroadcast('toggle_item', onToggleItem, [hosts_data])
+
+  useOnBroadcast('delete_hosts', async (id: string) => {
+    console.log(`delete_hosts: #${id}`)
+
+    let next_hosts: HostsListObjectType | undefined
+    console.log(current_hosts)
+    if (current_hosts && current_hosts.id === id) {
+      next_hosts = getNextSelectedItem(hosts_data.list, id)
+      console.log(next_hosts)
+    }
+
+    await actions.localListDeleteItem(id)
+    await getHostsData()
+
+    if (next_hosts) {
+      await setCurrentHosts(next_hosts)
+    }
+  }, [current_hosts, hosts_data])
 
   return (
     <div className={styles.root}>

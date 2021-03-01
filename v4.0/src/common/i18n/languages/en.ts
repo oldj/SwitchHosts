@@ -23,6 +23,8 @@ export default {
   folder: 'Folder',
   group: 'Group',
   hosts_add: 'Add new hosts',
+  hosts_delete: 'Delete this hosts',
+  hosts_delete_confirm: 'Are you sure you want to delete the current hosts?',
   hosts_edit: 'Edit hosts',
   hosts_title: 'Hosts title',
   hosts_type: 'Hosts type',

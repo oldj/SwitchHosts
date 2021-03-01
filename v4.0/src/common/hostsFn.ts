@@ -3,6 +3,7 @@
  * @homepage: https://oldj.net
  */
 
+import { del } from '@main/core/config'
 import { HostsDataType, HostsListObjectType } from '@root/common/data'
 import lodash from 'lodash'
 
@@ -89,4 +90,21 @@ export const getHostsOutput = (list: HostsListObjectType[]): string => {
   // todo 去重
 
   return content
+}
+
+export const deleteItemById = (list: HostsListObjectType[], id: string) => {
+  let idx = list.findIndex(item => item.id === id)
+  if (idx >= 0) {
+    list.splice(idx, 1)
+    return
+  }
+
+  list.map(item => deleteItemById(item.children || [], id))
+}
+
+export const getNextSelectedItem = (list: HostsListObjectType[], id: string): HostsListObjectType | undefined => {
+  let flat = flatten(list)
+  let idx = flat.findIndex(item => item.id === id)
+
+  return flat[idx + 1] || flat[idx - 1]
 }

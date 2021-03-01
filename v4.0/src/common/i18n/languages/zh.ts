@@ -25,6 +25,8 @@ const lang: LanguageDict = {
   folder: '文件夹',
   group: '组合',
   hosts_add: '添加 hosts',
+  hosts_delete: '删除当前方案',
+  hosts_delete_confirm: '确实要删除当前方案吗？',
   hosts_edit: '编辑 hosts',
   hosts_title: 'Hosts 标题',
   hosts_type: 'Hosts 类型',
