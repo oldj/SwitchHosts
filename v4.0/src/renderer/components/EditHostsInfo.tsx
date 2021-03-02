@@ -51,6 +51,7 @@ const EditHostsInfo = () => {
         // can not find by id
         setIsAdd(true)
         setTimeout(onSave, 300)
+        return
       }
 
     } else {
@@ -74,6 +75,7 @@ const EditHostsInfo = () => {
 
   useOnBroadcast('add_new', () => {
     setHosts(null)
+    setIsAdd(true)
     setIsShow(true)
   })
 
@@ -109,6 +111,7 @@ const EditHostsInfo = () => {
               <span>{lang.last_refresh}{hosts?.last_refresh || 'N/A'}</span>
               <Button
                 size="small"
+                type="link"
                 loading={is_refreshing}
                 disabled={is_refreshing}
                 onClick={() => {
@@ -200,6 +203,27 @@ const EditHostsInfo = () => {
 
   const wheres: HostsWhereType[] = ['local', 'remote', 'group', 'folder']
 
+  const footer_buttons: React.ReactElement[] = [
+    <Button key="cancel" onClick={onCancel}>{lang.btn_cancel}</Button>,
+    <Button key="ok" onClick={onSave} type="primary">{lang.btn_ok}</Button>,
+  ]
+  if (!is_add) {
+    footer_buttons.unshift(
+      <Button
+        key="delete"
+        icon={<DeleteOutlined/>}
+        danger
+        style={{ float: 'left' }}
+        onClick={() => {
+          if (hosts && confirm(lang.hosts_delete_confirm)) {
+            agent.broadcast('delete_hosts', hosts.id)
+            onCancel()
+          }
+        }}
+      >{lang.hosts_delete}</Button>,
+    )
+  }
+
   return (
     <Modal
       title={is_add ? lang.hosts_add : lang.hosts_edit}
@@ -208,22 +232,7 @@ const EditHostsInfo = () => {
       cancelText={lang.btn_cancel}
       onCancel={onCancel}
       onOk={onSave}
-      footer={[
-        <Button
-          key="delete"
-          icon={<DeleteOutlined/>}
-          danger
-          style={{ float: 'left' }}
-          onClick={() => {
-            if (hosts && confirm(lang.hosts_delete_confirm)) {
-              agent.broadcast('delete_hosts', hosts.id)
-              onCancel()
-            }
-          }}
-        >{lang.hosts_delete}</Button>,
-        <Button key="cancel" onClick={onCancel}>{lang.btn_cancel}</Button>,
-        <Button key="ok" onClick={onSave} type="primary">{lang.btn_ok}</Button>,
-      ]}
+      footer={footer_buttons}
     >
       <div className={styles.ln}>
         <div className={styles.label}>{lang.hosts_type}</div>
