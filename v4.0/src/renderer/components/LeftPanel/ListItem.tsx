@@ -9,6 +9,7 @@ import { FormOutlined, RightOutlined } from '@ant-design/icons'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { agent } from '@renderer/core/agent'
+import { PopupMenu } from '@renderer/core/PopupMenu'
 import { HostsListObjectType } from '@root/common/data'
 import { updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
@@ -79,12 +80,33 @@ const ListItem = (props: Props) => {
   // const children_count = flatten(data.children || []).length
   // const children_height = folder_open ? (item_height ? item_height * children_count : 0) : 0
 
+  const menu = new PopupMenu([
+    {
+      label: lang.edit,
+      click() {
+        agent.broadcast('edit_hosts_info', data)
+      },
+    },
+    {
+      type: 'separator',
+    },
+    {
+      label: lang.delete,
+      click() {
+        if (confirm(lang.hosts_delete_confirm)) {
+          agent.broadcast('delete_hosts', data.id)
+        }
+      },
+    },
+  ])
+
   return (
     <div className={styles.root}>
       <div
         ref={el_item}
         className={clsx(styles.item, is_selected && styles.selected, folder_open && styles.folder_open)}
         style={{ paddingLeft: `${1.3 * level}em` }}
+        onContextMenu={() => menu.show()}
       >
         <div className={styles.title} onClick={onSelect}>
           {is_folder ? (
