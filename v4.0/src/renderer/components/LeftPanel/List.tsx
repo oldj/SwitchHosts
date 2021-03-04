@@ -8,7 +8,6 @@ import { useModel } from '@@/plugin-model/useModel'
 import { RightOutlined } from '@ant-design/icons'
 import ItemIcon from '@renderer/components/ItemIcon'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
-import SystemHostsItem from '@renderer/components/LeftPanel/SystemHostsItem'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -29,7 +28,7 @@ const List = (props: Props) => {
 
   useEffect(() => {
     setShowList([{
-      id: '',
+      id: '0',
       title: lang.system_hosts,
       is_sys: true,
     }, ...hosts_data.list])
@@ -97,10 +96,11 @@ const List = (props: Props) => {
         )}
         collapseArrow={<RightOutlined/>}
         nodeAttr={(item) => {
-          console.log(item)
           return {
             can_drag: !item.is_sys,
+            can_drop_before: !item.is_sys,
             can_drop_in: item.where === 'folder',
+            can_drop_after: !item.is_sys,
           }
         }}
         draggingNodeRender={(data) => {
@@ -118,9 +118,10 @@ const List = (props: Props) => {
           )
         }}
         nodeClassName={styles.node}
+        nodeDropInClassName={styles.node_drop_in}
         nodeSelectedClassName={styles.node_selected}
         nodeCollapseArrowClassName={styles.arrow}
-        selected_id={current_hosts?.id}
+        selected_id={current_hosts?.id || '0'}
       />
     </div>
   )

@@ -30,6 +30,7 @@ interface INodeProps {
   tree: ITreeNodeData[];
   data: ITreeNodeData;
   nodeClassName?: string;
+  nodeDropInClassName?: string;
   nodeSelectedClassName?: string;
   nodeCollapseArrowClassName?: string;
   drag_source_id?: NodeIdType | null;
@@ -49,6 +50,7 @@ interface INodeProps {
   onChange: (id: NodeIdType, data: Partial<ITreeNodeData>) => void;
   indent_px?: number;
   nodeAttr?: (node: ITreeNodeData) => Partial<ITreeNodeData>;
+  has_no_children: boolean;
 }
 
 const Node = (props: INodeProps) => {
@@ -69,7 +71,6 @@ const Node = (props: INodeProps) => {
     onChange,
     nodeAttr,
     nodeClassName,
-    nodeSelectedClassName,
     nodeCollapseArrowClassName,
   } = props
 
@@ -129,16 +130,25 @@ const Node = (props: INodeProps) => {
     let ne = e.nativeEvent
     let h = el_target.offsetHeight
     let y = ne.offsetY
-    let where: DropWhereType
+    let where: DropWhereType | null = null
     let h_4 = h >> 2
     if (y <= h_4) {
-      if (attr.can_drop_before === false) return
+      if (attr.can_drop_before === false) {
+        setDropWhere(null)
+        return
+      }
       where = 'before'
     } else if (y >= h - h_4) {
-      if (attr.can_drop_after === false) return
+      if (attr.can_drop_after === false) {
+        setDropWhere(null)
+        return
+      }
       where = 'after'
     } else {
-      if (attr.can_drop_in === false) return
+      if (attr.can_drop_in === false) {
+        setDropWhere(null)
+        return
+      }
       where = 'in'
     }
     setDropWhere(where)
@@ -174,8 +184,10 @@ const Node = (props: INodeProps) => {
           styles.node,
           is_dragging && styles.is_dragging,
           (is_drag_source || is_parent_is_drag_source) && styles.is_source,
-          is_drop_target && styles[`drop_${drag_target_where}`],
-          is_selected && (nodeSelectedClassName || styles.selected),
+          is_drop_target && drag_target_where === 'before' && styles.drop_before,
+          is_drop_target && drag_target_where === 'in' && (props.nodeDropInClassName || styles.drop_in),
+          is_drop_target && drag_target_where === 'after' && styles.drop_after,
+          is_selected && (props.nodeSelectedClassName || styles.selected),
           nodeClassName,
         )}
         data-id={data.id}
@@ -191,8 +203,11 @@ const Node = (props: INodeProps) => {
           paddingLeft: level * (indent_px || 20),
         }}
       >
-        <div className={styles.content}>
-          <div className={styles.ln_header}>{
+        <div className={clsx(
+          styles.content,
+          props.has_no_children && styles.no_children,
+        )}>
+          <div className={styles.ln_header} data-role="tree-node-header">{
             has_children ?
               <div
                 className={clsx(
@@ -209,7 +224,7 @@ const Node = (props: INodeProps) => {
               </div> :
               null
           }</div>
-          <div className={styles.ln_body}>
+          <div className={styles.ln_body} data-role="tree-node-body">
             {
               render ? render(data, onUpdate) : (data.title || `node#${data.id}`)
             }

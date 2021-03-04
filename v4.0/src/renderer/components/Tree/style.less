@@ -1,5 +1,5 @@
 .root {
-  @drop-color: #09f;
+  @drop-color: var(--tree-drag-primary-color);
 
   .node {
     &.is_dragging {
@@ -47,6 +47,7 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
+    z-index: 1000;
   }
 
   .drop_before {
@@ -81,6 +82,10 @@
     margin: 2px 0;
     display: grid;
     grid-template-columns: 20px 1fr;
+
+    &.no_children {
+      grid-template-columns: 0 1fr;
+    }
   }
 }
 
