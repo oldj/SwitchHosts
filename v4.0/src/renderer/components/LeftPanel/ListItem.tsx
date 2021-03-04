@@ -13,7 +13,8 @@ import { PopupMenu } from '@renderer/core/PopupMenu'
 import { HostsListObjectType } from '@root/common/data'
 import { updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.less'
 
 interface Props {
@@ -25,31 +26,38 @@ const ListItem = (props: Props) => {
   const { lang } = useModel('useI18n')
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, setList } = useModel('useHostsData')
-  const [folder_open, setFolderOpen] = useState(!!data.folder_open)
+  const [is_collapsed, setIsCollapsed] = useState(!!data.is_collapsed)
   const [is_on, setIsOn] = useState(data.on)
+  const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
 
   useEffect(() => {
     setIsOn(data.on)
   }, [data])
 
-  // useEffect(() => {
-  //   if (folder_open) {
-  //     getElItemHeight()
-  //   }
-  // }, [folder_open])
+  useEffect(() => {
+    const is_selected = data.id === current_hosts?.id
+
+    if (is_selected && el.current) {
+      // el.current.scrollIntoViewIfNeeded()
+      scrollIntoView(el.current, {
+        behavior: 'smooth',
+        scrollMode: 'if-needed',
+      })
+    }
+
+  }, [data, current_hosts, el])
 
   const onSelect = () => {
     setCurrentHosts(data.is_sys ? null : data)
   }
 
-  const toggleFolderOpen = () => {
+  const toggleIsCollapsed = () => {
     if (!is_folder) return
 
-    const is_open = !folder_open
-    setFolderOpen(is_open)
-
-    setList(updateOneItem(hosts_data.list, { id: data.id, folder_open: is_open }))
+    let _is_collapsed = !is_collapsed
+    setIsCollapsed(_is_collapsed)
+    setList(updateOneItem(hosts_data.list, { id: data.id, is_collapsed: _is_collapsed }))
       .catch(e => console.error(e))
   }
 
@@ -91,16 +99,17 @@ const ListItem = (props: Props) => {
         styles.root,
         is_selected && styles.selected,
       )}
-      // className={clsx(styles.item, is_selected && styles.selected, folder_open && styles.folder_open)}
+      // className={clsx(styles.item, is_selected && styles.selected, is_collapsed && styles.is_collapsed)}
       // style={{ paddingLeft: `${1.3 * level}em` }}
       onContextMenu={() => !data.is_sys && menu.show()}
+      ref={el}
     >
       <div className={styles.title} onClick={onSelect}>
         <span
           className={clsx(styles.icon, is_folder && styles.folder)}
-          onClick={toggleFolderOpen}
+          onClick={toggleIsCollapsed}
         >
-          <ItemIcon where={data.is_sys ? 'system' : data.where} folder_open={data.folder_open}/>
+          <ItemIcon where={data.is_sys ? 'system' : data.where} is_collapsed={data.is_collapsed}/>
         </span>
         {data.title || lang.untitled}
       </div>

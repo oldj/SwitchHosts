@@ -37,12 +37,16 @@ const Tree = (props: ITreeProps) => {
   const [is_dragging, setIsDragging] = useState(false)
   const [drag_source_id, setDragSourceId] = useState<NodeIdType | null>(null)
   const [drop_target_id, setDropTargetId] = useState<NodeIdType | null>(null)
-  const [selected_id, setSelectedId] = useState<NodeIdType | null>(props.selected_id || null)
+  const [selected_id, setSelectedId] = useState<NodeIdType | null>(null)
   const [drop_where, setDropWhere] = useState<DropWhereType | null>(null)
 
   useEffect(() => {
     setTree(lodash.cloneDeep(data))
   }, [data])
+
+  useEffect(() => {
+    setSelectedId(props.selected_id || null)
+  }, [props.selected_id])
 
   const onDragStart = (id: NodeIdType) => {
     // console.log('onDragStart...')

@@ -12,7 +12,7 @@ import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsListObjectType } from '@root/common/data'
-import { getHostsOutput, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
+import { findItemById, getHostsOutput, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import styles from './List.less'
@@ -68,10 +68,10 @@ const List = (props: Props) => {
     console.log(`delete_hosts: #${id}`)
 
     let next_hosts: HostsListObjectType | undefined
-    console.log(current_hosts)
+    // console.log(current_hosts)
     if (current_hosts && current_hosts.id === id) {
       next_hosts = getNextSelectedItem(hosts_data.list, id)
-      console.log(next_hosts)
+      // console.log(next_hosts)
     }
 
     await actions.localListDeleteItem(id)
@@ -82,14 +82,32 @@ const List = (props: Props) => {
     }
   }, [current_hosts, hosts_data])
 
+  useOnBroadcast('select_hosts', async (id: string, wait_ms: number = 0) => {
+    let hosts = findItemById(hosts_data.list, id)
+    if (!hosts) {
+      if (wait_ms > 0) {
+        setTimeout(() => {
+          agent.broadcast('select_hosts', id, wait_ms - 50)
+        }, 50)
+      }
+      return
+    }
+
+    setCurrentHosts(hosts)
+  }, [hosts_data])
+
   return (
     <div className={styles.root}>
       {/*<SystemHostsItem/>*/}
       <Tree
         data={show_list}
+        selected_id={current_hosts?.id || '0'}
         onChange={list => {
           setShowList(list)
           setList(list).catch(e => console.error(e))
+        }}
+        onSelect={(id) => {
+          agent.broadcast('select_hosts', id)
         }}
         nodeRender={(data) => (
           <ListItem key={data.id} data={data}/>
@@ -109,7 +127,7 @@ const List = (props: Props) => {
               <span
                 className={clsx(styles.icon, data.where === 'folder' && styles.folder)}
               >
-                <ItemIcon where={data.is_sys ? 'system' : data.where} folder_open={data.folder_open}/>
+                <ItemIcon where={data.is_sys ? 'system' : data.where} is_collapsed={data.is_collapsed}/>
               </span>
               <span>
                 {data.title || lang.untitled}
@@ -121,7 +139,6 @@ const List = (props: Props) => {
         nodeDropInClassName={styles.node_drop_in}
         nodeSelectedClassName={styles.node_selected}
         nodeCollapseArrowClassName={styles.arrow}
-        selected_id={current_hosts?.id || '0'}
       />
     </div>
   )

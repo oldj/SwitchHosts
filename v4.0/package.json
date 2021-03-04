@@ -46,6 +46,7 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-icons": "^4.1.0",
+    "smooth-scroll-into-view-if-needed": "^1.1.30",
     "ts-node": "^9.1.1",
     "tsconfig-paths-webpack-plugin": "^3.3.0",
     "typescript": "^4.1.3",
