@@ -1,0 +1,97 @@
+.root {
+  @drop-color: var(--tree-drag-primary-color);
+
+  .node {
+    &.is_dragging {
+    }
+
+    &.is_source {
+      opacity: 0.5;
+    }
+
+    &.selected {
+      background: @drop-color;
+      color: #fff;
+    }
+  }
+
+  .ln_header {
+    display: grid;
+    justify-items: center;
+    align-items: center;
+  }
+
+  .arrow {
+    min-width: 20px;
+    min-height: 20px;
+    overflow: hidden;
+    text-align: center;
+    line-height: 20px;
+    cursor: pointer;
+    transform: rotate(90deg);
+
+    &.collapsed {
+      transform: rotate(0);
+    }
+  }
+
+  .ln_body {
+    padding-left: 4px;
+  }
+
+  .indicator_circle {
+    content: "";
+    display: block;
+    position: absolute;
+    border: 2px solid @drop-color;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    z-index: 1000;
+  }
+
+  .drop_before {
+    .ln_body {
+      box-shadow: 0 -2px 0 0 @drop-color;
+
+      &:before {
+        .indicator_circle;
+        margin: -4px 0 0 -4px;
+      }
+    }
+  }
+
+  .drop_in {
+    .ln_body {
+      background: @drop-color;
+    }
+  }
+
+  .drop_after {
+    .ln_body {
+      box-shadow: 0 2px 0 0 @drop-color;
+
+      &:after {
+        .indicator_circle;
+        margin: -2px 0 0 -4px;
+      }
+    }
+  }
+
+  .content {
+    margin: 2px 0;
+    display: grid;
+    grid-template-columns: 20px 1fr;
+
+    &.no_children {
+      grid-template-columns: 0 1fr;
+    }
+  }
+}
+
+.for_dragging {
+  display: none;
+  position: absolute;
+  top: -100000px;
+  left: -100000px
+}
