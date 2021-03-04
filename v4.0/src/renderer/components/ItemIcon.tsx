@@ -9,17 +9,17 @@ import React from 'react'
 
 interface Props {
   where?: string;
-  folder_open?: boolean;
+  is_collapsed?: boolean;
 }
 
 const ItemIcon = (props: Props) => {
-  const { where, folder_open } = props
+  const { where, is_collapsed } = props
 
   switch (where) {
     case 'folder':
-      return folder_open ?
-        <FolderOpenOutlined/> :
-        <FolderOutlined/>
+      return is_collapsed ?
+        <FolderOutlined/> :
+        <FolderOpenOutlined/>
     case 'remote':
       return <GlobalOutlined/>
     case 'group':

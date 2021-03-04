@@ -39,6 +39,7 @@ const EditHostsInfo = () => {
       }
       let list: HostsListObjectType[] = [...hosts_data.list, h]
       await setList(list)
+      agent.broadcast('select_hosts', h.id, 1000)
 
     } else if (hosts) {
       // edit
