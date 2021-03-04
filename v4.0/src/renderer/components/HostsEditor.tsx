@@ -19,7 +19,7 @@ interface Props {
 
 const HostsEditor = (props: Props) => {
   const { hosts } = props
-  const { hosts_data, setList } = useModel('useHostsData')
+  const { hosts_data } = useModel('useHostsData')
   const [hosts_id, setHostsId] = useState(hosts.id)
   const [content, setContent] = useState(hosts.content || '')
 
@@ -46,7 +46,7 @@ const HostsEditor = (props: Props) => {
     if (id !== hosts.id) return
     actions.localContentGet(hosts_data.list, hosts)
       .then(setContent)
-  })
+  }, [hosts, hosts_data])
 
   return (
     <div className={styles.root}>
