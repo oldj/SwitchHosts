@@ -13,7 +13,8 @@ import { PopupMenu } from '@renderer/core/PopupMenu'
 import { HostsListObjectType } from '@root/common/data'
 import { updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.less'
 
 interface Props {
@@ -27,17 +28,25 @@ const ListItem = (props: Props) => {
   const { hosts_data, setList } = useModel('useHostsData')
   const [is_collapsed, setIsCollapsed] = useState(!!data.is_collapsed)
   const [is_on, setIsOn] = useState(data.on)
+  const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
 
   useEffect(() => {
     setIsOn(data.on)
   }, [data])
 
-  // useEffect(() => {
-  //   if (is_collapsed) {
-  //     getElItemHeight()
-  //   }
-  // }, [is_collapsed])
+  useEffect(() => {
+    const is_selected = data.id === current_hosts?.id
+
+    if (is_selected && el.current) {
+      // el.current.scrollIntoViewIfNeeded()
+      scrollIntoView(el.current, {
+        behavior: 'smooth',
+        scrollMode: 'if-needed',
+      })
+    }
+
+  }, [data, current_hosts, el])
 
   const onSelect = () => {
     setCurrentHosts(data.is_sys ? null : data)
@@ -93,6 +102,7 @@ const ListItem = (props: Props) => {
       // className={clsx(styles.item, is_selected && styles.selected, is_collapsed && styles.is_collapsed)}
       // style={{ paddingLeft: `${1.3 * level}em` }}
       onContextMenu={() => !data.is_sys && menu.show()}
+      ref={el}
     >
       <div className={styles.title} onClick={onSelect}>
         <span
