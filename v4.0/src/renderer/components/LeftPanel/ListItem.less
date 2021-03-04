@@ -1,22 +1,12 @@
 @import "../../styles/common";
 
 .root {
-}
-
-.item {
-  position: relative;
-  line-height: var(--swh-tree-row-height);
   display: grid;
   grid-template-columns: 1fr 30px;
-  border-radius: 4px;
 
-  &.selected {
-    background: var(--swh-selected-bg);
-
-    &:hover {
-      .edit {
-        display: block;
-      }
+  &.selected:hover {
+    .edit {
+      display: block;
     }
   }
 
@@ -24,7 +14,7 @@
     position: absolute;
     z-index: 10;
     margin-left: -24px;
-    background: var(--swh-selected-bg);
+    //background: var(--swh-selected-bg);
     display: none;
     cursor: pointer;
     opacity: 0.5;
@@ -38,7 +28,7 @@
 
 .title {
   position: relative;
-  padding-left: 10px;
+  //padding-left: 10px;
   height: var(--swh-tree-row-height);
   overflow: hidden;
   cursor: default;
@@ -78,7 +68,7 @@
 
 .status {
   text-align: right;
-  margin: auto 10px auto auto;
+  margin: auto 6px auto auto;
 }
 
 .children {

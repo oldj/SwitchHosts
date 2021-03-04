@@ -19,6 +19,8 @@ export type HostsListObjectType = {
   folder_open?: boolean;
   children?: HostsListObjectType[];
 
+  is_sys?: boolean;
+
   [key: string]: any;
 }
 

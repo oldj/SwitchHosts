@@ -3,3 +3,41 @@
 .root {
 
 }
+
+.node {
+  position: relative;
+  line-height: var(--swh-tree-row-height);
+  border-radius: 4px;
+}
+
+.node_selected {
+  background: var(--swh-selected-bg);
+
+  &:hover {
+    .edit {
+      display: block;
+    }
+  }
+}
+
+.node_drop_in {
+  div[data-role="tree-node-body"] {
+    background: var(--swh-primary-color);
+    color: var(--swh-font-color-reverse);
+    border-radius: var(--swh-border-radius);
+  }
+}
+
+.arrow {
+  font-size: 10px;
+}
+
+.for_drag {
+  border: 1px solid var(--swh-border-color-1);
+  background: var(--swh-tree-node-drag-bg);
+  padding: 4px 8px;
+
+  span.icon {
+    margin-right: 8px;
+  }
+}

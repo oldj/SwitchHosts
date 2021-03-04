@@ -5,13 +5,16 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { actions, agent } from '@renderer/core/agent'
+import { RightOutlined } from '@ant-design/icons'
+import ItemIcon from '@renderer/components/ItemIcon'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
-import SystemHostsItem from '@renderer/components/LeftPanel/SystemHostsItem'
+import { Tree } from '@renderer/components/Tree'
+import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsListObjectType } from '@root/common/data'
 import { getHostsOutput, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
-import React from 'react'
+import clsx from 'clsx'
+import React, { useEffect, useState } from 'react'
 import styles from './List.less'
 
 interface Props {
@@ -20,7 +23,16 @@ interface Props {
 const List = (props: Props) => {
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, getHostsData, setList } = useModel('useHostsData')
-  const { i18n } = useModel('useI18n')
+  const { i18n, lang } = useModel('useI18n')
+  const [show_list, setShowList] = useState<HostsListObjectType[]>([])
+
+  useEffect(() => {
+    setShowList([{
+      id: '0',
+      title: lang.system_hosts,
+      is_sys: true,
+    }, ...hosts_data.list])
+  }, [hosts_data])
 
   const onToggleItem = async (id: string, on: boolean) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
@@ -72,10 +84,45 @@ const List = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      <SystemHostsItem/>
-      {hosts_data.list?.map(item => (
-        <ListItem data={item} key={item.id}/>
-      ))}
+      {/*<SystemHostsItem/>*/}
+      <Tree
+        data={show_list}
+        onChange={list => {
+          setShowList(list)
+          setList(list).catch(e => console.error(e))
+        }}
+        nodeRender={(data) => (
+          <ListItem key={data.id} data={data}/>
+        )}
+        collapseArrow={<RightOutlined/>}
+        nodeAttr={(item) => {
+          return {
+            can_drag: !item.is_sys,
+            can_drop_before: !item.is_sys,
+            can_drop_in: item.where === 'folder',
+            can_drop_after: !item.is_sys,
+          }
+        }}
+        draggingNodeRender={(data) => {
+          return (
+            <div className={clsx(styles.for_drag)}>
+              <span
+                className={clsx(styles.icon, data.where === 'folder' && styles.folder)}
+              >
+                <ItemIcon where={data.is_sys ? 'system' : data.where} folder_open={data.folder_open}/>
+              </span>
+              <span>
+                {data.title || lang.untitled}
+              </span>
+            </div>
+          )
+        }}
+        nodeClassName={styles.node}
+        nodeDropInClassName={styles.node_drop_in}
+        nodeSelectedClassName={styles.node_selected}
+        nodeCollapseArrowClassName={styles.arrow}
+        selected_id={current_hosts?.id || '0'}
+      />
     </div>
   )
 }
