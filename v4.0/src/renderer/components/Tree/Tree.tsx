@@ -6,7 +6,7 @@
 
 import clsx from 'clsx'
 import lodash from 'lodash'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { getNodeById, treeMoveNode } from './fn'
 import Node, { ITreeNodeData, NodeUpdate } from './Node'
 import styles from './style.less'
@@ -31,13 +31,17 @@ interface ITreeProps {
 }
 
 const Tree = (props: ITreeProps) => {
-  const { className, onChange } = props
-  const [tree, setTree] = useState<ITreeNodeData[]>(lodash.cloneDeep(props.data))
+  const { data, className, onChange } = props
+  const [tree, setTree] = useState<ITreeNodeData[]>([])
   const [is_dragging, setIsDragging] = useState(false)
   const [drag_source_id, setDragSourceId] = useState<NodeIdType | null>(null)
   const [drop_target_id, setDropTargetId] = useState<NodeIdType | null>(null)
   const [selected_id, setSelectedId] = useState<NodeIdType | null>(props.selected_id || null)
   const [drop_where, setDropWhere] = useState<DropWhereType | null>(null)
+
+  useEffect(() => {
+    setTree(lodash.cloneDeep(data))
+  }, [data])
 
   const onDragStart = (id: NodeIdType) => {
     // console.log('onDragStart...')

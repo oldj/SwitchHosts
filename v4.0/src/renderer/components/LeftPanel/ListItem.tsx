@@ -5,7 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { FormOutlined, RightOutlined } from '@ant-design/icons'
+import { FormOutlined } from '@ant-design/icons'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { agent } from '@renderer/core/agent'
@@ -13,18 +13,17 @@ import { PopupMenu } from '@renderer/core/PopupMenu'
 import { HostsListObjectType } from '@root/common/data'
 import { updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import styles from './ListItem.less'
 
 interface Props {
   data: HostsListObjectType;
-  level?: number;
 }
 
 const ListItem = (props: Props) => {
   const { data } = props
   const { lang } = useModel('useI18n')
-  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
+  const { setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, setList } = useModel('useHostsData')
   const [folder_open, setFolderOpen] = useState(!!data.folder_open)
   const [is_on, setIsOn] = useState(data.on)
@@ -63,11 +62,7 @@ const ListItem = (props: Props) => {
 
   if (!data) return null
 
-  let level = props.level || 0
-  const is_selected = current_hosts?.id === data.id
   const is_folder = data.where === 'folder'
-  // const children_count = flatten(data.children || []).length
-  // const children_height = folder_open ? (item_height ? item_height * children_count : 0) : 0
 
   const menu = new PopupMenu([
     {
@@ -100,19 +95,25 @@ const ListItem = (props: Props) => {
         <span
           className={clsx(styles.icon, is_folder && styles.folder)}
           onClick={toggleFolderOpen}
-        ><ItemIcon where={data.where} folder_open={data.folder_open}/></span>
+        >
+          <ItemIcon where={data.is_sys ? 'system' : data.where} folder_open={data.folder_open}/>
+        </span>
         {data.title || lang.untitled}
       </div>
       <div className={styles.status}>
-        <div className={styles.edit}>
-          <FormOutlined
-            title={lang.edit}
-            onClick={() => {
-              agent.broadcast('edit_hosts_info', data)
-            }}
-          />
-        </div>
-        <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)}/>
+        {data.is_sys ? null : (
+          <>
+            <div className={styles.edit}>
+              <FormOutlined
+                title={lang.edit}
+                onClick={() => {
+                  agent.broadcast('edit_hosts_info', data)
+                }}
+              />
+            </div>
+            <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)}/>
+          </>
+        )}
       </div>
     </div>
   )

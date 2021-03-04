@@ -6,6 +6,7 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import { RightOutlined } from '@ant-design/icons'
+import ItemIcon from '@renderer/components/ItemIcon'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import SystemHostsItem from '@renderer/components/LeftPanel/SystemHostsItem'
 import { Tree } from '@renderer/components/Tree'
@@ -13,7 +14,8 @@ import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsListObjectType } from '@root/common/data'
 import { getHostsOutput, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
-import React, { useState } from 'react'
+import clsx from 'clsx'
+import React, { useEffect, useState } from 'react'
 import styles from './List.less'
 
 interface Props {
@@ -22,8 +24,16 @@ interface Props {
 const List = (props: Props) => {
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, getHostsData, setList } = useModel('useHostsData')
-  const { i18n } = useModel('useI18n')
-  const [show_list, setShowList] = useState(hosts_data.list)
+  const { i18n, lang } = useModel('useI18n')
+  const [show_list, setShowList] = useState<HostsListObjectType[]>([])
+
+  useEffect(() => {
+    setShowList([{
+      id: '',
+      title: lang.system_hosts,
+      is_sys: true,
+    }, ...hosts_data.list])
+  }, [hosts_data])
 
   const onToggleItem = async (id: string, on: boolean) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
@@ -75,7 +85,7 @@ const List = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      <SystemHostsItem/>
+      {/*<SystemHostsItem/>*/}
       <Tree
         data={show_list}
         onChange={list => {
@@ -87,18 +97,23 @@ const List = (props: Props) => {
         )}
         collapseArrow={<RightOutlined/>}
         nodeAttr={(item) => {
+          console.log(item)
           return {
+            can_drag: !item.is_sys,
             can_drop_in: item.where === 'folder',
           }
         }}
         draggingNodeRender={(data) => {
           return (
-            <div style={{
-              border: '1px solid #999',
-              background: '#fff',
-              padding: '4px 8px',
-            }}>
-              111:{data.title || `#${data.id}`}
+            <div className={clsx(styles.for_drag)}>
+              <span
+                className={clsx(styles.icon, data.where === 'folder' && styles.folder)}
+              >
+                <ItemIcon where={data.is_sys ? 'system' : data.where} folder_open={data.folder_open}/>
+              </span>
+              <span>
+                {data.title || lang.untitled}
+              </span>
             </div>
           )
         }}

@@ -20,6 +20,8 @@ export default function useHostsData() {
   }
 
   const setList = async (list: HostsListObjectType[]) => {
+    list = list.filter(i => !i.is_sys)
+
     let data: HostsDataType = {
       list,
       version,
