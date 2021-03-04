@@ -7,7 +7,7 @@
 import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
-import { getNodeById, treeMoveNode } from './fn'
+import { flatten, getNodeById, treeMoveNode } from './fn'
 import Node, { ITreeNodeData, NodeUpdate } from './Node'
 import styles from './style.less'
 
@@ -19,6 +19,7 @@ interface ITreeProps {
   className?: string;
   nodeClassName?: string;
   nodeSelectedClassName?: string;
+  nodeDropInClassName?: string;
   nodeCollapseArrowClassName?: string;
   nodeRender?: (node: ITreeNodeData, update: NodeUpdate) => React.ReactElement;
   nodeAttr?: (node: ITreeNodeData) => Partial<ITreeNodeData>;
@@ -86,6 +87,8 @@ const Tree = (props: ITreeProps) => {
     props.onSelect && props.onSelect(id)
   }
 
+  const has_no_children = flatten(tree).length === tree.length
+
   return (
     <div className={clsx(styles.root, className)} onDrop={onDragEnd}>
       {tree.map((node) => (
@@ -111,8 +114,10 @@ const Tree = (props: ITreeProps) => {
           onSelect={onSelect}
           nodeAttr={props.nodeAttr}
           nodeClassName={props.nodeClassName}
+          nodeDropInClassName={props.nodeDropInClassName}
           nodeSelectedClassName={props.nodeSelectedClassName}
           nodeCollapseArrowClassName={props.nodeCollapseArrowClassName}
+          has_no_children={has_no_children}
         />
       ))}
     </div>

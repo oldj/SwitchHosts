@@ -23,7 +23,7 @@ interface Props {
 const ListItem = (props: Props) => {
   const { data } = props
   const { lang } = useModel('useI18n')
-  const { setCurrentHosts } = useModel('useCurrentHosts')
+  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, setList } = useModel('useHostsData')
   const [folder_open, setFolderOpen] = useState(!!data.folder_open)
   const [is_on, setIsOn] = useState(data.on)
@@ -40,7 +40,7 @@ const ListItem = (props: Props) => {
   // }, [folder_open])
 
   const onSelect = () => {
-    setCurrentHosts(data)
+    setCurrentHosts(data.is_sys ? null : data)
   }
 
   const toggleFolderOpen = () => {
@@ -63,6 +63,7 @@ const ListItem = (props: Props) => {
   if (!data) return null
 
   const is_folder = data.where === 'folder'
+  const is_selected = data.id === current_hosts?.id
 
   const menu = new PopupMenu([
     {
@@ -86,10 +87,13 @@ const ListItem = (props: Props) => {
 
   return (
     <div
-      className={styles.root}
+      className={clsx(
+        styles.root,
+        is_selected && styles.selected,
+      )}
       // className={clsx(styles.item, is_selected && styles.selected, folder_open && styles.folder_open)}
       // style={{ paddingLeft: `${1.3 * level}em` }}
-      onContextMenu={() => menu.show()}
+      onContextMenu={() => !data.is_sys && menu.show()}
     >
       <div className={styles.title} onClick={onSelect}>
         <span
