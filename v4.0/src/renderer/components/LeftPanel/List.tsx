@@ -5,13 +5,15 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { actions, agent } from '@renderer/core/agent'
+import { RightOutlined } from '@ant-design/icons'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import SystemHostsItem from '@renderer/components/LeftPanel/SystemHostsItem'
+import { Tree } from '@renderer/components/Tree'
+import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsListObjectType } from '@root/common/data'
 import { getHostsOutput, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
-import React from 'react'
+import React, { useState } from 'react'
 import styles from './List.less'
 
 interface Props {
@@ -21,6 +23,7 @@ const List = (props: Props) => {
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, getHostsData, setList } = useModel('useHostsData')
   const { i18n } = useModel('useI18n')
+  const [show_list, setShowList] = useState(hosts_data.list)
 
   const onToggleItem = async (id: string, on: boolean) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
@@ -73,9 +76,37 @@ const List = (props: Props) => {
   return (
     <div className={styles.root}>
       <SystemHostsItem/>
-      {hosts_data.list?.map(item => (
-        <ListItem data={item} key={item.id}/>
-      ))}
+      <Tree
+        data={show_list}
+        onChange={list => {
+          setShowList(list)
+          setList(list).catch(e => console.error(e))
+        }}
+        nodeRender={(data) => (
+          <ListItem key={data.id} data={data}/>
+        )}
+        collapseArrow={<RightOutlined/>}
+        nodeAttr={(item) => {
+          return {
+            can_drop_in: item.where === 'folder',
+          }
+        }}
+        draggingNodeRender={(data) => {
+          return (
+            <div style={{
+              border: '1px solid #999',
+              background: '#fff',
+              padding: '4px 8px',
+            }}>
+              111:{data.title || `#${data.id}`}
+            </div>
+          )
+        }}
+        nodeClassName={styles.node}
+        nodeSelectedClassName={styles.node_selected}
+        nodeCollapseArrowClassName={styles.arrow}
+        selected_id={current_hosts?.id}
+      />
     </div>
   )
 }
