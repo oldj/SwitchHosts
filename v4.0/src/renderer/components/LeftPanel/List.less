@@ -3,3 +3,23 @@
 .root {
 
 }
+
+.node {
+  position: relative;
+  line-height: var(--swh-tree-row-height);
+  border-radius: 4px;
+}
+
+.node_selected {
+  background: var(--swh-selected-bg);
+
+  &:hover {
+    .edit {
+      display: block;
+    }
+  }
+}
+
+.arrow {
+  font-size: 12px;
+}

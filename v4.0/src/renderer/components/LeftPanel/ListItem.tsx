@@ -29,7 +29,6 @@ const ListItem = (props: Props) => {
   const [folder_open, setFolderOpen] = useState(!!data.folder_open)
   const [is_on, setIsOn] = useState(data.on)
   // const [item_height, setItemHeight] = useState(0)
-  const el_item = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setIsOn(data.on)
@@ -62,16 +61,6 @@ const ListItem = (props: Props) => {
     agent.broadcast('toggle_item', data.id, on)
   }
 
-  // const getElItemHeight = () => {
-  //   let h = el_item.current ? el_item.current.offsetHeight : 0
-  //   if (!h) {
-  //     setTimeout(getElItemHeight, 100)
-  //     return
-  //   }
-  //
-  //   setItemHeight(h)
-  // }
-
   if (!data) return null
 
   let level = props.level || 0
@@ -101,44 +90,29 @@ const ListItem = (props: Props) => {
   ])
 
   return (
-    <div className={styles.root}>
-      <div
-        ref={el_item}
-        className={clsx(styles.item, is_selected && styles.selected, folder_open && styles.folder_open)}
-        style={{ paddingLeft: `${1.3 * level}em` }}
-        onContextMenu={() => menu.show()}
-      >
-        <div className={styles.title} onClick={onSelect}>
-          {is_folder ? (
-            <span className={styles.folder_arrow} onClick={toggleFolderOpen}>
-              <RightOutlined/>
-            </span>
-          ) : null}
-          <span
-            className={clsx(styles.icon, is_folder && styles.folder)}
-            onClick={toggleFolderOpen}
-          ><ItemIcon where={data.where} folder_open={data.folder_open}/></span>
-          {data.title || lang.untitled}
-        </div>
-        <div className={styles.status}>
-          <div className={styles.edit}>
-            <FormOutlined
-              title={lang.edit}
-              onClick={() => {
-                agent.broadcast('edit_hosts_info', data)
-              }}
-            />
-          </div>
-          <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)}/>
-        </div>
+    <div
+      className={styles.root}
+      // className={clsx(styles.item, is_selected && styles.selected, folder_open && styles.folder_open)}
+      // style={{ paddingLeft: `${1.3 * level}em` }}
+      onContextMenu={() => menu.show()}
+    >
+      <div className={styles.title} onClick={onSelect}>
+        <span
+          className={clsx(styles.icon, is_folder && styles.folder)}
+          onClick={toggleFolderOpen}
+        ><ItemIcon where={data.where} folder_open={data.folder_open}/></span>
+        {data.title || lang.untitled}
       </div>
-      <div
-        className={styles.children}
-        style={{ height: folder_open ? 'auto' : 0 }}
-      >
-        {(data.children || []).map(item => (
-          <ListItem data={item} key={item.id} level={level + 1}/>
-        ))}
+      <div className={styles.status}>
+        <div className={styles.edit}>
+          <FormOutlined
+            title={lang.edit}
+            onClick={() => {
+              agent.broadcast('edit_hosts_info', data)
+            }}
+          />
+        </div>
+        <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)}/>
       </div>
     </div>
   )
