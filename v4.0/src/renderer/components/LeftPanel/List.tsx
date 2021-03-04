@@ -83,7 +83,6 @@ const List = (props: Props) => {
   }, [current_hosts, hosts_data])
 
   useOnBroadcast('select_hosts', async (id: string, wait_ms: number = 0) => {
-    console.log(`select_hosts: #${id}`)
     let hosts = findItemById(hosts_data.list, id)
     if (!hosts) {
       if (wait_ms > 0) {
@@ -94,7 +93,6 @@ const List = (props: Props) => {
       return
     }
 
-    console.log(hosts)
     setCurrentHosts(hosts)
   }, [hosts_data])
 

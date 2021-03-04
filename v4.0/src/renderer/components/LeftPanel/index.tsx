@@ -4,9 +4,11 @@
  * @homepage: https://oldj.net
  */
 
+import { useModel } from '@@/plugin-model/useModel'
 import { PlusOutlined } from '@ant-design/icons'
 import List from '@renderer/components/LeftPanel/List'
 import { agent } from '@renderer/core/agent'
+import { PopupMenu } from '@renderer/core/PopupMenu'
 import React from 'react'
 import styles from './index.less'
 
@@ -15,6 +17,17 @@ interface Props {
 }
 
 const Index = (props: Props) => {
+  const { lang } = useModel('useI18n')
+
+  const menu = new PopupMenu([
+    {
+      label: lang.hosts_add,
+      click() {
+        agent.broadcast('add_new')
+      },
+    },
+  ])
+
   return (
     <div className={styles.root}>
       <div className={styles.topbar}>
@@ -26,7 +39,10 @@ const Index = (props: Props) => {
         </div>
       </div>
 
-      <div className={styles.list}>
+      <div
+        className={styles.list}
+        onContextMenu={() => menu.show()}
+      >
         <List/>
       </div>
     </div>
