@@ -10,10 +10,11 @@ import * as hostsFn from '@root/common/hostsFn'
 export default async (id: string) => {
   let list: HostsListObjectType[] = await swhdb.list.tree.all()
 
-  let cnt = await swhdb.collection.hosts.find<HostsListObjectType>(i => i.id === id)
-  if (cnt && cnt._id) {
-    await swhdb.collection.hosts.delete(cnt._id)
-  }
+  let node = hostsFn.findItemById(list, id)
+  await swhdb.collection.trash.insert({
+    data: node,
+    add_time_ms: (new Date()).getTime(),
+  })
 
   hostsFn.deleteItemById(list, id)
 

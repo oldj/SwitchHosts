@@ -11,6 +11,6 @@ export default async (id: string, content: string) => {
   if (!d || !d._id) {
     await swhdb.collection.hosts.insert({ id, content })
   } else {
-    await swhdb.collection.hosts.update(d._id, { content })
+    await swhdb.collection.hosts.update(i => i._id === d?._id, { content })
   }
 }

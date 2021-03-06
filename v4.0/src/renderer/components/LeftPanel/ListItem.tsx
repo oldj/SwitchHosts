@@ -84,11 +84,9 @@ const ListItem = (props: Props) => {
       type: 'separator',
     },
     {
-      label: lang.delete,
+      label: lang.move_to_trashcan,
       click() {
-        if (confirm(lang.hosts_delete_confirm)) {
-          agent.broadcast('delete_hosts', data.id)
-        }
+        agent.broadcast('move_to_trashcan', data.id)
       },
     },
   ])

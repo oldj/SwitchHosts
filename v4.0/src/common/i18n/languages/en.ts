@@ -41,6 +41,7 @@ export default {
   migrate_data: 'Migrate data',
   minute: 'minute',
   minutes: 'minutes',
+  move_to_trashcan: 'Move to trashcan',
   never: 'Never',
   no_access_to_hosts: 'No permission to write to the Hosts file.',
   password: 'Password',
@@ -51,6 +52,7 @@ export default {
   sudo_prompt_title: 'Input your sudo password',
   system_hosts: 'System Hosts',
   test: 'Test',
+  trashcan: 'Trashcan',
   untitled: 'Untitled',
   url_placeholder: 'http:// or https:// or file://',
 }

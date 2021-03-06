@@ -7,12 +7,13 @@
 import * as fs from 'fs'
 import lodash from 'lodash'
 import * as path from 'path'
+import { DataTypeDocument } from '../../typings'
 import { asInt } from '../../utils/asType'
 import LatDb from '../db'
 import Dict from './dict'
 import List from './list'
 
-type FilterFunction = (item: any) => boolean
+type FilterPredicate = (item: any) => boolean
 
 interface Options {
 
@@ -103,7 +104,7 @@ export default class Collection {
     return await this.find<T>(i => i._id === _id, keys)
   }
 
-  async find<T>(predicate: FilterFunction, keys: string | string[] = '*'): Promise<T | undefined> {
+  async find<T>(predicate: FilterPredicate, keys: string | string[] = '*'): Promise<T | undefined> {
     let _ids = await this._ids.all()
 
     for (let _id of _ids) {
@@ -120,7 +121,7 @@ export default class Collection {
     }
   }
 
-  async filter<T>(predicate: FilterFunction, keys: string | string[] = '*'): Promise<T[]> {
+  async filter<T>(predicate: FilterPredicate, keys: string | string[] = '*'): Promise<T[]> {
     let _ids = await this._ids.all()
     let list: T[] = []
 
@@ -140,29 +141,45 @@ export default class Collection {
     return list
   }
 
-  async update<T>(_id: string, data: T): Promise<T> {
-    let d = this.getDoc(_id)
-    let doc: T = await d.toJSON<T>()
+  async update<T>(predicate: FilterPredicate, data: T): Promise<T[]> {
+    let items = await this.filter<DataTypeDocument>(predicate)
+    let out: T[] = []
 
-    doc = {
-      ...doc,
-      ...data,
-      _id,
+    for (let item of items) {
+      let { _id } = item
+      let d = this.getDoc(_id)
+      let doc: T = await d.toJSON<T>()
+
+      doc = {
+        ...doc,
+        ...data,
+        _id,
+      }
+
+      let i = await d.update<T>(doc)
+      out.push(i)
     }
 
-    return await d.update<T>(doc)
+    return out
   }
 
-  async delete(_id: string) {
-    let index = await this._ids.indexOf(_id)
-    if (index === -1) return
-    await this._ids.splice(index, 1)
-    let d = this.getDoc(_id)
-    await d.remove()
-    delete this._docs[_id]
+  async delete(predicate: FilterPredicate) {
+    while (true) {
+      let item = await this.find<DataTypeDocument>(predicate)
+      if (!item) break
+
+      let index = await this._ids.indexOf(item._id)
+      if (index === -1) continue
+
+      await this._ids.splice(index, 1)
+      let d = this.getDoc(item._id)
+      await d.remove()
+      delete this._docs[item._id]
+    }
   }
 
   async remove() {
+    // remove current collection
     await this._meta.remove()
     await this._ids.remove()
     this._docs = {}
