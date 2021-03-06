@@ -22,6 +22,7 @@ const Trashcan = (props: Props) => {
   const { hosts_data } = useModel('useHostsData')
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const [trash_list, setTrashList] = useState<ITrashcanListObject[]>([])
+  const [is_collapsed, setIsCollapsed] = useState(true)
 
   useEffect(() => {
     let root: ITrashcanListObject = {
@@ -34,7 +35,7 @@ const Trashcan = (props: Props) => {
       children: [],
       can_drag: false,
       can_select: false,
-      is_collapsed: true,
+      is_collapsed,
       is_root: true,
       where: 'trashcan',
     }
@@ -51,7 +52,7 @@ const Trashcan = (props: Props) => {
     })
 
     setTrashList(list)
-  }, [hosts_data.trashcan])
+  }, [hosts_data.trashcan, is_collapsed])
 
   const onSelect = (id: string) => {
     let item = hosts_data.trashcan.find(i => i.data.id === id)
@@ -70,6 +71,7 @@ const Trashcan = (props: Props) => {
         nodeCollapseArrowClassName={list_styles.arrow}
         onSelect={onSelect}
         selected_id={current_hosts?.id}
+        onChange={list => setIsCollapsed(!!list[0]?.is_collapsed)}
       />
     </div>
   )
