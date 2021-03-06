@@ -55,6 +55,10 @@ const lang: LanguageDict = {
   system_hosts: '系统 Hosts',
   test: '测试',
   trashcan: '回收站',
+  trashcan_clear: '清空回收站',
+  trashcan_clear_confirm: '确实要清空回收站吗？',
+  trashcan_delete_confirm: '要彻底删除本项吗？',
+  trashcan_restore: '还原',
   untitled: '未命名',
   url_placeholder: 'http:// 或 https:// 或 file://',
 }
