@@ -3,14 +3,13 @@
  * @homepage: https://oldj.net
  */
 
-import { del } from '@main/core/config'
-import { HostsDataType, HostsListObjectType } from '@root/common/data'
+import { IHostsBasicData, IHostsListObject } from '@root/common/data'
 import lodash from 'lodash'
 
-type PartHostsObjectType = Partial<HostsListObjectType> & { id: string }
+type PartHostsObjectType = Partial<IHostsListObject> & { id: string }
 
-export const flatten = (list: HostsListObjectType[]): HostsListObjectType[] => {
-  let new_list: HostsListObjectType[] = []
+export const flatten = (list: IHostsListObject[]): IHostsListObject[] => {
+  let new_list: IHostsListObject[] = []
 
   list.map(item => {
     new_list.push(item)
@@ -22,12 +21,12 @@ export const flatten = (list: HostsListObjectType[]): HostsListObjectType[] => {
   return new_list
 }
 
-export const cleanHostsList = (data: HostsDataType): HostsDataType => {
+export const cleanHostsList = (data: IHostsBasicData): IHostsBasicData => {
   let list = flatten(data.list)
 
   list.map(item => {
     if (item.where === 'folder' && !Array.isArray(item.children)) {
-      item.children = [] as HostsListObjectType[]
+      item.children = [] as IHostsListObject[]
     }
 
     if (item.where === 'group' && !Array.isArray(item.include)) {
@@ -42,12 +41,12 @@ export const cleanHostsList = (data: HostsDataType): HostsDataType => {
   return data
 }
 
-export const findItemById = (list: HostsListObjectType[], id: string): HostsListObjectType | undefined => {
+export const findItemById = (list: IHostsListObject[], id: string): IHostsListObject | undefined => {
   return flatten(list).find(item => item.id === id)
 }
 
-export const updateOneItem = (list: HostsListObjectType[], item: PartHostsObjectType): HostsListObjectType[] => {
-  let new_list: HostsListObjectType[] = lodash.cloneDeep(list)
+export const updateOneItem = (list: IHostsListObject[], item: PartHostsObjectType): IHostsListObject[] => {
+  let new_list: IHostsListObject[] = lodash.cloneDeep(list)
 
   let i = findItemById(new_list, item.id)
   if (i) {
@@ -57,7 +56,7 @@ export const updateOneItem = (list: HostsListObjectType[], item: PartHostsObject
   return new_list
 }
 
-export const getContentOfHosts = (list: HostsListObjectType[], hosts: HostsListObjectType): string => {
+export const getContentOfHosts = (list: IHostsListObject[], hosts: IHostsListObject): string => {
   const { where } = hosts
   if (!where || where === 'local' || where === 'remote') {
     return hosts.content || ''
@@ -83,7 +82,7 @@ export const getContentOfHosts = (list: HostsListObjectType[], hosts: HostsListO
   return ''
 }
 
-export const getHostsOutput = (list: HostsListObjectType[]): string => {
+export const getHostsOutput = (list: IHostsListObject[]): string => {
   const content = flatten(list).filter(item => item.on).map(item => getContentOfHosts(list, item))
     .join('\n\n')
 
@@ -92,7 +91,7 @@ export const getHostsOutput = (list: HostsListObjectType[]): string => {
   return content
 }
 
-export const deleteItemById = (list: HostsListObjectType[], id: string) => {
+export const deleteItemById = (list: IHostsListObject[], id: string) => {
   let idx = list.findIndex(item => item.id === id)
   if (idx >= 0) {
     list.splice(idx, 1)
@@ -102,7 +101,7 @@ export const deleteItemById = (list: HostsListObjectType[], id: string) => {
   list.map(item => deleteItemById(item.children || [], id))
 }
 
-export const getNextSelectedItem = (list: HostsListObjectType[], id: string): HostsListObjectType | undefined => {
+export const getNextSelectedItem = (list: IHostsListObject[], id: string): IHostsListObject | undefined => {
   let flat = flatten(list)
   let idx = flat.findIndex(item => item.id === id)
 

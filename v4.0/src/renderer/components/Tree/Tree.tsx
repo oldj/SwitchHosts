@@ -8,32 +8,33 @@ import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
 import { flatten, getNodeById, treeMoveNode } from './fn'
-import Node, { INodeData, NodeUpdate } from './Node'
+import Node, { ITreeNodeData, NodeUpdate } from './Node'
 import styles from './style.less'
 
 export type NodeIdType = string;
 export type DropWhereType = 'before' | 'in' | 'after';
 
 interface ITreeProps {
-  data: INodeData[];
+  data: ITreeNodeData[];
   className?: string;
   nodeClassName?: string;
   nodeSelectedClassName?: string;
   nodeDropInClassName?: string;
   nodeCollapseArrowClassName?: string;
-  nodeRender?: (node: INodeData, update: NodeUpdate) => React.ReactElement | null;
-  nodeAttr?: (node: INodeData) => Partial<INodeData>;
-  draggingNodeRender?: (node: INodeData) => React.ReactElement;
+  nodeRender?: (node: ITreeNodeData, update: NodeUpdate) => React.ReactElement | null;
+  nodeAttr?: (node: ITreeNodeData) => Partial<ITreeNodeData>;
+  draggingNodeRender?: (node: ITreeNodeData) => React.ReactElement;
   collapseArrow?: string | React.ReactElement;
-  onChange?: (tree: INodeData[]) => void;
+  onChange?: (tree: ITreeNodeData[]) => void;
   indent_px?: number;
   selected_id?: NodeIdType;
   onSelect?: (id: NodeIdType) => void;
+  no_child_no_indent?: boolean;
 }
 
 const Tree = (props: ITreeProps) => {
   const { data, className, onChange } = props
-  const [tree, setTree] = useState<INodeData[]>([])
+  const [tree, setTree] = useState<ITreeNodeData[]>([])
   const [is_dragging, setIsDragging] = useState(false)
   const [drag_source_id, setDragSourceId] = useState<NodeIdType | null>(null)
   const [drop_target_id, setDropTargetId] = useState<NodeIdType | null>(null)
@@ -80,12 +81,12 @@ const Tree = (props: ITreeProps) => {
     setDropWhere(null)
   }
 
-  const onTreeChange = (tree: INodeData[]) => {
+  const onTreeChange = (tree: ITreeNodeData[]) => {
     console.log('onTreeChange...')
     onChange && onChange(tree)
   }
 
-  const onNodeChange = (id: NodeIdType, data: Partial<INodeData>) => {
+  const onNodeChange = (id: NodeIdType, data: Partial<ITreeNodeData>) => {
     console.log('onNodeChange...')
     let node = getNodeById(tree, id)
     if (!node) return
@@ -102,7 +103,7 @@ const Tree = (props: ITreeProps) => {
     props.onSelect && props.onSelect(id)
   }
 
-  const has_no_children = flatten(tree).length === tree.length
+  const has_no_child = flatten(tree).length === tree.length
 
   return (
     <div className={clsx(styles.root, className)} onDrop={onDragEnd}>
@@ -132,7 +133,8 @@ const Tree = (props: ITreeProps) => {
           nodeDropInClassName={props.nodeDropInClassName}
           nodeSelectedClassName={props.nodeSelectedClassName}
           nodeCollapseArrowClassName={props.nodeCollapseArrowClassName}
-          has_no_children={has_no_children}
+          has_no_child={has_no_child}
+          no_child_no_indent={props.no_child_no_indent}
         />
       ))}
     </div>

@@ -24,6 +24,7 @@ interface Props {
 const MainPanel = (props: Props) => {
   const { has_left_panel } = props
   const { i18n } = useModel('useI18n')
+  const { isHostsInTrashcan } = useModel('useHostsData')
   const { current_hosts } = useModel('useCurrentHosts')
   const [system_hosts, setSystemHosts] = useState('')
   const [is_on, setIsOn] = useState(!!current_hosts?.on)
@@ -82,7 +83,7 @@ const MainPanel = (props: Props) => {
         </div>
 
         <div>
-          {current_hosts ? (
+          {current_hosts && !isHostsInTrashcan(current_hosts.id) ? (
             <SwitchButton on={is_on} onChange={on => {
               agent.broadcast('toggle_item', current_hosts.id, on)
             }}/>

@@ -11,7 +11,7 @@ import ListItem from '@renderer/components/LeftPanel/ListItem'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { HostsListObjectType } from '@root/common/data'
+import { IHostsListObject } from '@root/common/data'
 import { findItemById, getHostsOutput, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
@@ -22,9 +22,9 @@ interface Props {
 
 const List = (props: Props) => {
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
-  const { hosts_data, getHostsData, setList } = useModel('useHostsData')
+  const { hosts_data, loadHostsData, setList } = useModel('useHostsData')
   const { i18n, lang } = useModel('useI18n')
-  const [show_list, setShowList] = useState<HostsListObjectType[]>([])
+  const [show_list, setShowList] = useState<IHostsListObject[]>([])
 
   useEffect(() => {
     setShowList([{
@@ -47,7 +47,7 @@ const List = (props: Props) => {
 
     } else {
       console.log(result)
-      getHostsData().catch(e => console.log(e))
+      loadHostsData().catch(e => console.log(e))
 
       let body = i18n.lang.no_access_to_hosts
       if (result.code !== 'no_access') {
@@ -67,7 +67,7 @@ const List = (props: Props) => {
   useOnBroadcast('move_to_trashcan', async (id: string) => {
     console.log(`move_to_trashcan: #${id}`)
 
-    let next_hosts: HostsListObjectType | undefined
+    let next_hosts: IHostsListObject | undefined
     // console.log(current_hosts)
     if (current_hosts && current_hosts.id === id) {
       next_hosts = getNextSelectedItem(hosts_data.list, id)
@@ -75,7 +75,7 @@ const List = (props: Props) => {
     }
 
     await actions.localListItemMoveToTrashcan(id)
-    await getHostsData()
+    await loadHostsData()
 
     if (next_hosts) {
       await setCurrentHosts(next_hosts)
