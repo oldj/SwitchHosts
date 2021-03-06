@@ -33,10 +33,15 @@ export default function useHostsData() {
     await actions.localListSet(list)
   }
 
+  const isHostsInTrashcan = (id: string): boolean => {
+    return hosts_data.trashcan.findIndex(i => i.data.id === id) > -1
+  }
+
   return {
     hosts_data,
     setHostsData,
     loadHostsData,
     setList,
+    isHostsInTrashcan,
   }
 }

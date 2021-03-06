@@ -42,6 +42,7 @@ export interface ITrashcanListObject extends ITrashcanObject, ITreeNodeData {
   id: string;
   children?: ITrashcanListObject[];
   is_root?: boolean;
+  where?: HostsWhereType | 'trashcan';
 
   [key: string]: any;
 }
