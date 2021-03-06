@@ -1,5 +1,5 @@
 import lodash from 'lodash'
-import { INodeData } from './Node'
+import { ITreeNodeData } from './Node'
 import { DropWhereType, NodeIdType } from './Tree'
 
 interface IObj {
@@ -8,7 +8,7 @@ interface IObj {
 
 export type KeyMapType = [string, string];
 
-export function flatten(tree_list: INodeData[]): INodeData[] {
+export function flatten(tree_list: ITreeNodeData[]): ITreeNodeData[] {
   let arr: any[] = []
 
   Array.isArray(tree_list) &&
@@ -27,9 +27,9 @@ export function flatten(tree_list: INodeData[]): INodeData[] {
 }
 
 export function getParentList(
-  tree_list: INodeData[],
+  tree_list: ITreeNodeData[],
   id: NodeIdType,
-): INodeData[] {
+): ITreeNodeData[] {
   if (tree_list.findIndex((i) => i.id === id) > -1) {
     return tree_list
   }
@@ -48,11 +48,11 @@ export function getParentList(
 }
 
 export const treeMoveNode = (
-  tree_list: INodeData[],
+  tree_list: ITreeNodeData[],
   source_id: NodeIdType,
   target_id: NodeIdType,
   where: DropWhereType,
-): INodeData[] | null => {
+): ITreeNodeData[] | null => {
   tree_list = lodash.cloneDeep(tree_list)
 
   if (source_id === target_id) return null
@@ -90,11 +90,11 @@ export const treeMoveNode = (
   return tree_list
 }
 
-export function getNodeById(tree_list: INodeData[], id: NodeIdType): INodeData | undefined {
+export function getNodeById(tree_list: ITreeNodeData[], id: NodeIdType): ITreeNodeData | undefined {
   return flatten(tree_list).find(i => i.id === id)
 }
 
-export function isChildOf(tree_list: INodeData[], a_id: NodeIdType, b_id: NodeIdType): boolean {
+export function isChildOf(tree_list: ITreeNodeData[], a_id: NodeIdType, b_id: NodeIdType): boolean {
   if (a_id === b_id) return false
 
   let target_node = getNodeById(tree_list, b_id)
