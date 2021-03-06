@@ -19,7 +19,7 @@ interface Props {
 
 const HostsEditor = (props: Props) => {
   const { hosts } = props
-  const { hosts_data } = useModel('useHostsData')
+  const { hosts_data, isHostsInTrashcan } = useModel('useHostsData')
   const [hosts_id, setHostsId] = useState(hosts.id)
   const [content, setContent] = useState(hosts.content || '')
 
@@ -40,7 +40,23 @@ const HostsEditor = (props: Props) => {
     toSave(hosts_id, content)
   }
 
-  let is_read_only = !hosts || (hosts.where && (['group', 'remote', 'folder']).includes(hosts.where))
+  const isReadOnly = (): boolean => {
+    if (!hosts) {
+      return true
+    }
+
+    if (hosts.where && (['group', 'remote', 'folder', 'trashcan']).includes(hosts.where)) {
+      return true
+    }
+
+    if (isHostsInTrashcan(hosts.id)) {
+      return true
+    }
+
+    return false
+  }
+
+  let is_read_only = isReadOnly()
 
   useOnBroadcast('reload_content', (id: string) => {
     if (id !== hosts.id) return
@@ -51,7 +67,11 @@ const HostsEditor = (props: Props) => {
   return (
     <div className={styles.root}>
       <div className={styles.editor}>
-        <textarea value={content} onChange={e => onChange(e.target.value)}/>
+        <textarea
+          value={content}
+          onChange={e => onChange(e.target.value)}
+          disabled={is_read_only}
+        />
       </div>
 
       <StatusBar

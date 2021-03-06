@@ -11,6 +11,7 @@ import { Tree } from '@renderer/components/Tree'
 import { ITrashcanListObject } from '@root/common/data'
 import React, { useEffect, useState } from 'react'
 import styles from './Trashcan.less'
+import list_styles from './List.less'
 
 interface Props {
 
@@ -18,7 +19,8 @@ interface Props {
 
 const Trashcan = (props: Props) => {
   const { lang } = useModel('useI18n')
-  const { hosts_data, loadHostsData, setList } = useModel('useHostsData')
+  const { hosts_data } = useModel('useHostsData')
+  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const [trash_list, setTrashList] = useState<ITrashcanListObject[]>([])
 
   useEffect(() => {
@@ -31,22 +33,31 @@ const Trashcan = (props: Props) => {
       add_time_ms: 0,
       children: [],
       can_drag: false,
+      can_select: false,
+      is_collapsed: true,
       is_root: true,
+      where: 'trashcan',
     }
 
     let list: ITrashcanListObject[] = [root]
 
-    console.log(hosts_data.trashcan)
     hosts_data.trashcan.map(i => {
       root.children && root.children.push({
         ...i,
         id: i.data.id,
         can_drag: false,
+        where: i.data.where,
       })
     })
 
     setTrashList(list)
   }, [hosts_data.trashcan])
+
+  const onSelect = (id: string) => {
+    let item = hosts_data.trashcan.find(i => i.data.id === id)
+    if (!item) return
+    setCurrentHosts(item.data)
+  }
 
   return (
     <div className={styles.root}>
@@ -54,6 +65,11 @@ const Trashcan = (props: Props) => {
         data={trash_list}
         nodeRender={(item) => <TrashcanItem data={item as ITrashcanListObject}/>}
         collapseArrow={<RightOutlined/>}
+        nodeClassName={list_styles.node}
+        nodeSelectedClassName={list_styles.node_selected}
+        nodeCollapseArrowClassName={list_styles.arrow}
+        onSelect={onSelect}
+        selected_id={current_hosts?.id}
       />
     </div>
   )
