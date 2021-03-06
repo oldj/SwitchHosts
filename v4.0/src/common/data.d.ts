@@ -1,3 +1,5 @@
+import { ITreeNodeData } from '@renderer/components/Tree/Node'
+
 export type HostsWhereType = 'local' | 'remote' | 'group' | 'folder';
 
 export interface IHostsListObject {
@@ -33,7 +35,15 @@ export interface IHostsContentObject {
 
 export interface ITrashcanObject {
   data: IHostsListObject;
-  add_time_ms: string;
+  add_time_ms: number;
+}
+
+export interface ITrashcanListObject extends ITrashcanObject, ITreeNodeData {
+  id: string;
+  children?: ITrashcanListObject[];
+  is_root?: boolean;
+
+  [key: string]: any;
 }
 
 export interface IHostsBasicData {

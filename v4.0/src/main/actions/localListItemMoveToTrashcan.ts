@@ -11,7 +11,7 @@ export default async (id: string) => {
   let list: IHostsListObject[] = await swhdb.list.tree.all()
 
   let node = hostsFn.findItemById(list, id)
-  await swhdb.collection.trash.insert({
+  await swhdb.list.trashcan.push({
     data: node,
     add_time_ms: (new Date()).getTime(),
   })

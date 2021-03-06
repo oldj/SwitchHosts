@@ -10,9 +10,9 @@ import { isChildOf } from './fn'
 import styles from './style.less'
 import { DropWhereType, NodeIdType } from './Tree'
 
-export type NodeUpdate = (data: Partial<INodeData>) => void
+export type NodeUpdate = (data: Partial<ITreeNodeData>) => void
 
-export interface INodeData {
+export interface ITreeNodeData {
   id: NodeIdType;
   title?: string;
   can_select?: boolean; // 是否可以被选中，默认为 true
@@ -21,14 +21,14 @@ export interface INodeData {
   can_drop_in?: boolean; // 是否可以接受 drop in，默认为 true
   can_drop_after?: boolean; // 是否可以接受 drop after，默认为 true
   is_collapsed?: boolean;
-  children?: INodeData[];
+  children?: ITreeNodeData[];
 
   [key: string]: any;
 }
 
 interface INodeProps {
-  tree: INodeData[];
-  data: INodeData;
+  tree: ITreeNodeData[];
+  data: ITreeNodeData;
   nodeClassName?: string;
   nodeDropInClassName?: string;
   nodeSelectedClassName?: string;
@@ -44,13 +44,14 @@ interface INodeProps {
   onSelect: (id: NodeIdType) => void;
   level: number;
   is_dragging: boolean;
-  render?: (data: INodeData, update: NodeUpdate) => React.ReactElement | null;
-  draggingNodeRender?: (data: INodeData) => React.ReactElement;
+  render?: (data: ITreeNodeData, update: NodeUpdate) => React.ReactElement | null;
+  draggingNodeRender?: (data: ITreeNodeData) => React.ReactElement;
   collapseArrow?: string | React.ReactElement;
-  onChange: (id: NodeIdType, data: Partial<INodeData>) => void;
+  onChange: (id: NodeIdType, data: Partial<ITreeNodeData>) => void;
   indent_px?: number;
-  nodeAttr?: (node: INodeData) => Partial<INodeData>;
-  has_no_children: boolean;
+  nodeAttr?: (node: ITreeNodeData) => Partial<ITreeNodeData>;
+  has_no_child: boolean;
+  no_child_no_indent?: boolean;
 }
 
 const Node = (props: INodeProps) => {
@@ -166,7 +167,7 @@ const Node = (props: INodeProps) => {
     el_dragging.current && (el_dragging.current.style.display = 'none')
   }
 
-  const onUpdate = (kv: Partial<INodeData>) => {
+  const onUpdate = (kv: Partial<ITreeNodeData>) => {
     onChange(data.id, kv)
   }
 
@@ -205,7 +206,7 @@ const Node = (props: INodeProps) => {
       >
         <div className={clsx(
           styles.content,
-          props.has_no_children && styles.no_children,
+          props.has_no_child && props.no_child_no_indent && styles.no_children,
         )}>
           <div className={styles.ln_header} data-role="tree-node-header">{
             has_children ?
