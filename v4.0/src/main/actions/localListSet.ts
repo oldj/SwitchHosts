@@ -4,8 +4,8 @@
  */
 
 import { swhdb } from '@main/data'
-import { HostsListObjectType } from '@root/common/data'
+import { IHostsListObject } from '@root/common/data'
 
-export default async (list: HostsListObjectType[]) => {
+export default async (list: IHostsListObject[]) => {
   await swhdb.list.tree.set(list)
 }

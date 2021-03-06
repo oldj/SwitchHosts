@@ -7,6 +7,7 @@
 import { useModel } from '@@/plugin-model/useModel'
 import { PlusOutlined } from '@ant-design/icons'
 import List from '@renderer/components/LeftPanel/List'
+import Trashcan from '@renderer/components/LeftPanel/Trashcan'
 import { agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
 import React from 'react'
@@ -44,6 +45,7 @@ const Index = (props: Props) => {
         onContextMenu={() => menu.show()}
       >
         <List/>
+        <Trashcan/>
       </div>
     </div>
   )

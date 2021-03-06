@@ -4,7 +4,11 @@
  * @homepage: https://oldj.net
  */
 
-import { BlockOutlined, FileTextOutlined, FolderOpenOutlined, FolderOutlined, GlobalOutlined, HomeOutlined } from '@ant-design/icons'
+import {
+  BlockOutlined, DeleteOutlined,
+  FileTextOutlined, FolderOpenOutlined,
+  FolderOutlined, GlobalOutlined, HomeOutlined,
+} from '@ant-design/icons'
 import React from 'react'
 
 interface Props {
@@ -26,6 +30,8 @@ const ItemIcon = (props: Props) => {
       return <BlockOutlined/>
     case 'system':
       return <HomeOutlined/>
+    case 'trashcan':
+      return <DeleteOutlined/>
     default:
       return <FileTextOutlined/>
   }

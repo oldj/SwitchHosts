@@ -4,15 +4,15 @@
  */
 
 import { swhdb } from '@main/data'
-import { HostsContentObjectType, HostsListObjectType } from '@root/common/data'
+import { IHostsContentObject, IHostsListObject } from '@root/common/data'
 import { findItemById, flatten } from '@root/common/hostsFn'
 
 const getContentById = async (id: string) => {
-  let hosts_content = await swhdb.collection.hosts.find<HostsContentObjectType>(i => i.id === id)
+  let hosts_content = await swhdb.collection.hosts.find<IHostsContentObject>(i => i.id === id)
   return hosts_content?.content || ''
 }
 
-const getContentOfHosts = async (list: HostsListObjectType[], hosts: HostsListObjectType): Promise<string> => {
+const getContentOfHosts = async (list: IHostsListObject[], hosts: IHostsListObject): Promise<string> => {
   const { where } = hosts
   if (!where || where === 'local' || where === 'remote') {
     return getContentById(hosts.id)

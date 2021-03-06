@@ -53,6 +53,10 @@ export default {
   system_hosts: 'System Hosts',
   test: 'Test',
   trashcan: 'Trashcan',
+  trashcan_clear: 'Empty the trashcan',
+  trashcan_clear_confirm: 'Are you sure you want to empty the trashcan?',
+  trashcan_delete_confirm: 'Do you want to delete this item completely?',
+  trashcan_restore: 'Restore',
   untitled: 'Untitled',
   url_placeholder: 'http:// or https:// or file://',
 }
