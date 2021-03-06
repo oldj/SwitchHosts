@@ -6,6 +6,7 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import { RightOutlined } from '@ant-design/icons'
+import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import { Tree } from '@renderer/components/Tree'
@@ -42,7 +43,7 @@ const List = (props: Props) => {
     }
   }
 
-  const writeHostsToSystem = async (list?: IHostsListObject[]): Promise<boolean> => {
+  const writeHostsToSystem = async (list?: IHostsListObject[], options?: IHostsWriteOptions): Promise<boolean> => {
     if (!Array.isArray(list)) {
       list = hosts_data.list
     }
@@ -58,7 +59,7 @@ const List = (props: Props) => {
     // console.log(content)
     // todo 去重
 
-    const result = await actions.systemHostsWrite(content)
+    const result = await actions.systemHostsWrite(content, options)
     if (result.success) {
       setList(list).catch(e => console.error(e))
       new Notification(i18n.lang.success, {
@@ -69,8 +70,12 @@ const List = (props: Props) => {
       console.log(result)
       loadHostsData().catch(e => console.log(e))
 
-      let body = i18n.lang.no_access_to_hosts
-      if (result.code !== 'no_access') {
+      let body: string = i18n.lang.no_access_to_hosts
+      if (result.code === 'no_access') {
+        if (agent.platform === 'darwin' || agent.platform === 'linux') {
+          agent.broadcast('show_sudo_password_input', list)
+        }
+      } else {
         body = result.message || 'Unknow error!'
       }
 
