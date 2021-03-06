@@ -10,7 +10,7 @@ import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
-import { HostsListObjectType } from '@root/common/data'
+import { IHostsListObject } from '@root/common/data'
 import { updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
@@ -18,7 +18,7 @@ import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.less'
 
 interface Props {
-  data: HostsListObjectType;
+  data: IHostsListObject;
 }
 
 const ListItem = (props: Props) => {

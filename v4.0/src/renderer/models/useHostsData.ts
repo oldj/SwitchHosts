@@ -5,25 +5,27 @@
  */
 
 import { actions } from '@renderer/core/agent'
-import { HostsDataType, HostsListObjectType } from '@root/common/data'
+import { IHostsBasicData, IHostsListObject } from '@root/common/data'
 import version from '@root/version.json'
 import { useState } from 'react'
 
 export default function useHostsData() {
-  const [hosts_data, setHostsData] = useState<HostsDataType>({
+  const [hosts_data, setHostsData] = useState<IHostsBasicData>({
     list: [],
+    trashcan: [],
     version,
   })
 
-  const getHostsData = async () => {
+  const loadHostsData = async () => {
     setHostsData(await actions.localBasicDataGet())
   }
 
-  const setList = async (list: HostsListObjectType[]) => {
+  const setList = async (list: IHostsListObject[]) => {
     list = list.filter(i => !i.is_sys)
 
-    let data: HostsDataType = {
+    let data: IHostsBasicData = {
       list,
+      trashcan: hosts_data.trashcan,
       version,
     }
 
@@ -34,7 +36,7 @@ export default function useHostsData() {
   return {
     hosts_data,
     setHostsData,
-    getHostsData,
+    loadHostsData,
     setList,
   }
 }

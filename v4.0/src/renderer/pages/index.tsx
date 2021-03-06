@@ -14,7 +14,7 @@ export default () => {
   const [loading, setLoading] = useState(true)
   const { i18n, setLocale } = useModel('useI18n')
   const { lang } = i18n
-  const { getHostsData } = useModel('useHostsData')
+  const { loadHostsData } = useModel('useHostsData')
   const [left_width, setLeftWidth] = useState(0)
   const [left_show, setLeftShow] = useState(true)
   const [show_migration, setShowMigration] = useState(false)
@@ -25,7 +25,7 @@ export default () => {
     } else {
       setShowMigration(false)
     }
-    await getHostsData()
+    await loadHostsData()
     setLoading(false)
   }
 
@@ -43,7 +43,7 @@ export default () => {
       return
     }
 
-    await getHostsData()
+    await loadHostsData()
     setLoading(false)
   }
 

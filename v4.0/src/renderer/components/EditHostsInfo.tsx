@@ -9,7 +9,7 @@ import { BorderOuterOutlined, CheckCircleOutlined, CheckSquareOutlined, DeleteOu
 import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { HostsListObjectType, HostsWhereType } from '@root/common/data'
+import { IHostsListObject, HostsWhereType } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
 import { Button, Input, message, Modal, Radio, Select, Transfer } from 'antd'
 import React, { useState } from 'react'
@@ -19,8 +19,8 @@ import styles from './EditHostsInfo.less'
 const EditHostsInfo = () => {
   const { i18n } = useModel('useI18n')
   const { lang } = i18n
-  const [hosts, setHosts] = useState<HostsListObjectType | null>(null)
-  const { hosts_data, setList, getHostsData } = useModel('useHostsData')
+  const [hosts, setHosts] = useState<IHostsListObject | null>(null)
+  const { hosts_data, setList, loadHostsData } = useModel('useHostsData')
   const [is_show, setIsShow] = useState(false)
   const [is_add, setIsAdd] = useState(true)
   const [is_refreshing, setIsRefreshing] = useState(false)
@@ -33,17 +33,17 @@ const EditHostsInfo = () => {
   const onSave = async () => {
     if (is_add) {
       // add
-      let h: HostsListObjectType = {
+      let h: IHostsListObject = {
         ...(hosts || {}),
         id: uuidv4(),
       }
-      let list: HostsListObjectType[] = [...hosts_data.list, h]
+      let list: IHostsListObject[] = [...hosts_data.list, h]
       await setList(list)
       agent.broadcast('select_hosts', h.id, 1000)
 
     } else if (hosts) {
       // edit
-      let h: HostsListObjectType | undefined = hostsFn.findItemById(hosts_data.list, hosts.id)
+      let h: IHostsListObject | undefined = hostsFn.findItemById(hosts_data.list, hosts.id)
       if (h) {
         Object.assign(h, hosts)
         await setList([...hosts_data.list])
@@ -63,12 +63,12 @@ const EditHostsInfo = () => {
     setIsShow(false)
   }
 
-  const onUpdate = async (kv: Partial<HostsListObjectType>) => {
-    let obj: HostsListObjectType = Object.assign({}, hosts, kv)
+  const onUpdate = async (kv: Partial<IHostsListObject>) => {
+    let obj: IHostsListObject = Object.assign({}, hosts, kv)
     setHosts(obj)
   }
 
-  useOnBroadcast('edit_hosts_info', (hosts?: HostsListObjectType) => {
+  useOnBroadcast('edit_hosts_info', (hosts?: IHostsListObject) => {
     setHosts(hosts || null)
     setIsAdd(!hosts)
     setIsShow(true)
@@ -130,7 +130,7 @@ const EditHostsInfo = () => {
                       message.success('ok')
                       onUpdate({ last_refresh: r.data.last_refresh })
                       agent.broadcast('reload_content', hosts.id)
-                      return getHostsData()
+                      return loadHostsData()
                     })
                     .catch(e => {
                       console.log(e)
@@ -146,7 +146,7 @@ const EditHostsInfo = () => {
     )
   }
 
-  const renderTransferItem = (item: HostsListObjectType): React.ReactElement => {
+  const renderTransferItem = (item: IHostsListObject): React.ReactElement => {
     return (
       <div>
         <ItemIcon where={item.where}/>
@@ -158,7 +158,7 @@ const EditHostsInfo = () => {
   const forGroup = (): React.ReactElement => {
     const list = hostsFn.flatten(hosts_data.list)
 
-    let source_list: HostsListObjectType[] = list
+    let source_list: IHostsListObject[] = list
       .filter(item => item.where === 'local' || item.where === 'remote')
       .map(item => {
         let o = { ...item }
