@@ -10,25 +10,25 @@ import { isChildOf } from './fn'
 import styles from './style.less'
 import { DropWhereType, NodeIdType } from './Tree'
 
-export type NodeUpdate = (data: Partial<ITreeNodeData>) => void
+export type NodeUpdate = (data: Partial<INodeData>) => void
 
-export interface ITreeNodeData {
+export interface INodeData {
   id: NodeIdType;
   title?: string;
-  children?: ITreeNodeData[];
   can_select?: boolean; // 是否可以被选中，默认为 true
   can_drag?: boolean; // 是否可以拖动，默认为 true
   can_drop_before?: boolean; // 是否可以接受 drop before，默认为 true
   can_drop_in?: boolean; // 是否可以接受 drop in，默认为 true
   can_drop_after?: boolean; // 是否可以接受 drop after，默认为 true
   is_collapsed?: boolean;
+  children?: INodeData[];
 
   [key: string]: any;
 }
 
 interface INodeProps {
-  tree: ITreeNodeData[];
-  data: ITreeNodeData;
+  tree: INodeData[];
+  data: INodeData;
   nodeClassName?: string;
   nodeDropInClassName?: string;
   nodeSelectedClassName?: string;
@@ -44,12 +44,12 @@ interface INodeProps {
   onSelect: (id: NodeIdType) => void;
   level: number;
   is_dragging: boolean;
-  render?: (data: ITreeNodeData, update: NodeUpdate) => React.ReactElement;
-  draggingNodeRender?: (data: ITreeNodeData) => React.ReactElement;
+  render?: (data: INodeData, update: NodeUpdate) => React.ReactElement | null;
+  draggingNodeRender?: (data: INodeData) => React.ReactElement;
   collapseArrow?: string | React.ReactElement;
-  onChange: (id: NodeIdType, data: Partial<ITreeNodeData>) => void;
+  onChange: (id: NodeIdType, data: Partial<INodeData>) => void;
   indent_px?: number;
-  nodeAttr?: (node: ITreeNodeData) => Partial<ITreeNodeData>;
+  nodeAttr?: (node: INodeData) => Partial<INodeData>;
   has_no_children: boolean;
 }
 
@@ -166,7 +166,7 @@ const Node = (props: INodeProps) => {
     el_dragging.current && (el_dragging.current.style.display = 'none')
   }
 
-  const onUpdate = (kv: Partial<ITreeNodeData>) => {
+  const onUpdate = (kv: Partial<INodeData>) => {
     onChange(data.id, kv)
   }
 

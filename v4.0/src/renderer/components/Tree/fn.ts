@@ -1,8 +1,14 @@
 import lodash from 'lodash'
-import { ITreeNodeData } from './Node'
+import { INodeData } from './Node'
 import { DropWhereType, NodeIdType } from './Tree'
 
-export function flatten(tree_list: ITreeNodeData[]): ITreeNodeData[] {
+interface IObj {
+  [key: string]: any;
+}
+
+export type KeyMapType = [string, string];
+
+export function flatten(tree_list: INodeData[]): INodeData[] {
   let arr: any[] = []
 
   Array.isArray(tree_list) &&
@@ -21,9 +27,9 @@ export function flatten(tree_list: ITreeNodeData[]): ITreeNodeData[] {
 }
 
 export function getParentList(
-  tree_list: ITreeNodeData[],
+  tree_list: INodeData[],
   id: NodeIdType,
-): ITreeNodeData[] {
+): INodeData[] {
   if (tree_list.findIndex((i) => i.id === id) > -1) {
     return tree_list
   }
@@ -42,11 +48,11 @@ export function getParentList(
 }
 
 export const treeMoveNode = (
-  tree_list: ITreeNodeData[],
+  tree_list: INodeData[],
   source_id: NodeIdType,
   target_id: NodeIdType,
   where: DropWhereType,
-): ITreeNodeData[] | null => {
+): INodeData[] | null => {
   tree_list = lodash.cloneDeep(tree_list)
 
   if (source_id === target_id) return null
@@ -84,15 +90,55 @@ export const treeMoveNode = (
   return tree_list
 }
 
-export function getNodeById(tree_list: ITreeNodeData[], id: NodeIdType): ITreeNodeData | undefined {
+export function getNodeById(tree_list: INodeData[], id: NodeIdType): INodeData | undefined {
   return flatten(tree_list).find(i => i.id === id)
 }
 
-export function isChildOf(tree_list: ITreeNodeData[], a_id: NodeIdType, b_id: NodeIdType): boolean {
+export function isChildOf(tree_list: INodeData[], a_id: NodeIdType, b_id: NodeIdType): boolean {
   if (a_id === b_id) return false
 
   let target_node = getNodeById(tree_list, b_id)
   if (!target_node || !Array.isArray(target_node.children)) return false
 
   return flatten(target_node.children).findIndex(i => i.id === a_id) > -1
+}
+
+export function objKeyMap(obj: IObj, key_maps: KeyMapType[], reversed: boolean = false): IObj {
+  if (reversed) {
+    key_maps = keyMapReverse(key_maps)
+  }
+
+  let keys = Object.keys(obj)
+  let new_obj: IObj = {}
+
+  keys.map(key => {
+    let map = key_maps.find(i => i[0] === key)
+    let value = obj[key]
+
+    if (Array.isArray(value)) {
+      value = treeKeyMap(value, key_maps)
+    } else if (typeof value === 'object' && value) {
+      value = objKeyMap(value, key_maps)
+    }
+
+    if (map) {
+      new_obj[map[1]] = value
+    } else {
+      new_obj[key] = value
+    }
+  })
+
+  return new_obj
+}
+
+export function treeKeyMap(tree_list: IObj[], key_maps: KeyMapType[], reversed: boolean = false): any[] {
+  if (reversed) {
+    key_maps = keyMapReverse(key_maps)
+  }
+
+  return tree_list.map(item => objKeyMap(item, key_maps))
+}
+
+export function keyMapReverse(key_maps: KeyMapType[]): KeyMapType[] {
+  return key_maps.map(([a, b]) => [b, a])
 }

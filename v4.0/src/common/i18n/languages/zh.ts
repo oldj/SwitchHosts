@@ -43,6 +43,7 @@ const lang: LanguageDict = {
   migrate_data: '迁移数据',
   minute: '分钟',
   minutes: '分钟',
+  move_to_trashcan: '移到回收站',
   never: '从不',
   no_access_to_hosts: '没有写入 Hosts 文件的权限。',
   password: '密码',
@@ -53,6 +54,7 @@ const lang: LanguageDict = {
   sudo_prompt_title: '请输入你的登录密码（sudo 密码）',
   system_hosts: '系统 Hosts',
   test: '测试',
+  trashcan: '回收站',
   untitled: '未命名',
   url_placeholder: 'http:// 或 https:// 或 file://',
 }

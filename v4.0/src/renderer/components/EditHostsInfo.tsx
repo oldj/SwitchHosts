@@ -215,13 +215,14 @@ const EditHostsInfo = () => {
         icon={<DeleteOutlined/>}
         danger
         style={{ float: 'left' }}
+        disabled={!hosts}
         onClick={() => {
-          if (hosts && confirm(lang.hosts_delete_confirm)) {
-            agent.broadcast('delete_hosts', hosts.id)
+          if (hosts) {
+            agent.broadcast('move_to_trashcan', hosts.id)
             onCancel()
           }
         }}
-      >{lang.hosts_delete}</Button>,
+      >{lang.move_to_trashcan}</Button>,
     )
   }
 

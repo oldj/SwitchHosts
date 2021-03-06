@@ -64,8 +64,8 @@ const List = (props: Props) => {
 
   useOnBroadcast('toggle_item', onToggleItem, [hosts_data])
 
-  useOnBroadcast('delete_hosts', async (id: string) => {
-    console.log(`delete_hosts: #${id}`)
+  useOnBroadcast('move_to_trashcan', async (id: string) => {
+    console.log(`move_to_trashcan: #${id}`)
 
     let next_hosts: HostsListObjectType | undefined
     // console.log(current_hosts)
@@ -74,7 +74,7 @@ const List = (props: Props) => {
       // console.log(next_hosts)
     }
 
-    await actions.localListDeleteItem(id)
+    await actions.localListItemMoveToTrashcan(id)
     await getHostsData()
 
     if (next_hosts) {

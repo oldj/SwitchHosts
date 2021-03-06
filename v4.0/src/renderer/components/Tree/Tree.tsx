@@ -8,24 +8,24 @@ import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
 import { flatten, getNodeById, treeMoveNode } from './fn'
-import Node, { ITreeNodeData, NodeUpdate } from './Node'
+import Node, { INodeData, NodeUpdate } from './Node'
 import styles from './style.less'
 
 export type NodeIdType = string;
 export type DropWhereType = 'before' | 'in' | 'after';
 
 interface ITreeProps {
-  data: ITreeNodeData[];
+  data: INodeData[];
   className?: string;
   nodeClassName?: string;
   nodeSelectedClassName?: string;
   nodeDropInClassName?: string;
   nodeCollapseArrowClassName?: string;
-  nodeRender?: (node: ITreeNodeData, update: NodeUpdate) => React.ReactElement;
-  nodeAttr?: (node: ITreeNodeData) => Partial<ITreeNodeData>;
-  draggingNodeRender?: (node: ITreeNodeData) => React.ReactElement;
+  nodeRender?: (node: INodeData, update: NodeUpdate) => React.ReactElement | null;
+  nodeAttr?: (node: INodeData) => Partial<INodeData>;
+  draggingNodeRender?: (node: INodeData) => React.ReactElement;
   collapseArrow?: string | React.ReactElement;
-  onChange?: (tree: ITreeNodeData[]) => void;
+  onChange?: (tree: INodeData[]) => void;
   indent_px?: number;
   selected_id?: NodeIdType;
   onSelect?: (id: NodeIdType) => void;
@@ -33,7 +33,7 @@ interface ITreeProps {
 
 const Tree = (props: ITreeProps) => {
   const { data, className, onChange } = props
-  const [tree, setTree] = useState<ITreeNodeData[]>([])
+  const [tree, setTree] = useState<INodeData[]>([])
   const [is_dragging, setIsDragging] = useState(false)
   const [drag_source_id, setDragSourceId] = useState<NodeIdType | null>(null)
   const [drop_target_id, setDropTargetId] = useState<NodeIdType | null>(null)
@@ -48,6 +48,11 @@ const Tree = (props: ITreeProps) => {
     setSelectedId(props.selected_id || null)
   }, [props.selected_id])
 
+  // useEffect(() => {
+  //   document.addEventListener('drop', onDragEnd, false)
+  //   return () => document.removeEventListener('drop', onDragEnd, false)
+  // }, [])
+
   const onDragStart = (id: NodeIdType) => {
     // console.log('onDragStart...')
     setIsDragging(true)
@@ -57,7 +62,7 @@ const Tree = (props: ITreeProps) => {
   }
 
   const onDragEnd = () => {
-    // console.log(`onDragEnd, ${is_dragging}`)
+    console.log(`onDragEnd, ${is_dragging}`)
     if (!is_dragging) return
 
     if (drag_source_id && drop_target_id && drop_where) {
@@ -65,7 +70,7 @@ const Tree = (props: ITreeProps) => {
       let tree2 = treeMoveNode(tree, drag_source_id, drop_target_id, drop_where)
       if (tree2) {
         setTree(tree2)
-        onChange && onChange(tree2)
+        onTreeChange(tree2)
       }
     }
 
@@ -75,15 +80,21 @@ const Tree = (props: ITreeProps) => {
     setDropWhere(null)
   }
 
-  const onNodeChange = (id: NodeIdType, data: Partial<ITreeNodeData>) => {
+  const onTreeChange = (tree: INodeData[]) => {
+    console.log('onTreeChange...')
+    onChange && onChange(tree)
+  }
+
+  const onNodeChange = (id: NodeIdType, data: Partial<INodeData>) => {
+    console.log('onNodeChange...')
     let node = getNodeById(tree, id)
     if (!node) return
 
     Object.assign(node, data)
     let tree2 = lodash.cloneDeep(tree)
     setTree(tree2)
-    onChange && onChange(tree2)
-    console.log(id, data)
+    onTreeChange(tree2)
+    // console.log(id, data)
   }
 
   const onSelect = (id: NodeIdType) => {
