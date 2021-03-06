@@ -21,7 +21,7 @@ interface Props {
 const TrashcanItem = (props: Props) => {
   const { data } = props
   const { lang } = useModel('useI18n')
-  const { loadHostsData } = useModel('useHostsData')
+  const { hosts_data, loadHostsData } = useModel('useHostsData')
 
   const onSelect = (i: any) => {
     console.log(i)
@@ -30,9 +30,12 @@ const TrashcanItem = (props: Props) => {
   const menu_for_all = new PopupMenu([
     {
       label: lang.trashcan_clear,
+      enabled: hosts_data.trashcan.length > 0,
       click() {
         if (confirm(lang.trashcan_clear_confirm)) {
-          agent.broadcast('trashcan_clear', data.id)
+          actions.localTrashcanClear()
+            .then(loadHostsData)
+            .catch(e => console.error(e))
         }
       },
     },
@@ -42,13 +45,9 @@ const TrashcanItem = (props: Props) => {
     {
       label: lang.trashcan_restore,
       click() {
-        // agent.broadcast('trashcan_restore', data.id)
         actions.localTrashcanItemRestore(data.id)
           .then(success => {
-            console.log(success)
-            if (success) {
-              loadHostsData()
-            }
+            success && loadHostsData()
           })
       },
     },
@@ -59,7 +58,10 @@ const TrashcanItem = (props: Props) => {
       label: lang.hosts_delete,
       click() {
         if (confirm(lang.trashcan_delete_confirm)) {
-          agent.broadcast('delete_hosts', data.id)
+          actions.localTrashcanItemDelete(data.id)
+            .then(success => {
+              success && loadHostsData()
+            })
         }
       },
     },
