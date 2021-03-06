@@ -4,12 +4,11 @@
  * @homepage: https://oldj.net
  */
 
-import LatDb from '@main/utils/db/core/db'
-import { DataTypeDocument } from '@main/utils/db/typings'
-import { asInt } from '@main/utils/db/utils/asType'
 import * as fs from 'fs'
 import lodash from 'lodash'
 import * as path from 'path'
+import { asInt } from '../../utils/asType'
+import LatDb from '../db'
 import Dict from './dict'
 import List from './list'
 
@@ -69,7 +68,7 @@ export default class Collection {
     return (await this._ids.all()).length
   }
 
-  async insert<T>(doc: Partial<DataTypeDocument> & T): Promise<DataTypeDocument> {
+  async insert<T>(doc: T): Promise<T> {
     let _id = await this.makeId()
     await this._ids.push(_id)
     doc = { ...doc, _id }
@@ -79,39 +78,41 @@ export default class Collection {
 
     this._docs[_id] = d
 
-    return doc as DataTypeDocument
+    return doc as T
   }
 
-  async all<T>(keys: string | string[] = '*'): Promise<(DataTypeDocument & T) | Partial<DataTypeDocument & T>[]> {
-    return await Promise.all((await this._ids.all()).map(async _id => {
+  async all<T>(keys: string | string[] = '*'): Promise<T[]> {
+    let data = await Promise.all((await this._ids.all()).map(async _id => {
       let d = this.getDoc(_id)
-      let doc: (DataTypeDocument & T) | Partial<DataTypeDocument & T> = await d.toJSON<DataTypeDocument & T>()
+      let doc: T = await d.toJSON<T>()
 
       if (Array.isArray(keys)) {
-        doc = lodash.pick(doc, keys) as Partial<DataTypeDocument & T>
+        doc = lodash.pick(doc, keys) as T
       }
 
       return doc
     }))
+
+    return data as T[]
   }
 
-  async index<T>(index: number, keys: string | string[] = '*'): Promise<Partial<DataTypeDocument & T> | undefined> {
+  async index<T>(index: number, keys: string | string[] = '*'): Promise<T | undefined> {
     let _id = await this._ids.index(index)
     if (!_id) return
 
     return await this.find<T>(i => i._id === _id, keys)
   }
 
-  async find<T>(predicate: FilterFunction, keys: string | string[] = '*'): Promise<Partial<DataTypeDocument & T> | undefined> {
+  async find<T>(predicate: FilterFunction, keys: string | string[] = '*'): Promise<T | undefined> {
     let _ids = await this._ids.all()
 
     for (let _id of _ids) {
       let d = this.getDoc(_id)
-      let doc: Partial<DataTypeDocument & T> = await d.toJSON<DataTypeDocument & T>()
+      let doc: T = await d.toJSON<T>()
 
       if (predicate(doc)) {
         if (Array.isArray(keys)) {
-          doc = lodash.pick(doc, keys) as Partial<DataTypeDocument & T>
+          doc = lodash.pick(doc, keys) as T
         }
 
         return doc
@@ -119,17 +120,17 @@ export default class Collection {
     }
   }
 
-  async filter<T>(predicate: FilterFunction, keys: string | string[] = '*'): Promise<Partial<DataTypeDocument & T>[]> {
+  async filter<T>(predicate: FilterFunction, keys: string | string[] = '*'): Promise<T[]> {
     let _ids = await this._ids.all()
-    let list: Partial<DataTypeDocument & T>[] = []
+    let list: T[] = []
 
     for (let _id of _ids) {
       let d = this.getDoc(_id)
-      let doc: Partial<DataTypeDocument & T> = await d.toJSON<DataTypeDocument & T>()
+      let doc: T = await d.toJSON<T>()
 
       if (predicate(doc)) {
         if (Array.isArray(keys)) {
-          doc = lodash.pick(doc, keys) as Partial<DataTypeDocument & T>
+          doc = lodash.pick(doc, keys) as T
         }
 
         list.push(doc)
@@ -139,9 +140,9 @@ export default class Collection {
     return list
   }
 
-  async update<T>(_id: string, data: Partial<DataTypeDocument & T>): Promise<DataTypeDocument & T> {
+  async update<T>(_id: string, data: T): Promise<T> {
     let d = this.getDoc(_id)
-    let doc: DataTypeDocument & T = await d.toJSON<DataTypeDocument & T>()
+    let doc: T = await d.toJSON<T>()
 
     doc = {
       ...doc,
@@ -149,7 +150,7 @@ export default class Collection {
       _id,
     }
 
-    return await d.update<DataTypeDocument & T>(doc)
+    return await d.update<T>(doc)
   }
 
   async delete(_id: string) {

@@ -4,10 +4,10 @@
  * @homepage: https://oldj.net
  */
 
-import IO from '@main/utils/db/core/io'
-import { DataTypeList, IBasicOptions } from '@main/utils/db/typings'
-import { clone } from '@main/utils/db/utils/clone'
 import * as path from 'path'
+import { DataTypeList, IBasicOptions } from '../../typings'
+import { clone } from '../../utils/clone'
+import IO from '../io'
 
 interface Options extends IBasicOptions {
 }
