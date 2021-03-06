@@ -12,7 +12,7 @@ import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
-import { findItemById, getHostsOutput, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
+import { findItemById, flatten, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import styles from './List.less'
@@ -36,11 +36,31 @@ const List = (props: Props) => {
 
   const onToggleItem = async (id: string, on: boolean) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
+    let success = await writeHostsToSystem(new_list)
+    if (!success) {
+      agent.broadcast('set_hosts_on_status', id, !on)
+    }
+  }
 
-    const content = getHostsOutput(new_list)
+  const writeHostsToSystem = async (list?: IHostsListObject[]): Promise<boolean> => {
+    if (!Array.isArray(list)) {
+      list = hosts_data.list
+    }
+
+    const content_list: string[] = []
+    const flat = flatten(list).filter(i => i.on)
+    for (let hosts of flat) {
+      let c = await actions.localContentGet(list, hosts)
+      content_list.push(c)
+    }
+
+    const content = content_list.join('\n\n')
+    // console.log(content)
+    // todo 去重
+
     const result = await actions.systemHostsWrite(content)
     if (result.success) {
-      setList(new_list).catch(e => console.error(e))
+      setList(list).catch(e => console.error(e))
       new Notification(i18n.lang.success, {
         body: i18n.lang.hosts_updated,
       })
@@ -57,12 +77,13 @@ const List = (props: Props) => {
       new Notification(i18n.lang.fail, {
         body,
       })
-
-      agent.broadcast('set_hosts_on_status', id, !on)
     }
+
+    return result.success
   }
 
   useOnBroadcast('toggle_item', onToggleItem, [hosts_data])
+  useOnBroadcast('write_hosts_to_system', writeHostsToSystem, [hosts_data])
 
   useOnBroadcast('move_to_trashcan', async (id: string) => {
     console.log(`move_to_trashcan: #${id}`)

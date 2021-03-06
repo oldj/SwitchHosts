@@ -17,6 +17,8 @@ interface IWriteResult {
   message?: string;
 }
 
+let sudo_pswd: string = ''
+
 export default async (content: string, options?: IHostsWriteOptions): Promise<IWriteResult> => {
   const fn = await getSystemHostsPath()
 
