@@ -4,11 +4,11 @@
  * @homepage: https://oldj.net
  */
 
-import { HostsListObjectType } from '@root/common/data'
+import { IHostsListObject } from '@root/common/data'
 import { useState } from 'react'
 
 export default function useCurrentHosts() {
-  const [current_hosts, setCurrentHosts] = useState<HostsListObjectType | null>(null)
+  const [current_hosts, setCurrentHosts] = useState<IHostsListObject | null>(null)
 
   return {
     current_hosts,

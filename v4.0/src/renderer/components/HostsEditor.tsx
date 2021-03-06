@@ -8,13 +8,13 @@ import { useModel } from '@@/plugin-model/useModel'
 import StatusBar from '@renderer/components/StatusBar'
 import { actions } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { HostsListObjectType } from '@root/common/data'
+import { IHostsListObject } from '@root/common/data'
 import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
 import styles from './HostsEditor.less'
 
 interface Props {
-  hosts: HostsListObjectType;
+  hosts: IHostsListObject;
 }
 
 const HostsEditor = (props: Props) => {

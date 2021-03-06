@@ -7,15 +7,15 @@
 import { localContentSet, localListSet } from '@main/actions/index'
 
 import { swhdb } from '@main/data'
-import { HostsListObjectType, OperationResultType } from '@root/common/data'
+import { IHostsListObject, IOperationResult } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
 import version from '@root/version.json'
 import axios from 'axios'
 import dayjs from 'dayjs'
 
-export default async (hosts_id: string): Promise<OperationResultType> => {
+export default async (hosts_id: string): Promise<IOperationResult> => {
   let list = await swhdb.list.tree.all()
-  let hosts: HostsListObjectType | undefined = hostsFn.findItemById(list, hosts_id)
+  let hosts: IHostsListObject | undefined = hostsFn.findItemById(list, hosts_id)
 
   if (!hosts) {
     return {
