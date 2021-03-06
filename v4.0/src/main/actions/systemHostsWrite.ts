@@ -5,11 +5,8 @@
 
 import getSystemHostsPath from '@main/actions/getSystemHostsPath'
 import { broadcast } from '@main/core/agent'
+import { IHostsWriteOptions } from '@main/types'
 import * as fs from 'fs'
-
-interface IHostsWriteOptions {
-  sudo_pswd?: string;
-}
 
 interface IWriteResult {
   success: boolean;
@@ -19,18 +16,25 @@ interface IWriteResult {
 
 let sudo_pswd: string = ''
 
-export default async (content: string, options?: IHostsWriteOptions): Promise<IWriteResult> => {
-  const fn = await getSystemHostsPath()
-
-  let has_access = false
+const checkAccess = async (fn: string): Promise<boolean> => {
   try {
     await fs.promises.access(fn, fs.constants.W_OK)
-    has_access = true
+    return true
   } catch (e) {
     console.error(e)
   }
+  return false
+}
 
-  if (!has_access) {
+const write = async (content: string, options?: IHostsWriteOptions): Promise<IWriteResult> => {
+  const fn = await getSystemHostsPath()
+
+  if (!(await checkAccess(fn))) {
+    console.log(options)
+    if (options && options.sudo_pswd) {
+      sudo_pswd = options.sudo_pswd
+    }
+
     return {
       success: false,
       code: 'no_access',
@@ -51,3 +55,5 @@ export default async (content: string, options?: IHostsWriteOptions): Promise<IW
 
   return { success: true }
 }
+
+export default write
