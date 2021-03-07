@@ -3,6 +3,7 @@ import EditHostsInfo from '@renderer/components/EditHostsInfo'
 import LeftPanel from '@renderer/components/LeftPanel'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
+import SudoPasswordInput from '@renderer/components/SudoPasswordInput'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { Modal } from 'antd'
@@ -89,6 +90,7 @@ export default () => {
         <MainPanel has_left_panel={left_show}/>
       </div>
       <EditHostsInfo/>
+      <SudoPasswordInput/>
     </div>
   )
 }

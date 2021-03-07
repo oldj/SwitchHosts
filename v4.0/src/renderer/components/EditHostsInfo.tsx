@@ -17,8 +17,7 @@ import { v4 as uuidv4 } from 'uuid'
 import styles from './EditHostsInfo.less'
 
 const EditHostsInfo = () => {
-  const { i18n } = useModel('useI18n')
-  const { lang } = i18n
+  const { lang } = useModel('useI18n')
   const [hosts, setHosts] = useState<IHostsListObject | null>(null)
   const { hosts_data, setList, loadHostsData } = useModel('useHostsData')
   const [is_show, setIsShow] = useState(false)

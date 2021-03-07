@@ -56,41 +56,6 @@ export const updateOneItem = (list: IHostsListObject[], item: PartHostsObjectTyp
   return new_list
 }
 
-export const getContentOfHosts = (list: IHostsListObject[], hosts: IHostsListObject): string => {
-  const { where } = hosts
-  if (!where || where === 'local' || where === 'remote') {
-    return hosts.content || ''
-  }
-
-  if (where === 'folder') {
-    const items = flatten(hosts.children || [])
-
-    return items.map(item => {
-      return `# file: ${item.title}\n` + getContentOfHosts(list, item)
-    }).join('\n\n')
-  }
-
-  if (where === 'group') {
-    return (hosts.include || []).map(id => {
-      let item = findItemById(list, id)
-      if (!item) return ''
-
-      return `# file: ${item.title}\n` + getContentOfHosts(list, item)
-    }).join('\n\n')
-  }
-
-  return ''
-}
-
-export const getHostsOutput = (list: IHostsListObject[]): string => {
-  const content = flatten(list).filter(item => item.on).map(item => getContentOfHosts(list, item))
-    .join('\n\n')
-
-  // todo 去重
-
-  return content
-}
-
 export const deleteItemById = (list: IHostsListObject[], id: string) => {
   let idx = list.findIndex(item => item.id === id)
   if (idx >= 0) {

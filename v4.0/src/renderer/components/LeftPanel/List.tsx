@@ -6,13 +6,15 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import { RightOutlined } from '@ant-design/icons'
+import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
+import { message } from 'antd'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
-import { findItemById, getHostsOutput, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
+import { findItemById, flatten, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import styles from './List.less'
@@ -23,7 +25,7 @@ interface Props {
 const List = (props: Props) => {
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, loadHostsData, setList } = useModel('useHostsData')
-  const { i18n, lang } = useModel('useI18n')
+  const { lang } = useModel('useI18n')
   const [show_list, setShowList] = useState<IHostsListObject[]>([])
 
   useEffect(() => {
@@ -36,33 +38,67 @@ const List = (props: Props) => {
 
   const onToggleItem = async (id: string, on: boolean) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
+    let success = await writeHostsToSystem(new_list)
+    if (!success) {
+      agent.broadcast('set_hosts_on_status', id, !on)
+    }
+  }
 
-    const content = getHostsOutput(new_list)
-    const result = await actions.systemHostsWrite(content)
+  const writeHostsToSystem = async (list?: IHostsListObject[], options?: IHostsWriteOptions): Promise<boolean> => {
+    if (!Array.isArray(list)) {
+      list = hosts_data.list
+    }
+
+    const content_list: string[] = []
+    const flat = flatten(list).filter(i => i.on)
+    for (let hosts of flat) {
+      let c = await actions.localContentGet(list, hosts)
+      content_list.push(c)
+    }
+
+    const content = content_list.join('\n\n')
+    // console.log(content)
+    // todo 去重
+
+    const result = await actions.systemHostsWrite(content, options)
     if (result.success) {
-      setList(new_list).catch(e => console.error(e))
-      new Notification(i18n.lang.success, {
-        body: i18n.lang.hosts_updated,
+      setList(list).catch(e => console.error(e))
+      new Notification(lang.success, {
+        body: lang.hosts_updated,
       })
+      message.success(lang.success)
+
+      if (current_hosts) {
+        let hosts = findItemById(list, current_hosts.id)
+        if (hosts) {
+          agent.broadcast('set_hosts_on_status', current_hosts.id, hosts.on)
+        }
+      }
 
     } else {
       console.log(result)
       loadHostsData().catch(e => console.log(e))
 
-      let body = i18n.lang.no_access_to_hosts
-      if (result.code !== 'no_access') {
+      let body: string = lang.no_access_to_hosts
+      if (result.code === 'no_access') {
+        if (agent.platform === 'darwin' || agent.platform === 'linux') {
+          agent.broadcast('show_sudo_password_input', list)
+        }
+      } else {
         body = result.message || 'Unknow error!'
       }
 
-      new Notification(i18n.lang.fail, {
+      new Notification(lang.fail, {
         body,
       })
-
-      agent.broadcast('set_hosts_on_status', id, !on)
+      message.error(lang.fail)
     }
+
+    return result.success
   }
 
   useOnBroadcast('toggle_item', onToggleItem, [hosts_data])
+  useOnBroadcast('write_hosts_to_system', writeHostsToSystem, [hosts_data])
 
   useOnBroadcast('move_to_trashcan', async (id: string) => {
     console.log(`move_to_trashcan: #${id}`)
