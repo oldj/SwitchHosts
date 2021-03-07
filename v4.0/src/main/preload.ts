@@ -47,19 +47,19 @@ const broadcast = <T>(event: string, ...args: any) => {
 }
 
 const on = (event: string, handler: EventHandler) => {
-  console.log(`on [${event}]`)
+  // console.log(`on [${event}]`)
   ee.on(event, handler)
   return () => off(event, handler)
 }
 
 const once = (event: string, handler: EventHandler) => {
-  console.log(`once [${event}]`)
+  // console.log(`once [${event}]`)
   ee.once(event, handler)
   return () => off(event, handler)
 }
 
 const off = (event: string, handler: EventHandler) => {
-  console.log(`off [${event}]`)
+  // console.log(`off [${event}]`)
   ee.off(event, handler)
 }
 

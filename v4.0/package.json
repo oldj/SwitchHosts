@@ -19,6 +19,8 @@
     "dayjs": "^1.10.4",
     "electron-store": "^6.0.1",
     "lodash": "^4.17.20",
+    "md5": "^2.3.0",
+    "md5-file": "^5.0.0",
     "mkdirp": "^1.0.4",
     "uuid": "^8.3.2"
   },
@@ -29,6 +31,7 @@
     "@babel/plugin-proposal-decorators": "^7.12.13",
     "@babel/preset-env": "^7.12.11",
     "@babel/preset-typescript": "^7.12.7",
+    "@types/md5": "^2.3.0",
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "@types/uuid": "^8.3.0",
