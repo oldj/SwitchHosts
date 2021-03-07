@@ -29,13 +29,14 @@ const SudoPasswordInput = (props: Props) => {
 
   const onOk = async () => {
     setIsShow(false)
+    setPswd('')
     agent.broadcast('write_hosts_to_system', tmp_list, { sudo_pswd: pswd })
   }
 
   useOnBroadcast('show_sudo_password_input', (tmp_list?: IHostsListObject[]) => {
     setTmpList(tmp_list)
     setIsShow(true)
-    console.log(tmp_list)
+    // console.log(tmp_list)
   }, [tmp_list])
 
   if (!is_show) return null

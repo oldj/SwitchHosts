@@ -8,6 +8,7 @@ import { useModel } from '@@/plugin-model/useModel'
 import { RightOutlined } from '@ant-design/icons'
 import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
+import { message } from 'antd'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
@@ -24,7 +25,7 @@ interface Props {
 const List = (props: Props) => {
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, loadHostsData, setList } = useModel('useHostsData')
-  const { i18n, lang } = useModel('useI18n')
+  const { lang } = useModel('useI18n')
   const [show_list, setShowList] = useState<IHostsListObject[]>([])
 
   useEffect(() => {
@@ -62,15 +63,23 @@ const List = (props: Props) => {
     const result = await actions.systemHostsWrite(content, options)
     if (result.success) {
       setList(list).catch(e => console.error(e))
-      new Notification(i18n.lang.success, {
-        body: i18n.lang.hosts_updated,
+      new Notification(lang.success, {
+        body: lang.hosts_updated,
       })
+      message.success(lang.success)
+
+      if (current_hosts) {
+        let hosts = findItemById(list, current_hosts.id)
+        if (hosts) {
+          agent.broadcast('set_hosts_on_status', current_hosts.id, hosts.on)
+        }
+      }
 
     } else {
       console.log(result)
       loadHostsData().catch(e => console.log(e))
 
-      let body: string = i18n.lang.no_access_to_hosts
+      let body: string = lang.no_access_to_hosts
       if (result.code === 'no_access') {
         if (agent.platform === 'darwin' || agent.platform === 'linux') {
           agent.broadcast('show_sudo_password_input', list)
@@ -79,9 +88,10 @@ const List = (props: Props) => {
         body = result.message || 'Unknow error!'
       }
 
-      new Notification(i18n.lang.fail, {
+      new Notification(lang.fail, {
         body,
       })
+      message.error(lang.fail)
     }
 
     return result.success
