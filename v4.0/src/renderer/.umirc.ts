@@ -18,4 +18,5 @@ export default defineConfig({
     '@root': path.dirname(__dirname),
     '@@': path.join(path.dirname(__dirname), 'renderer', '.umi'),
   },
+  webpack5: {},
 })
