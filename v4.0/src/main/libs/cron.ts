@@ -28,8 +28,7 @@ const isNeedRefresh = (hosts: IHostsListObject): boolean => {
 }
 
 const check = async () => {
-  console.log('check refresh...')
-
+  // console.log('check refresh...')
   let list = await localListGet()
   let remote_hosts = flatten(list)
     .filter(h => h.where === 'remote')
@@ -49,6 +48,5 @@ const check = async () => {
 
 export const start = () => {
   clearInterval(t)
-
-  setInterval(check, 3 * 1000)
+  t = setInterval(check, 60 * 1000)
 }
