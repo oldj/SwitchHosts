@@ -4,7 +4,8 @@
  * @homepage: https://oldj.net
  */
 
-import { localContentSet, localListSet } from '@main/actions/index'
+import { localContentGet, localContentSet, localListSet } from '@main/actions/index'
+import { broadcast } from '@main/core/agent'
 
 import { swhdb } from '@main/data'
 import { IHostsListObject, IOperationResult } from '@root/common/data'
@@ -40,7 +41,8 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
     }
   }
 
-  let content: string
+  let old_content: string = await localContentGet(list, hosts)
+  let new_content: string
   try {
     console.log(`-> refreshHosts URL: "${url}"`)
     let resp = await axios.get(url, {
@@ -48,7 +50,7 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
         'User-Agent': `SwitchHosts/${version.join('.')}`,
       },
     })
-    content = resp.data
+    new_content = resp.data
   } catch (e) {
     console.error(e)
     return {
@@ -58,9 +60,14 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
   }
 
   hosts.last_refresh = dayjs().format('YYYY-MM-DD HH:mm:ss')
+  hosts.last_refresh_ms = (new Date()).getTime()
 
-  await localContentSet(hosts_id, content)
   await localListSet(list)
+
+  if (old_content !== new_content) {
+    await localContentSet(hosts_id, new_content)
+    broadcast('reload_content', hosts_id)
+  }
 
   return {
     success: true,
