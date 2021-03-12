@@ -3,6 +3,7 @@ import { store } from '@main/core/config'
 import '@main/core/message'
 import '@main/core/popupMenu'
 import '@main/data'
+import * as cron from '@main/libs/cron'
 
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
@@ -54,6 +55,7 @@ const createWindow = async () => {
 app.on('ready', async () => {
   console.log(`VERSION: ${version.join('.')}`)
   await createWindow()
+  cron.start()
 })
 
 app.on('window-all-closed', () => {
@@ -62,8 +64,8 @@ app.on('window-all-closed', () => {
   }
 })
 
-app.on('activate', () => {
+app.on('activate', async () => {
   if (win === null) {
-    createWindow()
+    await createWindow()
   }
 })

@@ -14,6 +14,7 @@ import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
 import { findItemById, flatten, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
+import normalize from '@root/common/normalize'
 import { message } from 'antd'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
@@ -39,7 +40,9 @@ const List = (props: Props) => {
   const onToggleItem = async (id: string, on: boolean) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
     let success = await writeHostsToSystem(new_list)
-    if (!success) {
+    if (success) {
+      message.success(lang.success)
+    } else {
       agent.broadcast('set_hosts_on_status', id, !on)
     }
   }
@@ -56,9 +59,9 @@ const List = (props: Props) => {
       content_list.push(c)
     }
 
-    const content = content_list.join('\n\n')
+    let content = content_list.join('\n\n')
     // console.log(content)
-    // todo 去重
+    content = normalize(content)
 
     const result = await actions.systemHostsWrite(content, options)
     if (result.success) {
@@ -66,7 +69,6 @@ const List = (props: Props) => {
       new Notification(lang.success, {
         body: lang.hosts_updated,
       })
-      message.success(lang.success)
 
       if (current_hosts) {
         let hosts = findItemById(list, current_hosts.id)
@@ -132,6 +134,17 @@ const List = (props: Props) => {
     setCurrentHosts(hosts)
   }, [ hosts_data ])
 
+  useOnBroadcast('reload_list', loadHostsData)
+
+  useOnBroadcast('hosts_content_changed', async (hosts_id: string) => {
+    let list: IHostsListObject[] = await actions.localListGet()
+    let hosts = findItemById(list, hosts_id)
+    if (!hosts || !hosts.on) return
+
+    // 当前 hosts 是开启状态，且内容发生了变化
+    await writeHostsToSystem(list)
+  })
+
   return (
     <div className={styles.root}>
       {/*<SystemHostsItem/>*/}
@@ -142,9 +155,9 @@ const List = (props: Props) => {
           setShowList(list)
           setList(list).catch(e => console.error(e))
         }}
-        onSelect={(id) => {
-          agent.broadcast('select_hosts', id)
-        }}
+        // onSelect={(id) => {
+        //   agent.broadcast('select_hosts', id)
+        //}}
         nodeRender={(data) => (
           <ListItem key={data.id} data={data}/>
         )}

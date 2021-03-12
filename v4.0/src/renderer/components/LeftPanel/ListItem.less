@@ -14,14 +14,20 @@
     position: absolute;
     z-index: 10;
     margin-left: -24px;
-    //background: var(--swh-selected-bg);
+    background: var(--swh-selected-bg);
+    padding: 0 2px;
     display: none;
     cursor: pointer;
-    opacity: 0.5;
-    transition: 0.3s;
+
+    svg {
+      opacity: 0.5;
+      transition: 0.3s;
+    }
 
     &:hover {
-      opacity: 1;
+      svg {
+        opacity: 1;
+      }
     }
   }
 }
@@ -31,6 +37,8 @@
   //padding-left: 10px;
   height: var(--swh-tree-row-height);
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: default;
 }
 

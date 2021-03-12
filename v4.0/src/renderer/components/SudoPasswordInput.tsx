@@ -57,7 +57,7 @@ const SudoPasswordInput = (props: Props) => {
         onChange={e => setPswd(e.target.value)}
         autoFocus={true}
         onKeyDown={e => {
-          if (e.code === 'Enter') onOk()
+          if (e.key === 'Enter') onOk()
         }}
       />
     </Modal>

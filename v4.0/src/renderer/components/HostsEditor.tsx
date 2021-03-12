@@ -6,7 +6,7 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import StatusBar from '@renderer/components/StatusBar'
-import { actions } from '@renderer/core/agent'
+import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
 import lodash from 'lodash'
@@ -32,6 +32,7 @@ const HostsEditor = (props: Props) => {
 
   const toSave = lodash.debounce((id: string, content: string) => {
     actions.localContentSet(id, content)
+      .then(() => agent.broadcast('hosts_content_changed', id))
       .catch(e => console.error(e))
   }, 1000)
 
@@ -53,13 +54,14 @@ const HostsEditor = (props: Props) => {
       return true
     }
 
+    // ..
     return false
   }
 
   let is_read_only = isReadOnly()
 
-  useOnBroadcast('reload_content', (id: string) => {
-    if (id !== hosts.id) return
+  useOnBroadcast('hosts_refreshed', (h: IHostsListObject) => {
+    if (h.id !== hosts.id) return
     actions.localContentGet(hosts_data.list, hosts)
       .then(setContent)
   }, [ hosts, hosts_data ])
