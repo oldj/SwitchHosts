@@ -17,6 +17,7 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsWhereType, IHostsListObject } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
 import { Button, Input, message, Modal, Radio, Select, Transfer } from 'antd'
+import lodash from 'lodash'
 import React, { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import styles from './EditHostsInfo.less'
@@ -24,7 +25,8 @@ import styles from './EditHostsInfo.less'
 const EditHostsInfo = () => {
   const { lang } = useModel('useI18n')
   const [ hosts, setHosts ] = useState<IHostsListObject | null>(null)
-  const { hosts_data, setList, loadHostsData } = useModel('useHostsData')
+  const { hosts_data, setList } = useModel('useHostsData')
+  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const [ is_show, setIsShow ] = useState(false)
   const [ is_add, setIsAdd ] = useState(true)
   const [ is_refreshing, setIsRefreshing ] = useState(false)
@@ -35,22 +37,35 @@ const EditHostsInfo = () => {
   }
 
   const onSave = async () => {
+    let data: Omit<IHostsListObject, 'id'> & { id?: string } = { ...hosts }
+
+    const keys_to_trim = [ 'title', 'url' ]
+    keys_to_trim.map(k => {
+      if (data[k]) {
+        data[k] = data[k].trim()
+      }
+    })
+
     if (is_add) {
       // add
       let h: IHostsListObject = {
-        ...(hosts || {}),
+        ...(data),
         id: uuidv4(),
       }
       let list: IHostsListObject[] = [ ...hosts_data.list, h ]
       await setList(list)
       agent.broadcast('select_hosts', h.id, 1000)
 
-    } else if (hosts) {
+    } else if (data && data.id) {
       // edit
-      let h: IHostsListObject | undefined = hostsFn.findItemById(hosts_data.list, hosts.id)
+      let h: IHostsListObject | undefined = hostsFn.findItemById(hosts_data.list, data.id)
       if (h) {
-        Object.assign(h, hosts)
+        Object.assign(h, data)
         await setList([ ...hosts_data.list ])
+
+        if (data.id === current_hosts?.id) {
+          setCurrentHosts(h)
+        }
 
       } else {
         // can not find by id
@@ -67,7 +82,7 @@ const EditHostsInfo = () => {
     setIsShow(false)
   }
 
-  const onUpdate = async (kv: Partial<IHostsListObject>) => {
+  const onUpdate = (kv: Partial<IHostsListObject>) => {
     let obj: IHostsListObject = Object.assign({}, hosts, kv)
     setHosts(obj)
   }
@@ -84,14 +99,23 @@ const EditHostsInfo = () => {
     setIsShow(true)
   })
 
+  useOnBroadcast('hosts_refreshed', (_hosts: IHostsListObject) => {
+    if (hosts && hosts.id === _hosts.id) {
+      onUpdate(lodash.pick(_hosts, [ 'last_refresh', 'last_refresh_ms' ]))
+    }
+  }, [ hosts ])
+
   const forRemote = (): React.ReactElement => {
     return (
       <>
         <div className={styles.ln}>
           <div className={styles.label}>URL</div>
           <div>
-            <Input value={hosts?.url} onChange={e => onUpdate({ url: e.target.value })}
-                   placeholder={lang.url_placeholder}/>
+            <Input
+              value={hosts?.url}
+              onChange={e => onUpdate({ url: e.target.value })}
+              placeholder={lang.url_placeholder}
+            />
           </div>
         </div>
 
@@ -133,9 +157,10 @@ const EditHostsInfo = () => {
                       }
 
                       message.success('ok')
-                      onUpdate({ last_refresh: r.data.last_refresh })
-                      agent.broadcast('reload_content', hosts.id)
-                      return loadHostsData()
+                      onUpdate({
+                        last_refresh: r.data.last_refresh,
+                        last_refresh_ms: r.data.last_refresh_ms,
+                      })
                     })
                     .catch(e => {
                       console.log(e)

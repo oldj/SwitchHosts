@@ -11,7 +11,8 @@ export interface IHostsListObject {
   // remote
   url?: string;
   last_refresh?: string;
-  refresh_interval?: number;
+  last_refresh_ms?: number;
+  refresh_interval?: number; // 单位：秒
 
   // group
   include?: string[];
@@ -47,7 +48,7 @@ export interface ITrashcanListObject extends ITrashcanObject, ITreeNodeData {
   [key: string]: any;
 }
 
-export type VersionType = [number, number, number, number]
+export type VersionType = [ number, number, number, number ]
 
 export interface IHostsBasicData {
   list: IHostsListObject[];
