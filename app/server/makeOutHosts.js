@@ -16,10 +16,22 @@ function getHostsContent (item) {
 function parseLine(line){
   if(!line) return false;
   if(/^#/.test(line.trim())) return false;
-  const parts = line.trim().split(/\s/).map(v=>v.trim()).filter(v=>v);
+  const delimiter = line.indexOf('#');
+  let entry = '';
+  let comment = '';
+  if (delimiter === -1) {
+    entry = line;
+    // leave comment as empty
+  } else {
+    entry = line.split('#', 1)[0];
+    // comment already has a prefix '#'
+    comment = '\t' + line.slice(delimiter);
+  }
+  const parts = entry.trim().split(/\s/).map(v => v.trim()).filter(v => v);
   return {
     ip: parts[0],
     domain: parts.slice(1),
+    comment,
   };
 }
 
@@ -52,11 +64,21 @@ function normalize(content){
       }
     });
 
-    if(!invalidLineContent){
-      return validLineContent;
-    }else{
-      return validLineContent + '\n' + '# invalid hosts (repeated)\n' + invalidLineContent;
+    if (invalidLineContent) {
+      invalidLineContent = '# invalid hosts (repeated)\n' + invalidLineContent;
+      if (validLineContent) {
+        // line breaks are only required if validLineContent exists
+        invalidLineContent = '\n' + invalidLineContent;
+      }
     }
+    // comments are added after validLineContent preferentially
+    if (validLineContent) {
+      validLineContent += hosts.comment;
+    } else {
+      invalidLineContent += hosts.comment;
+    }
+
+    return validLineContent + invalidLineContent;
   }).join('\n');
 }
 
