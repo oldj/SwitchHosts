@@ -8,7 +8,7 @@
 
 import { swhdb } from '@main/data'
 import getDataFolder from '@main/libs/getDataFolder'
-import { IHostsBasicData } from '@root/common/data'
+import { IHostsBasicData, VersionType } from '@root/common/data'
 import { cleanHostsList, flatten } from '@root/common/hostsFn'
 import version from '@root/version.json'
 import * as fs from 'fs'
@@ -19,7 +19,7 @@ const readOldData = async (): Promise<IHostsBasicData> => {
   const default_data: IHostsBasicData = {
     list: [],
     trashcan: [],
-    version,
+    version: version as VersionType,
   }
 
   if (!fs.existsSync(fn)) {

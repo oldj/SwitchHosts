@@ -6,7 +6,7 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import ItemIcon from '@renderer/components/ItemIcon'
-import { actions, agent } from '@renderer/core/agent'
+import { actions } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
 import { ITrashcanListObject } from '@root/common/data'
 import clsx from 'clsx'

@@ -4,6 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import LatDb from './core/db'
+import Db from './core/db'
 
-export default LatDb
+export default Db

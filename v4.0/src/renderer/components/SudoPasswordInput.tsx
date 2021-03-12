@@ -18,9 +18,9 @@ interface Props {
 
 const SudoPasswordInput = (props: Props) => {
   const { lang } = useModel('useI18n')
-  const [is_show, setIsShow] = useState(false)
-  const [pswd, setPswd] = useState('')
-  const [tmp_list, setTmpList] = useState<IHostsListObject[] | undefined>()
+  const [ is_show, setIsShow ] = useState(false)
+  const [ pswd, setPswd ] = useState('')
+  const [ tmp_list, setTmpList ] = useState<IHostsListObject[] | undefined>()
 
   const onCancel = () => {
     setIsShow(false)
@@ -37,7 +37,7 @@ const SudoPasswordInput = (props: Props) => {
     setTmpList(tmp_list)
     setIsShow(true)
     // console.log(tmp_list)
-  }, [tmp_list])
+  }, [ tmp_list ])
 
   if (!is_show) return null
 

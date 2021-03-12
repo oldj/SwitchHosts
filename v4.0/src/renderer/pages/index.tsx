@@ -12,13 +12,13 @@ import React, { useEffect, useState } from 'react'
 import styles from './index.less'
 
 export default () => {
-  const [loading, setLoading] = useState(true)
+  const [ loading, setLoading ] = useState(true)
   const { i18n, setLocale } = useModel('useI18n')
   const { lang } = i18n
   const { loadHostsData } = useModel('useHostsData')
-  const [left_width, setLeftWidth] = useState(0)
-  const [left_show, setLeftShow] = useState(true)
-  const [show_migration, setShowMigration] = useState(false)
+  const [ left_width, setLeftWidth ] = useState(0)
+  const [ left_show, setLeftShow ] = useState(true)
+  const [ show_migration, setShowMigration ] = useState(false)
 
   const migrate = async (do_migrate: boolean) => {
     if (do_migrate) {
@@ -52,7 +52,7 @@ export default () => {
     init().catch(e => console.error(e))
   }, [])
 
-  useOnBroadcast('toggle_left_pannel', () => setLeftShow(!left_show), [left_show])
+  useOnBroadcast('toggle_left_pannel', () => setLeftShow(!left_show), [ left_show ])
 
   if (loading) {
     if (show_migration) {

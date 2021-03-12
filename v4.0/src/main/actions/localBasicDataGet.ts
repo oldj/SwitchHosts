@@ -4,14 +4,14 @@
  */
 
 import { swhdb } from '@main/data'
-import { IHostsBasicData } from '@root/common/data'
+import { IHostsBasicData, VersionType } from '@root/common/data'
 import version from '@root/version.json'
 
 export default async (): Promise<IHostsBasicData> => {
   const default_data: IHostsBasicData = {
     list: [],
     trashcan: [],
-    version,
+    version: version as VersionType,
   }
 
   let list = await swhdb.list.tree.all()

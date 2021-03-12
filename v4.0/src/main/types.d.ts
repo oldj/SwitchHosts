@@ -22,6 +22,7 @@ export interface IHostsWriteOptions {
 declare global {
   namespace NodeJS {
     interface Global {
+      db_dir?: string;
       swhdb: SwhDb;
     }
   }
