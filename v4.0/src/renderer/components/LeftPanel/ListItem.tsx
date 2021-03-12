@@ -101,6 +101,10 @@ const ListItem = (props: Props) => {
       // style={{ paddingLeft: `${1.3 * level}em` }}
       onContextMenu={() => !data.is_sys && menu.show()}
       ref={el}
+      onClick={(e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+      }}
     >
       <div className={styles.title} onClick={onSelect}>
         <span

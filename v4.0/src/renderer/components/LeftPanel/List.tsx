@@ -155,9 +155,9 @@ const List = (props: Props) => {
           setShowList(list)
           setList(list).catch(e => console.error(e))
         }}
-        onSelect={(id) => {
-          agent.broadcast('select_hosts', id)
-        }}
+        // onSelect={(id) => {
+        //   agent.broadcast('select_hosts', id)
+        //}}
         nodeRender={(data) => (
           <ListItem key={data.id} data={data}/>
         )}
