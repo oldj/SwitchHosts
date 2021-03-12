@@ -132,6 +132,8 @@ const List = (props: Props) => {
     setCurrentHosts(hosts)
   }, [ hosts_data ])
 
+  useOnBroadcast('reload_list', loadHostsData)
+
   return (
     <div className={styles.root}>
       {/*<SystemHostsItem/>*/}

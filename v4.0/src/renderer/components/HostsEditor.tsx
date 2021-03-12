@@ -53,6 +53,7 @@ const HostsEditor = (props: Props) => {
       return true
     }
 
+    // ..
     return false
   }
 
