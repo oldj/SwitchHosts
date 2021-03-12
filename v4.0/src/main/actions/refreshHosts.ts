@@ -66,7 +66,8 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
 
   if (old_content !== new_content) {
     await localContentSet(hosts_id, new_content)
-    broadcast('reload_content', hosts_id)
+    broadcast('hosts_refreshed', hosts)
+    broadcast('hosts_content_change', hosts_id)
   }
 
   return {

@@ -59,7 +59,7 @@ const HostsEditor = (props: Props) => {
 
   let is_read_only = isReadOnly()
 
-  useOnBroadcast('reload_content', (id: string) => {
+  useOnBroadcast('hosts_content_change', (id: string) => {
     if (id !== hosts.id) return
     actions.localContentGet(hosts_data.list, hosts)
       .then(setContent)
