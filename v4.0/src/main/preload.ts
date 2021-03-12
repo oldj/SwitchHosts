@@ -22,7 +22,7 @@ const ee = new EventEmitter()
 let x_get_idx = 0
 
 const callAction = (action: keyof Actions, ...params: any[]) => {
-  const callback = ['_cb', (new Date()).getTime(), x_get_idx++].join('_')
+  const callback = [ '_cb', (new Date()).getTime(), x_get_idx++ ].join('_')
 
   return new Promise((resolve, reject) => {
     ipcRenderer.send('x_action', {

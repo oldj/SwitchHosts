@@ -16,8 +16,8 @@ interface Props {
 
 const SwitchButton = (props: Props) => {
   const { on, onChange, disabled } = props
-  const [is_on, setIsOn] = useState(on)
-  const [is_disabled, setIsDisabled] = useState(disabled)
+  const [ is_on, setIsOn ] = useState(on)
+  const [ is_disabled, setIsDisabled ] = useState(disabled)
 
   const onClick = () => {
     if (disabled) return
@@ -32,7 +32,7 @@ const SwitchButton = (props: Props) => {
   useEffect(() => {
     setIsOn(on)
     setIsDisabled(disabled)
-  }, [on, disabled])
+  }, [ on, disabled ])
 
   return (
     <div

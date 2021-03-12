@@ -1,5 +1,5 @@
-import { defineConfig } from 'umi'
 import * as path from 'path'
+import { defineConfig } from 'umi'
 
 export default defineConfig({
   title: 'SwitchHosts!',
@@ -18,4 +18,5 @@ export default defineConfig({
     '@root': path.dirname(__dirname),
     '@@': path.join(path.dirname(__dirname), 'renderer', '.umi'),
   },
+  webpack5: {},
 })

@@ -20,15 +20,15 @@ interface Props {
 const HostsEditor = (props: Props) => {
   const { hosts } = props
   const { hosts_data, isHostsInTrashcan } = useModel('useHostsData')
-  const [hosts_id, setHostsId] = useState(hosts.id)
-  const [content, setContent] = useState(hosts.content || '')
+  const [ hosts_id, setHostsId ] = useState(hosts.id)
+  const [ content, setContent ] = useState(hosts.content || '')
 
   useEffect(() => {
     setHostsId(hosts.id)
     // setContent(getContentOfHosts(hosts_data.list, hosts))
     actions.localContentGet(hosts_data.list, hosts)
       .then(setContent)
-  }, [hosts])
+  }, [ hosts ])
 
   const toSave = lodash.debounce((id: string, content: string) => {
     actions.localContentSet(id, content)
@@ -45,7 +45,7 @@ const HostsEditor = (props: Props) => {
       return true
     }
 
-    if (hosts.where && (['group', 'remote', 'folder', 'trashcan']).includes(hosts.where)) {
+    if (hosts.where && ([ 'group', 'remote', 'folder', 'trashcan' ]).includes(hosts.where)) {
       return true
     }
 
@@ -62,7 +62,7 @@ const HostsEditor = (props: Props) => {
     if (id !== hosts.id) return
     actions.localContentGet(hosts_data.list, hosts)
       .then(setContent)
-  }, [hosts, hosts_data])
+  }, [ hosts, hosts_data ])
 
   return (
     <div className={styles.root}>

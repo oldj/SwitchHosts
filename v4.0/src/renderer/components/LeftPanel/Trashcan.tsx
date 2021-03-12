@@ -10,8 +10,8 @@ import TrashcanItem from '@renderer/components/LeftPanel/TrashcanItem'
 import { Tree } from '@renderer/components/Tree'
 import { ITrashcanListObject } from '@root/common/data'
 import React, { useEffect, useState } from 'react'
-import styles from './Trashcan.less'
 import list_styles from './List.less'
+import styles from './Trashcan.less'
 
 interface Props {
 
@@ -21,8 +21,8 @@ const Trashcan = (props: Props) => {
   const { lang } = useModel('useI18n')
   const { hosts_data } = useModel('useHostsData')
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
-  const [trash_list, setTrashList] = useState<ITrashcanListObject[]>([])
-  const [is_collapsed, setIsCollapsed] = useState(true)
+  const [ trash_list, setTrashList ] = useState<ITrashcanListObject[]>([])
+  const [ is_collapsed, setIsCollapsed ] = useState(true)
 
   useEffect(() => {
     let root: ITrashcanListObject = {
@@ -40,7 +40,7 @@ const Trashcan = (props: Props) => {
       where: 'trashcan',
     }
 
-    let list: ITrashcanListObject[] = [root]
+    let list: ITrashcanListObject[] = [ root ]
 
     hosts_data.trashcan.map(i => {
       root.children && root.children.push({
@@ -52,7 +52,7 @@ const Trashcan = (props: Props) => {
     })
 
     setTrashList(list)
-  }, [hosts_data.trashcan, is_collapsed])
+  }, [ hosts_data.trashcan, is_collapsed ])
 
   const onSelect = (id: string) => {
     let item = hosts_data.trashcan.find(i => i.data.id === id)
