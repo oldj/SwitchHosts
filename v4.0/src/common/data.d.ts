@@ -47,10 +47,12 @@ export interface ITrashcanListObject extends ITrashcanObject, ITreeNodeData {
   [key: string]: any;
 }
 
+export type VersionType = [number, number, number, number]
+
 export interface IHostsBasicData {
   list: IHostsListObject[];
   trashcan: ITrashcanObject[];
-  version: [number, number, number, number];
+  version: VersionType;
 }
 
 export interface IOperationResult {

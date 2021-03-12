@@ -5,11 +5,16 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { BorderOuterOutlined, CheckCircleOutlined, CheckSquareOutlined, DeleteOutlined } from '@ant-design/icons'
+import {
+  BorderOuterOutlined,
+  CheckCircleOutlined,
+  CheckSquareOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IHostsListObject, HostsWhereType } from '@root/common/data'
+import { HostsWhereType, IHostsListObject } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
 import { Button, Input, message, Modal, Radio, Select, Transfer } from 'antd'
 import React, { useState } from 'react'
@@ -18,11 +23,11 @@ import styles from './EditHostsInfo.less'
 
 const EditHostsInfo = () => {
   const { lang } = useModel('useI18n')
-  const [hosts, setHosts] = useState<IHostsListObject | null>(null)
+  const [ hosts, setHosts ] = useState<IHostsListObject | null>(null)
   const { hosts_data, setList, loadHostsData } = useModel('useHostsData')
-  const [is_show, setIsShow] = useState(false)
-  const [is_add, setIsAdd] = useState(true)
-  const [is_refreshing, setIsRefreshing] = useState(false)
+  const [ is_show, setIsShow ] = useState(false)
+  const [ is_add, setIsAdd ] = useState(true)
+  const [ is_refreshing, setIsRefreshing ] = useState(false)
 
   const onCancel = () => {
     setHosts(null)
@@ -36,7 +41,7 @@ const EditHostsInfo = () => {
         ...(hosts || {}),
         id: uuidv4(),
       }
-      let list: IHostsListObject[] = [...hosts_data.list, h]
+      let list: IHostsListObject[] = [ ...hosts_data.list, h ]
       await setList(list)
       agent.broadcast('select_hosts', h.id, 1000)
 
@@ -45,7 +50,7 @@ const EditHostsInfo = () => {
       let h: IHostsListObject | undefined = hostsFn.findItemById(hosts_data.list, hosts.id)
       if (h) {
         Object.assign(h, hosts)
-        await setList([...hosts_data.list])
+        await setList([ ...hosts_data.list ])
 
       } else {
         // can not find by id
@@ -85,7 +90,8 @@ const EditHostsInfo = () => {
         <div className={styles.ln}>
           <div className={styles.label}>URL</div>
           <div>
-            <Input value={hosts?.url} onChange={e => onUpdate({ url: e.target.value })} placeholder={lang.url_placeholder}/>
+            <Input value={hosts?.url} onChange={e => onUpdate({ url: e.target.value })}
+                   placeholder={lang.url_placeholder}/>
           </div>
         </div>
 
@@ -194,14 +200,15 @@ const EditHostsInfo = () => {
           >
             <Radio.Button value={0}><BorderOuterOutlined/> {lang.choice_mode_default}</Radio.Button>
             <Radio.Button value={1}><CheckCircleOutlined/> {lang.choice_mode_single}</Radio.Button>
-            <Radio.Button value={2}><CheckSquareOutlined/> {lang.choice_mode_multiple}</Radio.Button>
+            <Radio.Button value={2}><CheckSquareOutlined/> {lang.choice_mode_multiple}
+            </Radio.Button>
           </Radio.Group>
         </div>
       </div>
     )
   }
 
-  const wheres: HostsWhereType[] = ['local', 'remote', 'group', 'folder']
+  const wheres: HostsWhereType[] = [ 'local', 'remote', 'group', 'folder' ]
 
   const footer_buttons: React.ReactElement[] = [
     <Button key="cancel" onClick={onCancel}>{lang.btn_cancel}</Button>,

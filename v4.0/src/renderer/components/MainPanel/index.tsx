@@ -26,33 +26,33 @@ const MainPanel = (props: Props) => {
   const { i18n } = useModel('useI18n')
   const { isHostsInTrashcan } = useModel('useHostsData')
   const { current_hosts } = useModel('useCurrentHosts')
-  const [system_hosts, setSystemHosts] = useState('')
-  const [is_on, setIsOn] = useState(!!current_hosts?.on)
+  const [ system_hosts, setSystemHosts ] = useState('')
+  const [ is_on, setIsOn ] = useState(!!current_hosts?.on)
 
   useEffect(() => {
     if (!current_hosts) {
       actions.systemHostsRead().then(value => setSystemHosts(value))
     }
     setIsOn(!!current_hosts?.on)
-  }, [current_hosts])
+  }, [ current_hosts ])
 
   useOnBroadcast('toggle_item', (id: string, on: boolean) => {
     if (current_hosts && current_hosts.id === id) {
       setIsOn(on)
     }
-  }, [current_hosts])
+  }, [ current_hosts ])
 
   useOnBroadcast('system_hosts_updated', () => {
     if (!current_hosts) {
       actions.systemHostsRead().then(value => setSystemHosts(value))
     }
-  }, [current_hosts])
+  }, [ current_hosts ])
 
   useOnBroadcast('set_hosts_on_status', (id: string, on: boolean) => {
     if (current_hosts && current_hosts.id === id) {
       setIsOn(on)
     }
-  }, [current_hosts])
+  }, [ current_hosts ])
 
   return (
     <div className={styles.root}>
@@ -70,7 +70,8 @@ const MainPanel = (props: Props) => {
               <span className={clsx(styles.hosts_icon)}>
                 <ItemIcon where={current_hosts.where}/>
               </span>
-              <span className={styles.hosts_title}>{current_hosts.title || i18n.lang.untitled}</span>
+              <span
+                className={styles.hosts_title}>{current_hosts.title || i18n.lang.untitled}</span>
             </>
           ) : (
             <>
