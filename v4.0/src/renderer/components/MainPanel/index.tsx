@@ -36,11 +36,11 @@ const MainPanel = (props: Props) => {
     setIsOn(!!current_hosts?.on)
   }, [ current_hosts ])
 
-  useOnBroadcast('toggle_item', (id: string, on: boolean) => {
-    if (current_hosts && current_hosts.id === id) {
-      setIsOn(on)
-    }
-  }, [ current_hosts ])
+  // useOnBroadcast('toggle_item', (id: string, on: boolean) => {
+  //   if (current_hosts && current_hosts.id === id) {
+  //     setIsOn(on)
+  //   }
+  // }, [ current_hosts ])
 
   useOnBroadcast('system_hosts_updated', () => {
     if (!current_hosts) {
