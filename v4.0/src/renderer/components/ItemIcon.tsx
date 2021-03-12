@@ -5,9 +5,13 @@
  */
 
 import {
-  BlockOutlined, DeleteOutlined,
-  FileTextOutlined, FolderOpenOutlined,
-  FolderOutlined, GlobalOutlined, HomeOutlined,
+  BlockOutlined,
+  DeleteOutlined,
+  FileTextOutlined,
+  FolderOpenOutlined,
+  FolderOutlined,
+  GlobalOutlined,
+  HomeOutlined,
 } from '@ant-design/icons'
 import React from 'react'
 

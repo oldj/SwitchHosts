@@ -5,15 +5,15 @@
  */
 
 import { actions } from '@renderer/core/agent'
-import { IHostsBasicData, IHostsListObject } from '@root/common/data'
+import { IHostsBasicData, IHostsListObject, VersionType } from '@root/common/data'
 import version from '@root/version.json'
 import { useState } from 'react'
 
 export default function useHostsData() {
-  const [hosts_data, setHostsData] = useState<IHostsBasicData>({
+  const [ hosts_data, setHostsData ] = useState<IHostsBasicData>({
     list: [],
     trashcan: [],
-    version,
+    version: version as VersionType,
   })
 
   const loadHostsData = async () => {
@@ -26,7 +26,7 @@ export default function useHostsData() {
     let data: IHostsBasicData = {
       list,
       trashcan: hosts_data.trashcan,
-      version,
+      version: version as VersionType,
     }
 
     setHostsData(data)

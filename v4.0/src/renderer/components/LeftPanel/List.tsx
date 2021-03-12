@@ -8,13 +8,13 @@ import { useModel } from '@@/plugin-model/useModel'
 import { RightOutlined } from '@ant-design/icons'
 import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
-import { message } from 'antd'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
 import { findItemById, flatten, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
+import { message } from 'antd'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import styles from './List.less'
@@ -26,15 +26,15 @@ const List = (props: Props) => {
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, loadHostsData, setList } = useModel('useHostsData')
   const { lang } = useModel('useI18n')
-  const [show_list, setShowList] = useState<IHostsListObject[]>([])
+  const [ show_list, setShowList ] = useState<IHostsListObject[]>([])
 
   useEffect(() => {
-    setShowList([{
+    setShowList([ {
       id: '0',
       title: lang.system_hosts,
       is_sys: true,
-    }, ...hosts_data.list])
-  }, [hosts_data])
+    }, ...hosts_data.list ])
+  }, [ hosts_data ])
 
   const onToggleItem = async (id: string, on: boolean) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
@@ -97,8 +97,8 @@ const List = (props: Props) => {
     return result.success
   }
 
-  useOnBroadcast('toggle_item', onToggleItem, [hosts_data])
-  useOnBroadcast('write_hosts_to_system', writeHostsToSystem, [hosts_data])
+  useOnBroadcast('toggle_item', onToggleItem, [ hosts_data ])
+  useOnBroadcast('write_hosts_to_system', writeHostsToSystem, [ hosts_data ])
 
   useOnBroadcast('move_to_trashcan', async (id: string) => {
     console.log(`move_to_trashcan: #${id}`)
@@ -116,7 +116,7 @@ const List = (props: Props) => {
     if (next_hosts) {
       await setCurrentHosts(next_hosts)
     }
-  }, [current_hosts, hosts_data])
+  }, [ current_hosts, hosts_data ])
 
   useOnBroadcast('select_hosts', async (id: string, wait_ms: number = 0) => {
     let hosts = findItemById(hosts_data.list, id)
@@ -130,7 +130,7 @@ const List = (props: Props) => {
     }
 
     setCurrentHosts(hosts)
-  }, [hosts_data])
+  }, [ hosts_data ])
 
   return (
     <div className={styles.root}>
@@ -163,7 +163,8 @@ const List = (props: Props) => {
               <span
                 className={clsx(styles.icon, data.where === 'folder' && styles.folder)}
               >
-                <ItemIcon where={data.is_sys ? 'system' : data.where} is_collapsed={data.is_collapsed}/>
+                <ItemIcon where={data.is_sys ? 'system' : data.where}
+                          is_collapsed={data.is_collapsed}/>
               </span>
               <span>
                 {data.title || lang.untitled}

@@ -23,3 +23,5 @@ src/renderer/.umi-production
 src/renderer/.umi-test
 src/renderer/dist
 .env.local
+
+test/tmp

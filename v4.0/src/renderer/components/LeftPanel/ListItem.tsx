@@ -26,14 +26,14 @@ const ListItem = (props: Props) => {
   const { lang } = useModel('useI18n')
   const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
   const { hosts_data, setList } = useModel('useHostsData')
-  const [is_collapsed, setIsCollapsed] = useState(!!data.is_collapsed)
-  const [is_on, setIsOn] = useState(data.on)
+  const [ is_collapsed, setIsCollapsed ] = useState(!!data.is_collapsed)
+  const [ is_on, setIsOn ] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
 
   useEffect(() => {
     setIsOn(data.on)
-  }, [data])
+  }, [ data ])
 
   useEffect(() => {
     const is_selected = data.id === current_hosts?.id
@@ -46,7 +46,7 @@ const ListItem = (props: Props) => {
       })
     }
 
-  }, [data, current_hosts, el])
+  }, [ data, current_hosts, el ])
 
   const onSelect = () => {
     setCurrentHosts(data.is_sys ? null : data)

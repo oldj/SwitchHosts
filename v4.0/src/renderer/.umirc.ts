@@ -1,5 +1,5 @@
-import { defineConfig } from 'umi'
 import * as path from 'path'
+import { defineConfig } from 'umi'
 
 export default defineConfig({
   title: 'SwitchHosts!',
