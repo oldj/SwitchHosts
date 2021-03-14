@@ -5,7 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { IconButton } from '@chakra-ui/react'
+import { HStack, IconButton, Center } from '@chakra-ui/react'
 import HostsEditor from '@renderer/components/HostsEditor'
 import HostsViewer from '@renderer/components/HostsViewer'
 import ItemIcon from '@renderer/components/ItemIcon'
@@ -57,7 +57,7 @@ const MainPanel = (props: Props) => {
   return (
     <div className={styles.root}>
       <div className={clsx(styles.topbar, !has_left_panel && styles.without_left_panel)}>
-        <div className={clsx(styles.toggle_left_panel)}>
+        <Center>
           <IconButton
             aria-label="Toggle sidebar"
             icon={<BiSidebar/>}
@@ -66,23 +66,30 @@ const MainPanel = (props: Props) => {
             }}
             variant="ghost"
           />
-        </div>
+        </Center>
 
         <div className={styles.hosts_title}>
           {current_hosts ? (
             <>
-              <span className={clsx(styles.hosts_icon)}>
+              <HStack>
+              <span className={styles.hosts_icon}>
                 <ItemIcon where={current_hosts.where}/>
               </span>
-              <span
-                className={styles.hosts_title}>{current_hosts.title || i18n.lang.untitled}</span>
+                <span className={styles.hosts_title}>
+                {current_hosts.title || i18n.lang.untitled}
+              </span>
+              </HStack>
             </>
           ) : (
             <>
-              <span className={clsx(styles.hosts_icon)}>
+              <HStack>
+              <span className={styles.hosts_icon}>
                 <ItemIcon where="system"/>
               </span>
-              <span className={styles.hosts_title}>{i18n.lang.system_hosts}</span>
+                <span className={styles.hosts_title}>
+                {i18n.lang.system_hosts}
+              </span>
+              </HStack>
             </>
           )}
         </div>
@@ -94,13 +101,13 @@ const MainPanel = (props: Props) => {
             }}/>
           ) : null}
         </div>
-        <div>
+        <Center>
           <IconButton
             aria-label="Toggle preference panel"
             icon={<BiSliderAlt/>}
             variant="ghost"
           />
-        </div>
+        </Center>
       </div>
 
       <div className={styles.main}>
