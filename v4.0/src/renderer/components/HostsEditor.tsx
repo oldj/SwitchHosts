@@ -26,12 +26,12 @@ const HostsEditor = (props: Props) => {
   useEffect(() => {
     setHostsId(hosts.id)
     // setContent(getContentOfHosts(hosts_data.list, hosts))
-    actions.localContentGet(hosts_data.list, hosts)
+    actions.getHostsContent(hosts.id)
       .then(setContent)
   }, [ hosts ])
 
   const toSave = lodash.debounce((id: string, content: string) => {
-    actions.localContentSet(id, content)
+    actions.setHostsContent(id, content)
       .then(() => agent.broadcast('hosts_content_changed', id))
       .catch(e => console.error(e))
   }, 1000)
@@ -62,7 +62,7 @@ const HostsEditor = (props: Props) => {
 
   useOnBroadcast('hosts_refreshed', (h: IHostsListObject) => {
     if (h.id !== hosts.id) return
-    actions.localContentGet(hosts_data.list, hosts)
+    actions.getHostsContent(hosts.id)
       .then(setContent)
   }, [ hosts, hosts_data ])
 

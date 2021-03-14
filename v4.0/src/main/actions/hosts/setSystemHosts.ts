@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import getSystemHostsPath from '@main/actions/getSystemHostsPath'
+import getPathOfSystemHosts from './getPathOfSystemHostsPath'
 import { broadcast } from '@main/core/agent'
 import safePSWD from '@main/libs/safePSWD'
 import { IHostsWriteOptions } from '@main/types'
@@ -76,7 +76,7 @@ const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteR
 })
 
 const write = async (content: string, options?: IHostsWriteOptions): Promise<IWriteResult> => {
-  const sys_hosts_path = await getSystemHostsPath()
+  const sys_hosts_path = await getPathOfSystemHosts()
   const fn_md5 = await md5File(sys_hosts_path)
   const content_md5 = md5(content)
 

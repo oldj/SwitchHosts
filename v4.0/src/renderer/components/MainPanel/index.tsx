@@ -31,7 +31,7 @@ const MainPanel = (props: Props) => {
 
   useEffect(() => {
     if (!current_hosts) {
-      actions.systemHostsRead().then(value => setSystemHosts(value))
+      actions.getSystemHosts().then(value => setSystemHosts(value))
     }
     setIsOn(!!current_hosts?.on)
   }, [ current_hosts ])
@@ -44,7 +44,7 @@ const MainPanel = (props: Props) => {
 
   useOnBroadcast('system_hosts_updated', () => {
     if (!current_hosts) {
-      actions.systemHostsRead().then(value => setSystemHosts(value))
+      actions.getSystemHosts().then(value => setSystemHosts(value))
     }
   }, [ current_hosts ])
 
