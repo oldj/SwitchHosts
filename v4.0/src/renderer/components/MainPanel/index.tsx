@@ -5,16 +5,16 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { MenuOutlined, SettingOutlined } from '@ant-design/icons'
+import { IconButton } from '@chakra-ui/react'
 import HostsEditor from '@renderer/components/HostsEditor'
 import HostsViewer from '@renderer/components/HostsViewer'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { Divider } from 'antd'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
+import { BiSidebar, BiSliderAlt } from 'react-icons/bi'
 import styles from './index.less'
 
 interface Props {
@@ -58,13 +58,17 @@ const MainPanel = (props: Props) => {
     <div className={styles.root}>
       <div className={clsx(styles.topbar, !has_left_panel && styles.without_left_panel)}>
         <div className={clsx(styles.toggle_left_panel)}>
-          <MenuOutlined
-            onClick={() => agent.broadcast('toggle_left_pannel')}
+          <IconButton
+            aria-label="Toggle sidebar"
+            icon={<BiSidebar/>}
+            onClick={() => {
+              agent.broadcast('toggle_left_pannel', !has_left_panel)
+            }}
+            variant="ghost"
           />
         </div>
 
         <div className={styles.hosts_title}>
-          <Divider type="vertical"/>
           {current_hosts ? (
             <>
               <span className={clsx(styles.hosts_icon)}>
@@ -91,7 +95,11 @@ const MainPanel = (props: Props) => {
           ) : null}
         </div>
         <div>
-          <SettingOutlined/>
+          <IconButton
+            aria-label="Toggle preference panel"
+            icon={<BiSliderAlt/>}
+            variant="ghost"
+          />
         </div>
       </div>
 

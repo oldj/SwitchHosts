@@ -4,16 +4,16 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  BlockOutlined,
-  DeleteOutlined,
-  FileTextOutlined,
-  FolderOpenOutlined,
-  FolderOutlined,
-  GlobalOutlined,
-  HomeOutlined,
-} from '@ant-design/icons'
 import React from 'react'
+import {
+  BiDesktop,
+  BiFile,
+  BiFolder,
+  BiFolderOpen,
+  BiGlobe,
+  BiLayer,
+  BiTrash,
+} from 'react-icons/bi'
 
 interface Props {
   where?: string;
@@ -26,18 +26,18 @@ const ItemIcon = (props: Props) => {
   switch (where) {
     case 'folder':
       return is_collapsed ?
-        <FolderOutlined/> :
-        <FolderOpenOutlined/>
+        <BiFolder/> :
+        <BiFolderOpen/>
     case 'remote':
-      return <GlobalOutlined/>
+      return <BiGlobe/>
     case 'group':
-      return <BlockOutlined/>
+      return <BiLayer/>
     case 'system':
-      return <HomeOutlined/>
+      return <BiDesktop/>
     case 'trashcan':
-      return <DeleteOutlined/>
+      return <BiTrash/>
     default:
-      return <FileTextOutlined/>
+      return <BiFile/>
   }
 }
 

@@ -5,7 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { RightOutlined } from '@ant-design/icons'
+import { Center, useToast } from '@chakra-ui/react'
 import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
@@ -15,9 +15,9 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
 import { findItemById, flatten, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
 import normalize from '@root/common/normalize'
-import { message } from 'antd'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
+import { BiChevronRight } from 'react-icons/bi'
 import styles from './List.less'
 
 interface Props {
@@ -28,6 +28,7 @@ const List = (props: Props) => {
   const { hosts_data, loadHostsData, setList } = useModel('useHostsData')
   const { lang } = useModel('useI18n')
   const [ show_list, setShowList ] = useState<IHostsListObject[]>([])
+  const toast = useToast()
 
   useEffect(() => {
     setShowList([ {
@@ -41,7 +42,10 @@ const List = (props: Props) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
     let success = await writeHostsToSystem(new_list)
     if (success) {
-      message.success(lang.success)
+      toast({
+        status: 'success',
+        description: lang.success,
+      })
     } else {
       agent.broadcast('set_hosts_on_status', id, !on)
     }
@@ -93,7 +97,10 @@ const List = (props: Props) => {
       new Notification(lang.fail, {
         body,
       })
-      message.error(lang.fail)
+      toast({
+        status: 'error',
+        description: lang.fail,
+      })
     }
 
     return result.success
@@ -161,7 +168,7 @@ const List = (props: Props) => {
         nodeRender={(data) => (
           <ListItem key={data.id} data={data}/>
         )}
-        collapseArrow={<RightOutlined/>}
+        collapseArrow={<Center w="20px" h="20px"><BiChevronRight/></Center>}
         nodeAttr={(item) => {
           return {
             can_drag: !item.is_sys,

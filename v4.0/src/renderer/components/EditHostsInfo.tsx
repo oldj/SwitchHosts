@@ -6,13 +6,10 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import {
-  BorderOuterOutlined,
-  CheckCircleOutlined,
-  CheckSquareOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons'
-import {
+  Box,
   Button,
+  Grid,
+  Input,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -22,19 +19,19 @@ import {
   ModalOverlay,
   Radio,
   RadioGroup,
-  Stack,
-  Input,
   Select,
+  Stack,
+  useToast,
 } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
+import Transfer from '@renderer/components/Transfer'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { HostsWhereType, IHostsListObject } from '@root/common/data'
+import { FolderModeType, HostsWhereType, IHostsListObject } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
-import { message } from 'antd'
-import Transfer from '@renderer/components/Transfer'
 import lodash from 'lodash'
 import React, { useState } from 'react'
+import { BiTrash } from 'react-icons/bi'
 import { v4 as uuidv4 } from 'uuid'
 import styles from './EditHostsInfo.less'
 
@@ -46,6 +43,8 @@ const EditHostsInfo = () => {
   const [ is_show, setIsShow ] = useState(false)
   const [ is_add, setIsAdd ] = useState(true)
   const [ is_refreshing, setIsRefreshing ] = useState(false)
+
+  const toast = useToast()
 
   const onCancel = () => {
     setHosts(null)
@@ -167,11 +166,17 @@ const EditHostsInfo = () => {
                     .then(r => {
                       console.log(r)
                       if (!r.success) {
-                        message.error(r.message || r.code || 'Error!')
+                        toast({
+                          status: 'error',
+                          description: r.message || r.code || 'Error!',
+                        })
                         return
                       }
 
-                      message.success('ok')
+                      toast({
+                        status: 'success',
+                        description: 'OK!',
+                      })
                       onUpdate({
                         last_refresh: r.data.last_refresh,
                         last_refresh_ms: r.data.last_refresh_ms,
@@ -179,7 +184,10 @@ const EditHostsInfo = () => {
                     })
                     .catch(e => {
                       console.log(e)
-                      message.error(e.message)
+                      toast({
+                        status: 'error',
+                        description: e.message,
+                      })
                     })
                     .finally(() => setIsRefreshing(false))
                 }}
@@ -232,15 +240,15 @@ const EditHostsInfo = () => {
       <div className={styles.ln}>
         <div className={styles.label}>{lang.choice_mode}</div>
         <div>
-          {/*<Radio.Group*/}
-          {/*  value={hosts?.folder_mode || 0}*/}
-          {/*  onChange={e => onUpdate({ folder_mode: e.target.value })}*/}
-          {/*>*/}
-          {/*  <Radio.Button value={0}><BorderOuterOutlined/> {lang.choice_mode_default}</Radio.Button>*/}
-          {/*  <Radio.Button value={1}><CheckCircleOutlined/> {lang.choice_mode_single}</Radio.Button>*/}
-          {/*  <Radio.Button value={2}><CheckSquareOutlined/> {lang.choice_mode_multiple}*/}
-          {/*  </Radio.Button>*/}
-          {/*</Radio.Group>*/}
+          <RadioGroup
+            value={(hosts?.folder_mode || 0).toString()}
+            onChange={(v: string) => onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })}
+          >
+            <Radio value="0">{lang.choice_mode_default}</Radio>
+            <Radio value="1">{lang.choice_mode_single}</Radio>
+            <Radio value="2">{lang.choice_mode_multiple}</Radio>
+          </RadioGroup
+          >
         </div>
       </div>
     )
@@ -249,27 +257,31 @@ const EditHostsInfo = () => {
   const wheres: HostsWhereType[] = [ 'local', 'remote', 'group', 'folder' ]
 
   const footer_buttons = (
-    <>
-      {
-        is_add ? null : (
-          <Button
-            leftIcon={<DeleteOutlined/>}
-            mr={3}
-            variant="outline"
-            disabled={!hosts}
-            colorScheme="pink"
-            onClick={() => {
-              if (hosts) {
-                agent.broadcast('move_to_trashcan', hosts.id)
-                onCancel()
-              }
-            }}
-          >{lang.move_to_trashcan}</Button>
-        )
-      }
-      <Button onClick={onCancel} mr={3}>{lang.btn_cancel}</Button>
-      <Button onClick={onSave} colorScheme="blue">{lang.btn_ok}</Button>
-    </>
+    <Grid templateColumns="1fr 1fr" style={{ width: '100%' }}>
+      <Box>
+        {
+          is_add ? null : (
+            <Button
+              leftIcon={<BiTrash/>}
+              mr={3}
+              variant="outline"
+              disabled={!hosts}
+              colorScheme="pink"
+              onClick={() => {
+                if (hosts) {
+                  agent.broadcast('move_to_trashcan', hosts.id)
+                  onCancel()
+                }
+              }}
+            >{lang.move_to_trashcan}</Button>
+          )
+        }
+      </Box>
+      <Box style={{ textAlign: 'right' }}>
+        <Button onClick={onCancel} mr={3}>{lang.btn_cancel}</Button>
+        <Button onClick={onSave} colorScheme="blue">{lang.btn_ok}</Button>
+      </Box>
+    </Grid>
   )
 
   return (
