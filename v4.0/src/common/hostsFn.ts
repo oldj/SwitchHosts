@@ -25,15 +25,15 @@ export const cleanHostsList = (data: IHostsBasicData): IHostsBasicData => {
   let list = flatten(data.list)
 
   list.map(item => {
-    if (item.where === 'folder' && !Array.isArray(item.children)) {
+    if (item.type === 'folder' && !Array.isArray(item.children)) {
       item.children = [] as IHostsListObject[]
     }
 
-    if (item.where === 'group' && !Array.isArray(item.include)) {
+    if (item.type === 'group' && !Array.isArray(item.include)) {
       item.include = [] as string[]
     }
 
-    if (item.where === 'folder' || item.where === 'group') {
+    if (item.type === 'folder' || item.type === 'group') {
       item.content = ''
     }
   })

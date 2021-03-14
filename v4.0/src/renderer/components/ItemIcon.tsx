@@ -16,14 +16,14 @@ import {
 } from 'react-icons/bi'
 
 interface Props {
-  where?: string;
+  type?: string;
   is_collapsed?: boolean;
 }
 
 const ItemIcon = (props: Props) => {
-  const { where, is_collapsed } = props
+  const { type, is_collapsed } = props
 
-  switch (where) {
+  switch (type) {
     case 'folder':
       return is_collapsed ?
         <BiFolder/> :

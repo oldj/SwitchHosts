@@ -71,7 +71,7 @@ const ListItem = (props: Props) => {
 
   if (!data) return null
 
-  const is_folder = data.where === 'folder'
+  const is_folder = data.type === 'folder'
   const is_selected = data.id === current_hosts?.id
 
   const menu = new PopupMenu([
@@ -112,7 +112,7 @@ const ListItem = (props: Props) => {
           className={clsx(styles.icon, is_folder && styles.folder)}
           onClick={toggleIsCollapsed}
         >
-          <ItemIcon where={data.is_sys ? 'system' : data.where} is_collapsed={data.is_collapsed}/>
+          <ItemIcon type={data.is_sys ? 'system' : data.type} is_collapsed={data.is_collapsed}/>
         </span>
         {data.title || lang.untitled}
       </div>

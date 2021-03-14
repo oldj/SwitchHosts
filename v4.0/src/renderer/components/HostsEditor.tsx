@@ -46,7 +46,7 @@ const HostsEditor = (props: Props) => {
       return true
     }
 
-    if (hosts.where && ([ 'group', 'remote', 'folder', 'trashcan' ]).includes(hosts.where)) {
+    if (hosts.type && ([ 'group', 'remote', 'folder', 'trashcan' ]).includes(hosts.type)) {
       return true
     }
 

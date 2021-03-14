@@ -25,9 +25,9 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
     }
   }
 
-  let { where, url } = hosts
+  let { type, url } = hosts
 
-  if (where !== 'remote') {
+  if (type !== 'remote') {
     return {
       success: false,
       code: 'not_remote',

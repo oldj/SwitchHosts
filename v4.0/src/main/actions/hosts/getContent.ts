@@ -19,14 +19,14 @@ const getContentOfHosts = async (id: string): Promise<string> => {
     return await getContentById(id)
   }
 
-  const { where } = hosts
-  if (!where || where === 'local' || where === 'remote') {
+  const { type } = hosts
+  if (!type || type === 'local' || type === 'remote') {
     return await getContentById(id)
   }
 
   let list = await getList()
 
-  if (where === 'folder') {
+  if (type === 'folder') {
     const items = flatten(hosts.children || [])
 
     let a = await Promise.all(items.map(async (item) => {
@@ -35,7 +35,7 @@ const getContentOfHosts = async (id: string): Promise<string> => {
     return a.join('\n\n')
   }
 
-  if (where === 'group') {
+  if (type === 'group') {
     let a = await Promise.all((hosts.include || []).map(async (id) => {
       let item = findItemById(list, id)
       if (!item) return ''

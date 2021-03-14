@@ -38,7 +38,7 @@ const Trashcan = (props: Props) => {
       can_select: false,
       is_collapsed,
       is_root: true,
-      where: 'trashcan',
+      type: 'trashcan',
     }
 
     let list: ITrashcanListObject[] = [ root ]
@@ -48,7 +48,7 @@ const Trashcan = (props: Props) => {
         ...i,
         id: i.data.id,
         can_drag: false,
-        where: i.data.where,
+        type: i.data.type,
       })
     })
 

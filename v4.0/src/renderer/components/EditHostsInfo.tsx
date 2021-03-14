@@ -28,7 +28,7 @@ import ItemIcon from '@renderer/components/ItemIcon'
 import Transfer from '@renderer/components/Transfer'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { FolderModeType, HostsWhereType, IHostsListObject } from '@root/common/data'
+import { FolderModeType, HostsType, IHostsListObject } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
 import lodash from 'lodash'
 import React, { useRef, useState } from 'react'
@@ -204,7 +204,7 @@ const EditHostsInfo = () => {
   const renderTransferItem = (item: IHostsListObject): React.ReactElement => {
     return (
       <HStack>
-        <ItemIcon where={item.where}/>
+        <ItemIcon type={item.type}/>
         <span style={{ marginLeft: 4 }}>{item.title || lang.untitled}</span>
       </HStack>
     )
@@ -214,7 +214,7 @@ const EditHostsInfo = () => {
     const list = hostsFn.flatten(hosts_data.list)
 
     let source_list: IHostsListObject[] = list
-      .filter(item => item.where === 'local' || item.where === 'remote')
+      .filter(item => item.type === 'local' || item.type === 'remote')
       .map(item => {
         let o = { ...item }
         o.key = o.id
@@ -258,7 +258,7 @@ const EditHostsInfo = () => {
     )
   }
 
-  const wheres: HostsWhereType[] = [ 'local', 'remote', 'group', 'folder' ]
+  const types: HostsType[] = [ 'local', 'remote', 'group', 'folder' ]
 
   const footer_buttons = (
     <Grid templateColumns="1fr 1fr" style={{ width: '100%' }}>
@@ -304,16 +304,16 @@ const EditHostsInfo = () => {
             <div className={styles.label}>{lang.hosts_type}</div>
             <div>
               <RadioGroup
-                onChange={(where: HostsWhereType) => onUpdate({ where })}
-                value={hosts?.where || 'local'}
+                onChange={(type: HostsType) => onUpdate({ type: type })}
+                value={hosts?.type || 'local'}
               >
                 <Stack direction="row" spacing={3}>
                   {
-                    wheres.map(where => (
-                      <Radio value={where} key={where} isDisabled={!is_add}>
+                    types.map(type => (
+                      <Radio value={type} key={type} isDisabled={!is_add}>
                         <HStack spacing="4px">
-                          <ItemIcon where={where}/>
-                          <span>{lang[where]}</span>
+                          <ItemIcon type={type}/>
+                          <span>{lang[type]}</span>
                         </HStack>
                       </Radio>
                     ))
@@ -334,9 +334,9 @@ const EditHostsInfo = () => {
             </div>
           </div>
 
-          {hosts?.where === 'remote' ? forRemote() : null}
-          {hosts?.where === 'group' ? forGroup() : null}
-          {hosts?.where === 'folder' ? forFolder() : null}
+          {hosts?.type === 'remote' ? forRemote() : null}
+          {hosts?.type === 'group' ? forGroup() : null}
+          {hosts?.type === 'folder' ? forFolder() : null}
         </ModalBody>
 
         <ModalFooter>
