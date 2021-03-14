@@ -59,7 +59,7 @@ const List = (props: Props) => {
     const content_list: string[] = []
     const flat = flatten(list).filter(i => i.on)
     for (let hosts of flat) {
-      let c = await actions.localContentGet(list, hosts)
+      let c = await actions.getHostsContent(hosts.id)
       content_list.push(c)
     }
 
@@ -67,7 +67,7 @@ const List = (props: Props) => {
     // console.log(content)
     content = normalize(content)
 
-    const result = await actions.systemHostsWrite(content, options)
+    const result = await actions.setSystemHosts(content, options)
     if (result.success) {
       setList(list).catch(e => console.error(e))
       new Notification(lang.success, {
@@ -119,7 +119,7 @@ const List = (props: Props) => {
       // console.log(next_hosts)
     }
 
-    await actions.localListItemMoveToTrashcan(id)
+    await actions.moveToTrashcan(id)
     await loadHostsData()
 
     if (next_hosts) {
@@ -144,7 +144,7 @@ const List = (props: Props) => {
   useOnBroadcast('reload_list', loadHostsData)
 
   useOnBroadcast('hosts_content_changed', async (hosts_id: string) => {
-    let list: IHostsListObject[] = await actions.localListGet()
+    let list: IHostsListObject[] = await actions.getList()
     let hosts = findItemById(list, hosts_id)
     if (!hosts || !hosts.on) return
 

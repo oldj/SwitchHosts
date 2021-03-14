@@ -11,6 +11,7 @@ import { PopupMenu } from '@renderer/core/PopupMenu'
 import { ITrashcanListObject } from '@root/common/data'
 import clsx from 'clsx'
 import React from 'react'
+import { HStack } from '@chakra-ui/react'
 import list_item_styles from './ListItem.less'
 import styles from './TrashcanItem.less'
 
@@ -33,7 +34,7 @@ const TrashcanItem = (props: Props) => {
       enabled: hosts_data.trashcan.length > 0,
       click() {
         if (confirm(lang.trashcan_clear_confirm)) {
-          actions.localTrashcanClear()
+          actions.clearTrashcan()
             .then(loadHostsData)
             .catch(e => console.error(e))
         }
@@ -45,7 +46,7 @@ const TrashcanItem = (props: Props) => {
     {
       label: lang.trashcan_restore,
       click() {
-        actions.localTrashcanItemRestore(data.id)
+        actions.restoreItemFromTrashcan(data.id)
           .then(success => {
             success && loadHostsData()
           })
@@ -58,7 +59,7 @@ const TrashcanItem = (props: Props) => {
       label: lang.hosts_delete,
       click() {
         if (confirm(lang.trashcan_delete_confirm)) {
-          actions.localTrashcanItemDelete(data.id)
+          actions.deleteItemFromTrashcan(data.id)
             .then(success => {
               success && loadHostsData()
             })
@@ -82,6 +83,7 @@ const TrashcanItem = (props: Props) => {
         <span className={list_item_styles.icon}>
           <ItemIcon where={data.where} is_collapsed={true}/>
         </span>
+
         {data.data.title || lang.untitled}
 
         {data.is_root ? (

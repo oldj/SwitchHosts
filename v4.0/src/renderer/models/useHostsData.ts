@@ -17,7 +17,7 @@ export default function useHostsData() {
   })
 
   const loadHostsData = async () => {
-    setHostsData(await actions.localBasicDataGet())
+    setHostsData(await actions.getBasicData())
   }
 
   const setList = async (list: IHostsListObject[]) => {
@@ -30,7 +30,7 @@ export default function useHostsData() {
     }
 
     setHostsData(data)
-    await actions.localListSet(list)
+    await actions.setList(list)
   }
 
   const isHostsInTrashcan = (id: string): boolean => {
