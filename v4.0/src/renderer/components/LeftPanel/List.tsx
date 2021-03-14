@@ -173,7 +173,7 @@ const List = (props: Props) => {
           return {
             can_drag: !item.is_sys,
             can_drop_before: !item.is_sys,
-            can_drop_in: item.where === 'folder',
+            can_drop_in: item.type === 'folder',
             can_drop_after: !item.is_sys,
           }
         }}
@@ -181,9 +181,9 @@ const List = (props: Props) => {
           return (
             <div className={clsx(styles.for_drag)}>
               <span
-                className={clsx(styles.icon, data.where === 'folder' && styles.folder)}
+                className={clsx(styles.icon, data.type === 'folder' && styles.folder)}
               >
-                <ItemIcon where={data.is_sys ? 'system' : data.where}
+                <ItemIcon type={data.is_sys ? 'system' : data.type}
                           is_collapsed={data.is_collapsed}/>
               </span>
               <span>

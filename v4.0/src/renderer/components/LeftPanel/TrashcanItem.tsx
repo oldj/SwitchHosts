@@ -81,7 +81,7 @@ const TrashcanItem = (props: Props) => {
     >
       <div className={styles.title} onClick={onSelect}>
         <span className={list_item_styles.icon}>
-          <ItemIcon where={data.where} is_collapsed={true}/>
+          <ItemIcon type={data.type} is_collapsed={true}/>
         </span>
 
         {data.data.title || lang.untitled}

@@ -46,6 +46,10 @@ export default async () => {
     if (h.refresh_interval) {
       h.refresh_interval *= 3600
     }
+
+    h.type = h.where
+    delete h.where
+
     await swhdb.collection.hosts.insert(h)
     h.content = ''
   }

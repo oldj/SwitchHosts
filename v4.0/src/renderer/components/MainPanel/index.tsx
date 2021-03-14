@@ -73,7 +73,7 @@ const MainPanel = (props: Props) => {
             <>
               <HStack>
               <span className={styles.hosts_icon}>
-                <ItemIcon where={current_hosts.where}/>
+                <ItemIcon type={current_hosts.type}/>
               </span>
                 <span className={styles.hosts_title}>
                 {current_hosts.title || i18n.lang.untitled}
@@ -84,7 +84,7 @@ const MainPanel = (props: Props) => {
             <>
               <HStack>
               <span className={styles.hosts_icon}>
-                <ItemIcon where="system"/>
+                <ItemIcon type="system"/>
               </span>
                 <span className={styles.hosts_title}>
                 {i18n.lang.system_hosts}
