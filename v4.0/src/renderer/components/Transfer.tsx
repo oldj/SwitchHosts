@@ -127,7 +127,7 @@ const Transfer = (props: Props) => {
             {lang.selected} <span>({right_keys.length})</span>
           </Box>
           <List
-            data={dataSource.filter(i => right_keys.includes(i.id))}
+            data={right_keys.map(id => dataSource.find(i => i.id === id)) as ITransferSourceObject[]}
             selected_keys={right_selectd_keys}
             setSelectedKeys={setRightSelectedKeys}
           />

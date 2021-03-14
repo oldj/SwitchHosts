@@ -1,6 +1,7 @@
 import { ITreeNodeData } from '@renderer/components/Tree/Node'
 
 export type HostsWhereType = 'local' | 'remote' | 'group' | 'folder';
+export type FolderModeType = 0 | 1 | 2 // 0: 默认; 1: 单选; 2: 多选
 
 export interface IHostsListObject {
   id: string;
@@ -18,7 +19,7 @@ export interface IHostsListObject {
   include?: string[];
 
   // folder
-  folder_mode?: 0 | 1 | 2; // 0: 默认; 1: 单选; 2: 多选
+  folder_mode?: FolderModeType;
   folder_open?: boolean;
   children?: IHostsListObject[];
 
