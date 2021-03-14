@@ -21,6 +21,7 @@ import {
   RadioGroup,
   Select,
   Stack,
+  HStack,
   useToast,
 } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
@@ -30,7 +31,7 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { FolderModeType, HostsWhereType, IHostsListObject } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
 import lodash from 'lodash'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { BiTrash } from 'react-icons/bi'
 import { v4 as uuidv4 } from 'uuid'
 import styles from './EditHostsInfo.less'
@@ -43,6 +44,7 @@ const EditHostsInfo = () => {
   const [ is_show, setIsShow ] = useState(false)
   const [ is_add, setIsAdd ] = useState(true)
   const [ is_refreshing, setIsRefreshing ] = useState(false)
+  const ipt_title_ref = useRef<HTMLInputElement>(null)
 
   const toast = useToast()
 
@@ -201,10 +203,10 @@ const EditHostsInfo = () => {
 
   const renderTransferItem = (item: IHostsListObject): React.ReactElement => {
     return (
-      <div>
+      <HStack>
         <ItemIcon where={item.where}/>
         <span style={{ marginLeft: 4 }}>{item.title || lang.untitled}</span>
-      </div>
+      </HStack>
     )
   }
 
@@ -244,9 +246,11 @@ const EditHostsInfo = () => {
             value={(hosts?.folder_mode || 0).toString()}
             onChange={(v: string) => onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })}
           >
-            <Radio value="0">{lang.choice_mode_default}</Radio>
-            <Radio value="1">{lang.choice_mode_single}</Radio>
-            <Radio value="2">{lang.choice_mode_multiple}</Radio>
+            <HStack spacing={3}>
+              <Radio value="0">{lang.choice_mode_default}</Radio>
+              <Radio value="1">{lang.choice_mode_single}</Radio>
+              <Radio value="2">{lang.choice_mode_multiple}</Radio>
+            </HStack>
           </RadioGroup
           >
         </div>
@@ -286,6 +290,7 @@ const EditHostsInfo = () => {
 
   return (
     <Modal
+      initialFocusRef={ipt_title_ref}
       isOpen={is_show}
       onClose={onCancel}
       closeOnOverlayClick={false}
@@ -302,11 +307,14 @@ const EditHostsInfo = () => {
                 onChange={(where: HostsWhereType) => onUpdate({ where })}
                 value={hosts?.where || 'local'}
               >
-                <Stack direction="row">
+                <Stack direction="row" spacing={3}>
                   {
                     wheres.map(where => (
                       <Radio value={where} key={where} isDisabled={!is_add}>
-                        <ItemIcon where={where}/> {lang[where]}
+                        <HStack spacing="4px">
+                          <ItemIcon where={where}/>
+                          <span>{lang[where]}</span>
+                        </HStack>
                       </Radio>
                     ))
                   }
@@ -318,8 +326,11 @@ const EditHostsInfo = () => {
           <div className={styles.ln}>
             <div className={styles.label}>{lang.hosts_title}</div>
             <div>
-              <Input value={hosts?.title || ''}
-                     onChange={e => onUpdate({ title: e.target.value })}/>
+              <Input
+                ref={ipt_title_ref}
+                value={hosts?.title || ''}
+                onChange={e => onUpdate({ title: e.target.value })}
+              />
             </div>
           </div>
 
