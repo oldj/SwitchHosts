@@ -8,7 +8,11 @@ import { useModel } from '@@/plugin-model/useModel'
 import {
   Box,
   Button,
+  FormControl,
+  FormHelperText,
+  FormLabel,
   Grid,
+  HStack,
   Input,
   Modal,
   ModalBody,
@@ -21,7 +25,6 @@ import {
   RadioGroup,
   Select,
   Stack,
-  HStack,
   useToast,
 } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
@@ -125,19 +128,17 @@ const EditHostsInfo = () => {
   const forRemote = (): React.ReactElement => {
     return (
       <>
-        <div className={styles.ln}>
-          <div className={styles.label}>URL</div>
-          <div>
-            <Input
-              value={hosts?.url || ''}
-              onChange={e => onUpdate({ url: e.target.value })}
-              placeholder={lang.url_placeholder}
-            />
-          </div>
-        </div>
+        <FormControl className={styles.ln}>
+          <FormLabel>URL</FormLabel>
+          <Input
+            value={hosts?.url || ''}
+            onChange={e => onUpdate({ url: e.target.value })}
+            placeholder={lang.url_placeholder}
+          />
+        </FormControl>
 
-        <div className={styles.ln}>
-          <div className={styles.label}>{lang.auto_refresh}</div>
+        <FormControl className={styles.ln}>
+          <FormLabel>{lang.auto_refresh}</FormLabel>
           <div>
             <Select
               value={hosts?.refresh_interval || 0}
@@ -154,7 +155,7 @@ const EditHostsInfo = () => {
             </Select>
           </div>
           {is_add ? null : (
-            <div className={styles.refresh_info}>
+            <FormHelperText className={styles.refresh_info}>
               <span>{lang.last_refresh}{hosts?.last_refresh || 'N/A'}</span>
               <Button
                 size="small"
@@ -194,9 +195,9 @@ const EditHostsInfo = () => {
                     .finally(() => setIsRefreshing(false))
                 }}
               >{lang.refresh}</Button>
-            </div>
+            </FormHelperText>
           )}
-        </div>
+        </FormControl>
       </>
     )
   }
@@ -224,7 +225,8 @@ const EditHostsInfo = () => {
     let target_keys: string[] = hosts?.include || []
 
     return (
-      <div className={styles.ln}>
+      <FormControl className={styles.ln}>
+        <FormLabel>{lang.content}</FormLabel>
         <Transfer
           dataSource={source_list}
           targetKeys={target_keys}
@@ -233,28 +235,26 @@ const EditHostsInfo = () => {
             onUpdate({ include: next_target_keys })
           }}
         />
-      </div>
+      </FormControl>
     )
   }
 
   const forFolder = (): React.ReactElement => {
     return (
-      <div className={styles.ln}>
-        <div className={styles.label}>{lang.choice_mode}</div>
-        <div>
-          <RadioGroup
-            value={(hosts?.folder_mode || 0).toString()}
-            onChange={(v: string) => onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })}
-          >
-            <HStack spacing={3}>
-              <Radio value="0">{lang.choice_mode_default}</Radio>
-              <Radio value="1">{lang.choice_mode_single}</Radio>
-              <Radio value="2">{lang.choice_mode_multiple}</Radio>
-            </HStack>
-          </RadioGroup
-          >
-        </div>
-      </div>
+      <FormControl className={styles.ln}>
+        <FormLabel>{lang.choice_mode}</FormLabel>
+        <RadioGroup
+          value={(hosts?.folder_mode || 0).toString()}
+          onChange={(v: string) => onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })}
+        >
+          <HStack spacing={3}>
+            <Radio value="0">{lang.choice_mode_default}</Radio>
+            <Radio value="1">{lang.choice_mode_single}</Radio>
+            <Radio value="2">{lang.choice_mode_multiple}</Radio>
+          </HStack>
+        </RadioGroup
+        >
+      </FormControl>
     )
   }
 
@@ -300,39 +300,35 @@ const EditHostsInfo = () => {
         <ModalHeader>{is_add ? lang.hosts_add : lang.hosts_edit}</ModalHeader>
         <ModalCloseButton/>
         <ModalBody pb={6}>
-          <div className={styles.ln}>
-            <div className={styles.label}>{lang.hosts_type}</div>
-            <div>
-              <RadioGroup
-                onChange={(type: HostsType) => onUpdate({ type: type })}
-                value={hosts?.type || 'local'}
-              >
-                <Stack direction="row" spacing={3}>
-                  {
-                    types.map(type => (
-                      <Radio value={type} key={type} isDisabled={!is_add}>
-                        <HStack spacing="4px">
-                          <ItemIcon type={type}/>
-                          <span>{lang[type]}</span>
-                        </HStack>
-                      </Radio>
-                    ))
-                  }
-                </Stack>
-              </RadioGroup>
-            </div>
-          </div>
+          <FormControl className={styles.ln}>
+            <FormLabel>{lang.hosts_type}</FormLabel>
+            <RadioGroup
+              onChange={(type: HostsType) => onUpdate({ type: type })}
+              value={hosts?.type || 'local'}
+            >
+              <Stack direction="row" spacing={3}>
+                {
+                  types.map(type => (
+                    <Radio value={type} key={type} isDisabled={!is_add}>
+                      <HStack spacing="4px">
+                        <ItemIcon type={type}/>
+                        <span>{lang[type]}</span>
+                      </HStack>
+                    </Radio>
+                  ))
+                }
+              </Stack>
+            </RadioGroup>
+          </FormControl>
 
-          <div className={styles.ln}>
-            <div className={styles.label}>{lang.hosts_title}</div>
-            <div>
-              <Input
-                ref={ipt_title_ref}
-                value={hosts?.title || ''}
-                onChange={e => onUpdate({ title: e.target.value })}
-              />
-            </div>
-          </div>
+          <FormControl className={styles.ln}>
+            <FormLabel>{lang.hosts_title}</FormLabel>
+            <Input
+              ref={ipt_title_ref}
+              value={hosts?.title || ''}
+              onChange={e => onUpdate({ title: e.target.value })}
+            />
+          </FormControl>
 
           {hosts?.type === 'remote' ? forRemote() : null}
           {hosts?.type === 'group' ? forGroup() : null}

@@ -17,6 +17,7 @@ export default {
   choices: 'Choices',
   chosen: 'Chosen',
   colon: ': ',
+  content: 'Content',
   day: 'day',
   days: 'days',
   delete: 'Delete',

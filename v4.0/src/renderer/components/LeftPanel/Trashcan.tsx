@@ -39,6 +39,7 @@ const Trashcan = (props: Props) => {
       is_collapsed,
       is_root: true,
       type: 'trashcan',
+      parent_id: null,
     }
 
     let list: ITrashcanListObject[] = [ root ]

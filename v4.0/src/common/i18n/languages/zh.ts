@@ -19,6 +19,7 @@ const lang: LanguageDict = {
   choices: '选项',
   chosen: '已选',
   colon: '：',
+  content: '内容',
   day: '天',
   days: '天',
   delete: '删除',
