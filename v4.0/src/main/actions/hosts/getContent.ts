@@ -40,7 +40,7 @@ const getContentOfHosts = async (id: string): Promise<string> => {
       let item = findItemById(list, id)
       if (!item) return ''
 
-      return `# file: ${item.title}\n` + (await getContentOfHosts(item.id))
+      return `# file: ${item.title}\n` + (await getContentOfHosts(id))
     }))
     return a.join('\n\n')
   }

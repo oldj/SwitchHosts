@@ -14,7 +14,7 @@ export const flatten = (list: IHostsListObject[]): IHostsListObject[] => {
   list.map(item => {
     new_list.push(item)
     if (item.children) {
-      new_list = [...new_list, ...flatten(item.children)]
+      new_list = [ ...new_list, ...flatten(item.children) ]
     }
   })
 
@@ -71,4 +71,18 @@ export const getNextSelectedItem = (list: IHostsListObject[], id: string): IHost
   let idx = flat.findIndex(item => item.id === id)
 
   return flat[idx + 1] || flat[idx - 1]
+}
+
+export const getParentOfItem = (list: IHostsListObject[], item_id: string): IHostsListObject | undefined => {
+  if (list.find(i => i.id === item_id)) {
+    // is in the top level
+    return
+  }
+
+  let flat = flatten(list)
+  for (let h of flat) {
+    if (h.children && h.children.find(i => i.id === item_id)) {
+      return h
+    }
+  }
 }
