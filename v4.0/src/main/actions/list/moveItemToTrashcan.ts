@@ -3,13 +3,14 @@
  * @homepage: https://oldj.net
  */
 
+import { getList } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { swhdb } from '@main/data'
-import { IHostsListObject } from '@root/common/data'
+import { IHostsListObject, ITrashcanObject } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
 
 export default async (id: string) => {
-  let list: IHostsListObject[] = await swhdb.list.tree.all()
+  let list: IHostsListObject[] = await getList()
 
   let node = hostsFn.findItemById(list, id)
   if (!node) {
@@ -22,15 +23,17 @@ export default async (id: string) => {
     broadcast('toggle_item', node.id, false)
   }
 
-  await swhdb.list.trashcan.push({
+  let obj: ITrashcanObject = {
     data: {
       ...node,
       on: false,
     },
     add_time_ms: (new Date()).getTime(),
-  })
+    parent_id: hostsFn.getParentOfItem(list, id)?.id || null,
+  }
+
+  await swhdb.list.trashcan.push(obj)
 
   hostsFn.deleteItemById(list, id)
-
   await swhdb.list.tree.set(list)
 }

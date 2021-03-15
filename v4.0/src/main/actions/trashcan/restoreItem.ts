@@ -3,7 +3,9 @@
  * @homepage: https://oldj.net
  */
 
+import { getList, setList } from '@main/actions'
 import { swhdb } from '@main/data'
+import { getNodeById } from '@renderer/components/Tree/fn'
 import { ITrashcanListObject } from '@root/common/data'
 
 export default async (id: string): Promise<boolean> => {
@@ -14,7 +16,28 @@ export default async (id: string): Promise<boolean> => {
     return false
   }
 
-  await swhdb.list.tree.push(trashcan_item.data || {})
+  let hosts = trashcan_item.data
+  if (!hosts || !hosts.id) {
+    console.log(`bad trashcan_item!`)
+    return false
+  }
+
+  let list = await getList()
+  let { parent_id } = trashcan_item
+
+  if (!parent_id) {
+    await setList([ ...list, hosts ])
+  } else {
+    let parent_hosts = getNodeById(list, parent_id)
+    if (!parent_hosts) {
+      console.log(`can't find parent_hosts with id #${parent_id}.`)
+      return false
+    }
+
+    parent_hosts.children = [ ...(parent_hosts.children || []), hosts ]
+    await setList(list)
+  }
+
   await swhdb.list.trashcan.delete(i => i.data.id === id)
 
   return true

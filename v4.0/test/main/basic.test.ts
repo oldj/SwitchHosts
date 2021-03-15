@@ -42,6 +42,34 @@ describe('basic test', () => {
   })
 
   it('group hosts', async () => {
+    await setList([
+      { id: '1' },
+      { id: '2' },
+      { id: '3', type: 'group', include: [ '1', '2' ] },
+    ])
+    let c1 = '# 425748244153'
+    let c2 = '# 642156457548'
+    await setHostsContent('1', c1)
+    await setHostsContent('2', c2)
 
+    assert(await getHostsContent('1') === c1)
+    assert(await getHostsContent('2') === c2)
+
+    let c3 = await getHostsContent('3')
+    assert(c3.indexOf(c1) > -1)
+    assert(c3.indexOf(c2) > c3.indexOf(c1))
+
+    await setList([
+      { id: '1' },
+      { id: '2' },
+      {
+        id: '4', type: 'folder', children: [
+          { id: '5', type: 'group', include: [ '1', '2' ] },
+        ],
+      },
+    ])
+
+    let c5 = await getHostsContent('5')
+    assert(c3 === c5)
   })
 })

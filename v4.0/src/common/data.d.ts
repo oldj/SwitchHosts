@@ -38,6 +38,7 @@ export interface IHostsContentObject {
 export interface ITrashcanObject {
   data: IHostsListObject;
   add_time_ms: number;
+  parent_id: string | null;
 }
 
 export interface ITrashcanListObject extends ITrashcanObject, ITreeNodeData {
