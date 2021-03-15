@@ -6,6 +6,7 @@
 
 export default {
   _name: 'English',
+  all: 'All',
   auto_refresh: 'Auto refresh',
   btn_cancel: 'Cancel',
   btn_ok: 'OK',
@@ -48,6 +49,7 @@ export default {
   read_only: 'Read only',
   refresh: 'Refresh',
   remote: 'Remote',
+  selected: 'Selected',
   success: 'Success!',
   sudo_prompt_title: 'Input your sudo password',
   system_hosts: 'System Hosts',

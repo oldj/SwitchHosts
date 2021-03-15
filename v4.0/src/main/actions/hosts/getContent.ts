@@ -3,8 +3,9 @@
  * @homepage: https://oldj.net
  */
 
+import { getItemFromList, getList } from '@main/actions'
 import { swhdb } from '@main/data'
-import { IHostsContentObject, IHostsListObject } from '@root/common/data'
+import { IHostsContentObject } from '@root/common/data'
 import { findItemById, flatten } from '@root/common/hostsFn'
 
 const getContentById = async (id: string) => {
@@ -12,27 +13,34 @@ const getContentById = async (id: string) => {
   return hosts_content?.content || ''
 }
 
-const getContentOfHosts = async (list: IHostsListObject[], hosts: IHostsListObject): Promise<string> => {
-  const { where } = hosts
-  if (!where || where === 'local' || where === 'remote') {
-    return getContentById(hosts.id)
+const getContentOfHosts = async (id: string): Promise<string> => {
+  let hosts = await getItemFromList(id)
+  if (!hosts) {
+    return await getContentById(id)
   }
 
-  if (where === 'folder') {
+  const { type } = hosts
+  if (!type || type === 'local' || type === 'remote') {
+    return await getContentById(id)
+  }
+
+  let list = await getList()
+
+  if (type === 'folder') {
     const items = flatten(hosts.children || [])
 
     let a = await Promise.all(items.map(async (item) => {
-      return `# file: ${item.title}\n` + (await getContentOfHosts(list, item))
+      return `# file: ${item.title}\n` + (await getContentOfHosts(item.id))
     }))
     return a.join('\n\n')
   }
 
-  if (where === 'group') {
+  if (type === 'group') {
     let a = await Promise.all((hosts.include || []).map(async (id) => {
       let item = findItemById(list, id)
       if (!item) return ''
 
-      return `# file: ${item.title}\n` + (await getContentOfHosts(list, item))
+      return `# file: ${item.title}\n` + (await getContentOfHosts(id))
     }))
     return a.join('\n\n')
   }

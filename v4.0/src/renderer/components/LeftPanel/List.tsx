@@ -5,7 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { RightOutlined } from '@ant-design/icons'
+import { Center, useToast } from '@chakra-ui/react'
 import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import ListItem from '@renderer/components/LeftPanel/ListItem'
@@ -15,9 +15,9 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
 import { findItemById, flatten, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
 import normalize from '@root/common/normalize'
-import { message } from 'antd'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
+import { BiChevronRight } from 'react-icons/bi'
 import styles from './List.less'
 
 interface Props {
@@ -28,6 +28,7 @@ const List = (props: Props) => {
   const { hosts_data, loadHostsData, setList } = useModel('useHostsData')
   const { lang } = useModel('useI18n')
   const [ show_list, setShowList ] = useState<IHostsListObject[]>([])
+  const toast = useToast()
 
   useEffect(() => {
     setShowList([ {
@@ -41,7 +42,10 @@ const List = (props: Props) => {
     const new_list = updateOneItem(hosts_data.list, { id, on })
     let success = await writeHostsToSystem(new_list)
     if (success) {
-      message.success(lang.success)
+      toast({
+        status: 'success',
+        description: lang.success,
+      })
     } else {
       agent.broadcast('set_hosts_on_status', id, !on)
     }
@@ -55,7 +59,7 @@ const List = (props: Props) => {
     const content_list: string[] = []
     const flat = flatten(list).filter(i => i.on)
     for (let hosts of flat) {
-      let c = await actions.localContentGet(list, hosts)
+      let c = await actions.getHostsContent(hosts.id)
       content_list.push(c)
     }
 
@@ -63,7 +67,7 @@ const List = (props: Props) => {
     // console.log(content)
     content = normalize(content)
 
-    const result = await actions.systemHostsWrite(content, options)
+    const result = await actions.setSystemHosts(content, options)
     if (result.success) {
       setList(list).catch(e => console.error(e))
       new Notification(lang.success, {
@@ -93,7 +97,10 @@ const List = (props: Props) => {
       new Notification(lang.fail, {
         body,
       })
-      message.error(lang.fail)
+      toast({
+        status: 'error',
+        description: lang.fail,
+      })
     }
 
     return result.success
@@ -112,7 +119,7 @@ const List = (props: Props) => {
       // console.log(next_hosts)
     }
 
-    await actions.localListItemMoveToTrashcan(id)
+    await actions.moveToTrashcan(id)
     await loadHostsData()
 
     if (next_hosts) {
@@ -137,7 +144,7 @@ const List = (props: Props) => {
   useOnBroadcast('reload_list', loadHostsData)
 
   useOnBroadcast('hosts_content_changed', async (hosts_id: string) => {
-    let list: IHostsListObject[] = await actions.localListGet()
+    let list: IHostsListObject[] = await actions.getList()
     let hosts = findItemById(list, hosts_id)
     if (!hosts || !hosts.on) return
 
@@ -161,12 +168,12 @@ const List = (props: Props) => {
         nodeRender={(data) => (
           <ListItem key={data.id} data={data}/>
         )}
-        collapseArrow={<RightOutlined/>}
+        collapseArrow={<Center w="20px" h="20px"><BiChevronRight/></Center>}
         nodeAttr={(item) => {
           return {
             can_drag: !item.is_sys,
             can_drop_before: !item.is_sys,
-            can_drop_in: item.where === 'folder',
+            can_drop_in: item.type === 'folder',
             can_drop_after: !item.is_sys,
           }
         }}
@@ -174,9 +181,9 @@ const List = (props: Props) => {
           return (
             <div className={clsx(styles.for_drag)}>
               <span
-                className={clsx(styles.icon, data.where === 'folder' && styles.folder)}
+                className={clsx(styles.icon, data.type === 'folder' && styles.folder)}
               >
-                <ItemIcon where={data.is_sys ? 'system' : data.where}
+                <ItemIcon type={data.is_sys ? 'system' : data.type}
                           is_collapsed={data.is_collapsed}/>
               </span>
               <span>

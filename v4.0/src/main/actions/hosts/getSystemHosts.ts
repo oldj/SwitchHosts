@@ -3,11 +3,11 @@
  * @homepage: https://oldj.net
  */
 
-import getSystemHostsPath from '@main/actions/getSystemHostsPath'
+import getPathOfSystemHosts from './getPathOfSystemHostsPath'
 import * as fs from 'fs'
 
 export default async (): Promise<string> => {
-  const fn = await getSystemHostsPath()
+  const fn = await getPathOfSystemHosts()
 
   if (!fs.existsSync(fn)) {
     return ''

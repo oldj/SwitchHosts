@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { localContentGet, localContentSet, localListSet } from '@main/actions/index'
+import { getHostsContent, setHostsContent, setList } from '@main/actions/index'
 import { broadcast } from '@main/core/agent'
 
 import { swhdb } from '@main/data'
@@ -25,9 +25,9 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
     }
   }
 
-  let { where, url } = hosts
+  let { type, url } = hosts
 
-  if (where !== 'remote') {
+  if (type !== 'remote') {
     return {
       success: false,
       code: 'not_remote',
@@ -41,7 +41,7 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
     }
   }
 
-  let old_content: string = await localContentGet(list, hosts)
+  let old_content: string = await getHostsContent(hosts.id)
   let new_content: string
   try {
     console.log(`-> refreshHosts URL: "${url}"`)
@@ -62,10 +62,10 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
   hosts.last_refresh = dayjs().format('YYYY-MM-DD HH:mm:ss')
   hosts.last_refresh_ms = (new Date()).getTime()
 
-  await localListSet(list)
+  await setList(list)
 
   if (old_content !== new_content) {
-    await localContentSet(hosts_id, new_content)
+    await setHostsContent(hosts_id, new_content)
     broadcast('hosts_refreshed', hosts)
     broadcast('hosts_content_changed', hosts_id)
   }

@@ -6,7 +6,6 @@ import MainPanel from '@renderer/components/MainPanel'
 import SudoPasswordInput from '@renderer/components/SudoPasswordInput'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { Modal } from 'antd'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import styles from './index.less'
@@ -52,22 +51,14 @@ export default () => {
     init().catch(e => console.error(e))
   }, [])
 
-  useOnBroadcast('toggle_left_pannel', () => setLeftShow(!left_show), [ left_show ])
+  useOnBroadcast('toggle_left_pannel', (show: boolean) => setLeftShow(show))
 
   if (loading) {
     if (show_migration) {
-      Modal.confirm({
-        title: lang.migrate_data,
-        content: lang.migrate_confirm,
-        onOk: () => {
-          return migrate(true)
-        },
-        onCancel: () => {
-          return migrate(false)
-        },
-        okText: lang.btn_ok,
-        cancelText: lang.btn_cancel,
-      })
+      setTimeout(() => {
+        migrate(confirm(lang.migrate_confirm))
+          .catch(e => alert(e.message))
+      }, 200)
     }
 
     return (

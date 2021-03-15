@@ -3,7 +3,7 @@
  * @author: oldj
  * @homepage: https://oldj.net
  */
-import { localListGet, refreshHosts } from '@main/actions'
+import { getList, refreshHosts } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { IHostsListObject } from '@root/common/data'
 import { flatten } from '@root/common/hostsFn'
@@ -29,9 +29,9 @@ const isNeedRefresh = (hosts: IHostsListObject): boolean => {
 
 const check = async () => {
   // console.log('check refresh...')
-  let list = await localListGet()
+  let list = await getList()
   let remote_hosts = flatten(list)
-    .filter(h => h.where === 'remote')
+    .filter(h => h.type === 'remote')
 
   for (let hosts of remote_hosts) {
     if (isNeedRefresh(hosts)) {

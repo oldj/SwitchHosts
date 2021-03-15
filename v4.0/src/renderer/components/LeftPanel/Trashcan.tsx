@@ -5,11 +5,12 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { RightOutlined } from '@ant-design/icons'
 import TrashcanItem from '@renderer/components/LeftPanel/TrashcanItem'
 import { Tree } from '@renderer/components/Tree'
 import { ITrashcanListObject } from '@root/common/data'
 import React, { useEffect, useState } from 'react'
+import { BiChevronRight } from 'react-icons/bi'
+import { Center } from '@chakra-ui/react'
 import list_styles from './List.less'
 import styles from './Trashcan.less'
 
@@ -37,7 +38,7 @@ const Trashcan = (props: Props) => {
       can_select: false,
       is_collapsed,
       is_root: true,
-      where: 'trashcan',
+      type: 'trashcan',
     }
 
     let list: ITrashcanListObject[] = [ root ]
@@ -47,7 +48,7 @@ const Trashcan = (props: Props) => {
         ...i,
         id: i.data.id,
         can_drag: false,
-        where: i.data.where,
+        type: i.data.type,
       })
     })
 
@@ -65,7 +66,7 @@ const Trashcan = (props: Props) => {
       <Tree
         data={trash_list}
         nodeRender={(item) => <TrashcanItem data={item as ITrashcanListObject}/>}
-        collapseArrow={<RightOutlined/>}
+        collapseArrow={<Center w="20px" h="20px"><BiChevronRight/></Center>}
         nodeClassName={list_styles.node}
         nodeSelectedClassName={list_styles.node_selected}
         nodeCollapseArrowClassName={list_styles.arrow}

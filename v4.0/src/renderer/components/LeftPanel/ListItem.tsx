@@ -5,7 +5,6 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { FormOutlined } from '@ant-design/icons'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { agent } from '@renderer/core/agent'
@@ -14,6 +13,8 @@ import { IHostsListObject } from '@root/common/data'
 import { updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
+import { BiEdit } from 'react-icons/bi'
+import { Center } from '@chakra-ui/react'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.less'
 
@@ -70,7 +71,7 @@ const ListItem = (props: Props) => {
 
   if (!data) return null
 
-  const is_folder = data.where === 'folder'
+  const is_folder = data.type === 'folder'
   const is_selected = data.id === current_hosts?.id
 
   const menu = new PopupMenu([
@@ -111,7 +112,7 @@ const ListItem = (props: Props) => {
           className={clsx(styles.icon, is_folder && styles.folder)}
           onClick={toggleIsCollapsed}
         >
-          <ItemIcon where={data.is_sys ? 'system' : data.where} is_collapsed={data.is_collapsed}/>
+          <ItemIcon type={data.is_sys ? 'system' : data.type} is_collapsed={data.is_collapsed}/>
         </span>
         {data.title || lang.untitled}
       </div>
@@ -119,12 +120,14 @@ const ListItem = (props: Props) => {
         {data.is_sys ? null : (
           <>
             <div className={styles.edit}>
-              <FormOutlined
-                title={lang.edit}
-                onClick={() => {
-                  agent.broadcast('edit_hosts_info', data)
-                }}
-              />
+              <Center h="var(--swh-tree-row-height)">
+                <BiEdit
+                  title={lang.edit}
+                  onClick={() => {
+                    agent.broadcast('edit_hosts_info', data)
+                  }}
+                />
+              </Center>
             </div>
             <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)}/>
           </>
