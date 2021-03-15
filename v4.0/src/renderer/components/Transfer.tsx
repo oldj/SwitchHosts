@@ -94,7 +94,11 @@ const Transfer = (props: Props) => {
       <Grid templateColumns="minmax(0, 1fr) 40px minmax(0, 1fr)" gap={1}>
         <Box borderWidth="1px" borderRadius="md">
           <Box className={styles.title} borderBottomWidth={1} px={3} py={1}>
-            {lang.all} <span>({dataSource.length})</span>
+            {lang.all} <span>({
+            left_selectd_keys.length === 0
+              ? dataSource.length
+              : `${left_selectd_keys.length}/${dataSource.length}`
+          })</span>
           </Box>
           <List
             data={dataSource.filter(i => !right_keys.includes(i.id))}
@@ -124,7 +128,11 @@ const Transfer = (props: Props) => {
         </Center>
         <Box borderWidth="1px" borderRadius="md">
           <Box className={styles.title} borderBottomWidth={1} px={3} py={1}>
-            {lang.selected} <span>({right_keys.length})</span>
+            {lang.selected} <span>({
+            right_selectd_keys.length === 0
+              ? right_keys.length
+              : `${right_selectd_keys.length}/${right_keys.length}`
+          })</span>
           </Box>
           <List
             data={right_keys.map(id => dataSource.find(i => i.id === id)) as ITransferSourceObject[]}
