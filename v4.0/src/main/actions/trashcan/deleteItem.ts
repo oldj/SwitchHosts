@@ -8,6 +8,8 @@ import { ITrashcanListObject } from '@root/common/data'
 import { flatten } from '@root/common/hostsFn'
 
 export default async (id: string): Promise<boolean> => {
+  // Permanently delete the specified item with id.
+
   let trashcan_item: ITrashcanListObject = await swhdb.list.trashcan.find(i => i.data.id === id)
 
   if (!trashcan_item) {

@@ -1,12 +1,13 @@
 import { ITreeNodeData } from '@renderer/components/Tree/Node'
 
-export type HostsWhereType = 'local' | 'remote' | 'group' | 'folder';
+export type HostsType = 'local' | 'remote' | 'group' | 'folder';
+export type FolderModeType = 0 | 1 | 2 // 0: 默认; 1: 单选; 2: 多选
 
 export interface IHostsListObject {
   id: string;
   title?: string;
   on?: boolean;
-  where?: HostsWhereType;
+  type?: HostsType;
 
   // remote
   url?: string;
@@ -18,7 +19,7 @@ export interface IHostsListObject {
   include?: string[];
 
   // folder
-  folder_mode?: 0 | 1 | 2; // 0: 默认; 1: 单选; 2: 多选
+  folder_mode?: FolderModeType;
   folder_open?: boolean;
   children?: IHostsListObject[];
 
@@ -37,13 +38,14 @@ export interface IHostsContentObject {
 export interface ITrashcanObject {
   data: IHostsListObject;
   add_time_ms: number;
+  parent_id: string | null;
 }
 
 export interface ITrashcanListObject extends ITrashcanObject, ITreeNodeData {
   id: string;
   children?: ITrashcanListObject[];
   is_root?: boolean;
-  where?: HostsWhereType | 'trashcan';
+  type?: HostsType | 'trashcan';
 
   [key: string]: any;
 }

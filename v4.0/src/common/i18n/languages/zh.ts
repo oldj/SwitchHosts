@@ -8,6 +8,7 @@ import { LanguageDict } from '@root/common/types'
 
 const lang: LanguageDict = {
   _name: '中文',
+  all: '全部',
   auto_refresh: '自动刷新',
   btn_cancel: '取消',
   btn_ok: '好的',
@@ -50,6 +51,7 @@ const lang: LanguageDict = {
   read_only: '只读',
   refresh: '刷新',
   remote: '远程',
+  selected: '已选',
   success: '操作成功！',
   sudo_prompt_title: '请输入你的登录密码（sudo 密码）',
   system_hosts: '系统 Hosts',
