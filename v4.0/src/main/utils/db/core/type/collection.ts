@@ -52,9 +52,10 @@ export default class Collection {
     index++
     await this._meta.set('index', index)
 
-    let ts = ((new Date()).getTime() % 1000).toString().padStart(3, '0')
+    // let ts = ((new Date()).getTime() % 1000).toString().padStart(3, '0')
+    // return `${index}${ts}`
 
-    return `${index}${ts}`
+    return index.toString()
   }
 
   private getDoc(_id: string): Dict {

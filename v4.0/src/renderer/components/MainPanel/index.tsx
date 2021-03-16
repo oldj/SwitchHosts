@@ -5,7 +5,8 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { HStack, IconButton, Center } from '@chakra-ui/react'
+import { Center, HStack, IconButton } from '@chakra-ui/react'
+import History from '@renderer/components/History'
 import HostsEditor from '@renderer/components/HostsEditor'
 import HostsViewer from '@renderer/components/HostsViewer'
 import ItemIcon from '@renderer/components/ItemIcon'
@@ -14,7 +15,7 @@ import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
-import { BiSidebar, BiSliderAlt } from 'react-icons/bi'
+import { BiHistory, BiSidebar, BiSliderAlt } from 'react-icons/bi'
 import styles from './index.less'
 
 interface Props {
@@ -94,13 +95,21 @@ const MainPanel = (props: Props) => {
           )}
         </div>
 
-        <div>
+        <Center>
           {current_hosts && !isHostsInTrashcan(current_hosts.id) ? (
             <SwitchButton on={is_on} onChange={on => {
               agent.broadcast('toggle_item', current_hosts.id, on)
             }}/>
-          ) : null}
-        </div>
+          ) : (
+            <IconButton
+              aria-label="Show history"
+              icon={<BiHistory/>}
+              variant="ghost"
+              onClick={() => agent.broadcast('show_history')}
+            />
+          )}
+        </Center>
+
         <Center>
           <IconButton
             aria-label="Toggle preference panel"
@@ -117,6 +126,8 @@ const MainPanel = (props: Props) => {
           <HostsViewer content={system_hosts}/>
         )}
       </div>
+
+      <History/>
     </div>
   )
 }
