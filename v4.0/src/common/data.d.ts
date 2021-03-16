@@ -51,6 +51,7 @@ export interface ITrashcanListObject extends ITrashcanObject, ITreeNodeData {
 }
 
 export interface IHostsHistoryObject {
+  id: string;
   content: string;
   add_time_ms: number;
   label?: string;
