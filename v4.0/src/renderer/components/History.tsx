@@ -9,6 +9,7 @@ import { actions } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsHistoryObject } from '@root/common/data'
 import React, { useEffect, useState } from 'react'
+import dayjs from 'dayjs'
 
 import {
   Modal,
@@ -29,19 +30,26 @@ import {
 } from '@chakra-ui/react'
 import { BiHistory } from 'react-icons/bi'
 
-interface Props {
-
+interface IHistoryProps {
+  list: IHostsHistoryObject[];
 }
 
-const HistoryList = (): React.ReactElement => {
+const HistoryList = (props: IHistoryProps): React.ReactElement => {
+  const { list } = props
+  const [ selected_item, setSelectedItem ] = useState<IHostsHistoryObject>(list[0])
+
   return (
-    <Flex>
-      <List w="200px">
-        <ListItem>item</ListItem>
-      </List>
-      <Box flex={1} pl={3}>
-        content
+    <Flex h="80vh" minHeight="300px">
+      <Box flex={1} mr={3}>
+        {selected_item ? selected_item.content : ''}
       </Box>
+      <List w="200px" spacing={3}>
+        {list.map((item) => (
+          <ListItem key={item.id} onClick={() => setSelectedItem(item)}>
+            <span>{dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}</span>
+          </ListItem>
+        ))}
+      </List>
     </Flex>
   )
 }
@@ -60,8 +68,8 @@ const Loading = (): React.ReactElement => {
   )
 }
 
-const History = (props: Props) => {
-  const [ is_open, setIsOpen ] = useState(false)
+const History = () => {
+  const [ is_open, setIsOpen ] = useState(true)
   const [ is_loading, setIsLoading ] = useState(true)
   const [ list, setList ] = useState<IHostsHistoryObject[]>([])
   const { lang } = useModel('useI18n')
@@ -99,7 +107,7 @@ const History = (props: Props) => {
         </ModalHeader>
         <ModalCloseButton/>
         <ModalBody>
-          {is_loading ? <Loading/> : <HistoryList/>}
+          {is_loading ? <Loading/> : <HistoryList list={list}/>}
         </ModalBody>
         <ModalFooter>
           <Button onClick={onClose}>
