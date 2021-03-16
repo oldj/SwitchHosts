@@ -17,6 +17,7 @@ export { default as setHostsContent } from './hosts/setContent'
 export { default as refreshHosts } from './hosts/refresh'
 export { default as getSystemHosts } from './hosts/getSystemHosts'
 export { default as setSystemHosts } from './hosts/setSystemHosts'
+export { default as getHistoryList } from './hosts/getHistoryList'
 
 export { default as getList } from './list/getList'
 export { default as setList } from './list/setList'

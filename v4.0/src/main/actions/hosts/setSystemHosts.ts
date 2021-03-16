@@ -3,6 +3,8 @@
  * @homepage: https://oldj.net
  */
 
+import { swhdb } from '@main/data'
+import { IHostsHistoryObject } from '@root/common/data'
 import getPathOfSystemHosts from './getPathOfSystemHostsPath'
 import { broadcast } from '@main/core/agent'
 import safePSWD from '@main/libs/safePSWD'
@@ -30,6 +32,13 @@ const checkAccess = async (fn: string): Promise<boolean> => {
     console.error(e)
   }
   return false
+}
+
+const addHistory = async (content: string) => {
+  await swhdb.collection.history.insert({
+    content,
+    add_time_ms: (new Date()).getTime(),
+  })
 }
 
 const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteResult> => new Promise((resolve, reject) => {
@@ -92,7 +101,12 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
 
     let platform = process.platform
     if ((platform === 'darwin' || platform === 'linux') && sudo_pswd) {
-      return await writeWithSudo(sys_hosts_path, content)
+      let r = await writeWithSudo(sys_hosts_path, content)
+      if (r.success) {
+        await addHistory(content)
+      }
+
+      return r
     }
 
     return {
@@ -111,6 +125,7 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
     }
   }
 
+  await addHistory(content)
   broadcast('system_hosts_updated')
 
   return { success: true }

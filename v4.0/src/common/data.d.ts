@@ -50,6 +50,12 @@ export interface ITrashcanListObject extends ITrashcanObject, ITreeNodeData {
   [key: string]: any;
 }
 
+export interface IHostsHistoryObject {
+  content: string;
+  add_time_ms: number;
+  label?: string;
+}
+
 export type VersionType = [ number, number, number, number ]
 
 export interface IHostsBasicData {
