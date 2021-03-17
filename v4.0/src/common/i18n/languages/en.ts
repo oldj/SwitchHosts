@@ -58,6 +58,7 @@ export default {
   system_hosts: 'System Hosts',
   system_hosts_history: 'History versions of the System Hosts',
   system_hosts_history_delete_confirm: 'Are you sure you want to delete this item?',
+  system_hosts_history_help: 'If the total number of historical records exceeds this limit, the oldest record will be deleted.',
   system_hosts_history_limit: 'Maximum number of records: ',
   test: 'Test',
   trashcan: 'Trashcan',

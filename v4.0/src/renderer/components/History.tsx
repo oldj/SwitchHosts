@@ -22,6 +22,7 @@ import {
   Select,
   Spacer,
   Spinner,
+  Tooltip,
   VStack,
 } from '@chakra-ui/react'
 import HostsViewer from '@renderer/components/HostsViewer'
@@ -31,7 +32,7 @@ import { IHostsHistoryObject } from '@root/common/data'
 import dayjs from 'dayjs'
 import prettyBytes from 'pretty-bytes'
 import React, { useEffect, useRef, useState } from 'react'
-import { BiDetail, BiHistory, BiTrash } from 'react-icons/bi'
+import { BiDetail, BiHelpCircle, BiHistory, BiTrash } from 'react-icons/bi'
 
 interface IHistoryProps {
   list: IHostsHistoryObject[];
@@ -107,8 +108,8 @@ const Loading = (): React.ReactElement => {
 }
 
 const History = () => {
-  const [ is_open, setIsOpen ] = useState(true)
-  const [ is_loading, setIsLoading ] = useState(true)
+  const [ is_open, setIsOpen ] = useState(false)
+  const [ is_loading, setIsLoading ] = useState(false)
   const [ list, setList ] = useState<IHostsHistoryObject[]>([])
   const [ selected_item, setSelectedItem ] = useState<IHostsHistoryObject>()
   const [ history_limit, setHistoryLimit ] = useState(0)
@@ -117,7 +118,7 @@ const History = () => {
   const { lang } = useModel('useI18n')
 
   const loadData = async () => {
-    // setIsLoading(true)
+    setIsLoading(true)
     let list = await actions.getHistoryList()
     list = list.reverse()
     setList(list)
@@ -160,12 +161,6 @@ const History = () => {
     setHistoryLimit(value)
     await actions.configSet('history_limit', value)
   }
-
-  useEffect(() => {
-    if (is_open && list.length === 0) {
-      loadData()
-    }
-  }, [ is_open, list ])
 
   useOnBroadcast('show_history', () => {
     setIsOpen(true)
@@ -219,6 +214,9 @@ const History = () => {
                   ))}
                 </Select>
               </Box>
+              <Tooltip label={lang.system_hosts_history_help} aria-label="A tooltip">
+                <Box ml={3}><BiHelpCircle/></Box>
+              </Tooltip>
               <Spacer/>
               <Button
                 leftIcon={<BiTrash/>}

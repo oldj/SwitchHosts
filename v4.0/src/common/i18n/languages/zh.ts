@@ -60,6 +60,7 @@ const lang: LanguageDict = {
   system_hosts: '系统 Hosts',
   system_hosts_history: '系统 Hosts 历史版本',
   system_hosts_history_delete_confirm: '确实要删除该项记录吗？',
+  system_hosts_history_help: '如果历史记录的总数超过这个限制，最老的记录将被删除。',
   system_hosts_history_limit: '最大记录数：',
   test: '测试',
   trashcan: '回收站',
