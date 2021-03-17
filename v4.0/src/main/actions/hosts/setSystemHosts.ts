@@ -3,10 +3,12 @@
  * @homepage: https://oldj.net
  */
 
+import { configGet, deleteHistory } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { swhdb } from '@main/data'
 import safePSWD from '@main/libs/safePSWD'
 import { IHostsWriteOptions } from '@main/types'
+import { IHostsHistoryObject } from '@root/common/data'
 import { exec } from 'child_process'
 import * as fs from 'fs'
 import md5 from 'md5'
@@ -40,6 +42,18 @@ const addHistory = async (content: string) => {
     content,
     add_time_ms: (new Date()).getTime(),
   })
+
+  let history_limit = await configGet('history_limit')
+  if (typeof history_limit !== 'number' || history_limit <= 0) return
+
+  let lists = await swhdb.collection.history.all<IHostsHistoryObject>()
+  if (lists.length <= history_limit) {
+    return
+  }
+
+  for (let i = 0; i < lists.length - history_limit; i++) {
+    await deleteHistory(lists[i].id)
+  }
 }
 
 const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteResult> => new Promise((resolve, reject) => {

@@ -59,6 +59,8 @@ const lang: LanguageDict = {
   sudo_prompt_title: '请输入你的登录密码（sudo 密码）',
   system_hosts: '系统 Hosts',
   system_hosts_history: '系统 Hosts 历史版本',
+  system_hosts_history_delete_confirm: '确实要删除该项记录吗？',
+  system_hosts_history_limit: '最大记录数：',
   test: '测试',
   trashcan: '回收站',
   trashcan_clear: '清空回收站',

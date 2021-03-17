@@ -57,6 +57,8 @@ export default {
   sudo_prompt_title: 'Input your sudo password',
   system_hosts: 'System Hosts',
   system_hosts_history: 'History versions of the System Hosts',
+  system_hosts_history_delete_confirm: 'Are you sure you want to delete this item?',
+  system_hosts_history_limit: 'Maximum number of records: ',
   test: 'Test',
   trashcan: 'Trashcan',
   trashcan_clear: 'Empty the trashcan',
