@@ -47,6 +47,7 @@ export default {
   move_to_trashcan: 'Move to trashcan',
   never: 'Never',
   no_access_to_hosts: 'No permission to write to the Hosts file.',
+  no_record: 'No record',
   password: 'Password',
   read_only: 'Read only',
   refresh: 'Refresh',

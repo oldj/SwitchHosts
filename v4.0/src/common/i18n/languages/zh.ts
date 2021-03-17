@@ -49,6 +49,7 @@ const lang: LanguageDict = {
   move_to_trashcan: '移到回收站',
   never: '从不',
   no_access_to_hosts: '没有写入 Hosts 文件的权限。',
+  no_record: '没有记录',
   password: '密码',
   read_only: '只读',
   refresh: '刷新',
