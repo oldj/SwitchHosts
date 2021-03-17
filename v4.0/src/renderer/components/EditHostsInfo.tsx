@@ -133,6 +133,7 @@ const EditHostsInfo = () => {
             value={hosts?.url || ''}
             onChange={e => onUpdate({ url: e.target.value })}
             placeholder={lang.url_placeholder}
+            onKeyDown={e => e.key === 'Enter' && onSave()}
           />
         </FormControl>
 
@@ -330,6 +331,7 @@ const EditHostsInfo = () => {
               ref={ipt_title_ref}
               value={hosts?.title || ''}
               onChange={e => onUpdate({ title: e.target.value })}
+              onKeyDown={e => e.key === 'Enter' && onSave()}
             />
           </FormControl>
 
