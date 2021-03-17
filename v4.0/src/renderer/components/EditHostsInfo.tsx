@@ -8,19 +8,18 @@ import { useModel } from '@@/plugin-model/useModel'
 import {
   Box,
   Button,
+  Drawer,
+  DrawerBody,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
   FormControl,
   FormHelperText,
   FormLabel,
   Grid,
   HStack,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   Radio,
   RadioGroup,
   Select,
@@ -35,7 +34,7 @@ import { FolderModeType, HostsType, IHostsListObject } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
 import lodash from 'lodash'
 import React, { useRef, useState } from 'react'
-import { BiTrash } from 'react-icons/bi'
+import { BiEdit, BiTrash } from 'react-icons/bi'
 import { v4 as uuidv4 } from 'uuid'
 import styles from './EditHostsInfo.less'
 
@@ -289,17 +288,21 @@ const EditHostsInfo = () => {
   )
 
   return (
-    <Modal
+    <Drawer
       initialFocusRef={ipt_title_ref}
       isOpen={is_show}
       onClose={onCancel}
-      closeOnOverlayClick={false}
+      size="lg"
     >
-      <ModalOverlay/>
-      <ModalContent>
-        <ModalHeader>{is_add ? lang.hosts_add : lang.hosts_edit}</ModalHeader>
-        <ModalCloseButton/>
-        <ModalBody pb={6}>
+      <DrawerOverlay/>
+      <DrawerContent>
+        <DrawerHeader>
+          <HStack>
+            <Box mr={1}><BiEdit/></Box>
+            <Box>{is_add ? lang.hosts_add : lang.hosts_edit}</Box>
+          </HStack>
+        </DrawerHeader>
+        <DrawerBody pb={6}>
           <FormControl className={styles.ln}>
             <FormLabel>{lang.hosts_type}</FormLabel>
             <RadioGroup
@@ -333,13 +336,13 @@ const EditHostsInfo = () => {
           {hosts?.type === 'remote' ? forRemote() : null}
           {hosts?.type === 'group' ? forGroup() : null}
           {hosts?.type === 'folder' ? forFolder() : null}
-        </ModalBody>
+        </DrawerBody>
 
-        <ModalFooter>
+        <DrawerFooter>
           {footer_buttons}
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   )
 }
 

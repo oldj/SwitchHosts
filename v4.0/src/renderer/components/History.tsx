@@ -181,60 +181,59 @@ const History = () => {
       onClose={onClose}
       initialFocusRef={btn_close}
     >
-      <DrawerOverlay>
-        <DrawerContent>
-          {/*<DrawerCloseButton/>*/}
-          <DrawerHeader>
-            <HStack>
-              <Box mr={1}><BiHistory/></Box>
-              <Box>{lang.system_hosts_history}</Box>
-            </HStack>
-          </DrawerHeader>
-          <DrawerBody>
-            {
-              is_loading ?
-                <Loading/> :
-                <HistoryList
-                  list={list}
-                  selected_item={selected_item}
-                  setSelectedItem={setSelectedItem}
-                />
-            }
-          </DrawerBody>
-          <DrawerFooter>
-            <Flex width="100%" align="center">
-              <Box>{lang.system_hosts_history_limit}</Box>
-              <Box>
-                <Select
-                  value={history_limit}
-                  onChange={e => updateHistoryLimit(parseInt(e.target.value))}
-                >
-                  {history_limit_values.map(v => (
-                    <option key={v} value={v}>{v}</option>
-                  ))}
-                </Select>
-              </Box>
-              <Tooltip label={lang.system_hosts_history_help} aria-label="A tooltip">
-                <Box ml={3}><BiHelpCircle/></Box>
-              </Tooltip>
-              <Spacer/>
-              <Button
-                leftIcon={<BiTrash/>}
-                variant="outline"
-                mr={3}
-                colorScheme="pink"
-                isDisabled={!selected_item}
-                onClick={() => selected_item && deleteItem(selected_item.id)}
+      <DrawerOverlay/>
+      <DrawerContent>
+        {/*<DrawerCloseButton/>*/}
+        <DrawerHeader>
+          <HStack>
+            <Box mr={1}><BiHistory/></Box>
+            <Box>{lang.system_hosts_history}</Box>
+          </HStack>
+        </DrawerHeader>
+        <DrawerBody>
+          {
+            is_loading ?
+              <Loading/> :
+              <HistoryList
+                list={list}
+                selected_item={selected_item}
+                setSelectedItem={setSelectedItem}
+              />
+          }
+        </DrawerBody>
+        <DrawerFooter>
+          <Flex width="100%" align="center">
+            <Box>{lang.system_hosts_history_limit}</Box>
+            <Box>
+              <Select
+                value={history_limit}
+                onChange={e => updateHistoryLimit(parseInt(e.target.value))}
               >
-                {lang.delete}
-              </Button>
-              <Button onClick={onClose} ref={btn_close}>
-                {lang.close}
-              </Button>
-            </Flex>
-          </DrawerFooter>
-        </DrawerContent>
-      </DrawerOverlay>
+                {history_limit_values.map(v => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </Select>
+            </Box>
+            <Tooltip label={lang.system_hosts_history_help} aria-label="A tooltip">
+              <Box ml={3}><BiHelpCircle/></Box>
+            </Tooltip>
+            <Spacer/>
+            <Button
+              leftIcon={<BiTrash/>}
+              variant="outline"
+              mr={3}
+              colorScheme="pink"
+              isDisabled={!selected_item}
+              onClick={() => selected_item && deleteItem(selected_item.id)}
+            >
+              {lang.delete}
+            </Button>
+            <Button onClick={onClose} ref={btn_close}>
+              {lang.close}
+            </Button>
+          </Flex>
+        </DrawerFooter>
+      </DrawerContent>
     </Drawer>
   )
 }
