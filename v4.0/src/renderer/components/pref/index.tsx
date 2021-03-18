@@ -13,13 +13,19 @@ import {
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
-  DrawerOverlay, HStack,
-  Input,
-  Tabs, TabList, TabPanels, Tab, TabPanel,
+  DrawerOverlay,
+  HStack,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
 } from '@chakra-ui/react'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import React, { useState } from 'react'
-import { BiEdit, BiSliderAlt } from 'react-icons/bi'
+import { ConfigsType } from '@root/common/default_configs'
+import React, { useEffect, useState } from 'react'
+import { BiSliderAlt } from 'react-icons/bi'
+import General from './General'
 
 interface Props {
 
@@ -27,13 +33,35 @@ interface Props {
 
 const PreferencePanel = (props: Props) => {
   const [ is_open, setIsOpen ] = useState(true)
+  const { configs } = useModel('useConfigs')
+  const [ data, setData ] = useState<ConfigsType | null>(configs)
   const { lang } = useModel('useI18n')
 
   const onClose = async () => {
     setIsOpen(false)
   }
 
-  useOnBroadcast('show_preferences', () => setIsOpen(true))
+  const onUpdate = (kv: Partial<ConfigsType>) => {
+    if (!data) return
+    setData({ ...data, ...kv })
+  }
+
+  const onSave = async () => {
+
+  }
+
+  useEffect(() => {
+    setData(configs)
+  }, [ configs ])
+
+  useOnBroadcast('show_preferences', async () => {
+    setIsOpen(true)
+  })
+
+  if (!data) {
+    console.log('invalid config data!')
+    return null
+  }
 
   return (
     <Drawer
@@ -61,7 +89,7 @@ const PreferencePanel = (props: Props) => {
 
             <TabPanels>
               <TabPanel>
-                <p>one!</p>
+                <General data={data} onChange={onUpdate}/>
               </TabPanel>
               <TabPanel>
                 <p>two!</p>

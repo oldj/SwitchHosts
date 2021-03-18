@@ -13,9 +13,9 @@ import styles from './index.less'
 
 export default () => {
   const [ loading, setLoading ] = useState(true)
-  const { i18n, setLocale } = useModel('useI18n')
-  const { lang } = i18n
+  const { lang, setLocale } = useModel('useI18n')
   const { loadHostsData } = useModel('useHostsData')
+  const { configs } = useModel('useConfigs')
   const [ left_width, setLeftWidth ] = useState(0)
   const [ left_show, setLeftShow ] = useState(true)
   const [ show_migration, setShowMigration ] = useState(false)
@@ -31,11 +31,13 @@ export default () => {
   }
 
   const init = async () => {
-    setLocale(await actions.configGet('locale'))
-    setLeftWidth(await actions.configGet('left_panel_width'))
-    setLeftShow(await actions.configGet('left_panel_show'))
+    if (!configs) return
 
-    let theme = await actions.configGet('theme')
+    setLocale(configs.locale)
+    setLeftWidth(configs.left_panel_width)
+    setLeftShow(configs.left_panel_show)
+
+    let theme = configs.theme
     document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
 
     let if_migrate = await actions.migrateCheck()
@@ -49,8 +51,9 @@ export default () => {
   }
 
   useEffect(() => {
+    if (!configs) return
     init().catch(e => console.error(e))
-  }, [])
+  }, [ configs ])
 
   useOnBroadcast('toggle_left_pannel', (show: boolean) => setLeftShow(show))
 
