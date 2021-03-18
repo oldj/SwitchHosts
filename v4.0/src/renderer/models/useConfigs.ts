@@ -8,7 +8,7 @@ import { actions } from '@renderer/core/agent'
 import { ConfigsType } from '@root/common/default_configs'
 import { useEffect, useState } from 'react'
 
-export default function useCurrentHosts() {
+export default function useConfigs() {
   const [ configs, setConfigs ] = useState<ConfigsType | null>(null)
 
   const loadConfigs = async () => {

@@ -41,8 +41,7 @@ import styles from './EditHostsInfo.less'
 const EditHostsInfo = () => {
   const { lang } = useModel('useI18n')
   const [ hosts, setHosts ] = useState<IHostsListObject | null>(null)
-  const { hosts_data, setList } = useModel('useHostsData')
-  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
+  const { hosts_data, setList, current_hosts, setCurrentHosts } = useModel('useHostsData')
   const [ is_show, setIsShow ] = useState(false)
   const [ is_add, setIsAdd ] = useState(true)
   const [ is_refreshing, setIsRefreshing ] = useState(false)

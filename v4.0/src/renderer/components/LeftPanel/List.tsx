@@ -24,8 +24,13 @@ interface Props {
 }
 
 const List = (props: Props) => {
-  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
-  const { hosts_data, loadHostsData, setList } = useModel('useHostsData')
+  const {
+    hosts_data,
+    loadHostsData,
+    setList,
+    current_hosts,
+    setCurrentHosts,
+  } = useModel('useHostsData')
   const { lang } = useModel('useI18n')
   const [ show_list, setShowList ] = useState<IHostsListObject[]>([])
   const toast = useToast()
