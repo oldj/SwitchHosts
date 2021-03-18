@@ -41,8 +41,7 @@ import styles from './EditHostsInfo.less'
 const EditHostsInfo = () => {
   const { lang } = useModel('useI18n')
   const [ hosts, setHosts ] = useState<IHostsListObject | null>(null)
-  const { hosts_data, setList } = useModel('useHostsData')
-  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
+  const { hosts_data, setList, current_hosts, setCurrentHosts } = useModel('useHostsData')
   const [ is_show, setIsShow ] = useState(false)
   const [ is_add, setIsAdd ] = useState(true)
   const [ is_refreshing, setIsRefreshing ] = useState(false)
@@ -282,7 +281,7 @@ const EditHostsInfo = () => {
         }
       </Box>
       <Box style={{ textAlign: 'right' }}>
-        <Button onClick={onCancel} mr={3}>{lang.btn_cancel}</Button>
+        <Button onClick={onCancel} variant="outline" mr={3}>{lang.btn_cancel}</Button>
         <Button onClick={onSave} colorScheme="blue">{lang.btn_ok}</Button>
       </Box>
     </Grid>

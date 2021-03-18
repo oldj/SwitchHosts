@@ -25,8 +25,7 @@ interface Props {
 const MainPanel = (props: Props) => {
   const { has_left_panel } = props
   const { i18n } = useModel('useI18n')
-  const { isHostsInTrashcan } = useModel('useHostsData')
-  const { current_hosts } = useModel('useCurrentHosts')
+  const { isHostsInTrashcan, current_hosts } = useModel('useHostsData')
   const [ system_hosts, setSystemHosts ] = useState('')
   const [ is_on, setIsOn ] = useState(!!current_hosts?.on)
 
@@ -115,6 +114,7 @@ const MainPanel = (props: Props) => {
             aria-label="Toggle preference panel"
             icon={<BiSliderAlt/>}
             variant="ghost"
+            onClick={() => agent.broadcast('show_preferences')}
           />
         </Center>
       </div>

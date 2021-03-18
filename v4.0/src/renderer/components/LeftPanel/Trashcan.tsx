@@ -20,8 +20,7 @@ interface Props {
 
 const Trashcan = (props: Props) => {
   const { lang } = useModel('useI18n')
-  const { hosts_data } = useModel('useHostsData')
-  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
+  const { hosts_data, current_hosts, setCurrentHosts } = useModel('useHostsData')
   const [ trash_list, setTrashList ] = useState<ITrashcanListObject[]>([])
   const [ is_collapsed, setIsCollapsed ] = useState(true)
 

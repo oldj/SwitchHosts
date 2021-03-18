@@ -24,6 +24,7 @@ declare global {
     interface Global {
       db_dir?: string;
       swhdb: SwhDb;
+      cfgdb: SwhDb;
     }
   }
 }
