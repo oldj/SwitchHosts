@@ -1,5 +1,4 @@
 import '@main/core/agent'
-import { store } from '@main/core/config'
 import '@main/core/message'
 import '@main/core/popupMenu'
 import '@main/data'
@@ -29,7 +28,6 @@ const createWindow = async () => {
   if (process.env.NODE_ENV !== 'production') {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1' // eslint-disable-line require-atomic-updates
     win.loadURL(`http://127.0.0.1:8220`)
-    console.log(`config file: ${store.path}`)
   } else {
     win.loadURL(
       url.format({

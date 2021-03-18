@@ -282,7 +282,7 @@ const EditHostsInfo = () => {
         }
       </Box>
       <Box style={{ textAlign: 'right' }}>
-        <Button onClick={onCancel} mr={3}>{lang.btn_cancel}</Button>
+        <Button onClick={onCancel} variant="outline" mr={3}>{lang.btn_cancel}</Button>
         <Button onClick={onSave} colorScheme="blue">{lang.btn_ok}</Button>
       </Box>
     </Grid>
