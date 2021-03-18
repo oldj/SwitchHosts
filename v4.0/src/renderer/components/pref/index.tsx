@@ -21,6 +21,8 @@ import {
   TabPanels,
   Tabs,
 } from '@chakra-ui/react'
+import Advanced from '@renderer/components/pref/Advanced'
+import Commands from '@renderer/components/pref/Commands'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { ConfigsType } from '@root/common/default_configs'
 import React, { useEffect, useState } from 'react'
@@ -94,10 +96,10 @@ const PreferencePanel = (props: Props) => {
                 <General data={data} onChange={onUpdate}/>
               </TabPanel>
               <TabPanel>
-                <p>two!</p>
+                <Commands data={data} onChange={onUpdate}/>
               </TabPanel>
               <TabPanel>
-                <p>three!</p>
+                <Advanced data={data} onChange={onUpdate}/>
               </TabPanel>
             </TabPanels>
           </Tabs>
