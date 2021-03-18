@@ -16,7 +16,7 @@ interface Props {
 
 const SystemHostsItem = (props: Props) => {
   const { i18n } = useModel('useI18n')
-  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
+  const { current_hosts, setCurrentHosts } = useModel('useHostsData')
 
   const is_selected = !current_hosts
 

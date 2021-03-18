@@ -15,6 +15,7 @@ export default function useHostsData() {
     trashcan: [],
     version: version as VersionType,
   })
+  const [ current_hosts, setCurrentHosts ] = useState<IHostsListObject | null>(null)
 
   const loadHostsData = async () => {
     setHostsData(await actions.getBasicData())
@@ -43,5 +44,7 @@ export default function useHostsData() {
     loadHostsData,
     setList,
     isHostsInTrashcan,
+    current_hosts,
+    setCurrentHosts,
   }
 }

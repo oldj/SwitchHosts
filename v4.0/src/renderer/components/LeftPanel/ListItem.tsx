@@ -25,8 +25,7 @@ interface Props {
 const ListItem = (props: Props) => {
   const { data } = props
   const { lang } = useModel('useI18n')
-  const { current_hosts, setCurrentHosts } = useModel('useCurrentHosts')
-  const { hosts_data, setList } = useModel('useHostsData')
+  const { hosts_data, setList, current_hosts, setCurrentHosts } = useModel('useHostsData')
   const [ is_collapsed, setIsCollapsed ] = useState(!!data.is_collapsed)
   const [ is_on, setIsOn ] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
