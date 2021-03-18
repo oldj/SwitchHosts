@@ -80,7 +80,7 @@ const General = (props: IProps) => {
         </HStack>
       </FormControl>
 
-      <FormControl>
+      <FormControl pt={6}>
         <HStack>
           <Checkbox
             isChecked={data.show_title_on_tray}
