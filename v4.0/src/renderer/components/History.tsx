@@ -199,7 +199,7 @@ const History = () => {
         </DrawerBody>
         <DrawerFooter>
           <Flex width="100%" align="center">
-            <Box>{lang.system_hosts_history_limit}</Box>
+            <Box mr={3}>{lang.system_hosts_history_limit}</Box>
             <Box>
               <Select
                 value={configs?.history_limit}
