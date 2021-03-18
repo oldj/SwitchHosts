@@ -1,9 +1,11 @@
 /**
- * configGet
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { ConfigsType, get } from '@main/core/config'
+import { cfgdb } from '@main/data'
+import default_configs, { ConfigsType } from '@root/common/default_configs'
 
-export default async <K extends keyof ConfigsType>(key: K) => get(key)
+export default async <K extends keyof ConfigsType>(key: K) => {
+  return await cfgdb.dict.cfg.get(key, default_configs[key]) as ConfigsType[K]
+}

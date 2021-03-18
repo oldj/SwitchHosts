@@ -108,11 +108,11 @@ const Loading = (): React.ReactElement => {
 }
 
 const History = () => {
+  const { configs, updateConfigs } = useModel('useConfigs')
   const [ is_open, setIsOpen ] = useState(false)
   const [ is_loading, setIsLoading ] = useState(false)
   const [ list, setList ] = useState<IHostsHistoryObject[]>([])
   const [ selected_item, setSelectedItem ] = useState<IHostsHistoryObject>()
-  const [ history_limit, setHistoryLimit ] = useState(0)
   const btn_close = useRef(null)
 
   const { lang } = useModel('useI18n')
@@ -125,9 +125,6 @@ const History = () => {
     if (!selected_item) {
       setSelectedItem(list[0])
     }
-
-    let v = await actions.configGet('history_limit')
-    setHistoryLimit(v)
 
     setIsLoading(false)
 
@@ -158,8 +155,7 @@ const History = () => {
   const updateHistoryLimit = async (value: number) => {
     if (!value || value < 0) return
 
-    setHistoryLimit(value)
-    await actions.configSet('history_limit', value)
+    await updateConfigs({ history_limit: value })
   }
 
   useOnBroadcast('show_history', () => {
@@ -168,8 +164,8 @@ const History = () => {
   })
 
   let history_limit_values: number[] = [ 10, 50, 100, 500 ]
-  if (!history_limit_values.includes(history_limit)) {
-    history_limit_values.push(history_limit)
+  if (configs && !history_limit_values.includes(configs.history_limit)) {
+    history_limit_values.push(configs.history_limit)
     history_limit_values.sort()
   }
 
@@ -206,7 +202,7 @@ const History = () => {
             <Box>{lang.system_hosts_history_limit}</Box>
             <Box>
               <Select
-                value={history_limit}
+                value={configs?.history_limit}
                 onChange={e => updateHistoryLimit(parseInt(e.target.value))}
               >
                 {history_limit_values.map(v => (

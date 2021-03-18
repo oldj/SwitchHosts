@@ -12,6 +12,7 @@ export { default as getBasicData } from './getBasicData'
 export { default as configGet } from './config/get'
 export { default as configSet } from './config/set'
 export { default as configAll } from './config/all'
+export { default as configUpdate } from './config/update'
 
 export { default as getPathOfSystemHosts } from './hosts/getPathOfSystemHostsPath'
 export { default as getHostsContent } from './hosts/getContent'
