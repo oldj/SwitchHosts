@@ -22,7 +22,7 @@ const Commands = (props: IProps) => {
     <VStack spacing={4}>
       <FormControl>
         <FormLabel>{lang.commands_title}</FormLabel>
-        <FormHelperText mb={2}>{lang.commands_help}</FormHelperText>
+        <FormHelperText mb={3}>{lang.commands_help}</FormHelperText>
         <Textarea
           minHeight="200px"
           placeholder={'# echo "ok!"'}

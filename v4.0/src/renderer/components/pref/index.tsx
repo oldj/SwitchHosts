@@ -41,6 +41,7 @@ const PreferencePanel = (props: Props) => {
 
   const onClose = () => {
     setIsOpen(false)
+    setData(configs)
   }
 
   const onUpdate = (kv: Partial<ConfigsType>) => {
