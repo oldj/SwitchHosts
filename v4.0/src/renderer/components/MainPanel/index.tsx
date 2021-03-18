@@ -115,6 +115,7 @@ const MainPanel = (props: Props) => {
             aria-label="Toggle preference panel"
             icon={<BiSliderAlt/>}
             variant="ghost"
+            onClick={() => agent.broadcast('show_preferences')}
           />
         </Center>
       </div>

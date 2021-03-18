@@ -91,6 +91,15 @@ export default class Dict {
     return (await this.all()) as Promise<T>
   }
 
+  async delete(key: string) {
+    this._data = await this.ensure()
+    if (!this._data.hasOwnProperty(key)) {
+      return
+    }
+    delete this._data[key]
+    this.dump()
+  }
+
   async clear() {
     this._data = {}
     this.dump()

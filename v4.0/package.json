@@ -18,7 +18,6 @@
   "dependencies": {
     "axios": "^0.21.1",
     "dayjs": "^1.10.4",
-    "electron-store": "^7.0.2",
     "lodash": "^4.17.21",
     "md5": "^2.3.0",
     "md5-file": "^5.0.0",

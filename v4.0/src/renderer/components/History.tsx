@@ -228,7 +228,7 @@ const History = () => {
             >
               {lang.delete}
             </Button>
-            <Button onClick={onClose} ref={btn_close}>
+            <Button onClick={onClose} ref={btn_close} variant="outline">
               {lang.close}
             </Button>
           </Flex>

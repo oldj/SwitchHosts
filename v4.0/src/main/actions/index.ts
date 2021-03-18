@@ -6,10 +6,12 @@
 
 export { default as ping } from './ping'
 
-export { default as configGet } from './configGet'
-export { default as configSet } from './configSet'
 export { default as getDataFolder } from './getDataFolder'
 export { default as getBasicData } from './getBasicData'
+
+export { default as configGet } from './config/get'
+export { default as configSet } from './config/set'
+export { default as configAll } from './config/all'
 
 export { default as getPathOfSystemHosts } from './hosts/getPathOfSystemHostsPath'
 export { default as getHostsContent } from './hosts/getContent'

@@ -5,21 +5,25 @@
  */
 
 import default_configs from '@main/default_configs'
-import Store from 'electron-store'
-
-export const store = new Store()
+import { cfgdb } from '@main/data'
 
 export type ConfigsType = typeof default_configs
 
-export const get = <K extends keyof ConfigsType>(key: K) => {
-  return store.get(key, default_configs[key]) as ConfigsType[K]
+export const get = async <K extends keyof ConfigsType>(key: K) => {
+  return await cfgdb.dict.cfg.get(key, default_configs[key]) as ConfigsType[K]
 }
 
-export const set = <K extends keyof ConfigsType>(key: K, value: ConfigsType[K]) => {
+export const set = async <K extends keyof ConfigsType>(key: K, value: ConfigsType[K]) => {
   console.log(`config:store.set [${key}]: ${value}`)
-  store.set(key, value)
+  await cfgdb.dict.cfg.set(key, value)
 }
 
-export const del = (key: keyof ConfigsType) => {
-  store.delete(key)
+export const del = async (key: keyof ConfigsType) => {
+  await cfgdb.dict.cfg.delete(key)
+}
+
+export const all = async (): Promise<ConfigsType> => {
+  let cfgs: Partial<ConfigsType> = await cfgdb.dict.cfg.all()
+
+  return Object.assign({}, default_configs, cfgs)
 }
