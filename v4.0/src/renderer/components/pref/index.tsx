@@ -33,11 +33,11 @@ interface Props {
 
 const PreferencePanel = (props: Props) => {
   const [ is_open, setIsOpen ] = useState(true)
-  const { configs } = useModel('useConfigs')
+  const { configs, updateConfigs } = useModel('useConfigs')
   const [ data, setData ] = useState<ConfigsType | null>(configs)
   const { lang } = useModel('useI18n')
 
-  const onClose = async () => {
+  const onClose = () => {
     setIsOpen(false)
   }
 
@@ -47,7 +47,9 @@ const PreferencePanel = (props: Props) => {
   }
 
   const onSave = async () => {
-
+    if (!data) return
+    await updateConfigs(data)
+    onClose()
   }
 
   useEffect(() => {
@@ -105,7 +107,7 @@ const PreferencePanel = (props: Props) => {
           <Button variant="outline" onClick={onClose} mr={3}>
             {lang.btn_cancel}
           </Button>
-          <Button onClick={onClose} colorScheme="blue">
+          <Button onClick={onSave} colorScheme="blue">
             {lang.btn_ok}
           </Button>
         </DrawerFooter>
