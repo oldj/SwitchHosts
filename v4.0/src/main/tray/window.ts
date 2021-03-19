@@ -13,7 +13,7 @@ const makeWindow = () => {
     frame: false,
     resizable: true,
     transparent: true,
-    width: 360,
+    width: 300,
     height: 600,
     minWidth: 300,
     minHeight: 200,

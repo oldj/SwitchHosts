@@ -23,7 +23,12 @@ const makeTray = () => {
   tray.setToolTip('SwitchHosts!')
   tray.on('click', () => {
     if (win.isVisible()) {
-      win.hide()
+      if (win.isFocused()) {
+        win.hide()
+      } else {
+        show()
+        win.focus()
+      }
     } else {
       show()
     }
