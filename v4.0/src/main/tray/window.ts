@@ -27,8 +27,8 @@ const makeWindow = () => {
   win.loadURL(`${getIndex()}#/tray`)
     .catch(e => console.error(e))
 
-  // win.hide()
-  // win.on('blur', () => win.hide())
+  win.hide()
+  win.on('blur', () => win.hide())
 
   if (process.env.NODE_ENV !== 'production') {
     // Open DevTools, see https://github.com/electron/electron/issues/12438 for why we wait for dom-ready

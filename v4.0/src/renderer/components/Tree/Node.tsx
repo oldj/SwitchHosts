@@ -78,6 +78,8 @@ const Node = (props: INodeProps) => {
   const el_node = useRef<HTMLDivElement>(null)
   const el_dragging = useRef<HTMLDivElement>(null)
 
+  const attr = nodeAttr ? nodeAttr(data) : data
+
   const getTargetId = (el: HTMLElement | null): string | undefined => {
     if (!el) return
     let id = el.getAttribute('data-id')
@@ -124,8 +126,6 @@ const Node = (props: INodeProps) => {
     if (isChildOf(props.tree, data.id, drag_source_id)) return
 
     setDropTargetId(data.id)
-
-    let attr = nodeAttr ? nodeAttr(data) : data
 
     // where
     let ne = e.nativeEvent
@@ -192,14 +192,14 @@ const Node = (props: INodeProps) => {
           nodeClassName,
         )}
         data-id={data.id}
-        draggable={data.can_drag !== false}
+        draggable={attr.can_drag !== false}
         onDragStart={onDragStart}
         // onDragEnter={onDragEnter}
         onDragOver={onDragOver}
         // onDragLeave={onDragLeave}
         onDragEnd={onDragEnd}
         onDrop={onDragEnd}
-        onClick={() => data.can_select !== false && onSelect(data.id)}
+        onClick={() => attr.can_select !== false && onSelect(data.id)}
         style={{
           paddingLeft: level * (indent_px || 20),
         }}

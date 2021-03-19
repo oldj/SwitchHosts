@@ -5,10 +5,13 @@ import styles from './tray.less'
 
 export default () => {
   const { loadHostsData } = useModel('useHostsData')
+  const { setLocale } = useModel('useI18n')
   const { configs } = useModel('useConfigs')
 
   useEffect(() => {
     if (!configs) return
+
+    setLocale(configs.locale)
     loadHostsData()
       .catch(e => console.error(e))
   }, [ configs ])

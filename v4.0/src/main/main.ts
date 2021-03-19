@@ -1,5 +1,5 @@
 import '@main/core/agent'
-import '@main/core/message'
+import * as message from '@main/core/message'
 import '@main/core/popupMenu'
 import '@main/data'
 import '@main/tray'
@@ -54,6 +54,15 @@ const createWindow = async () => {
   })
 }
 
+const onActive = async () => {
+  if (win === null) {
+    await createWindow()
+  } else if (win.isMinimized()) {
+    await win.restore()
+  }
+  win?.show()
+}
+
 app.on('ready', async () => {
   console.log(`VERSION: ${version.join('.')}`)
   await createWindow()
@@ -67,12 +76,5 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => is_will_quit = true)
-
-app.on('activate', async () => {
-  if (win === null) {
-    await createWindow()
-  } else if (win.isMinimized()) {
-    await win.restore()
-  }
-  win?.show()
-})
+app.on('activate', onActive)
+message.on('active_main_window', onActive)
