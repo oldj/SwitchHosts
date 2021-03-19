@@ -177,12 +177,12 @@ const List = (props: Props) => {
         //   agent.broadcast('select_hosts', id)
         //}}
         nodeRender={(data) => (
-          <ListItem key={data.id} data={data}/>
+          <ListItem key={data.id} data={data} is_tray={is_tray}/>
         )}
         collapseArrow={<Center w="20px" h="20px"><BiChevronRight/></Center>}
         nodeAttr={(item) => {
           return {
-            can_drag: !item.is_sys,
+            can_drag: !item.is_sys && !is_tray,
             can_drop_before: !item.is_sys,
             can_drop_in: item.type === 'folder',
             can_drop_after: !item.is_sys,

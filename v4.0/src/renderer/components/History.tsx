@@ -31,7 +31,7 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsHistoryObject } from '@root/common/data'
 import dayjs from 'dayjs'
 import prettyBytes from 'pretty-bytes'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { BiDetail, BiHelpCircle, BiHistory, BiTrash } from 'react-icons/bi'
 
 interface IHistoryProps {
@@ -113,7 +113,7 @@ const History = () => {
   const [ is_loading, setIsLoading ] = useState(false)
   const [ list, setList ] = useState<IHostsHistoryObject[]>([])
   const [ selected_item, setSelectedItem ] = useState<IHostsHistoryObject>()
-  const btn_close = useRef(null)
+  // const btn_close = useRef(null)
 
   const { lang } = useModel('useI18n')
 
@@ -175,7 +175,7 @@ const History = () => {
       placement="right"
       isOpen={is_open}
       onClose={onClose}
-      initialFocusRef={btn_close}
+      // initialFocusRef={btn_close}
     >
       <DrawerOverlay/>
       <DrawerContent>
@@ -224,7 +224,11 @@ const History = () => {
             >
               {lang.delete}
             </Button>
-            <Button onClick={onClose} ref={btn_close} variant="outline">
+            <Button
+              onClick={onClose}
+              // ref={btn_close}
+              variant="outline"
+            >
               {lang.close}
             </Button>
           </Flex>
