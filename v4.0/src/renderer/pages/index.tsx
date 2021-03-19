@@ -1,9 +1,10 @@
 import { useModel } from '@@/plugin-model/useModel'
+import About from '@renderer/components/About'
 import EditHostsInfo from '@renderer/components/EditHostsInfo'
 import LeftPanel from '@renderer/components/LeftPanel'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
-import PreferencePanel from '@renderer/components/pref'
+import PreferencePanel from '@renderer/components/Pref'
 import SudoPasswordInput from '@renderer/components/SudoPasswordInput'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -87,6 +88,7 @@ export default () => {
       <EditHostsInfo/>
       <SudoPasswordInput/>
       <PreferencePanel/>
+      <About/>
     </div>
   )
 }

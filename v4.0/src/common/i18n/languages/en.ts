@@ -6,6 +6,7 @@
 
 export default {
   _name: 'English',
+  _app_name: 'SwitchHosts!',
   acknowledgement: 'Acknowledgement',
   advanced: 'Advanced',
   all: 'All',
