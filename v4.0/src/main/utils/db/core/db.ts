@@ -4,9 +4,10 @@
  * @homepage: https://oldj.net
  */
 
+import getKeys, { IKeys } from './keys'
 import * as path from 'path'
 import settings from '../settings'
-import { IBasicOptions } from '../typings'
+import { DataTypeDocument, IBasicOptions, IDbDataJSON } from '../typings'
 import Collection from './type/collection'
 import Dict from './type/dict'
 import List from './type/list'
@@ -88,5 +89,87 @@ export default class LatDb {
     }
 
     return options
+  }
+
+  async keys(): Promise<IKeys> {
+    return await getKeys(this.dir)
+  }
+
+  async toJSON(): Promise<IDbDataJSON> {
+    let keys = await this.keys()
+    let data: IDbDataJSON = {}
+
+    // dict
+    data.dict = {}
+    if (keys.dict) {
+      for (let name of keys.dict) {
+        data.dict[name] = await this.dict[name].all()
+      }
+    }
+
+    // list
+    data.list = {}
+    if (keys.list) {
+      for (let name of keys.list) {
+        data.list[name] = await this.list[name].all()
+      }
+    }
+
+    // set
+    data.set = {}
+    if (keys.set) {
+      for (let name of keys.set) {
+        data.set[name] = await this.set[name].all()
+      }
+    }
+
+    // collection
+    data.collection = {}
+    if (keys.collection) {
+      for (let name of keys.collection) {
+        data.collection[name] = {
+          meta: await this.collection[name]._getMeta(),
+          data: await this.collection[name].all<DataTypeDocument>(),
+        }
+      }
+    }
+
+    return data
+  }
+
+  async loadJSON(data: IDbDataJSON) {
+    // dict
+    if (data.dict) {
+      for (let name of Object.keys(data.dict)) {
+        await this.dict[name].update(data.dict[name])
+      }
+    }
+
+    // list
+    if (data.list) {
+      for (let name of Object.keys(data.list)) {
+        await this.list[name].update(data.list[name])
+      }
+    }
+
+    // set
+    if (data.set) {
+      for (let name of Object.keys(data.set)) {
+        await this.set[name].update(data.set[name])
+      }
+    }
+
+    // collection
+    if (data.collection) {
+      for (let name of Object.keys(data.collection)) {
+        await this.collection[name].remove()
+        for (let doc of data.collection[name].data) {
+          await this.collection[name]._insert(doc)
+        }
+        if (data.collection[name].meta) {
+          await this.collection[name]._setMeta(data.collection[name].meta)
+        }
+      }
+    }
   }
 }
