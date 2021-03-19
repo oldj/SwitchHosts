@@ -21,12 +21,12 @@ import {
   TabPanels,
   Tabs,
 } from '@chakra-ui/react'
-import Advanced from '@renderer/components/pref/Advanced'
-import Commands from '@renderer/components/pref/Commands'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { ConfigsType } from '@root/common/default_configs'
 import React, { useEffect, useState } from 'react'
 import { BiSliderAlt } from 'react-icons/bi'
+import Advanced from './Advanced'
+import Commands from './Commands'
 import General from './General'
 
 interface Props {
@@ -34,7 +34,7 @@ interface Props {
 }
 
 const PreferencePanel = (props: Props) => {
-  const [ is_open, setIsOpen ] = useState(true)
+  const [ is_open, setIsOpen ] = useState(false)
   const { configs, updateConfigs } = useModel('useConfigs')
   const [ data, setData ] = useState<ConfigsType | null>(configs)
   const { lang } = useModel('useI18n')

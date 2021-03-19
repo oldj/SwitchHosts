@@ -8,12 +8,18 @@
   position: relative;
   line-height: var(--swh-tree-row-height);
   border-radius: 4px;
+
+  &:hover {
+    background: var(--swh-tree-hover-bg);
+  }
 }
 
 .node_selected {
-  background: var(--swh-selected-bg);
+  background: var(--swh-tree-selected-bg);
 
   &:hover {
+    background: var(--swh-tree-selected-bg);
+
     .edit {
       display: block;
     }

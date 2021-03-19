@@ -5,13 +5,13 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
+import { Center } from '@chakra-ui/react'
 import TrashcanItem from '@renderer/components/LeftPanel/TrashcanItem'
+import list_styles from '@renderer/components/List/index.less'
 import { Tree } from '@renderer/components/Tree'
 import { ITrashcanListObject } from '@root/common/data'
 import React, { useEffect, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
-import { Center } from '@chakra-ui/react'
-import list_styles from './List.less'
 import styles from './Trashcan.less'
 
 interface Props {

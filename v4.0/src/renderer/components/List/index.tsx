@@ -8,7 +8,6 @@ import { useModel } from '@@/plugin-model/useModel'
 import { Center, useToast } from '@chakra-ui/react'
 import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
-import ListItem from '@renderer/components/LeftPanel/ListItem'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -18,12 +17,15 @@ import normalize from '@root/common/normalize'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
-import styles from './List.less'
+import styles from './index.less'
+import ListItem from './ListItem'
 
 interface Props {
+  is_tray?: boolean;
 }
 
 const List = (props: Props) => {
+  const { is_tray } = props
   const {
     hosts_data,
     loadHostsData,
@@ -36,11 +38,15 @@ const List = (props: Props) => {
   const toast = useToast()
 
   useEffect(() => {
-    setShowList([ {
-      id: '0',
-      title: lang.system_hosts,
-      is_sys: true,
-    }, ...hosts_data.list ])
+    if (!is_tray) {
+      setShowList([ {
+        id: '0',
+        title: lang.system_hosts,
+        is_sys: true,
+      }, ...hosts_data.list ])
+    } else {
+      setShowList([ ...hosts_data.list ])
+    }
   }, [ hosts_data ])
 
   const onToggleItem = async (id: string, on: boolean) => {
@@ -171,12 +177,12 @@ const List = (props: Props) => {
         //   agent.broadcast('select_hosts', id)
         //}}
         nodeRender={(data) => (
-          <ListItem key={data.id} data={data}/>
+          <ListItem key={data.id} data={data} is_tray={is_tray}/>
         )}
         collapseArrow={<Center w="20px" h="20px"><BiChevronRight/></Center>}
         nodeAttr={(item) => {
           return {
-            can_drag: !item.is_sys,
+            can_drag: !item.is_sys && !is_tray,
             can_drop_before: !item.is_sys,
             can_drop_in: item.type === 'folder',
             can_drop_after: !item.is_sys,
@@ -185,11 +191,11 @@ const List = (props: Props) => {
         draggingNodeRender={(data) => {
           return (
             <div className={clsx(styles.for_drag)}>
-              <span
-                className={clsx(styles.icon, data.type === 'folder' && styles.folder)}
-              >
-                <ItemIcon type={data.is_sys ? 'system' : data.type}
-                          is_collapsed={data.is_collapsed}/>
+              <span className={clsx(styles.icon, data.type === 'folder' && styles.folder)}>
+                <ItemIcon
+                  type={data.is_sys ? 'system' : data.type}
+                  is_collapsed={data.is_collapsed}
+                />
               </span>
               <span>
                 {data.title || lang.untitled}
