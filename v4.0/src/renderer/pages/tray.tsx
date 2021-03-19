@@ -1,6 +1,8 @@
 import { useModel } from '@@/plugin-model/useModel'
 import List from '@renderer/components/List'
+import { agent } from '@renderer/core/agent'
 import React, { useEffect } from 'react'
+import { BiArea } from 'react-icons/bi'
 import styles from './tray.less'
 
 export default () => {
@@ -16,9 +18,17 @@ export default () => {
       .catch(e => console.error(e))
   }, [ configs ])
 
+  const showMain = () => {
+    agent.broadcast('active_main_window')
+  }
+
   return (
     <div className={styles.root}>
-      <div className={styles.header}>SwitchHosts!</div>
+      <div className={styles.header}>
+        <span/>
+        <span>SwitchHosts!</span>
+        <span onClick={showMain}><BiArea/></span>
+      </div>
       <div className={styles.body}>
         <List is_tray={true}/>
       </div>
