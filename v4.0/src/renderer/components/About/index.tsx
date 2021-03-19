@@ -20,7 +20,7 @@ import {
 import { default as Link } from '@renderer/components/BrowserLink'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import acknowledgements from '@root/common/acknowledgements'
-import logo from '@root/common/assets/logo@512w.png'
+import logo from '@root/assets/logo@512w.png'
 import { homepage_url, source_url } from '@root/common/constants'
 import version from '@root/version.json'
 import React, { useState } from 'react'
