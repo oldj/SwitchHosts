@@ -82,4 +82,9 @@ export default class LatSet {
     this._data = new Set()
     await this._io.remove()
   }
+
+  async update(data: DataTypeSetItem[]) {
+    this._data = new Set(data)
+    this.dump()
+  }
 }

@@ -9,6 +9,7 @@ import lodash from 'lodash'
 import * as path from 'path'
 import { DataTypeDocument } from '../../typings'
 import { asInt } from '../../utils/asType'
+import { clone } from '../../utils/clone'
 import LatDb from '../db'
 import Dict from './dict'
 import List from './list'
@@ -70,17 +71,23 @@ export default class Collection {
     return (await this._ids.all()).length
   }
 
-  async insert<T>(doc: T): Promise<T> {
+  async insert<T>(doc: T): Promise<T & { _id: string }> {
     let _id = await this.makeId()
+    let doc2 = { ...doc, _id }
+    await this._insert(doc2)
+    return doc2
+  }
+
+  /**
+   * 类似 insert 方法，但不同的是如果传入的 doc 包含 _id 参数，侧会尝试更新对应的文档
+   * 如果不存在 _id 参数，或者 _id 对应的文档不存在，则新建
+   * 这个方法一般用在 db.loadJSON() 等场景
+   */
+  async _insert(doc: DataTypeDocument) {
+    let _id = doc._id
     await this._ids.push(_id)
-    doc = { ...doc, _id }
-
-    let d = new Dict(_id, this._path_data, this._db.options)
+    let d = this.getDoc(_id)
     await d.update(doc)
-
-    this._docs[_id] = d
-
-    return doc as T
   }
 
   async all<T>(keys: string | string[] = '*'): Promise<T[]> {
@@ -185,5 +192,18 @@ export default class Collection {
     await this._ids.remove()
     this._docs = {}
     await fs.promises.rmdir(this._path, { recursive: true })
+  }
+
+  @clone
+  async _getMeta() {
+    return await this._meta.all()
+  }
+
+  @clone
+  async _setMeta(data: any) {
+    let keys = Object.keys(data)
+    for (let k of keys) {
+      await this._meta.set(k, data[k])
+    }
   }
 }

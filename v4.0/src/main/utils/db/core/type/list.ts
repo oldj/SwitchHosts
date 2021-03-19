@@ -200,4 +200,9 @@ export default class List {
     this._data = []
     await this._io.remove()
   }
+
+  async update(data: any[]) {
+    this._data = data
+    this.dump()
+  }
 }
