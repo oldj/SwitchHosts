@@ -8,6 +8,7 @@ import { LanguageDict } from '@root/common/types'
 
 const lang: LanguageDict = {
   _name: '中文',
+  _app_name: 'SwitchHosts!',
   acknowledgement: '特别致谢',
   advanced: '高级',
   all: '全部',
