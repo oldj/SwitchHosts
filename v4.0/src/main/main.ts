@@ -10,6 +10,7 @@ import { app, BrowserWindow } from 'electron'
 import * as path from 'path'
 
 let win: BrowserWindow | null
+let is_will_quit: boolean = false
 
 const createWindow = async () => {
   win = new BrowserWindow({
@@ -39,6 +40,15 @@ const createWindow = async () => {
     })
   }
 
+  win.on('close', (e: Electron.Event) => {
+    if (is_will_quit) {
+      win = null
+    } else {
+      e.preventDefault()
+      win?.hide()
+    }
+  })
+
   win.on('closed', () => {
     win = null
   })
@@ -56,8 +66,13 @@ app.on('window-all-closed', () => {
   }
 })
 
+app.on('before-quit', () => is_will_quit = true)
+
 app.on('activate', async () => {
   if (win === null) {
     await createWindow()
+  } else if (win.isMinimized()) {
+    await win.restore()
   }
+  win?.show()
 })

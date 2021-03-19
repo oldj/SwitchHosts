@@ -5,7 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import List from '@renderer/components/LeftPanel/List'
+import List from '@renderer/components/List'
 import { BiPlus } from 'react-icons/bi'
 import { IconButton, Center } from '@chakra-ui/react'
 import Trashcan from '@renderer/components/LeftPanel/Trashcan'
