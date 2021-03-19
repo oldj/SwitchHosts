@@ -2,6 +2,7 @@ const webpack = require('webpack')
 const { merge } = require('webpack-merge')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin')
+const CopyPlugin = require('copy-webpack-plugin')
 
 const baseConfig = require('./webpack.base.config')
 
@@ -12,7 +13,7 @@ module.exports = merge(baseConfig, {
     preload: './src/main/preload.ts'
   },
   resolve: {
-    plugins: [new TsconfigPathsPlugin({})]
+    plugins: [ new TsconfigPathsPlugin({}) ]
   },
   module: {
     rules: [
@@ -31,8 +32,8 @@ module.exports = merge(baseConfig, {
             '@babel/preset-typescript'
           ],
           plugins: [
-            ['@babel/plugin-proposal-decorators', { legacy: true }],
-            ['@babel/plugin-proposal-class-properties', { loose: true }]
+            [ '@babel/plugin-proposal-decorators', { legacy: true } ],
+            [ '@babel/plugin-proposal-class-properties', { loose: true } ]
           ]
         }
       }
@@ -44,6 +45,11 @@ module.exports = merge(baseConfig, {
     }),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+    }),
+    new CopyPlugin({
+      patterns: [
+        { from: 'src/assets', to: 'assets' }
+      ]
     })
   ]
 })

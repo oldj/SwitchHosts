@@ -20,10 +20,11 @@ import styles from './ListItem.less'
 
 interface Props {
   data: IHostsListObject;
+  is_tray?: boolean;
 }
 
 const ListItem = (props: Props) => {
-  const { data } = props
+  const { data, is_tray } = props
   const { lang } = useModel('useI18n')
   const { hosts_data, setList, current_hosts, setCurrentHosts } = useModel('useHostsData')
   const [ is_collapsed, setIsCollapsed ] = useState(!!data.is_collapsed)
@@ -96,10 +97,11 @@ const ListItem = (props: Props) => {
       className={clsx(
         styles.root,
         is_selected && styles.selected,
+        is_tray && styles.is_tray,
       )}
       // className={clsx(styles.item, is_selected && styles.selected, is_collapsed && styles.is_collapsed)}
       // style={{ paddingLeft: `${1.3 * level}em` }}
-      onContextMenu={() => !data.is_sys && menu.show()}
+      onContextMenu={() => !data.is_sys && !is_tray && menu.show()}
       ref={el}
       onClick={(e: React.MouseEvent) => {
         e.preventDefault()

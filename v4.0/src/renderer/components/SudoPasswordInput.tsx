@@ -5,20 +5,19 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
+import {
+  Button,
+  Input,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalOverlay,
+} from '@chakra-ui/react'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
-import {
-  Input,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  Button,
-} from '@chakra-ui/react'
 import React, { useState } from 'react'
 import styles from './SudoPasswordInput.less'
 
@@ -48,6 +47,7 @@ const SudoPasswordInput = (props: Props) => {
     setTmpList(tmp_list)
     setIsShow(true)
     // console.log(tmp_list)
+    agent.broadcast('active_main_window')
   }, [ tmp_list ])
 
   if (!is_show) return null
@@ -75,7 +75,7 @@ const SudoPasswordInput = (props: Props) => {
           />
         </ModalBody>
         <ModalFooter>
-          <Button onClick={onCancel} mr={3}>{lang.btn_cancel}</Button>
+          <Button variant="outline" onClick={onCancel} mr={3}>{lang.btn_cancel}</Button>
           <Button colorScheme="blue" onClick={onOk}>{lang.btn_ok}</Button>
         </ModalFooter>
       </ModalContent>

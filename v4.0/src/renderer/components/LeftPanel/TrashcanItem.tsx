@@ -6,13 +6,12 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import ItemIcon from '@renderer/components/ItemIcon'
+import list_item_styles from '@renderer/components/List/ListItem.less'
 import { actions } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
 import { ITrashcanListObject } from '@root/common/data'
 import clsx from 'clsx'
 import React from 'react'
-import { HStack } from '@chakra-ui/react'
-import list_item_styles from './ListItem.less'
 import styles from './TrashcanItem.less'
 
 interface Props {
