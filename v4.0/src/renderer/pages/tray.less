@@ -42,7 +42,14 @@
 }
 
 :global(.platform-win32) {
+  .root {
+    //box-shadow: inset 0 0 0 1px #000;
+    border: 1px solid #000;
+    box-sizing: border-box;
+  }
+
   .body {
+    padding: 1px;
     .swh-scroll-y();
   }
 }

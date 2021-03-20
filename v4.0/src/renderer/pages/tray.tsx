@@ -16,6 +16,8 @@ export default () => {
     setLocale(configs.locale)
     loadHostsData()
       .catch(e => console.error(e))
+
+    document.body.classList.add(`platform-${agent.platform}`, `theme-${configs.theme}`)
   }, [ configs ])
 
   const showMain = () => {

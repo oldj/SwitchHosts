@@ -9,7 +9,7 @@ import { broadcast } from '@main/core/agent'
 import { makeWindow } from '@main/tray/window'
 import { I18N } from '@root/common/i18n'
 import version from '@root/version.json'
-import { app, BrowserWindow, Menu, Tray } from 'electron'
+import { app, BrowserWindow, Menu, screen, Tray } from 'electron'
 import * as path from 'path'
 
 let tray: Tray
@@ -76,18 +76,44 @@ const makeTray = () => {
 const getPosition = () => {
   const tray_bounds = tray.getBounds()
   const window_bounds = win.getBounds()
+  const point = screen.getCursorScreenPoint()
+  const screen_bounds0 = screen.getDisplayNearestPoint(point).bounds
+  const screen_bounds = screen.getDisplayNearestPoint(point).workAreaSize
+  console.log(tray_bounds)
+  console.log(window_bounds)
+  console.log(screen_bounds0)
+  console.log(screen_bounds)
 
-  let x = Math.round(tray_bounds.x + tray_bounds.width / 2 - window_bounds.width / 2)
-  let y = Math.round(tray_bounds.y + tray_bounds.height)
+  let x: number
+  let y: number
+
+  let dw = screen_bounds0.width - screen_bounds.width
+  if (dw > 0 && tray_bounds.x < dw) {
+    // tray is at left
+    x = dw
+  } else {
+    x = tray_bounds.x + tray_bounds.width / 2 - window_bounds.width / 2
+  }
+
+  // let dh = screen_bounds0.height - screen_bounds.height
+  if (tray_bounds.y < screen_bounds.height / 2) {
+    y = tray_bounds.y + tray_bounds.height
+  } else {
+    y = tray_bounds.y - window_bounds.height - 2
+  }
 
   if (x < 0) x = 0
+  if (x + window_bounds.width > screen_bounds.width) x = screen_bounds.width - window_bounds.width
+
+  x = Math.round(x)
+  y = Math.round(y)
 
   return { x, y }
 }
 
 const show = () => {
   const { x, y } = getPosition()
-  win.setPosition(x, y - 100, true)
+  win.setPosition(x, y, true)
   win.show()
   // win.focus()
 }
