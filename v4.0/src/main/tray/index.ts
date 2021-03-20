@@ -4,8 +4,12 @@
  * @homepage: https://oldj.net
  */
 
+import { configGet } from '@main/actions'
+import { broadcast } from '@main/core/agent'
 import { makeWindow } from '@main/tray/window'
-import { app, BrowserWindow, Tray } from 'electron'
+import { I18N } from '@root/common/i18n'
+import version from '@root/version.json'
+import { app, BrowserWindow, Menu, Tray } from 'electron'
 import * as path from 'path'
 
 let tray: Tray
@@ -22,7 +26,6 @@ const makeTray = () => {
 
   tray.setToolTip('SwitchHosts!')
   tray.on('click', () => {
-    console.log(1111, win.isVisible(), win.isFocused())
     if (!win) {
       makeWindow()
       return
@@ -38,6 +41,35 @@ const makeTray = () => {
     } else {
       show()
     }
+  })
+
+  tray.on('right-click', async () => {
+    let locale = await configGet('locale')
+    const i18n = new I18N(locale)
+    const { lang } = i18n
+
+    const ver = version.slice(0, 3).join('.') + ` (${version[3]})`
+
+    const menu = Menu.buildFromTemplate([
+      {
+        label: lang._app_name,
+        toolTip: lang.show_main_window,
+        click() {
+          broadcast('active_main_window')
+        },
+      },
+      {
+        label: `v${ver}`,
+        enabled: false,
+      },
+      { type: 'separator' },
+      {
+        label: lang.quit,
+        role: 'quit',
+      },
+    ])
+
+    tray.popUpContextMenu(menu)
   })
 }
 

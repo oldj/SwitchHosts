@@ -7,8 +7,8 @@
 import { LanguageDict } from '@root/common/types'
 
 const lang: LanguageDict = {
-  _name: '中文',
   _app_name: 'SwitchHosts!',
+  _name: '中文',
   acknowledgement: '特别致谢',
   advanced: '高级',
   all: '全部',
@@ -63,10 +63,12 @@ const lang: LanguageDict = {
   no_record: '没有记录',
   password: '密码',
   preferences: '选项',
+  quit: '退出',
   read_only: '只读',
   refresh: '刷新',
   remote: '远程',
   selected: '已选',
+  show_main_window: '显示主窗口',
   show_title_on_tray: '在系统托盘显示标题',
   source_code: '源码',
   success: '操作成功！',

@@ -5,8 +5,8 @@
  */
 
 export default {
-  _name: 'English',
   _app_name: 'SwitchHosts!',
+  _name: 'English',
   acknowledgement: 'Acknowledgement',
   advanced: 'Advanced',
   all: 'All',
@@ -61,10 +61,12 @@ export default {
   no_record: 'No record',
   password: 'Password',
   preferences: 'Preferences',
+  quit: 'Quit',
   read_only: 'Read only',
   refresh: 'Refresh',
   remote: 'Remote',
   selected: 'Selected',
+  show_main_window: 'Show main window',
   show_title_on_tray: 'Show title on tray',
   source_code: 'Souce code',
   success: 'Success!',
