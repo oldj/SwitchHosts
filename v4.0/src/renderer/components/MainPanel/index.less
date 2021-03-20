@@ -1,53 +1,6 @@
 @import "../../styles/common";
 
 .root {
-  height: 100vh;
-  display: grid;
-  grid-template-rows: var(--swh-top-bar-height) 1fr;
-}
-
-.topbar {
-  height: var(--swh-top-bar-height);
-  border-bottom: 1px solid var(--swh-border-color-1);
-  -webkit-app-region: drag;
-  user-select: none;
-
-  display: grid;
-  grid-template-columns: 40px 1fr 40px 40px;
-
-  & > div {
-    margin: 0 auto;
-    line-height: var(--swh-top-bar-height);
-  }
-
-  //svg {
-  //  position: relative;
-  //  top: 3px;
-  //}
-}
-
-.toggle_left_panel {
-}
-
-.without_left_panel {
-}
-
-.hosts_icon {
-  padding-right: 0.5em;
-  //display: inline-block;
-}
-
-.hosts_title {
-  margin-left: 0 !important;
-}
-
-:global(.platform-darwin) {
-  .without_left_panel {
-    padding-left: 70px;
-  }
-}
-
-.main {
   width: 100%;
   height: calc(100vh - var(--swh-top-bar-height));
   //overflow: auto;

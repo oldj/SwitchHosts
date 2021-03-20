@@ -5,10 +5,8 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import List from '@renderer/components/List'
-import { BiPlus } from 'react-icons/bi'
-import { IconButton, Center } from '@chakra-ui/react'
 import Trashcan from '@renderer/components/LeftPanel/Trashcan'
+import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
 import React from 'react'
@@ -32,22 +30,6 @@ const Index = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      <div className={styles.topbar}>
-        <div className={styles.left}>
-          {/*<span>SwitchHosts!</span>*/}
-        </div>
-        <div className={styles.right}>
-          <Center>
-            <IconButton
-              aria-label="Add"
-              icon={<BiPlus/>}
-              onClick={() => agent.broadcast('add_new')}
-              variant="ghost"
-            />
-          </Center>
-        </div>
-      </div>
-
       <div
         className={styles.list}
         onContextMenu={() => menu.show()}

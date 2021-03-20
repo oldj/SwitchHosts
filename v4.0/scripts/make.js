@@ -110,10 +110,11 @@ const makeDefault = async () => {
 
   await builder.build({
     //targets: Platform.MAC.createTarget(),
-    ...TARGET_PLATFORMS_configs.mac,
+    //...TARGET_PLATFORMS_configs.mac,
+    ...TARGET_PLATFORMS_configs.win,
     config: {
       ...cfg_common,
-      appId: 'im.type',
+      appId: 'SwitchHosts',
       productName: APP_NAME,
       mac: {
         category: 'public.app-category.productivity',
