@@ -21,6 +21,7 @@ const makeWindow = () => {
     minHeight: 200,
     maximizable: false,
     minimizable: false,
+    skipTaskbar: true,
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
