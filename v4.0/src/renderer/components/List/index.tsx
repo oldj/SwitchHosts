@@ -84,9 +84,9 @@ const List = (props: Props) => {
     const result = await actions.setSystemHosts(content, options)
     if (result.success) {
       setList(list).catch(e => console.error(e))
-      new Notification(lang.success, {
-        body: lang.hosts_updated,
-      })
+      // new Notification(lang.success, {
+      //   body: lang.hosts_updated,
+      // })
 
       if (current_hosts) {
         let hosts = findItemById(list, current_hosts.id)
@@ -99,18 +99,18 @@ const List = (props: Props) => {
       console.log(result)
       loadHostsData().catch(e => console.log(e))
 
-      let body: string = lang.no_access_to_hosts
+      // let body: string = lang.no_access_to_hosts
       if (result.code === 'no_access') {
         if (agent.platform === 'darwin' || agent.platform === 'linux') {
           agent.broadcast('show_sudo_password_input', list)
         }
-      } else {
-        body = result.message || 'Unknow error!'
+        // } else {
+        // body = result.message || 'Unknow error!'
       }
 
-      new Notification(lang.fail, {
-        body,
-      })
+      // new Notification(lang.fail, {
+      //   body,
+      // })
       toast({
         status: 'error',
         description: lang.fail,

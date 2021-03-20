@@ -6,17 +6,18 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import {
-  Box,
   Checkbox,
   FormControl,
   FormHelperText,
   FormLabel,
+  Link,
   Tooltip,
   VStack,
 } from '@chakra-ui/react'
 import { actions } from '@renderer/core/agent'
 import { ConfigsType } from '@root/common/default_configs'
 import React, { useEffect, useState } from 'react'
+import styles from './styles.less'
 
 interface IProps {
   data: ConfigsType;
@@ -28,18 +29,19 @@ const PathLink = (props: { link: string }) => {
   const { lang } = useModel('useI18n')
 
   return (
-    <Box
-      display="inline-block"
-      cursor="pointer"
-      textDecoration="underline"
-      onClick={(e: React.MouseEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        actions.showItemInFolder(link)
-      }}
-    >
-      <Tooltip label={lang.click_to_open}>{link}</Tooltip>
-    </Box>
+    <Tooltip label={lang.click_to_open}>
+      <Link
+        className={styles.link}
+        onClick={(e: React.MouseEvent) => {
+          e.preventDefault()
+          e.stopPropagation()
+          actions.showItemInFolder(link)
+        }}
+        href={'file://' + link}
+      >
+        {link}
+      </Link>
+    </Tooltip>
   )
 }
 
