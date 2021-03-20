@@ -1,11 +1,14 @@
 @import "../../styles/common";
 
-.root {
-  position: relative;
-}
-
 .list {
+  position: relative;
   height: calc(100vh - var(--swh-top-bar-height));
   overflow: auto;
   padding: 5px 10px;
+}
+
+:global(.platform-win32) {
+  .list {
+    .swh-scroll-y();
+  }
 }

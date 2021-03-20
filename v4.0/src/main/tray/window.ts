@@ -11,7 +11,7 @@ import path from 'path'
 const makeWindow = () => {
   let win = new BrowserWindow({
     frame: false,
-    titleBarStyle: 'hidden',
+    // titleBarStyle: 'hidden',
     hasShadow: true,
     resizable: false,
     transparent: true,
