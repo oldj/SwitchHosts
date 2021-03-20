@@ -57,6 +57,7 @@ const List = (props: Props) => {
         status: 'success',
         description: lang.success,
       })
+      agent.broadcast('set_hosts_on_status', id, on)
     } else {
       agent.broadcast('set_hosts_on_status', id, !on)
     }

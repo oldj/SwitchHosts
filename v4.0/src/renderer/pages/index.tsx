@@ -1,6 +1,7 @@
 import { useModel } from '@@/plugin-model/useModel'
 import About from '@renderer/components/About'
 import EditHostsInfo from '@renderer/components/EditHostsInfo'
+import History from '@renderer/components/History'
 import LeftPanel from '@renderer/components/LeftPanel'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
@@ -74,7 +75,8 @@ export default () => {
 
   return (
     <div className={styles.root}>
-      <TopBar/>
+      <TopBar show_left_panel={left_show}/>
+
       <div>
         <div className={styles.left} style={{
           width: left_width,
@@ -86,12 +88,14 @@ export default () => {
           className={clsx(styles.main)}
           style={{ width: `calc(100% - ${left_show ? left_width : 0}px)` }}
         >
-          <MainPanel has_left_panel={left_show}/>
+          <MainPanel/>
         </div>
       </div>
+
       <EditHostsInfo/>
       <SudoPasswordInput/>
       <PreferencePanel/>
+      <History/>
       <About/>
     </div>
   )

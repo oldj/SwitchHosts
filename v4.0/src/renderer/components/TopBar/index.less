@@ -1,18 +1,33 @@
 @import "../../styles/common";
 
 .root {
+  @w: 150px;
+  @p: 10px;
+
   border-bottom: 1px solid var(--swh-border-color-0);
   display: grid;
-  grid-template-columns: 100px 1fr 100px;
-  padding: 0 16px
+  grid-template-columns: @w 1fr @w;
+  padding: 0 @p;
+  -webkit-user-select: none;
+  -webkit-app-region: drag;
+
+  .hosts_title {
+    max-width: calc(100vw - (@w + @p) * 2);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
 }
 
 .left {
 
 }
 
-.center {
-  text-align: center;
+:global(.platform-darwin) {
+  .left {
+    padding-left: 60px;
+  }
 }
 
 .right {
