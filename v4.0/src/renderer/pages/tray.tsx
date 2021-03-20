@@ -29,10 +29,12 @@ export default () => {
       <div className={styles.header}>
         <span/>
         <span>SwitchHosts!</span>
-        <span onClick={showMain}><BiArea/></span>
       </div>
       <div className={styles.body}>
         <List is_tray={true}/>
+      </div>
+      <div className={styles.footer}>
+        <span onClick={showMain}><BiArea/></span>
       </div>
     </div>
   )

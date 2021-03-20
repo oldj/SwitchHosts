@@ -79,10 +79,6 @@ const getPosition = () => {
   const point = screen.getCursorScreenPoint()
   const screen_bounds0 = screen.getDisplayNearestPoint(point).bounds
   const screen_bounds = screen.getDisplayNearestPoint(point).workAreaSize
-  console.log(tray_bounds)
-  console.log(window_bounds)
-  console.log(screen_bounds0)
-  console.log(screen_bounds)
 
   let x: number
   let y: number
