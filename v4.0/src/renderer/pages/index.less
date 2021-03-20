@@ -1,11 +1,13 @@
 @import "../styles/common";
 
 .root {
+  display: grid;
+  grid-template-rows: var(--swh-top-bar-height) 1fr;
 }
 
 .left {
   position: fixed;
-  top: 0;
+  top: var(--swh-top-bar-height);
   left: 0;
   bottom: 0;
   background: var(--swh-left-panel-bg);
@@ -15,7 +17,7 @@
 
 .main {
   position: fixed;
-  top: 0;
+  top: var(--swh-top-bar-height);
   right: 0;
   bottom: 0;
   background: var(--swh-main-bg);

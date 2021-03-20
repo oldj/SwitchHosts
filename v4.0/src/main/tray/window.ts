@@ -11,12 +11,16 @@ import path from 'path'
 const makeWindow = () => {
   let win = new BrowserWindow({
     frame: false,
-    resizable: true,
+    titleBarStyle: 'hidden',
+    hasShadow: true,
+    resizable: false,
     transparent: true,
     width: 300,
     height: 600,
     minWidth: 300,
     minHeight: 200,
+    maximizable: false,
+    minimizable: false,
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
