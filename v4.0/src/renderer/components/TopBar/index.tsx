@@ -24,7 +24,7 @@ export default (props: IProps) => {
   const { isHostsInTrashcan, current_hosts } = useModel('useHostsData')
   const [ is_on, setIsOn ] = useState(!!current_hosts?.on)
 
-  const show_toggle_switch = current_hosts && !isHostsInTrashcan(current_hosts.id)
+  const show_toggle_switch = !show_left_panel && current_hosts && !isHostsInTrashcan(current_hosts.id)
   const show_history = !current_hosts
 
   useEffect(() => {

@@ -19,6 +19,7 @@ export default {
   choice_mode_single: 'Single',
   choices: 'Choices',
   chosen: 'Chosen',
+  click_to_open: 'Click to open',
   close: 'Close',
   colon: ': ',
   commands: 'Commands',
@@ -90,4 +91,8 @@ export default {
   usage_data_agree: 'Yes, submit anonymized usage data',
   usage_data_help: 'Would you like to help us improve SwitchHosts! by periodically submitting anonymous usage data?',
   usage_data_title: 'Make SwitchHosts! better!',
+  where_is_my_data: 'Where is my data stored?',
+  where_is_my_hosts: 'Where is my hosts file?',
+  your_data_is: 'Your data files are stored in:',
+  your_hosts_file_is: 'Your hosts file is located at:',
 }

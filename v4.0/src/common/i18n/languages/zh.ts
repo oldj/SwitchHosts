@@ -21,6 +21,7 @@ const lang: LanguageDict = {
   choice_mode_single: '单选',
   choices: '选项',
   chosen: '已选',
+  click_to_open: '点击打开',
   close: '关闭',
   colon: '：',
   commands: '命令',
@@ -92,6 +93,10 @@ const lang: LanguageDict = {
   usage_data_agree: '好的，发送匿名的使用数据',
   usage_data_help: '您愿意发送匿名的使用数据来帮助我们改进 SwitchHosts! 吗？数据中不会包含任何隐私信息。',
   usage_data_title: '帮助改进 SwitchHosts!',
+  where_is_my_data: '我的数据存储在哪里？',
+  where_is_my_hosts: '我的 hosts 文件在哪里？',
+  your_data_is: '你的数据在：',
+  your_hosts_file_is: '你的 hosts 文件在：',
 }
 
 export default lang
