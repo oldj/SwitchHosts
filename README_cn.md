@@ -33,7 +33,7 @@
 在 macOS 上，也可以使用 `brew cask` 安装，命令如下：
 
 ```bash
-brew cask install switchhosts
+brew install --cask switchhosts
 ```
 
 感谢 [@gobinathm](https://github.com/gobinathm)、[@iamybj](https://github.com/iamybj) 更新 `brew cask` 版本。

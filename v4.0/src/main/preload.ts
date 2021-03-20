@@ -22,7 +22,7 @@ const ee = new EventEmitter()
 let x_get_idx = 0
 
 const callAction = (action: keyof Actions, ...params: any[]) => {
-  const callback = ['_cb', (new Date()).getTime(), x_get_idx++].join('_')
+  const callback = [ '_cb', (new Date()).getTime(), x_get_idx++ ].join('_')
 
   return new Promise((resolve, reject) => {
     ipcRenderer.send('x_action', {
@@ -47,19 +47,19 @@ const broadcast = <T>(event: string, ...args: any) => {
 }
 
 const on = (event: string, handler: EventHandler) => {
-  console.log(`on [${event}]`)
+  // console.log(`on [${event}]`)
   ee.on(event, handler)
   return () => off(event, handler)
 }
 
 const once = (event: string, handler: EventHandler) => {
-  console.log(`once [${event}]`)
+  // console.log(`once [${event}]`)
   ee.once(event, handler)
   return () => off(event, handler)
 }
 
 const off = (event: string, handler: EventHandler) => {
-  console.log(`off [${event}]`)
+  // console.log(`off [${event}]`)
   ee.off(event, handler)
 }
 

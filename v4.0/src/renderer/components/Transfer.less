@@ -1,0 +1,28 @@
+@import "../styles/common";
+
+.root {
+
+}
+
+.title {
+  span {
+    font-size: 80%;
+    color: var(--swh-font-color-weak);
+  }
+}
+
+.list {
+  height: 200px;
+  overflow: auto;
+}
+
+.item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.selected {
+  background: var(--swh-tree-selected-bg);
+}

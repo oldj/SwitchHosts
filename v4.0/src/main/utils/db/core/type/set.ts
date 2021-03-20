@@ -4,9 +4,10 @@
  * @homepage: https://oldj.net
  */
 
-import IO from '@main/utils/db/core/io'
-import { DataTypeSet, DataTypeSetItem, IBasicOptions } from '@main/utils/db/typings'
 import * as path from 'path'
+import { DataTypeSet, DataTypeSetItem, IBasicOptions } from '../../typings'
+import { clone } from '../../utils/clone'
+import IO from '../io'
 
 interface Options extends IBasicOptions {
 }
@@ -69,6 +70,7 @@ export default class LatSet {
     this.dump()
   }
 
+  @clone
   async set(data: any[]) {
     let s = new Set<DataTypeSetItem>()
     data.map(i => s.add(i))
@@ -79,5 +81,10 @@ export default class LatSet {
   async remove() {
     this._data = new Set()
     await this._io.remove()
+  }
+
+  async update(data: DataTypeSetItem[]) {
+    this._data = new Set(data)
+    this.dump()
   }
 }

@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import SwhDb from '@main/libs/db'
+import SwhDb from '@main/utils/db'
 import * as actions from './actions'
 
 export type Actions = typeof actions
@@ -15,10 +15,16 @@ export interface ActionData {
   callback: string;
 }
 
+export interface IHostsWriteOptions {
+  sudo_pswd?: string;
+}
+
 declare global {
   namespace NodeJS {
     interface Global {
+      db_dir?: string;
       swhdb: SwhDb;
+      cfgdb: SwhDb;
     }
   }
 }

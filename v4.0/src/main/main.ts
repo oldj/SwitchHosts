@@ -1,15 +1,16 @@
 import '@main/core/agent'
-import { store } from '@main/core/config'
-import '@main/core/message'
+import * as message from '@main/core/message'
 import '@main/core/popupMenu'
 import '@main/data'
-
+import '@main/tray'
+import * as cron from '@main/libs/cron'
+import getIndex from '@main/libs/getIndex'
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
 import * as path from 'path'
-import * as url from 'url'
 
 let win: BrowserWindow | null
+let is_will_quit: boolean = false
 
 const createWindow = async () => {
   win = new BrowserWindow({
@@ -17,6 +18,7 @@ const createWindow = async () => {
     height: 480,
     minWidth: 300,
     minHeight: 200,
+    autoHideMenuBar: true,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       contextIsolation: true,
@@ -27,17 +29,10 @@ const createWindow = async () => {
 
   if (process.env.NODE_ENV !== 'production') {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1' // eslint-disable-line require-atomic-updates
-    win.loadURL(`http://127.0.0.1:8220`)
-    console.log(`config file: ${store.path}`)
-  } else {
-    win.loadURL(
-      url.format({
-        pathname: path.join(__dirname, 'renderer', 'index.html'),
-        protocol: 'file:',
-        slashes: true,
-      }),
-    )
   }
+
+  win.loadURL(getIndex())
+    .catch(e => console.error(e))
 
   if (process.env.NODE_ENV !== 'production') {
     // Open DevTools, see https://github.com/electron/electron/issues/12438 for why we wait for dom-ready
@@ -46,14 +41,33 @@ const createWindow = async () => {
     })
   }
 
+  win.on('close', (e: Electron.Event) => {
+    if (is_will_quit) {
+      win = null
+    } else {
+      e.preventDefault()
+      win?.hide()
+    }
+  })
+
   win.on('closed', () => {
     win = null
   })
 }
 
+const onActive = async () => {
+  if (win === null) {
+    await createWindow()
+  } else if (win.isMinimized()) {
+    await win.restore()
+  }
+  win?.show()
+}
+
 app.on('ready', async () => {
   console.log(`VERSION: ${version.join('.')}`)
   await createWindow()
+  cron.start()
 })
 
 app.on('window-all-closed', () => {
@@ -62,8 +76,6 @@ app.on('window-all-closed', () => {
   }
 })
 
-app.on('activate', () => {
-  if (win === null) {
-    createWindow()
-  }
-})
+app.on('before-quit', () => is_will_quit = true)
+app.on('activate', onActive)
+message.on('active_main_window', onActive)

@@ -5,6 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
+import { Box, Flex, HStack, Spacer } from '@chakra-ui/react'
 import React from 'react'
 import styles from './StatusBar.less'
 
@@ -17,13 +18,22 @@ const StatusBar = (props: Props) => {
   const { i18n } = useModel('useI18n')
 
   return (
-    <div className={styles.root}>
-      <div className={styles.left}>
-        <span className={styles.item}>{props.line_count} {props.line_count > 1 ? i18n.lang.lines : i18n.lang.line}</span>
-        <span className={styles.item}>{props.read_only ? i18n.lang.read_only : ''}</span>
-      </div>
-      <div className={styles.right}>right</div>
-    </div>
+    <Flex
+      className={styles.root}
+      px="10px"
+      userSelect="none"
+    >
+      <HStack>
+        <Box mr={1}>
+          {props.line_count} {props.line_count > 1 ? i18n.lang.lines : i18n.lang.line}
+        </Box>
+        <Box>{props.read_only ? i18n.lang.read_only : ''}</Box>
+      </HStack>
+      <Spacer/>
+      <Box>
+        {/* right */}
+      </Box>
+    </Flex>
   )
 }
 

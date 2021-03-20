@@ -5,10 +5,10 @@
  * @homepage: https://oldj.net
  */
 
+import getDataFolder from '@main/libs/getDataFolder'
 import { isDir } from '@main/utils/fs2'
 import * as fs from 'fs'
 import * as path from 'path'
-import getDataFolder from '@main/libs/getDataFolder'
 
 export default async (): Promise<boolean> => {
   let dir = getDataFolder()
