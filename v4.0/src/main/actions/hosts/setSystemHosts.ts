@@ -31,7 +31,7 @@ const checkAccess = async (fn: string): Promise<boolean> => {
     await fs.promises.access(fn, fs.constants.W_OK)
     return true
   } catch (e) {
-    console.error(e)
+    // console.error(e)
   }
   return false
 }
@@ -52,6 +52,7 @@ const addHistory = async (content: string) => {
   }
 
   for (let i = 0; i < lists.length - history_limit; i++) {
+    if (!lists[i] || !lists[i].id) break
     await deleteHistory(lists[i].id)
   }
 }
