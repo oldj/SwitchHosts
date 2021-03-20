@@ -29,14 +29,12 @@ const Index = (props: Props) => {
   ])
 
   return (
-    <div className={styles.root}>
-      <div
-        className={styles.list}
-        onContextMenu={() => menu.show()}
-      >
-        <List/>
-        <Trashcan/>
-      </div>
+    <div
+      className={styles.list}
+      onContextMenu={() => menu.show()}
+    >
+      <List/>
+      <Trashcan/>
     </div>
   )
 }
