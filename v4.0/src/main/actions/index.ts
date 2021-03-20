@@ -34,6 +34,7 @@ export { default as deleteItemFromTrashcan } from './trashcan/deleteItem'
 export { default as restoreItemFromTrashcan } from './trashcan/restoreItem'
 
 export { default as openUrl } from './openUrl'
+export { default as showItemInFolder } from './showItemInFolder'
 
 export { default as migrateCheck } from './migrate/checkIfMigration'
 export { default as migrateData } from './migrate/migrateData'
