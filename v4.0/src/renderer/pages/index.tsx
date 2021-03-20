@@ -1,23 +1,27 @@
 import { useModel } from '@@/plugin-model/useModel'
+import About from '@renderer/components/About'
 import EditHostsInfo from '@renderer/components/EditHostsInfo'
+import History from '@renderer/components/History'
 import LeftPanel from '@renderer/components/LeftPanel'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
+import PreferencePanel from '@renderer/components/Pref'
+import SudoPasswordInput from '@renderer/components/SudoPasswordInput'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { Modal } from 'antd'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
+import TopBar from '../components/TopBar'
 import styles from './index.less'
 
 export default () => {
-  const [loading, setLoading] = useState(true)
-  const { i18n, setLocale } = useModel('useI18n')
-  const { lang } = i18n
-  const { getData } = useModel('useHostsData')
-  const [left_width, setLeftWidth] = useState(0)
-  const [left_show, setLeftShow] = useState(true)
-  const [show_migration, setShowMigration] = useState(false)
+  const [ loading, setLoading ] = useState(true)
+  const { lang, setLocale } = useModel('useI18n')
+  const { loadHostsData } = useModel('useHostsData')
+  const { configs } = useModel('useConfigs')
+  const [ left_width, setLeftWidth ] = useState(0)
+  const [ left_show, setLeftShow ] = useState(true)
+  const [ show_migration, setShowMigration ] = useState(false)
 
   const migrate = async (do_migrate: boolean) => {
     if (do_migrate) {
@@ -25,16 +29,18 @@ export default () => {
     } else {
       setShowMigration(false)
     }
-    await getData()
+    await loadHostsData()
     setLoading(false)
   }
 
   const init = async () => {
-    setLocale(await actions.configGet('locale'))
-    setLeftWidth(await actions.configGet('left_panel_width'))
-    setLeftShow(await actions.configGet('left_panel_show'))
+    if (!configs) return
 
-    let theme = await actions.configGet('theme')
+    setLocale(configs.locale)
+    setLeftWidth(configs.left_panel_width)
+    setLeftShow(configs.left_panel_show)
+
+    let theme = configs.theme
     document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
 
     let if_migrate = await actions.migrateCheck()
@@ -43,30 +49,23 @@ export default () => {
       return
     }
 
-    await getData()
+    await loadHostsData()
     setLoading(false)
   }
 
   useEffect(() => {
+    if (!configs) return
     init().catch(e => console.error(e))
-  }, [])
+  }, [ configs ])
 
-  useOnBroadcast('toggle_left_pannel', () => setLeftShow(!left_show), [left_show])
+  useOnBroadcast('toggle_left_pannel', (show: boolean) => setLeftShow(show))
 
   if (loading) {
     if (show_migration) {
-      Modal.confirm({
-        title: lang.migrate_data,
-        content: lang.migrate_confirm,
-        onOk: () => {
-          return migrate(true)
-        },
-        onCancel: () => {
-          return migrate(false)
-        },
-        okText: lang.btn_ok,
-        cancelText: lang.btn_cancel,
-      })
+      setTimeout(() => {
+        migrate(confirm(lang.migrate_confirm))
+          .catch(e => alert(e.message))
+      }, 200)
     }
 
     return (
@@ -76,19 +75,28 @@ export default () => {
 
   return (
     <div className={styles.root}>
-      <div className={styles.left} style={{
-        width: left_width,
-        left: left_show ? 0 : -left_width,
-      }}>
-        <LeftPanel width={left_width}/>
+      <TopBar show_left_panel={left_show}/>
+
+      <div>
+        <div className={styles.left} style={{
+          width: left_width,
+          left: left_show ? 0 : -left_width,
+        }}>
+          <LeftPanel width={left_width}/>
+        </div>
+        <div
+          className={clsx(styles.main)}
+          style={{ width: `calc(100% - ${left_show ? left_width : 0}px)` }}
+        >
+          <MainPanel/>
+        </div>
       </div>
-      <div
-        className={clsx(styles.main)}
-        style={{ width: `calc(100% - ${left_show ? left_width : 0}px)` }}
-      >
-        <MainPanel has_left_panel={left_show}/>
-      </div>
+
       <EditHostsInfo/>
+      <SudoPasswordInput/>
+      <PreferencePanel/>
+      <History/>
+      <About/>
     </div>
   )
 }

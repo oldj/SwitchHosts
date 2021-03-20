@@ -1,0 +1,85 @@
+@import "../../styles/common";
+
+.root {
+  display: grid;
+  grid-template-columns: 1fr 30px;
+
+  &.selected:not(.is_tray):hover {
+    .edit {
+      display: block;
+    }
+  }
+
+  .edit {
+    position: absolute;
+    z-index: 10;
+    margin-left: -24px;
+    //background: var(--swh-selected-bg);
+    padding: 0 2px;
+    display: none;
+    cursor: pointer;
+
+    svg {
+      opacity: 0.5;
+      transition: 0.3s;
+    }
+
+    &:hover {
+      svg {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.title {
+  position: relative;
+  //padding-left: 10px;
+  height: var(--swh-tree-row-height);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.folder_open {
+  .folder_arrow {
+    transform: rotate(90deg);
+    margin-top: 1px;
+    margin-left: -10px;
+  }
+}
+
+.folder_arrow {
+  position: absolute;
+  margin-top: 1px;
+  margin-left: -10px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 8px;
+}
+
+.icon {
+  margin-right: 0.5em;
+  display: inline-block;
+  vertical-align: middle;
+
+  &.folder {
+    cursor: pointer;
+  }
+
+  svg {
+    position: relative;
+    top: -1px;
+  }
+}
+
+.status {
+  text-align: right;
+  margin: auto 6px auto auto;
+}
+
+.children {
+  overflow: hidden;
+  transition: 0.3s;
+}

@@ -4,15 +4,15 @@
  * @homepage: https://oldj.net
  */
 
-import IO from '@main/utils/db/core/io'
-import { DataTypeList, IBasicOptions } from '@main/utils/db/typings'
-import { clone } from '@main/utils/db/utils/clone'
 import * as path from 'path'
+import { DataTypeList, IBasicOptions } from '../../typings'
+import { clone } from '../../utils/clone'
+import IO from '../io'
 
 interface Options extends IBasicOptions {
 }
 
-type FilterFunction = (item: any) => boolean
+type FilterPredicate = (item: any) => boolean
 type MapFunction = (item: any) => any
 
 export default class List {
@@ -110,13 +110,13 @@ export default class List {
   }
 
   @clone
-  async find(predicate: FilterFunction): Promise<any | undefined> {
+  async find(predicate: FilterPredicate): Promise<any | undefined> {
     this._data = await this.ensure()
     return this._data.find(predicate)
   }
 
   @clone
-  async filter(predicate: FilterFunction): Promise<any[]> {
+  async filter(predicate: FilterPredicate): Promise<any[]> {
     this._data = await this.ensure()
     return this._data.filter(predicate)
   }
@@ -144,7 +144,7 @@ export default class List {
     return this._data[index]
   }
 
-  async indexOf(predicate: string | number | boolean | null | FilterFunction): Promise<number> {
+  async indexOf(predicate: string | number | boolean | null | FilterPredicate): Promise<number> {
     this._data = await this.ensure()
 
     if (typeof predicate === 'function') {
@@ -178,6 +178,14 @@ export default class List {
   }
 
   @clone
+  async delete(predicate: FilterPredicate): Promise<any[]> {
+    this._data = await this.filter(i => !predicate(i))
+    this.dump()
+
+    return this._data
+  }
+
+  @clone
   async set(data: any[]) {
     this._data = data
     this.dump()
@@ -191,5 +199,10 @@ export default class List {
   async remove() {
     this._data = []
     await this._io.remove()
+  }
+
+  async update(data: any[]) {
+    this._data = data
+    this.dump()
   }
 }

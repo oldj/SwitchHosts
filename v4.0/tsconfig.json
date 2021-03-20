@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
     "experimentalDecorators": true,
     "importHelpers": true,
@@ -22,9 +22,14 @@
       ],
       "@@/*": [
         "src/renderer/.umi/*"
+      ],
+      "@_t/*": [
+        "test/*"
       ]
     },
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "resolveJsonModule": true
   },
   "include": [
     "mock/**/*",
