@@ -50,12 +50,14 @@ const List = (props: Props) => {
   }, [ hosts_data ])
 
   const onToggleItem = async (id: string, on: boolean) => {
+    // console.log(`toggle hosts #${id} as ${on ? 'on' : 'off'}`)
     const new_list = updateOneItem(hosts_data.list, { id, on })
     let success = await writeHostsToSystem(new_list)
     if (success) {
       toast({
         status: 'success',
         description: lang.success,
+        isClosable: true,
       })
       agent.broadcast('set_hosts_on_status', id, on)
     } else {
@@ -112,14 +114,21 @@ const List = (props: Props) => {
       toast({
         status: 'error',
         description: lang.fail,
+        isClosable: true,
       })
     }
+
+    agent.broadcast('tray:list_updated')
 
     return result.success
   }
 
-  useOnBroadcast('toggle_item', onToggleItem, [ hosts_data ])
-  useOnBroadcast('write_hosts_to_system', writeHostsToSystem, [ hosts_data ])
+  if (!is_tray) {
+    useOnBroadcast('toggle_item', onToggleItem, [ hosts_data ])
+    useOnBroadcast('write_hosts_to_system', writeHostsToSystem, [ hosts_data ])
+  } else {
+    useOnBroadcast('tray:list_updated', loadHostsData)
+  }
 
   useOnBroadcast('move_to_trashcan', async (id: string) => {
     console.log(`move_to_trashcan: #${id}`)
