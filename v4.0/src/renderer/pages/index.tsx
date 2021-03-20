@@ -10,6 +10,7 @@ import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
+import TopBar from '../components/TopBar'
 import styles from './index.less'
 
 export default () => {
@@ -73,17 +74,20 @@ export default () => {
 
   return (
     <div className={styles.root}>
-      <div className={styles.left} style={{
-        width: left_width,
-        left: left_show ? 0 : -left_width,
-      }}>
-        <LeftPanel width={left_width}/>
-      </div>
-      <div
-        className={clsx(styles.main)}
-        style={{ width: `calc(100% - ${left_show ? left_width : 0}px)` }}
-      >
-        <MainPanel has_left_panel={left_show}/>
+      <TopBar/>
+      <div>
+        <div className={styles.left} style={{
+          width: left_width,
+          left: left_show ? 0 : -left_width,
+        }}>
+          <LeftPanel width={left_width}/>
+        </div>
+        <div
+          className={clsx(styles.main)}
+          style={{ width: `calc(100% - ${left_show ? left_width : 0}px)` }}
+        >
+          <MainPanel has_left_panel={left_show}/>
+        </div>
       </div>
       <EditHostsInfo/>
       <SudoPasswordInput/>

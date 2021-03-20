@@ -22,6 +22,12 @@ const makeTray = () => {
 
   tray.setToolTip('SwitchHosts!')
   tray.on('click', () => {
+    console.log(1111, win.isVisible(), win.isFocused())
+    if (!win) {
+      makeWindow()
+      return
+    }
+
     if (win.isVisible()) {
       if (win.isFocused()) {
         win.hide()
@@ -39,16 +45,19 @@ const getPosition = () => {
   const tray_bounds = tray.getBounds()
   const window_bounds = win.getBounds()
 
-  const x = Math.round(tray_bounds.x + tray_bounds.width / 2 - window_bounds.width / 2)
-  const y = Math.round(tray_bounds.y + tray_bounds.height)
+  let x = Math.round(tray_bounds.x + tray_bounds.width / 2 - window_bounds.width / 2)
+  let y = Math.round(tray_bounds.y + tray_bounds.height)
+
+  if (x < 0) x = 0
 
   return { x, y }
 }
 
 const show = () => {
   const { x, y } = getPosition()
-  win.setPosition(x, y, true)
+  win.setPosition(x, y - 100, true)
   win.show()
+  // win.focus()
 }
 
 app.whenReady().then(() => {

@@ -18,6 +18,7 @@ const createWindow = async () => {
     height: 480,
     minWidth: 300,
     minHeight: 200,
+    autoHideMenuBar: true,
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       contextIsolation: true,
