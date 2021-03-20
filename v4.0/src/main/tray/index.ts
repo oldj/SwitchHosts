@@ -25,6 +25,7 @@ const makeTray = () => {
   win = makeWindow()
 
   tray.setToolTip('SwitchHosts!')
+
   tray.on('click', () => {
     if (!win) {
       makeWindow()
@@ -42,6 +43,8 @@ const makeTray = () => {
       show()
     }
   })
+
+  tray.on('double-click', () => broadcast('active_main_window'))
 
   tray.on('right-click', async () => {
     let locale = await configGet('locale')
