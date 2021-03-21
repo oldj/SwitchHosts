@@ -67,6 +67,8 @@ export default {
   read_only: 'Read only',
   refresh: 'Refresh',
   remote: 'Remote',
+  remove_duplicate_records: 'Remove duplicate records',
+  remove_duplicate_records_desc: 'If a domain points to multiple IPs, only the first one will take effect, and the following ones will be converted into comments.',
   selected: 'Selected',
   show_main_window: 'Show main window',
   show_title_on_tray: 'Show title on tray',
