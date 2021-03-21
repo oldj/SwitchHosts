@@ -3,10 +3,10 @@
  * @homepage: https://oldj.net
  */
 
-import { getHostsContent } from '@main/actions'
+import { configGet, getHostsContent } from '@main/actions'
 import { IHostsListObject } from '@root/common/data'
 import { flatten } from '@root/common/hostsFn'
-import normalize from '@root/common/normalize'
+import normalize, { INormalizeOptions } from '@root/common/normalize'
 
 const getContentOfList = async (list: IHostsListObject[]): Promise<string> => {
   const content_list: string[] = []
@@ -19,7 +19,13 @@ const getContentOfList = async (list: IHostsListObject[]): Promise<string> => {
 
   let content = content_list.join('\n\n')
   // console.log(content)
-  content = normalize(content)
+  let options: INormalizeOptions = {}
+
+  if (await configGet('remove_duplicate_records')) {
+    options.remove_duplicate_records = true
+  }
+
+  content = normalize(content, options)
 
   return content
 }

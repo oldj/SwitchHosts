@@ -17,6 +17,7 @@ const configs = {
   hide_at_launch: false as boolean,
   send_usage_data: false as boolean,
   cmd_after_hosts_apply: '' as string,
+  remove_duplicate_records: false,
 
   // other
   env: 'PROD' as 'PROD' | 'DEV',
