@@ -6,20 +6,23 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  AlertTitle,
   Box,
   Button,
-  Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
+  Center,
+  HStack,
+  IconButton,
+  Spacer,
+  VStack,
 } from '@chakra-ui/react'
 import { actions } from '@renderer/core/agent'
-import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { ICommandRunResult } from '@root/common/data'
 import dayjs from 'dayjs'
 import React, { useEffect, useState } from 'react'
+import { BiTrash } from 'react-icons/bi'
 
 interface Props {
   is_show: boolean;
@@ -32,7 +35,18 @@ const CommandsHistory = (props: Props) => {
 
   const loadData = async () => {
     let data = await actions.cmdGetHistoryList()
+    data = data.reverse()
     setList(data)
+  }
+
+  const deleteOneRecord = async (_id: string) => {
+    await actions.cmdDeleteHistory(_id)
+    setList(list.filter(i => i._id !== _id))
+  }
+
+  const clearAll = async () => {
+    await actions.cmdClearHistory()
+    setList([])
   }
 
   useEffect(() => {
@@ -41,19 +55,71 @@ const CommandsHistory = (props: Props) => {
     }
   }, [ is_show ])
 
+  if (!is_show) {
+    return null
+  }
+
+  if (list.length === 0) {
+    return (
+      <Center h="100px">{lang.no_record}</Center>
+    )
+  }
+
   return (
-    <Box>
+    <VStack w="100%">
       {list.map((item, idx) => {
         return (
-          <Box key={idx}>
-            <Box>{dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}</Box>
-            <Box>{item.success}</Box>
-            <Box>{item.stdout}</Box>
-            <Box>{item.stderr}</Box>
-          </Box>
+          <Alert
+            key={idx}
+            status={item.success ? 'success' : 'error'}
+            w="100%"
+            // alignItems="top"
+          >
+            <AlertIcon/>
+            <Box flex="1">
+              <AlertTitle d="block">
+                <HStack>
+                  <span>#{item._id}</span>
+                  <span style={{ fontWeight: 'normal' }}>
+                    {dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}
+                  </span>
+                  <Spacer/>
+                  <IconButton
+                    aria-label="delete"
+                    icon={<BiTrash/>}
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => item._id && deleteOneRecord(item._id)}
+                  />
+                </HStack>
+              </AlertTitle>
+              <AlertDescription d="block" spacing={3}>
+                {item.stdout ? (
+                  <>
+                    <Box><strong>stdout:</strong></Box>
+                    <Box>
+                      <pre>{item.stdout}</pre>
+                    </Box>
+                  </>
+                ) : null}
+                {item.stderr ? (
+                  <>
+                    <Box><strong>stderr:</strong></Box>
+                    <Box>
+                      <pre>{item.stderr}</pre>
+                    </Box>
+                  </>
+                ) : null}
+              </AlertDescription>
+            </Box>
+          </Alert>
         )
       })}
-    </Box>
+
+      <Box pt={10}>
+        <Button onClick={clearAll} variant="link">{lang.clear_history}</Button>
+      </Box>
+    </VStack>
   )
 }
 

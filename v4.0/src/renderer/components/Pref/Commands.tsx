@@ -6,16 +6,15 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import {
-  FormControl,
-  Button,
   Box,
+  Button,
+  FormControl,
   FormHelperText,
   FormLabel,
   Textarea,
   VStack,
 } from '@chakra-ui/react'
 import CommandsHistory from '@renderer/components/Pref/CommandsHistory'
-import { agent } from '@renderer/core/agent'
 import { ConfigsType } from '@root/common/default_configs'
 import React, { useState } from 'react'
 
@@ -47,10 +46,12 @@ const Commands = (props: IProps) => {
       </FormControl>
 
       <Box>
-        <Button variant="link" onClick={toggleShowHistory}>show history</Button>
+        <Button variant="link" onClick={toggleShowHistory}>{
+          show_history ? lang.hide_history : lang.show_history
+        }</Button>
       </Box>
 
-      <Box>
+      <Box w="100%">
         <CommandsHistory is_show={show_history}/>
       </Box>
     </VStack>

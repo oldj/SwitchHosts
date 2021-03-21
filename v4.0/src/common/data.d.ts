@@ -73,6 +73,7 @@ export interface IOperationResult {
 }
 
 export interface ICommandRunResult {
+  _id?: string;
   success: boolean;
   stdout: string;
   stderr: string;
