@@ -18,6 +18,7 @@ const configs = {
   send_usage_data: false as boolean,
   cmd_after_hosts_apply: '' as string,
   remove_duplicate_records: false,
+  hide_dock_icon: false,
 
   // other
   env: 'PROD' as 'PROD' | 'DEV',

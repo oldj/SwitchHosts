@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { configGet, updateTrayTitle } from '@main/actions'
+import { configGet, configSet, updateTrayTitle } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { makeWindow } from '@main/tray/window'
 import { I18N } from '@root/common/i18n'
@@ -15,7 +15,7 @@ import * as path from 'path'
 let tray: Tray
 let win: BrowserWindow
 
-const makeTray = () => {
+const makeTray = async () => {
   let icon = 'logo.png'
   if (process.platform === 'darwin') {
     icon = 'logoTemplate.png'
@@ -67,6 +67,20 @@ const makeTray = () => {
       {
         label: `v${ver}`,
         enabled: false,
+      },
+      { type: 'separator' },
+      {
+        label: lang.toggle_dock_icon,
+        async click() {
+          let hide_dock_icon = await configGet('hide_dock_icon')
+          hide_dock_icon = !hide_dock_icon
+          await configSet('hide_dock_icon', hide_dock_icon)
+          if (hide_dock_icon) {
+            app.dock.hide()
+          } else {
+            app.dock.show()
+          }
+        },
       },
       { type: 'separator' },
       {
