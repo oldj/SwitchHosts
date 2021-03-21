@@ -69,6 +69,8 @@ const lang: LanguageDict = {
   read_only: '只读',
   refresh: '刷新',
   remote: '远程',
+  remove_duplicate_records: '移除重复的记录',
+  remove_duplicate_records_desc: '如果一个域名指向多个 IP，只有第一条会生效，后面的将被转为注释。',
   selected: '已选',
   show_main_window: '显示主窗口',
   show_title_on_tray: '在系统托盘显示标题',

@@ -105,6 +105,18 @@ const General = (props: IProps) => {
           </Checkbox>
         </HStack>
       </FormControl>
+
+      <FormControl>
+        <VStack align="left">
+          <Checkbox
+            isChecked={data.remove_duplicate_records}
+            onChange={e => onChange({ remove_duplicate_records: e.target.checked })}
+          >
+            {lang.remove_duplicate_records}
+          </Checkbox>
+          <FormHelperText pl="20px">{lang.remove_duplicate_records_desc}</FormHelperText>
+        </VStack>
+      </FormControl>
     </VStack>
   )
 }
