@@ -4,6 +4,7 @@
  */
 
 import { configGet, deleteHistory, updateTrayTitle } from '@main/actions'
+import tryToRun from '@main/actions/cmd/tryToRun'
 import { broadcast } from '@main/core/agent'
 import { swhdb } from '@main/data'
 import safePSWD from '@main/libs/safePSWD'
@@ -81,7 +82,6 @@ const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteR
 
     if (!error) {
       console.log('success.')
-      broadcast('system_hosts_updated')
 
       result = {
         success: true,
@@ -117,12 +117,7 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
 
     let platform = process.platform
     if ((platform === 'darwin' || platform === 'linux') && sudo_pswd) {
-      let r = await writeWithSudo(sys_hosts_path, content)
-      if (r.success) {
-        await updateTrayTitle()
-      }
-
-      return r
+      return await writeWithSudo(sys_hosts_path, content)
     }
 
     return {
@@ -141,10 +136,21 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
     }
   }
 
-  await addHistory(content)
-  broadcast('system_hosts_updated')
-
   return { success: true }
 }
 
-export default write
+const setSystemHosts = async (content: string, options?: IHostsWriteOptions): Promise<IWriteResult> => {
+  let result = await write(content, options)
+
+  if (result.success) {
+    await addHistory(content)
+    await updateTrayTitle()
+    broadcast('system_hosts_updated')
+
+    await tryToRun()
+  }
+
+  return result
+}
+
+export default setSystemHosts
