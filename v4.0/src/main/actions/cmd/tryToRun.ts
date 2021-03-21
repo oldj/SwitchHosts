@@ -5,15 +5,10 @@
  */
 
 import { cfgdb } from '@main/data'
+import { ICommandRunResult } from '@root/common/data'
 import { exec } from 'child_process'
 
-interface IExeResult {
-  success: boolean;
-  stdout: string;
-  stderr: string;
-}
-
-const run = (cmd: string): Promise<IExeResult> => new Promise(resolve => {
+const run = (cmd: string): Promise<ICommandRunResult> => new Promise(resolve => {
   exec(cmd, (error, stdout, stderr) => {
     // command output is in stdout
     let success: boolean = !error
@@ -22,6 +17,7 @@ const run = (cmd: string): Promise<IExeResult> => new Promise(resolve => {
       success,
       stdout,
       stderr,
+      add_time_ms: (new Date()).getTime(),
     })
   })
 })
@@ -36,9 +32,5 @@ export default async () => {
   console.log(`to run cmd...`)
   let result = await run(cmd)
   console.log(result)
-
-  await cfgdb.collection.cmd_history.insert({
-    ...result,
-    add_time_ms: (new Date()).getTime(),
-  })
+  await cfgdb.collection.cmd_history.insert(result)
 }
