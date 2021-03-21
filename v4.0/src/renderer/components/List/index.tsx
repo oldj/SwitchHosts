@@ -12,7 +12,7 @@ import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
-import { findItemById, flatten, getNextSelectedItem, updateOneItem } from '@root/common/hostsFn'
+import { findItemById, flatten, getNextSelectedItem, setOnStateOfItem } from '@root/common/hostsFn'
 import normalize from '@root/common/normalize'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
@@ -33,6 +33,7 @@ const List = (props: Props) => {
     current_hosts,
     setCurrentHosts,
   } = useModel('useHostsData')
+  const { configs } = useModel('useConfigs')
   const { lang } = useModel('useI18n')
   const [ show_list, setShowList ] = useState<IHostsListObject[]>([])
   const toast = useToast()
@@ -51,7 +52,7 @@ const List = (props: Props) => {
 
   const onToggleItem = async (id: string, on: boolean) => {
     // console.log(`toggle hosts #${id} as ${on ? 'on' : 'off'}`)
-    const new_list = updateOneItem(hosts_data.list, { id, on })
+    const new_list = setOnStateOfItem(hosts_data.list, id, on, configs?.choice_mode ?? 0)
     let success = await writeHostsToSystem(new_list)
     if (success) {
       toast({
@@ -84,9 +85,9 @@ const List = (props: Props) => {
     const result = await actions.setSystemHosts(content, options)
     if (result.success) {
       setList(list).catch(e => console.error(e))
-      new Notification(lang.success, {
-        body: lang.hosts_updated,
-      })
+      // new Notification(lang.success, {
+      //   body: lang.hosts_updated,
+      // })
 
       if (current_hosts) {
         let hosts = findItemById(list, current_hosts.id)
@@ -99,18 +100,18 @@ const List = (props: Props) => {
       console.log(result)
       loadHostsData().catch(e => console.log(e))
 
-      let body: string = lang.no_access_to_hosts
+      // let body: string = lang.no_access_to_hosts
       if (result.code === 'no_access') {
         if (agent.platform === 'darwin' || agent.platform === 'linux') {
           agent.broadcast('show_sudo_password_input', list)
         }
-      } else {
-        body = result.message || 'Unknow error!'
+        // } else {
+        // body = result.message || 'Unknow error!'
       }
 
-      new Notification(lang.fail, {
-        body,
-      })
+      // new Notification(lang.fail, {
+      //   body,
+      // })
       toast({
         status: 'error',
         description: lang.fail,

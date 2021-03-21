@@ -171,6 +171,7 @@ const EditHostsInfo = () => {
                         toast({
                           status: 'error',
                           description: r.message || r.code || 'Error!',
+                          isClosable: true,
                         })
                         return
                       }
@@ -178,6 +179,7 @@ const EditHostsInfo = () => {
                       toast({
                         status: 'success',
                         description: 'OK!',
+                        isClosable: true,
                       })
                       onUpdate({
                         last_refresh: r.data.last_refresh,
@@ -189,6 +191,7 @@ const EditHostsInfo = () => {
                       toast({
                         status: 'error',
                         description: e.message,
+                        isClosable: true,
                       })
                     })
                     .finally(() => setIsRefreshing(false))
@@ -309,7 +312,7 @@ const EditHostsInfo = () => {
               onChange={(type: HostsType) => onUpdate({ type: type })}
               value={hosts?.type || 'local'}
             >
-              <Stack direction="row" spacing={3}>
+              <Stack direction="row" spacing={6}>
                 {
                   types.map(type => (
                     <Radio value={type} key={type} isDisabled={!is_add}>

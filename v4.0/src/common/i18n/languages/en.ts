@@ -15,6 +15,7 @@ export default {
   btn_ok: 'OK',
   choice_mode: 'Choice mode',
   choice_mode_default: 'Default',
+  choice_mode_desc: 'Only valid for the topmost item, each folder can set its own choice mode.',
   choice_mode_multiple: 'Multiple',
   choice_mode_single: 'Single',
   choices: 'Choices',
