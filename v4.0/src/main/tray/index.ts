@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { configGet } from '@main/actions'
+import { configGet, updateTrayTitle } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { makeWindow } from '@main/tray/window'
 import { I18N } from '@root/common/i18n'
@@ -23,6 +23,9 @@ const makeTray = () => {
 
   tray = new Tray(path.join(__dirname, 'assets', icon))
   win = makeWindow()
+
+  updateTrayTitle()
+    .catch(e => console.error(e))
 
   tray.setToolTip('SwitchHosts!')
 

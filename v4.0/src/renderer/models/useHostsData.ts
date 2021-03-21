@@ -32,6 +32,7 @@ export default function useHostsData() {
 
     setHostsData(data)
     await actions.setList(list)
+    await actions.updateTrayTitle()
   }
 
   const isHostsInTrashcan = (id: string): boolean => {
