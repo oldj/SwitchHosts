@@ -33,4 +33,14 @@ export default async () => {
   let result = await run(cmd)
   console.log(result)
   await cfgdb.collection.cmd_history.insert(result)
+
+  // auto delete old records
+  const max_records = 200
+  let all = await cfgdb.collection.cmd_history.all<ICommandRunResult>()
+  if (all.length > max_records) {
+    let n = all.length - max_records
+    for (let i = 0; i < n; i++) {
+      await cfgdb.collection.cmd_history.delete(item => item._id === all[i]._id)
+    }
+  }
 }
