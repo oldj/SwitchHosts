@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import { IHostsBasicData, IHostsListObject } from '@root/common/data'
+import { FolderModeType, IHostsBasicData, IHostsListObject } from '@root/common/data'
 import lodash from 'lodash'
 
 type PartHostsObjectType = Partial<IHostsListObject> & { id: string }
@@ -56,6 +56,46 @@ export const updateOneItem = (list: IHostsListObject[], item: PartHostsObjectTyp
   return new_list
 }
 
+const isInTopLevel = (list: IHostsListObject[], id: string): boolean => {
+  return list.findIndex(i => i.id === id) > -1
+}
+
+export const setOnStateOfItem = (list: IHostsListObject[], id: string, on: boolean, default_choice_mode: FolderModeType = 0): IHostsListObject[] => {
+  let new_list: IHostsListObject[] = lodash.cloneDeep(list)
+
+  let item = findItemById(new_list, id)
+  if (!item) return new_list
+
+  item.on = on
+
+  if (!on) return new_list
+
+  if (isInTopLevel(list, id)) {
+    if (default_choice_mode === 1) {
+      new_list.map(item => {
+        if (item.id !== id) {
+          item.on = false
+        }
+      })
+    }
+  } else {
+    let parent = getParentOfItem(new_list, id)
+    if (parent) {
+      let folder_mode = parent.folder_mode || default_choice_mode
+      if (folder_mode === 1 && parent.children) {
+        // 单选模式
+        parent.children.map(item => {
+          if (item.id !== id) {
+            item.on = false
+          }
+        })
+      }
+    }
+  }
+
+  return new_list
+}
+
 export const deleteItemById = (list: IHostsListObject[], id: string) => {
   let idx = list.findIndex(item => item.id === id)
   if (idx >= 0) {
@@ -80,9 +120,9 @@ export const getParentOfItem = (list: IHostsListObject[], item_id: string): IHos
   }
 
   let flat = flatten(list)
-  for (let h of flat) {
-    if (h.children && h.children.find(i => i.id === item_id)) {
-      return h
+  for (let p of flat) {
+    if (p.children && p.children.find(i => i.id === item_id)) {
+      return p
     }
   }
 }

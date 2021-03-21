@@ -17,6 +17,7 @@ const lang: LanguageDict = {
   btn_ok: '确定',
   choice_mode: '选择模式',
   choice_mode_default: '默认',
+  choice_mode_desc: '只对顶层项目生效，每个文件夹可设置自己的选择模式。',
   choice_mode_multiple: '多选',
   choice_mode_single: '单选',
   choices: '选项',
