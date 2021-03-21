@@ -27,6 +27,7 @@ export { default as getList } from './list/getList'
 export { default as setList } from './list/setList'
 export { default as getItemFromList } from './list/getItem'
 export { default as moveToTrashcan } from './list/moveItemToTrashcan'
+export { default as getContentOfList } from './list/getContentOfList'
 
 export { default as getTrashcanList } from './trashcan/getList'
 export { default as clearTrashcan } from './trashcan/clear'

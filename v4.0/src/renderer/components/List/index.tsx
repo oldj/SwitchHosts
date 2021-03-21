@@ -71,17 +71,7 @@ const List = (props: Props) => {
       list = hosts_data.list
     }
 
-    const content_list: string[] = []
-    const flat = flatten(list).filter(i => i.on)
-    for (let hosts of flat) {
-      let c = await actions.getHostsContent(hosts.id)
-      content_list.push(c)
-    }
-
-    let content = content_list.join('\n\n')
-    // console.log(content)
-    content = normalize(content)
-
+    let content: string = await actions.getContentOfList(list)
     const result = await actions.setSystemHosts(content, options)
     if (result.success) {
       setList(list).catch(e => console.error(e))
