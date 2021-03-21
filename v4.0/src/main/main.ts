@@ -1,4 +1,5 @@
 import '@main/core/agent'
+import { configAll, configGet } from '@main/actions'
 import * as message from '@main/core/message'
 import '@main/core/popupMenu'
 import '@main/data'
@@ -13,6 +14,8 @@ let win: BrowserWindow | null
 let is_will_quit: boolean = false
 
 const createWindow = async () => {
+  const configs = await configAll()
+
   win = new BrowserWindow({
     width: 800,
     height: 480,
@@ -26,6 +29,15 @@ const createWindow = async () => {
       spellcheck: true,
     },
   })
+
+  if (configs.hide_at_launch) {
+    win.hide()
+  }
+
+  let hide_dock_icon = await configGet('hide_dock_icon')
+  if (hide_dock_icon) {
+    app.dock.hide()
+  }
 
   if (process.env.NODE_ENV !== 'production') {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1' // eslint-disable-line require-atomic-updates

@@ -87,6 +87,7 @@ export default {
   theme: 'Theme',
   theme_dark: 'Dark',
   theme_light: 'Light',
+  toggle_dock_icon: 'Toggle the dock icon',
   trashcan: 'Trashcan',
   trashcan_clear: 'Empty the trashcan',
   trashcan_clear_confirm: 'Are you sure you want to empty the trashcan?',

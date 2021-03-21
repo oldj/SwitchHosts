@@ -89,6 +89,7 @@ const lang: LanguageDict = {
   theme: '主题',
   theme_dark: '夜间',
   theme_light: '明亮',
+  toggle_dock_icon: '显示/隐藏任务栏图标',
   trashcan: '回收站',
   trashcan_clear: '清空回收站',
   trashcan_clear_confirm: '确实要清空回收站吗？',
