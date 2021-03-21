@@ -52,7 +52,7 @@ const PreferencePanel = (props: Props) => {
   const onSave = async () => {
     if (!data) return
     await updateConfigs(data)
-    onClose()
+    setIsOpen(false)
   }
 
   useEffect(() => {
