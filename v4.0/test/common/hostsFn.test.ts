@@ -8,7 +8,7 @@ import assert = require('assert')
 import { IHostsListObject } from '@root/common/data'
 import { findItemById, setOnStateOfItem } from '@root/common/hostsFn'
 
-describe.only('hostsFn test', function () {
+describe('hostsFn test', function () {
 
   const makeAList = (): IHostsListObject[] => {
     return [
