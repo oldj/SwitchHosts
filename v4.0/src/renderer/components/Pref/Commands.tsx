@@ -5,9 +5,18 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { FormControl, FormHelperText, FormLabel, Textarea, VStack } from '@chakra-ui/react'
+import {
+  Box,
+  Button,
+  FormControl,
+  FormHelperText,
+  FormLabel,
+  Textarea,
+  VStack,
+} from '@chakra-ui/react'
+import CommandsHistory from '@renderer/components/Pref/CommandsHistory'
 import { ConfigsType } from '@root/common/default_configs'
-import React from 'react'
+import React, { useState } from 'react'
 
 interface IProps {
   data: ConfigsType;
@@ -17,6 +26,11 @@ interface IProps {
 const Commands = (props: IProps) => {
   const { data, onChange } = props
   const { lang } = useModel('useI18n')
+  const [ show_history, setShowHistory ] = useState(false)
+
+  const toggleShowHistory = () => {
+    setShowHistory(!show_history)
+  }
 
   return (
     <VStack spacing={4}>
@@ -30,6 +44,16 @@ const Commands = (props: IProps) => {
           onChange={e => onChange({ cmd_after_hosts_apply: e.target.value })}
         />
       </FormControl>
+
+      <Box>
+        <Button variant="link" onClick={toggleShowHistory}>{
+          show_history ? lang.hide_history : lang.show_history
+        }</Button>
+      </Box>
+
+      <Box w="100%">
+        <CommandsHistory is_show={show_history}/>
+      </Box>
     </VStack>
   )
 }

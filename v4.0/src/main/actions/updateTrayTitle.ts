@@ -10,12 +10,10 @@ import { tray } from '@main/tray'
 import { flatten } from '@root/common/hostsFn'
 
 export default async (show?: boolean, title?: string) => {
-  console.log(tray)
   if (!tray) return
 
   if (typeof show !== 'boolean') {
     show = await cfgdb.dict.cfg.get('show_title_on_tray')
-    console.log(show)
   }
 
   if (!show) {

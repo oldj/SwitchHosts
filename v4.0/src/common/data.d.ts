@@ -71,3 +71,11 @@ export interface IOperationResult {
   data?: any;
   code?: string | number;
 }
+
+export interface ICommandRunResult {
+  _id?: string;
+  success: boolean;
+  stdout: string;
+  stderr: string;
+  add_time_ms: number;
+}
