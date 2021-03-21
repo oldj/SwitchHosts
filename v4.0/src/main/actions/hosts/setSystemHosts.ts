@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import { configGet, deleteHistory } from '@main/actions'
+import { configGet, deleteHistory, updateTrayTitle } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { swhdb } from '@main/data'
 import safePSWD from '@main/libs/safePSWD'
@@ -119,7 +119,7 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
     if ((platform === 'darwin' || platform === 'linux') && sudo_pswd) {
       let r = await writeWithSudo(sys_hosts_path, content)
       if (r.success) {
-        await addHistory(content)
+        await updateTrayTitle()
       }
 
       return r
