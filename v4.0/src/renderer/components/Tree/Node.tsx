@@ -191,6 +191,7 @@ const Node = (props: INodeProps) => {
           is_selected && (props.nodeSelectedClassName || styles.selected),
           nodeClassName,
         )}
+        data-selected={is_selected ? '1' : '0'}
         data-id={data.id}
         draggable={attr.can_drag !== false}
         onDragStart={onDragStart}

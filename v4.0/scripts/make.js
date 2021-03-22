@@ -161,7 +161,7 @@ const makeDefault = async () => {
         binaries: []
       },
       win: {
-        icon: 'assets/app@2x.ico'
+        icon: 'assets/app.ico'
       },
       nsis: {
         installerIcon: 'assets/installer-icon.ico',
@@ -173,7 +173,7 @@ const makeDefault = async () => {
         artifactName: '${productName}_Portable_${version}(${buildVersion}).${ext}'
       },
       linux: {
-        icon: 'assets/app@2x.png',
+        icon: 'assets/app.png',
         artifactName: '${productName}_linux_${version}(${buildVersion}).${ext}',
         category: 'Office'
       }
