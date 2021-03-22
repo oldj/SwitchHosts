@@ -27,7 +27,7 @@ const TARGET_PLATFORMS_configs = {
     mac: ['default', 'mas']
   },
   win: {
-    win: ['portable:ia32']
+    win: ['nsis:ia32', 'portable:ia32']
   },
   all: {
     mac: ['default', 'mas'],
