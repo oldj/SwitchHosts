@@ -44,9 +44,8 @@ const About = () => {
           <VStack spacing={1}>
             <Box pt={8} pb={3}>
               <Image
+                className={styles.logo}
                 src={logo}
-                w="64px"
-                h="64px"
               />
             </Box>
             <Box fontWeight="bold" fontSize="16px">{lang._app_name}</Box>

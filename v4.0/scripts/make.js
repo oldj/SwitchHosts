@@ -36,7 +36,7 @@ const TARGET_PLATFORMS_configs = {
   }
 }
 
-const APP_NAME = 'SwitchHosts!'
+const APP_NAME = 'SwitchHosts'
 const IDENTITY = 'Yingjie Wu'
 
 const cfg_common = {
