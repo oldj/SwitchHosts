@@ -7,7 +7,7 @@
 import { LanguageDict } from '@root/common/types'
 
 const lang: LanguageDict = {
-  _app_name: 'SwitchHosts!',
+  _app_name: 'SwitchHosts',
   _name: '中文',
   acknowledgement: '特别致谢',
   advanced: '高级',
@@ -56,7 +56,7 @@ const lang: LanguageDict = {
   lines: '行',
   loading: '加载中...',
   local: '本地',
-  migrate_confirm: 'SwitchHosts! v4.0 使用了新的数据存储格式，是否迁移旧数据为新格式？',
+  migrate_confirm: 'SwitchHosts v4.0 使用了新的数据存储格式，是否迁移旧数据为新格式？',
   migrate_data: '迁移数据',
   minute: '分钟',
   minutes: '分钟',
@@ -98,8 +98,8 @@ const lang: LanguageDict = {
   untitled: '未命名',
   url_placeholder: 'http:// 或 https:// 或 file://',
   usage_data_agree: '好的，发送匿名的使用数据',
-  usage_data_help: '您愿意发送匿名的使用数据来帮助我们改进 SwitchHosts! 吗？数据中不会包含任何隐私信息。',
-  usage_data_title: '帮助改进 SwitchHosts!',
+  usage_data_help: '您愿意发送匿名的使用数据来帮助我们改进 SwitchHosts 吗？数据中不会包含任何隐私信息。',
+  usage_data_title: '帮助改进 SwitchHosts',
   where_is_my_data: '我的数据存储在哪里？',
   where_is_my_hosts: '我的 hosts 文件在哪里？',
   your_data_is: '你的数据在：',

@@ -2,7 +2,7 @@ import * as path from 'path'
 import { defineConfig } from 'umi'
 
 export default defineConfig({
-  title: 'SwitchHosts!',
+  title: 'SwitchHosts',
   hash: true,
   history: {
     type: 'hash',

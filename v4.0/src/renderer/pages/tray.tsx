@@ -28,7 +28,7 @@ export default () => {
     <div className={styles.root}>
       <div className={styles.header}>
         <span/>
-        <span>SwitchHosts!</span>
+        <span>SwitchHosts</span>
       </div>
       <div className={styles.body}>
         <List is_tray={true}/>

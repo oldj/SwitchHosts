@@ -5,7 +5,7 @@
  */
 
 export default {
-  _app_name: 'SwitchHosts!',
+  _app_name: 'SwitchHosts',
   _name: 'English',
   acknowledgement: 'Acknowledgement',
   advanced: 'Advanced',
@@ -54,7 +54,7 @@ export default {
   lines: 'lines',
   loading: 'Loading...',
   local: 'Local',
-  migrate_confirm: 'SwitchHosts! v4.0 uses a new data storage format, do you want to migrate old data to the new format?',
+  migrate_confirm: 'SwitchHosts v4.0 uses a new data storage format, do you want to migrate old data to the new format?',
   migrate_data: 'Migrate data',
   minute: 'minute',
   minutes: 'minutes',
@@ -96,8 +96,8 @@ export default {
   untitled: 'Untitled',
   url_placeholder: 'http:// or https:// or file://',
   usage_data_agree: 'Yes, submit anonymized usage data',
-  usage_data_help: 'Would you like to help us improve SwitchHosts! by periodically submitting anonymous usage data?',
-  usage_data_title: 'Make SwitchHosts! better!',
+  usage_data_help: 'Would you like to help us improve SwitchHosts by periodically submitting anonymous usage data?',
+  usage_data_title: 'Make SwitchHosts better!',
   where_is_my_data: 'Where is my data stored?',
   where_is_my_hosts: 'Where is my hosts file?',
   your_data_is: 'Your data files are stored in:',
