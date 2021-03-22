@@ -16,7 +16,7 @@ let tray: Tray
 let win: BrowserWindow
 
 const makeTray = async () => {
-  let icon = 'logo.png'
+  let icon = 'logo@512w.png'
   if (process.platform === 'darwin') {
     icon = 'logoTemplate.png'
   }
