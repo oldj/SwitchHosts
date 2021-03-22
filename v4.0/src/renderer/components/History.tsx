@@ -29,10 +29,12 @@ import HostsViewer from '@renderer/components/HostsViewer'
 import { actions } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsHistoryObject } from '@root/common/data'
+import clsx from 'clsx'
 import dayjs from 'dayjs'
 import prettyBytes from 'pretty-bytes'
-import React, { useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { BiDetail, BiHelpCircle, BiHistory, BiTrash } from 'react-icons/bi'
+import styles from './History.less'
 
 interface IHistoryProps {
   list: IHostsHistoryObject[];
@@ -71,10 +73,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
             px={3}
             py={2}
             userSelect="none"
-            {...(item.id === selected_item?.id ? {
-              // selected style
-              bg: 'var(--swh-selected-bg)',
-            } : null)}
+            className={clsx(item.id === selected_item?.id && styles.selected)}
           >
             <HStack>
               <Box><BiDetail/></Box>
