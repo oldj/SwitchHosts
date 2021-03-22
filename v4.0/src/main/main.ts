@@ -1,11 +1,12 @@
-import '@main/core/agent'
 import { configAll, configGet } from '@main/actions'
+import '@main/core/agent'
 import * as message from '@main/core/message'
 import '@main/core/popupMenu'
 import '@main/data'
-import '@main/tray'
 import * as cron from '@main/libs/cron'
 import getIndex from '@main/libs/getIndex'
+import isDev from '@main/libs/isDev'
+import '@main/tray'
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
 import * as path from 'path'
@@ -39,14 +40,15 @@ const createWindow = async () => {
     app.dock.hide()
   }
 
-  if (process.env.NODE_ENV !== 'production') {
+  console.log('isDev: ', isDev())
+  if (isDev()) {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1' // eslint-disable-line require-atomic-updates
   }
 
   win.loadURL(getIndex())
     .catch(e => console.error(e))
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (isDev()) {
     // Open DevTools, see https://github.com/electron/electron/issues/12438 for why we wait for dom-ready
     win.webContents.once('dom-ready', () => {
       win!.webContents.openDevTools()

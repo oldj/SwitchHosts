@@ -5,6 +5,7 @@
  */
 
 import getIndex from '@main/libs/getIndex'
+import isDev from '@main/libs/isDev'
 import { BrowserWindow } from 'electron'
 import path from 'path'
 
@@ -35,7 +36,7 @@ const makeWindow = () => {
   win.hide()
   win.on('blur', () => win.hide())
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (isDev()) {
     // Open DevTools, see https://github.com/electron/electron/issues/12438 for why we wait for dom-ready
     win.webContents.once('dom-ready', () => {
       win!.webContents.openDevTools()
