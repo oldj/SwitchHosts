@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import { configGet, deleteHistory, updateTrayTitle } from '@main/actions'
+import { configGet, deleteHistory, getHistoryList, updateTrayTitle } from '@main/actions'
 import tryToRun from '@main/actions/cmd/tryToRun'
 import { broadcast } from '@main/core/agent'
 import { swhdb } from '@main/data'
@@ -23,6 +23,8 @@ interface IWriteResult {
   success: boolean;
   code?: string;
   message?: string;
+  old_content?: string;
+  new_content?: string;
 }
 
 let sudo_pswd: string = ''
@@ -41,7 +43,7 @@ const addHistory = async (content: string) => {
   await swhdb.collection.history.insert({
     id: uuid4(),
     content,
-    add_time_ms: (new Date()).getTime(),
+    add_time_ms: (new Date()).getTime()
   })
 
   let history_limit = await configGet('history_limit')
@@ -58,14 +60,14 @@ const addHistory = async (content: string) => {
   }
 }
 
-const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteResult> => new Promise((resolve, reject) => {
+const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteResult> => new Promise((resolve) => {
   let tmp_fn = path.join(os.tmpdir(), `swh_${(new Date()).getTime()}_${Math.random()}.txt`)
   fs.writeFileSync(tmp_fn, content, 'utf-8')
 
   let cmd = [
     `echo '${sudo_pswd}' | sudo -S chmod 777 ${sys_hosts_path}`
     , `cat "${tmp_fn}" > ${sys_hosts_path}`
-    , `echo '${sudo_pswd}' | sudo -S chmod 644 ${sys_hosts_path}`,
+    , `echo '${sudo_pswd}' | sudo -S chmod 644 ${sys_hosts_path}`
     // , 'rm -rf ' + tmp_fn
   ].join(' && ')
 
@@ -84,7 +86,7 @@ const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteR
       console.log('success.')
 
       result = {
-        success: true,
+        success: true
       }
     } else {
       console.log('fail!')
@@ -92,7 +94,7 @@ const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteR
 
       result = {
         success: false,
-        message: stderr,
+        message: stderr
       }
     }
 
@@ -110,6 +112,13 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
     return { success: true }
   }
 
+  let old_content: string = ''
+  try {
+    old_content = await fs.promises.readFile(sys_hosts_path, 'utf-8')
+  } catch (e) {
+    console.error(e)
+  }
+
   if (!(await checkAccess(sys_hosts_path))) {
     if (options && options.sudo_pswd) {
       sudo_pswd = safePSWD(options.sudo_pswd)
@@ -117,12 +126,18 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
 
     let platform = process.platform
     if ((platform === 'darwin' || platform === 'linux') && sudo_pswd) {
-      return await writeWithSudo(sys_hosts_path, content)
+      let result = await writeWithSudo(sys_hosts_path, content)
+      if (result.success) {
+        result.old_content = old_content
+        result.new_content = content
+      }
+
+      return result
     }
 
     return {
       success: false,
-      code: 'no_access',
+      code: 'no_access'
     }
   }
 
@@ -132,17 +147,25 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
     return {
       success: false,
       code: 'fail',
-      message: e.message,
+      message: e.message
     }
   }
 
-  return { success: true }
+  return { success: true, old_content, new_content: content }
 }
 
 const setSystemHosts = async (content: string, options?: IHostsWriteOptions): Promise<IWriteResult> => {
   let result = await write(content, options)
+  let { success, old_content } = result
 
-  if (result.success) {
+  if (success) {
+    if (typeof old_content === 'string') {
+      let histories = await getHistoryList()
+      if (histories.length === 0 || histories[histories.length - 1].content !== old_content) {
+        await addHistory(old_content)
+      }
+    }
+
     await addHistory(content)
     await updateTrayTitle()
     broadcast('system_hosts_updated')
