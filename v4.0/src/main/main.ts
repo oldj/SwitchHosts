@@ -27,8 +27,8 @@ const createWindow = async () => {
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-      spellcheck: true,
-    },
+      spellcheck: true
+    }
   })
 
   if (configs.hide_at_launch) {
@@ -66,6 +66,20 @@ const createWindow = async () => {
 
   win.on('closed', () => {
     win = null
+  })
+}
+
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    if (win) {
+      if (win.isMinimized()) {
+        win.restore()
+      }
+      win.focus()
+    }
   })
 }
 
