@@ -20,6 +20,7 @@ import {
   TabPanel,
   TabPanels,
   Tabs,
+  useColorMode
 } from '@chakra-ui/react'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { ConfigsType } from '@root/common/default_configs'
@@ -34,10 +35,11 @@ interface Props {
 }
 
 const PreferencePanel = (props: Props) => {
-  const [ is_open, setIsOpen ] = useState(false)
+  const [is_open, setIsOpen] = useState(false)
   const { configs, updateConfigs } = useModel('useConfigs')
-  const [ data, setData ] = useState<ConfigsType | null>(configs)
+  const [data, setData] = useState<ConfigsType | null>(configs)
   const { lang } = useModel('useI18n')
+  const { colorMode, setColorMode } = useColorMode()
 
   const onClose = () => {
     setIsOpen(false)
@@ -53,11 +55,15 @@ const PreferencePanel = (props: Props) => {
     if (!data) return
     await updateConfigs(data)
     setIsOpen(false)
+
+    if (colorMode !== data.theme) {
+      setColorMode(data.theme)
+    }
   }
 
   useEffect(() => {
     setData(configs)
-  }, [ configs ])
+  }, [configs])
 
   useOnBroadcast('show_preferences', async () => {
     setIsOpen(true)
