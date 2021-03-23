@@ -88,6 +88,7 @@ const List = (props: Props) => {
     } else {
       console.log(result)
       loadHostsData().catch(e => console.log(e))
+      let err_desc = lang.fail
 
       // let body: string = lang.no_access_to_hosts
       if (result.code === 'no_access') {
@@ -96,6 +97,7 @@ const List = (props: Props) => {
         }
         // } else {
         // body = result.message || 'Unknow error!'
+        err_desc = lang.no_access_to_hosts
       }
 
       // new Notification(lang.fail, {
@@ -103,7 +105,7 @@ const List = (props: Props) => {
       // })
       toast({
         status: 'error',
-        description: lang.fail,
+        description: err_desc,
         isClosable: true,
       })
     }
