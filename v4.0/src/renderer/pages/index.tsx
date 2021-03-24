@@ -17,13 +17,13 @@ import TopBar from '../components/TopBar'
 import styles from './index.less'
 
 export default () => {
-  const [ loading, setLoading ] = useState(true)
+  const [loading, setLoading] = useState(true)
   const { lang, setLocale } = useModel('useI18n')
   const { loadHostsData } = useModel('useHostsData')
   const { configs } = useModel('useConfigs')
-  const [ left_width, setLeftWidth ] = useState(0)
-  const [ left_show, setLeftShow ] = useState(true)
-  const [ show_migration, setShowMigration ] = useState(false)
+  const [left_width, setLeftWidth] = useState(0)
+  const [left_show, setLeftShow] = useState(true)
+  const [show_migration, setShowMigration] = useState(false)
 
   const migrate = async (do_migrate: boolean) => {
     if (do_migrate) {
@@ -43,6 +43,8 @@ export default () => {
     setLeftShow(configs.left_panel_show)
 
     let theme = configs.theme
+    let cls = document.body.className
+    document.body.className = cls.replace(/\btheme-\w+/ig, '')
     document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
 
     let if_migrate = await actions.migrateCheck()
@@ -58,7 +60,7 @@ export default () => {
   useEffect(() => {
     if (!configs) return
     init().catch(e => console.error(e))
-  }, [ configs ])
+  }, [configs])
 
   useOnBroadcast('toggle_left_pannel', (show: boolean) => setLeftShow(show))
 
@@ -82,7 +84,7 @@ export default () => {
       <div>
         <div className={styles.left} style={{
           width: left_width,
-          left: left_show ? 0 : -left_width,
+          left: left_show ? 0 : -left_width
         }}>
           <LeftPanel width={left_width}/>
         </div>

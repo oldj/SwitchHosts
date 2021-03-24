@@ -22,6 +22,7 @@ import {
   Tabs,
   useColorMode
 } from '@chakra-ui/react'
+import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { ConfigsType } from '@root/common/default_configs'
 import React, { useEffect, useState } from 'react'
@@ -59,6 +60,8 @@ const PreferencePanel = (props: Props) => {
     if (colorMode !== data.theme) {
       setColorMode(data.theme)
     }
+
+    agent.broadcast('config_updated')
   }
 
   useEffect(() => {
