@@ -9,8 +9,6 @@ import { I18N, LocaleName } from '@root/common/i18n'
 import { homepage_url, feedback_url } from '@root/common/constants'
 import { broadcast } from '@main/core/agent'
 
-//const version = require('../version')
-
 export const makeMainMenu = (locale: LocaleName = 'en') => {
   const i18n = new I18N(locale)
   const { lang } = i18n
@@ -58,27 +56,34 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
       submenu: [
         {
           role: 'undo',
+          label: lang.undo,
         },
         {
           role: 'redo',
+          label: lang.redo,
         },
         {
           type: 'separator',
         },
         {
           role: 'cut',
+          label: lang.cut,
         },
         {
           role: 'copy',
+          label: lang.copy,
         },
         {
           role: 'paste',
+          label: lang.paste,
         },
         {
           role: 'delete',
+          label: lang.delete,
         },
         {
           role: 'selectAll',
+          label: lang.select_all,
         },
         {
           type: 'separator',
@@ -121,33 +126,41 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         // },
         {
           role: 'resetZoom',
+          label: lang.reset_zoom,
         },
         {
           role: 'zoomIn',
+          label: lang.zoom_in,
         },
         {
           role: 'zoomOut',
+          label: lang.zoom_out,
         },
         {
           type: 'separator',
         },
         {
           role: 'togglefullscreen',
+          label: lang.toggle_full_screen,
         },
       ],
     },
     {
+      label: lang.window,
       role: 'window',
       submenu: [
         {
           role: 'minimize',
+          label: lang.minimize,
         },
         {
           role: 'close',
+          label: lang.close,
         },
       ],
     },
     {
+      label: lang.help,
       role: 'help',
       submenu: [
         // {
@@ -156,9 +169,9 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         //     checkUpdate.check()
         //   }
         // },
-        {
-          type: 'separator',
-        },
+        // {
+        //   type: 'separator',
+        // },
         {
           label: lang.feedback,
           click () {
@@ -202,18 +215,22 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         // },
         {
           role: 'hide',
+          label: lang.hide,
         },
         {
           role: 'hideOthers',
+          label: lang.hide_others,
         },
         {
           role: 'unhide',
+          label: lang.unhide,
         },
         {
           type: 'separator',
         },
         {
           role: 'quit',
+          label: lang.quit,
         }],
     })
     // Edit menu.
@@ -238,20 +255,24 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
       {
         accelerator: 'CmdOrCtrl+W',
         role: 'close',
+        label: lang.close,
       },
       {
         accelerator: 'CmdOrCtrl+M',
         role: 'minimize',
+        label: lang.minimize,
       },
       {
         role: 'zoom',
+        label: lang.zoom,
       },
       {
         type: 'separator',
       },
-      {
-        role: 'front',
-      },
+      // {
+      //   role: 'front',
+      //   label: lang.front,
+      // },
     ]
   } else if (os === 'win32' || os === 'linux') {
     let submenu = (template[0] && template[0].submenu) as MenuItemConstructorOptions[]
@@ -273,6 +294,7 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
       })
       submenu.push({
         role: 'quit',
+        label: lang.quit,
         accelerator: 'CmdOrCtrl+Q',
       })
     }
