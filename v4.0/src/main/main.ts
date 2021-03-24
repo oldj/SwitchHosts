@@ -7,6 +7,7 @@ import * as cron from '@main/libs/cron'
 import getIndex from '@main/libs/getIndex'
 import isDev from '@main/libs/isDev'
 import '@main/tray'
+import { makeMainMenu } from '@main/libs/menu'
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
 import * as path from 'path'
@@ -27,8 +28,8 @@ const createWindow = async () => {
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-      spellcheck: true
-    }
+      spellcheck: true,
+    },
   })
 
   if (configs.hide_at_launch) {
@@ -44,6 +45,8 @@ const createWindow = async () => {
   if (isDev()) {
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = '1' // eslint-disable-line require-atomic-updates
   }
+
+  makeMainMenu(configs.locale)
 
   win.loadURL(getIndex())
     .catch(e => console.error(e))
