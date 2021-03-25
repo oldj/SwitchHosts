@@ -19,6 +19,42 @@
     outline: none;
     background: inherit;
   }
+
+  :global {
+    .CodeMirror {
+      font-family: @font-editor;
+      background: var(--swh-editor-bg-color);
+      color: var(--swh-editor-text-color);
+    }
+
+    .cm-s-default .cm-comment {
+      color: var(--swh-editor-comment);
+    }
+
+    .cm-s-default .cm-ip {
+      color: var(--swh-editor-ip);
+      font-weight: bold;
+    }
+
+    .cm-s-default .cm-error {
+      color: var(--swh-editor-error);
+    }
+
+    .cm-s-default .cm-hl {
+      background: var(--swh-editor-hl-bg);
+    }
+
+    .CodeMirror-gutters {
+      border-right: none;
+      padding-right: 6px;
+      background: var(--swh-editor-gutter-bg);
+    }
+
+    .CodeMirror-linenumber {
+      cursor: pointer;
+      font-size: 12px;
+    }
+  }
 }
 
 .status_bar {
