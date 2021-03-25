@@ -99,7 +99,7 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
           label: lang.comment_current_line,
           accelerator: 'CommandOrControl+/',
           click () {
-            broadcast('to_comment')
+            broadcast('toggle_comment')
           },
         },
       ],
