@@ -9,6 +9,7 @@ import StatusBar from '@renderer/components/StatusBar'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
+import 'codemirror/addon/comment/comment'
 import CodeMirror from 'codemirror'
 import lodash from 'lodash'
 import React, { useEffect, useRef, useState } from 'react'
@@ -82,6 +83,33 @@ const HostsEditor = (props: Props) => {
     toSave(hosts.id, content)
   }
 
+  const toggleComment = () => {
+    if (is_read_only || !cm_editor) return
+    cm_editor.toggleComment()
+  }
+
+  const onGutterClick = (n: number) => {
+    if (is_read_only || !cm_editor) return
+
+    let info = cm_editor.lineInfo(n)
+    let line = info.text
+    if (/^\s*$/.test(line)) return
+
+    let new_line: string
+    if (/^#/.test(line)) {
+      new_line = line.replace(/^#\s*/, '')
+    } else {
+      new_line = '# ' + line
+    }
+
+    cm_editor.getDoc()
+      .replaceRange(
+        new_line,
+        { line: info.line, ch: 0 },
+        { line: info.line, ch: line.length },
+      )
+  }
+
   useEffect(() => {
     if (!el_ref.current) return
 
@@ -98,6 +126,10 @@ const HostsEditor = (props: Props) => {
       let value = editor.getDoc().getValue()
       agent.broadcast('editor:content_change', value)
     })
+
+    cm.on('gutterClick', (cm, n) => {
+      agent.broadcast('editor:gutter_click', n)
+    })
   }, [])
 
   useOnBroadcast('editor:content_change', (new_content: string) => {
@@ -105,10 +137,14 @@ const HostsEditor = (props: Props) => {
     onChange(new_content)
   }, [hosts, hosts_id, content])
 
+  useOnBroadcast('editor:gutter_click', onGutterClick, [cm_editor])
+
   useOnBroadcast('hosts_refreshed', (h: IHostsListObject) => {
     if (h.id !== hosts.id) return
     loadContent()
   }, [hosts, hosts_data])
+
+  useOnBroadcast('toggle_comment', toggleComment, [hosts, cm_editor])
 
   return (
     <div className={styles.root}>
