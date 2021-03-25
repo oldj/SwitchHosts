@@ -1,0 +1,82 @@
+@import "../../styles/common";
+
+.root {
+  .code;
+  width: 100%;
+  height: 100%;
+}
+
+.editor {
+  height: calc(100% - var(--swh-status-bar-height));
+  background: inherit;
+
+  &.read_only {
+    :global {
+      .CodeMirror, .CodeMirror-gutters {
+        //background-color: var(--swh-editor-read-only-bg);
+      }
+
+      .CodeMirror-cursor {
+        display: none !important
+      }
+    }
+  }
+
+  textarea {
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 10px;
+    resize: none;
+    outline: none;
+    background: inherit;
+  }
+
+  :global {
+    .CodeMirror {
+      font-family: @font-editor;
+      background: var(--swh-editor-bg-color);
+      color: var(--swh-editor-text-color);
+    }
+
+    .cm-s-default .cm-comment {
+      color: var(--swh-editor-comment);
+    }
+
+    .cm-s-default .cm-ip {
+      color: var(--swh-editor-ip);
+      font-weight: bold;
+    }
+
+    .cm-s-default .cm-error {
+      color: var(--swh-editor-error);
+    }
+
+    .cm-s-default .cm-hl {
+      background: var(--swh-editor-hl-bg);
+    }
+
+    .CodeMirror-gutters {
+      border-right: none;
+      padding-right: 6px;
+      background: var(--swh-editor-gutter-bg);
+    }
+
+    .CodeMirror-linenumber {
+      cursor: pointer;
+      font-size: 12px;
+    }
+  }
+}
+
+.status_bar {
+  height: var(--swh-status-bar-height);
+  line-height: var(--swh-status-bar-height);
+  border-top: 1px solid var(--swh-border-color-1);
+  padding: 0 10px;
+  font-size: 12px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  color: var(--swh-font-color-weak);
+}
