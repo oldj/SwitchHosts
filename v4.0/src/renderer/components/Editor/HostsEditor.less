@@ -10,6 +10,18 @@
   height: calc(100% - var(--swh-status-bar-height));
   background: inherit;
 
+  &.read_only {
+    :global {
+      .CodeMirror, .CodeMirror-gutters {
+        //background-color: var(--swh-editor-read-only-bg);
+      }
+
+      .CodeMirror-cursor {
+        display: none !important
+      }
+    }
+  }
+
   textarea {
     width: 100%;
     height: 100%;
