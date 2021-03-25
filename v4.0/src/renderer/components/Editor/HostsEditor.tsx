@@ -9,55 +9,42 @@ import StatusBar from '@renderer/components/StatusBar'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
-import 'codemirror/addon/comment/comment'
+import clsx from 'clsx'
 import CodeMirror from 'codemirror'
+import 'codemirror/addon/comment/comment'
 import lodash from 'lodash'
 import React, { useEffect, useRef, useState } from 'react'
 import modeHosts from './cm_hl'
-import styles from './HostsEditor.less'
 // import 'codemirror/lib/codemirror.css'
 import './codemirror.less'
+import styles from './HostsEditor.less'
 
 modeHosts()
 
 interface Props {
-  hosts: IHostsListObject;
+  hosts: {
+    id: string;
+    content?: string;
+  };
 }
 
 const HostsEditor = (props: Props) => {
   const { hosts } = props
-  const { hosts_data, isHostsInTrashcan } = useModel('useHostsData')
+  const { hosts_data, isReadOnly } = useModel('useHostsData')
   const [hosts_id, setHostsId] = useState(hosts.id)
   const [content, setContent] = useState(hosts.content || '')
   const [cm_editor, setCMEditor] = useState<CodeMirror.EditorFromTextArea | null>(null)
   const el_ref = useRef<HTMLTextAreaElement>(null)
 
-  const isReadOnly = (): boolean => {
-    if (!hosts) {
-      return true
-    }
-
-    if (hosts.type && (['group', 'remote', 'folder', 'trashcan']).includes(hosts.type)) {
-      return true
-    }
-
-    if (isHostsInTrashcan(hosts.id)) {
-      return true
-    }
-
-    // ..
-    return false
-  }
-
-  let is_read_only = isReadOnly()
+  let is_read_only = isReadOnly(hosts)
 
   const loadContent = async () => {
     if (!cm_editor) return
 
-    let content = await actions.getHostsContent(hosts_id)
+    let content = hosts.id === '0' ? await actions.getSystemHosts() : await actions.getHostsContent(hosts.id)
     setContent(content)
     cm_editor.setValue(content)
-    cm_editor.setOption('readOnly', isReadOnly())
+    cm_editor.setOption('readOnly', isReadOnly(hosts))
   }
 
   useEffect(() => {
@@ -140,15 +127,23 @@ const HostsEditor = (props: Props) => {
   useOnBroadcast('editor:gutter_click', onGutterClick, [cm_editor])
 
   useOnBroadcast('hosts_refreshed', (h: IHostsListObject) => {
-    if (h.id !== hosts.id) return
+    if (hosts.id !== '0' && h.id !== hosts.id) return
     loadContent()
-  }, [hosts, hosts_data])
+  }, [hosts, hosts_data, cm_editor])
 
   useOnBroadcast('toggle_comment', toggleComment, [hosts, cm_editor])
 
+  useOnBroadcast('set_hosts_on_status', () => {
+    if (hosts.id === '0') {
+      loadContent()
+    }
+  }, [hosts, cm_editor])
+
   return (
     <div className={styles.root}>
-      <div className={styles.editor}>
+      <div
+        className={clsx(styles.editor, is_read_only && styles.read_only)}
+      >
         <textarea
           ref={el_ref}
           defaultValue={content}

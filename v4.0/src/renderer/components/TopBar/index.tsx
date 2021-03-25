@@ -20,22 +20,22 @@ interface IProps {
 
 export default (props: IProps) => {
   const { show_left_panel } = props
-  const { i18n } = useModel('useI18n')
-  const { isHostsInTrashcan, current_hosts } = useModel('useHostsData')
-  const [ is_on, setIsOn ] = useState(!!current_hosts?.on)
+  const { lang } = useModel('useI18n')
+  const { isHostsInTrashcan, current_hosts, isReadOnly } = useModel('useHostsData')
+  const [is_on, setIsOn] = useState(!!current_hosts?.on)
 
   const show_toggle_switch = !show_left_panel && current_hosts && !isHostsInTrashcan(current_hosts.id)
   const show_history = !current_hosts
 
   useEffect(() => {
     setIsOn(!!current_hosts?.on)
-  }, [ current_hosts ])
+  }, [current_hosts])
 
   useOnBroadcast('set_hosts_on_status', (id: string, on: boolean) => {
     if (current_hosts && current_hosts.id === id) {
       setIsOn(on)
     }
-  }, [ current_hosts ])
+  }, [current_hosts])
 
   return (
     <div className={styles.root}>
@@ -59,29 +59,31 @@ export default (props: IProps) => {
 
       <Center>
         <div className={styles.hosts_title}>
-          {current_hosts ? (
-            <>
-              <HStack>
-              <span className={styles.hosts_icon}>
-                <ItemIcon type={current_hosts.type} is_collapsed={!current_hosts.folder_open}/>
-              </span>
+          <HStack>
+            {current_hosts ? (
+              <>
+                <span className={styles.hosts_icon}>
+                  <ItemIcon type={current_hosts.type} is_collapsed={!current_hosts.folder_open}/>
+                </span>
                 <span className={styles.hosts_title}>
-                {current_hosts.title || i18n.lang.untitled}
-              </span>
-              </HStack>
-            </>
-          ) : (
-            <>
-              <HStack>
-              <span className={styles.hosts_icon}>
-                <ItemIcon type="system"/>
-              </span>
+                  {current_hosts.title || lang.untitled}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className={styles.hosts_icon}>
+                  <ItemIcon type="system"/>
+                </span>
                 <span className={styles.hosts_title}>
-                {i18n.lang.system_hosts}
-              </span>
-              </HStack>
-            </>
-          )}
+                  {lang.system_hosts}
+                </span>
+              </>
+            )}
+
+            {isReadOnly(current_hosts) ? (
+              <span className={styles.read_only}>{lang.read_only}</span>
+            ) : null}
+          </HStack>
         </div>
       </Center>
 
