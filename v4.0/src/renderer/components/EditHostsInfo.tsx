@@ -332,6 +332,7 @@ const EditHostsInfo = () => {
             <Input
               ref={ipt_title_ref}
               value={hosts?.title || ''}
+              maxLength={50}
               onChange={e => onUpdate({ title: e.target.value })}
               onKeyDown={e => e.key === 'Enter' && onSave()}
             />
