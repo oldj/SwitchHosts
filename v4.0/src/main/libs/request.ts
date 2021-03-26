@@ -4,7 +4,8 @@
  * @homepage: https://oldj.net
  */
 
-import axios from 'axios'
+import { configGet } from '@main/actions'
+import axios, { AxiosRequestConfig } from 'axios'
 import querystring from 'querystring'
 import version from '@root/version.json'
 
@@ -30,13 +31,24 @@ export const GET = async (url: string, params: IParams | null = null, options: I
     url += (url.includes('?') ? '&' : '?') + s
   }
 
-  const instance = axios.create({
+  let configs: AxiosRequestConfig = {
     timeout: options.timeout || 30000,
     headers: {
       ...default_headers,
       ...options.headers,
     },
-  })
+  }
+
+  if (await configGet('use_proxy')) {
+    let host = await configGet('proxy_host')
+    let port = await configGet('proxy_port')
+
+    if (host && port) {
+      configs.proxy = { host, port }
+    }
+  }
+
+  const instance = axios.create(configs)
 
   return await instance.get(url)
 }
