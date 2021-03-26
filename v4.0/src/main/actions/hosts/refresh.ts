@@ -8,10 +8,9 @@ import { getHostsContent, setHostsContent, setList } from '@main/actions/index'
 import { broadcast } from '@main/core/agent'
 
 import { swhdb } from '@main/data'
+import { GET } from '@main/libs/request'
 import { IHostsListObject, IOperationResult } from '@root/common/data'
 import * as hostsFn from '@root/common/hostsFn'
-import version from '@root/version.json'
-import axios from 'axios'
 import dayjs from 'dayjs'
 
 export default async (hosts_id: string): Promise<IOperationResult> => {
@@ -45,11 +44,7 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
   let new_content: string
   try {
     console.log(`-> refreshHosts URL: "${url}"`)
-    let resp = await axios.get(url, {
-      headers: {
-        'User-Agent': `SwitchHosts/${version.join('.')}`,
-      },
-    })
+    let resp = await GET(url)
     new_content = resp.data
   } catch (e) {
     console.error(e)

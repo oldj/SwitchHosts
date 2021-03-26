@@ -20,8 +20,11 @@ import {
   TabPanel,
   TabPanels,
   Tabs,
-  useColorMode
+  useColorMode,
 } from '@chakra-ui/react'
+import About from '@renderer/components/About'
+import AboutContent from '@renderer/components/About/AboutContent'
+import Proxy from '@renderer/components/Pref/Proxy'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { ConfigsType } from '@root/common/default_configs'
@@ -98,7 +101,9 @@ const PreferencePanel = (props: Props) => {
             <TabList>
               <Tab>{lang.general}</Tab>
               <Tab>{lang.commands}</Tab>
+              <Tab>{lang.proxy}</Tab>
               <Tab>{lang.advanced}</Tab>
+              <Tab>{lang.about}</Tab>
             </TabList>
 
             <TabPanels>
@@ -109,7 +114,14 @@ const PreferencePanel = (props: Props) => {
                 <Commands data={data} onChange={onUpdate}/>
               </TabPanel>
               <TabPanel>
+                <Proxy data={data} onChange={onUpdate}/>
+              </TabPanel>
+              <TabPanel>
                 <Advanced data={data} onChange={onUpdate}/>
+              </TabPanel>
+
+              <TabPanel>
+                <AboutContent/>
               </TabPanel>
             </TabPanels>
           </Tabs>
