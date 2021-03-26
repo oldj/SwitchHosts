@@ -30,8 +30,8 @@ const TARGET_PLATFORMS_configs = {
     win: ['nsis:ia32', 'portable:ia32']
   },
   all: {
-    mac: ['default', 'mas'],
-    linux: [/*'zip:x64', */'AppImage:x64'],
+    mac: ['default'],
+    linux: [/*'zip:x64', */'AppImage:x64', 'deb:x64'],
     win: ['nsis:ia32', 'nsis:x64', 'portable:ia32']
   }
 }
@@ -110,8 +110,8 @@ const makeDefault = async () => {
 
   await builder.build({
     //targets: Platform.MAC.createTarget(),
-    ...TARGET_PLATFORMS_configs.mac,
-    ...TARGET_PLATFORMS_configs.win,
+    //...TARGET_PLATFORMS_configs.mac,
+    ...TARGET_PLATFORMS_configs.all,
     config: {
       ...cfg_common,
       appId: 'SwitchHosts',
