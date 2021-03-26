@@ -40,11 +40,12 @@ export const GET = async (url: string, params: IParams | null = null, options: I
   }
 
   if (await configGet('use_proxy')) {
+    let protocol = await configGet('proxy_protocol')
     let host = await configGet('proxy_host')
     let port = await configGet('proxy_port')
 
     if (host && port) {
-      configs.proxy = { host, port }
+      configs.proxy = { protocol, host, port }
     }
   }
 
