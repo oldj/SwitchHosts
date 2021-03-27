@@ -1,0 +1,16 @@
+127.0.0.1 localhost
+127.0.0.1 test.com # valid
+# invalid hosts (repeated): 127.0.0.2 test.com
+
+# a comment
+
+127.0.0.1 a.com # some note1
+127.0.0.1 b.com # some note2
+127.0.0.1 c.com # another note2
+127.0.0.1 d.com # some e.com note
+
+# invalid hosts (repeated): 127.0.0.1 d.com
+# invalid hosts (repeated): 127.0.0.1 d.com
+
+127.0.0.2 e.com # comment for e.com
+# invalid hosts (repeated): 127.0.0.2 b.com c.com d.com

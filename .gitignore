@@ -1,27 +1,27 @@
 .idea
-*.pyc
-*.swp
-src/build
-src/dist
-dist
-projectFilesBackup
-*.DS_Store
-tmp
-*.js.map
 
-*.hosts
-
-src/configs.json
-
-*.swh
-*.iml
-
+# dependencies
 node_modules
-UserInterfaceState.xcuserstate
-xcdebugger
 npm-debug.log*
-.nyc_output
-coverage/
+yarn-error.log
+yarn.lock
+package-lock.json
 
-.env
+# production
+build
+dist
 
+# misc
+.DS_Store
+
+# umi
+src/.umi
+src/.umi-production
+src/.umi-test
+src/renderer/.umi
+src/renderer/.umi-production
+src/renderer/.umi-test
+src/renderer/dist
+.env.local
+
+test/tmp
