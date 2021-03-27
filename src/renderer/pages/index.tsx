@@ -1,5 +1,4 @@
 import { useModel } from '@@/plugin-model/useModel'
-import { VStack } from '@chakra-ui/react'
 import About from '@renderer/components/About'
 import EditHostsInfo from '@renderer/components/EditHostsInfo'
 import History from '@renderer/components/History'
@@ -7,7 +6,6 @@ import LeftPanel from '@renderer/components/LeftPanel'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
 import PreferencePanel from '@renderer/components/Pref'
-import CommandsHistory from '@renderer/components/Pref/CommandsHistory'
 import SudoPasswordInput from '@renderer/components/SudoPasswordInput'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -84,7 +82,7 @@ export default () => {
       <div>
         <div className={styles.left} style={{
           width: left_width,
-          left: left_show ? 0 : -left_width
+          left: left_show ? 0 : -left_width,
         }}>
           <LeftPanel width={left_width}/>
         </div>

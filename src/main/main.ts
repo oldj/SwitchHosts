@@ -11,6 +11,7 @@ import { makeMainMenu } from '@main/libs/menu'
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
 import * as path from 'path'
+import windowStateKeeper from 'electron-window-state'
 
 let win: BrowserWindow | null
 let is_will_quit: boolean = false
@@ -18,9 +19,16 @@ let is_will_quit: boolean = false
 const createWindow = async () => {
   const configs = await configAll()
 
+  let main_window_state = windowStateKeeper({
+    defaultWidth: 800,
+    defaultHeight: 480,
+  })
+
   win = new BrowserWindow({
-    width: 800,
-    height: 480,
+    x: main_window_state.x,
+    y: main_window_state.y,
+    width: main_window_state.width,
+    height: main_window_state.height,
     minWidth: 300,
     minHeight: 200,
     autoHideMenuBar: true,
@@ -31,6 +39,8 @@ const createWindow = async () => {
       spellcheck: true,
     },
   })
+
+  main_window_state.manage(win)
 
   if (configs.hide_at_launch) {
     win.hide()
