@@ -18,11 +18,12 @@ interface Props {
 
 const Index = (props: Props) => {
   const { lang } = useModel('useI18n')
+  const { hosts_data } = useModel('useHostsData')
 
   const menu = new PopupMenu([
     {
       label: lang.hosts_add,
-      click() {
+      click () {
         agent.broadcast('add_new')
       },
     },
@@ -34,7 +35,7 @@ const Index = (props: Props) => {
       onContextMenu={() => menu.show()}
     >
       <List/>
-      <Trashcan/>
+      {hosts_data.trashcan.length > 0 ? <Trashcan/> : null}
     </div>
   )
 }

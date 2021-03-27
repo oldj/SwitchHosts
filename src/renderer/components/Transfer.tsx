@@ -35,9 +35,9 @@ interface Props {
 const Transfer = (props: Props) => {
   const { dataSource, targetKeys, render, onChange } = props
   const { lang } = useModel('useI18n')
-  const [ right_keys, setRightKeys ] = useState<IdType[]>(targetKeys)
-  const [ left_selectd_keys, setLeftSelectedKeys ] = useState<IdType[]>([])
-  const [ right_selectd_keys, setRightSelectedKeys ] = useState<IdType[]>([])
+  const [right_keys, setRightKeys] = useState<IdType[]>(targetKeys)
+  const [left_selectd_keys, setLeftSelectedKeys] = useState<IdType[]>([])
+  const [right_selectd_keys, setRightSelectedKeys] = useState<IdType[]>([])
 
   const List = (list_props: IListProps) => {
     const { data, selected_keys, setSelectedKeys } = list_props
@@ -46,13 +46,14 @@ const Transfer = (props: Props) => {
       setSelectedKeys(
         selected_keys.includes(id) ?
           selected_keys.filter(i => i != id) :
-          [ ...selected_keys, id ],
+          [...selected_keys, id],
       )
     }
 
     return (
       <div className={styles.list}>
         {data.map(item => {
+          if (!item || !item.id) return null
           const is_selected = selected_keys.includes(item.id)
 
           return (
@@ -76,7 +77,7 @@ const Transfer = (props: Props) => {
   }
 
   const moveLeftToRight = () => {
-    let result = [ ...right_keys, ...left_selectd_keys ]
+    let result = [...right_keys, ...left_selectd_keys]
     setRightKeys(result)
     setLeftSelectedKeys([])
     onChange && onChange(result)
