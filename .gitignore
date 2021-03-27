@@ -24,4 +24,5 @@ src/renderer/.umi-test
 src/renderer/dist
 .env.local
 
+tmp
 test/tmp
