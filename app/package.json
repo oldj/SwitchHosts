@@ -11,6 +11,6 @@
   "homepage": "https://swh.app",
   "scripts": {
   },
-  "license": "MIT",
+  "license": "LGPL",
   "dependencies": {}
 }
