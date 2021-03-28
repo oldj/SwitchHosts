@@ -65,6 +65,7 @@ const lang: LanguageDict = {
   hour: '小时',
   hours: '小时',
   import: '导入',
+  is_latest_version_inform: '太棒了，你正在运行的是最新版本！',
   language: '语言',
   last_refresh: '最后刷新：',
   latest_version_desc: '最新的版本为：{0}',

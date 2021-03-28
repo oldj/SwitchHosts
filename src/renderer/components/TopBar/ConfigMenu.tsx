@@ -7,6 +7,7 @@
 import { useModel } from '@@/plugin-model/useModel'
 import { actions, agent } from '@renderer/core/agent'
 import { feedback_url, homepage_url } from '@root/common/constants'
+import { useToast } from '@chakra-ui/react'
 import React from 'react'
 import {
   Menu,
@@ -29,6 +30,7 @@ interface Props {
 
 const ConfigMenu = (props: Props) => {
   const { lang } = useModel('useI18n')
+  const toast = useToast()
 
   return (
     <Menu>
@@ -50,7 +52,17 @@ const ConfigMenu = (props: Props) => {
 
         <MenuItem
           icon={<BiRefresh/>}
-          onClick={() => actions.checkVersion()}
+          onClick={async () => {
+            let r = await actions.checkUpdate()
+            if (r === false) {
+              toast({
+                description: lang.is_latest_version_inform,
+                status: 'info',
+                duration: 3000,
+                isClosable: true,
+              })
+            }
+          }}
         >
           {lang.check_update}
         </MenuItem>
