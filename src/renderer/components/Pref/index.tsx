@@ -22,8 +22,6 @@ import {
   Tabs,
   useColorMode,
 } from '@chakra-ui/react'
-import About from '@renderer/components/About'
-import AboutContent from '@renderer/components/About/AboutContent'
 import Proxy from '@renderer/components/Pref/Proxy'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -103,7 +101,6 @@ const PreferencePanel = (props: Props) => {
               <Tab>{lang.commands}</Tab>
               <Tab>{lang.proxy}</Tab>
               <Tab>{lang.advanced}</Tab>
-              <Tab>{lang.about}</Tab>
             </TabList>
 
             <TabPanels>
@@ -118,10 +115,6 @@ const PreferencePanel = (props: Props) => {
               </TabPanel>
               <TabPanel>
                 <Advanced data={data} onChange={onUpdate}/>
-              </TabPanel>
-
-              <TabPanel>
-                <AboutContent/>
               </TabPanel>
             </TabPanels>
           </Tabs>
