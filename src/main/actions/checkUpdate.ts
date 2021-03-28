@@ -10,13 +10,13 @@ import { server_url } from '@root/common/constants'
 import version from '@root/version.json'
 import compareVersions from 'compare-versions'
 
-export default async () => {
+export default async (): Promise<boolean | null> => {
   // Check the latest version, also used for anonymous statistics of DAU,
   // no personal information will be sent.
 
   let r = await GET(`${server_url}/api/check/`)
   if (r.status !== 200 || !r.data?.success) {
-    return
+    return null
   }
 
   let server_version = r.data.data.version
@@ -26,5 +26,10 @@ export default async () => {
     // new version found
     console.log(`new version: ${server_version}`)
     broadcast('new_version', server_version)
+    // 有更新
+    return true
   }
+
+  // 没有更新
+  return false
 }

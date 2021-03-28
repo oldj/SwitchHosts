@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { checkVersion, getList, refreshHosts } from '@main/actions'
+import { checkUpdate, getList, refreshHosts } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { IHostsListObject } from '@root/common/data'
 import { flatten } from '@root/common/hostsFn'
@@ -54,14 +54,14 @@ const check = async () => {
 
   let ts = (new Date()).getTime()
   if (!ts_last_server_check || (ts - ts_last_server_check) > 3600 * 1000) {
-    checkVersion()
+    checkUpdate()
       .catch(e => console.error(e))
     ts_last_server_check = ts
   }
 }
 
 export const start = () => {
-  setTimeout(checkVersion, 5000)
+  setTimeout(checkUpdate, 5000)
 
   clearInterval(t)
   t = setInterval(check, 60 * 1000)

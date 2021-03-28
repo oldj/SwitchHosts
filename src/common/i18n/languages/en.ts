@@ -63,6 +63,7 @@ export default {
   hour: 'hour',
   hours: 'hours',
   import: 'Import',
+  is_latest_version_inform: 'Great, you are running the latest version!',
   language: 'Language',
   last_refresh: 'Last refresh: ',
   latest_version_desc: 'The latest version is: {0}',
