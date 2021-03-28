@@ -61,4 +61,4 @@ npm run make # the packed files will be in ./dist
 
 ## 版权
 
-SwitchHosts 是一个免费开源软件，基于 LGPL 协议发布。
+SwitchHosts 是一个免费开源软件，基于 Apache-2.0 协议发布。
