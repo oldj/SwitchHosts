@@ -4,6 +4,7 @@
  * @homepage: https://oldj.net
  */
 
+require('dotenv').config()
 const version = require('../src/version.json')
 const builder = require('electron-builder')
 const execa = require('execa')
@@ -37,7 +38,7 @@ const TARGET_PLATFORMS_configs = {
 }
 
 const APP_NAME = 'SwitchHosts'
-const IDENTITY = 'Yingjie Wu'
+const { IDENTITY } = process.env
 
 const cfg_common = {
   copyright: `Copyright © ${(new Date()).getFullYear()}`,
