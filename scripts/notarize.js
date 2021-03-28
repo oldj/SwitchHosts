@@ -5,17 +5,17 @@
  */
 
 require('dotenv').config()
-const {notarize} = require('electron-notarize')
+const { notarize } = require('electron-notarize')
 
 exports.default = async function notarizing (context) {
   const appName = context.packager.appInfo.productFilename
-  const {electronPlatformName, appOutDir} = context
+  const { electronPlatformName, appOutDir } = context
   if (electronPlatformName !== 'darwin') {
     return
   }
 
   let appPath = `${appOutDir}/${appName}.app`
-  let {appleId, appBundleId, ascProvider, appleIdPassword} = process.env
+  let { appleId, appBundleId, ascProvider, appleIdPassword } = process.env
   if (!appleIdPassword) {
     appleIdPassword = `@keychain:Application Loader: ${appleId}`
   }
