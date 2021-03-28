@@ -66,4 +66,4 @@ npm run make # the packed files will be in ./dist
 
 ## Copyright
 
-SwitchHosts is a free and open source software, it is released under the LGPL license.
+SwitchHosts is a free and open source software, it is released under the [Apache License](./LICENSE).

@@ -11,6 +11,6 @@
   "homepage": "https://swh.app",
   "scripts": {
   },
-  "license": "LGPL",
+  "license": "Apache-2.0",
   "dependencies": {}
 }
