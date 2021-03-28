@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
+    "compare-versions": "^3.6.0",
     "dayjs": "^1.10.4",
     "electron-window-state": "^5.0.3",
     "lodash": "^4.17.21",

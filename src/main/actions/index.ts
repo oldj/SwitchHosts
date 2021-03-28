@@ -41,6 +41,7 @@ export { default as cmdClearHistory } from './cmd/clearHistory'
 export { default as openUrl } from './openUrl'
 export { default as showItemInFolder } from './showItemInFolder'
 export { default as updateTrayTitle } from './updateTrayTitle'
+export { default as checkVersion } from './checkVersion'
 
 export { default as migrateCheck } from './migrate/checkIfMigration'
 export { default as migrateData } from './migrate/migrateData'
