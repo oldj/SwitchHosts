@@ -26,3 +26,5 @@ src/renderer/dist
 
 tmp
 test/tmp
+
+.env
