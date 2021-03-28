@@ -8,10 +8,11 @@ import { useModel } from '@@/plugin-model/useModel'
 import { Box, Center, Flex, HStack, IconButton } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
+import ConfigMenu from '@renderer/components/TopBar/ConfigMenu'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import React, { useEffect, useState } from 'react'
-import { BiHistory, BiPlus, BiSidebar, BiSliderAlt } from 'react-icons/bi'
+import { BiHistory, BiPlus, BiSidebar, BiSliderAlt, BiCog } from 'react-icons/bi'
 import styles from './index.less'
 
 interface IProps {
@@ -57,63 +58,58 @@ export default (props: IProps) => {
         />
       </Flex>
 
-      <Center>
-        <div className={styles.hosts_title}>
-          <HStack>
-            {current_hosts ? (
-              <>
+      <Center className={styles.hosts_title}>
+        <HStack>
+          {current_hosts ? (
+            <>
                 <span className={styles.hosts_icon}>
                   <ItemIcon type={current_hosts.type} is_collapsed={!current_hosts.folder_open}/>
                 </span>
-                <span className={styles.hosts_title}>
+              <span className={styles.hosts_title}>
                   {current_hosts.title || lang.untitled}
                 </span>
-              </>
-            ) : (
-              <>
+            </>
+          ) : (
+            <>
                 <span className={styles.hosts_icon}>
                   <ItemIcon type="system"/>
                 </span>
-                <span className={styles.hosts_title}>
+              <span className={styles.hosts_title}>
                   {lang.system_hosts}
                 </span>
-              </>
-            )}
+            </>
+          )}
 
-            {isReadOnly(current_hosts) ? (
-              <span className={styles.read_only}>{lang.read_only}</span>
-            ) : null}
-          </HStack>
-        </div>
+          {isReadOnly(current_hosts) ? (
+            <span className={styles.read_only}>{lang.read_only}</span>
+          ) : null}
+        </HStack>
       </Center>
 
       <Flex align="center" justifyContent="flex-end">
-        <Center>
-          {show_toggle_switch ? (
-            <Box mr={3}>
-              <SwitchButton on={is_on} onChange={on => {
-                current_hosts && agent.broadcast('toggle_item', current_hosts.id, on)
-              }}/>
-            </Box>
-          ) : null}
-          {show_history ? (
-            <IconButton
-              aria-label="Show history"
-              icon={<BiHistory/>}
-              variant="ghost"
-              onClick={() => agent.broadcast('show_history')}
-            />
-          ) : null}
-        </Center>
-
-        <Center>
+        {show_toggle_switch ? (
+          <Box mr={3}>
+            <SwitchButton on={is_on} onChange={on => {
+              current_hosts && agent.broadcast('toggle_item', current_hosts.id, on)
+            }}/>
+          </Box>
+        ) : null}
+        {show_history ? (
           <IconButton
-            aria-label="Toggle preference panel"
-            icon={<BiSliderAlt/>}
+            aria-label="Show history"
+            icon={<BiHistory/>}
             variant="ghost"
-            onClick={() => agent.broadcast('show_preferences')}
+            onClick={() => agent.broadcast('show_history')}
           />
-        </Center>
+        ) : null}
+
+        {/*<IconButton*/}
+        {/*  aria-label="Toggle preference panel"*/}
+        {/*  icon={<BiSliderAlt/>}*/}
+        {/*  variant="ghost"*/}
+        {/*  onClick={() => agent.broadcast('show_preferences')}*/}
+        {/*/>*/}
+        <ConfigMenu/>
       </Flex>
     </div>
   )
