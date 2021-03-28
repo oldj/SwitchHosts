@@ -3,10 +3,9 @@
  * @author: oldj
  * @homepage: https://oldj.net
  */
-import { getList, refreshHosts } from '@main/actions'
+
+import { checkVersion, getList, refreshHosts } from '@main/actions'
 import { broadcast } from '@main/core/agent'
-import { GET } from '@main/libs/request'
-import { server_url } from '@root/common/constants'
 import { IHostsListObject } from '@root/common/data'
 import { flatten } from '@root/common/hostsFn'
 
@@ -49,25 +48,20 @@ const checkRefresh = async () => {
   broadcast('reload_list')
 }
 
-const checkServer = async () => {
-  // Only used for anonymous statistics of DAU, no personal information will be sent
-  await GET(`${server_url}/api/check/`)
-}
-
 const check = async () => {
   checkRefresh()
     .catch(e => console.error(e))
 
   let ts = (new Date()).getTime()
   if (!ts_last_server_check || (ts - ts_last_server_check) > 3600 * 1000) {
-    checkServer()
+    checkVersion()
       .catch(e => console.error(e))
     ts_last_server_check = ts
   }
 }
 
 export const start = () => {
-  setTimeout(checkServer, 5000)
+  setTimeout(checkVersion, 5000)
 
   clearInterval(t)
   t = setInterval(check, 60 * 1000)
