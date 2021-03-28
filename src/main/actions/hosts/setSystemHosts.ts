@@ -119,7 +119,8 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
     console.error(e)
   }
 
-  if (!(await checkAccess(sys_hosts_path))) {
+  let has_access = await checkAccess(sys_hosts_path)
+  if (!has_access) {
     if (options && options.sudo_pswd) {
       sudo_pswd = safePSWD(options.sudo_pswd)
     }
@@ -144,9 +145,15 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
   try {
     await fs.promises.writeFile(sys_hosts_path, content, 'utf-8')
   } catch (e) {
+    console.error(e)
+    let code = 'fail'
+    if (e.code === 'EPERM' || e.message.include('operation not permitted')) {
+      code = 'no_access'
+    }
+
     return {
       success: false,
-      code: 'fail',
+      code,
       message: e.message
     }
   }
