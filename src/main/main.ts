@@ -6,12 +6,13 @@ import '@main/data'
 import * as cron from '@main/libs/cron'
 import getIndex from '@main/libs/getIndex'
 import isDev from '@main/libs/isDev'
-import '@main/tray'
 import { makeMainMenu } from '@main/libs/menu'
+import '@main/tray'
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
-import * as path from 'path'
 import windowStateKeeper from 'electron-window-state'
+import * as path from 'path'
+import { v4 as uuid4 } from 'uuid'
 
 let win: BrowserWindow | null
 let is_will_quit: boolean = false
@@ -41,6 +42,10 @@ const createWindow = async () => {
   })
 
   main_window_state.manage(win)
+
+  const ses = win.webContents.session
+  // console.log(ses.getUserAgent())
+  global.ua = ses.getUserAgent()
 
   if (configs.hide_at_launch) {
     win.hide()
@@ -107,6 +112,7 @@ const onActive = async () => {
 
 app.on('ready', async () => {
   console.log(`VERSION: ${version.join('.')}`)
+  global.session_id = uuid4()
   await createWindow()
   cron.start()
 })
