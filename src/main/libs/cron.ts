@@ -48,20 +48,24 @@ const checkRefresh = async () => {
   broadcast('reload_list')
 }
 
-const check = async () => {
-  checkRefresh()
-    .catch(e => console.error(e))
-
+const checkServer = async () => {
   let ts = (new Date()).getTime()
   if (!ts_last_server_check || (ts - ts_last_server_check) > 3600 * 1000) {
-    checkUpdate()
-      .catch(e => console.error(e))
+    await checkUpdate()
     ts_last_server_check = ts
   }
 }
 
+const check = async () => {
+  checkRefresh()
+    .catch(e => console.error(e))
+
+  checkServer()
+    .catch(e => console.error(e))
+}
+
 export const start = () => {
-  setTimeout(checkUpdate, 5000)
+  setTimeout(checkServer, 5000)
 
   clearInterval(t)
   t = setInterval(check, 60 * 1000)

@@ -14,7 +14,7 @@ export default async (): Promise<boolean | null> => {
   // Check the latest version, also used for anonymous statistics of DAU,
   // no personal information will be sent.
 
-  let r = await GET(`${server_url}/api/check/`)
+  let r = await GET(`${server_url}/api/check/`, { sid: global.session_id })
   if (r.status !== 200 || !r.data?.success) {
     return null
   }
