@@ -60,7 +60,7 @@ const makeTray = async () => {
       {
         label: lang._app_name,
         toolTip: lang.show_main_window,
-        click() {
+        click () {
           broadcast('active_main_window')
         },
       },
@@ -71,7 +71,7 @@ const makeTray = async () => {
       { type: 'separator' },
       {
         label: lang.toggle_dock_icon,
-        async click() {
+        async click () {
           let hide_dock_icon = await configGet('hide_dock_icon')
           hide_dock_icon = !hide_dock_icon
           await configSet('hide_dock_icon', hide_dock_icon)
