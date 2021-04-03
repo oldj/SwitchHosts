@@ -84,7 +84,9 @@ const ConfigMenu = (props: Props) => {
           icon={<BiExport/>}
           onClick={async () => {
             let r = await actions.exportData()
-            if (r === false) {
+            if (r === null) {
+              return
+            } else if (r === false) {
               toast({
                 status: 'error',
                 description: lang.fail,
@@ -105,7 +107,9 @@ const ConfigMenu = (props: Props) => {
           icon={<BiImport/>}
           onClick={async () => {
             let r = await actions.importData()
-            if (r === true) {
+            if (r === null) {
+              return
+            } else if (r === true) {
               toast({
                 status: 'success',
                 description: lang.import_done,

@@ -10,7 +10,7 @@ import { swhdb } from '@main/data'
 import { dialog } from 'electron'
 import { promises as fs } from 'fs'
 
-export default async (): Promise<boolean | string> => {
+export default async (): Promise<boolean | null | string> => {
   let { lang } = await getI18N()
 
   let result = await dialog.showOpenDialog({
@@ -26,7 +26,7 @@ export default async (): Promise<boolean | string> => {
   })
 
   if (result.canceled) {
-    return false
+    return null
   }
 
   let paths = result.filePaths
