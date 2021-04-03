@@ -6,10 +6,10 @@
 
 // migrate data from v3 to v4
 
-import { swhdb } from '@main/data'
+import importV3Data from '@main/actions/migrate/importV3Data'
 import getDataFolder from '@main/libs/getDataFolder'
 import { IHostsBasicData, VersionType } from '@root/common/data'
-import { cleanHostsList, flatten } from '@root/common/hostsFn'
+import { cleanHostsList } from '@root/common/hostsFn'
 import version from '@root/version.json'
 import * as fs from 'fs'
 import path from 'path'
@@ -38,22 +38,5 @@ const readOldData = async (): Promise<IHostsBasicData> => {
 
 export default async () => {
   let old_data = await readOldData()
-
-  let { list } = old_data
-  let hosts = flatten(list)
-
-  for (let h of hosts) {
-    if (h.refresh_interval) {
-      h.refresh_interval *= 3600
-    }
-
-    h.type = h.where
-    delete h.where
-
-    await swhdb.collection.hosts.insert(h)
-    h.content = ''
-  }
-
-  await swhdb.list.tree.extend(...list)
-  await swhdb.dict.meta.set('version', version)
+  await importV3Data(old_data)
 }
