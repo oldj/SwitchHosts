@@ -27,6 +27,7 @@ interface Props {
 
 const ConfigMenu = (props: Props) => {
   const { lang } = useModel('useI18n')
+  const { loadHostsData, setCurrentHosts } = useModel('useHostsData')
   const toast = useToast()
 
   return (
@@ -102,7 +103,29 @@ const ConfigMenu = (props: Props) => {
         </MenuItem>
         <MenuItem
           icon={<BiImport/>}
-          onClick={() => agent.broadcast('show_preferences')}
+          onClick={async () => {
+            let r = await actions.importData()
+            if (r === true) {
+              toast({
+                status: 'success',
+                description: lang.import_done,
+                isClosable: true,
+              })
+              await loadHostsData()
+              setCurrentHosts(null)
+            } else {
+              let description = lang.fail
+              if (typeof r === 'string') {
+                description += ` [${r}]`
+              }
+
+              toast({
+                status: 'error',
+                description,
+                isClosable: true,
+              })
+            }
+          }}
         >
           {lang.import}
         </MenuItem>
