@@ -47,6 +47,7 @@ const createWindow = async () => {
   const ses = win.webContents.session
   // console.log(ses.getUserAgent())
   global.ua = ses.getUserAgent()
+  global.main_win = win
 
   if (configs.hide_at_launch) {
     win.hide()
