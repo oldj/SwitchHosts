@@ -6,7 +6,6 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import HostsEditor from '@renderer/components/Editor/HostsEditor'
-import HostsViewer from '@renderer/components/HostsViewer'
 import { actions } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import React, { useEffect, useState } from 'react'
