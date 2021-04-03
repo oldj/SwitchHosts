@@ -1,12 +1,12 @@
-import isDev from '@main/libs/isDev'
-import path from 'path'
-import * as url from 'url'
-
 /**
  * getIndex
  * @author: oldj
  * @homepage: https://oldj.net
  */
+
+import isDev from '@main/libs/isDev'
+import path from 'path'
+import * as url from 'url'
 
 export default (): string => {
   let index: string

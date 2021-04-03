@@ -3,6 +3,7 @@
  * @author: oldj
  * @homepage: https://oldj.net
  */
+
 import { cfgdb } from '@main/data'
 import { ICommandRunResult } from '@root/common/data'
 
