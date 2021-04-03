@@ -70,12 +70,15 @@ const TrashcanItem = (props: Props) => {
   return (
     <div
       className={clsx(styles.root, data.is_root && styles.trashcan_title)}
-      onContextMenu={() => {
+      onContextMenu={(e) => {
         if (data.is_root) {
           menu_for_all.show()
         } else {
           menu_for_item.show()
         }
+
+        e.preventDefault()
+        e.stopPropagation()
       }}
     >
       <div className={styles.title} onClick={onSelect}>

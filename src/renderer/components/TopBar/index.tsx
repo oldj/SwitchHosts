@@ -60,7 +60,7 @@ export default (props: IProps) => {
       </Flex>
 
       <Box className={styles.title_wrapper}>
-        <HStack className={styles.title} k>
+        <HStack className={styles.title}>
           {current_hosts ? (
             <>
                 <span className={styles.hosts_icon}>

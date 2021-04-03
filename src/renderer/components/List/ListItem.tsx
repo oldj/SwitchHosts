@@ -101,7 +101,11 @@ const ListItem = (props: Props) => {
       )}
       // className={clsx(styles.item, is_selected && styles.selected, is_collapsed && styles.is_collapsed)}
       // style={{ paddingLeft: `${1.3 * level}em` }}
-      onContextMenu={() => !data.is_sys && !is_tray && menu.show()}
+      onContextMenu={(e) => {
+        !data.is_sys && !is_tray && menu.show()
+        e.preventDefault()
+        e.stopPropagation()
+      }}
       ref={el}
       onClick={(e: React.MouseEvent) => {
         e.preventDefault()
