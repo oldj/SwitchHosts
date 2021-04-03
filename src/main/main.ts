@@ -34,6 +34,7 @@ const createWindow = async () => {
     minHeight: 200,
     autoHideMenuBar: true,
     titleBarStyle: 'hiddenInset',
+    frame: false,
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
