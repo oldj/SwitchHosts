@@ -43,6 +43,8 @@ export { default as showItemInFolder } from './showItemInFolder'
 export { default as updateTrayTitle } from './updateTrayTitle'
 export { default as checkUpdate } from './checkUpdate'
 export { default as closeMainWindow } from './closeMainWindow'
+export { default as exportData } from './export'
+export { default as importData } from './import'
 export { default as quit } from './quit'
 
 export { default as migrateCheck } from './migrate/checkIfMigration'
