@@ -15,7 +15,7 @@ const makeWindow = () => {
     // titleBarStyle: 'hidden',
     hasShadow: true,
     resizable: false,
-    transparent: true,
+    // transparent: true,
     width: 300,
     height: 600,
     minWidth: 300,
