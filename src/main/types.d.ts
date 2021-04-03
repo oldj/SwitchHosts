@@ -5,6 +5,7 @@
  */
 
 import SwhDb from '@main/utils/db'
+import { BrowserWindow } from 'electron'
 import * as actions from './actions'
 
 export type Actions = typeof actions
@@ -25,6 +26,9 @@ declare global {
       db_dir?: string;
       swhdb: SwhDb;
       cfgdb: SwhDb;
+      ua: string; // user agent
+      session_id: string; // A random value, refreshed every time the app starts, used to identify different startup sessions.
+      main_win: BrowserWindow;
     }
   }
 }

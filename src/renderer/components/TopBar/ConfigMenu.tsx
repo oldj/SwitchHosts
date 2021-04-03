@@ -5,23 +5,10 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
+import { Button, Menu, MenuButton, MenuDivider, MenuItem, MenuList, useToast } from '@chakra-ui/react'
 import { actions, agent } from '@renderer/core/agent'
 import { feedback_url, homepage_url } from '@root/common/constants'
-import { useToast } from '@chakra-ui/react'
 import React from 'react'
-import {
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  MenuItemOption,
-  MenuGroup,
-  MenuOptionGroup,
-  MenuIcon,
-  MenuCommand,
-  MenuDivider,
-  Button, Flex,
-} from '@chakra-ui/react'
 import { BiCog, BiExit, BiHomeCircle, BiInfoCircle, BiMessageDetail, BiRefresh, BiSliderAlt } from 'react-icons/bi'
 
 interface Props {
@@ -37,6 +24,7 @@ const ConfigMenu = (props: Props) => {
       <MenuButton
         as={Button}
         variant="ghost"
+        width="35px"
       >
         <BiCog/>
       </MenuButton>

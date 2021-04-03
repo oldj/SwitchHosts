@@ -1,5 +1,6 @@
 {
-  "name": "SwitchHosts",
+  "name": "switchhosts",
+  "productName": "SwitchHosts",
   "version": "4.0.0",
   "description": "Switch hosts quickly!",
   "main": "./main.js",
