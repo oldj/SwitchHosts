@@ -9,7 +9,17 @@ import { Button, Menu, MenuButton, MenuDivider, MenuItem, MenuList, useToast } f
 import { actions, agent } from '@renderer/core/agent'
 import { feedback_url, homepage_url } from '@root/common/constants'
 import React from 'react'
-import { BiCog, BiExit, BiHomeCircle, BiInfoCircle, BiMessageDetail, BiRefresh, BiSliderAlt } from 'react-icons/bi'
+import {
+  BiCog,
+  BiExit,
+  BiHomeCircle,
+  BiInfoCircle,
+  BiMessageDetail,
+  BiRefresh,
+  BiSliderAlt,
+  BiExport,
+  BiImport,
+} from 'react-icons/bi'
 
 interface Props {
 
@@ -65,6 +75,36 @@ const ConfigMenu = (props: Props) => {
           onClick={() => actions.openUrl(homepage_url)}
         >
           {lang.homepage}
+        </MenuItem>
+
+        <MenuDivider/>
+
+        <MenuItem
+          icon={<BiExport/>}
+          onClick={async () => {
+            let r = await actions.exportData()
+            if (r === false) {
+              toast({
+                status: 'error',
+                description: lang.fail,
+                isClosable: true,
+              })
+            } else {
+              toast({
+                status: 'success',
+                description: lang.export_done,
+                isClosable: true,
+              })
+            }
+          }}
+        >
+          {lang.export}
+        </MenuItem>
+        <MenuItem
+          icon={<BiImport/>}
+          onClick={() => agent.broadcast('show_preferences')}
+        >
+          {lang.import}
         </MenuItem>
 
         <MenuDivider/>
