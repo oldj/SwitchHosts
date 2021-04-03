@@ -5,14 +5,14 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { Box, Center, Flex, HStack, IconButton } from '@chakra-ui/react'
+import { Box, Flex, HStack, IconButton } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import ConfigMenu from '@renderer/components/TopBar/ConfigMenu'
-import { agent } from '@renderer/core/agent'
+import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import React, { useEffect, useState } from 'react'
-import { BiHistory, BiPlus, BiSidebar, BiSliderAlt, BiCog } from 'react-icons/bi'
+import { BiHistory, BiPlus, BiSidebar, BiX } from 'react-icons/bi'
 import styles from './index.less'
 
 interface IProps {
@@ -27,6 +27,7 @@ export default (props: IProps) => {
 
   const show_toggle_switch = !show_left_panel && current_hosts && !isHostsInTrashcan(current_hosts.id)
   const show_history = !current_hosts
+  const show_close_button = agent.platform !== 'darwin'
 
   useEffect(() => {
     setIsOn(!!current_hosts?.on)
@@ -58,8 +59,8 @@ export default (props: IProps) => {
         />
       </Flex>
 
-      <Center className={styles.hosts_title}>
-        <HStack>
+      <Box className={styles.title_wrapper}>
+        <HStack className={styles.title} k>
           {current_hosts ? (
             <>
                 <span className={styles.hosts_icon}>
@@ -84,9 +85,13 @@ export default (props: IProps) => {
             <span className={styles.read_only}>{lang.read_only}</span>
           ) : null}
         </HStack>
-      </Center>
+      </Box>
 
-      <Flex align="center" justifyContent="flex-end">
+      <Flex
+        align="center"
+        justifyContent="flex-end"
+        className={styles.right}
+      >
         {show_toggle_switch ? (
           <Box mr={3}>
             <SwitchButton on={is_on} onChange={on => {
@@ -103,13 +108,17 @@ export default (props: IProps) => {
           />
         ) : null}
 
-        {/*<IconButton*/}
-        {/*  aria-label="Toggle preference panel"*/}
-        {/*  icon={<BiSliderAlt/>}*/}
-        {/*  variant="ghost"*/}
-        {/*  onClick={() => agent.broadcast('show_preferences')}*/}
-        {/*/>*/}
         <ConfigMenu/>
+
+        {show_close_button ? (
+          <IconButton
+            aria-label="Close window"
+            fontSize="20px"
+            icon={<BiX/>}
+            variant="ghost"
+            onClick={() => actions.closeMainWindow()}
+          />
+        ) : null}
       </Flex>
     </div>
   )
