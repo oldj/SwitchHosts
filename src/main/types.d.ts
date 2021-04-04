@@ -29,6 +29,7 @@ declare global {
       ua: string; // user agent
       session_id: string; // A random value, refreshed every time the app starts, used to identify different startup sessions.
       main_win: BrowserWindow;
+      last_path?: string; // the last path opened by SwitchHosts
     }
   }
 }

@@ -112,6 +112,7 @@ const makeDefault = async () => {
   await builder.build({
     //targets: Platform.MAC.createTarget(),
     //...TARGET_PLATFORMS_configs.mac,
+    //...TARGET_PLATFORMS_configs.win,
     ...TARGET_PLATFORMS_configs.all,
     config: {
       ...cfg_common,

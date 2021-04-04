@@ -134,7 +134,7 @@ const show = () => {
   // win.focus()
 }
 
-app.whenReady().then(() => {
+app && app.whenReady().then(() => {
   if (!tray) {
     makeTray()
   }
