@@ -67,6 +67,8 @@ const lang: LanguageDict = {
   hours: '小时',
   import: '导入',
   import_done: '导入已完成。',
+  import_fail: '导入失败！',
+  import_from_url: '从 URL 导入',
   is_latest_version_inform: '太棒了，你正在运行的是最新版本！',
   language: '语言',
   last_refresh: '最后刷新：',

@@ -65,6 +65,8 @@ export default {
   hours: 'hours',
   import: 'Import',
   import_done: 'The import is complete.',
+  import_fail: 'Import failed!',
+  import_from_url: 'Import from URL',
   is_latest_version_inform: 'Great, you are running the latest version!',
   language: 'Language',
   last_refresh: 'Last refresh: ',
