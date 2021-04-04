@@ -6,10 +6,21 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import { Button, Menu, MenuButton, MenuDivider, MenuItem, MenuList, useToast } from '@chakra-ui/react'
+import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
 import { actions, agent } from '@renderer/core/agent'
 import { feedback_url, homepage_url } from '@root/common/constants'
-import React from 'react'
-import { BiCog, BiExit, BiHomeCircle, BiInfoCircle, BiMessageDetail, BiRefresh, BiSliderAlt } from 'react-icons/bi'
+import React, { useState } from 'react'
+import {
+  BiCog,
+  BiExit,
+  BiExport,
+  BiHomeCircle,
+  BiImport,
+  BiInfoCircle,
+  BiMessageDetail,
+  BiRefresh,
+  BiSliderAlt,
+} from 'react-icons/bi'
 
 interface Props {
 
@@ -17,72 +28,141 @@ interface Props {
 
 const ConfigMenu = (props: Props) => {
   const { lang } = useModel('useI18n')
+  const { loadHostsData, setCurrentHosts } = useModel('useHostsData')
+  const [show_import_from_url, setShowImportFromUrl] = useState(false)
   const toast = useToast()
 
   return (
-    <Menu>
-      <MenuButton
-        as={Button}
-        variant="ghost"
-        width="35px"
-      >
-        <BiCog/>
-      </MenuButton>
-      <MenuList borderColor="var(--swh-border-color-0)">
-        <MenuItem
-          icon={<BiInfoCircle/>}
-          onClick={() => agent.broadcast('show_about')}
+    <>
+      <Menu>
+        <MenuButton
+          as={Button}
+          variant="ghost"
+          width="35px"
         >
-          {lang.about}
-        </MenuItem>
+          <BiCog/>
+        </MenuButton>
+        <MenuList borderColor="var(--swh-border-color-0)">
+          <MenuItem
+            icon={<BiInfoCircle/>}
+            onClick={() => agent.broadcast('show_about')}
+          >
+            {lang.about}
+          </MenuItem>
 
-        <MenuDivider/>
+          <MenuDivider/>
 
-        <MenuItem
-          icon={<BiRefresh/>}
-          onClick={async () => {
-            let r = await actions.checkUpdate()
-            if (r === false) {
-              toast({
-                description: lang.is_latest_version_inform,
-                status: 'info',
-                duration: 3000,
-                isClosable: true,
-              })
-            }
-          }}
-        >
-          {lang.check_update}
-        </MenuItem>
-        <MenuItem
-          icon={<BiMessageDetail/>}
-          onClick={() => actions.openUrl(feedback_url)}
-        >
-          {lang.feedback}
-        </MenuItem>
-        <MenuItem
-          icon={<BiHomeCircle/>}
-          onClick={() => actions.openUrl(homepage_url)}
-        >
-          {lang.homepage}
-        </MenuItem>
+          <MenuItem
+            icon={<BiRefresh/>}
+            onClick={async () => {
+              let r = await actions.checkUpdate()
+              if (r === false) {
+                toast({
+                  description: lang.is_latest_version_inform,
+                  status: 'info',
+                  duration: 3000,
+                  isClosable: true,
+                })
+              }
+            }}
+          >
+            {lang.check_update}
+          </MenuItem>
+          <MenuItem
+            icon={<BiMessageDetail/>}
+            onClick={() => actions.openUrl(feedback_url)}
+          >
+            {lang.feedback}
+          </MenuItem>
+          <MenuItem
+            icon={<BiHomeCircle/>}
+            onClick={() => actions.openUrl(homepage_url)}
+          >
+            {lang.homepage}
+          </MenuItem>
 
-        <MenuDivider/>
+          <MenuDivider/>
 
-        <MenuItem
-          icon={<BiSliderAlt/>}
-          onClick={() => agent.broadcast('show_preferences')}
-        >
-          {lang.preferences}
-        </MenuItem>
-        <MenuItem
-          icon={<BiExit/>}
-          onClick={() => actions.quit()}
-        >
-          {lang.quit}
-        </MenuItem>
-      </MenuList>
-    </Menu>
+          <MenuItem
+            icon={<BiExport/>}
+            onClick={async () => {
+              let r = await actions.exportData()
+              if (r === null) {
+                return
+              } else if (r === false) {
+                toast({
+                  status: 'error',
+                  description: lang.import_fail,
+                  isClosable: true,
+                })
+              } else {
+                toast({
+                  status: 'success',
+                  description: lang.export_done,
+                  isClosable: true,
+                })
+              }
+            }}
+          >
+            {lang.export}
+          </MenuItem>
+          <MenuItem
+            icon={<BiImport/>}
+            onClick={async () => {
+              let r = await actions.importData()
+              if (r === null) {
+                return
+              } else if (r === true) {
+                toast({
+                  status: 'success',
+                  description: lang.import_done,
+                  isClosable: true,
+                })
+                await loadHostsData()
+                setCurrentHosts(null)
+              } else {
+                let description = lang.import_fail
+                if (typeof r === 'string') {
+                  description += ` [${r}]`
+                }
+
+                toast({
+                  status: 'error',
+                  description,
+                  isClosable: true,
+                })
+              }
+            }}
+          >
+            {lang.import}
+          </MenuItem>
+          <MenuItem
+            icon={<BiImport/>}
+            onClick={async () => {
+              setShowImportFromUrl(true)
+            }}
+          >
+            {lang.import_from_url}
+          </MenuItem>
+
+          <MenuDivider/>
+
+          <MenuItem
+            icon={<BiSliderAlt/>}
+            onClick={() => agent.broadcast('show_preferences')}
+          >
+            {lang.preferences}
+          </MenuItem>
+          <MenuItem
+            icon={<BiExit/>}
+            onClick={() => actions.quit()}
+          >
+            {lang.quit}
+          </MenuItem>
+        </MenuList>
+      </Menu>
+      <ImportFromUrl is_show={show_import_from_url} setIsShow={setShowImportFromUrl}/>
+    </>
   )
 }
 

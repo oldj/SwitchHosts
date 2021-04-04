@@ -47,3 +47,6 @@ export { default as quit } from './quit'
 
 export { default as migrateCheck } from './migrate/checkIfMigration'
 export { default as migrateData } from './migrate/migrateData'
+export { default as exportData } from './migrate/export'
+export { default as importData } from './migrate/import'
+export { default as importDataFromUrl } from './migrate/importFromUrl'
