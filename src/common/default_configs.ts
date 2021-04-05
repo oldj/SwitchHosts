@@ -24,6 +24,7 @@ const configs = {
   proxy_protocol: 'http' as ProtocolType,
   proxy_host: '',
   proxy_port: 0,
+  http_api_on: false,
 
   // other
   env: 'PROD' as 'PROD' | 'DEV',
