@@ -20,6 +20,7 @@ import {
 import { ConfigsType, ThemeType } from '@root/common/default_configs'
 import { LocaleName } from '@root/common/i18n'
 import React from 'react'
+import { http_api_port } from '@root/common/constants'
 
 interface IProps {
   data: ConfigsType;
@@ -28,7 +29,7 @@ interface IProps {
 
 const General = (props: IProps) => {
   const { data, onChange } = props
-  const { lang } = useModel('useI18n')
+  const { i18n, lang } = useModel('useI18n')
 
   const label_width = 20
 
@@ -115,6 +116,18 @@ const General = (props: IProps) => {
             {lang.remove_duplicate_records}
           </Checkbox>
           <FormHelperText pl="20px">{lang.remove_duplicate_records_desc}</FormHelperText>
+        </VStack>
+      </FormControl>
+
+      <FormControl>
+        <VStack align="left">
+          <Checkbox
+            isChecked={data.http_api_on}
+            onChange={e => onChange({ http_api_on: e.target.checked })}
+          >
+            {lang.http_api_on}
+          </Checkbox>
+          <FormHelperText pl="20px">{i18n.trans('http_api_on_desc', [http_api_port.toString()])}</FormHelperText>
         </VStack>
       </FormControl>
     </VStack>
