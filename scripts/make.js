@@ -208,8 +208,8 @@ const makeDefault = async () => {
         artifactName: '${productName}_${version}(${buildVersion}).${ext}'
       },
       win: {
-        icon: 'assets/app.ico',
-        requestedExecutionLevel: 'requireAdministrator'
+        icon: 'assets/app.ico'
+        //requestedExecutionLevel: 'requireAdministrator'
       },
       nsis: {
         installerIcon: 'assets/installer-icon.ico',

@@ -17,6 +17,7 @@ import {
   Select,
   VStack,
 } from '@chakra-ui/react'
+import { agent } from '@renderer/core/agent'
 import { ConfigsType, ThemeType } from '@root/common/default_configs'
 import { LocaleName } from '@root/common/i18n'
 import React from 'react'
@@ -30,6 +31,7 @@ interface IProps {
 const General = (props: IProps) => {
   const { data, onChange } = props
   const { i18n, lang } = useModel('useI18n')
+  const { platform } = agent
 
   const label_width = 20
 
@@ -63,7 +65,7 @@ const General = (props: IProps) => {
         </HStack>
       </FormControl>
 
-      <FormControl>
+      <FormControl pb={6}>
         <HStack>
           <FormLabel w={label_width}>{lang.choice_mode}</FormLabel>
           <VStack align="left">
@@ -85,16 +87,20 @@ const General = (props: IProps) => {
         </HStack>
       </FormControl>
 
-      <FormControl pt={6}>
-        <HStack>
-          <Checkbox
-            isChecked={data.show_title_on_tray}
-            onChange={e => onChange({ show_title_on_tray: e.target.checked })}
-          >
-            {lang.show_title_on_tray}
-          </Checkbox>
-        </HStack>
-      </FormControl>
+      {
+        platform === 'darwin' ? (
+          <FormControl>
+            <HStack>
+              <Checkbox
+                isChecked={data.show_title_on_tray}
+                onChange={e => onChange({ show_title_on_tray: e.target.checked })}
+              >
+                {lang.show_title_on_tray}
+              </Checkbox>
+            </HStack>
+          </FormControl>
+        ) : null
+      }
 
       <FormControl>
         <HStack>
