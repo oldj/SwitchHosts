@@ -105,6 +105,62 @@ const afterMake = async () => {
   console.log('-> afterMake...')
 }
 
+const makeMacArm = async () => {
+  console.log('-> makeMacArm...')
+
+  await builder.build({
+    config: {
+      ...cfg_common,
+      appId: 'SwitchHosts',
+      productName: APP_NAME,
+      mac: {
+        target: [
+          {
+            target: 'dmg',
+            arch: [
+              //'x64',
+              'arm64'
+            ]
+          }
+        ],
+        category: 'public.app-category.productivity',
+        icon: 'assets/app.icns',
+        gatekeeperAssess: false,
+        electronLanguages,
+        identity: IDENTITY,
+        hardenedRuntime: true,
+        entitlements: 'scripts/entitlements.mac.plist',
+        entitlementsInherit: 'scripts/entitlements.mac.plist',
+        provisioningProfile: 'scripts/app.provisionprofile',
+        artifactName: '${productName}_arm64_${version}(${buildVersion}).${ext}'
+      },
+      dmg: {
+        //backgroundColor: '#f1f1f6',
+        background: 'assets/dmg-bg.png',
+        //icon: 'assets/dmg-icon.icns',
+        iconSize: 160,
+        window: {
+          width: 600,
+          height: 420
+        },
+        contents: [{
+          x: 150,
+          y: 200
+        }, {
+          x: 450,
+          y: 200,
+          type: 'link',
+          path: '/Applications'
+        }],
+        sign: false,
+        artifactName: '${productName}_arm64_${version}(${buildVersion}).${ext}'
+      }
+    }
+  })
+
+  console.log('done!')
+}
+
 const makeDefault = async () => {
   console.log('-> makeDefault...')
   // forFullVersion.task(APP_NAME)
@@ -151,28 +207,18 @@ const makeDefault = async () => {
         sign: false,
         artifactName: '${productName}_${version}(${buildVersion}).${ext}'
       },
-      mas: {
-        category: 'public.app-category.productivity',
-        icon: 'assets/app.icns',
-        //gatekeeperAssess: false,
-        electronLanguages,
-        identity: IDENTITY,
-        entitlements: 'scripts/parent.plist',
-        entitlementsInherit: 'scripts/child.plist',
-        //artifactName: '${productName}_${version}(${buildVersion}).${ext}',
-        binaries: []
-      },
       win: {
-        icon: 'assets/app.ico'
+        icon: 'assets/app.ico',
+        requestedExecutionLevel: 'requireAdministrator'
       },
       nsis: {
         installerIcon: 'assets/installer-icon.ico',
         oneClick: false,
         allowToChangeInstallationDirectory: true,
-        artifactName: '${productName}_Installer_${version}(${buildVersion}).${ext}'
+        artifactName: '${productName}_installer_${version}(${buildVersion}).${ext}'
       },
       portable: {
-        artifactName: '${productName}_Portable_${version}(${buildVersion}).${ext}'
+        artifactName: '${productName}_portable_${version}(${buildVersion}).${ext}'
       },
       linux: {
         icon: 'assets/app.png',
@@ -189,7 +235,7 @@ const makeDefault = async () => {
   try {
     await beforeMake()
 
-    //await makeMASLite()
+    await makeMacArm()
     await makeDefault()
 
     await afterMake()
