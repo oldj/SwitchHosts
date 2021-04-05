@@ -50,7 +50,7 @@ const List = (props: Props) => {
   }, [ hosts_data ])
 
   const onToggleItem = async (id: string, on: boolean) => {
-    // console.log(`toggle hosts #${id} as ${on ? 'on' : 'off'}`)
+    console.log(`toggle hosts #${id} as ${on ? 'on' : 'off'}`)
     const new_list = setOnStateOfItem(hosts_data.list, id, on, configs?.choice_mode ?? 0)
     let success = await writeHostsToSystem(new_list)
     if (success) {

@@ -65,6 +65,8 @@ const lang: LanguageDict = {
   hosts_updated: 'Hosts 文件已更新。',
   hour: '小时',
   hours: '小时',
+  http_api_on: '开启 HTTP API',
+  http_api_on_desc: '运行于 {0} 端口，可用于 Alfred 等第三方软件切换 hosts',
   import: '导入',
   import_done: '导入已完成。',
   import_fail: '导入失败！',
