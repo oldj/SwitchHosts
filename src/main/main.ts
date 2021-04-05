@@ -7,7 +7,7 @@ import * as cron from '@main/libs/cron'
 import getIndex from '@main/libs/getIndex'
 import isDev from '@main/libs/isDev'
 import { makeMainMenu } from '@main/libs/menu'
-import '@main/http'
+import * as http_api from '@main/http'
 import '@main/tray'
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
@@ -118,6 +118,11 @@ app.on('ready', async () => {
   global.session_id = uuid4()
   await createWindow()
   cron.start()
+
+  let http_api_on = await configGet('http_api_on')
+  if (http_api_on) {
+    http_api.start()
+  }
 })
 
 app.on('window-all-closed', () => {
