@@ -1,5 +1,5 @@
 /**
- * useHosts
+ * useConfigs
  * @author: oldj
  * @homepage: https://oldj.net
  */
@@ -12,9 +12,7 @@ export default function useConfigs() {
   const [ configs, setConfigs ] = useState<ConfigsType | null>(null)
 
   const loadConfigs = async () => {
-    let new_configs = await actions.configAll()
     setConfigs(await actions.configAll())
-    return new_configs
   }
 
   const updateConfigs = async (kv: Partial<ConfigsType>) => {

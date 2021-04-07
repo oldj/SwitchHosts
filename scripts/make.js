@@ -1,5 +1,5 @@
 /**
- * build
+ * make
  * @author: oldj
  * @homepage: https://oldj.net
  */

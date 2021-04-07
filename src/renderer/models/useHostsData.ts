@@ -1,5 +1,5 @@
 /**
- * useHosts
+ * useHostsData
  * @author: oldj
  * @homepage: https://oldj.net
  */
