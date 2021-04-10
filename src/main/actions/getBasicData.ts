@@ -44,7 +44,7 @@ export default async (): Promise<IHostsBasicData> => {
 
   let list = normalizeList(await swhdb.list.tree.all())
   let trashcan = normalizeTrashcan(await swhdb.list.trashcan.all())
-  let v = await swhdb.dict.meta.get('version', version)
+  let v = await swhdb.dict.meta.get<VersionType>('version', version)
 
   return {
     ...default_data,

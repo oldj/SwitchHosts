@@ -5,15 +5,15 @@
  */
 
 import getDataFolder from '@main/libs/getDataFolder'
-import SwhDb from '@main/utils/db'
+import PotDb from 'potdb'
 import * as path from 'path'
 
-let swhdb: SwhDb
-let cfgdb: SwhDb
+let swhdb: PotDb
+let cfgdb: PotDb
 
 if (!global.swhdb) {
   let db_dir: string = path.join(getDataFolder(), 'data')
-  swhdb = new SwhDb(db_dir)
+  swhdb = new PotDb(db_dir)
   console.log(`data db: ${swhdb.dir}`)
   global.swhdb = swhdb
 } else {
@@ -22,7 +22,7 @@ if (!global.swhdb) {
 
 if (!global.cfgdb) {
   let db_dir: string = path.join(getDataFolder(), 'config')
-  cfgdb = new SwhDb(db_dir)
+  cfgdb = new PotDb(db_dir)
   console.log(`config db: ${cfgdb.dir}`)
   global.cfgdb = cfgdb
 } else {
