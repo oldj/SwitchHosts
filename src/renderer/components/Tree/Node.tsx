@@ -132,14 +132,16 @@ const Node = (props: INodeProps) => {
     let h = el_target.offsetHeight
     let y = ne.offsetY
     let where: DropWhereType | null = null
+    let h_2 = h >> 1
     let h_4 = h >> 2
-    if (y <= h_4) {
+    let h_threshold = attr.can_drop_in === false ? h_2 : h_4
+    if (y <= h_threshold) {
       if (attr.can_drop_before === false) {
         setDropWhere(null)
         return
       }
       where = 'before'
-    } else if (y >= h - h_4) {
+    } else if (y >= h - h_threshold) {
       if (attr.can_drop_after === false) {
         setDropWhere(null)
         return
