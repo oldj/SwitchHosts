@@ -10,3 +10,7 @@ node_modules
 *.css.map
 npm-debug.log*
 tmp
+
+.env
+.umi
+build
