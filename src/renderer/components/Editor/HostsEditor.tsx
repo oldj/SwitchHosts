@@ -33,10 +33,9 @@ const HostsEditor = (props: Props) => {
   const { hosts_data, isReadOnly } = useModel('useHostsData')
   const [hosts_id, setHostsId] = useState(hosts.id)
   const [content, setContent] = useState(hosts.content || '')
+  const [is_read_only, setIsReadOnly] = useState(true)
   const [cm_editor, setCMEditor] = useState<CodeMirror.EditorFromTextArea | null>(null)
   const el_ref = useRef<HTMLTextAreaElement>(null)
-
-  let is_read_only = isReadOnly(hosts)
 
   const loadContent = async () => {
     if (!cm_editor) return
@@ -57,6 +56,7 @@ const HostsEditor = (props: Props) => {
     }
 
     setHostsId(hosts.id)
+    setIsReadOnly(isReadOnly(hosts))
   }, [hosts])
 
   const toSave = lodash.debounce((id: string, content: string) => {
@@ -124,14 +124,14 @@ const HostsEditor = (props: Props) => {
     onChange(new_content)
   }, [hosts, hosts_id, content])
 
-  useOnBroadcast('editor:gutter_click', onGutterClick, [cm_editor])
+  useOnBroadcast('editor:gutter_click', onGutterClick, [cm_editor, is_read_only])
 
   useOnBroadcast('hosts_refreshed', (h: IHostsListObject) => {
     if (hosts.id !== '0' && h.id !== hosts.id) return
     loadContent()
   }, [hosts, hosts_data, cm_editor])
 
-  useOnBroadcast('toggle_comment', toggleComment, [hosts, cm_editor])
+  useOnBroadcast('toggle_comment', toggleComment, [cm_editor, is_read_only])
 
   useOnBroadcast('set_hosts_on_status', () => {
     if (hosts.id === '0') {
