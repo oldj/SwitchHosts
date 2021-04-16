@@ -2,7 +2,7 @@
 
 - [English](README.md)
 
-项目主页：[https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)
+项目主页：[https://swh.app](https://swh.app)
 
 SwitchHosts 是一个管理 hosts 文件的应用，基于 [Electron](http://electron.atom.io/)
 、[React](https://facebook.github.io/react/)、[UmiJS](https://umijs.org/)

@@ -2,7 +2,7 @@
 
 - [简体中文](README_cn.md)
 
-Homepage: [https://oldj.github.io/SwitchHosts/](https://oldj.github.io/SwitchHosts/)
+Homepage: [https://swh.app](https://swh.app)
 
 SwitchHosts is an App for managing hosts file, it is based on [Electron](http://electron.atom.io/)
 , [React](https://facebook.github.io/react/), [UmiJS](https://umijs.org/)
