@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import SwhDb from '@main/utils/db'
+import SwhDb from 'potdb'
 import { BrowserWindow } from 'electron'
 import * as actions from './actions'
 

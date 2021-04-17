@@ -9,12 +9,27 @@ import { GET } from '@main/libs/request'
 import { server_url } from '@root/common/constants'
 import version from '@root/version.json'
 import compareVersions from 'compare-versions'
+import { cfgdb } from '@main/data'
+import { v4 as uuid4 } from 'uuid'
+
+const getUniqueId = async (): Promise<string> => {
+  let uid: string = await cfgdb.dict.local.get('uid', '')
+  if (!uid) {
+    uid = uuid4()
+    await cfgdb.dict.local.set('uid', uid)
+  }
+  return uid
+}
 
 export default async (): Promise<boolean | null> => {
   // Check the latest version, also used for anonymous statistics of DAU,
   // no personal information will be sent.
 
-  let r = await GET(`${server_url}/api/check/`, { sid: global.session_id })
+  let r = await GET(`${server_url}/api/check/`, {
+    sid: global.session_id,
+    uid: await getUniqueId(),
+  })
+
   if (r.status !== 200 || !r.data?.success) {
     return null
   }
