@@ -62,6 +62,9 @@ const check = async () => {
 
   checkServer()
     .catch(e => console.error(e))
+
+  global.tracer.emit()
+    .catch(e => console.error(e))
 }
 
 export const start = () => {

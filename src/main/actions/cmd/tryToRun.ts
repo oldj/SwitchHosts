@@ -43,4 +43,6 @@ export default async () => {
       await cfgdb.collection.cmd_history.delete(item => item._id === all[i]._id)
     }
   }
+
+  global.tracer.add(`cmd:${result.success ? 1 : 0}`)
 }

@@ -4,6 +4,7 @@
  * @homepage: https://oldj.net
  */
 
+import Tracer from '@main/libs/tracer'
 import SwhDb from 'potdb'
 import { BrowserWindow } from 'electron'
 import * as actions from './actions'
@@ -30,6 +31,7 @@ declare global {
       session_id: string; // A random value, refreshed every time the app starts, used to identify different startup sessions.
       main_win: BrowserWindow;
       last_path?: string; // the last path opened by SwitchHosts
+      tracer: Tracer;
     }
   }
 }

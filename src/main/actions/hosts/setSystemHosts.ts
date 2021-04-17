@@ -43,7 +43,7 @@ const addHistory = async (content: string) => {
   await swhdb.collection.history.insert({
     id: uuid4(),
     content,
-    add_time_ms: (new Date()).getTime()
+    add_time_ms: (new Date()).getTime(),
   })
 
   let history_limit = await configGet('history_limit')
@@ -67,7 +67,7 @@ const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteR
   let cmd = [
     `echo '${sudo_pswd}' | sudo -S chmod 777 ${sys_hosts_path}`
     , `cat "${tmp_fn}" > ${sys_hosts_path}`
-    , `echo '${sudo_pswd}' | sudo -S chmod 644 ${sys_hosts_path}`
+    , `echo '${sudo_pswd}' | sudo -S chmod 644 ${sys_hosts_path}`,
     // , 'rm -rf ' + tmp_fn
   ].join(' && ')
 
@@ -86,7 +86,7 @@ const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteR
       console.log('success.')
 
       result = {
-        success: true
+        success: true,
       }
     } else {
       console.log('fail!')
@@ -94,7 +94,7 @@ const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteR
 
       result = {
         success: false,
-        message: stderr
+        message: stderr,
       }
     }
 
@@ -138,7 +138,7 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
 
     return {
       success: false,
-      code: 'no_access'
+      code: 'no_access',
     }
   }
 
@@ -154,7 +154,7 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
     return {
       success: false,
       code,
-      message: e.message
+      message: e.message,
     }
   }
 
@@ -179,6 +179,8 @@ const setSystemHosts = async (content: string, options?: IHostsWriteOptions): Pr
 
     await tryToRun()
   }
+
+  global.tracer.add(`w:${success ? 1 : 0}`)
 
   return result
 }

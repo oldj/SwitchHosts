@@ -3,11 +3,12 @@ import '@main/core/agent'
 import * as message from '@main/core/message'
 import '@main/core/popupMenu'
 import '@main/data'
+import * as http_api from '@main/http'
 import * as cron from '@main/libs/cron'
 import getIndex from '@main/libs/getIndex'
 import isDev from '@main/libs/isDev'
 import { makeMainMenu } from '@main/libs/menu'
-import * as http_api from '@main/http'
+import Tracer from '@main/libs/tracer'
 import '@main/tray'
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
@@ -112,6 +113,8 @@ const onActive = async () => {
   }
   win?.show()
 }
+
+global.tracer = new Tracer()
 
 app.on('ready', async () => {
   console.log(`VERSION: ${version.join('.')}`)
