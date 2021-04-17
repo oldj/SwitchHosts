@@ -21,6 +21,7 @@ import {
   BiRefresh,
   BiSliderAlt,
 } from 'react-icons/bi'
+import styles from './ConfigMenu.less'
 
 interface Props {
 
@@ -42,7 +43,7 @@ const ConfigMenu = (props: Props) => {
         >
           <BiCog/>
         </MenuButton>
-        <MenuList borderColor="var(--swh-border-color-0)">
+        <MenuList borderColor="var(--swh-border-color-0)" className={styles.menu_list}>
           <MenuItem
             icon={<BiInfoCircle/>}
             onClick={() => agent.broadcast('show_about')}
