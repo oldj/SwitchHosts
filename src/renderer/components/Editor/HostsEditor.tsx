@@ -154,6 +154,7 @@ const HostsEditor = (props: Props) => {
 
       <StatusBar
         line_count={content.split('\n').length}
+        bytes={content.length}
         read_only={is_read_only}
       />
     </div>
