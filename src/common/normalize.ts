@@ -23,10 +23,10 @@ interface IDomainsIPMap {
 }
 
 export const parseLine = (line: string): IHostsLineObj => {
-  let [ cnt, ...cmt ] = line.split('#')
+  let [cnt, ...cmt] = line.split('#')
   let comment = cmt.join('#').trim()
 
-  let [ ip, ...domains ] = cnt.trim().replace(/\s+/g, ' ').split(' ')
+  let [ip, ...domains] = cnt.trim().replace(/\s+/g, ' ').split(' ')
 
   return { ip, domains, comment }
 }
@@ -36,7 +36,7 @@ export const formatLine = (o: Partial<IHostsLineObj>): string => {
   if (comment) {
     comment = '# ' + comment
   }
-  return [ o.ip || '', (o.domains || []).join(' '), comment ].join(' ').trim()
+  return [o.ip || '', (o.domains || []).join(' '), comment].join(' ').trim()
 }
 
 const removeDuplicateRecords = (content: string): string => {
@@ -52,14 +52,17 @@ const removeDuplicateRecords = (content: string): string => {
       return
     }
 
+    const ipv = /:/.test(ip) ? 6 : 4
+
     let new_domains: string[] = []
     let duplicate_domains: string[] = []
     domains.map(domain => {
-      if (domain in domain_ip_map) {
+      const domain_v = `${domain}_${ipv}`
+      if (domain_v in domain_ip_map) {
         duplicate_domains.push(domain)
       } else {
         new_domains.push(domain)
-        domain_ip_map[domain] = ip
+        domain_ip_map[domain_v] = ip
       }
     })
 

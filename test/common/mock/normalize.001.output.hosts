@@ -14,3 +14,5 @@
 
 127.0.0.2 e.com # comment for e.com
 # invalid hosts (repeated): 127.0.0.2 b.com c.com d.com
+
+::1 localhost

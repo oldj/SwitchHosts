@@ -13,3 +13,5 @@
 127.0.0.1 d.com # some e.com note
 
 127.0.0.2 b.com     c.com   e.com  d.com   # comment for e.com
+
+::1		    localhost

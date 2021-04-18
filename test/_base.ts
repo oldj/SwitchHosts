@@ -10,7 +10,7 @@ import * as path from 'path'
 global.db_dir = path.join(__dirname, 'tmp', 'db')
 
 import { swhdb } from '@root/main/data'
-import Db from '@root/main/utils/db'
+import Db from 'potdb'
 
 declare global {
   namespace NodeJS {
