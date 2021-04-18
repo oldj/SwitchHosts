@@ -10,7 +10,8 @@ import { BrowserWindow } from 'electron'
 import path from 'path'
 
 const makeWindow = () => {
-  let win = new BrowserWindow({
+  let win: BrowserWindow | null
+  win = new BrowserWindow({
     frame: false,
     // titleBarStyle: 'hidden',
     hasShadow: true,
@@ -34,7 +35,16 @@ const makeWindow = () => {
     .catch(e => console.error(e))
 
   win.hide()
-  win.on('blur', () => win.hide())
+  win.on('blur', () => win?.hide())
+
+  win.on('close', (e: Electron.Event) => {
+    if (global.is_will_quit) {
+      win = null
+    } else {
+      e.preventDefault()
+      win?.hide()
+    }
+  })
 
   if (isDev()) {
     // Open DevTools, see https://github.com/electron/electron/issues/12438 for why we wait for dom-ready

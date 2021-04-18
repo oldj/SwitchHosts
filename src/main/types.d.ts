@@ -32,6 +32,7 @@ declare global {
       main_win: BrowserWindow;
       last_path?: string; // the last path opened by SwitchHosts
       tracer: Tracer;
+      is_will_quit?: boolean;
     }
   }
 }

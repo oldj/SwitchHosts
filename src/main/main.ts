@@ -17,7 +17,6 @@ import * as path from 'path'
 import { v4 as uuid4 } from 'uuid'
 
 let win: BrowserWindow | null
-let is_will_quit: boolean = false
 
 const createWindow = async () => {
   const configs = await configAll()
@@ -78,7 +77,7 @@ const createWindow = async () => {
   }
 
   win.on('close', (e: Electron.Event) => {
-    if (is_will_quit) {
+    if (global.is_will_quit) {
       win = null
     } else {
       e.preventDefault()
@@ -134,6 +133,6 @@ app.on('window-all-closed', () => {
   }
 })
 
-app.on('before-quit', () => is_will_quit = true)
+app.on('before-quit', () => global.is_will_quit = true)
 app.on('activate', onActive)
 message.on('active_main_window', onActive)
