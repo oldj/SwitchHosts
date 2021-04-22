@@ -13,7 +13,7 @@ const configs = {
   history_limit: 50,
   locale: 'zh' as LocaleName,
   theme: 'light' as ThemeType,
-  choice_mode: 1 as FolderModeType,
+  choice_mode: 2 as FolderModeType,
   show_title_on_tray: false,
   hide_at_launch: false,
   send_usage_data: false,
