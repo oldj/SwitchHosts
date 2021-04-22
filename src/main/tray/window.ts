@@ -24,6 +24,7 @@ const makeWindow = () => {
     maximizable: false,
     minimizable: false,
     skipTaskbar: true,
+    show: false,
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
@@ -31,10 +32,13 @@ const makeWindow = () => {
     },
   })
 
+  win.setVisibleOnAllWorkspaces(true, {
+    visibleOnFullScreen: true,
+  })
+
   win.loadURL(`${getIndex()}#/tray`)
     .catch(e => console.error(e))
 
-  win.hide()
   win.on('blur', () => win?.hide())
 
   win.on('close', (e: Electron.Event) => {
