@@ -3,6 +3,7 @@
  * @blog https://oldj.net
  */
 
+import { findShow } from '@main/actions'
 import isDev from '@main/libs/isDev'
 import { BrowserWindow, Menu, MenuItem, MenuItemConstructorOptions, shell } from 'electron'
 import { I18N, LocaleName } from '@root/common/i18n'
@@ -100,6 +101,13 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
           accelerator: 'CommandOrControl+/',
           click () {
             broadcast('toggle_comment')
+          },
+        },
+        {
+          label: lang.find_and_replace,
+          accelerator: 'CommandOrControl+F',
+          click () {
+            findShow()
           },
         },
       ],

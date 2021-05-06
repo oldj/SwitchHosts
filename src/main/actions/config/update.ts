@@ -5,7 +5,7 @@
 
 import { updateTrayTitle } from '@main/actions'
 import { cfgdb } from '@main/data'
-import { makeMainMenu } from '@main/libs/menu'
+import { makeMainMenu } from '@main/ui/menu'
 import { ConfigsType } from '@root/common/default_configs'
 import * as http_api from '@main/http'
 

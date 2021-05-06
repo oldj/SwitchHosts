@@ -1,7 +1,6 @@
 /**
  * @author: oldj
  * @homepage: https://oldj.net
- * zh
  */
 
 import { LanguageDict } from '@root/common/types'
@@ -45,6 +44,10 @@ const lang: LanguageDict = {
   fail: '操作失败！',
   feedback: '意见反馈',
   file: '文件',
+  find: '查找',
+  find_all: '查找所有',
+  find_and_replace: '查找并替换',
+  find_history: '查找历史',
   folder: '文件夹',
   front: '前置',
   general: '通用',
@@ -67,6 +70,7 @@ const lang: LanguageDict = {
   hours: '小时',
   http_api_on: '开启 HTTP API',
   http_api_on_desc: '运行于 {0} 端口，可用于 Alfred 等第三方软件切换 hosts',
+  ignore_case: '忽略大小写',
   import: '导入',
   import_done: '导入已完成。',
   import_fail: '导入失败！',
@@ -101,10 +105,14 @@ const lang: LanguageDict = {
   read_only: '只读',
   redo: '重做',
   refresh: '刷新',
+  regexp: '正则表达式',
   reload: '重载',
   remote: '远程',
   remove_duplicate_records: '移除重复的记录',
   remove_duplicate_records_desc: '如果一个域名指向多个 IP，只有第一条会生效，后面的将被转为注释。',
+  replace: '替换',
+  replace_all: '替换所有',
+  replace_history: '替换历史',
   reset_zoom: '重置缩放',
   search: '搜索',
   select_all: '全选',

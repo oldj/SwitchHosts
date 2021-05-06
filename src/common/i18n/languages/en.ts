@@ -1,7 +1,6 @@
 /**
  * @author: oldj
  * @homepage: https://oldj.net
- * en
  */
 
 export default {
@@ -43,6 +42,10 @@ export default {
   fail: 'Fail!',
   feedback: 'Feedback',
   file: 'File',
+  find: 'Find',
+  find_all: 'Find all',
+  find_and_replace: 'Find and replace',
+  find_history: 'Find history',
   folder: 'Folder',
   front: 'Front',
   general: 'General',
@@ -65,6 +68,7 @@ export default {
   hours: 'hours',
   http_api_on: 'HTTP API on',
   http_api_on_desc: 'Runs on port {0}, can be used by third-party software such as Alfred to switch hosts',
+  ignore_case: 'Ignore case',
   import: 'Import',
   import_done: 'The import is complete.',
   import_fail: 'Import failed!',
@@ -99,10 +103,14 @@ export default {
   read_only: 'Read only',
   redo: 'Redo',
   refresh: 'Refresh',
+  regexp: 'Regular expression',
   reload: 'Reload',
   remote: 'Remote',
   remove_duplicate_records: 'Remove duplicate records',
   remove_duplicate_records_desc: 'If a domain points to multiple IPs, only the first one will take effect, and the following ones will be converted into comments.',
+  replace: 'Replace',
+  replace_all: 'Replace all',
+  replace_history: 'Replace history',
   reset_zoom: 'Reset zoom',
   search: 'Search',
   select_all: 'Select all',

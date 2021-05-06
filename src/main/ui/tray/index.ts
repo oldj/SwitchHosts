@@ -6,7 +6,7 @@
 
 import { configGet, configSet, updateTrayTitle } from '@main/actions'
 import { broadcast } from '@main/core/agent'
-import { makeWindow } from '@main/tray/window'
+import { makeWindow } from '@main/ui/tray/window'
 import { I18N } from '@root/common/i18n'
 import version from '@root/version.json'
 import { app, BrowserWindow, Menu, screen, Tray } from 'electron'

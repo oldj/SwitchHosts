@@ -6,7 +6,7 @@
 
 import { getList } from '@main/actions/index'
 import { cfgdb } from '@main/data'
-import { tray } from '@main/tray'
+import { tray } from '@main/ui/tray'
 import { flatten } from '@root/common/hostsFn'
 
 export default async (show?: boolean, title?: string) => {
