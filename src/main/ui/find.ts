@@ -23,7 +23,8 @@ const makeWindow = () => {
     maximizable: false,
     minimizable: false,
     skipTaskbar: true,
-    // show: false,
+    show: false,
+    autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
@@ -31,9 +32,9 @@ const makeWindow = () => {
     },
   })
 
-  win.setVisibleOnAllWorkspaces(true, {
-    visibleOnFullScreen: true,
-  })
+  // win.setVisibleOnAllWorkspaces(true, {
+  //   visibleOnFullScreen: true,
+  // })
 
   win.loadURL(`${getIndex()}#/find`)
     .catch(e => console.error(e))
