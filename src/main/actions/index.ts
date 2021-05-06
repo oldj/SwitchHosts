@@ -46,6 +46,7 @@ export { default as closeMainWindow } from './closeMainWindow'
 export { default as quit } from './quit'
 
 export { default as findShow } from './find/show'
+export { default as findBy } from './find/findBy'
 
 export { default as migrateCheck } from './migrate/checkIfMigration'
 export { default as migrateData } from './migrate/migrateData'

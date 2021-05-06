@@ -4,6 +4,7 @@
  * @homepage: https://oldj.net
  */
 
+import { HostsType } from '@root/common/data'
 import { MenuItemConstructorOptions } from 'electron'
 import { default as lang } from './i18n/languages/en'
 
@@ -19,4 +20,12 @@ export interface IMenuItemOption extends MenuItemConstructorOptions {
 export interface IPopupMenuOption {
   menu_id: string;
   items: IMenuItemOption[];
+}
+
+export interface IFindResultItem {
+  item_id: string;
+  item_type: HostsType;
+  line: number;
+  start: number;
+  end: number;
 }
