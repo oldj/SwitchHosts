@@ -13,6 +13,7 @@ import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
 import { findItemById, getNextSelectedItem, setOnStateOfItem } from '@root/common/hostsFn'
+import { IFindShowSourceParam } from '@root/common/types'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
@@ -34,20 +35,20 @@ const List = (props: Props) => {
   } = useModel('useHostsData')
   const { configs } = useModel('useConfigs')
   const { lang } = useModel('useI18n')
-  const [ show_list, setShowList ] = useState<IHostsListObject[]>([])
+  const [show_list, setShowList] = useState<IHostsListObject[]>([])
   const toast = useToast()
 
   useEffect(() => {
     if (!is_tray) {
-      setShowList([ {
+      setShowList([{
         id: '0',
         title: lang.system_hosts,
         is_sys: true,
-      }, ...hosts_data.list ])
+      }, ...hosts_data.list])
     } else {
-      setShowList([ ...hosts_data.list ])
+      setShowList([...hosts_data.list])
     }
-  }, [ hosts_data ])
+  }, [hosts_data])
 
   const onToggleItem = async (id: string, on: boolean) => {
     console.log(`toggle hosts #${id} as ${on ? 'on' : 'off'}`)
@@ -116,8 +117,8 @@ const List = (props: Props) => {
   }
 
   if (!is_tray) {
-    useOnBroadcast('toggle_item', onToggleItem, [ hosts_data ])
-    useOnBroadcast('write_hosts_to_system', writeHostsToSystem, [ hosts_data ])
+    useOnBroadcast('toggle_item', onToggleItem, [hosts_data])
+    useOnBroadcast('write_hosts_to_system', writeHostsToSystem, [hosts_data])
   } else {
     useOnBroadcast('tray:list_updated', loadHostsData)
   }
@@ -138,7 +139,7 @@ const List = (props: Props) => {
     if (next_hosts) {
       await setCurrentHosts(next_hosts)
     }
-  }, [ current_hosts, hosts_data ])
+  }, [current_hosts, hosts_data])
 
   useOnBroadcast('select_hosts', async (id: string, wait_ms: number = 0) => {
     let hosts = findItemById(hosts_data.list, id)
@@ -152,7 +153,7 @@ const List = (props: Props) => {
     }
 
     setCurrentHosts(hosts)
-  }, [ hosts_data ])
+  }, [hosts_data])
 
   useOnBroadcast('reload_list', loadHostsData)
 
@@ -163,6 +164,10 @@ const List = (props: Props) => {
 
     // 当前 hosts 是开启状态，且内容发生了变化
     await writeHostsToSystem(list)
+  })
+
+  useOnBroadcast('show_source', async (params: IFindShowSourceParam) => {
+    agent.broadcast('select_hosts', params.item_id)
   })
 
   return (

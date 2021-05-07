@@ -13,13 +13,14 @@ import {
   InputGroup,
   InputLeftElement,
   Spacer,
+  Tooltip,
   useColorMode,
   VStack,
 } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IFindResultItem } from '@root/common/types'
+import { IFindResultItem, IFindShowSourceParam } from '@root/common/types'
 import { useDebounce } from 'ahooks'
 import lodash from 'lodash'
 import React, { useEffect, useRef, useState } from 'react'
@@ -36,7 +37,7 @@ const find = (props: Props) => {
   const { lang, i18n, setLocale } = useModel('useI18n')
   const { configs, loadConfigs } = useModel('useConfigs')
   const { colorMode, setColorMode } = useColorMode()
-  const [keyword, setKeyword] = useState('ato')
+  const [keyword, setKeyword] = useState('')
   const [replact_to, setReplaceTo] = useState('')
   const [is_regexp, setIsRegExp] = useState(false)
   const [is_ignore_case, setIsIgnoreCase] = useState(false)
@@ -100,26 +101,38 @@ const find = (props: Props) => {
     setFindResult(result)
   }, 500)
 
+  const toShowSource = async (result_item: IFindResultItem) => {
+    console.log(result_item)
+    await actions.cmdFocusMainWindow()
+    agent.broadcast('show_source', lodash.pick<IFindShowSourceParam>(result_item, [
+      'item_id', 'start', 'end', 'match',
+      'line', 'line_pos', 'end_line', 'end_line_pos',
+    ]))
+  }
+
   const ResultRow = (row_data: ListChildComponentProps) => {
     let data = find_result[row_data.index]
     return (
-      <Box
-        style={row_data.style}
-        className={styles.result_row}
-        borderBottomWidth={1}
-        borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
-      >
-        <div className={styles.result_content}>
-          <span>{data.before}</span>
-          <span className={styles.highlight}>{data.match}</span>
-          <span>{data.after}</span>
-        </div>
-        <div className={styles.result_title}>
-          <ItemIcon type={data.item_type}/>
-          <span>{data.item_title}</span>
-        </div>
-        <div className={styles.result_line}>{data.line}</div>
-      </Box>
+      <Tooltip label={lang.to_show_source} placement="top" hasArrow>
+        <Box
+          style={row_data.style}
+          className={styles.result_row}
+          borderBottomWidth={1}
+          borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
+          onDoubleClick={e => toShowSource(data)}
+        >
+          <div className={styles.result_content}>
+            <span>{data.before}</span>
+            <span className={styles.highlight}>{data.match}</span>
+            <span>{data.after}</span>
+          </div>
+          <div className={styles.result_title}>
+            <ItemIcon type={data.item_type}/>
+            <span>{data.item_title}</span>
+          </div>
+          <div className={styles.result_line}>{data.line}</div>
+        </Box>
+      </Tooltip>
     )
   }
 

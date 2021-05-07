@@ -5,7 +5,7 @@
 
 import { IFindResultItem } from '@root/common/types'
 
-type MatchResult = Pick<IFindResultItem, 'line' | 'start' | 'end' | 'before' | 'match' | 'after'>
+type MatchResult = Pick<IFindResultItem, 'start' | 'end' | 'before' | 'match' | 'after' | 'line' | 'line_pos' | 'end_line' | 'end_line_pos'>
 
 export default (content: string, exp: RegExp): MatchResult[] => {
   let result_items: MatchResult[] = []
@@ -33,13 +33,23 @@ export default (content: string, exp: RegExp): MatchResult[] => {
     let before = before_lines[before_lines.length - 1]
     let after = cnt.split('\n')[0]
 
+    let i_ln = i.split('\n')
+    let end_line = line + i_ln.length - 1
+    let end_line_pos = before.length + i.length
+    if (i_ln.length > 1) {
+      end_line_pos = i_ln[i_ln.length - 1].length
+    }
+
     result_items.push({
-      line,
       start,
       end: start + i.length,
       before,
       match: i,
       after,
+      line,
+      line_pos: before.length,
+      end_line,
+      end_line_pos,
     })
 
     start += i.length

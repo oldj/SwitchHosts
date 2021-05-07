@@ -134,6 +134,7 @@ export default {
   theme_dark: 'Dark',
   theme_light: 'Light',
   title: 'Title',
+  to_show_source: 'Double-click to show the source code.',
   toggle_developer_tools: 'Toggle Developer Tools',
   toggle_dock_icon: 'Toggle the dock icon',
   toggle_full_screen: 'Toggle full screen',

@@ -136,6 +136,7 @@ const lang: LanguageDict = {
   theme_dark: '夜间',
   theme_light: '明亮',
   title: '标题',
+  to_show_source: '双击显示源代码。',
   toggle_developer_tools: '切换开发者工具',
   toggle_dock_icon: '显示/隐藏任务栏图标',
   toggle_full_screen: '切换全屏',

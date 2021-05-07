@@ -26,10 +26,19 @@ export interface IFindResultItem {
   item_title: string;
   item_id: string;
   item_type: HostsType;
-  line: number;
   start: number;
   end: number;
+  line: number;
+  line_pos: number;
+  end_line: number;
+  end_line_pos: number;
   before: string;
   match: string;
   after: string;
+}
+
+export type IFindShowSourceParam = Pick<IFindResultItem,
+  'item_id' | 'start' | 'end' | 'line' | 'line_pos'
+  | 'end_line' | 'end_line_pos'> & {
+  [key: string]: any;
 }

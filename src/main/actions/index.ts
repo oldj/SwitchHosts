@@ -37,6 +37,7 @@ export { default as restoreItemFromTrashcan } from './trashcan/restoreItem'
 export { default as cmdGetHistoryList } from './cmd/getHistoryList'
 export { default as cmdDeleteHistory } from './cmd/deleteHistory'
 export { default as cmdClearHistory } from './cmd/clearHistory'
+export { default as cmdFocusMainWindow } from './cmd/focusMainWindow'
 
 export { default as openUrl } from './openUrl'
 export { default as showItemInFolder } from './showItemInFolder'
