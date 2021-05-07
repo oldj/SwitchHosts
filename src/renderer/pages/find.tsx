@@ -20,7 +20,7 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IFindResultItem } from '@root/common/types'
 import { useDebounce } from 'ahooks'
 import lodash from 'lodash'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { IoSearch } from 'react-icons/io5'
 import styles from './find.less'
 
@@ -38,6 +38,7 @@ const find = (props: Props) => {
   const [is_ignore_case, setIsIgnoreCase] = useState(false)
   const [find_result, setFindResult] = useState<IFindResultItem[]>([])
   const debounced_keyword = useDebounce(keyword, { wait: 500 })
+  const ipt_kw = useRef<HTMLInputElement>(null)
 
   const init = async () => {
     if (!configs) return
@@ -67,6 +68,17 @@ const find = (props: Props) => {
   useEffect(() => {
     doFind(debounced_keyword)
   }, [debounced_keyword, is_regexp, is_ignore_case])
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (ipt_kw.current) {
+        ipt_kw.current.focus()
+      }
+    }
+
+    window.addEventListener('focus', onFocus, false)
+    return () => window.removeEventListener('focus', onFocus, false)
+  }, [ipt_kw])
 
   useOnBroadcast('config_updated', loadConfigs)
 
@@ -104,6 +116,7 @@ const find = (props: Props) => {
             onChange={(e) => {
               setKeyword(e.target.value)
             }}
+            ref={ipt_kw}
           />
         </InputGroup>
 

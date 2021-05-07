@@ -23,9 +23,13 @@ export interface IPopupMenuOption {
 }
 
 export interface IFindResultItem {
+  item_title: string;
   item_id: string;
   item_type: HostsType;
   line: number;
   start: number;
   end: number;
+  before: string;
+  match: string;
+  after: string;
 }

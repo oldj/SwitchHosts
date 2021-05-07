@@ -7,24 +7,11 @@ import getContentOfHosts from '@main/actions/hosts/getContent'
 import { flatten } from '@root/common/hostsFn'
 import { IFindResultItem } from '@root/common/types'
 import { getList } from '../index'
+import findInContent from './findInContent'
 
-interface IFindOptions {
+export interface IFindOptions {
   is_regexp: boolean;
   is_ignore_case: boolean;
-}
-
-const findInContent = (content: string, exp: string | RegExp, options: IFindOptions): Omit<IFindResultItem, 'item_id' | 'item_type'>[] => {
-  let result_items: IFindResultItem[] = []
-
-  let result = {
-    line: -1,
-    start: -1,
-    end: -1,
-  }
-
-  // todo ...
-
-  return result_items
 }
 
 export default async (keyword: string, options: IFindOptions): Promise<IFindResultItem[]> => {
@@ -34,9 +21,12 @@ export default async (keyword: string, options: IFindOptions): Promise<IFindResu
   let tree = await getList()
   let items = flatten(tree)
 
-  let exp: string | RegExp = keyword
+  let exp: RegExp
   if (options.is_regexp) {
-    exp = new RegExp(exp, options.is_ignore_case ? 'ig' : 'g')
+    exp = new RegExp(keyword, options.is_ignore_case ? 'ig' : 'g')
+  } else {
+    let kw = keyword.replace(/([.^$([?*+])/ig, '\\$1')
+    exp = new RegExp(kw, options.is_ignore_case ? 'ig' : 'g')
   }
 
   for (let item of items) {
@@ -45,9 +35,10 @@ export default async (keyword: string, options: IFindOptions): Promise<IFindResu
       continue
     }
     let content = await getContentOfHosts(item.id)
-    let found = findInContent(content, exp, options)
+    let found = findInContent(content, exp)
     result_items = [...result_items, ...found.map(i => ({
       ...i,
+      item_title: item.title || '',
       item_id: item.id,
       item_type,
     }))]
