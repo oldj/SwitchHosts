@@ -23,7 +23,7 @@ import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsType } from '@root/common/data'
-import { IFindItem, IFindPosition, IFindShowSourceParam } from '@root/common/types'
+import { IFindItem, IFindPosition, IFindShowSourceParam, IFindSpliter } from '@root/common/types'
 import { useDebounce } from 'ahooks'
 import clsx from 'clsx'
 import lodash from 'lodash'
@@ -42,6 +42,7 @@ interface IFindPositionShow extends IFindPosition {
   item_id: string;
   item_title: string;
   item_type: HostsType;
+  index: number;
   is_disabled?: boolean;
   is_readonly?: boolean;
 }
@@ -50,8 +51,8 @@ const find = (props: Props) => {
   const { lang, i18n, setLocale } = useModel('useI18n')
   const { configs, loadConfigs } = useModel('useConfigs')
   const { colorMode, setColorMode } = useColorMode()
-  const [keyword, setKeyword] = useState('test')
-  const [replact_to, setReplaceTo] = useState('abccc')
+  const [keyword, setKeyword] = useState('')
+  const [replact_to, setReplaceTo] = useState('')
   const [is_regexp, setIsRegExp] = useState(false)
   const [is_ignore_case, setIsIgnoreCase] = useState(false)
   const [find_result, setFindResult] = useState<IFindItem[]>([])
@@ -104,21 +105,33 @@ const find = (props: Props) => {
 
   useOnBroadcast('config_updated', loadConfigs)
 
+  useOnBroadcast('close_find', () => {
+    console.log('on close find...')
+    setFindResult([])
+    setFindPositions([])
+    setKeyword('')
+    setReplaceTo('')
+    setIsRegExp(false)
+    setIsIgnoreCase(false)
+    setCurrentResultIdx(-1)
+    setlastScrollResultIdx(-1)
+  })
+
   const parsePositionShow = (find_items: IFindItem[]) => {
     let positions_show: IFindPositionShow[] = []
 
     find_items.map((item) => {
       let { item_id, item_title, item_type, positions } = item
-      positions.map((p) => {
+      positions.map((p, index) => {
         positions_show.push({
           item_id, item_title, item_type,
           ...p,
+          index,
           is_readonly: item_type !== 'local',
         })
       })
     })
 
-    console.log(positions_show)
     setFindPositions(positions_show)
   }
 
@@ -150,12 +163,41 @@ const find = (props: Props) => {
     ]))
   }
 
-  const replaceOne = async (result_item: IFindPositionShow) => {
-    await actions.cmdFocusMainWindow()
-    agent.broadcast('replace_one', lodash.pick<IFindShowSourceParam>(result_item, [
-      'item_id', 'start', 'end', 'match',
-      'line', 'line_pos', 'end_line', 'end_line_pos',
-    ]))
+  const replaceOne = async () => {
+    let pos: IFindPositionShow = find_positions[current_result_idx]
+    if (!pos) return
+
+    setFindPositions([
+      ...find_positions.slice(0, current_result_idx),
+      {
+        ...pos,
+        is_disabled: true,
+      },
+      ...find_positions.slice(current_result_idx + 1),
+    ])
+
+    let r = find_result.find(i => i.item_id === pos.item_id)
+    if (!r) return
+    let spliters = r.spliters
+    let sp = spliters[pos.index]
+    if (!sp) return
+    sp.replace = replact_to
+
+    const content = spliters.map(sp => `${sp.before}${sp.replace ?? sp.match}${sp.after}`).join('')
+    console.log(content)
+
+    await actions.setHostsContent(pos.item_id, content)
+    agent.broadcast('hosts_refreshed_by_id', pos.item_id)
+
+    // agent.broadcast('replace_one', {
+    //   item_id: pos.item_id,
+    //   index: pos.index,
+    //   replace_to:  replact_to,
+    // })
+
+    if (current_result_idx < find_positions.length - 1) {
+      setCurrentResultIdx(current_result_idx + 1)
+    }
   }
 
   const ResultRow = (row_data: ListChildComponentProps) => {
@@ -176,7 +218,11 @@ const find = (props: Props) => {
     return (
       <Box
         style={row_data.style}
-        className={clsx(styles.result_row, is_selected && styles.selected)}
+        className={clsx(
+          styles.result_row,
+          is_selected && styles.selected,
+          data.is_disabled && styles.disabled,
+        )}
         borderBottomWidth={1}
         borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
         onClick={() => {
@@ -204,7 +250,7 @@ const find = (props: Props) => {
   }
 
   let can_replace = true
-  if (current_result_idx) {
+  if (current_result_idx > -1) {
     let pos = find_positions[current_result_idx]
     if (pos?.is_disabled || pos?.is_readonly) {
       can_replace = false
@@ -322,6 +368,7 @@ const find = (props: Props) => {
             variant="solid"
             colorScheme="blue"
             isDisabled={is_searching || find_positions.length === 0 || !can_replace}
+            onClick={replaceOne}
           >{lang.replace}</Button>
 
           <ButtonGroup

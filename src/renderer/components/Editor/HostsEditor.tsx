@@ -141,6 +141,11 @@ const HostsEditor = (props: Props) => {
     loadContent()
   }, [hosts, hosts_data, cm_editor])
 
+  useOnBroadcast('hosts_refreshed_by_id', (id: string) => {
+    if (hosts.id !== '0' && id !== hosts.id) return
+    loadContent()
+  }, [hosts, hosts_data, cm_editor])
+
   useOnBroadcast('toggle_comment', toggleComment, [cm_editor, is_read_only])
 
   useOnBroadcast('set_hosts_on_status', () => {
@@ -169,11 +174,6 @@ const HostsEditor = (props: Props) => {
     cm_editor.focus()
   }
 
-  const replaceOne = async (params: IFindShowSourceParam) => {
-    if (!cm_editor) return
-    let doc = cm_editor.getDoc()
-  }
-
   useOnBroadcast('show_source', async (params: IFindShowSourceParam) => {
     if (!cm_editor) return
 
@@ -186,10 +186,6 @@ const HostsEditor = (props: Props) => {
     }
 
     setSelection(params)
-  }, [hosts, cm_editor])
-
-  useOnBroadcast('replace_one', async (params: IFindShowSourceParam) => {
-    if (!cm_editor) return
   }, [hosts, cm_editor])
 
   return (

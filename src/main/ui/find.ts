@@ -3,6 +3,7 @@
  * @homepage: https://oldj.net
  */
 
+import { broadcast } from '@main/core/agent'
 import getIndex from '@main/libs/getIndex'
 import isDev from '@main/libs/isDev'
 import { BrowserWindow } from 'electron'
@@ -48,6 +49,7 @@ const makeWindow = () => {
     } else {
       e.preventDefault()
       win?.hide()
+      broadcast('close_find')
     }
   })
 
