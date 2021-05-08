@@ -4,7 +4,7 @@
  */
 
 import assert = require('assert')
-import { default as findInContent } from 'src/main/actions/find/findInContent'
+import { default as findInContent } from 'src/main/actions/find/findPositionsInContent'
 
 describe('find in content test', () => {
   it('basic test 1', () => {
@@ -33,23 +33,23 @@ describe('find in content test', () => {
     assert(m[2].after === '')
   })
 
-  it.only('basic test 2', () => {
+  it('basic test 2', () => {
     let content = `abc12 abc123 abc\nxyza3b`
     let m = findInContent(content, /a\w*3/ig)
-    console.log(m)
+    // console.log(m)
     assert(m.length === 2)
-    assert(m[1].line === 1)
-    assert(m[1].start === 6)
-    assert(m[1].end === 12)
-    assert(m[1].before === 'abc12 ')
-    assert(m[1].match === 'abc123')
-    assert(m[1].after === ' abc')
+    assert(m[0].line === 1)
+    assert(m[0].start === 6)
+    assert(m[0].end === 12)
+    assert(m[0].before === 'abc12 ')
+    assert(m[0].match === 'abc123')
+    assert(m[0].after === ' abc')
 
-    assert(m[2].line === 2)
-    assert(m[2].start === 20)
-    assert(m[2].end === 22)
-    assert(m[2].before === 'xyz')
-    assert(m[2].match === 'a3')
-    assert(m[2].after === 'b')
+    assert(m[1].line === 2)
+    assert(m[1].start === 20)
+    assert(m[1].end === 22)
+    assert(m[1].before === 'xyz')
+    assert(m[1].match === 'a3')
+    assert(m[1].after === 'b')
   })
 })

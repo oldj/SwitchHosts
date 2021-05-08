@@ -7,30 +7,41 @@ import { useModel } from '@@/plugin-model/useModel'
 import {
   Box,
   Button,
+  ButtonGroup,
   Checkbox,
   HStack,
+  IconButton,
   Input,
   InputGroup,
   InputLeftElement,
   Spacer,
-  Tooltip,
+  Spinner,
   useColorMode,
   VStack,
 } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IFindResultItem, IFindShowSourceParam } from '@root/common/types'
+import { HostsType } from '@root/common/data'
+import { IFindItem, IFindPosition, IFindShowSourceParam } from '@root/common/types'
 import { useDebounce } from 'ahooks'
+import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useEffect, useRef, useState } from 'react'
-import { IoSearch } from 'react-icons/io5'
-import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
+import { IoArrowBackOutline, IoArrowForwardOutline, IoSearch } from 'react-icons/io5'
 import AutoSizer from 'react-virtualized-auto-sizer'
+import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
+import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './find.less'
 
 interface Props {
 
+}
+
+interface IFindPositionShow extends IFindPosition {
+  item_id: string;
+  item_title: string;
+  item_type: HostsType;
 }
 
 const find = (props: Props) => {
@@ -41,7 +52,11 @@ const find = (props: Props) => {
   const [replact_to, setReplaceTo] = useState('')
   const [is_regexp, setIsRegExp] = useState(false)
   const [is_ignore_case, setIsIgnoreCase] = useState(false)
-  const [find_result, setFindResult] = useState<IFindResultItem[]>([])
+  const [find_result, setFindResult] = useState<IFindItem[]>([])
+  const [find_positions, setFindPositions] = useState<IFindPositionShow[]>([])
+  const [is_searching, setIsSearching] = useState(false)
+  const [current_result_idx, setCurrentResultIdx] = useState(0)
+  const [last_scroll_result_idx, setlastScrollResultIdx] = useState(-1)
   const debounced_keyword = useDebounce(keyword, { wait: 500 })
   const ipt_kw = useRef<HTMLInputElement>(null)
 
@@ -87,6 +102,23 @@ const find = (props: Props) => {
 
   useOnBroadcast('config_updated', loadConfigs)
 
+  const parsePositionShow = (find_items: IFindItem[]) => {
+    let positions_show: IFindPositionShow[] = []
+
+    find_items.map((item) => {
+      let { item_id, item_title, item_type, positions } = item
+      positions.map((p) => {
+        positions_show.push({
+          item_id, item_title, item_type,
+          ...p,
+        })
+      })
+    })
+
+    console.log(positions_show)
+    setFindPositions(positions_show)
+  }
+
   const doFind = lodash.debounce(async (v: string) => {
     console.log('find by:', v)
     if (!v) {
@@ -94,15 +126,20 @@ const find = (props: Props) => {
       return
     }
 
+    setIsSearching(true)
     let result = await actions.findBy(v, {
       is_regexp,
       is_ignore_case,
     })
+    setCurrentResultIdx(0)
+    setlastScrollResultIdx(0)
     setFindResult(result)
+    parsePositionShow(result)
+    setIsSearching(false)
   }, 500)
 
-  const toShowSource = async (result_item: IFindResultItem) => {
-    console.log(result_item)
+  const toShowSource = async (result_item: IFindPositionShow) => {
+    // console.log(result_item)
     await actions.cmdFocusMainWindow()
     agent.broadcast('show_source', lodash.pick<IFindShowSourceParam>(result_item, [
       'item_id', 'start', 'end', 'match',
@@ -110,29 +147,51 @@ const find = (props: Props) => {
     ]))
   }
 
+  const replaceOne = async (result_item: IFindPositionShow) => {
+    await actions.cmdFocusMainWindow()
+    agent.broadcast('replace_one', lodash.pick<IFindShowSourceParam>(result_item, [
+      'item_id', 'start', 'end', 'match',
+      'line', 'line_pos', 'end_line', 'end_line_pos',
+    ]))
+  }
+
   const ResultRow = (row_data: ListChildComponentProps) => {
-    let data = find_result[row_data.index]
+    const data = find_positions[row_data.index]
+    const el = useRef<HTMLDivElement>(null)
+    const is_selected = current_result_idx === row_data.index
+
+    useEffect(() => {
+      if (el.current && is_selected && current_result_idx !== last_scroll_result_idx) {
+        setlastScrollResultIdx(current_result_idx)
+        scrollIntoView(el.current, {
+          behavior: 'smooth',
+          scrollMode: 'if-needed',
+        })
+      }
+    }, [el, current_result_idx, last_scroll_result_idx])
+
     return (
-      <Tooltip label={lang.to_show_source} placement="top" hasArrow>
-        <Box
-          style={row_data.style}
-          className={styles.result_row}
-          borderBottomWidth={1}
-          borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
-          onDoubleClick={e => toShowSource(data)}
-        >
-          <div className={styles.result_content}>
-            <span>{data.before}</span>
-            <span className={styles.highlight}>{data.match}</span>
-            <span>{data.after}</span>
-          </div>
-          <div className={styles.result_title}>
-            <ItemIcon type={data.item_type}/>
-            <span>{data.item_title}</span>
-          </div>
-          <div className={styles.result_line}>{data.line}</div>
-        </Box>
-      </Tooltip>
+      <Box
+        style={row_data.style}
+        className={clsx(styles.result_row, is_selected && styles.selected)}
+        borderBottomWidth={1}
+        borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
+        onClick={() => setCurrentResultIdx(row_data.index)}
+        onDoubleClick={() => toShowSource(data)}
+        ref={el}
+        title={lang.to_show_source}
+      >
+        <div className={styles.result_content}>
+          <span>{data.before}</span>
+          <span className={styles.highlight}>{data.match}</span>
+          <span>{data.after}</span>
+        </div>
+        <div className={styles.result_title}>
+          <ItemIcon type={data.item_type}/>
+          <span>{data.item_title}</span>
+        </div>
+        <div className={styles.result_line}>{data.line}</div>
+      </Box>
     )
   }
 
@@ -212,7 +271,7 @@ const find = (props: Props) => {
               <List
                 width={width}
                 height={height}
-                itemCount={find_result.length}
+                itemCount={find_positions.length}
                 itemSize={28}
               >
                 {ResultRow}
@@ -228,19 +287,51 @@ const find = (props: Props) => {
           spacing={4}
           // justifyContent="flex-end"
         >
-          <span>{i18n.trans(find_result.length > 1 ? 'items_found' : 'item_found', [find_result.length.toString()])}</span>
+          {is_searching ? (
+            <Spinner/>
+          ) : (
+            <span>{i18n.trans(
+              find_positions.length > 1 ? 'items_found' : 'item_found',
+              [find_positions.length.toLocaleString()],
+            )}</span>
+          )}
           <Spacer/>
           <Button
             size="sm"
             variant="outline"
-            isDisabled={find_result.length === 0}
+            isDisabled={is_searching || find_positions.length === 0}
           >{lang.replace_all}</Button>
           <Button
             size="sm"
             variant="solid"
             colorScheme="blue"
-            isDisabled={find_result.length === 0}
+            isDisabled={is_searching || find_positions.length === 0}
           >{lang.replace}</Button>
+
+          <ButtonGroup
+            size="sm"
+            isAttached variant="outline"
+            isDisabled={is_searching || find_positions.length === 0}
+          >
+            <IconButton
+              aria-label="previous" icon={<IoArrowBackOutline/>}
+              onClick={() => {
+                let idx = current_result_idx - 1
+                if (idx < 0) idx = 0
+                setCurrentResultIdx(idx)
+              }}
+              isDisabled={current_result_idx <= 1}
+            />
+            <IconButton
+              aria-label="next" icon={<IoArrowForwardOutline/>}
+              onClick={() => {
+                let idx = current_result_idx + 1
+                if (idx > find_positions.length) idx = find_positions.length
+                setCurrentResultIdx(idx)
+              }}
+              isDisabled={current_result_idx >= find_positions.length}
+            />
+          </ButtonGroup>
         </HStack>
       </VStack>
     </div>

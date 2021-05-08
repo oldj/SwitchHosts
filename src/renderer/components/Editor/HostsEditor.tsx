@@ -162,10 +162,16 @@ const HostsEditor = (props: Props) => {
     })
 
     // console.log(doc.getSelection())
+    await wait(200)
     if (!doc.getSelection()) {
-      await wait(200)
       await setSelection(params)
     }
+    cm_editor.focus()
+  }
+
+  const replaceOne = async (params: IFindShowSourceParam) => {
+    if (!cm_editor) return
+    let doc = cm_editor.getDoc()
   }
 
   useOnBroadcast('show_source', async (params: IFindShowSourceParam) => {
@@ -180,6 +186,10 @@ const HostsEditor = (props: Props) => {
     }
 
     setSelection(params)
+  }, [hosts, cm_editor])
+
+  useOnBroadcast('replace_one', async (params: IFindShowSourceParam) => {
+    if (!cm_editor) return
   }, [hosts, cm_editor])
 
   return (

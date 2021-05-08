@@ -22,10 +22,7 @@ export interface IPopupMenuOption {
   items: IMenuItemOption[];
 }
 
-export interface IFindResultItem {
-  item_title: string;
-  item_id: string;
-  item_type: HostsType;
+export interface IFindPosition {
   start: number;
   end: number;
   line: number;
@@ -37,8 +34,22 @@ export interface IFindResultItem {
   after: string;
 }
 
-export type IFindShowSourceParam = Pick<IFindResultItem,
-  'item_id' | 'start' | 'end' | 'line' | 'line_pos'
-  | 'end_line' | 'end_line_pos'> & {
+export interface IFindSpliter {
+  before: string;
+  match: string;
+  after: string;
+  replace?: string;
+}
+
+export interface IFindItem {
+  item_id: string;
+  item_title: string;
+  item_type: HostsType;
+  positions: IFindPosition[];
+  spliters: IFindSpliter[];
+}
+
+export type IFindShowSourceParam = IFindPosition & {
+  item_id: string;
   [key: string]: any;
 }

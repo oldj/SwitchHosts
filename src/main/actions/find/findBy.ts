@@ -3,20 +3,21 @@
  * @homepage: https://oldj.net
  */
 
+import splitContent from '@main/actions/find/splitContent'
 import getContentOfHosts from '@main/actions/hosts/getContent'
 import { flatten } from '@root/common/hostsFn'
-import { IFindResultItem } from '@root/common/types'
+import { IFindItem } from '@root/common/types'
+import findInContent from 'src/main/actions/find/findPositionsInContent'
 import { getList } from '../index'
-import findInContent from './findInContent'
 
 export interface IFindOptions {
   is_regexp: boolean;
   is_ignore_case: boolean;
 }
 
-export default async (keyword: string, options: IFindOptions): Promise<IFindResultItem[]> => {
+export default async (keyword: string, options: IFindOptions): Promise<IFindItem[]> => {
   console.log(keyword)
-  let result_items: IFindResultItem[] = []
+  let result_items: IFindItem[] = []
 
   let tree = await getList()
   let items = flatten(tree)
@@ -35,13 +36,15 @@ export default async (keyword: string, options: IFindOptions): Promise<IFindResu
       continue
     }
     let content = await getContentOfHosts(item.id)
-    let found = findInContent(content, exp)
-    result_items = [...result_items, ...found.map(i => ({
-      ...i,
+    let positions = findInContent(content, exp)
+
+    result_items.push({
       item_title: item.title || '',
       item_id: item.id,
       item_type,
-    }))]
+      positions,
+      spliters: splitContent(content, positions),
+    })
   }
 
   return result_items
