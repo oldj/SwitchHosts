@@ -51,8 +51,8 @@ const find = (props: Props) => {
   const { lang, i18n, setLocale } = useModel('useI18n')
   const { configs, loadConfigs } = useModel('useConfigs')
   const { colorMode, setColorMode } = useColorMode()
-  const [keyword, setKeyword] = useState('')
-  const [replact_to, setReplaceTo] = useState('')
+  const [keyword, setKeyword] = useState('test')
+  const [replact_to, setReplaceTo] = useState('abc123')
   const [is_regexp, setIsRegExp] = useState(false)
   const [is_ignore_case, setIsIgnoreCase] = useState(false)
   const [find_result, setFindResult] = useState<IFindItem[]>([])
@@ -184,20 +184,27 @@ const find = (props: Props) => {
     sp.replace = replact_to
 
     const content = spliters.map(sp => `${sp.before}${sp.replace ?? sp.match}${sp.after}`).join('')
-    console.log(content)
-
     await actions.setHostsContent(pos.item_id, content)
     agent.broadcast('hosts_refreshed_by_id', pos.item_id)
-
-    // agent.broadcast('replace_one', {
-    //   item_id: pos.item_id,
-    //   index: pos.index,
-    //   replace_to:  replact_to,
-    // })
 
     if (current_result_idx < find_positions.length - 1) {
       setCurrentResultIdx(current_result_idx + 1)
     }
+  }
+
+  const replaceAll = async () => {
+    for (let item of find_result) {
+      let { item_id, item_type, spliters } = item
+      if (item_type !== 'local') continue
+      const content = spliters.map(sp => `${sp.before}${replact_to}${sp.after}`).join('')
+      await actions.setHostsContent(item_id, content)
+      agent.broadcast('hosts_refreshed_by_id', item_id)
+    }
+
+    setFindPositions(find_positions.map(pos => ({
+      ...pos,
+      is_disabled: !pos.is_readonly,
+    })))
   }
 
   const ResultRow = (row_data: ListChildComponentProps) => {
@@ -222,6 +229,7 @@ const find = (props: Props) => {
           styles.result_row,
           is_selected && styles.selected,
           data.is_disabled && styles.disabled,
+          data.is_readonly && styles.readonly,
         )}
         borderBottomWidth={1}
         borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
@@ -362,6 +370,7 @@ const find = (props: Props) => {
             size="sm"
             variant="outline"
             isDisabled={is_searching || find_positions.length === 0}
+            onClick={replaceAll}
           >{lang.replace_all}</Button>
           <Button
             size="sm"
