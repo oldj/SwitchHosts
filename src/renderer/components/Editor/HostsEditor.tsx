@@ -195,7 +195,7 @@ const HostsEditor = (props: Props) => {
   return (
     <div className={styles.root}>
       <div
-        className={clsx(styles.editor, is_read_only && styles.read_only)}
+        className={clsx(styles.editor, is_read_only && styles.read_only_tag)}
       >
         <textarea
           ref={el_ref}

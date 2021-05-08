@@ -42,14 +42,16 @@ interface IFindPositionShow extends IFindPosition {
   item_id: string;
   item_title: string;
   item_type: HostsType;
+  is_disabled?: boolean;
+  is_readonly?: boolean;
 }
 
 const find = (props: Props) => {
   const { lang, i18n, setLocale } = useModel('useI18n')
   const { configs, loadConfigs } = useModel('useConfigs')
   const { colorMode, setColorMode } = useColorMode()
-  const [keyword, setKeyword] = useState('')
-  const [replact_to, setReplaceTo] = useState('')
+  const [keyword, setKeyword] = useState('test')
+  const [replact_to, setReplaceTo] = useState('abccc')
   const [is_regexp, setIsRegExp] = useState(false)
   const [is_ignore_case, setIsIgnoreCase] = useState(false)
   const [find_result, setFindResult] = useState<IFindItem[]>([])
@@ -111,6 +113,7 @@ const find = (props: Props) => {
         positions_show.push({
           item_id, item_title, item_type,
           ...p,
+          is_readonly: item_type !== 'local',
         })
       })
     })
@@ -176,13 +179,18 @@ const find = (props: Props) => {
         className={clsx(styles.result_row, is_selected && styles.selected)}
         borderBottomWidth={1}
         borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
-        onClick={() => setCurrentResultIdx(row_data.index)}
+        onClick={() => {
+          setCurrentResultIdx(row_data.index)
+        }}
         onDoubleClick={() => toShowSource(data)}
         ref={el}
         title={lang.to_show_source}
       >
         <div className={styles.result_content}>
-          <span>{data.before}</span>
+          {data.is_readonly ? <span className={styles.read_only}>{lang.read_only}</span> : null}
+          <span>
+            {data.before}
+          </span>
           <span className={styles.highlight}>{data.match}</span>
           <span>{data.after}</span>
         </div>
@@ -193,6 +201,14 @@ const find = (props: Props) => {
         <div className={styles.result_line}>{data.line}</div>
       </Box>
     )
+  }
+
+  let can_replace = true
+  if (current_result_idx) {
+    let pos = find_positions[current_result_idx]
+    if (pos?.is_disabled || pos?.is_readonly) {
+      can_replace = false
+    }
   }
 
   return (
@@ -305,7 +321,7 @@ const find = (props: Props) => {
             size="sm"
             variant="solid"
             colorScheme="blue"
-            isDisabled={is_searching || find_positions.length === 0}
+            isDisabled={is_searching || find_positions.length === 0 || !can_replace}
           >{lang.replace}</Button>
 
           <ButtonGroup
@@ -320,16 +336,16 @@ const find = (props: Props) => {
                 if (idx < 0) idx = 0
                 setCurrentResultIdx(idx)
               }}
-              isDisabled={current_result_idx <= 1}
+              isDisabled={current_result_idx <= 0}
             />
             <IconButton
               aria-label="next" icon={<IoArrowForwardOutline/>}
               onClick={() => {
                 let idx = current_result_idx + 1
-                if (idx > find_positions.length) idx = find_positions.length
+                if (idx > find_positions.length - 1) idx = find_positions.length - 1
                 setCurrentResultIdx(idx)
               }}
-              isDisabled={current_result_idx >= find_positions.length}
+              isDisabled={current_result_idx >= find_positions.length - 1}
             />
           </ButtonGroup>
         </HStack>
