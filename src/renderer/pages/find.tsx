@@ -21,14 +21,15 @@ import {
 } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
+import { PopupMenu } from '@renderer/core/PopupMenu'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsType } from '@root/common/data'
-import { IFindItem, IFindPosition, IFindShowSourceParam, IFindSpliter } from '@root/common/types'
+import { IFindItem, IFindPosition, IFindShowSourceParam } from '@root/common/types'
 import { useDebounce } from 'ahooks'
 import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useEffect, useRef, useState } from 'react'
-import { IoArrowBackOutline, IoArrowForwardOutline, IoSearch } from 'react-icons/io5'
+import { IoArrowBackOutline, IoArrowForwardOutline, IoChevronDownOutline, IoSearch } from 'react-icons/io5'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
@@ -51,8 +52,8 @@ const find = (props: Props) => {
   const { lang, i18n, setLocale } = useModel('useI18n')
   const { configs, loadConfigs } = useModel('useConfigs')
   const { colorMode, setColorMode } = useColorMode()
-  const [keyword, setKeyword] = useState('test')
-  const [replact_to, setReplaceTo] = useState('abc123')
+  const [keyword, setKeyword] = useState('')
+  const [replace_to, setReplaceTo] = useState('')
   const [is_regexp, setIsRegExp] = useState(false)
   const [is_ignore_case, setIsIgnoreCase] = useState(false)
   const [find_result, setFindResult] = useState<IFindItem[]>([])
@@ -152,6 +153,12 @@ const find = (props: Props) => {
     setFindResult(result)
     parsePositionShow(result)
     setIsSearching(false)
+
+    await actions.findAddHistory({
+      value: v,
+      is_regexp,
+      is_ignore_case,
+    })
   }, 500)
 
   const toShowSource = async (result_item: IFindPositionShow) => {
@@ -176,12 +183,17 @@ const find = (props: Props) => {
       ...find_positions.slice(current_result_idx + 1),
     ])
 
+    if (replace_to) {
+      actions.findAddReplaceHistory(replace_to)
+        .catch(e => console.error(e))
+    }
+
     let r = find_result.find(i => i.item_id === pos.item_id)
     if (!r) return
     let spliters = r.spliters
     let sp = spliters[pos.index]
     if (!sp) return
-    sp.replace = replact_to
+    sp.replace = replace_to
 
     const content = spliters.map(sp => `${sp.before}${sp.replace ?? sp.match}${sp.after}`).join('')
     await actions.setHostsContent(pos.item_id, content)
@@ -196,7 +208,7 @@ const find = (props: Props) => {
     for (let item of find_result) {
       let { item_id, item_type, spliters } = item
       if (item_type !== 'local') continue
-      const content = spliters.map(sp => `${sp.before}${replact_to}${sp.after}`).join('')
+      const content = spliters.map(sp => `${sp.before}${replace_to}${sp.after}`).join('')
       await actions.setHostsContent(item_id, content)
       agent.broadcast('hosts_refreshed_by_id', item_id)
     }
@@ -205,6 +217,11 @@ const find = (props: Props) => {
       ...pos,
       is_disabled: !pos.is_readonly,
     })))
+
+    if (replace_to) {
+      actions.findAddReplaceHistory(replace_to)
+        .catch(e => console.error(e))
+    }
   }
 
   const ResultRow = (row_data: ListChildComponentProps) => {
@@ -257,6 +274,36 @@ const find = (props: Props) => {
     )
   }
 
+  const showKeywordHistory = async () => {
+    let history = await actions.findGetHistory()
+    if (history.length === 0) return
+
+    let menu = new PopupMenu(history.reverse().map(i => ({
+      label: i.value,
+      click () {
+        setKeyword(i.value)
+        setIsRegExp(i.is_regexp)
+        setIsIgnoreCase(i.is_ignore_case)
+      }
+    })))
+
+    menu.show()
+  }
+
+  const showReplaceHistory = async () => {
+    let history = await actions.findGetReplaceHistory()
+    if (history.length === 0) return
+
+    let menu = new PopupMenu(history.reverse().map(v => ({
+      label: v,
+      click () {
+        setReplaceTo(v)
+      }
+    })))
+
+    menu.show()
+  }
+
   let can_replace = true
   if (current_result_idx > -1) {
     let pos = find_positions[current_result_idx]
@@ -273,8 +320,16 @@ const find = (props: Props) => {
       >
         <InputGroup>
           <InputLeftElement
-            pointerEvents="none"
-            children={<IoSearch color="gray.300"/>}
+            // pointerEvents="none"
+            children={
+              <HStack
+                spacing={0}
+              >
+                <IoSearch/>
+                <IoChevronDownOutline style={{ fontSize: 10 }}/>
+              </HStack>
+            }
+            onClick={showKeywordHistory}
           />
           <Input
             autoFocus={true}
@@ -290,13 +345,21 @@ const find = (props: Props) => {
 
         <InputGroup>
           <InputLeftElement
-            pointerEvents="none"
-            children={<IoSearch color="gray.300"/>}
+            // pointerEvents="none"
+            children={
+              <HStack
+                spacing={0}
+              >
+                <IoSearch/>
+                <IoChevronDownOutline style={{ fontSize: 10 }}/>
+              </HStack>
+            }
+            onClick={showReplaceHistory}
           />
           <Input
             placeholder="replace to"
             variant="flushed"
-            value={replact_to}
+            value={replace_to}
             onChange={(e) => {
               setReplaceTo(e.target.value)
             }}

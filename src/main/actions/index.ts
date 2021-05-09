@@ -48,6 +48,12 @@ export { default as quit } from './quit'
 
 export { default as findShow } from './find/show'
 export { default as findBy } from './find/findBy'
+export { default as findAddHistory } from './find/addHistory'
+export { default as findGetHistory } from './find/getHistory'
+export { default as findSetHistory } from './find/setHistory'
+export { default as findAddReplaceHistory } from './find/addReplaceHistory'
+export { default as findGetReplaceHistory } from './find/getReplaceHistory'
+export { default as findSetReplaceHistory } from './find/setReplaceHistory'
 
 export { default as migrateCheck } from './migrate/checkIfMigration'
 export { default as migrateData } from './migrate/migrateData'
