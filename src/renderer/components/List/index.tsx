@@ -150,6 +150,7 @@ const List = (props: Props) => {
     }
 
     setCurrentHosts(hosts)
+    setSelectedIds([id])
   }, [hosts_data])
 
   useOnBroadcast(events.reload_list, loadHostsData)
