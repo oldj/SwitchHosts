@@ -18,6 +18,7 @@ import {
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
+import events from '@root/common/events'
 import React, { useState } from 'react'
 import styles from './SudoPasswordInput.less'
 
@@ -40,14 +41,14 @@ const SudoPasswordInput = (props: Props) => {
   const onOk = async () => {
     setIsShow(false)
     setPswd('')
-    agent.broadcast('write_hosts_to_system', tmp_list, { sudo_pswd: pswd })
+    agent.broadcast(events.write_hosts_to_system, tmp_list, { sudo_pswd: pswd })
   }
 
-  useOnBroadcast('show_sudo_password_input', (tmp_list?: IHostsListObject[]) => {
+  useOnBroadcast(events.show_sudo_password_input, (tmp_list?: IHostsListObject[]) => {
     setTmpList(tmp_list)
     setIsShow(true)
     // console.log(tmp_list)
-    agent.broadcast('active_main_window')
+    agent.broadcast(events.active_main_window)
   }, [ tmp_list ])
 
   if (!is_show) return null

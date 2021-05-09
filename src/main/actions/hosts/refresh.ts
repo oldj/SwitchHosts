@@ -10,6 +10,7 @@ import { broadcast } from '@main/core/agent'
 import { swhdb } from '@main/data'
 import { GET } from '@main/libs/request'
 import { IHostsListObject, IOperationResult } from '@root/common/data'
+import events from '@root/common/events'
 import * as hostsFn from '@root/common/hostsFn'
 import dayjs from 'dayjs'
 
@@ -61,8 +62,8 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
 
   if (old_content !== new_content) {
     await setHostsContent(hosts_id, new_content)
-    broadcast('hosts_refreshed', hosts)
-    broadcast('hosts_content_changed', hosts_id)
+    broadcast(events.hosts_refreshed, hosts)
+    broadcast(events.hosts_content_changed, hosts_id)
   }
 
   return {

@@ -15,6 +15,7 @@ import {
 } from '@chakra-ui/react'
 import AboutContent from '@renderer/components/About/AboutContent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import events from '@root/common/events'
 import React, { useState } from 'react'
 import styles from './index.less'
 
@@ -24,7 +25,7 @@ const About = () => {
 
   const onClose = () => setIsOpen(false)
 
-  useOnBroadcast('show_about', () => setIsOpen(true))
+  useOnBroadcast(events.show_about, () => setIsOpen(true))
 
   return (
     <Modal isOpen={is_open} onClose={onClose}>

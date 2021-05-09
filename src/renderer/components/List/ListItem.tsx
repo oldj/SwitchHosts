@@ -17,6 +17,7 @@ import { BiEdit } from 'react-icons/bi'
 import { Center } from '@chakra-ui/react'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.less'
+import events from '@root/common/events'
 
 interface Props {
   data: IHostsListObject;
@@ -66,7 +67,7 @@ const ListItem = (props: Props) => {
     on = typeof on === 'boolean' ? on : !is_on
     setIsOn(on)
 
-    agent.broadcast('toggle_item', data.id, on)
+    agent.broadcast(events.toggle_item, data.id, on)
   }
 
   if (!data) return null
@@ -78,7 +79,7 @@ const ListItem = (props: Props) => {
     {
       label: lang.edit,
       click() {
-        agent.broadcast('edit_hosts_info', data)
+        agent.broadcast(events.edit_hosts_info, data)
       },
     },
     {
@@ -87,7 +88,7 @@ const ListItem = (props: Props) => {
     {
       label: lang.move_to_trashcan,
       click() {
-        agent.broadcast('move_to_trashcan', data.id)
+        agent.broadcast(events.move_to_trashcan, data.id)
       },
     },
   ])
@@ -129,7 +130,7 @@ const ListItem = (props: Props) => {
                 <BiEdit
                   title={lang.edit}
                   onClick={() => {
-                    agent.broadcast('edit_hosts_info', data)
+                    agent.broadcast(events.edit_hosts_info, data)
                   }}
                 />
               </Center>

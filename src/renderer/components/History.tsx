@@ -29,6 +29,7 @@ import HostsViewer from '@renderer/components/HostsViewer'
 import { actions } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsHistoryObject } from '@root/common/data'
+import events from '@root/common/events'
 import clsx from 'clsx'
 import dayjs from 'dayjs'
 import prettyBytes from 'pretty-bytes'
@@ -157,7 +158,7 @@ const History = () => {
     await updateConfigs({ history_limit: value })
   }
 
-  useOnBroadcast('show_history', () => {
+  useOnBroadcast(events.show_history, () => {
     setIsOpen(true)
     loadData()
   })

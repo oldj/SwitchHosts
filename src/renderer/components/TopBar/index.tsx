@@ -11,6 +11,7 @@ import SwitchButton from '@renderer/components/SwitchButton'
 import ConfigMenu from '@renderer/components/TopBar/ConfigMenu'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import events from '@root/common/events'
 import React, { useEffect, useState } from 'react'
 import { BiHistory, BiPlus, BiSidebar, BiX } from 'react-icons/bi'
 import styles from './index.less'
@@ -33,7 +34,7 @@ export default (props: IProps) => {
     setIsOn(!!current_hosts?.on)
   }, [current_hosts])
 
-  useOnBroadcast('set_hosts_on_status', (id: string, on: boolean) => {
+  useOnBroadcast(events.set_hosts_on_status, (id: string, on: boolean) => {
     if (current_hosts && current_hosts.id === id) {
       setIsOn(on)
     }
@@ -46,7 +47,7 @@ export default (props: IProps) => {
           aria-label="Toggle sidebar"
           icon={<BiSidebar/>}
           onClick={() => {
-            agent.broadcast('toggle_left_pannel', !show_left_panel)
+            agent.broadcast(events.toggle_left_pannel, !show_left_panel)
           }}
           variant="ghost"
           mr={1}
@@ -54,7 +55,7 @@ export default (props: IProps) => {
         <IconButton
           aria-label="Add"
           icon={<BiPlus/>}
-          onClick={() => agent.broadcast('add_new')}
+          onClick={() => agent.broadcast(events.add_new)}
           variant="ghost"
         />
       </Flex>
@@ -95,7 +96,7 @@ export default (props: IProps) => {
         {show_toggle_switch ? (
           <Box mr={3}>
             <SwitchButton on={is_on} onChange={on => {
-              current_hosts && agent.broadcast('toggle_item', current_hosts.id, on)
+              current_hosts && agent.broadcast(events.toggle_item, current_hosts.id, on)
             }}/>
           </Box>
         ) : null}
@@ -104,7 +105,7 @@ export default (props: IProps) => {
             aria-label="Show history"
             icon={<BiHistory/>}
             variant="ghost"
-            onClick={() => agent.broadcast('show_history')}
+            onClick={() => agent.broadcast(events.show_history)}
           />
         ) : null}
 

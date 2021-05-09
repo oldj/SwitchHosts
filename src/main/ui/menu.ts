@@ -5,6 +5,7 @@
 
 import { findShow } from '@main/actions'
 import isDev from '@main/libs/isDev'
+import events from '@root/common/events'
 import { BrowserWindow, Menu, MenuItem, MenuItemConstructorOptions, shell } from 'electron'
 import { I18N, LocaleName } from '@root/common/i18n'
 import { homepage_url, feedback_url } from '@root/common/constants'
@@ -22,7 +23,7 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
           label: lang.new,
           accelerator: 'CommandOrControl+N',
           click: () => {
-            broadcast('add_new')
+            broadcast(events.add_new)
           },
         },
         {
@@ -47,7 +48,7 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
           label: lang.preferences,
           accelerator: 'CommandOrControl+,',
           click: () => {
-            broadcast('show_preferences')
+            broadcast(events.show_preferences)
           },
         },
       ],
@@ -88,19 +89,12 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         },
         {
           type: 'separator',
-          // },
-          // {
-          //   label: lang.search,
-          //   accelerator: 'CommandOrControl+F',
-          //   click () {
-          //     broadcast('search:start')
-          //   }
         },
         {
           label: lang.comment_current_line,
           accelerator: 'CommandOrControl+/',
           click () {
-            broadcast('toggle_comment')
+            broadcast(events.toggle_comment)
           },
         },
         {
@@ -208,7 +202,7 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
           label: lang.about,
           //role: 'about',
           click: () => {
-            broadcast('show_about')
+            broadcast(events.show_about)
           },
         },
         {
@@ -293,7 +287,7 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         label: `${lang.about} ${name}`,
         //role: 'about',
         click: () => {
-          broadcast('show_about')
+          broadcast(events.show_about)
         },
       })
 

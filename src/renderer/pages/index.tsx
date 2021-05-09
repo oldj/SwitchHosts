@@ -11,6 +11,7 @@ import SudoPasswordInput from '@renderer/components/SudoPasswordInput'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { download_url } from '@root/common/constants'
+import events from '@root/common/events'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import TopBar from '../components/TopBar'
@@ -63,9 +64,9 @@ export default () => {
     init().catch(e => console.error(e))
   }, [configs])
 
-  useOnBroadcast('toggle_left_pannel', (show: boolean) => setLeftShow(show))
+  useOnBroadcast(events.toggle_left_pannel, (show: boolean) => setLeftShow(show))
 
-  useOnBroadcast('new_version', (new_version: string) => {
+  useOnBroadcast(events.new_version, (new_version: string) => {
     toast({
       title: lang.new_version_found,
       description: (

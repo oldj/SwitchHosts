@@ -9,6 +9,7 @@ import StatusBar from '@renderer/components/StatusBar'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
+import events from '@root/common/events'
 import { IFindShowSourceParam } from '@root/common/types'
 import wait from '@root/common/utils/wait'
 import clsx from 'clsx'
@@ -65,7 +66,7 @@ const HostsEditor = (props: Props) => {
 
   const toSave = lodash.debounce((id: string, content: string) => {
     actions.setHostsContent(id, content)
-      .then(() => agent.broadcast('hosts_content_changed', id))
+      .then(() => agent.broadcast(events.hosts_content_changed, id))
       .catch(e => console.error(e))
   }, 1000)
 
@@ -115,11 +116,11 @@ const HostsEditor = (props: Props) => {
 
     cm.on('change', (editor) => {
       let value = editor.getDoc().getValue()
-      agent.broadcast('editor:content_change', value)
+      agent.broadcast(events.editor_content_change, value)
     })
 
     cm.on('gutterClick', (cm, n) => {
-      agent.broadcast('editor:gutter_click', n)
+      agent.broadcast(events.editor_gutter_click, n)
     })
   }, [])
 
@@ -129,26 +130,26 @@ const HostsEditor = (props: Props) => {
     }
   }, [hosts, find_params])
 
-  useOnBroadcast('editor:content_change', (new_content: string) => {
+  useOnBroadcast(events.editor_content_change, (new_content: string) => {
     if (new_content === content) return
     onChange(new_content)
   }, [hosts, hosts_id, content])
 
-  useOnBroadcast('editor:gutter_click', onGutterClick, [cm_editor, is_read_only])
+  useOnBroadcast(events.editor_gutter_click, onGutterClick, [cm_editor, is_read_only])
 
-  useOnBroadcast('hosts_refreshed', (h: IHostsListObject) => {
+  useOnBroadcast(events.hosts_refreshed, (h: IHostsListObject) => {
     if (hosts.id !== '0' && h.id !== hosts.id) return
     loadContent()
   }, [hosts, hosts_data, cm_editor])
 
-  useOnBroadcast('hosts_refreshed_by_id', (id: string) => {
+  useOnBroadcast(events.hosts_refreshed_by_id, (id: string) => {
     if (hosts.id !== '0' && id !== hosts.id) return
     loadContent()
   }, [hosts, hosts_data, cm_editor])
 
-  useOnBroadcast('toggle_comment', toggleComment, [cm_editor, is_read_only])
+  useOnBroadcast(events.toggle_comment, toggleComment, [cm_editor, is_read_only])
 
-  useOnBroadcast('set_hosts_on_status', () => {
+  useOnBroadcast(events.set_hosts_on_status, () => {
     if (hosts.id === '0') {
       loadContent()
     }
@@ -174,7 +175,7 @@ const HostsEditor = (props: Props) => {
     cm_editor.focus()
   }
 
-  useOnBroadcast('show_source', async (params: IFindShowSourceParam) => {
+  useOnBroadcast(events.show_source, async (params: IFindShowSourceParam) => {
     if (!cm_editor) return
 
     if (params.item_id !== hosts.id) {

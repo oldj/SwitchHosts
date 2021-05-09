@@ -11,6 +11,7 @@ import version from '@root/version.json'
 import compareVersions from 'compare-versions'
 import { cfgdb } from '@main/data'
 import { v4 as uuid4 } from 'uuid'
+import events from '@root/common/events'
 
 const getUniqueId = async (): Promise<string> => {
   let uid: string = await cfgdb.dict.local.get('uid', '')
@@ -40,7 +41,7 @@ export default async (): Promise<boolean | null> => {
   if (compareVersions(server_version, local_version) === 1) {
     // new version found
     console.log(`new version: ${server_version}`)
-    broadcast('new_version', server_version)
+    broadcast(events.new_version, server_version)
     // 有更新
     return true
   }

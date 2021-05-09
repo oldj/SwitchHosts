@@ -6,6 +6,7 @@
 import { broadcast } from '@main/core/agent'
 import getIndex from '@main/libs/getIndex'
 import isDev from '@main/libs/isDev'
+import events from '@root/common/events'
 import { BrowserWindow } from 'electron'
 import path from 'path'
 
@@ -49,7 +50,7 @@ const makeWindow = () => {
     } else {
       e.preventDefault()
       win?.hide()
-      broadcast('close_find')
+      broadcast(events.close_find)
     }
   })
 

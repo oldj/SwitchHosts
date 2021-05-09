@@ -12,6 +12,7 @@ import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
+import events from '@root/common/events'
 import { findItemById, getNextSelectedItem, setOnStateOfItem } from '@root/common/hostsFn'
 import { IFindShowSourceParam } from '@root/common/types'
 import clsx from 'clsx'
@@ -60,9 +61,9 @@ const List = (props: Props) => {
         description: lang.success,
         isClosable: true,
       })
-      agent.broadcast('set_hosts_on_status', id, on)
+      agent.broadcast(events.set_hosts_on_status, id, on)
     } else {
-      agent.broadcast('set_hosts_on_status', id, !on)
+      agent.broadcast(events.set_hosts_on_status, id, !on)
     }
   }
 
@@ -82,7 +83,7 @@ const List = (props: Props) => {
       if (current_hosts) {
         let hosts = findItemById(list, current_hosts.id)
         if (hosts) {
-          agent.broadcast('set_hosts_on_status', current_hosts.id, hosts.on)
+          agent.broadcast(events.set_hosts_on_status, current_hosts.id, hosts.on)
         }
       }
 
@@ -94,7 +95,7 @@ const List = (props: Props) => {
       // let body: string = lang.no_access_to_hosts
       if (result.code === 'no_access') {
         if (agent.platform === 'darwin' || agent.platform === 'linux') {
-          agent.broadcast('show_sudo_password_input', list)
+          agent.broadcast(events.show_sudo_password_input, list)
         }
         // } else {
         // body = result.message || 'Unknow error!'
@@ -111,19 +112,19 @@ const List = (props: Props) => {
       })
     }
 
-    agent.broadcast('tray:list_updated')
+    agent.broadcast(events.tray_list_updated)
 
     return result.success
   }
 
   if (!is_tray) {
-    useOnBroadcast('toggle_item', onToggleItem, [hosts_data])
-    useOnBroadcast('write_hosts_to_system', writeHostsToSystem, [hosts_data])
+    useOnBroadcast(events.toggle_item, onToggleItem, [hosts_data])
+    useOnBroadcast(events.write_hosts_to_system, writeHostsToSystem, [hosts_data])
   } else {
-    useOnBroadcast('tray:list_updated', loadHostsData)
+    useOnBroadcast(events.tray_list_updated, loadHostsData)
   }
 
-  useOnBroadcast('move_to_trashcan', async (id: string) => {
+  useOnBroadcast(events.move_to_trashcan, async (id: string) => {
     console.log(`move_to_trashcan: #${id}`)
 
     let next_hosts: IHostsListObject | undefined
@@ -141,12 +142,12 @@ const List = (props: Props) => {
     }
   }, [current_hosts, hosts_data])
 
-  useOnBroadcast('select_hosts', async (id: string, wait_ms: number = 0) => {
+  useOnBroadcast(events.select_hosts, async (id: string, wait_ms: number = 0) => {
     let hosts = findItemById(hosts_data.list, id)
     if (!hosts) {
       if (wait_ms > 0) {
         setTimeout(() => {
-          agent.broadcast('select_hosts', id, wait_ms - 50)
+          agent.broadcast(events.select_hosts, id, wait_ms - 50)
         }, 50)
       }
       return
@@ -155,9 +156,9 @@ const List = (props: Props) => {
     setCurrentHosts(hosts)
   }, [hosts_data])
 
-  useOnBroadcast('reload_list', loadHostsData)
+  useOnBroadcast(events.reload_list, loadHostsData)
 
-  useOnBroadcast('hosts_content_changed', async (hosts_id: string) => {
+  useOnBroadcast(events.hosts_content_changed, async (hosts_id: string) => {
     let list: IHostsListObject[] = await actions.getList()
     let hosts = findItemById(list, hosts_id)
     if (!hosts || !hosts.on) return
@@ -166,8 +167,8 @@ const List = (props: Props) => {
     await writeHostsToSystem(list)
   })
 
-  useOnBroadcast('show_source', async (params: IFindShowSourceParam) => {
-    agent.broadcast('select_hosts', params.item_id)
+  useOnBroadcast(events.show_source, async (params: IFindShowSourceParam) => {
+    agent.broadcast(events.select_hosts, params.item_id)
   })
 
   return (
@@ -181,7 +182,7 @@ const List = (props: Props) => {
           setList(list).catch(e => console.error(e))
         }}
         // onSelect={(id) => {
-        //   agent.broadcast('select_hosts', id)
+        //   agent.broadcast(events.select_hosts, id)
         //}}
         nodeRender={(data) => (
           <ListItem key={data.id} data={data} is_tray={is_tray}/>

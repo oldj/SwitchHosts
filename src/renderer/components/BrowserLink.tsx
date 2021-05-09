@@ -5,6 +5,7 @@
  */
 
 import { actions, agent } from '@renderer/core/agent'
+import events from '@root/common/events'
 import React from 'react'
 
 interface Props {
@@ -19,7 +20,7 @@ const BrowserLink = (props: Props) => {
 
   const onClick = (e: React.MouseEvent) => {
     e.preventDefault()
-    agent.broadcast('browser_link', href)
+    agent.broadcast(events.browser_link, href)
     actions.openUrl(href)
       .catch(e => console.error(e))
   }

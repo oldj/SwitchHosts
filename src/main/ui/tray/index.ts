@@ -7,6 +7,7 @@
 import { configGet, configSet, updateTrayTitle } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { makeWindow } from '@main/ui/tray/window'
+import events from '@root/common/events'
 import { I18N } from '@root/common/i18n'
 import version from '@root/version.json'
 import { app, BrowserWindow, Menu, screen, Tray } from 'electron'
@@ -47,7 +48,7 @@ const makeTray = async () => {
     }
   })
 
-  tray.on('double-click', () => broadcast('active_main_window'))
+  tray.on('double-click', () => broadcast(events.active_main_window))
 
   tray.on('right-click', async () => {
     let locale = await configGet('locale')
@@ -61,7 +62,7 @@ const makeTray = async () => {
         label: lang._app_name,
         toolTip: lang.show_main_window,
         click () {
-          broadcast('active_main_window')
+          broadcast(events.active_main_window)
         },
       },
       {

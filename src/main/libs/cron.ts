@@ -7,6 +7,7 @@
 import { checkUpdate, getList, refreshHosts } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { IHostsListObject } from '@root/common/data'
+import events from '@root/common/events'
 import { flatten } from '@root/common/hostsFn'
 
 let t: any
@@ -45,7 +46,7 @@ const checkRefresh = async () => {
     }
   }
 
-  broadcast('reload_list')
+  broadcast(events.reload_list)
 }
 
 const checkServer = async () => {

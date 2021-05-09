@@ -8,6 +8,7 @@ import { useModel } from '@@/plugin-model/useModel'
 import HostsEditor from '@renderer/components/Editor/HostsEditor'
 import { actions } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import events from '@root/common/events'
 import React, { useEffect, useState } from 'react'
 import styles from './index.less'
 
@@ -24,7 +25,7 @@ const MainPanel = (props: Props) => {
     }
   }, [current_hosts])
 
-  useOnBroadcast('system_hosts_updated', () => {
+  useOnBroadcast(events.system_hosts_updated, () => {
     if (!current_hosts) {
       actions.getSystemHosts().then(value => setSystemHostsContent(value))
     }

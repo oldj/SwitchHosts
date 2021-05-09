@@ -3,6 +3,7 @@ import { useColorMode } from '@chakra-ui/react'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import events from '@root/common/events'
 import React, { useEffect } from 'react'
 import { BiArea } from 'react-icons/bi'
 import styles from './tray.less'
@@ -30,10 +31,10 @@ export default () => {
   }
 
   useEffect(update, [configs])
-  useOnBroadcast('config_updated', loadConfigs, [configs])
+  useOnBroadcast(events.config_updated, loadConfigs, [configs])
 
   const showMain = () => {
-    agent.broadcast('active_main_window')
+    agent.broadcast(events.active_main_window)
   }
 
   return (

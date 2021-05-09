@@ -10,6 +10,7 @@ import { swhdb } from '@main/data'
 import safePSWD from '@main/libs/safePSWD'
 import { IHostsWriteOptions } from '@main/types'
 import { IHostsHistoryObject } from '@root/common/data'
+import events from '@root/common/events'
 import { exec } from 'child_process'
 import * as fs from 'fs'
 import md5 from 'md5'
@@ -175,7 +176,7 @@ const setSystemHosts = async (content: string, options?: IHostsWriteOptions): Pr
 
     await addHistory(content)
     await updateTrayTitle()
-    broadcast('system_hosts_updated')
+    broadcast(events.system_hosts_updated)
 
     await tryToRun()
   }

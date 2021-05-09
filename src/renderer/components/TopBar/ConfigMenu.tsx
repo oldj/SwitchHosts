@@ -9,6 +9,7 @@ import { Button, Menu, MenuButton, MenuDivider, MenuItem, MenuList, useToast } f
 import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
 import { actions, agent } from '@renderer/core/agent'
 import { feedback_url, homepage_url } from '@root/common/constants'
+import events from '@root/common/events'
 import React, { useState } from 'react'
 import {
   BiCog,
@@ -46,7 +47,7 @@ const ConfigMenu = (props: Props) => {
         <MenuList borderColor="var(--swh-border-color-0)" className={styles.menu_list}>
           <MenuItem
             icon={<BiInfoCircle/>}
-            onClick={() => agent.broadcast('show_about')}
+            onClick={() => agent.broadcast(events.show_about)}
           >
             {lang.about}
           </MenuItem>
@@ -150,7 +151,7 @@ const ConfigMenu = (props: Props) => {
 
           <MenuItem
             icon={<BiSliderAlt/>}
-            onClick={() => agent.broadcast('show_preferences')}
+            onClick={() => agent.broadcast(events.show_preferences)}
           >
             {lang.preferences}
           </MenuItem>

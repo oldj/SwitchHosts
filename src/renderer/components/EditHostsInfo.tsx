@@ -31,6 +31,7 @@ import Transfer from '@renderer/components/Transfer'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { FolderModeType, HostsType, IHostsListObject } from '@root/common/data'
+import events from '@root/common/events'
 import * as hostsFn from '@root/common/hostsFn'
 import lodash from 'lodash'
 import React, { useRef, useState } from 'react'
@@ -72,7 +73,7 @@ const EditHostsInfo = () => {
       }
       let list: IHostsListObject[] = [ ...hosts_data.list, h ]
       await setList(list)
-      agent.broadcast('select_hosts', h.id, 1000)
+      agent.broadcast(events.select_hosts, h.id, 1000)
 
     } else if (data && data.id) {
       // edit
@@ -105,19 +106,19 @@ const EditHostsInfo = () => {
     setHosts(obj)
   }
 
-  useOnBroadcast('edit_hosts_info', (hosts?: IHostsListObject) => {
+  useOnBroadcast(events.edit_hosts_info, (hosts?: IHostsListObject) => {
     setHosts(hosts || null)
     setIsAdd(!hosts)
     setIsShow(true)
   })
 
-  useOnBroadcast('add_new', () => {
+  useOnBroadcast(events.add_new, () => {
     setHosts(null)
     setIsAdd(true)
     setIsShow(true)
   })
 
-  useOnBroadcast('hosts_refreshed', (_hosts: IHostsListObject) => {
+  useOnBroadcast(events.hosts_refreshed, (_hosts: IHostsListObject) => {
     if (hosts && hosts.id === _hosts.id) {
       onUpdate(lodash.pick(_hosts, [ 'last_refresh', 'last_refresh_ms' ]))
     }
@@ -275,7 +276,7 @@ const EditHostsInfo = () => {
               colorScheme="pink"
               onClick={() => {
                 if (hosts) {
-                  agent.broadcast('move_to_trashcan', hosts.id)
+                  agent.broadcast(events.move_to_trashcan, hosts.id)
                   onCancel()
                 }
               }}

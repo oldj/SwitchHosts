@@ -6,6 +6,7 @@
 
 import { getList } from '@main/actions'
 import { broadcast } from '@main/core/agent'
+import events from '@root/common/events'
 import { findItemById } from '@root/common/hostsFn'
 import { Request, Response } from 'express'
 
@@ -24,7 +25,7 @@ const toggle = async (req: Request, res: Response) => {
     return
   }
 
-  broadcast('toggle_item', id, !item.on)
+  broadcast(events.toggle_item, id, !item.on)
   res.end('ok')
 }
 

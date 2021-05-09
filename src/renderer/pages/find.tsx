@@ -24,6 +24,7 @@ import { actions, agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsType } from '@root/common/data'
+import events from '@root/common/events'
 import { IFindItem, IFindPosition, IFindShowSourceParam } from '@root/common/types'
 import { useDebounce } from 'ahooks'
 import clsx from 'clsx'
@@ -104,9 +105,9 @@ const find = (props: Props) => {
     return () => window.removeEventListener('focus', onFocus, false)
   }, [ipt_kw])
 
-  useOnBroadcast('config_updated', loadConfigs)
+  useOnBroadcast(events.config_updated, loadConfigs)
 
-  useOnBroadcast('close_find', () => {
+  useOnBroadcast(events.close_find, () => {
     console.log('on close find...')
     setFindResult([])
     setFindPositions([])
@@ -164,7 +165,7 @@ const find = (props: Props) => {
   const toShowSource = async (result_item: IFindPositionShow) => {
     // console.log(result_item)
     await actions.cmdFocusMainWindow()
-    agent.broadcast('show_source', lodash.pick<IFindShowSourceParam>(result_item, [
+    agent.broadcast(events.show_source, lodash.pick<IFindShowSourceParam>(result_item, [
       'item_id', 'start', 'end', 'match',
       'line', 'line_pos', 'end_line', 'end_line_pos',
     ]))
@@ -197,7 +198,7 @@ const find = (props: Props) => {
 
     const content = spliters.map(sp => `${sp.before}${sp.replace ?? sp.match}${sp.after}`).join('')
     await actions.setHostsContent(pos.item_id, content)
-    agent.broadcast('hosts_refreshed_by_id', pos.item_id)
+    agent.broadcast(events.hosts_refreshed_by_id, pos.item_id)
 
     if (current_result_idx < find_positions.length - 1) {
       setCurrentResultIdx(current_result_idx + 1)
@@ -210,7 +211,7 @@ const find = (props: Props) => {
       if (item_type !== 'local') continue
       const content = spliters.map(sp => `${sp.before}${replace_to}${sp.after}`).join('')
       await actions.setHostsContent(item_id, content)
-      agent.broadcast('hosts_refreshed_by_id', item_id)
+      agent.broadcast(events.hosts_refreshed_by_id, item_id)
     }
 
     setFindPositions(find_positions.map(pos => ({

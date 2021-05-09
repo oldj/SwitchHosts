@@ -9,6 +9,7 @@ import Trashcan from '@renderer/components/LeftPanel/Trashcan'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
+import events from '@root/common/events'
 import React from 'react'
 import styles from './index.less'
 
@@ -24,7 +25,7 @@ const Index = (props: Props) => {
     {
       label: lang.hosts_add,
       click () {
-        agent.broadcast('add_new')
+        agent.broadcast(events.add_new)
       },
     },
   ])

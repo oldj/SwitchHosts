@@ -26,6 +26,7 @@ import Proxy from '@renderer/components/Pref/Proxy'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { ConfigsType } from '@root/common/default_configs'
+import events from '@root/common/events'
 import React, { useEffect, useState } from 'react'
 import { BiSliderAlt } from 'react-icons/bi'
 import Advanced from './Advanced'
@@ -62,14 +63,14 @@ const PreferencePanel = (props: Props) => {
       setColorMode(data.theme)
     }
 
-    agent.broadcast('config_updated', data)
+    agent.broadcast(events.config_updated, data)
   }
 
   useEffect(() => {
     setData(configs)
   }, [configs])
 
-  useOnBroadcast('show_preferences', async () => {
+  useOnBroadcast(events.show_preferences, async () => {
     setIsOpen(true)
   })
 

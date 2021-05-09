@@ -7,6 +7,7 @@ import { getList } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { swhdb } from '@main/data'
 import { IHostsListObject, ITrashcanObject } from '@root/common/data'
+import events from '@root/common/events'
 import * as hostsFn from '@root/common/hostsFn'
 
 export default async (id: string) => {
@@ -20,7 +21,7 @@ export default async (id: string) => {
 
   if (node.on) {
     // current hosts is in use, update system hosts
-    broadcast('toggle_item', node.id, false)
+    broadcast(events.toggle_item, node.id, false)
   }
 
   let obj: ITrashcanObject = {
