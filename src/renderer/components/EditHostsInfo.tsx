@@ -218,7 +218,7 @@ const EditHostsInfo = () => {
     const list = hostsFn.flatten(hosts_data.list)
 
     let source_list: IHostsListObject[] = list
-      .filter(item => item.type === 'local' || item.type === 'remote')
+      .filter(item => !item.type || item.type === 'local' || item.type === 'remote')
       .map(item => {
         let o = { ...item }
         o.key = o.id
