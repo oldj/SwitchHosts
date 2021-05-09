@@ -276,7 +276,7 @@ const EditHostsInfo = () => {
               colorScheme="pink"
               onClick={() => {
                 if (hosts) {
-                  agent.broadcast(events.move_to_trashcan, hosts.id)
+                  agent.broadcast(events.move_to_trashcan, [hosts.id])
                   onCancel()
                 }
               }}

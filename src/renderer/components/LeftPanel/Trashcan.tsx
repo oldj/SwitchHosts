@@ -21,8 +21,8 @@ interface Props {
 const Trashcan = (props: Props) => {
   const { lang } = useModel('useI18n')
   const { hosts_data, current_hosts, setCurrentHosts } = useModel('useHostsData')
-  const [ trash_list, setTrashList ] = useState<ITrashcanListObject[]>([])
-  const [ is_collapsed, setIsCollapsed ] = useState(true)
+  const [trash_list, setTrashList] = useState<ITrashcanListObject[]>([])
+  const [is_collapsed, setIsCollapsed] = useState(true)
 
   useEffect(() => {
     let root: ITrashcanListObject = {
@@ -41,7 +41,7 @@ const Trashcan = (props: Props) => {
       parent_id: null,
     }
 
-    let list: ITrashcanListObject[] = [ root ]
+    let list: ITrashcanListObject[] = [root]
 
     hosts_data.trashcan.map(i => {
       root.children && root.children.push({
@@ -53,9 +53,10 @@ const Trashcan = (props: Props) => {
     })
 
     setTrashList(list)
-  }, [ hosts_data.trashcan, is_collapsed ])
+  }, [hosts_data.trashcan, is_collapsed])
 
-  const onSelect = (id: string) => {
+  const onSelect = (ids: string[]) => {
+    let id = ids[0]
     let item = hosts_data.trashcan.find(i => i.data.id === id)
     if (!item) return
     setCurrentHosts(item.data)
@@ -71,7 +72,7 @@ const Trashcan = (props: Props) => {
         nodeSelectedClassName={list_styles.node_selected}
         nodeCollapseArrowClassName={list_styles.arrow}
         onSelect={onSelect}
-        selected_id={current_hosts?.id}
+        selected_ids={current_hosts ? [current_hosts.id] : []}
         onChange={list => setIsCollapsed(!!list[0]?.is_collapsed)}
       />
     </div>

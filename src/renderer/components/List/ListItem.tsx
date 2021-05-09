@@ -21,12 +21,13 @@ import events from '@root/common/events'
 
 interface Props {
   data: IHostsListObject;
+  selected_ids: string[];
   is_tray?: boolean;
 }
 
 const ListItem = (props: Props) => {
-  const { data, is_tray } = props
-  const { lang } = useModel('useI18n')
+  const { data, is_tray, selected_ids } = props
+  const { lang, i18n } = useModel('useI18n')
   const { hosts_data, setList, current_hosts, setCurrentHosts } = useModel('useHostsData')
   const [ is_collapsed, setIsCollapsed ] = useState(!!data.is_collapsed)
   const [ is_on, setIsOn ] = useState(data.on)
@@ -75,24 +76,6 @@ const ListItem = (props: Props) => {
   const is_folder = data.type === 'folder'
   const is_selected = data.id === current_hosts?.id
 
-  const menu = new PopupMenu([
-    {
-      label: lang.edit,
-      click() {
-        agent.broadcast(events.edit_hosts_info, data)
-      },
-    },
-    {
-      type: 'separator',
-    },
-    {
-      label: lang.move_to_trashcan,
-      click() {
-        agent.broadcast(events.move_to_trashcan, data.id)
-      },
-    },
-  ])
-
   return (
     <div
       className={clsx(
@@ -103,14 +86,40 @@ const ListItem = (props: Props) => {
       // className={clsx(styles.item, is_selected && styles.selected, is_collapsed && styles.is_collapsed)}
       // style={{ paddingLeft: `${1.3 * level}em` }}
       onContextMenu={(e) => {
+        let deal_count = 1
+        if (selected_ids.includes(data.id)) {
+          deal_count = selected_ids.length
+        }
+
+        const menu = new PopupMenu([
+          {
+            label: lang.edit,
+            click() {
+              agent.broadcast(events.edit_hosts_info, data)
+            },
+          },
+          {
+            type: 'separator',
+          },
+          {
+            label: deal_count === 1 ? lang.move_to_trashcan : i18n.trans('move_items_to_trashcan', [deal_count.toLocaleString()]),
+            click() {
+              let ids = deal_count === 1 ? [data.id] : selected_ids
+              agent.broadcast(events.move_to_trashcan, ids)
+            },
+          },
+        ])
+
         !data.is_sys && !is_tray && menu.show()
         e.preventDefault()
         e.stopPropagation()
       }}
       ref={el}
       onClick={(e: React.MouseEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
+        if (is_tray) {
+          e.preventDefault()
+          e.stopPropagation()
+        }
       }}
     >
       <div className={styles.title} onClick={onSelect}>

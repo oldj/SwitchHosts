@@ -36,6 +36,7 @@ const List = (props: Props) => {
   } = useModel('useHostsData')
   const { configs } = useModel('useConfigs')
   const { lang } = useModel('useI18n')
+  const [selected_ids, setSelectedIds] = useState<string[]>([current_hosts?.id || '0'])
   const [show_list, setShowList] = useState<IHostsListObject[]>([])
   const toast = useToast()
 
@@ -124,21 +125,16 @@ const List = (props: Props) => {
     useOnBroadcast(events.tray_list_updated, loadHostsData)
   }
 
-  useOnBroadcast(events.move_to_trashcan, async (id: string) => {
-    console.log(`move_to_trashcan: #${id}`)
-
-    let next_hosts: IHostsListObject | undefined
-    // console.log(current_hosts)
-    if (current_hosts && current_hosts.id === id) {
-      next_hosts = getNextSelectedItem(hosts_data.list, id)
-      // console.log(next_hosts)
-    }
-
-    await actions.moveToTrashcan(id)
+  useOnBroadcast(events.move_to_trashcan, async (ids: string[]) => {
+    console.log(`move_to_trashcan: #${ids}`)
+    await actions.moveManyToTrashcan(ids)
     await loadHostsData()
 
-    if (next_hosts) {
-      await setCurrentHosts(next_hosts)
+    if (current_hosts && ids.includes(current_hosts.id)) {
+      // 选中删除指定节点后的兄弟节点
+      let next_item = getNextSelectedItem(hosts_data.list, i => ids.includes(i.id))
+      setCurrentHosts(next_item || null)
+      setSelectedIds(next_item ? [next_item.id] : [])
     }
   }, [current_hosts, hosts_data])
 
@@ -176,16 +172,17 @@ const List = (props: Props) => {
       {/*<SystemHostsItem/>*/}
       <Tree
         data={show_list}
-        selected_id={current_hosts?.id || '0'}
+        selected_ids={selected_ids}
         onChange={list => {
           setShowList(list)
           setList(list).catch(e => console.error(e))
         }}
-        // onSelect={(id) => {
-        //   agent.broadcast(events.select_hosts, id)
-        //}}
+        onSelect={(ids: string[]) => {
+          console.log(ids)
+          setSelectedIds(ids)
+        }}
         nodeRender={(data) => (
-          <ListItem key={data.id} data={data} is_tray={is_tray}/>
+          <ListItem key={data.id} data={data} is_tray={is_tray} selected_ids={selected_ids}/>
         )}
         collapseArrow={<Center w="20px" h="20px"><BiChevronRight/></Center>}
         nodeAttr={(item) => {
@@ -207,6 +204,9 @@ const List = (props: Props) => {
               </span>
               <span>
                 {data.title || lang.untitled}
+                {selected_ids.length > 1 ? (
+                  <span className={styles.items_count}>{selected_ids.length} {lang.items}</span>
+                ) : null}
               </span>
             </div>
           )
@@ -215,6 +215,7 @@ const List = (props: Props) => {
         nodeDropInClassName={styles.node_drop_in}
         nodeSelectedClassName={styles.node_selected}
         nodeCollapseArrowClassName={styles.arrow}
+        allowed_multiple_selection={true}
       />
     </div>
   )

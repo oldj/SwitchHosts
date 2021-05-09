@@ -8,6 +8,8 @@ import lodash from 'lodash'
 
 type PartHostsObjectType = Partial<IHostsListObject> & { id: string }
 
+type Predicate = (obj: IHostsListObject) => boolean;
+
 export const flatten = (list: IHostsListObject[]): IHostsListObject[] => {
   let new_list: IHostsListObject[] = []
 
@@ -106,11 +108,28 @@ export const deleteItemById = (list: IHostsListObject[], id: string) => {
   list.map(item => deleteItemById(item.children || [], id))
 }
 
-export const getNextSelectedItem = (list: IHostsListObject[], id: string): IHostsListObject | undefined => {
-  let flat = flatten(list)
-  let idx = flat.findIndex(item => item.id === id)
+// export const getNextSelectedItem = (list: IHostsListObject[], id: string): IHostsListObject | undefined => {
+//   let flat = flatten(list)
+//   let idx = flat.findIndex(item => item.id === id)
+//
+//   return flat[idx + 1] || flat[idx - 1]
+// }
 
-  return flat[idx + 1] || flat[idx - 1]
+export const getNextSelectedItem = (tree: IHostsListObject[], predicate: Predicate): IHostsListObject | undefined => {
+  let flat = flatten(tree)
+  let idx_1 = -1
+  let idx_2 = -1
+
+  flat.map((i, idx) => {
+    if (predicate(i)) {
+      if (idx_1 === -1) {
+        idx_1 = idx
+      }
+      idx_2 = idx
+    }
+  })
+
+  return flat[idx_2 + 1] || flat[idx_1 - 1]
 }
 
 export const getParentOfItem = (list: IHostsListObject[], item_id: string): IHostsListObject | undefined => {

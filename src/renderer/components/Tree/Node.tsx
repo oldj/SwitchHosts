@@ -5,10 +5,18 @@
  */
 
 import clsx from 'clsx'
+import lodash from 'lodash'
 import React, { useRef } from 'react'
-import { isChildOf } from './fn'
+import { isChildOf, isSelfOrChild } from './fn'
 import styles from './style.less'
-import { DropWhereType, NodeIdType } from './Tree'
+import { DropWhereType, MultipleSelectType, NodeIdType } from './Tree'
+
+declare global {
+  interface Window {
+    _t_dragover_id?: string;
+    _t_dragover_ts: number;
+  }
+}
 
 export type NodeUpdate = (data: Partial<ITreeNodeData>) => void
 
@@ -33,25 +41,26 @@ interface INodeProps {
   nodeDropInClassName?: string;
   nodeSelectedClassName?: string;
   nodeCollapseArrowClassName?: string;
-  drag_source_id?: NodeIdType | null;
-  drop_target_id?: NodeIdType | null;
-  drag_target_where?: DropWhereType | null;
+  drag_source_id: NodeIdType | null;
+  drop_target_id: NodeIdType | null;
+  drag_target_where: DropWhereType | null;
   onDragStart: (id: NodeIdType) => void;
   onDragEnd: () => void;
   setDropTargetId: (id: NodeIdType | null) => void;
   setDropWhere: (where: DropWhereType | null) => void;
-  selected_id: NodeIdType | null;
-  onSelect: (id: NodeIdType) => void;
+  selected_ids: NodeIdType[];
+  onSelect: (id: NodeIdType, multiple_type?: MultipleSelectType) => void;
   level: number;
   is_dragging: boolean;
   render?: (data: ITreeNodeData, update: NodeUpdate) => React.ReactElement | null;
-  draggingNodeRender?: (data: ITreeNodeData) => React.ReactElement;
+  draggingNodeRender?: (data: ITreeNodeData, source_ids: string[]) => React.ReactElement;
   collapseArrow?: string | React.ReactElement;
   onChange: (id: NodeIdType, data: Partial<ITreeNodeData>) => void;
   indent_px?: number;
   nodeAttr?: (node: ITreeNodeData) => Partial<ITreeNodeData>;
   has_no_child: boolean;
   no_child_no_indent?: boolean;
+  allowed_multiple_selection?: boolean;
 }
 
 const Node = (props: INodeProps) => {
@@ -67,7 +76,7 @@ const Node = (props: INodeProps) => {
     render,
     draggingNodeRender,
     indent_px,
-    selected_id,
+    selected_ids,
     onSelect,
     onChange,
     nodeAttr,
@@ -111,6 +120,7 @@ const Node = (props: INodeProps) => {
   }
 
   // const onDragEnter = (e: React.DragEvent) => {
+  //   console.log(`enter: ` + data.id)
   // }
 
   const onDragOver = (e: React.DragEvent) => {
@@ -126,6 +136,19 @@ const Node = (props: INodeProps) => {
     if (isChildOf(props.tree, data.id, drag_source_id)) return
 
     setDropTargetId(data.id)
+
+    let now = (new Date()).getTime()
+    if (window._t_dragover_id !== data.id) {
+      window._t_dragover_id = data.id
+      window._t_dragover_ts = now
+    }
+    if (
+      data.children?.length
+      && data.is_collapsed
+      && now - window._t_dragover_ts > 1000
+    ) {
+      props.onChange(data.id, { is_collapsed: false })
+    }
 
     // where
     let ne = e.nativeEvent
@@ -158,6 +181,7 @@ const Node = (props: INodeProps) => {
   }
 
   // const onDragLeave = (e: React.DragEvent) => {
+  //   console.log(`leave: ` + data.id)
   // }
 
   const onDragEnd = (e: React.DragEvent) => {
@@ -165,6 +189,8 @@ const Node = (props: INodeProps) => {
     e.stopPropagation()
     // console.log('onDragEnd.')
     props.onDragEnd()
+
+    window._t_dragover_id = ''
 
     el_dragging.current && (el_dragging.current.style.display = 'none')
   }
@@ -175,7 +201,7 @@ const Node = (props: INodeProps) => {
 
   const is_drag_source = drag_source_id === data.id
   const is_drop_target = drop_target_id === data.id
-  const is_selected = selected_id === data.id
+  const is_selected = selected_ids.includes(data.id)
   const is_parent_is_drag_source = drag_source_id ? isChildOf(props.tree, data.id, drag_source_id) : false
   const has_children = Array.isArray(data.children) && data.children.length > 0
 
@@ -202,9 +228,20 @@ const Node = (props: INodeProps) => {
         // onDragLeave={onDragLeave}
         onDragEnd={onDragEnd}
         onDrop={onDragEnd}
-        onClick={() => attr.can_select !== false && onSelect(data.id)}
+        onClick={(e) => {
+          if (attr.can_select === false) {
+            return
+          }
+          let multiple_type: MultipleSelectType = 0
+          if (e.shiftKey) {
+            multiple_type = 2
+          } else if (e.metaKey) {
+            multiple_type = 1
+          }
+          onSelect(data.id, multiple_type)
+        }}
         style={{
-          paddingLeft: level * (indent_px || 20),
+          paddingLeft: level * (indent_px || 20) + 4,
         }}
       >
         <div className={clsx(
@@ -237,16 +274,71 @@ const Node = (props: INodeProps) => {
       </div>
       {draggingNodeRender && (
         <div ref={el_dragging} className={styles.for_dragging}>
-          {draggingNodeRender(data)}
+          {
+            draggingNodeRender(data, selected_ids.includes(data.id) ? selected_ids : [data.id])
+          }
         </div>
       )}
       {has_children && data.children && !data.is_collapsed
         ? data.children.map((node) => (
-          <Node {...props} key={node.id} data={node} level={level + 1}/>
+          <Node
+            {...props}
+            key={node.id}
+            data={node}
+            level={level + 1}
+          />
         ))
         : null}
     </>
   )
 }
 
-export default Node
+function diff<T> (a: T[], b: T[]): T[] {
+  return [
+    ...a.filter(i => !b.includes(i)),
+    ...b.filter(i => !a.includes(i)),
+  ]
+}
+
+function isEqual (prevProps: INodeProps, nextProps: INodeProps): boolean {
+  let { data, selected_ids, allowed_multiple_selection } = nextProps
+
+  if (!lodash.isEqual(prevProps.data, data)) {
+    return false
+  }
+
+  // select
+  let prev_selected_ids = prevProps.selected_ids
+
+  let diff_ids = diff<NodeIdType>(prev_selected_ids, selected_ids)
+  if (diff_ids.length > 0) {
+    if (allowed_multiple_selection) {
+      return false
+    } else {
+      for (let id of diff_ids) {
+        if (isSelfOrChild(data, id)) {
+          return false
+        }
+      }
+    }
+  }
+
+  // drag
+  if (prevProps.is_dragging !== nextProps.is_dragging) {
+    return false
+  }
+
+  let { drag_source_id, drop_target_id } = nextProps
+  if (
+    isSelfOrChild(data, drag_source_id)
+    || isSelfOrChild(data, drop_target_id)
+    || isSelfOrChild(data, prevProps.drag_source_id)
+    || isSelfOrChild(data, prevProps.drop_target_id)
+  ) {
+    return false
+  }
+
+  return true
+}
+
+export default React.memo(Node, isEqual)
