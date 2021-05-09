@@ -62,7 +62,7 @@ const PreferencePanel = (props: Props) => {
       setColorMode(data.theme)
     }
 
-    agent.broadcast('config_updated')
+    agent.broadcast('config_updated', data)
   }
 
   useEffect(() => {

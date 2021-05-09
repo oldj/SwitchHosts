@@ -7,9 +7,10 @@ import * as http_api from '@main/http'
 import * as cron from '@main/libs/cron'
 import getIndex from '@main/libs/getIndex'
 import isDev from '@main/libs/isDev'
-import { makeMainMenu } from '@main/libs/menu'
+import { makeMainMenu } from '@main/ui/menu'
 import Tracer from '@main/libs/tracer'
-import '@main/tray'
+import '@main/ui/tray'
+import * as find from '@main/ui/find'
 import version from '@root/version.json'
 import { app, BrowserWindow } from 'electron'
 import windowStateKeeper from 'electron-window-state'
@@ -125,6 +126,8 @@ app.on('ready', async () => {
   if (http_api_on) {
     http_api.start()
   }
+
+  find.makeWindow()
 })
 
 app.on('window-all-closed', () => {

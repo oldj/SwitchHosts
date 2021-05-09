@@ -9,9 +9,12 @@ import StatusBar from '@renderer/components/StatusBar'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
+import { IFindShowSourceParam } from '@root/common/types'
+import wait from '@root/common/utils/wait'
 import clsx from 'clsx'
 import CodeMirror from 'codemirror'
 import 'codemirror/addon/comment/comment'
+import 'codemirror/addon/selection/mark-selection'
 import lodash from 'lodash'
 import React, { useEffect, useRef, useState } from 'react'
 import modeHosts from './cm_hl'
@@ -36,6 +39,7 @@ const HostsEditor = (props: Props) => {
   const [is_read_only, setIsReadOnly] = useState(true)
   const [cm_editor, setCMEditor] = useState<CodeMirror.EditorFromTextArea | null>(null)
   const el_ref = useRef<HTMLTextAreaElement>(null)
+  const [find_params, setFindParams] = useState<IFindShowSourceParam | null>(null)
 
   const loadContent = async () => {
     if (!cm_editor) return
@@ -119,6 +123,12 @@ const HostsEditor = (props: Props) => {
     })
   }, [])
 
+  useEffect(() => {
+    if (find_params && find_params.item_id === hosts.id) {
+      setSelection(find_params)
+    }
+  }, [hosts, find_params])
+
   useOnBroadcast('editor:content_change', (new_content: string) => {
     if (new_content === content) return
     onChange(new_content)
@@ -131,6 +141,11 @@ const HostsEditor = (props: Props) => {
     loadContent()
   }, [hosts, hosts_data, cm_editor])
 
+  useOnBroadcast('hosts_refreshed_by_id', (id: string) => {
+    if (hosts.id !== '0' && id !== hosts.id) return
+    loadContent()
+  }, [hosts, hosts_data, cm_editor])
+
   useOnBroadcast('toggle_comment', toggleComment, [cm_editor, is_read_only])
 
   useOnBroadcast('set_hosts_on_status', () => {
@@ -139,10 +154,44 @@ const HostsEditor = (props: Props) => {
     }
   }, [hosts, cm_editor])
 
+  const setSelection = async (params: IFindShowSourceParam) => {
+    if (!cm_editor) return
+    let doc = cm_editor.getDoc()
+
+    doc.setSelection({
+      line: params.line - 1,
+      ch: params.line_pos,
+    }, {
+      line: params.end_line - 1,
+      ch: params.end_line_pos,
+    })
+
+    // console.log(doc.getSelection())
+    await wait(200)
+    if (!doc.getSelection()) {
+      await setSelection(params)
+    }
+    cm_editor.focus()
+  }
+
+  useOnBroadcast('show_source', async (params: IFindShowSourceParam) => {
+    if (!cm_editor) return
+
+    if (params.item_id !== hosts.id) {
+      setFindParams(params)
+      setTimeout(() => {
+        setFindParams(null)
+      }, 3000)
+      return
+    }
+
+    setSelection(params)
+  }, [hosts, cm_editor])
+
   return (
     <div className={styles.root}>
       <div
-        className={clsx(styles.editor, is_read_only && styles.read_only)}
+        className={clsx(styles.editor, is_read_only && styles.read_only_tag)}
       >
         <textarea
           ref={el_ref}

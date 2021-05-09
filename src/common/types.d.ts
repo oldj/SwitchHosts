@@ -4,6 +4,7 @@
  * @homepage: https://oldj.net
  */
 
+import { HostsType } from '@root/common/data'
 import { MenuItemConstructorOptions } from 'electron'
 import { default as lang } from './i18n/languages/en'
 
@@ -19,4 +20,36 @@ export interface IMenuItemOption extends MenuItemConstructorOptions {
 export interface IPopupMenuOption {
   menu_id: string;
   items: IMenuItemOption[];
+}
+
+export interface IFindPosition {
+  start: number;
+  end: number;
+  line: number;
+  line_pos: number;
+  end_line: number;
+  end_line_pos: number;
+  before: string;
+  match: string;
+  after: string;
+}
+
+export interface IFindSpliter {
+  before: string;
+  match: string;
+  after: string;
+  replace?: string;
+}
+
+export interface IFindItem {
+  item_id: string;
+  item_title: string;
+  item_type: HostsType;
+  positions: IFindPosition[];
+  spliters: IFindSpliter[];
+}
+
+export type IFindShowSourceParam = IFindPosition & {
+  item_id: string;
+  [key: string]: any;
 }
