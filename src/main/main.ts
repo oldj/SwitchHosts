@@ -58,6 +58,9 @@ const createWindow = async () => {
   let hide_dock_icon = await configGet('hide_dock_icon')
   if (hide_dock_icon) {
     app.dock.hide()
+  } else {
+    app.dock.show()
+      .catch(e => console.error(e))
   }
 
   console.log('isDev: ', isDev())
