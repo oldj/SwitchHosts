@@ -27,6 +27,7 @@ export default {
   show_sudo_password_input: 'show_sudo_password_input',
   system_hosts_updated: 'system_hosts_updated',
   toggle_comment: 'toggle_comment',
+  toggle_developer_tools: 'toggle_developer_tools',
   toggle_item: 'toggle_item',
   toggle_left_pannel: 'toggle_left_pannel',
   tray_list_updated: 'tray:list_updated',

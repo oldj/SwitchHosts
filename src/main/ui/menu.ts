@@ -4,7 +4,6 @@
  */
 
 import { findShow } from '@main/actions'
-import isDev from '@main/libs/isDev'
 import events from '@root/common/events'
 import { BrowserWindow, Menu, MenuItem, MenuItemConstructorOptions, shell } from 'electron'
 import { I18N, LocaleName } from '@root/common/i18n'

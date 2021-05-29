@@ -21,6 +21,7 @@ import {
   BiMessageDetail,
   BiRefresh,
   BiSliderAlt,
+  BiWrench,
 } from 'react-icons/bi'
 import styles from './ConfigMenu.less'
 
@@ -155,6 +156,15 @@ const ConfigMenu = (props: Props) => {
           >
             {lang.preferences}
           </MenuItem>
+          <MenuItem
+            icon={<BiWrench/>}
+            onClick={() => actions.cmdToggleDevTools()}
+          >
+            {lang.toggle_developer_tools}
+          </MenuItem>
+
+          <MenuDivider/>
+
           <MenuItem
             icon={<BiExit/>}
             onClick={() => actions.quit()}

@@ -9,8 +9,8 @@ import {
   Box,
   Checkbox,
   FormControl,
-  FormLabel,
   FormHelperText,
+  FormLabel,
   HStack,
   Radio,
   RadioGroup,
@@ -18,10 +18,10 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { agent } from '@renderer/core/agent'
+import { http_api_port } from '@root/common/constants'
 import { ConfigsType, ThemeType } from '@root/common/default_configs'
 import { LocaleName } from '@root/common/i18n'
 import React from 'react'
-import { http_api_port } from '@root/common/constants'
 
 interface IProps {
   data: ConfigsType;
@@ -113,16 +113,18 @@ const General = (props: IProps) => {
         </HStack>
       </FormControl>
 
-      <FormControl>
-        <HStack>
-          <Checkbox
-            isChecked={data.hide_dock_icon}
-            onChange={e => onChange({ hide_dock_icon: e.target.checked })}
-          >
-            {lang.hide_dock_icon}
-          </Checkbox>
-        </HStack>
-      </FormControl>
+      {agent.platform === 'darwin' ? (
+        <FormControl>
+          <HStack>
+            <Checkbox
+              isChecked={data.hide_dock_icon}
+              onChange={e => onChange({ hide_dock_icon: e.target.checked })}
+            >
+              {lang.hide_dock_icon}
+            </Checkbox>
+          </HStack>
+        </FormControl>
+      ) : null}
 
       <FormControl>
         <VStack align="left">
