@@ -42,6 +42,7 @@ const ConfigMenu = (props: Props) => {
           as={Button}
           variant="ghost"
           width="35px"
+          px="10.5px"
         >
           <BiCog/>
         </MenuButton>
