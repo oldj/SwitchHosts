@@ -109,23 +109,25 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
     {
       label: lang.view,
       submenu: [
-        // {
-        //     label: 'Reload',
-        //     accelerator: 'CmdOrCtrl+R',
-        //     click (item, focusedWindow) {
-        //         if (focusedWindow) focusedWindow.reload()
-        //     }
-        // },
-        // {
-        //     label: 'Toggle Developer Tools',
-        //     accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
-        //     click (item, focusedWindow) {
-        //         if (focusedWindow) focusedWindow.webContents.toggleDevTools()
-        //     }
-        // },
-        // {
-        //     type: 'separator'
-        // },
+        {
+          label: lang.reload,
+          accelerator: 'CmdOrCtrl+R',
+          click (item: MenuItem, focusedWindow: BrowserWindow | undefined) {
+            if (focusedWindow) focusedWindow.reload()
+          },
+        },
+        {
+          label: lang.toggle_developer_tools,// 'Toggle Developer Tools',
+          accelerator: process.platform === 'darwin'
+            ? 'Alt+Command+I'
+            : 'Ctrl+Shift+I',
+          click (item: MenuItem, focusedWindow: BrowserWindow | undefined) {
+            if (focusedWindow) focusedWindow.webContents.toggleDevTools()
+          },
+        },
+        {
+          type: 'separator',
+        },
         {
           role: 'resetZoom',
           label: lang.reset_zoom,
@@ -306,33 +308,14 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
     submenu.splice(0, 4)
   }
 
-  if (isDev()) {
-    // VIEW
-    // @ts-ignore
-    template[3].submenu = [
-      {
-        label: lang.reload,
-        accelerator: 'CmdOrCtrl+R',
-        click (item: MenuItem, focusedWindow: BrowserWindow) {
-          if (focusedWindow) focusedWindow.reload()
-        },
-      },
-      {
-        label: lang.toggle_developer_tools,// 'Toggle Developer Tools',
-        accelerator: process.platform === 'darwin'
-          ? 'Alt+Command+I'
-          : 'Ctrl+Shift+I',
-        click (item: MenuItem, focusedWindow: BrowserWindow) {
-          if (focusedWindow) focusedWindow.webContents.toggleDevTools()
-        },
-      },
-      {
-        type: 'separator',
-      },
-      // @ts-ignore
-      ...template[3].submenu,
-    ]
-  }
+  // if (isDev()) {
+  //   // VIEW
+  //   // @ts-ignore
+  //   template[3].submenu = [
+  //     // @ts-ignore
+  //     ...template[3].submenu,
+  //   ]
+  // }
 
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
