@@ -10,7 +10,7 @@ import { makeWindow } from '@main/ui/tray/window'
 import events from '@root/common/events'
 import { I18N } from '@root/common/i18n'
 import version from '@root/version.json'
-import { app, BrowserWindow, Menu, screen, Tray } from 'electron'
+import { app, BrowserWindow, Menu, MenuItemConstructorOptions, screen, Tray } from 'electron'
 import * as path from 'path'
 
 let tray: Tray
@@ -69,21 +69,23 @@ const makeTray = async () => {
         label: `v${ver}`,
         enabled: false,
       },
-      { type: 'separator' },
-      {
-        label: lang.toggle_dock_icon,
-        async click () {
-          let hide_dock_icon = await configGet('hide_dock_icon')
-          hide_dock_icon = !hide_dock_icon
-          await configSet('hide_dock_icon', hide_dock_icon)
-          if (hide_dock_icon) {
-            app.dock.hide()
-          } else {
-            app.dock.show()
-              .catch(e => console.error(e))
-          }
+      ...(app.dock ? <MenuItemConstructorOptions[]>[
+        { type: 'separator' },
+        {
+          label: lang.toggle_dock_icon,
+          async click () {
+            let hide_dock_icon = await configGet('hide_dock_icon')
+            hide_dock_icon = !hide_dock_icon
+            await configSet('hide_dock_icon', hide_dock_icon)
+            if (hide_dock_icon) {
+              app.dock.hide()
+            } else {
+              app.dock.show()
+                .catch(e => console.error(e))
+            }
+          },
         },
-      },
+      ] : []),
       { type: 'separator' },
       {
         label: lang.quit,
