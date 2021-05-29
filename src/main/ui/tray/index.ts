@@ -80,6 +80,7 @@ const makeTray = async () => {
             app.dock.hide()
           } else {
             app.dock.show()
+              .catch(e => console.error(e))
           }
         },
       },

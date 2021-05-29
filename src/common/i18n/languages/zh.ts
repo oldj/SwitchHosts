@@ -89,6 +89,7 @@ const lang: LanguageDict = {
   match: '匹配',
   migrate_confirm: 'SwitchHosts v4.0 使用了新的数据存储格式，是否迁移旧数据为新格式？',
   migrate_data: '迁移数据',
+  hide_dock_icon: '隐藏任务栏（Dock）图标',
   minimize: '最小化',
   minute: '分钟',
   minutes: '分钟',

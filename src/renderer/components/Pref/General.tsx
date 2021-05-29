@@ -114,6 +114,17 @@ const General = (props: IProps) => {
       </FormControl>
 
       <FormControl>
+        <HStack>
+          <Checkbox
+            isChecked={data.hide_dock_icon}
+            onChange={e => onChange({ hide_dock_icon: e.target.checked })}
+          >
+            {lang.hide_dock_icon}
+          </Checkbox>
+        </HStack>
+      </FormControl>
+
+      <FormControl>
         <VStack align="left">
           <Checkbox
             isChecked={data.remove_duplicate_records}
