@@ -68,7 +68,7 @@ export default {
   hour: 'hour',
   hours: 'hours',
   http_api_on: 'HTTP API on',
-  http_api_on_desc: 'Runs on port {0}, can be used by third-party software such as Alfred to switch hosts',
+  http_api_on_desc: 'Runs on port {0}, can be used by third-party software such as Alfred to switch hosts.',
   ignore_case: 'Ignore case',
   import: 'Import',
   import_done: 'The import is complete.',
