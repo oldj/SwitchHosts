@@ -5,11 +5,13 @@
  */
 
 import getDataFolder from '@main/libs/getDataFolder'
-import PotDb from 'potdb'
+import { app } from 'electron'
 import * as path from 'path'
+import PotDb from 'potdb'
 
 let swhdb: PotDb
 let cfgdb: PotDb
+let localdb: PotDb
 
 if (!global.swhdb) {
   let db_dir: string = path.join(getDataFolder(), 'data')
@@ -29,7 +31,17 @@ if (!global.cfgdb) {
   cfgdb = global.cfgdb
 }
 
+if (!global.localdb) {
+  let db_dir: string = path.join(app.getPath('userData'), 'swh_local')
+  localdb = new PotDb(db_dir)
+  console.log(`local db: ${localdb.dir}`)
+  global.localdb = localdb
+} else {
+  localdb = global.localdb
+}
+
 export {
   swhdb,
   cfgdb,
+  localdb,
 }

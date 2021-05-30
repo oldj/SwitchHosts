@@ -5,19 +5,19 @@
  */
 
 import { broadcast } from '@main/core/agent'
+import { localdb } from '@main/data'
 import { GET } from '@main/libs/request'
 import { server_url } from '@root/common/constants'
+import events from '@root/common/events'
 import version from '@root/version.json'
 import compareVersions from 'compare-versions'
-import { cfgdb } from '@main/data'
 import { v4 as uuid4 } from 'uuid'
-import events from '@root/common/events'
 
 const getUniqueId = async (): Promise<string> => {
-  let uid: string = await cfgdb.dict.local.get('uid', '')
+  let uid: string = await localdb.dict.local.get('uid', '')
   if (!uid) {
     uid = uuid4()
-    await cfgdb.dict.local.set('uid', uid)
+    await localdb.dict.local.set('uid', uid)
   }
   return uid
 }
