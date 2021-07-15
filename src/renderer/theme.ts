@@ -12,8 +12,6 @@ const config = {
 }
 
 const colors = {
-  swh: {
-  }
 }
 
 // @ts-ignore

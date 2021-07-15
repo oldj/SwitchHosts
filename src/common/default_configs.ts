@@ -1,7 +1,7 @@
 import { LocaleName } from '@root/common/i18n'
 import { FolderModeType } from './data.d'
 
-export type ThemeType = 'light' | 'dark' | 'auto'
+export type ThemeType = 'light' | 'dark' | 'system'
 export type ProtocolType = 'http' | 'https'
 
 const configs = {
@@ -11,7 +11,7 @@ const configs = {
 
   // preferences
   history_limit: 50,
-  locale: 'zh' as LocaleName,
+  locale: 'en' as LocaleName,
   theme: 'light' as ThemeType,
   choice_mode: 2 as FolderModeType,
   show_title_on_tray: false,

@@ -87,6 +87,7 @@ const _agent = {
   off,
   popupMenu,
   platform: process.platform,
+  darkModeToggle: (theme?: 'dark' | 'light' | 'system') => ipcRenderer.invoke(`dark-mode:${theme ?? 'toggle'}`),
 }
 
 contextBridge.exposeInMainWorld('_agent', _agent)

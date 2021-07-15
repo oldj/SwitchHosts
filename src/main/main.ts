@@ -12,7 +12,7 @@ import Tracer from '@main/libs/tracer'
 import '@main/ui/tray'
 import * as find from '@main/ui/find'
 import version from '@root/version.json'
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron'
 import windowStateKeeper from 'electron-window-state'
 import * as path from 'path'
 import { v4 as uuid4 } from 'uuid'
@@ -91,6 +91,27 @@ const createWindow = async () => {
 
   win.on('closed', () => {
     win = null
+  })
+
+  ipcMain.handle('dark-mode:toggle', () => {
+    if (nativeTheme.shouldUseDarkColors) {
+      nativeTheme.themeSource = 'light'
+    } else {
+      nativeTheme.themeSource = 'dark'
+    }
+    return nativeTheme.shouldUseDarkColors
+  })
+
+  ipcMain.handle('dark-mode:dark', () => {
+    nativeTheme.themeSource = 'dark'
+  })
+
+  ipcMain.handle('dark-mode:light', () => {
+    nativeTheme.themeSource = 'light'
+  })
+
+  ipcMain.handle('dark-mode:system', () => {
+    nativeTheme.themeSource = 'system'
   })
 }
 

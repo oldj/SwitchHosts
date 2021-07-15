@@ -48,6 +48,7 @@ export default () => {
     let cls = document.body.className
     document.body.className = cls.replace(/\btheme-\w+/ig, '')
     document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
+    await agent.darkModeToggle(theme)
 
     let if_migrate = await actions.migrateCheck()
     if (if_migrate) {
