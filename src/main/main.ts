@@ -59,8 +59,7 @@ const createWindow = async () => {
   if (hide_dock_icon) {
     app.dock && app.dock.hide()
   } else {
-    app.dock && app.dock.show()
-      .catch(e => console.error(e))
+    app.dock && app.dock.show().catch((e) => console.error(e))
   }
 
   console.log('isDev: ', isDev())
@@ -70,8 +69,7 @@ const createWindow = async () => {
 
   makeMainMenu(configs.locale)
 
-  win.loadURL(getIndex())
-    .catch(e => console.error(e))
+  win.loadURL(getIndex()).catch((e) => console.error(e))
 
   if (isDev()) {
     // Open DevTools, see https://github.com/electron/electron/issues/12438 for why we wait for dom-ready
@@ -160,6 +158,6 @@ app.on('window-all-closed', () => {
   }
 })
 
-app.on('before-quit', () => global.is_will_quit = true)
+app.on('before-quit', () => (global.is_will_quit = true))
 app.on('activate', onActive)
 message.on('active_main_window', onActive)

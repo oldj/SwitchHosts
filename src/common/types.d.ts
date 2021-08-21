@@ -14,42 +14,42 @@ export type LanguageKey = keyof LanguageDict
 export interface IMenuItemOption extends MenuItemConstructorOptions {
   // 参见：https://www.electronjs.org/docs/api/menu-item
 
-  _click_evt?: string;
+  _click_evt?: string
 }
 
 export interface IPopupMenuOption {
-  menu_id: string;
-  items: IMenuItemOption[];
+  menu_id: string
+  items: IMenuItemOption[]
 }
 
 export interface IFindPosition {
-  start: number;
-  end: number;
-  line: number;
-  line_pos: number;
-  end_line: number;
-  end_line_pos: number;
-  before: string;
-  match: string;
-  after: string;
+  start: number
+  end: number
+  line: number
+  line_pos: number
+  end_line: number
+  end_line_pos: number
+  before: string
+  match: string
+  after: string
 }
 
 export interface IFindSpliter {
-  before: string;
-  match: string;
-  after: string;
-  replace?: string;
+  before: string
+  match: string
+  after: string
+  replace?: string
 }
 
 export interface IFindItem {
-  item_id: string;
-  item_title: string;
-  item_type: HostsType;
-  positions: IFindPosition[];
-  spliters: IFindSpliter[];
+  item_id: string
+  item_title: string
+  item_type: HostsType
+  positions: IFindPosition[]
+  spliters: IFindSpliter[]
 }
 
 export type IFindShowSourceParam = IFindPosition & {
-  item_id: string;
-  [key: string]: any;
+  item_id: string
+  [key: string]: any
 }

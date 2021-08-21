@@ -20,23 +20,24 @@ import styles from './ListItem.less'
 import events from '@root/common/events'
 
 interface Props {
-  data: IHostsListObject;
-  selected_ids: string[];
-  is_tray?: boolean;
+  data: IHostsListObject
+  selected_ids: string[]
+  is_tray?: boolean
 }
 
 const ListItem = (props: Props) => {
   const { data, is_tray, selected_ids } = props
   const { lang, i18n } = useModel('useI18n')
-  const { hosts_data, setList, current_hosts, setCurrentHosts } = useModel('useHostsData')
-  const [ is_collapsed, setIsCollapsed ] = useState(!!data.is_collapsed)
-  const [ is_on, setIsOn ] = useState(data.on)
+  const { hosts_data, setList, current_hosts, setCurrentHosts } =
+    useModel('useHostsData')
+  const [is_collapsed, setIsCollapsed] = useState(!!data.is_collapsed)
+  const [is_on, setIsOn] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
 
   useEffect(() => {
     setIsOn(data.on)
-  }, [ data ])
+  }, [data])
 
   useEffect(() => {
     const is_selected = data.id === current_hosts?.id
@@ -48,8 +49,7 @@ const ListItem = (props: Props) => {
         scrollMode: 'if-needed',
       })
     }
-
-  }, [ data, current_hosts, el ])
+  }, [data, current_hosts, el])
 
   const onSelect = () => {
     setCurrentHosts(data.is_sys ? null : data)
@@ -60,8 +60,12 @@ const ListItem = (props: Props) => {
 
     let _is_collapsed = !is_collapsed
     setIsCollapsed(_is_collapsed)
-    setList(updateOneItem(hosts_data.list, { id: data.id, is_collapsed: _is_collapsed }))
-      .catch(e => console.error(e))
+    setList(
+      updateOneItem(hosts_data.list, {
+        id: data.id,
+        is_collapsed: _is_collapsed,
+      }),
+    ).catch((e) => console.error(e))
   }
 
   const toggleOn = (on?: boolean) => {
@@ -102,7 +106,12 @@ const ListItem = (props: Props) => {
             type: 'separator',
           },
           {
-            label: deal_count === 1 ? lang.move_to_trashcan : i18n.trans('move_items_to_trashcan', [deal_count.toLocaleString()]),
+            label:
+              deal_count === 1
+                ? lang.move_to_trashcan
+                : i18n.trans('move_items_to_trashcan', [
+                    deal_count.toLocaleString(),
+                  ]),
             click() {
               let ids = deal_count === 1 ? [data.id] : selected_ids
               agent.broadcast(events.move_to_trashcan, ids)
@@ -127,7 +136,10 @@ const ListItem = (props: Props) => {
           className={clsx(styles.icon, is_folder && styles.folder)}
           onClick={toggleIsCollapsed}
         >
-          <ItemIcon type={data.is_sys ? 'system' : data.type} is_collapsed={data.is_collapsed}/>
+          <ItemIcon
+            type={data.is_sys ? 'system' : data.type}
+            is_collapsed={data.is_collapsed}
+          />
         </span>
         {data.title || lang.untitled}
       </div>
@@ -144,7 +156,7 @@ const ListItem = (props: Props) => {
                 />
               </Center>
             </div>
-            <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)}/>
+            <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)} />
           </>
         )}
       </div>

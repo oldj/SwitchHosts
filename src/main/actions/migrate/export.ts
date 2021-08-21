@@ -17,10 +17,7 @@ export default async (): Promise<string | null | false> => {
   let result = await dialog.showSaveDialog({
     title: lang.import,
     defaultPath: path.join(global.last_path || '', 'swh_data.json'),
-    properties: [
-      'createDirectory',
-      'showOverwriteConfirmation',
-    ],
+    properties: ['createDirectory', 'showOverwriteConfirmation'],
   })
 
   if (result.canceled || !result.filePath) {
@@ -31,10 +28,14 @@ export default async (): Promise<string | null | false> => {
 
   let data = await swhdb.toJSON()
   try {
-    await fs.writeFile(target_dir, JSON.stringify({
-      data,
-      version,
-    }), 'utf-8')
+    await fs.writeFile(
+      target_dir,
+      JSON.stringify({
+        data,
+        version,
+      }),
+      'utf-8',
+    )
   } catch (e) {
     console.error(e)
     return false

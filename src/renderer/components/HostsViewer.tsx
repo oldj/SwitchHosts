@@ -9,7 +9,7 @@ import React from 'react'
 import styles from './HostsViewer.less'
 
 interface Props {
-  content: string;
+  content: string
 }
 
 const HostsViewer = (props: Props) => {
@@ -17,19 +17,21 @@ const HostsViewer = (props: Props) => {
   const lines = content.split('\n')
 
   const Line = (p: { line: string }) => {
-    return (
-      <div className={styles.line}>{p.line}</div>
-    )
+    return <div className={styles.line}>{p.line}</div>
   }
 
   return (
     <div className={styles.root}>
       <div className={styles.content}>
         {lines.map((line, idx) => (
-          <Line line={line} key={idx}/>
+          <Line line={line} key={idx} />
         ))}
       </div>
-      <StatusBar line_count={lines.length} bytes={content.length} read_only={true}/>
+      <StatusBar
+        line_count={lines.length}
+        bytes={content.length}
+        read_only={true}
+      />
     </div>
   )
 }

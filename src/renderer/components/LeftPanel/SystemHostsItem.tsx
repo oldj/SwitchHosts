@@ -10,9 +10,7 @@ import clsx from 'clsx'
 import React from 'react'
 import styles from './SystemHostsItem.less'
 
-interface Props {
-
-}
+interface Props {}
 
 const SystemHostsItem = (props: Props) => {
   const { i18n } = useModel('useI18n')
@@ -29,7 +27,9 @@ const SystemHostsItem = (props: Props) => {
       className={clsx(styles.root, is_selected && styles.selected)}
       onClick={showSystemHosts}
     >
-      <span className={styles.icon}><ItemIcon type="system"/></span>
+      <span className={styles.icon}>
+        <ItemIcon type="system" />
+      </span>
       <span>{i18n.lang.system_hosts}</span>
     </div>
   )

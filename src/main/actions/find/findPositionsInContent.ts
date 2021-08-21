@@ -5,7 +5,18 @@
 
 import { IFindPosition } from '@root/common/types'
 
-type MatchResult = Pick<IFindPosition, 'start' | 'end' | 'before' | 'match' | 'after' | 'line' | 'line_pos' | 'end_line' | 'end_line_pos'>
+type MatchResult = Pick<
+  IFindPosition,
+  | 'start'
+  | 'end'
+  | 'before'
+  | 'match'
+  | 'after'
+  | 'line'
+  | 'line_pos'
+  | 'end_line'
+  | 'end_line_pos'
+>
 
 export default (content: string, exp: RegExp): MatchResult[] => {
   let result_items: MatchResult[] = []

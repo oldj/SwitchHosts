@@ -16,7 +16,8 @@ export default {
   check_update: 'Check update',
   choice_mode: 'Choice mode',
   choice_mode_default: 'Default',
-  choice_mode_desc: 'Only valid for the topmost item, each folder can set its own choice mode.',
+  choice_mode_desc:
+    'Only valid for the topmost item, each folder can set its own choice mode.',
   choice_mode_multiple: 'Multiple',
   choice_mode_single: 'Single',
   choices: 'Choices',
@@ -26,7 +27,8 @@ export default {
   close: 'Close',
   colon: ': ',
   commands: 'Commands',
-  commands_help: 'The following system commands will be executed when Hosts applied:',
+  commands_help:
+    'The following system commands will be executed when Hosts applied:',
   commands_title: 'Command after a hosts be applied',
   comment_current_line: 'Comment current line',
   content: 'Content',
@@ -68,7 +70,8 @@ export default {
   hour: 'hour',
   hours: 'hours',
   http_api_on: 'HTTP API on',
-  http_api_on_desc: 'Runs on port {0}, can be used by third-party software such as Alfred to switch hosts.',
+  http_api_on_desc:
+    'Runs on port {0}, can be used by third-party software such as Alfred to switch hosts.',
   ignore_case: 'Ignore case',
   import: 'Import',
   import_done: 'The import is complete.',
@@ -86,7 +89,8 @@ export default {
   loading: 'Loading...',
   local: 'Local',
   match: 'Match',
-  migrate_confirm: 'SwitchHosts v4.0 uses a new data storage format, do you want to migrate old data to the new format?',
+  migrate_confirm:
+    'SwitchHosts v4.0 uses a new data storage format, do you want to migrate old data to the new format?',
   migrate_data: 'Migrate data',
   minimize: 'Minimize',
   minute: 'minute',
@@ -115,7 +119,8 @@ export default {
   reload: 'Reload',
   remote: 'Remote',
   remove_duplicate_records: 'Remove duplicate records',
-  remove_duplicate_records_desc: 'If a domain points to multiple IPs, only the first one will take effect, and the following ones will be converted into comments.',
+  remove_duplicate_records_desc:
+    'If a domain points to multiple IPs, only the first one will take effect, and the following ones will be converted into comments.',
   replace: 'Replace',
   replace_all: 'Replace all',
   replace_history: 'Replace history',
@@ -131,8 +136,10 @@ export default {
   sudo_prompt_title: 'Input your sudo password',
   system_hosts: 'System Hosts',
   system_hosts_history: 'History versions of the System Hosts',
-  system_hosts_history_delete_confirm: 'Are you sure you want to delete this item?',
-  system_hosts_history_help: 'If the total number of historical records exceeds this limit, the oldest record will be deleted.',
+  system_hosts_history_delete_confirm:
+    'Are you sure you want to delete this item?',
+  system_hosts_history_help:
+    'If the total number of historical records exceeds this limit, the oldest record will be deleted.',
   system_hosts_history_limit: 'Maximum number of records: ',
   test: 'Test',
   theme: 'Theme',
@@ -153,7 +160,8 @@ export default {
   untitled: 'Untitled',
   url_placeholder: 'http:// or https:// or file://',
   usage_data_agree: 'Yes, submit anonymized usage data',
-  usage_data_help: 'Would you like to help us improve SwitchHosts by periodically submitting anonymous usage data?',
+  usage_data_help:
+    'Would you like to help us improve SwitchHosts by periodically submitting anonymous usage data?',
   usage_data_title: 'Make SwitchHosts better!',
   use_proxy: 'Use proxy',
   view: 'View',

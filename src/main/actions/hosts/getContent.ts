@@ -9,7 +9,9 @@ import { IHostsContentObject } from '@root/common/data'
 import { findItemById, flatten } from '@root/common/hostsFn'
 
 const getContentById = async (id: string) => {
-  let hosts_content = await swhdb.collection.hosts.find<IHostsContentObject>(i => i.id === id)
+  let hosts_content = await swhdb.collection.hosts.find<IHostsContentObject>(
+    (i) => i.id === id,
+  )
   return hosts_content?.content || ''
 }
 
@@ -29,19 +31,23 @@ const getContentOfHosts = async (id: string): Promise<string> => {
   if (type === 'folder') {
     const items = flatten(hosts.children || [])
 
-    let a = await Promise.all(items.map(async (item) => {
-      return `# file: ${item.title}\n` + (await getContentOfHosts(item.id))
-    }))
+    let a = await Promise.all(
+      items.map(async (item) => {
+        return `# file: ${item.title}\n` + (await getContentOfHosts(item.id))
+      }),
+    )
     return a.join('\n\n')
   }
 
   if (type === 'group') {
-    let a = await Promise.all((hosts.include || []).map(async (id) => {
-      let item = findItemById(list, id)
-      if (!item) return ''
+    let a = await Promise.all(
+      (hosts.include || []).map(async (id) => {
+        let item = findItemById(list, id)
+        if (!item) return ''
 
-      return `# file: ${item.title}\n` + (await getContentOfHosts(id))
-    }))
+        return `# file: ${item.title}\n` + (await getContentOfHosts(id))
+      }),
+    )
     return a.join('\n\n')
   }
 

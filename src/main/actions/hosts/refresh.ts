@@ -56,7 +56,7 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
   }
 
   hosts.last_refresh = dayjs().format('YYYY-MM-DD HH:mm:ss')
-  hosts.last_refresh_ms = (new Date()).getTime()
+  hosts.last_refresh_ms = new Date().getTime()
 
   await setList(list)
 

@@ -21,7 +21,7 @@ const isNeedRefresh = (hosts: IHostsListObject): boolean => {
 
   if (!last_refresh_ms) return true
 
-  let ts = (new Date()).getTime()
+  let ts = new Date().getTime()
   if ((ts - last_refresh_ms) / 1000 >= refresh_interval) {
     return true
   }
@@ -33,8 +33,7 @@ const isNeedRefresh = (hosts: IHostsListObject): boolean => {
 const checkRefresh = async () => {
   // console.log('check refresh...')
   let list = await getList()
-  let remote_hosts = flatten(list)
-    .filter(h => h.type === 'remote')
+  let remote_hosts = flatten(list).filter((h) => h.type === 'remote')
 
   for (let hosts of remote_hosts) {
     if (isNeedRefresh(hosts)) {
@@ -50,22 +49,19 @@ const checkRefresh = async () => {
 }
 
 const checkServer = async () => {
-  let ts = (new Date()).getTime()
-  if (!ts_last_server_check || (ts - ts_last_server_check) > 3600 * 1000) {
+  let ts = new Date().getTime()
+  if (!ts_last_server_check || ts - ts_last_server_check > 3600 * 1000) {
     await checkUpdate()
     ts_last_server_check = ts
   }
 }
 
 const check = async () => {
-  checkRefresh()
-    .catch(e => console.error(e))
+  checkRefresh().catch((e) => console.error(e))
 
-  checkServer()
-    .catch(e => console.error(e))
+  checkServer().catch((e) => console.error(e))
 
-  global.tracer.emit()
-    .catch(e => console.error(e))
+  global.tracer.emit().catch((e) => console.error(e))
 }
 
 export const start = () => {

@@ -18,16 +18,18 @@ export default () => {
     if (!configs) return
 
     setLocale(configs.locale)
-    loadHostsData()
-      .catch(e => console.error(e))
+    loadHostsData().catch((e) => console.error(e))
 
     if (colorMode !== configs.theme) {
       setColorMode(configs.theme)
     }
 
     let cls = document.body.className
-    document.body.className = cls.replace(/\btheme-\w+/ig, '')
-    document.body.classList.add(`platform-${agent.platform}`, `theme-${configs.theme}`)
+    document.body.className = cls.replace(/\btheme-\w+/gi, '')
+    document.body.classList.add(
+      `platform-${agent.platform}`,
+      `theme-${configs.theme}`,
+    )
   }
 
   useEffect(update, [configs])
@@ -39,14 +41,14 @@ export default () => {
 
   return (
     <div className={styles.root}>
-      <h1 className={styles.header}>
-        SwitchHosts
-      </h1>
+      <h1 className={styles.header}>SwitchHosts</h1>
       <div className={styles.body}>
-        <List is_tray={true}/>
+        <List is_tray={true} />
       </div>
       <div className={styles.footer}>
-        <span onClick={showMain}><BiArea/></span>
+        <span onClick={showMain}>
+          <BiArea />
+        </span>
       </div>
     </div>
   )

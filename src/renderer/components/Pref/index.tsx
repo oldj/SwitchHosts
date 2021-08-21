@@ -33,9 +33,7 @@ import Advanced from './Advanced'
 import Commands from './Commands'
 import General from './General'
 
-interface Props {
-
-}
+interface Props {}
 
 const PreferencePanel = (props: Props) => {
   const [is_open, setIsOpen] = useState(false)
@@ -80,17 +78,14 @@ const PreferencePanel = (props: Props) => {
   }
 
   return (
-    <Drawer
-      size="lg"
-      isOpen={is_open}
-      placement="right"
-      onClose={onClose}
-    >
-      <DrawerOverlay/>
+    <Drawer size="lg" isOpen={is_open} placement="right" onClose={onClose}>
+      <DrawerOverlay />
       <DrawerContent>
         <DrawerHeader>
           <HStack>
-            <Box mr={1}><BiSliderAlt/></Box>
+            <Box mr={1}>
+              <BiSliderAlt />
+            </Box>
             <Box>{lang.preferences}</Box>
           </HStack>
         </DrawerHeader>
@@ -106,16 +101,16 @@ const PreferencePanel = (props: Props) => {
 
             <TabPanels>
               <TabPanel>
-                <General data={data} onChange={onUpdate}/>
+                <General data={data} onChange={onUpdate} />
               </TabPanel>
               <TabPanel>
-                <Commands data={data} onChange={onUpdate}/>
+                <Commands data={data} onChange={onUpdate} />
               </TabPanel>
               <TabPanel>
-                <Proxy data={data} onChange={onUpdate}/>
+                <Proxy data={data} onChange={onUpdate} />
               </TabPanel>
               <TabPanel>
-                <Advanced data={data} onChange={onUpdate}/>
+                <Advanced data={data} onChange={onUpdate} />
               </TabPanel>
             </TabPanels>
           </Tabs>

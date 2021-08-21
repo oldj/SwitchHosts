@@ -22,15 +22,13 @@ import events from '@root/common/events'
 import React, { useState } from 'react'
 import styles from './SudoPasswordInput.less'
 
-interface Props {
-
-}
+interface Props {}
 
 const SudoPasswordInput = (props: Props) => {
   const { lang } = useModel('useI18n')
-  const [ is_show, setIsShow ] = useState(false)
-  const [ pswd, setPswd ] = useState('')
-  const [ tmp_list, setTmpList ] = useState<IHostsListObject[] | undefined>()
+  const [is_show, setIsShow] = useState(false)
+  const [pswd, setPswd] = useState('')
+  const [tmp_list, setTmpList] = useState<IHostsListObject[] | undefined>()
   const ipt_ref = React.useRef<HTMLInputElement>(null)
 
   const onCancel = () => {
@@ -44,40 +42,44 @@ const SudoPasswordInput = (props: Props) => {
     agent.broadcast(events.write_hosts_to_system, tmp_list, { sudo_pswd: pswd })
   }
 
-  useOnBroadcast(events.show_sudo_password_input, (tmp_list?: IHostsListObject[]) => {
-    setTmpList(tmp_list)
-    setIsShow(true)
-    // console.log(tmp_list)
-    agent.broadcast(events.active_main_window)
-  }, [ tmp_list ])
+  useOnBroadcast(
+    events.show_sudo_password_input,
+    (tmp_list?: IHostsListObject[]) => {
+      setTmpList(tmp_list)
+      setIsShow(true)
+      // console.log(tmp_list)
+      agent.broadcast(events.active_main_window)
+    },
+    [tmp_list],
+  )
 
   if (!is_show) return null
 
   return (
-    <Modal
-      initialFocusRef={ipt_ref}
-      isOpen={is_show}
-      onClose={onCancel}
-    >
-      <ModalOverlay/>
+    <Modal initialFocusRef={ipt_ref} isOpen={is_show} onClose={onCancel}>
+      <ModalOverlay />
       <ModalContent>
-        <ModalCloseButton/>
+        <ModalCloseButton />
         <ModalBody pb={6}>
           <div className={styles.label}>{lang.sudo_prompt_title}</div>
           <Input
             ref={ipt_ref}
             type="password"
             value={pswd}
-            onChange={e => setPswd(e.target.value)}
+            onChange={(e) => setPswd(e.target.value)}
             autoFocus={true}
-            onKeyDown={e => {
+            onKeyDown={(e) => {
               if (e.key === 'Enter') onOk()
             }}
           />
         </ModalBody>
         <ModalFooter>
-          <Button variant="outline" onClick={onCancel} mr={3}>{lang.btn_cancel}</Button>
-          <Button colorScheme="blue" onClick={onOk}>{lang.btn_ok}</Button>
+          <Button variant="outline" onClick={onCancel} mr={3}>
+            {lang.btn_cancel}
+          </Button>
+          <Button colorScheme="blue" onClick={onOk}>
+            {lang.btn_ok}
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

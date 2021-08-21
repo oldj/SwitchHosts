@@ -87,7 +87,8 @@ const lang: LanguageDict = {
   loading: '加载中...',
   local: '本地',
   match: '匹配',
-  migrate_confirm: 'SwitchHosts v4.0 使用了新的数据存储格式，是否迁移旧数据为新格式？',
+  migrate_confirm:
+    'SwitchHosts v4.0 使用了新的数据存储格式，是否迁移旧数据为新格式？',
   migrate_data: '迁移数据',
   hide_dock_icon: '隐藏任务栏（Dock）图标',
   minimize: '最小化',
@@ -117,7 +118,8 @@ const lang: LanguageDict = {
   reload: '重载',
   remote: '远程',
   remove_duplicate_records: '移除重复的记录',
-  remove_duplicate_records_desc: '如果一个域名指向多个 IP，只有第一条会生效，后面的将被转为注释。',
+  remove_duplicate_records_desc:
+    '如果一个域名指向多个 IP，只有第一条会生效，后面的将被转为注释。',
   replace: '替换',
   replace_all: '替换所有',
   replace_history: '替换历史',
@@ -134,7 +136,8 @@ const lang: LanguageDict = {
   system_hosts: '系统 Hosts',
   system_hosts_history: '系统 Hosts 历史版本',
   system_hosts_history_delete_confirm: '确实要删除该项记录吗？',
-  system_hosts_history_help: '如果历史记录的总数超过这个限制，最老的记录将被删除。',
+  system_hosts_history_help:
+    '如果历史记录的总数超过这个限制，最老的记录将被删除。',
   system_hosts_history_limit: '最大记录数：',
   test: '测试',
   theme: '主题',
@@ -155,7 +158,8 @@ const lang: LanguageDict = {
   untitled: '未命名',
   url_placeholder: 'http:// 或 https:// 或 file://',
   usage_data_agree: '好的，发送匿名的使用数据',
-  usage_data_help: '您愿意发送匿名的使用数据来帮助我们改进 SwitchHosts 吗？数据中不会包含任何隐私信息。',
+  usage_data_help:
+    '您愿意发送匿名的使用数据来帮助我们改进 SwitchHosts 吗？数据中不会包含任何隐私信息。',
   usage_data_title: '帮助改进 SwitchHosts',
   use_proxy: '使用代理',
   view: '视图',

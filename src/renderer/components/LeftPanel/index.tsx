@@ -14,7 +14,7 @@ import React from 'react'
 import styles from './index.less'
 
 interface Props {
-  width: number;
+  width: number
 }
 
 const Index = (props: Props) => {
@@ -24,19 +24,16 @@ const Index = (props: Props) => {
   const menu = new PopupMenu([
     {
       label: lang.hosts_add,
-      click () {
+      click() {
         agent.broadcast(events.add_new)
       },
     },
   ])
 
   return (
-    <div
-      className={styles.list}
-      onContextMenu={() => menu.show()}
-    >
-      <List/>
-      {hosts_data.trashcan.length > 0 ? <Trashcan/> : null}
+    <div className={styles.list} onContextMenu={() => menu.show()}>
+      <List />
+      {hosts_data.trashcan.length > 0 ? <Trashcan /> : null}
     </div>
   )
 }

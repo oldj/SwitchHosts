@@ -14,13 +14,12 @@ import React, { useEffect, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
 import styles from './Trashcan.less'
 
-interface Props {
-
-}
+interface Props {}
 
 const Trashcan = (props: Props) => {
   const { lang } = useModel('useI18n')
-  const { hosts_data, current_hosts, setCurrentHosts } = useModel('useHostsData')
+  const { hosts_data, current_hosts, setCurrentHosts } =
+    useModel('useHostsData')
   const [trash_list, setTrashList] = useState<ITrashcanListObject[]>([])
   const [is_collapsed, setIsCollapsed] = useState(true)
 
@@ -43,13 +42,14 @@ const Trashcan = (props: Props) => {
 
     let list: ITrashcanListObject[] = [root]
 
-    hosts_data.trashcan.map(i => {
-      root.children && root.children.push({
-        ...i,
-        id: i.data.id,
-        can_drag: false,
-        type: i.data.type,
-      })
+    hosts_data.trashcan.map((i) => {
+      root.children &&
+        root.children.push({
+          ...i,
+          id: i.data.id,
+          can_drag: false,
+          type: i.data.type,
+        })
     })
 
     setTrashList(list)
@@ -57,7 +57,7 @@ const Trashcan = (props: Props) => {
 
   const onSelect = (ids: string[]) => {
     let id = ids[0]
-    let item = hosts_data.trashcan.find(i => i.data.id === id)
+    let item = hosts_data.trashcan.find((i) => i.data.id === id)
     if (!item) return
     setCurrentHosts(item.data)
   }
@@ -66,14 +66,20 @@ const Trashcan = (props: Props) => {
     <div className={styles.root}>
       <Tree
         data={trash_list}
-        nodeRender={(item) => <TrashcanItem data={item as ITrashcanListObject}/>}
-        collapseArrow={<Center w="20px" h="20px"><BiChevronRight/></Center>}
+        nodeRender={(item) => (
+          <TrashcanItem data={item as ITrashcanListObject} />
+        )}
+        collapseArrow={
+          <Center w="20px" h="20px">
+            <BiChevronRight />
+          </Center>
+        }
         nodeClassName={list_styles.node}
         nodeSelectedClassName={list_styles.node_selected}
         nodeCollapseArrowClassName={list_styles.arrow}
         onSelect={onSelect}
         selected_ids={current_hosts ? [current_hosts.id] : []}
-        onChange={list => setIsCollapsed(!!list[0]?.is_collapsed)}
+        onChange={(list) => setIsCollapsed(!!list[0]?.is_collapsed)}
       />
     </div>
   )

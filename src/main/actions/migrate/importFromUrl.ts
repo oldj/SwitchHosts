@@ -35,7 +35,11 @@ export default async (url: string): Promise<boolean | null | string> => {
     data = res.data
   }
 
-  if (typeof data !== 'object' || !data.version || !Array.isArray(data.version)) {
+  if (
+    typeof data !== 'object' ||
+    !data.version ||
+    !Array.isArray(data.version)
+  ) {
     return 'invalid_data'
   }
 

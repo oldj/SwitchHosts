@@ -9,7 +9,9 @@ import { getNodeById } from '@renderer/components/Tree/fn'
 import { ITrashcanListObject } from '@root/common/data'
 
 export default async (id: string): Promise<boolean> => {
-  let trashcan_item: ITrashcanListObject = await swhdb.list.trashcan.find(i => i.data.id === id)
+  let trashcan_item: ITrashcanListObject = await swhdb.list.trashcan.find(
+    (i) => i.data.id === id,
+  )
 
   if (!trashcan_item) {
     console.log(`can't find trashcan_item with id #${id}.`)
@@ -26,7 +28,7 @@ export default async (id: string): Promise<boolean> => {
   let { parent_id } = trashcan_item
 
   if (!parent_id) {
-    await setList([ ...list, hosts ])
+    await setList([...list, hosts])
   } else {
     let parent_hosts = getNodeById(list, parent_id)
     if (!parent_hosts) {
@@ -34,11 +36,11 @@ export default async (id: string): Promise<boolean> => {
       return false
     }
 
-    parent_hosts.children = [ ...(parent_hosts.children || []), hosts ]
+    parent_hosts.children = [...(parent_hosts.children || []), hosts]
     await setList(list)
   }
 
-  await swhdb.list.trashcan.delete(i => i.data.id === id)
+  await swhdb.list.trashcan.delete((i) => i.data.id === id)
 
   return true
 }

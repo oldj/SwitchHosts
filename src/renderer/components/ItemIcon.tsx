@@ -16,8 +16,8 @@ import {
 } from 'react-icons/bi'
 
 interface Props {
-  type?: string;
-  is_collapsed?: boolean;
+  type?: string
+  is_collapsed?: boolean
 }
 
 const ItemIcon = (props: Props) => {
@@ -25,19 +25,17 @@ const ItemIcon = (props: Props) => {
 
   switch (type) {
     case 'folder':
-      return is_collapsed ?
-        <BiFolder/> :
-        <BiFolderOpen/>
+      return is_collapsed ? <BiFolder /> : <BiFolderOpen />
     case 'remote':
-      return <BiGlobe/>
+      return <BiGlobe />
     case 'group':
-      return <BiLayer/>
+      return <BiLayer />
     case 'system':
-      return <BiDesktop/>
+      return <BiDesktop />
     case 'trashcan':
-      return <BiTrash/>
+      return <BiTrash />
     default:
-      return <BiFile/>
+      return <BiFile />
   }
 }
 

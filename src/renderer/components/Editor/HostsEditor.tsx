@@ -27,9 +27,9 @@ modeHosts()
 
 interface Props {
   hosts: {
-    id: string;
-    content?: string;
-  };
+    id: string
+    content?: string
+  }
 }
 
 const HostsEditor = (props: Props) => {
@@ -38,14 +38,20 @@ const HostsEditor = (props: Props) => {
   const [hosts_id, setHostsId] = useState(hosts.id)
   const [content, setContent] = useState(hosts.content || '')
   const [is_read_only, setIsReadOnly] = useState(true)
-  const [cm_editor, setCMEditor] = useState<CodeMirror.EditorFromTextArea | null>(null)
+  const [cm_editor, setCMEditor] =
+    useState<CodeMirror.EditorFromTextArea | null>(null)
   const el_ref = useRef<HTMLTextAreaElement>(null)
-  const [find_params, setFindParams] = useState<IFindShowSourceParam | null>(null)
+  const [find_params, setFindParams] = useState<IFindShowSourceParam | null>(
+    null,
+  )
 
   const loadContent = async () => {
     if (!cm_editor) return
 
-    let content = hosts.id === '0' ? await actions.getSystemHosts() : await actions.getHostsContent(hosts.id)
+    let content =
+      hosts.id === '0'
+        ? await actions.getSystemHosts()
+        : await actions.getHostsContent(hosts.id)
     setContent(content)
     cm_editor.setValue(content)
     cm_editor.setOption('readOnly', isReadOnly(hosts))
@@ -65,9 +71,10 @@ const HostsEditor = (props: Props) => {
   }, [hosts])
 
   const toSave = lodash.debounce((id: string, content: string) => {
-    actions.setHostsContent(id, content)
+    actions
+      .setHostsContent(id, content)
       .then(() => agent.broadcast(events.hosts_content_changed, id))
-      .catch(e => console.error(e))
+      .catch((e) => console.error(e))
   }, 1000)
 
   const onChange = (content: string) => {
@@ -94,7 +101,8 @@ const HostsEditor = (props: Props) => {
       new_line = '# ' + line
     }
 
-    cm_editor.getDoc()
+    cm_editor
+      .getDoc()
       .replaceRange(
         new_line,
         { line: info.line, ch: 0 },
@@ -130,42 +138,67 @@ const HostsEditor = (props: Props) => {
     }
   }, [hosts, find_params])
 
-  useOnBroadcast(events.editor_content_change, (new_content: string) => {
-    if (new_content === content) return
-    onChange(new_content)
-  }, [hosts, hosts_id, content])
+  useOnBroadcast(
+    events.editor_content_change,
+    (new_content: string) => {
+      if (new_content === content) return
+      onChange(new_content)
+    },
+    [hosts, hosts_id, content],
+  )
 
-  useOnBroadcast(events.editor_gutter_click, onGutterClick, [cm_editor, is_read_only])
+  useOnBroadcast(events.editor_gutter_click, onGutterClick, [
+    cm_editor,
+    is_read_only,
+  ])
 
-  useOnBroadcast(events.hosts_refreshed, (h: IHostsListObject) => {
-    if (hosts.id !== '0' && h.id !== hosts.id) return
-    loadContent()
-  }, [hosts, hosts_data, cm_editor])
-
-  useOnBroadcast(events.hosts_refreshed_by_id, (id: string) => {
-    if (hosts.id !== '0' && id !== hosts.id) return
-    loadContent()
-  }, [hosts, hosts_data, cm_editor])
-
-  useOnBroadcast(events.toggle_comment, toggleComment, [cm_editor, is_read_only])
-
-  useOnBroadcast(events.set_hosts_on_status, () => {
-    if (hosts.id === '0') {
+  useOnBroadcast(
+    events.hosts_refreshed,
+    (h: IHostsListObject) => {
+      if (hosts.id !== '0' && h.id !== hosts.id) return
       loadContent()
-    }
-  }, [hosts, cm_editor])
+    },
+    [hosts, hosts_data, cm_editor],
+  )
+
+  useOnBroadcast(
+    events.hosts_refreshed_by_id,
+    (id: string) => {
+      if (hosts.id !== '0' && id !== hosts.id) return
+      loadContent()
+    },
+    [hosts, hosts_data, cm_editor],
+  )
+
+  useOnBroadcast(events.toggle_comment, toggleComment, [
+    cm_editor,
+    is_read_only,
+  ])
+
+  useOnBroadcast(
+    events.set_hosts_on_status,
+    () => {
+      if (hosts.id === '0') {
+        loadContent()
+      }
+    },
+    [hosts, cm_editor],
+  )
 
   const setSelection = async (params: IFindShowSourceParam) => {
     if (!cm_editor) return
     let doc = cm_editor.getDoc()
 
-    doc.setSelection({
-      line: params.line - 1,
-      ch: params.line_pos,
-    }, {
-      line: params.end_line - 1,
-      ch: params.end_line_pos,
-    })
+    doc.setSelection(
+      {
+        line: params.line - 1,
+        ch: params.line_pos,
+      },
+      {
+        line: params.end_line - 1,
+        ch: params.end_line_pos,
+      },
+    )
 
     // console.log(doc.getSelection())
     await wait(200)
@@ -175,19 +208,23 @@ const HostsEditor = (props: Props) => {
     cm_editor.focus()
   }
 
-  useOnBroadcast(events.show_source, async (params: IFindShowSourceParam) => {
-    if (!cm_editor) return
+  useOnBroadcast(
+    events.show_source,
+    async (params: IFindShowSourceParam) => {
+      if (!cm_editor) return
 
-    if (params.item_id !== hosts.id) {
-      setFindParams(params)
-      setTimeout(() => {
-        setFindParams(null)
-      }, 3000)
-      return
-    }
+      if (params.item_id !== hosts.id) {
+        setFindParams(params)
+        setTimeout(() => {
+          setFindParams(null)
+        }, 3000)
+        return
+      }
 
-    setSelection(params)
-  }, [hosts, cm_editor])
+      setSelection(params)
+    },
+    [hosts, cm_editor],
+  )
 
   return (
     <div className={styles.root}>

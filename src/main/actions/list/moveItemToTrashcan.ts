@@ -29,7 +29,7 @@ export default async (id: string) => {
       ...node,
       on: false,
     },
-    add_time_ms: (new Date()).getTime(),
+    add_time_ms: new Date().getTime(),
     parent_id: hostsFn.getParentOfItem(list, id)?.id || null,
   }
 

@@ -7,31 +7,43 @@
 import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
-import { canBeSelected, flatten, getNodeById, selectTo, treeMoveNode } from './fn'
+import {
+  canBeSelected,
+  flatten,
+  getNodeById,
+  selectTo,
+  treeMoveNode,
+} from './fn'
 import Node, { ITreeNodeData, NodeUpdate } from './Node'
 import styles from './style.less'
 
-export type NodeIdType = string;
-export type DropWhereType = 'before' | 'in' | 'after';
+export type NodeIdType = string
+export type DropWhereType = 'before' | 'in' | 'after'
 export type MultipleSelectType = 0 | 1 | 2
 
 interface ITreeProps {
-  data: ITreeNodeData[];
-  className?: string;
-  nodeClassName?: string;
-  nodeSelectedClassName?: string;
-  nodeDropInClassName?: string;
-  nodeCollapseArrowClassName?: string;
-  nodeRender?: (node: ITreeNodeData, update: NodeUpdate) => React.ReactElement | null;
-  nodeAttr?: (node: ITreeNodeData) => Partial<ITreeNodeData>;
-  draggingNodeRender?: (node: ITreeNodeData, source_ids: string[]) => React.ReactElement;
-  collapseArrow?: string | React.ReactElement;
-  onChange?: (tree: ITreeNodeData[]) => void;
-  indent_px?: number;
-  selected_ids: NodeIdType[];
-  onSelect?: (ids: NodeIdType[]) => void;
-  no_child_no_indent?: boolean;
-  allowed_multiple_selection?: boolean;
+  data: ITreeNodeData[]
+  className?: string
+  nodeClassName?: string
+  nodeSelectedClassName?: string
+  nodeDropInClassName?: string
+  nodeCollapseArrowClassName?: string
+  nodeRender?: (
+    node: ITreeNodeData,
+    update: NodeUpdate,
+  ) => React.ReactElement | null
+  nodeAttr?: (node: ITreeNodeData) => Partial<ITreeNodeData>
+  draggingNodeRender?: (
+    node: ITreeNodeData,
+    source_ids: string[],
+  ) => React.ReactElement
+  collapseArrow?: string | React.ReactElement
+  onChange?: (tree: ITreeNodeData[]) => void
+  indent_px?: number
+  selected_ids: NodeIdType[]
+  onSelect?: (ids: NodeIdType[]) => void
+  no_child_no_indent?: boolean
+  allowed_multiple_selection?: boolean
 }
 
 const Tree = (props: ITreeProps) => {
@@ -40,7 +52,9 @@ const Tree = (props: ITreeProps) => {
   const [is_dragging, setIsDragging] = useState(false)
   const [drag_source_id, setDragSourceId] = useState<NodeIdType | null>(null)
   const [drop_target_id, setDropTargetId] = useState<NodeIdType | null>(null)
-  const [selected_ids, setSelectedIds] = useState<NodeIdType[]>(props.selected_ids || [])
+  const [selected_ids, setSelectedIds] = useState<NodeIdType[]>(
+    props.selected_ids || [],
+  )
   const [drop_where, setDropWhere] = useState<DropWhereType | null>(null)
 
   useEffect(() => {
@@ -48,7 +62,10 @@ const Tree = (props: ITreeProps) => {
   }, [data])
 
   useEffect(() => {
-    if (props.selected_ids && props.selected_ids.join(',') !== selected_ids.join(',')) {
+    if (
+      props.selected_ids &&
+      props.selected_ids.join(',') !== selected_ids.join(',')
+    ) {
       setSelectedIds(props.selected_ids)
     }
   }, [props.selected_ids])
@@ -101,7 +118,10 @@ const Tree = (props: ITreeProps) => {
     onTreeChange(tree2)
   }
 
-  const onSelectOne = (id: NodeIdType, multiple_type: MultipleSelectType = 0) => {
+  const onSelectOne = (
+    id: NodeIdType,
+    multiple_type: MultipleSelectType = 0,
+  ) => {
     // console.log('multiple_type:', multiple_type, 'ids:', selected_ids, 'id:', id)
     const { onSelect } = props
     let new_selected_ids: NodeIdType[] = []
@@ -118,7 +138,7 @@ const Tree = (props: ITreeProps) => {
         return
       }
       if (selected_ids.includes(id)) {
-        new_selected_ids = selected_ids.filter(i => i !== id)
+        new_selected_ids = selected_ids.filter((i) => i !== id)
       } else {
         new_selected_ids = [...selected_ids, id]
       }

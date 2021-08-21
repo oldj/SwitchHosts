@@ -9,7 +9,7 @@ import { ConfigsType } from '@root/common/default_configs'
 import { useEffect, useState } from 'react'
 
 export default function useConfigs() {
-  const [ configs, setConfigs ] = useState<ConfigsType | null>(null)
+  const [configs, setConfigs] = useState<ConfigsType | null>(null)
 
   const loadConfigs = async () => {
     setConfigs(await actions.configAll())

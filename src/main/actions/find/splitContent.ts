@@ -6,10 +6,13 @@
 import { IFindPosition, IFindSpliter } from '@root/common/types'
 
 type MatchResult = Pick<IFindPosition, 'start' | 'end' | 'match'> & {
-  [key: string]: any;
+  [key: string]: any
 }
 
-export default (content: string, find_results: MatchResult[]): IFindSpliter[] => {
+export default (
+  content: string,
+  find_results: MatchResult[],
+): IFindSpliter[] => {
   let spliters: IFindSpliter[] = []
 
   let last_end = 0
@@ -24,7 +27,9 @@ export default (content: string, find_results: MatchResult[]): IFindSpliter[] =>
     }
 
     let spliter: IFindSpliter = {
-      before, after, match,
+      before,
+      after,
+      match,
     }
 
     spliters.push(spliter)

@@ -16,7 +16,7 @@ import version from '@root/version.json'
 
 const normalizeList = (list: IHostsListObject[]): IHostsListObject[] => {
   let flat = flatten(list)
-  flat.map(item => {
+  flat.map((item) => {
     if (!item.id) {
       item.id = uuid4()
     }
@@ -25,8 +25,10 @@ const normalizeList = (list: IHostsListObject[]): IHostsListObject[] => {
   return list
 }
 
-const normalizeTrashcan = (list: ITrashcanListObject[]): ITrashcanListObject[] => {
-  list.map(item => {
+const normalizeTrashcan = (
+  list: ITrashcanListObject[],
+): ITrashcanListObject[] => {
+  list.map((item) => {
     if (!item.id) {
       item.id = uuid4()
     }

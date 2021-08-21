@@ -9,15 +9,15 @@ import React, { useEffect, useState } from 'react'
 import styles from './SwitchButton.less'
 
 interface Props {
-  on: boolean;
-  onChange?: (on: boolean) => void;
-  disabled?: boolean;
+  on: boolean
+  onChange?: (on: boolean) => void
+  disabled?: boolean
 }
 
 const SwitchButton = (props: Props) => {
   const { on, onChange, disabled } = props
-  const [ is_on, setIsOn ] = useState(on)
-  const [ is_disabled, setIsDisabled ] = useState(disabled)
+  const [is_on, setIsOn] = useState(on)
+  const [is_disabled, setIsDisabled] = useState(disabled)
 
   const onClick = () => {
     if (disabled) return
@@ -32,14 +32,18 @@ const SwitchButton = (props: Props) => {
   useEffect(() => {
     setIsOn(on)
     setIsDisabled(disabled)
-  }, [ on, disabled ])
+  }, [on, disabled])
 
   return (
     <div
-      className={clsx(styles.root, is_on && styles.on, is_disabled && styles.disabled)}
+      className={clsx(
+        styles.root,
+        is_on && styles.on,
+        is_disabled && styles.disabled,
+      )}
       onClick={onClick}
     >
-      <div className={styles.handler}/>
+      <div className={styles.handler} />
     </div>
   )
 }

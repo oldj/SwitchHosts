@@ -28,11 +28,14 @@ export class I18N {
 
     const _this = this
 
-    this.lang = new Proxy({}, {
-      get(obj, key: LanguageKey) {
-        return _this.trans(key)
+    this.lang = new Proxy(
+      {},
+      {
+        get(obj, key: LanguageKey) {
+          return _this.trans(key)
+        },
       },
-    }) as LanguageDict
+    ) as LanguageDict
   }
 
   trans(key: LanguageKey, words?: string[]) {
@@ -54,4 +57,3 @@ export class I18N {
     return s
   }
 }
-

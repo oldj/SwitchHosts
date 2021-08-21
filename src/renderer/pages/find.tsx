@@ -25,28 +25,35 @@ import { PopupMenu } from '@renderer/core/PopupMenu'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsType } from '@root/common/data'
 import events from '@root/common/events'
-import { IFindItem, IFindPosition, IFindShowSourceParam } from '@root/common/types'
+import {
+  IFindItem,
+  IFindPosition,
+  IFindShowSourceParam,
+} from '@root/common/types'
 import { useDebounce } from 'ahooks'
 import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useEffect, useRef, useState } from 'react'
-import { IoArrowBackOutline, IoArrowForwardOutline, IoChevronDownOutline, IoSearch } from 'react-icons/io5'
+import {
+  IoArrowBackOutline,
+  IoArrowForwardOutline,
+  IoChevronDownOutline,
+  IoSearch,
+} from 'react-icons/io5'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './find.less'
 
-interface Props {
-
-}
+interface Props {}
 
 interface IFindPositionShow extends IFindPosition {
-  item_id: string;
-  item_title: string;
-  item_type: HostsType;
-  index: number;
-  is_disabled?: boolean;
-  is_readonly?: boolean;
+  item_id: string
+  item_title: string
+  item_type: HostsType
+  index: number
+  is_disabled?: boolean
+  is_readonly?: boolean
 }
 
 const find = (props: Props) => {
@@ -72,13 +79,13 @@ const find = (props: Props) => {
 
     let theme = configs.theme
     let cls = document.body.className
-    document.body.className = cls.replace(/\btheme-\w+/ig, '')
+    document.body.className = cls.replace(/\btheme-\w+/gi, '')
     document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
   }
 
   useEffect(() => {
     if (!configs) return
-    init().catch(e => console.error(e))
+    init().catch((e) => console.error(e))
     console.log(configs.theme)
     if (colorMode !== configs.theme) {
       setColorMode(configs.theme)
@@ -126,7 +133,9 @@ const find = (props: Props) => {
       let { item_id, item_title, item_type, positions } = item
       positions.map((p, index) => {
         positions_show.push({
-          item_id, item_title, item_type,
+          item_id,
+          item_title,
+          item_type,
           ...p,
           index,
           is_readonly: item_type !== 'local',
@@ -165,10 +174,19 @@ const find = (props: Props) => {
   const toShowSource = async (result_item: IFindPositionShow) => {
     // console.log(result_item)
     await actions.cmdFocusMainWindow()
-    agent.broadcast(events.show_source, lodash.pick<IFindShowSourceParam>(result_item, [
-      'item_id', 'start', 'end', 'match',
-      'line', 'line_pos', 'end_line', 'end_line_pos',
-    ]))
+    agent.broadcast(
+      events.show_source,
+      lodash.pick<IFindShowSourceParam>(result_item, [
+        'item_id',
+        'start',
+        'end',
+        'match',
+        'line',
+        'line_pos',
+        'end_line',
+        'end_line_pos',
+      ]),
+    )
   }
 
   const replaceOne = async () => {
@@ -185,18 +203,19 @@ const find = (props: Props) => {
     ])
 
     if (replace_to) {
-      actions.findAddReplaceHistory(replace_to)
-        .catch(e => console.error(e))
+      actions.findAddReplaceHistory(replace_to).catch((e) => console.error(e))
     }
 
-    let r = find_result.find(i => i.item_id === pos.item_id)
+    let r = find_result.find((i) => i.item_id === pos.item_id)
     if (!r) return
     let spliters = r.spliters
     let sp = spliters[pos.index]
     if (!sp) return
     sp.replace = replace_to
 
-    const content = spliters.map(sp => `${sp.before}${sp.replace ?? sp.match}${sp.after}`).join('')
+    const content = spliters
+      .map((sp) => `${sp.before}${sp.replace ?? sp.match}${sp.after}`)
+      .join('')
     await actions.setHostsContent(pos.item_id, content)
     agent.broadcast(events.hosts_refreshed_by_id, pos.item_id)
 
@@ -209,19 +228,22 @@ const find = (props: Props) => {
     for (let item of find_result) {
       let { item_id, item_type, spliters } = item
       if (item_type !== 'local') continue
-      const content = spliters.map(sp => `${sp.before}${replace_to}${sp.after}`).join('')
+      const content = spliters
+        .map((sp) => `${sp.before}${replace_to}${sp.after}`)
+        .join('')
       await actions.setHostsContent(item_id, content)
       agent.broadcast(events.hosts_refreshed_by_id, item_id)
     }
 
-    setFindPositions(find_positions.map(pos => ({
-      ...pos,
-      is_disabled: !pos.is_readonly,
-    })))
+    setFindPositions(
+      find_positions.map((pos) => ({
+        ...pos,
+        is_disabled: !pos.is_readonly,
+      })),
+    )
 
     if (replace_to) {
-      actions.findAddReplaceHistory(replace_to)
-        .catch(e => console.error(e))
+      actions.findAddReplaceHistory(replace_to).catch((e) => console.error(e))
     }
   }
 
@@ -231,7 +253,11 @@ const find = (props: Props) => {
     const is_selected = current_result_idx === row_data.index
 
     useEffect(() => {
-      if (el.current && is_selected && current_result_idx !== last_scroll_result_idx) {
+      if (
+        el.current &&
+        is_selected &&
+        current_result_idx !== last_scroll_result_idx
+      ) {
         setlastScrollResultIdx(current_result_idx)
         scrollIntoView(el.current, {
           behavior: 'smooth',
@@ -259,15 +285,15 @@ const find = (props: Props) => {
         title={lang.to_show_source}
       >
         <div className={styles.result_content}>
-          {data.is_readonly ? <span className={styles.read_only}>{lang.read_only}</span> : null}
-          <span>
-            {data.before}
-          </span>
+          {data.is_readonly ? (
+            <span className={styles.read_only}>{lang.read_only}</span>
+          ) : null}
+          <span>{data.before}</span>
           <span className={styles.highlight}>{data.match}</span>
           <span>{data.after}</span>
         </div>
         <div className={styles.result_title}>
-          <ItemIcon type={data.item_type}/>
+          <ItemIcon type={data.item_type} />
           <span>{data.item_title}</span>
         </div>
         <div className={styles.result_line}>{data.line}</div>
@@ -279,14 +305,16 @@ const find = (props: Props) => {
     let history = await actions.findGetHistory()
     if (history.length === 0) return
 
-    let menu = new PopupMenu(history.reverse().map(i => ({
-      label: i.value,
-      click () {
-        setKeyword(i.value)
-        setIsRegExp(i.is_regexp)
-        setIsIgnoreCase(i.is_ignore_case)
-      }
-    })))
+    let menu = new PopupMenu(
+      history.reverse().map((i) => ({
+        label: i.value,
+        click() {
+          setKeyword(i.value)
+          setIsRegExp(i.is_regexp)
+          setIsIgnoreCase(i.is_ignore_case)
+        },
+      })),
+    )
 
     menu.show()
   }
@@ -295,12 +323,14 @@ const find = (props: Props) => {
     let history = await actions.findGetReplaceHistory()
     if (history.length === 0) return
 
-    let menu = new PopupMenu(history.reverse().map(v => ({
-      label: v,
-      click () {
-        setReplaceTo(v)
-      }
-    })))
+    let menu = new PopupMenu(
+      history.reverse().map((v) => ({
+        label: v,
+        click() {
+          setReplaceTo(v)
+        },
+      })),
+    )
 
     menu.show()
   }
@@ -315,19 +345,14 @@ const find = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      <VStack
-        spacing={0}
-        h="100%"
-      >
+      <VStack spacing={0} h="100%">
         <InputGroup>
           <InputLeftElement
             // pointerEvents="none"
             children={
-              <HStack
-                spacing={0}
-              >
-                <IoSearch/>
-                <IoChevronDownOutline style={{ fontSize: 10 }}/>
+              <HStack spacing={0}>
+                <IoSearch />
+                <IoChevronDownOutline style={{ fontSize: 10 }} />
               </HStack>
             }
             onClick={showKeywordHistory}
@@ -348,11 +373,9 @@ const find = (props: Props) => {
           <InputLeftElement
             // pointerEvents="none"
             children={
-              <HStack
-                spacing={0}
-              >
-                <IoSearch/>
-                <IoChevronDownOutline style={{ fontSize: 10 }}/>
+              <HStack spacing={0}>
+                <IoSearch />
+                <IoChevronDownOutline style={{ fontSize: 10 }} />
               </HStack>
             }
             onClick={showReplaceHistory}
@@ -377,17 +400,18 @@ const find = (props: Props) => {
           <Checkbox
             checked={is_regexp}
             onChange={(e) => setIsRegExp(e.target.checked)}
-          >{lang.regexp}</Checkbox>
+          >
+            {lang.regexp}
+          </Checkbox>
           <Checkbox
             checked={is_ignore_case}
             onChange={(e) => setIsIgnoreCase(e.target.checked)}
-          >{lang.ignore_case}</Checkbox>
+          >
+            {lang.ignore_case}
+          </Checkbox>
         </HStack>
 
-        <Box
-          w="100%"
-          borderTopWidth={1}
-        >
+        <Box w="100%" borderTopWidth={1}>
           <div className={styles.result_row}>
             <div>{lang.match}</div>
             <div>{lang.title}</div>
@@ -422,35 +446,45 @@ const find = (props: Props) => {
           // justifyContent="flex-end"
         >
           {is_searching ? (
-            <Spinner/>
+            <Spinner />
           ) : (
-            <span>{i18n.trans(
-              find_positions.length > 1 ? 'items_found' : 'item_found',
-              [find_positions.length.toLocaleString()],
-            )}</span>
+            <span>
+              {i18n.trans(
+                find_positions.length > 1 ? 'items_found' : 'item_found',
+                [find_positions.length.toLocaleString()],
+              )}
+            </span>
           )}
-          <Spacer/>
+          <Spacer />
           <Button
             size="sm"
             variant="outline"
             isDisabled={is_searching || find_positions.length === 0}
             onClick={replaceAll}
-          >{lang.replace_all}</Button>
+          >
+            {lang.replace_all}
+          </Button>
           <Button
             size="sm"
             variant="solid"
             colorScheme="blue"
-            isDisabled={is_searching || find_positions.length === 0 || !can_replace}
+            isDisabled={
+              is_searching || find_positions.length === 0 || !can_replace
+            }
             onClick={replaceOne}
-          >{lang.replace}</Button>
+          >
+            {lang.replace}
+          </Button>
 
           <ButtonGroup
             size="sm"
-            isAttached variant="outline"
+            isAttached
+            variant="outline"
             isDisabled={is_searching || find_positions.length === 0}
           >
             <IconButton
-              aria-label="previous" icon={<IoArrowBackOutline/>}
+              aria-label="previous"
+              icon={<IoArrowBackOutline />}
               onClick={() => {
                 let idx = current_result_idx - 1
                 if (idx < 0) idx = 0
@@ -459,10 +493,12 @@ const find = (props: Props) => {
               isDisabled={current_result_idx <= 0}
             />
             <IconButton
-              aria-label="next" icon={<IoArrowForwardOutline/>}
+              aria-label="next"
+              icon={<IoArrowForwardOutline />}
               onClick={() => {
                 let idx = current_result_idx + 1
-                if (idx > find_positions.length - 1) idx = find_positions.length - 1
+                if (idx > find_positions.length - 1)
+                  idx = find_positions.length - 1
                 setCurrentResultIdx(idx)
               }}
               isDisabled={current_result_idx >= find_positions.length - 1}

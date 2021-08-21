@@ -5,7 +5,15 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { Button, Menu, MenuButton, MenuDivider, MenuItem, MenuList, useToast } from '@chakra-ui/react'
+import {
+  Button,
+  Menu,
+  MenuButton,
+  MenuDivider,
+  MenuItem,
+  MenuList,
+  useToast,
+} from '@chakra-ui/react'
 import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
 import { actions, agent } from '@renderer/core/agent'
 import { feedback_url, homepage_url } from '@root/common/constants'
@@ -25,9 +33,7 @@ import {
 } from 'react-icons/bi'
 import styles from './ConfigMenu.less'
 
-interface Props {
-
-}
+interface Props {}
 
 const ConfigMenu = (props: Props) => {
   const { lang } = useModel('useI18n')
@@ -38,26 +44,24 @@ const ConfigMenu = (props: Props) => {
   return (
     <>
       <Menu>
-        <MenuButton
-          as={Button}
-          variant="ghost"
-          width="35px"
-          px="10.5px"
-        >
-          <BiCog/>
+        <MenuButton as={Button} variant="ghost" width="35px" px="10.5px">
+          <BiCog />
         </MenuButton>
-        <MenuList borderColor="var(--swh-border-color-0)" className={styles.menu_list}>
+        <MenuList
+          borderColor="var(--swh-border-color-0)"
+          className={styles.menu_list}
+        >
           <MenuItem
-            icon={<BiInfoCircle/>}
+            icon={<BiInfoCircle />}
             onClick={() => agent.broadcast(events.show_about)}
           >
             {lang.about}
           </MenuItem>
 
-          <MenuDivider/>
+          <MenuDivider />
 
           <MenuItem
-            icon={<BiRefresh/>}
+            icon={<BiRefresh />}
             onClick={async () => {
               let r = await actions.checkUpdate()
               if (r === false) {
@@ -73,22 +77,22 @@ const ConfigMenu = (props: Props) => {
             {lang.check_update}
           </MenuItem>
           <MenuItem
-            icon={<BiMessageDetail/>}
+            icon={<BiMessageDetail />}
             onClick={() => actions.openUrl(feedback_url)}
           >
             {lang.feedback}
           </MenuItem>
           <MenuItem
-            icon={<BiHomeCircle/>}
+            icon={<BiHomeCircle />}
             onClick={() => actions.openUrl(homepage_url)}
           >
             {lang.homepage}
           </MenuItem>
 
-          <MenuDivider/>
+          <MenuDivider />
 
           <MenuItem
-            icon={<BiExport/>}
+            icon={<BiExport />}
             onClick={async () => {
               let r = await actions.exportData()
               if (r === null) {
@@ -111,7 +115,7 @@ const ConfigMenu = (props: Props) => {
             {lang.export}
           </MenuItem>
           <MenuItem
-            icon={<BiImport/>}
+            icon={<BiImport />}
             onClick={async () => {
               let r = await actions.importData()
               if (r === null) {
@@ -141,7 +145,7 @@ const ConfigMenu = (props: Props) => {
             {lang.import}
           </MenuItem>
           <MenuItem
-            icon={<BiImport/>}
+            icon={<BiImport />}
             onClick={async () => {
               setShowImportFromUrl(true)
             }}
@@ -149,32 +153,32 @@ const ConfigMenu = (props: Props) => {
             {lang.import_from_url}
           </MenuItem>
 
-          <MenuDivider/>
+          <MenuDivider />
 
           <MenuItem
-            icon={<BiSliderAlt/>}
+            icon={<BiSliderAlt />}
             onClick={() => agent.broadcast(events.show_preferences)}
           >
             {lang.preferences}
           </MenuItem>
           <MenuItem
-            icon={<BiWrench/>}
+            icon={<BiWrench />}
             onClick={() => actions.cmdToggleDevTools()}
           >
             {lang.toggle_developer_tools}
           </MenuItem>
 
-          <MenuDivider/>
+          <MenuDivider />
 
-          <MenuItem
-            icon={<BiExit/>}
-            onClick={() => actions.quit()}
-          >
+          <MenuItem icon={<BiExit />} onClick={() => actions.quit()}>
             {lang.quit}
           </MenuItem>
         </MenuList>
       </Menu>
-      <ImportFromUrl is_show={show_import_from_url} setIsShow={setShowImportFromUrl}/>
+      <ImportFromUrl
+        is_show={show_import_from_url}
+        setIsShow={setShowImportFromUrl}
+      />
     </>
   )
 }

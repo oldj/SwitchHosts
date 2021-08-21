@@ -4,7 +4,7 @@ import CodeMirror from 'codemirror'
 
 export default function () {
   CodeMirror.defineMode('hosts', function () {
-    function tokenBase (stream: CodeMirror.StringStream) {
+    function tokenBase(stream: CodeMirror.StringStream) {
       if (stream.eatSpace()) return null
 
       let sol = stream.sol()
@@ -28,7 +28,7 @@ export default function () {
       return null
     }
 
-    function tokenize (stream: CodeMirror.StringStream, state: any) {
+    function tokenize(stream: CodeMirror.StringStream, state: any) {
       return (state.tokens[0] || tokenBase)(stream, state)
     }
 

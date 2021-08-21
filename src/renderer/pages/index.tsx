@@ -46,7 +46,7 @@ export default () => {
 
     let theme = configs.theme
     let cls = document.body.className
-    document.body.className = cls.replace(/\btheme-\w+/ig, '')
+    document.body.className = cls.replace(/\btheme-\w+/gi, '')
     document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
     await agent.darkModeToggle(theme)
 
@@ -62,69 +62,77 @@ export default () => {
 
   useEffect(() => {
     if (!configs) return
-    init().catch(e => console.error(e))
+    init().catch((e) => console.error(e))
   }, [configs])
 
-  useOnBroadcast(events.toggle_left_pannel, (show: boolean) => setLeftShow(show))
+  useOnBroadcast(events.toggle_left_pannel, (show: boolean) =>
+    setLeftShow(show),
+  )
 
-  useOnBroadcast(events.new_version, (new_version: string) => {
-    toast({
-      title: lang.new_version_found,
-      description: (
-        <div className={styles.new_version}>
-          <span>{i18n.trans('latest_version_desc', [new_version])}</span>
-          <Button
-            ml="10px"
-            variant="link"
-            onClick={() => {
-              actions.openUrl(download_url)
-            }}
-          >{lang.download}</Button>
-        </div>
-      ),
-      status: 'info',
-      duration: 10000,
-      isClosable: true,
-    })
-  }, [lang, i18n])
+  useOnBroadcast(
+    events.new_version,
+    (new_version: string) => {
+      toast({
+        title: lang.new_version_found,
+        description: (
+          <div className={styles.new_version}>
+            <span>{i18n.trans('latest_version_desc', [new_version])}</span>
+            <Button
+              ml="10px"
+              variant="link"
+              onClick={() => {
+                actions.openUrl(download_url)
+              }}
+            >
+              {lang.download}
+            </Button>
+          </div>
+        ),
+        status: 'info',
+        duration: 10000,
+        isClosable: true,
+      })
+    },
+    [lang, i18n],
+  )
 
   if (loading) {
     if (show_migration) {
       setTimeout(() => {
-        migrate(confirm(lang.migrate_confirm))
-          .catch(e => alert(e.message))
+        migrate(confirm(lang.migrate_confirm)).catch((e) => alert(e.message))
       }, 200)
     }
 
-    return (
-      <Loading/>
-    )
+    return <Loading />
   }
 
   return (
     <div className={styles.root}>
-      <TopBar show_left_panel={left_show}/>
+      <TopBar show_left_panel={left_show} />
 
       <div>
-        <div className={styles.left} style={{
-          width: left_width,
-          left: left_show ? 0 : -left_width,
-        }}>
-          <LeftPanel width={left_width}/>
+        <div
+          className={styles.left}
+          style={{
+            width: left_width,
+            left: left_show ? 0 : -left_width,
+          }}
+        >
+          <LeftPanel width={left_width} />
         </div>
         <div
           className={clsx(styles.main)}
           style={{ width: `calc(100% - ${left_show ? left_width : 0}px)` }}
         >
-          <MainPanel/>
+          <MainPanel />
         </div>
       </div>
 
-      <EditHostsInfo/>
-      <SudoPasswordInput/>
-      <PreferencePanel/>
-      <History/>
-      <About/>
+      <EditHostsInfo />
+      <SudoPasswordInput />
+      <PreferencePanel />
+      <History />
+      <About />
     </div>
   )
 }

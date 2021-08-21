@@ -9,7 +9,7 @@ import { IMenuItemOption } from '@root/common/types'
 
 let _idx: number = 0
 
-type OffFunction = () => void;
+type OffFunction = () => void
 
 export class PopupMenu {
   private _id: string
@@ -25,7 +25,7 @@ export class PopupMenu {
     // console.log('show')
     this.onHide()
 
-    let items = this._items.map(i => {
+    let items = this._items.map((i) => {
       let d = { ...i }
 
       if (typeof d.click === 'function') {
@@ -44,12 +44,11 @@ export class PopupMenu {
       menu_id: this._id,
       items,
     })
-
     ;((offs: OffFunction[]) => {
       agent.once(`popup_menu_close:${this._id}`, () => {
         // console.log(`on popup_menu_close:${this._id}`)
         setTimeout(() => {
-          offs.map(o => o())
+          offs.map((o) => o())
         }, 100)
       })
     })(this._offs)
@@ -57,7 +56,7 @@ export class PopupMenu {
 
   private onHide() {
     // console.log('hide...')
-    this._offs.map(o => o())
+    this._offs.map((o) => o())
     this._offs = []
   }
 }

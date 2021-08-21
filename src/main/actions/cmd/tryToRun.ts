@@ -8,19 +8,20 @@ import { cfgdb } from '@main/data'
 import { ICommandRunResult } from '@root/common/data'
 import { exec } from 'child_process'
 
-const run = (cmd: string): Promise<ICommandRunResult> => new Promise(resolve => {
-  exec(cmd, (error, stdout, stderr) => {
-    // command output is in stdout
-    let success: boolean = !error
+const run = (cmd: string): Promise<ICommandRunResult> =>
+  new Promise((resolve) => {
+    exec(cmd, (error, stdout, stderr) => {
+      // command output is in stdout
+      let success: boolean = !error
 
-    resolve({
-      success,
-      stdout,
-      stderr,
-      add_time_ms: (new Date()).getTime(),
+      resolve({
+        success,
+        stdout,
+        stderr,
+        add_time_ms: new Date().getTime(),
+      })
     })
   })
-})
 
 export default async () => {
   let cmd = await cfgdb.dict.cfg.get('cmd_after_hosts_apply')
@@ -40,7 +41,9 @@ export default async () => {
   if (all.length > max_records) {
     let n = all.length - max_records
     for (let i = 0; i < n; i++) {
-      await cfgdb.collection.cmd_history.delete(item => item._id === all[i]._id)
+      await cfgdb.collection.cmd_history.delete(
+        (item) => item._id === all[i]._id,
+      )
     }
   }
 

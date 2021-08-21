@@ -20,8 +20,8 @@ import { ConfigsType, ProtocolType } from '@root/common/default_configs'
 import React, { useState } from 'react'
 
 interface IProps {
-  data: ConfigsType;
-  onChange: (kv: Partial<ConfigsType>) => void;
+  data: ConfigsType
+  onChange: (kv: Partial<ConfigsType>) => void
 }
 
 const General = (props: IProps) => {
@@ -33,12 +33,11 @@ const General = (props: IProps) => {
 
   return (
     <VStack spacing={4}>
-
       <FormControl>
         <HStack>
           <Checkbox
             isChecked={data.use_proxy}
-            onChange={e => {
+            onChange={(e) => {
               let is_use = e.target.checked
               setIsUse(is_use)
               onChange({ use_proxy: is_use })
@@ -56,7 +55,9 @@ const General = (props: IProps) => {
             w="200px"
             isDisabled={!is_use}
             value={data.proxy_protocol}
-            onChange={e => onChange({ proxy_protocol: e.target.value as ProtocolType })}
+            onChange={(e) =>
+              onChange({ proxy_protocol: e.target.value as ProtocolType })
+            }
           >
             <option value="http">HTTP</option>
             <option value="https">HTTPS</option>
@@ -71,7 +72,7 @@ const General = (props: IProps) => {
             w="200px"
             isDisabled={!is_use}
             value={data.proxy_host}
-            onChange={e => onChange({ proxy_host: e.target.value })}
+            onChange={(e) => onChange({ proxy_host: e.target.value })}
           />
         </HStack>
       </FormControl>
@@ -85,11 +86,10 @@ const General = (props: IProps) => {
             value={data.proxy_port || ''}
             onChange={(_, vn) => onChange({ proxy_port: vn })}
           >
-            <NumberInputField/>
+            <NumberInputField />
           </NumberInput>
         </HStack>
       </FormControl>
-
     </VStack>
   )
 }

@@ -17,16 +17,18 @@ import { BiHistory, BiPlus, BiSidebar, BiX } from 'react-icons/bi'
 import styles from './index.less'
 
 interface IProps {
-  show_left_panel: boolean;
+  show_left_panel: boolean
 }
 
 export default (props: IProps) => {
   const { show_left_panel } = props
   const { lang } = useModel('useI18n')
-  const { isHostsInTrashcan, current_hosts, isReadOnly } = useModel('useHostsData')
+  const { isHostsInTrashcan, current_hosts, isReadOnly } =
+    useModel('useHostsData')
   const [is_on, setIsOn] = useState(!!current_hosts?.on)
 
-  const show_toggle_switch = !show_left_panel && current_hosts && !isHostsInTrashcan(current_hosts.id)
+  const show_toggle_switch =
+    !show_left_panel && current_hosts && !isHostsInTrashcan(current_hosts.id)
   const show_history = !current_hosts
   const show_close_button = agent.platform !== 'darwin'
 
@@ -34,18 +36,22 @@ export default (props: IProps) => {
     setIsOn(!!current_hosts?.on)
   }, [current_hosts])
 
-  useOnBroadcast(events.set_hosts_on_status, (id: string, on: boolean) => {
-    if (current_hosts && current_hosts.id === id) {
-      setIsOn(on)
-    }
-  }, [current_hosts])
+  useOnBroadcast(
+    events.set_hosts_on_status,
+    (id: string, on: boolean) => {
+      if (current_hosts && current_hosts.id === id) {
+        setIsOn(on)
+      }
+    },
+    [current_hosts],
+  )
 
   return (
     <div className={styles.root}>
       <Flex align="center" className={styles.left}>
         <IconButton
           aria-label="Toggle sidebar"
-          icon={<BiSidebar/>}
+          icon={<BiSidebar />}
           onClick={() => {
             agent.broadcast(events.toggle_left_pannel, !show_left_panel)
           }}
@@ -54,7 +60,7 @@ export default (props: IProps) => {
         />
         <IconButton
           aria-label="Add"
-          icon={<BiPlus/>}
+          icon={<BiPlus />}
           onClick={() => agent.broadcast(events.add_new)}
           variant="ghost"
         />
@@ -64,21 +70,22 @@ export default (props: IProps) => {
         <HStack className={styles.title}>
           {current_hosts ? (
             <>
-                <span className={styles.hosts_icon}>
-                  <ItemIcon type={current_hosts.type} is_collapsed={!current_hosts.folder_open}/>
-                </span>
+              <span className={styles.hosts_icon}>
+                <ItemIcon
+                  type={current_hosts.type}
+                  is_collapsed={!current_hosts.folder_open}
+                />
+              </span>
               <span className={styles.hosts_title}>
-                  {current_hosts.title || lang.untitled}
-                </span>
+                {current_hosts.title || lang.untitled}
+              </span>
             </>
           ) : (
             <>
-                <span className={styles.hosts_icon}>
-                  <ItemIcon type="system"/>
-                </span>
-              <span className={styles.hosts_title}>
-                  {lang.system_hosts}
-                </span>
+              <span className={styles.hosts_icon}>
+                <ItemIcon type="system" />
+              </span>
+              <span className={styles.hosts_title}>{lang.system_hosts}</span>
             </>
           )}
 
@@ -88,34 +95,34 @@ export default (props: IProps) => {
         </HStack>
       </Box>
 
-      <Flex
-        align="center"
-        justifyContent="flex-end"
-        className={styles.right}
-      >
+      <Flex align="center" justifyContent="flex-end" className={styles.right}>
         {show_toggle_switch ? (
           <Box mr={3}>
-            <SwitchButton on={is_on} onChange={on => {
-              current_hosts && agent.broadcast(events.toggle_item, current_hosts.id, on)
-            }}/>
+            <SwitchButton
+              on={is_on}
+              onChange={(on) => {
+                current_hosts &&
+                  agent.broadcast(events.toggle_item, current_hosts.id, on)
+              }}
+            />
           </Box>
         ) : null}
         {show_history ? (
           <IconButton
             aria-label="Show history"
-            icon={<BiHistory/>}
+            icon={<BiHistory />}
             variant="ghost"
             onClick={() => agent.broadcast(events.show_history)}
           />
         ) : null}
 
-        <ConfigMenu/>
+        <ConfigMenu />
 
         {show_close_button ? (
           <IconButton
             aria-label="Close window"
             fontSize="20px"
-            icon={<BiX/>}
+            icon={<BiX />}
             variant="ghost"
             onClick={() => actions.closeMainWindow()}
           />

@@ -11,7 +11,7 @@ import { EventEmitter } from 'events'
 
 declare global {
   interface Window {
-    _agent: typeof _agent;
+    _agent: typeof _agent
   }
 }
 
@@ -22,7 +22,7 @@ const ee = new EventEmitter()
 let x_get_idx = 0
 
 const callAction = (action: keyof Actions, ...params: any[]) => {
-  const callback = [ '_cb', (new Date()).getTime(), x_get_idx++ ].join('_')
+  const callback = ['_cb', new Date().getTime(), x_get_idx++].join('_')
 
   return new Promise((resolve, reject) => {
     ipcRenderer.send('x_action', {
@@ -87,7 +87,8 @@ const _agent = {
   off,
   popupMenu,
   platform: process.platform,
-  darkModeToggle: (theme?: 'dark' | 'light' | 'system') => ipcRenderer.invoke(`dark-mode:${theme ?? 'toggle'}`),
+  darkModeToggle: (theme?: 'dark' | 'light' | 'system') =>
+    ipcRenderer.invoke(`dark-mode:${theme ?? 'toggle'}`),
 }
 
 contextBridge.exposeInMainWorld('_agent', _agent)

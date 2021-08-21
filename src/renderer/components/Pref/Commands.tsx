@@ -19,14 +19,14 @@ import { ConfigsType } from '@root/common/default_configs'
 import React, { useState } from 'react'
 
 interface IProps {
-  data: ConfigsType;
-  onChange: (kv: Partial<ConfigsType>) => void;
+  data: ConfigsType
+  onChange: (kv: Partial<ConfigsType>) => void
 }
 
 const Commands = (props: IProps) => {
   const { data, onChange } = props
   const { lang } = useModel('useI18n')
-  const [ show_history, setShowHistory ] = useState(false)
+  const [show_history, setShowHistory] = useState(false)
 
   const toggleShowHistory = () => {
     setShowHistory(!show_history)
@@ -41,18 +41,18 @@ const Commands = (props: IProps) => {
           minHeight="200px"
           placeholder={'# echo "ok!"'}
           value={data.cmd_after_hosts_apply}
-          onChange={e => onChange({ cmd_after_hosts_apply: e.target.value })}
+          onChange={(e) => onChange({ cmd_after_hosts_apply: e.target.value })}
         />
       </FormControl>
 
       <Box>
-        <Button variant="link" onClick={toggleShowHistory}>{
-          show_history ? lang.hide_history : lang.show_history
-        }</Button>
+        <Button variant="link" onClick={toggleShowHistory}>
+          {show_history ? lang.hide_history : lang.show_history}
+        </Button>
       </Box>
 
       <Box w="100%">
-        <CommandsHistory is_show={show_history}/>
+        <CommandsHistory is_show={show_history} />
       </Box>
     </VStack>
   )

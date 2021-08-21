@@ -12,7 +12,7 @@ export default async (data: IFindHistoryData) => {
   let history_all = await getHistory()
 
   // remove old
-  history_all = history_all.filter(i => i.value !== data.value)
+  history_all = history_all.filter((i) => i.value !== data.value)
 
   // insert new
   history_all.push(data)

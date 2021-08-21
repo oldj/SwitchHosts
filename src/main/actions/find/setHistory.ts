@@ -6,9 +6,9 @@
 import { cfgdb } from '@main/data'
 
 export interface IFindHistoryData {
-  value: string;
-  is_regexp: boolean;
-  is_ignore_case: boolean;
+  value: string
+  is_regexp: boolean
+  is_ignore_case: boolean
 }
 
 export default async (data: IFindHistoryData[]) => {

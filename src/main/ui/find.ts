@@ -38,8 +38,7 @@ const makeWindow = () => {
   //   visibleOnFullScreen: true,
   // })
 
-  win.loadURL(`${getIndex()}#/find`)
-    .catch(e => console.error(e))
+  win.loadURL(`${getIndex()}#/find`).catch((e) => console.error(e))
 
   // win.on('blur', () => win?.hide())
 
@@ -66,6 +65,4 @@ const makeWindow = () => {
   return win
 }
 
-export {
-  makeWindow,
-}
+export { makeWindow }

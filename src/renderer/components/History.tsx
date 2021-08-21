@@ -38,9 +38,9 @@ import { BiDetail, BiHelpCircle, BiHistory, BiTrash } from 'react-icons/bi'
 import styles from './History.less'
 
 interface IHistoryProps {
-  list: IHostsHistoryObject[];
-  selected_item: IHostsHistoryObject | undefined;
-  setSelectedItem: (item: IHostsHistoryObject) => void;
+  list: IHostsHistoryObject[]
+  selected_item: IHostsHistoryObject | undefined
+  setSelectedItem: (item: IHostsHistoryObject) => void
 }
 
 const HistoryList = (props: IHistoryProps): React.ReactElement => {
@@ -49,23 +49,23 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
 
   if (list.length === 0) {
     return (
-      <Center h="100%" opacity={0.5} fontSize="lg">{lang.no_record}</Center>
+      <Center h="100%" opacity={0.5} fontSize="lg">
+        {lang.no_record}
+      </Center>
     )
   }
 
   return (
     <Flex h="100%" minHeight="300px">
-      <Box
-        flex={1} mr={3}
-        borderWidth="1px" borderRadius="md"
-      >
-        <HostsViewer
-          content={selected_item ? selected_item.content : ''}
-        />
+      <Box flex={1} mr={3} borderWidth="1px" borderRadius="md">
+        <HostsViewer content={selected_item ? selected_item.content : ''} />
       </Box>
       <List
-        w="200px" h="100%" overflow="auto"
-        borderWidth="1px" borderRadius="md"
+        w="200px"
+        h="100%"
+        overflow="auto"
+        borderWidth="1px"
+        borderRadius="md"
       >
         {list.map((item) => (
           <ListItem
@@ -77,9 +77,13 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
             className={clsx(item.id === selected_item?.id && styles.selected)}
           >
             <HStack>
-              <Box><BiDetail/></Box>
+              <Box>
+                <BiDetail />
+              </Box>
               <VStack align="left" spacing={0}>
-                <Box>{dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}</Box>
+                <Box>
+                  {dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}
+                </Box>
                 <HStack lineHeight="14px" fontSize="9px" opacity={0.6}>
                   <Box>{item.content.split('\n').length} lines</Box>
                   <Box>{prettyBytes(item.content.length)}</Box>
@@ -96,12 +100,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
 const Loading = (): React.ReactElement => {
   return (
     <Center h="300px">
-      <Spinner
-        speed="1s"
-        emptyColor="gray.200"
-        size="lg"
-        mr={3}
-      />
+      <Spinner speed="1s" emptyColor="gray.200" size="lg" mr={3} />
       <Box>Loading...</Box>
     </Center>
   )
@@ -109,10 +108,10 @@ const Loading = (): React.ReactElement => {
 
 const History = () => {
   const { configs, updateConfigs } = useModel('useConfigs')
-  const [ is_open, setIsOpen ] = useState(false)
-  const [ is_loading, setIsLoading ] = useState(false)
-  const [ list, setList ] = useState<IHostsHistoryObject[]>([])
-  const [ selected_item, setSelectedItem ] = useState<IHostsHistoryObject>()
+  const [is_open, setIsOpen] = useState(false)
+  const [is_loading, setIsLoading] = useState(false)
+  const [list, setList] = useState<IHostsHistoryObject[]>([])
+  const [selected_item, setSelectedItem] = useState<IHostsHistoryObject>()
   // const btn_close = useRef(null)
 
   const { lang } = useModel('useI18n')
@@ -141,7 +140,7 @@ const History = () => {
       return
     }
 
-    let idx = list.findIndex(i => i.id === id)
+    let idx = list.findIndex((i) => i.id === id)
     await actions.deleteHistory(id)
     setSelectedItem(undefined)
     let list2 = await loadData()
@@ -163,7 +162,7 @@ const History = () => {
     loadData()
   })
 
-  let history_limit_values: number[] = [ 10, 50, 100, 500 ]
+  let history_limit_values: number[] = [10, 50, 100, 500]
   if (configs && !history_limit_values.includes(configs.history_limit)) {
     history_limit_values.push(configs.history_limit)
     history_limit_values.sort()
@@ -177,25 +176,27 @@ const History = () => {
       onClose={onClose}
       // initialFocusRef={btn_close}
     >
-      <DrawerOverlay/>
+      <DrawerOverlay />
       <DrawerContent>
         {/*<DrawerCloseButton/>*/}
         <DrawerHeader>
           <HStack>
-            <Box mr={1}><BiHistory/></Box>
+            <Box mr={1}>
+              <BiHistory />
+            </Box>
             <Box>{lang.system_hosts_history}</Box>
           </HStack>
         </DrawerHeader>
         <DrawerBody>
-          {
-            is_loading ?
-              <Loading/> :
-              <HistoryList
-                list={list}
-                selected_item={selected_item}
-                setSelectedItem={setSelectedItem}
-              />
-          }
+          {is_loading ? (
+            <Loading />
+          ) : (
+            <HistoryList
+              list={list}
+              selected_item={selected_item}
+              setSelectedItem={setSelectedItem}
+            />
+          )}
         </DrawerBody>
         <DrawerFooter>
           <Flex width="100%" align="center">
@@ -203,19 +204,26 @@ const History = () => {
             <Box>
               <Select
                 value={configs?.history_limit}
-                onChange={e => updateHistoryLimit(parseInt(e.target.value))}
+                onChange={(e) => updateHistoryLimit(parseInt(e.target.value))}
               >
-                {history_limit_values.map(v => (
-                  <option key={v} value={v}>{v}</option>
+                {history_limit_values.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
                 ))}
               </Select>
             </Box>
-            <Tooltip label={lang.system_hosts_history_help} aria-label="A tooltip">
-              <Box ml={3}><BiHelpCircle/></Box>
+            <Tooltip
+              label={lang.system_hosts_history_help}
+              aria-label="A tooltip"
+            >
+              <Box ml={3}>
+                <BiHelpCircle />
+              </Box>
             </Tooltip>
-            <Spacer/>
+            <Spacer />
             <Button
-              leftIcon={<BiTrash/>}
+              leftIcon={<BiTrash />}
               variant="outline"
               mr={3}
               colorScheme="pink"

@@ -14,20 +14,24 @@ const list = async (req: Request, res: Response) => {
   try {
     list = await getList()
   } catch (e) {
-    res.end(JSON.stringify({
-      success: false,
-      message: e.message,
-    }))
+    res.end(
+      JSON.stringify({
+        success: false,
+        message: e.message,
+      }),
+    )
 
     return
   }
 
   list = flatten(list)
 
-  res.end(JSON.stringify({
-    success: true,
-    data: list,
-  }))
+  res.end(
+    JSON.stringify({
+      success: true,
+      data: list,
+    }),
+  )
 }
 
 export default list

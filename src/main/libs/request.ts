@@ -10,15 +10,19 @@ import querystring from 'querystring'
 import version from '@root/version.json'
 
 interface IParams {
-  [key: string]: string | string[] | number;
+  [key: string]: string | string[] | number
 }
 
 interface IRequestOptions {
-  timeout?: number;
-  headers?: { [key: string]: string | string[] },
+  timeout?: number
+  headers?: { [key: string]: string | string[] }
 }
 
-export const GET = async (url: string, params: IParams | null = null, options: IRequestOptions = {}) => {
+export const GET = async (
+  url: string,
+  params: IParams | null = null,
+  options: IRequestOptions = {},
+) => {
   let s = ''
   if (params) {
     s = querystring.stringify(params)

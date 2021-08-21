@@ -11,11 +11,14 @@ import findInContent from 'src/main/actions/find/findPositionsInContent'
 import { getList } from '../index'
 
 export interface IFindOptions {
-  is_regexp: boolean;
-  is_ignore_case: boolean;
+  is_regexp: boolean
+  is_ignore_case: boolean
 }
 
-export default async (keyword: string, options: IFindOptions): Promise<IFindItem[]> => {
+export default async (
+  keyword: string,
+  options: IFindOptions,
+): Promise<IFindItem[]> => {
   console.log(keyword)
   let result_items: IFindItem[] = []
 
@@ -26,7 +29,7 @@ export default async (keyword: string, options: IFindOptions): Promise<IFindItem
   if (options.is_regexp) {
     exp = new RegExp(keyword, options.is_ignore_case ? 'ig' : 'g')
   } else {
-    let kw = keyword.replace(/([.^$([?*+])/ig, '\\$1')
+    let kw = keyword.replace(/([.^$([?*+])/gi, '\\$1')
     exp = new RegExp(kw, options.is_ignore_case ? 'ig' : 'g')
   }
 

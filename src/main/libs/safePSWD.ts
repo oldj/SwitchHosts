@@ -5,8 +5,10 @@
  */
 
 export default (pswd: string): string => {
-  return pswd
-    .replace(/\\/g, '\\\\')
-    //.replace(/'/g, "\\''")
-    .replace(/'/g, '\\x27')
+  return (
+    pswd
+      .replace(/\\/g, '\\\\')
+      //.replace(/'/g, "\\''")
+      .replace(/'/g, '\\x27')
+  )
 }

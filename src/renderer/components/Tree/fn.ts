@@ -3,30 +3,30 @@ import { ITreeNodeData } from './Node'
 import { DropWhereType, NodeIdType } from './Tree'
 
 interface IObj {
-  [key: string]: any;
+  [key: string]: any
 }
 
-export type KeyMapType = [string, string];
+export type KeyMapType = [string, string]
 
-export function flatten (tree_list: ITreeNodeData[]): ITreeNodeData[] {
+export function flatten(tree_list: ITreeNodeData[]): ITreeNodeData[] {
   let arr: any[] = []
 
   Array.isArray(tree_list) &&
-  tree_list.map((item) => {
-    if (!item) return
+    tree_list.map((item) => {
+      if (!item) return
 
-    arr.push(item)
+      arr.push(item)
 
-    if (Array.isArray(item.children)) {
-      let a2 = flatten(item.children)
-      arr = arr.concat(a2)
-    }
-  })
+      if (Array.isArray(item.children)) {
+        let a2 = flatten(item.children)
+        arr = arr.concat(a2)
+      }
+    })
 
   return arr
 }
 
-export function getParentList (
+export function getParentList(
   tree_list: ITreeNodeData[],
   id: NodeIdType,
 ): ITreeNodeData[] {
@@ -63,7 +63,7 @@ export const treeMoveNode = (
 
   let source_nodes: ITreeNodeData[] = []
   while (true) {
-    let idx = source_parent_list.findIndex(i => source_ids.includes(i.id))
+    let idx = source_parent_list.findIndex((i) => source_ids.includes(i.id))
     if (idx === -1) break
     let node = source_parent_list.splice(idx, 1)[0]
     source_nodes.push(node)
@@ -91,29 +91,43 @@ export const treeMoveNode = (
   return tree_list
 }
 
-export function getNodeById (tree_list: ITreeNodeData[], id: NodeIdType): ITreeNodeData | undefined {
-  return flatten(tree_list).find(i => i.id === id)
+export function getNodeById(
+  tree_list: ITreeNodeData[],
+  id: NodeIdType,
+): ITreeNodeData | undefined {
+  return flatten(tree_list).find((i) => i.id === id)
 }
 
 /**
  * a is child of b
  */
-export function isChildOf (tree_list: ITreeNodeData[], a_id: NodeIdType, b_id: NodeIdType): boolean {
+export function isChildOf(
+  tree_list: ITreeNodeData[],
+  a_id: NodeIdType,
+  b_id: NodeIdType,
+): boolean {
   if (a_id === b_id) return false
 
   let target_node = getNodeById(tree_list, b_id)
   if (!target_node || !Array.isArray(target_node.children)) return false
 
-  return flatten(target_node.children).findIndex(i => i.id === a_id) > -1
+  return flatten(target_node.children).findIndex((i) => i.id === a_id) > -1
 }
 
-export function isSelfOrChild (item: ITreeNodeData, id: NodeIdType | null): boolean {
+export function isSelfOrChild(
+  item: ITreeNodeData,
+  id: NodeIdType | null,
+): boolean {
   if (!id) return false
   if (item.id === id) return true
-  return flatten(item.children || []).findIndex(i => i.id === id) > -1
+  return flatten(item.children || []).findIndex((i) => i.id === id) > -1
 }
 
-export function objKeyMap (obj: IObj, key_maps: KeyMapType[], reversed: boolean = false): IObj {
+export function objKeyMap(
+  obj: IObj,
+  key_maps: KeyMapType[],
+  reversed: boolean = false,
+): IObj {
   if (reversed) {
     key_maps = keyMapReverse(key_maps)
   }
@@ -121,8 +135,8 @@ export function objKeyMap (obj: IObj, key_maps: KeyMapType[], reversed: boolean 
   let keys = Object.keys(obj)
   let new_obj: IObj = {}
 
-  keys.map(key => {
-    let map = key_maps.find(i => i[0] === key)
+  keys.map((key) => {
+    let map = key_maps.find((i) => i[0] === key)
     let value = obj[key]
 
     if (Array.isArray(value)) {
@@ -141,54 +155,74 @@ export function objKeyMap (obj: IObj, key_maps: KeyMapType[], reversed: boolean 
   return new_obj
 }
 
-export function treeKeyMap (tree_list: IObj[], key_maps: KeyMapType[], reversed: boolean = false): any[] {
+export function treeKeyMap(
+  tree_list: IObj[],
+  key_maps: KeyMapType[],
+  reversed: boolean = false,
+): any[] {
   if (reversed) {
     key_maps = keyMapReverse(key_maps)
   }
 
-  return tree_list.map(item => objKeyMap(item, key_maps))
+  return tree_list.map((item) => objKeyMap(item, key_maps))
 }
 
-export function keyMapReverse (key_maps: KeyMapType[]): KeyMapType[] {
+export function keyMapReverse(key_maps: KeyMapType[]): KeyMapType[] {
   return key_maps.map(([a, b]) => [b, a])
 }
 
-export function isParent (tree_list: ITreeNodeData[], item: ITreeNodeData, id: string): boolean {
+export function isParent(
+  tree_list: ITreeNodeData[],
+  item: ITreeNodeData,
+  id: string,
+): boolean {
   let parents = getParentList(tree_list, item.id)
-  return parents.findIndex(i => i.id === id) > -1
+  return parents.findIndex((i) => i.id === id) > -1
 }
 
-export function canBeSelected (tree_list: ITreeNodeData[], selected_ids: NodeIdType[], new_id: NodeIdType): boolean {
+export function canBeSelected(
+  tree_list: ITreeNodeData[],
+  selected_ids: NodeIdType[],
+  new_id: NodeIdType,
+): boolean {
   let id_one = selected_ids[0]
   if (!id_one) return true
 
   if (
-    tree_list.findIndex(i => i.id === id_one) > -1 &&
-    tree_list.findIndex(i => i.id === new_id) > -1
+    tree_list.findIndex((i) => i.id === id_one) > -1 &&
+    tree_list.findIndex((i) => i.id === new_id) > -1
   ) {
     return true
   }
 
   let flat = flatten(tree_list)
-  let parent = flat.find(i => i.children && i.children.findIndex(j => j.id === id_one) > -1)
+  let parent = flat.find(
+    (i) => i.children && i.children.findIndex((j) => j.id === id_one) > -1,
+  )
   if (!parent || !parent.children) {
     return false
   }
 
-  return parent.children.findIndex(i => i.id === new_id) > -1
+  return parent.children.findIndex((i) => i.id === new_id) > -1
 }
 
-export function selectTo (tree_list: ITreeNodeData[], selected_ids: NodeIdType[], new_id: NodeIdType): NodeIdType[] {
+export function selectTo(
+  tree_list: ITreeNodeData[],
+  selected_ids: NodeIdType[],
+  new_id: NodeIdType,
+): NodeIdType[] {
   if (!canBeSelected(tree_list, selected_ids, new_id)) {
     return selected_ids
   }
 
   let list: ITreeNodeData[]
-  if (tree_list.findIndex(i => i.id === new_id) > -1) {
+  if (tree_list.findIndex((i) => i.id === new_id) > -1) {
     list = tree_list
   } else {
     let flat = flatten(tree_list)
-    let parent = flat.find(i => i.children && i.children.findIndex(j => j.id === new_id) > -1)
+    let parent = flat.find(
+      (i) => i.children && i.children.findIndex((j) => j.id === new_id) > -1,
+    )
     if (!parent || !parent.children) {
       return selected_ids
     }

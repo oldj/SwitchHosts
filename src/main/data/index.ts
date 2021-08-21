@@ -40,8 +40,4 @@ if (!global.localdb) {
   localdb = global.localdb
 }
 
-export {
-  swhdb,
-  cfgdb,
-  localdb,
-}
+export { swhdb, cfgdb, localdb }

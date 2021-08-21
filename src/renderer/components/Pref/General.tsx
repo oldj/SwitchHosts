@@ -24,8 +24,8 @@ import { LocaleName } from '@root/common/i18n'
 import React from 'react'
 
 interface IProps {
-  data: ConfigsType;
-  onChange: (kv: Partial<ConfigsType>) => void;
+  data: ConfigsType
+  onChange: (kv: Partial<ConfigsType>) => void
 }
 
 const General = (props: IProps) => {
@@ -43,7 +43,7 @@ const General = (props: IProps) => {
           <Select
             w="200px"
             value={data.locale}
-            onChange={e => onChange({ locale: e.target.value as LocaleName })}
+            onChange={(e) => onChange({ locale: e.target.value as LocaleName })}
           >
             <option value="zh">简体中文</option>
             <option value="en">English</option>
@@ -58,7 +58,7 @@ const General = (props: IProps) => {
           <Select
             w="200px"
             value={data.theme}
-            onChange={e => onChange({ theme: e.target.value as ThemeType })}
+            onChange={(e) => onChange({ theme: e.target.value as ThemeType })}
           >
             <option value="light">{lang.theme_light}</option>
             <option value="dark">{lang.theme_dark}</option>
@@ -72,7 +72,13 @@ const General = (props: IProps) => {
           <VStack align="left">
             <RadioGroup
               value={data.choice_mode.toString()}
-              onChange={v => onChange({ choice_mode: parseInt(v.toString()) as ConfigsType['choice_mode'] })}
+              onChange={(v) =>
+                onChange({
+                  choice_mode: parseInt(
+                    v.toString(),
+                  ) as ConfigsType['choice_mode'],
+                })
+              }
             >
               <HStack spacing={10}>
                 <Radio value="1">
@@ -88,26 +94,26 @@ const General = (props: IProps) => {
         </HStack>
       </FormControl>
 
-      {
-        platform === 'darwin' ? (
-          <FormControl>
-            <HStack>
-              <Checkbox
-                isChecked={data.show_title_on_tray}
-                onChange={e => onChange({ show_title_on_tray: e.target.checked })}
-              >
-                {lang.show_title_on_tray}
-              </Checkbox>
-            </HStack>
-          </FormControl>
-        ) : null
-      }
+      {platform === 'darwin' ? (
+        <FormControl>
+          <HStack>
+            <Checkbox
+              isChecked={data.show_title_on_tray}
+              onChange={(e) =>
+                onChange({ show_title_on_tray: e.target.checked })
+              }
+            >
+              {lang.show_title_on_tray}
+            </Checkbox>
+          </HStack>
+        </FormControl>
+      ) : null}
 
       <FormControl>
         <HStack>
           <Checkbox
             isChecked={data.hide_at_launch}
-            onChange={e => onChange({ hide_at_launch: e.target.checked })}
+            onChange={(e) => onChange({ hide_at_launch: e.target.checked })}
           >
             {lang.hide_at_launch}
           </Checkbox>
@@ -119,7 +125,7 @@ const General = (props: IProps) => {
           <HStack>
             <Checkbox
               isChecked={data.hide_dock_icon}
-              onChange={e => onChange({ hide_dock_icon: e.target.checked })}
+              onChange={(e) => onChange({ hide_dock_icon: e.target.checked })}
             >
               {lang.hide_dock_icon}
             </Checkbox>
@@ -131,11 +137,15 @@ const General = (props: IProps) => {
         <VStack align="left">
           <Checkbox
             isChecked={data.remove_duplicate_records}
-            onChange={e => onChange({ remove_duplicate_records: e.target.checked })}
+            onChange={(e) =>
+              onChange({ remove_duplicate_records: e.target.checked })
+            }
           >
             {lang.remove_duplicate_records}
           </Checkbox>
-          <FormHelperText pl="20px">{lang.remove_duplicate_records_desc}</FormHelperText>
+          <FormHelperText pl="20px">
+            {lang.remove_duplicate_records_desc}
+          </FormHelperText>
         </VStack>
       </FormControl>
 
@@ -143,11 +153,13 @@ const General = (props: IProps) => {
         <VStack align="left">
           <Checkbox
             isChecked={data.http_api_on}
-            onChange={e => onChange({ http_api_on: e.target.checked })}
+            onChange={(e) => onChange({ http_api_on: e.target.checked })}
           >
             {lang.http_api_on}
           </Checkbox>
-          <FormHelperText pl="20px">{i18n.trans('http_api_on_desc', [http_api_port.toString()])}</FormHelperText>
+          <FormHelperText pl="20px">
+            {i18n.trans('http_api_on_desc', [http_api_port.toString()])}
+          </FormHelperText>
         </VStack>
       </FormControl>
     </VStack>

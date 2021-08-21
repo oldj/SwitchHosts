@@ -12,7 +12,12 @@ import api_router from './api/index'
 const app = express()
 
 app.use((req, res, next) => {
-  console.log(`> "${(new Date()).toString()}"`, req.method, req.originalUrl, `"${req.headers['user-agent']}"`)
+  console.log(
+    `> "${new Date().toString()}"`,
+    req.method,
+    req.originalUrl,
+    `"${req.headers['user-agent']}"`,
+  )
   next()
 })
 
@@ -21,7 +26,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/remote-test', (req, res) => {
-  res.send(`# remote-test\n# ${(new Date()).toString()}`)
+  res.send(`# remote-test\n# ${new Date().toString()}`)
 })
 
 app.use('/api', api_router)
@@ -31,7 +36,9 @@ let server: Server
 export const start = (): boolean => {
   try {
     server = app.listen(http_api_port, '127.0.0.1', function () {
-      console.log(`SwitchHosts HTTP server is listening on port ${http_api_port}!`)
+      console.log(
+        `SwitchHosts HTTP server is listening on port ${http_api_port}!`,
+      )
       console.log(`-> http://127.0.0.1:${http_api_port}`)
     })
   } catch (e) {

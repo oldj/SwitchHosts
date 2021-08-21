@@ -15,7 +15,7 @@ import React from 'react'
 import styles from './TrashcanItem.less'
 
 interface Props {
-  data: ITrashcanListObject;
+  data: ITrashcanListObject
 }
 
 const TrashcanItem = (props: Props) => {
@@ -33,9 +33,10 @@ const TrashcanItem = (props: Props) => {
       enabled: hosts_data.trashcan.length > 0,
       click() {
         if (confirm(lang.trashcan_clear_confirm)) {
-          actions.clearTrashcan()
+          actions
+            .clearTrashcan()
             .then(loadHostsData)
-            .catch(e => console.error(e))
+            .catch((e) => console.error(e))
         }
       },
     },
@@ -45,10 +46,9 @@ const TrashcanItem = (props: Props) => {
     {
       label: lang.trashcan_restore,
       click() {
-        actions.restoreItemFromTrashcan(data.id)
-          .then(success => {
-            success && loadHostsData()
-          })
+        actions.restoreItemFromTrashcan(data.id).then((success) => {
+          success && loadHostsData()
+        })
       },
     },
     {
@@ -58,10 +58,9 @@ const TrashcanItem = (props: Props) => {
       label: lang.hosts_delete,
       click() {
         if (confirm(lang.trashcan_delete_confirm)) {
-          actions.deleteItemFromTrashcan(data.id)
-            .then(success => {
-              success && loadHostsData()
-            })
+          actions.deleteItemFromTrashcan(data.id).then((success) => {
+            success && loadHostsData()
+          })
         }
       },
     },
@@ -83,7 +82,7 @@ const TrashcanItem = (props: Props) => {
     >
       <div className={styles.title} onClick={onSelect}>
         <span className={list_item_styles.icon}>
-          <ItemIcon type={data.type} is_collapsed={true}/>
+          <ItemIcon type={data.type} is_collapsed={true} />
         </span>
 
         {data.data.title || lang.untitled}

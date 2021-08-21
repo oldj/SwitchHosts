@@ -9,8 +9,8 @@ import { LocaleName } from '@root/common/i18n'
 import React from 'react'
 
 interface Props {
-  locale: LocaleName;
-  children: string | React.ReactElement | React.ReactElement[];
+  locale: LocaleName
+  children: string | React.ReactElement | React.ReactElement[]
 }
 
 const Lang = (props: Props): React.ReactElement | null => {

@@ -12,7 +12,7 @@ export default async (value: string) => {
   let history_all = await getReplaceHistory()
 
   // remove old
-  history_all = history_all.filter(v => v !== value)
+  history_all = history_all.filter((v) => v !== value)
 
   // insert new
   history_all.push(value)

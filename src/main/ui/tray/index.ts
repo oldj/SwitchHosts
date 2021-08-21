@@ -10,7 +10,14 @@ import { makeWindow } from '@main/ui/tray/window'
 import events from '@root/common/events'
 import { I18N } from '@root/common/i18n'
 import version from '@root/version.json'
-import { app, BrowserWindow, Menu, MenuItemConstructorOptions, screen, Tray } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  Menu,
+  MenuItemConstructorOptions,
+  screen,
+  Tray,
+} from 'electron'
 import * as path from 'path'
 
 let tray: Tray
@@ -25,8 +32,7 @@ const makeTray = async () => {
   tray = new Tray(path.join(__dirname, 'assets', icon))
   win = makeWindow()
 
-  updateTrayTitle()
-    .catch(e => console.error(e))
+  updateTrayTitle().catch((e) => console.error(e))
 
   tray.setToolTip('SwitchHosts')
 
@@ -61,7 +67,7 @@ const makeTray = async () => {
       {
         label: lang._app_name,
         toolTip: lang.show_main_window,
-        click () {
+        click() {
           broadcast(events.active_main_window)
         },
       },
@@ -69,23 +75,24 @@ const makeTray = async () => {
         label: `v${ver}`,
         enabled: false,
       },
-      ...(app.dock ? <MenuItemConstructorOptions[]>[
-        { type: 'separator' },
-        {
-          label: lang.toggle_dock_icon,
-          async click () {
-            let hide_dock_icon = await configGet('hide_dock_icon')
-            hide_dock_icon = !hide_dock_icon
-            await configSet('hide_dock_icon', hide_dock_icon)
-            if (hide_dock_icon) {
-              app.dock.hide()
-            } else {
-              app.dock.show()
-                .catch(e => console.error(e))
-            }
-          },
-        },
-      ] : []),
+      ...(app.dock
+        ? <MenuItemConstructorOptions[]>[
+            { type: 'separator' },
+            {
+              label: lang.toggle_dock_icon,
+              async click() {
+                let hide_dock_icon = await configGet('hide_dock_icon')
+                hide_dock_icon = !hide_dock_icon
+                await configSet('hide_dock_icon', hide_dock_icon)
+                if (hide_dock_icon) {
+                  app.dock.hide()
+                } else {
+                  app.dock.show().catch((e) => console.error(e))
+                }
+              },
+            },
+          ]
+        : []),
       { type: 'separator' },
       {
         label: lang.quit,
@@ -123,7 +130,8 @@ const getPosition = () => {
   }
 
   if (x < 0) x = 0
-  if (x + window_bounds.width > screen_bounds.width) x = screen_bounds.width - window_bounds.width
+  if (x + window_bounds.width > screen_bounds.width)
+    x = screen_bounds.width - window_bounds.width
 
   x = Math.round(x)
   y = Math.round(y)
@@ -138,13 +146,11 @@ const show = () => {
   // win.focus()
 }
 
-app && app.whenReady().then(() => {
-  if (!tray) {
-    makeTray()
-  }
-})
+app &&
+  app.whenReady().then(() => {
+    if (!tray) {
+      makeTray()
+    }
+  })
 
-export {
-  tray,
-  makeTray,
-}
+export { tray, makeTray }

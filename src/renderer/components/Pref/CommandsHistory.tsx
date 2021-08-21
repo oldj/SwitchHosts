@@ -25,12 +25,12 @@ import React, { useEffect, useState } from 'react'
 import { BiTrash } from 'react-icons/bi'
 
 interface Props {
-  is_show: boolean;
+  is_show: boolean
 }
 
 const CommandsHistory = (props: Props) => {
   const { is_show } = props
-  const [ list, setList ] = useState<ICommandRunResult[]>([])
+  const [list, setList] = useState<ICommandRunResult[]>([])
   const { lang } = useModel('useI18n')
 
   const loadData = async () => {
@@ -41,7 +41,7 @@ const CommandsHistory = (props: Props) => {
 
   const deleteOneRecord = async (_id: string) => {
     await actions.cmdDeleteHistory(_id)
-    setList(list.filter(i => i._id !== _id))
+    setList(list.filter((i) => i._id !== _id))
   }
 
   const clearAll = async () => {
@@ -53,16 +53,14 @@ const CommandsHistory = (props: Props) => {
     if (is_show) {
       loadData()
     }
-  }, [ is_show ])
+  }, [is_show])
 
   if (!is_show) {
     return null
   }
 
   if (list.length === 0) {
-    return (
-      <Center h="100px">{lang.no_record}</Center>
-    )
+    return <Center h="100px">{lang.no_record}</Center>
   }
 
   return (
@@ -75,7 +73,7 @@ const CommandsHistory = (props: Props) => {
             w="100%"
             // alignItems="top"
           >
-            <AlertIcon/>
+            <AlertIcon />
             <Box flex="1">
               <AlertTitle d="block">
                 <HStack>
@@ -83,10 +81,10 @@ const CommandsHistory = (props: Props) => {
                   <span style={{ fontWeight: 'normal' }}>
                     {dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}
                   </span>
-                  <Spacer/>
+                  <Spacer />
                   <IconButton
                     aria-label="delete"
-                    icon={<BiTrash/>}
+                    icon={<BiTrash />}
                     size="sm"
                     variant="ghost"
                     onClick={() => item._id && deleteOneRecord(item._id)}
@@ -96,7 +94,9 @@ const CommandsHistory = (props: Props) => {
               <AlertDescription d="block" spacing={3}>
                 {item.stdout ? (
                   <>
-                    <Box><strong>stdout:</strong></Box>
+                    <Box>
+                      <strong>stdout:</strong>
+                    </Box>
                     <Box>
                       <pre>{item.stdout}</pre>
                     </Box>
@@ -104,7 +104,9 @@ const CommandsHistory = (props: Props) => {
                 ) : null}
                 {item.stderr ? (
                   <>
-                    <Box><strong>stderr:</strong></Box>
+                    <Box>
+                      <strong>stderr:</strong>
+                    </Box>
                     <Box>
                       <pre>{item.stderr}</pre>
                     </Box>
@@ -117,7 +119,9 @@ const CommandsHistory = (props: Props) => {
       })}
 
       <Box pt={10}>
-        <Button onClick={clearAll} variant="link">{lang.clear_history}</Button>
+        <Button onClick={clearAll} variant="link">
+          {lang.clear_history}
+        </Button>
       </Box>
     </VStack>
   )

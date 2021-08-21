@@ -20,9 +20,7 @@ export default async (): Promise<boolean | null | string> => {
       { name: 'JSON', extensions: ['json'] },
       { name: 'All Files', extensions: ['*'] },
     ],
-    properties: [
-      'openFile',
-    ],
+    properties: ['openFile'],
   })
 
   if (result.canceled) {
@@ -41,7 +39,11 @@ export default async (): Promise<boolean | null | string> => {
     return 'parse_error'
   }
 
-  if (typeof data !== 'object' || !data.version || !Array.isArray(data.version)) {
+  if (
+    typeof data !== 'object' ||
+    !data.version ||
+    !Array.isArray(data.version)
+  ) {
     return 'invalid_data'
   }
 

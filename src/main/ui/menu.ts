@@ -5,7 +5,13 @@
 
 import { findShow } from '@main/actions'
 import events from '@root/common/events'
-import { BrowserWindow, Menu, MenuItem, MenuItemConstructorOptions, shell } from 'electron'
+import {
+  BrowserWindow,
+  Menu,
+  MenuItem,
+  MenuItemConstructorOptions,
+  shell,
+} from 'electron'
 import { I18N, LocaleName } from '@root/common/i18n'
 import { homepage_url, feedback_url } from '@root/common/constants'
 import { broadcast } from '@main/core/agent'
@@ -92,14 +98,14 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         {
           label: lang.comment_current_line,
           accelerator: 'CommandOrControl+/',
-          click () {
+          click() {
             broadcast(events.toggle_comment)
           },
         },
         {
           label: lang.find_and_replace,
           accelerator: 'CommandOrControl+F',
-          click () {
+          click() {
             findShow()
           },
         },
@@ -111,16 +117,15 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         {
           label: lang.reload,
           accelerator: 'CmdOrCtrl+R',
-          click (item: MenuItem, focusedWindow: BrowserWindow | undefined) {
+          click(item: MenuItem, focusedWindow: BrowserWindow | undefined) {
             if (focusedWindow) focusedWindow.reload()
           },
         },
         {
-          label: lang.toggle_developer_tools,// 'Toggle Developer Tools',
-          accelerator: process.platform === 'darwin'
-            ? 'Alt+Command+I'
-            : 'Ctrl+Shift+I',
-          click (item: MenuItem, focusedWindow: BrowserWindow | undefined) {
+          label: lang.toggle_developer_tools, // 'Toggle Developer Tools',
+          accelerator:
+            process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+          click(item: MenuItem, focusedWindow: BrowserWindow | undefined) {
             if (focusedWindow) focusedWindow.webContents.toggleDevTools()
           },
         },
@@ -177,16 +182,14 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         // },
         {
           label: lang.feedback,
-          click () {
-            shell.openExternal(feedback_url)
-              .catch(e => console.log(e))
+          click() {
+            shell.openExternal(feedback_url).catch((e) => console.log(e))
           },
         },
         {
           label: lang.homepage,
-          click () {
-            shell.openExternal(homepage_url)
-              .catch(e => console.log(e))
+          click() {
+            shell.openExternal(homepage_url).catch((e) => console.log(e))
           },
         },
       ],
@@ -234,7 +237,8 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         {
           role: 'quit',
           label: lang.quit,
-        }],
+        },
+      ],
     })
     // Edit menu.
     /*template[2].submenu.push(
@@ -278,7 +282,8 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
       // },
     ]
   } else if (os === 'win32' || os === 'linux') {
-    let submenu = (template[0] && template[0].submenu) as MenuItemConstructorOptions[]
+    let submenu = (template[0] &&
+      template[0].submenu) as MenuItemConstructorOptions[]
 
     if (submenu) {
       submenu.unshift({
@@ -303,7 +308,8 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
     }
 
     // VIEW
-    submenu = (template[2] && template[2].submenu) as MenuItemConstructorOptions[]
+    submenu = (template[2] &&
+      template[2].submenu) as MenuItemConstructorOptions[]
     submenu.splice(0, 4)
   }
 

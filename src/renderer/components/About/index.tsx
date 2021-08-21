@@ -29,10 +29,10 @@ const About = () => {
 
   return (
     <Modal isOpen={is_open} onClose={onClose}>
-      <ModalOverlay/>
+      <ModalOverlay />
       <ModalContent>
         <ModalBody className={styles.root}>
-          <AboutContent/>
+          <AboutContent />
         </ModalBody>
 
         <ModalFooter className={styles.footer}>

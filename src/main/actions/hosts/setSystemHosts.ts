@@ -3,7 +3,12 @@
  * @homepage: https://oldj.net
  */
 
-import { configGet, deleteHistory, getHistoryList, updateTrayTitle } from '@main/actions'
+import {
+  configGet,
+  deleteHistory,
+  getHistoryList,
+  updateTrayTitle,
+} from '@main/actions'
 import tryToRun from '@main/actions/cmd/tryToRun'
 import { broadcast } from '@main/core/agent'
 import { swhdb } from '@main/data'
@@ -21,11 +26,11 @@ import { v4 as uuid4 } from 'uuid'
 import getPathOfSystemHosts from './getPathOfSystemHostsPath'
 
 interface IWriteResult {
-  success: boolean;
-  code?: string;
-  message?: string;
-  old_content?: string;
-  new_content?: string;
+  success: boolean
+  code?: string
+  message?: string
+  old_content?: string
+  new_content?: string
 }
 
 let sudo_pswd: string = ''
@@ -44,7 +49,7 @@ const addHistory = async (content: string) => {
   await swhdb.collection.history.insert({
     id: uuid4(),
     content,
-    add_time_ms: (new Date()).getTime(),
+    add_time_ms: new Date().getTime(),
   })
 
   let history_limit = await configGet('history_limit')
@@ -61,49 +66,59 @@ const addHistory = async (content: string) => {
   }
 }
 
-const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteResult> => new Promise((resolve) => {
-  let tmp_fn = path.join(os.tmpdir(), `swh_${(new Date()).getTime()}_${Math.random()}.txt`)
-  fs.writeFileSync(tmp_fn, content, 'utf-8')
+const writeWithSudo = (
+  sys_hosts_path: string,
+  content: string,
+): Promise<IWriteResult> =>
+  new Promise((resolve) => {
+    let tmp_fn = path.join(
+      os.tmpdir(),
+      `swh_${new Date().getTime()}_${Math.random()}.txt`,
+    )
+    fs.writeFileSync(tmp_fn, content, 'utf-8')
 
-  let cmd = [
-    `echo '${sudo_pswd}' | sudo -S chmod 777 ${sys_hosts_path}`
-    , `cat "${tmp_fn}" > ${sys_hosts_path}`
-    , `echo '${sudo_pswd}' | sudo -S chmod 644 ${sys_hosts_path}`,
-    // , 'rm -rf ' + tmp_fn
-  ].join(' && ')
+    let cmd = [
+      `echo '${sudo_pswd}' | sudo -S chmod 777 ${sys_hosts_path}`,
+      `cat "${tmp_fn}" > ${sys_hosts_path}`,
+      `echo '${sudo_pswd}' | sudo -S chmod 644 ${sys_hosts_path}`,
+      // , 'rm -rf ' + tmp_fn
+    ].join(' && ')
 
-  exec(cmd, function (error, stdout, stderr) {
-    // command output is in stdout
-    console.log('stdout', stdout)
-    console.log('stderr', stderr)
+    exec(cmd, function (error, stdout, stderr) {
+      // command output is in stdout
+      console.log('stdout', stdout)
+      console.log('stderr', stderr)
 
-    if (fs.existsSync(tmp_fn)) {
-      fs.unlinkSync(tmp_fn)
-    }
-
-    let result: IWriteResult
-
-    if (!error) {
-      console.log('success.')
-
-      result = {
-        success: true,
+      if (fs.existsSync(tmp_fn)) {
+        fs.unlinkSync(tmp_fn)
       }
-    } else {
-      console.log('fail!')
-      sudo_pswd = ''
 
-      result = {
-        success: false,
-        message: stderr,
+      let result: IWriteResult
+
+      if (!error) {
+        console.log('success.')
+
+        result = {
+          success: true,
+        }
+      } else {
+        console.log('fail!')
+        sudo_pswd = ''
+
+        result = {
+          success: false,
+          message: stderr,
+        }
       }
-    }
 
-    resolve(result)
+      resolve(result)
+    })
   })
-})
 
-const write = async (content: string, options?: IHostsWriteOptions): Promise<IWriteResult> => {
+const write = async (
+  content: string,
+  options?: IHostsWriteOptions,
+): Promise<IWriteResult> => {
   const sys_hosts_path = await getPathOfSystemHosts()
   const fn_md5 = await md5File(sys_hosts_path)
   const content_md5 = md5(content)
@@ -162,14 +177,20 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
   return { success: true, old_content, new_content: content }
 }
 
-const setSystemHosts = async (content: string, options?: IHostsWriteOptions): Promise<IWriteResult> => {
+const setSystemHosts = async (
+  content: string,
+  options?: IHostsWriteOptions,
+): Promise<IWriteResult> => {
   let result = await write(content, options)
   let { success, old_content } = result
 
   if (success) {
     if (typeof old_content === 'string') {
       let histories = await getHistoryList()
-      if (histories.length === 0 || histories[histories.length - 1].content !== old_content) {
+      if (
+        histories.length === 0 ||
+        histories[histories.length - 1].content !== old_content
+      ) {
         await addHistory(old_content)
       }
     }

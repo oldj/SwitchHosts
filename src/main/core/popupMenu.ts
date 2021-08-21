@@ -12,7 +12,7 @@ ipcMain.on('x_popup_menu', (e, options: IPopupMenuOption) => {
   // console.log(options)
   const menu = new Menu()
 
-  options.items.map(opt => {
+  options.items.map((opt) => {
     if (typeof opt._click_evt === 'string') {
       let evt: string = opt._click_evt
       opt.click = () => {

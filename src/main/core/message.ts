@@ -28,13 +28,14 @@ ipcMain.on('x_unreg', (e, d) => {
         delete registered_clients[k]
       }
     }
-
   } else if (name) {
     delete registered_clients[name]
-
   } else {
     for (let k in registered_clients) {
-      if (registered_clients.hasOwnProperty(k) && registered_clients[k] === e.sender) {
+      if (
+        registered_clients.hasOwnProperty(k) &&
+        registered_clients[k] === e.sender
+      ) {
         delete registered_clients[k]
         break
       }

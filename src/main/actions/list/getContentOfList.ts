@@ -10,7 +10,7 @@ import normalize, { INormalizeOptions } from '@root/common/normalize'
 
 const getContentOfList = async (list: IHostsListObject[]): Promise<string> => {
   const content_list: string[] = []
-  const flat = flatten(list).filter(item => item.on)
+  const flat = flatten(list).filter((item) => item.on)
 
   for (let hosts of flat) {
     let c = await getHostsContent(hosts.id)

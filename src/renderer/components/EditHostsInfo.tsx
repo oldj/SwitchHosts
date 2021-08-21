@@ -41,11 +41,12 @@ import styles from './EditHostsInfo.less'
 
 const EditHostsInfo = () => {
   const { lang } = useModel('useI18n')
-  const [ hosts, setHosts ] = useState<IHostsListObject | null>(null)
-  const { hosts_data, setList, current_hosts, setCurrentHosts } = useModel('useHostsData')
-  const [ is_show, setIsShow ] = useState(false)
-  const [ is_add, setIsAdd ] = useState(true)
-  const [ is_refreshing, setIsRefreshing ] = useState(false)
+  const [hosts, setHosts] = useState<IHostsListObject | null>(null)
+  const { hosts_data, setList, current_hosts, setCurrentHosts } =
+    useModel('useHostsData')
+  const [is_show, setIsShow] = useState(false)
+  const [is_add, setIsAdd] = useState(true)
+  const [is_refreshing, setIsRefreshing] = useState(false)
   const ipt_title_ref = useRef<HTMLInputElement>(null)
 
   const toast = useToast()
@@ -58,8 +59,8 @@ const EditHostsInfo = () => {
   const onSave = async () => {
     let data: Omit<IHostsListObject, 'id'> & { id?: string } = { ...hosts }
 
-    const keys_to_trim = [ 'title', 'url' ]
-    keys_to_trim.map(k => {
+    const keys_to_trim = ['title', 'url']
+    keys_to_trim.map((k) => {
       if (data[k]) {
         data[k] = data[k].trim()
       }
@@ -68,31 +69,31 @@ const EditHostsInfo = () => {
     if (is_add) {
       // add
       let h: IHostsListObject = {
-        ...(data),
+        ...data,
         id: uuidv4(),
       }
-      let list: IHostsListObject[] = [ ...hosts_data.list, h ]
+      let list: IHostsListObject[] = [...hosts_data.list, h]
       await setList(list)
       agent.broadcast(events.select_hosts, h.id, 1000)
-
     } else if (data && data.id) {
       // edit
-      let h: IHostsListObject | undefined = hostsFn.findItemById(hosts_data.list, data.id)
+      let h: IHostsListObject | undefined = hostsFn.findItemById(
+        hosts_data.list,
+        data.id,
+      )
       if (h) {
         Object.assign(h, data)
-        await setList([ ...hosts_data.list ])
+        await setList([...hosts_data.list])
 
         if (data.id === current_hosts?.id) {
           setCurrentHosts(h)
         }
-
       } else {
         // can not find by id
         setIsAdd(true)
         setTimeout(onSave, 300)
         return
       }
-
     } else {
       // unknow error
       alert('unknow error!')
@@ -118,11 +119,15 @@ const EditHostsInfo = () => {
     setIsShow(true)
   })
 
-  useOnBroadcast(events.hosts_refreshed, (_hosts: IHostsListObject) => {
-    if (hosts && hosts.id === _hosts.id) {
-      onUpdate(lodash.pick(_hosts, [ 'last_refresh', 'last_refresh_ms' ]))
-    }
-  }, [ hosts ])
+  useOnBroadcast(
+    events.hosts_refreshed,
+    (_hosts: IHostsListObject) => {
+      if (hosts && hosts.id === _hosts.id) {
+        onUpdate(lodash.pick(_hosts, ['last_refresh', 'last_refresh_ms']))
+      }
+    },
+    [hosts],
+  )
 
   const forRemote = (): React.ReactElement => {
     return (
@@ -131,9 +136,9 @@ const EditHostsInfo = () => {
           <FormLabel>URL</FormLabel>
           <Input
             value={hosts?.url || ''}
-            onChange={e => onUpdate({ url: e.target.value })}
+            onChange={(e) => onUpdate({ url: e.target.value })}
             placeholder={lang.url_placeholder}
-            onKeyDown={e => e.key === 'Enter' && onSave()}
+            onKeyDown={(e) => e.key === 'Enter' && onSave()}
           />
         </FormControl>
 
@@ -142,7 +147,9 @@ const EditHostsInfo = () => {
           <div>
             <Select
               value={hosts?.refresh_interval || 0}
-              onChange={e => onUpdate({ refresh_interval: parseInt(e.target.value) || 0 })}
+              onChange={(e) =>
+                onUpdate({ refresh_interval: parseInt(e.target.value) || 0 })
+              }
               style={{ minWidth: 120 }}
             >
               <option value={0}>{lang.never}</option>
@@ -156,7 +163,10 @@ const EditHostsInfo = () => {
           </div>
           {is_add ? null : (
             <FormHelperText className={styles.refresh_info}>
-              <span>{lang.last_refresh}{hosts?.last_refresh || 'N/A'}</span>
+              <span>
+                {lang.last_refresh}
+                {hosts?.last_refresh || 'N/A'}
+              </span>
               <Button
                 size="small"
                 variant="ghost"
@@ -165,8 +175,9 @@ const EditHostsInfo = () => {
                   if (!hosts) return
 
                   setIsRefreshing(true)
-                  actions.refreshHosts(hosts.id)
-                    .then(r => {
+                  actions
+                    .refreshHosts(hosts.id)
+                    .then((r) => {
                       console.log(r)
                       if (!r.success) {
                         toast({
@@ -187,7 +198,7 @@ const EditHostsInfo = () => {
                         last_refresh_ms: r.data.last_refresh_ms,
                       })
                     })
-                    .catch(e => {
+                    .catch((e) => {
                       console.log(e)
                       toast({
                         status: 'error',
@@ -197,7 +208,9 @@ const EditHostsInfo = () => {
                     })
                     .finally(() => setIsRefreshing(false))
                 }}
-              >{lang.refresh}</Button>
+              >
+                {lang.refresh}
+              </Button>
             </FormHelperText>
           )}
         </FormControl>
@@ -208,7 +221,7 @@ const EditHostsInfo = () => {
   const renderTransferItem = (item: IHostsListObject): React.ReactElement => {
     return (
       <HStack>
-        <ItemIcon type={item.type}/>
+        <ItemIcon type={item.type} />
         <span style={{ marginLeft: 4 }}>{item.title || lang.untitled}</span>
       </HStack>
     )
@@ -218,8 +231,10 @@ const EditHostsInfo = () => {
     const list = hostsFn.flatten(hosts_data.list)
 
     let source_list: IHostsListObject[] = list
-      .filter(item => !item.type || item.type === 'local' || item.type === 'remote')
-      .map(item => {
+      .filter(
+        (item) => !item.type || item.type === 'local' || item.type === 'remote',
+      )
+      .map((item) => {
         let o = { ...item }
         o.key = o.id
         return o
@@ -248,45 +263,50 @@ const EditHostsInfo = () => {
         <FormLabel>{lang.choice_mode}</FormLabel>
         <RadioGroup
           value={(hosts?.folder_mode || 0).toString()}
-          onChange={(v: string) => onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })}
+          onChange={(v: string) =>
+            onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })
+          }
         >
           <HStack spacing={3}>
             <Radio value="0">{lang.choice_mode_default}</Radio>
             <Radio value="1">{lang.choice_mode_single}</Radio>
             <Radio value="2">{lang.choice_mode_multiple}</Radio>
           </HStack>
-        </RadioGroup
-        >
+        </RadioGroup>
       </FormControl>
     )
   }
 
-  const types: HostsType[] = [ 'local', 'remote', 'group', 'folder' ]
+  const types: HostsType[] = ['local', 'remote', 'group', 'folder']
 
   const footer_buttons = (
     <Grid templateColumns="1fr 1fr" style={{ width: '100%' }}>
       <Box>
-        {
-          is_add ? null : (
-            <Button
-              leftIcon={<BiTrash/>}
-              mr={3}
-              variant="outline"
-              disabled={!hosts}
-              colorScheme="pink"
-              onClick={() => {
-                if (hosts) {
-                  agent.broadcast(events.move_to_trashcan, [hosts.id])
-                  onCancel()
-                }
-              }}
-            >{lang.move_to_trashcan}</Button>
-          )
-        }
+        {is_add ? null : (
+          <Button
+            leftIcon={<BiTrash />}
+            mr={3}
+            variant="outline"
+            disabled={!hosts}
+            colorScheme="pink"
+            onClick={() => {
+              if (hosts) {
+                agent.broadcast(events.move_to_trashcan, [hosts.id])
+                onCancel()
+              }
+            }}
+          >
+            {lang.move_to_trashcan}
+          </Button>
+        )}
       </Box>
       <Box style={{ textAlign: 'right' }}>
-        <Button onClick={onCancel} variant="outline" mr={3}>{lang.btn_cancel}</Button>
-        <Button onClick={onSave} colorScheme="blue">{lang.btn_ok}</Button>
+        <Button onClick={onCancel} variant="outline" mr={3}>
+          {lang.btn_cancel}
+        </Button>
+        <Button onClick={onSave} colorScheme="blue">
+          {lang.btn_ok}
+        </Button>
       </Box>
     </Grid>
   )
@@ -298,11 +318,13 @@ const EditHostsInfo = () => {
       onClose={onCancel}
       size="lg"
     >
-      <DrawerOverlay/>
+      <DrawerOverlay />
       <DrawerContent>
         <DrawerHeader>
           <HStack>
-            <Box mr={1}><BiEdit/></Box>
+            <Box mr={1}>
+              <BiEdit />
+            </Box>
             <Box>{is_add ? lang.hosts_add : lang.hosts_edit}</Box>
           </HStack>
         </DrawerHeader>
@@ -314,16 +336,14 @@ const EditHostsInfo = () => {
               value={hosts?.type || 'local'}
             >
               <Stack direction="row" spacing={6}>
-                {
-                  types.map(type => (
-                    <Radio value={type} key={type} isDisabled={!is_add}>
-                      <HStack spacing="4px">
-                        <ItemIcon type={type}/>
-                        <span>{lang[type]}</span>
-                      </HStack>
-                    </Radio>
-                  ))
-                }
+                {types.map((type) => (
+                  <Radio value={type} key={type} isDisabled={!is_add}>
+                    <HStack spacing="4px">
+                      <ItemIcon type={type} />
+                      <span>{lang[type]}</span>
+                    </HStack>
+                  </Radio>
+                ))}
               </Stack>
             </RadioGroup>
           </FormControl>
@@ -334,8 +354,8 @@ const EditHostsInfo = () => {
               ref={ipt_title_ref}
               value={hosts?.title || ''}
               maxLength={50}
-              onChange={e => onUpdate({ title: e.target.value })}
-              onKeyDown={e => e.key === 'Enter' && onSave()}
+              onChange={(e) => onUpdate({ title: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && onSave()}
             />
           </FormControl>
 
@@ -344,9 +364,7 @@ const EditHostsInfo = () => {
           {hosts?.type === 'folder' ? forFolder() : null}
         </DrawerBody>
 
-        <DrawerFooter>
-          {footer_buttons}
-        </DrawerFooter>
+        <DrawerFooter>{footer_buttons}</DrawerFooter>
       </DrawerContent>
     </Drawer>
   )

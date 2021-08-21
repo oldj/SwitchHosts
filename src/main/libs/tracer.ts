@@ -5,15 +5,15 @@ import { server_url } from '@root/common/constants'
 class Tracer {
   data: string[]
 
-  constructor () {
+  constructor() {
     this.data = []
   }
 
-  add (action: string) {
+  add(action: string) {
     this.data.push(action)
   }
 
-  async emit () {
+  async emit() {
     if (this.data.length === 0) return
 
     let send_usage_data = await configGet('send_usage_data')

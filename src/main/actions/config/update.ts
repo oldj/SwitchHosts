@@ -32,8 +32,7 @@ export default async (data: Partial<ConfigsType>) => {
     if (data.hide_dock_icon) {
       app.dock.hide()
     } else {
-      app.dock.show()
-        .catch(e => console.error(e))
+      app.dock.show().catch((e) => console.error(e))
     }
   }
 }

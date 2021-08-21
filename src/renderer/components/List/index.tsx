@@ -13,7 +13,11 @@ import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
 import events from '@root/common/events'
-import { findItemById, getNextSelectedItem, setOnStateOfItem } from '@root/common/hostsFn'
+import {
+  findItemById,
+  getNextSelectedItem,
+  setOnStateOfItem,
+} from '@root/common/hostsFn'
 import { IFindShowSourceParam } from '@root/common/types'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
@@ -22,31 +26,31 @@ import styles from './index.less'
 import ListItem from './ListItem'
 
 interface Props {
-  is_tray?: boolean;
+  is_tray?: boolean
 }
 
 const List = (props: Props) => {
   const { is_tray } = props
-  const {
-    hosts_data,
-    loadHostsData,
-    setList,
-    current_hosts,
-    setCurrentHosts,
-  } = useModel('useHostsData')
+  const { hosts_data, loadHostsData, setList, current_hosts, setCurrentHosts } =
+    useModel('useHostsData')
   const { configs } = useModel('useConfigs')
   const { lang } = useModel('useI18n')
-  const [selected_ids, setSelectedIds] = useState<string[]>([current_hosts?.id || '0'])
+  const [selected_ids, setSelectedIds] = useState<string[]>([
+    current_hosts?.id || '0',
+  ])
   const [show_list, setShowList] = useState<IHostsListObject[]>([])
   const toast = useToast()
 
   useEffect(() => {
     if (!is_tray) {
-      setShowList([{
-        id: '0',
-        title: lang.system_hosts,
-        is_sys: true,
-      }, ...hosts_data.list])
+      setShowList([
+        {
+          id: '0',
+          title: lang.system_hosts,
+          is_sys: true,
+        },
+        ...hosts_data.list,
+      ])
     } else {
       setShowList([...hosts_data.list])
     }
@@ -54,7 +58,12 @@ const List = (props: Props) => {
 
   const onToggleItem = async (id: string, on: boolean) => {
     console.log(`toggle hosts #${id} as ${on ? 'on' : 'off'}`)
-    const new_list = setOnStateOfItem(hosts_data.list, id, on, configs?.choice_mode ?? 0)
+    const new_list = setOnStateOfItem(
+      hosts_data.list,
+      id,
+      on,
+      configs?.choice_mode ?? 0,
+    )
     let success = await writeHostsToSystem(new_list)
     if (success) {
       toast({
@@ -68,7 +77,10 @@ const List = (props: Props) => {
     }
   }
 
-  const writeHostsToSystem = async (list?: IHostsListObject[], options?: IHostsWriteOptions): Promise<boolean> => {
+  const writeHostsToSystem = async (
+    list?: IHostsListObject[],
+    options?: IHostsWriteOptions,
+  ): Promise<boolean> => {
     if (!Array.isArray(list)) {
       list = hosts_data.list
     }
@@ -76,7 +88,7 @@ const List = (props: Props) => {
     let content: string = await actions.getContentOfList(list)
     const result = await actions.setSystemHosts(content, options)
     if (result.success) {
-      setList(list).catch(e => console.error(e))
+      setList(list).catch((e) => console.error(e))
       // new Notification(lang.success, {
       //   body: lang.hosts_updated,
       // })
@@ -84,13 +96,16 @@ const List = (props: Props) => {
       if (current_hosts) {
         let hosts = findItemById(list, current_hosts.id)
         if (hosts) {
-          agent.broadcast(events.set_hosts_on_status, current_hosts.id, hosts.on)
+          agent.broadcast(
+            events.set_hosts_on_status,
+            current_hosts.id,
+            hosts.on,
+          )
         }
       }
-
     } else {
       console.log(result)
-      loadHostsData().catch(e => console.log(e))
+      loadHostsData().catch((e) => console.log(e))
       let err_desc = lang.fail
 
       // let body: string = lang.no_access_to_hosts
@@ -120,38 +135,50 @@ const List = (props: Props) => {
 
   if (!is_tray) {
     useOnBroadcast(events.toggle_item, onToggleItem, [hosts_data])
-    useOnBroadcast(events.write_hosts_to_system, writeHostsToSystem, [hosts_data])
+    useOnBroadcast(events.write_hosts_to_system, writeHostsToSystem, [
+      hosts_data,
+    ])
   } else {
     useOnBroadcast(events.tray_list_updated, loadHostsData)
   }
 
-  useOnBroadcast(events.move_to_trashcan, async (ids: string[]) => {
-    console.log(`move_to_trashcan: #${ids}`)
-    await actions.moveManyToTrashcan(ids)
-    await loadHostsData()
+  useOnBroadcast(
+    events.move_to_trashcan,
+    async (ids: string[]) => {
+      console.log(`move_to_trashcan: #${ids}`)
+      await actions.moveManyToTrashcan(ids)
+      await loadHostsData()
 
-    if (current_hosts && ids.includes(current_hosts.id)) {
-      // 选中删除指定节点后的兄弟节点
-      let next_item = getNextSelectedItem(hosts_data.list, i => ids.includes(i.id))
-      setCurrentHosts(next_item || null)
-      setSelectedIds(next_item ? [next_item.id] : [])
-    }
-  }, [current_hosts, hosts_data])
-
-  useOnBroadcast(events.select_hosts, async (id: string, wait_ms: number = 0) => {
-    let hosts = findItemById(hosts_data.list, id)
-    if (!hosts) {
-      if (wait_ms > 0) {
-        setTimeout(() => {
-          agent.broadcast(events.select_hosts, id, wait_ms - 50)
-        }, 50)
+      if (current_hosts && ids.includes(current_hosts.id)) {
+        // 选中删除指定节点后的兄弟节点
+        let next_item = getNextSelectedItem(hosts_data.list, (i) =>
+          ids.includes(i.id),
+        )
+        setCurrentHosts(next_item || null)
+        setSelectedIds(next_item ? [next_item.id] : [])
       }
-      return
-    }
+    },
+    [current_hosts, hosts_data],
+  )
 
-    setCurrentHosts(hosts)
-    setSelectedIds([id])
-  }, [hosts_data])
+  useOnBroadcast(
+    events.select_hosts,
+    async (id: string, wait_ms: number = 0) => {
+      let hosts = findItemById(hosts_data.list, id)
+      if (!hosts) {
+        if (wait_ms > 0) {
+          setTimeout(() => {
+            agent.broadcast(events.select_hosts, id, wait_ms - 50)
+          }, 50)
+        }
+        return
+      }
+
+      setCurrentHosts(hosts)
+      setSelectedIds([id])
+    },
+    [hosts_data],
+  )
 
   useOnBroadcast(events.reload_list, loadHostsData)
 
@@ -174,18 +201,27 @@ const List = (props: Props) => {
       <Tree
         data={show_list}
         selected_ids={selected_ids}
-        onChange={list => {
+        onChange={(list) => {
           setShowList(list)
-          setList(list).catch(e => console.error(e))
+          setList(list).catch((e) => console.error(e))
         }}
         onSelect={(ids: string[]) => {
           console.log(ids)
           setSelectedIds(ids)
         }}
         nodeRender={(data) => (
-          <ListItem key={data.id} data={data} is_tray={is_tray} selected_ids={selected_ids}/>
+          <ListItem
+            key={data.id}
+            data={data}
+            is_tray={is_tray}
+            selected_ids={selected_ids}
+          />
         )}
-        collapseArrow={<Center w="20px" h="20px"><BiChevronRight/></Center>}
+        collapseArrow={
+          <Center w="20px" h="20px">
+            <BiChevronRight />
+          </Center>
+        }
         nodeAttr={(item) => {
           return {
             can_drag: !item.is_sys && !is_tray,
@@ -197,7 +233,12 @@ const List = (props: Props) => {
         draggingNodeRender={(data) => {
           return (
             <div className={clsx(styles.for_drag)}>
-              <span className={clsx(styles.icon, data.type === 'folder' && styles.folder)}>
+              <span
+                className={clsx(
+                  styles.icon,
+                  data.type === 'folder' && styles.folder,
+                )}
+              >
                 <ItemIcon
                   type={data.is_sys ? 'system' : data.type}
                   is_collapsed={data.is_collapsed}
@@ -206,7 +247,9 @@ const List = (props: Props) => {
               <span>
                 {data.title || lang.untitled}
                 {selected_ids.length > 1 ? (
-                  <span className={styles.items_count}>{selected_ids.length} {lang.items}</span>
+                  <span className={styles.items_count}>
+                    {selected_ids.length} {lang.items}
+                  </span>
                 ) : null}
               </span>
             </div>

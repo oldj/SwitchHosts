@@ -14,22 +14,22 @@ import styles from './Transfer.less'
 type IdType = string
 
 interface ITransferSourceObject {
-  id: IdType;
+  id: IdType
 
-  [key: string]: any;
+  [key: string]: any
 }
 
 interface IListProps {
-  data: ITransferSourceObject[];
-  selected_keys: IdType[];
-  setSelectedKeys: (ids: IdType[]) => void;
+  data: ITransferSourceObject[]
+  selected_keys: IdType[]
+  setSelectedKeys: (ids: IdType[]) => void
 }
 
 interface Props {
-  dataSource: ITransferSourceObject[];
-  targetKeys: IdType[];
-  render?: (obj: ITransferSourceObject) => React.ReactElement;
-  onChange?: (next_target_keys: IdType[]) => void;
+  dataSource: ITransferSourceObject[]
+  targetKeys: IdType[]
+  render?: (obj: ITransferSourceObject) => React.ReactElement
+  onChange?: (next_target_keys: IdType[]) => void
 }
 
 const Transfer = (props: Props) => {
@@ -44,15 +44,15 @@ const Transfer = (props: Props) => {
 
     const toggleSelect = (id: IdType) => {
       setSelectedKeys(
-        selected_keys.includes(id) ?
-          selected_keys.filter(i => i != id) :
-          [...selected_keys, id],
+        selected_keys.includes(id)
+          ? selected_keys.filter((i) => i != id)
+          : [...selected_keys, id],
       )
     }
 
     return (
       <div className={styles.list}>
-        {data.map(item => {
+        {data.map((item) => {
           if (!item || !item.id) return null
           const is_selected = selected_keys.includes(item.id)
 
@@ -64,11 +64,7 @@ const Transfer = (props: Props) => {
               py={1}
               onClick={() => toggleSelect(item.id)}
             >
-              {
-                render ?
-                  render(item) :
-                  item.title || item.id
-              }
+              {render ? render(item) : item.title || item.id}
             </Box>
           )
         })}
@@ -84,7 +80,7 @@ const Transfer = (props: Props) => {
   }
 
   const moveRightToLeft = () => {
-    let result = right_keys.filter(i => !right_selectd_keys.includes(i))
+    let result = right_keys.filter((i) => !right_selectd_keys.includes(i))
     setRightKeys(result)
     setRightSelectedKeys([])
     onChange && onChange(result)
@@ -95,14 +91,17 @@ const Transfer = (props: Props) => {
       <Grid templateColumns="minmax(0, 1fr) 40px minmax(0, 1fr)" gap={1}>
         <Box borderWidth="1px" borderRadius="md">
           <Box className={styles.title} borderBottomWidth={1} px={3} py={1}>
-            {lang.all} <span>({
-            left_selectd_keys.length === 0
-              ? dataSource.length
-              : `${left_selectd_keys.length}/${dataSource.length}`
-          })</span>
+            {lang.all}{' '}
+            <span>
+              (
+              {left_selectd_keys.length === 0
+                ? dataSource.length
+                : `${left_selectd_keys.length}/${dataSource.length}`}
+              )
+            </span>
           </Box>
           <List
-            data={dataSource.filter(i => !right_keys.includes(i.id))}
+            data={dataSource.filter((i) => !right_keys.includes(i.id))}
             selected_keys={left_selectd_keys}
             setSelectedKeys={setLeftSelectedKeys}
           />
@@ -113,7 +112,7 @@ const Transfer = (props: Props) => {
               size="sm"
               variant="outline"
               aria-label="Move to right"
-              icon={<ArrowForwardIcon/>}
+              icon={<ArrowForwardIcon />}
               isDisabled={left_selectd_keys.length === 0}
               onClick={moveLeftToRight}
             />
@@ -121,7 +120,7 @@ const Transfer = (props: Props) => {
               size="sm"
               variant="outline"
               aria-label="Move to left"
-              icon={<ArrowBackIcon/>}
+              icon={<ArrowBackIcon />}
               isDisabled={right_selectd_keys.length === 0}
               onClick={moveRightToLeft}
             />
@@ -129,14 +128,21 @@ const Transfer = (props: Props) => {
         </Center>
         <Box borderWidth="1px" borderRadius="md">
           <Box className={styles.title} borderBottomWidth={1} px={3} py={1}>
-            {lang.selected} <span>({
-            right_selectd_keys.length === 0
-              ? right_keys.length
-              : `${right_selectd_keys.length}/${right_keys.length}`
-          })</span>
+            {lang.selected}{' '}
+            <span>
+              (
+              {right_selectd_keys.length === 0
+                ? right_keys.length
+                : `${right_selectd_keys.length}/${right_keys.length}`}
+              )
+            </span>
           </Box>
           <List
-            data={right_keys.map(id => dataSource.find(i => i.id === id)) as ITransferSourceObject[]}
+            data={
+              right_keys.map((id) =>
+                dataSource.find((i) => i.id === id),
+              ) as ITransferSourceObject[]
+            }
             selected_keys={right_selectd_keys}
             setSelectedKeys={setRightSelectedKeys}
           />

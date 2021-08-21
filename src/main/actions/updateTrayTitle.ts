@@ -23,8 +23,8 @@ export default async (show?: boolean, title?: string) => {
 
   if (!title) {
     let list = await getList()
-    let on_items = flatten(list).filter(i => i.on)
-    title = on_items.map(i => i.title).join(',')
+    let on_items = flatten(list).filter((i) => i.on)
+    title = on_items.map((i) => i.title).join(',')
     if (title.length > 20) {
       title = title.substring(0, 17) + '...'
     }

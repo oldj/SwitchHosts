@@ -20,8 +20,8 @@ import React, { useEffect, useState } from 'react'
 import styles from './styles.less'
 
 interface IProps {
-  data: ConfigsType;
-  onChange: (kv: Partial<ConfigsType>) => void;
+  data: ConfigsType
+  onChange: (kv: Partial<ConfigsType>) => void
 }
 
 const PathLink = (props: { link: string }) => {
@@ -48,14 +48,14 @@ const PathLink = (props: { link: string }) => {
 const Advanced = (props: IProps) => {
   const { data, onChange } = props
   const { lang } = useModel('useI18n')
-  const [ hosts_path, setHostsPath ] = useState('')
-  const [ data_path, setDataPath ] = useState('')
+  const [hosts_path, setHostsPath] = useState('')
+  const [data_path, setDataPath] = useState('')
 
   useEffect(() => {
-    actions.getPathOfSystemHosts()
-      .then(hosts_path => setHostsPath(hosts_path))
-    actions.getDataFolder()
-      .then(data_path => setDataPath(data_path))
+    actions
+      .getPathOfSystemHosts()
+      .then((hosts_path) => setHostsPath(hosts_path))
+    actions.getDataFolder().then((data_path) => setDataPath(data_path))
   }, [])
 
   return (
@@ -65,7 +65,7 @@ const Advanced = (props: IProps) => {
         <FormHelperText mb={2}>{lang.usage_data_help}</FormHelperText>
         <Checkbox
           isChecked={data.send_usage_data}
-          onChange={e => onChange({ send_usage_data: e.target.checked })}
+          onChange={(e) => onChange({ send_usage_data: e.target.checked })}
         >
           {lang.usage_data_agree}
         </Checkbox>
@@ -74,13 +74,13 @@ const Advanced = (props: IProps) => {
       <FormControl>
         <FormLabel>{lang.where_is_my_hosts}</FormLabel>
         <FormHelperText mb={2}>{lang.your_hosts_file_is}</FormHelperText>
-        <PathLink link={hosts_path}/>
+        <PathLink link={hosts_path} />
       </FormControl>
 
       <FormControl>
         <FormLabel>{lang.where_is_my_data}</FormLabel>
         <FormHelperText mb={2}>{lang.your_data_is}</FormHelperText>
-        <PathLink link={data_path}/>
+        <PathLink link={data_path} />
       </FormControl>
     </VStack>
   )
