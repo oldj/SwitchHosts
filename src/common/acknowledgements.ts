@@ -22,4 +22,5 @@ export default [
   { name: 'Constaline', link: 'https://github.com/Constaline' },
   { name: 'TooBug', link: 'https://github.com/TooBug' },
   { name: 'Lussac', link: 'https://github.com/LussacZheng' },
+  { name: 'Aktilor', link: 'https://github.com/Aktilor' },
 ]
