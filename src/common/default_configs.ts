@@ -3,6 +3,7 @@ import { FolderModeType } from './data.d'
 
 export type ThemeType = 'light' | 'dark' | 'system'
 export type ProtocolType = 'http' | 'https'
+export type DefaultLocaleType = LocaleName | undefined
 
 const configs = {
   // UI
@@ -11,7 +12,7 @@ const configs = {
 
   // preferences
   history_limit: 50,
-  locale: 'en' as LocaleName,
+  locale: undefined as DefaultLocaleType,
   theme: 'light' as ThemeType,
   choice_mode: 2 as FolderModeType,
   show_title_on_tray: false,

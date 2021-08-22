@@ -14,7 +14,7 @@ export default function useI18n() {
 
   return {
     locale,
-    setLocale,
+    setLocale: (locale?: LocaleName) => setLocale(locale || 'en'),
     i18n,
     lang: i18n.lang,
   }

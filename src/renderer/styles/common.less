@@ -9,6 +9,13 @@ html, body {
   color: var(--swh-font-color);
 }
 
+button, a, input {
+  &:focus:not(:focus-visible) {
+    outline: 0;
+    box-shadow: none;
+  }
+}
+
 .win-drag {
   -webkit-app-region: drag;
 }

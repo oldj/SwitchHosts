@@ -5,6 +5,7 @@
  */
 
 import Tracer from '@main/libs/tracer'
+import { LocaleName } from '@root/common/i18n'
 import SwhDb from 'potdb'
 import { BrowserWindow } from 'electron'
 import * as actions from './actions'
@@ -35,6 +36,7 @@ declare global {
       last_path?: string // the last path opened by SwitchHosts
       tracer: Tracer
       is_will_quit?: boolean
+      system_locale?: LocaleName
     }
   }
 }
