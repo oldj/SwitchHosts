@@ -7,10 +7,11 @@ import * as http_api from '@main/http'
 import * as cron from '@main/libs/cron'
 import getIndex from '@main/libs/getIndex'
 import isDev from '@main/libs/isDev'
-import { makeMainMenu } from '@main/ui/menu'
 import Tracer from '@main/libs/tracer'
-import '@main/ui/tray'
+import checkSystemLocale from '@main/ui/checkSystemLocale'
 import * as find from '@main/ui/find'
+import { makeMainMenu } from '@main/ui/menu'
+import '@main/ui/tray'
 import version from '@root/version.json'
 import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron'
 import windowStateKeeper from 'electron-window-state'
@@ -141,6 +142,8 @@ global.tracer = new Tracer()
 app.on('ready', async () => {
   console.log(`VERSION: ${version.join('.')}`)
   global.session_id = uuid4()
+  await checkSystemLocale()
+
   await createWindow()
   cron.start()
 

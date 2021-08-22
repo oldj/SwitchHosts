@@ -29,4 +29,5 @@ export default defineConfig({
     },
   },
   webpack5: {},
+  mfsu: {},
 })

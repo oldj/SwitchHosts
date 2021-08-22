@@ -38,6 +38,17 @@ export default () => {
   }
 
   const init = async () => {
+    let if_migrate = await actions.migrateCheck()
+    if (if_migrate) {
+      setShowMigration(true)
+      return
+    }
+
+    await loadHostsData()
+    setLoading(false)
+  }
+
+  const onConfigsUpdate = async () => {
     if (!configs) return
 
     setLocale(configs.locale)
@@ -49,20 +60,14 @@ export default () => {
     document.body.className = cls.replace(/\btheme-\w+/gi, '')
     document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
     await agent.darkModeToggle(theme)
-
-    let if_migrate = await actions.migrateCheck()
-    if (if_migrate) {
-      setShowMigration(true)
-      return
-    }
-
-    await loadHostsData()
-    setLoading(false)
   }
 
   useEffect(() => {
-    if (!configs) return
     init().catch((e) => console.error(e))
+  }, [])
+
+  useEffect(() => {
+    onConfigsUpdate().catch((e) => console.error(e))
   }, [configs])
 
   useOnBroadcast(events.toggle_left_pannel, (show: boolean) =>
