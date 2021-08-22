@@ -12,14 +12,13 @@ import { IHostsListObject } from '@root/common/data'
 import events from '@root/common/events'
 import { IFindShowSourceParam } from '@root/common/types'
 import wait from '@root/common/utils/wait'
+import { useDebounceFn } from 'ahooks'
 import clsx from 'clsx'
 import CodeMirror from 'codemirror'
 import 'codemirror/addon/comment/comment'
 import 'codemirror/addon/selection/mark-selection'
-import lodash from 'lodash'
 import React, { useEffect, useRef, useState } from 'react'
 import modeHosts from './cm_hl'
-// import 'codemirror/lib/codemirror.css'
 import './codemirror.less'
 import styles from './HostsEditor.less'
 
@@ -58,7 +57,7 @@ const HostsEditor = (props: Props) => {
   }
 
   useEffect(() => {
-    loadContent()
+    loadContent().catch((e) => console.error(e))
   }, [hosts_id, cm_editor])
 
   useEffect(() => {
@@ -70,12 +69,15 @@ const HostsEditor = (props: Props) => {
     setIsReadOnly(isReadOnly(hosts))
   }, [hosts])
 
-  const toSave = lodash.debounce((id: string, content: string) => {
-    actions
-      .setHostsContent(id, content)
-      .then(() => agent.broadcast(events.hosts_content_changed, id))
-      .catch((e) => console.error(e))
-  }, 1000)
+  const { run: toSave } = useDebounceFn(
+    (id: string, content: string) => {
+      actions
+        .setHostsContent(id, content)
+        .then(() => agent.broadcast(events.hosts_content_changed, id))
+        .catch((e) => console.error(e))
+    },
+    { wait: 1000 },
+  )
 
   const onChange = (content: string) => {
     setContent(content)
@@ -134,7 +136,7 @@ const HostsEditor = (props: Props) => {
 
   useEffect(() => {
     if (find_params && find_params.item_id === hosts.id) {
-      setSelection(find_params)
+      setSelection(find_params).catch((e) => console.error(e))
     }
   }, [hosts, find_params])
 
@@ -156,7 +158,7 @@ const HostsEditor = (props: Props) => {
     events.hosts_refreshed,
     (h: IHostsListObject) => {
       if (hosts.id !== '0' && h.id !== hosts.id) return
-      loadContent()
+      loadContent().catch((e) => console.error(e))
     },
     [hosts, hosts_data, cm_editor],
   )
@@ -165,7 +167,7 @@ const HostsEditor = (props: Props) => {
     events.hosts_refreshed_by_id,
     (id: string) => {
       if (hosts.id !== '0' && id !== hosts.id) return
-      loadContent()
+      loadContent().catch((e) => console.error(e))
     },
     [hosts, hosts_data, cm_editor],
   )
@@ -179,7 +181,7 @@ const HostsEditor = (props: Props) => {
     events.set_hosts_on_status,
     () => {
       if (hosts.id === '0') {
-        loadContent()
+        loadContent().catch((e) => console.error(e))
       }
     },
     [hosts, cm_editor],
@@ -221,7 +223,7 @@ const HostsEditor = (props: Props) => {
         return
       }
 
-      setSelection(params)
+      setSelection(params).catch((e) => console.error(e))
     },
     [hosts, cm_editor],
   )

@@ -30,7 +30,7 @@ import {
   IFindPosition,
   IFindShowSourceParam,
 } from '@root/common/types'
-import { useDebounce } from 'ahooks'
+import { useDebounce, useDebounceFn } from 'ahooks'
 import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useEffect, useRef, useState } from 'react'
@@ -146,30 +146,33 @@ const find = (props: Props) => {
     setFindPositions(positions_show)
   }
 
-  const doFind = lodash.debounce(async (v: string) => {
-    console.log('find by:', v)
-    if (!v) {
-      setFindResult([])
-      return
-    }
+  const { run: doFind } = useDebounceFn(
+    async (v: string) => {
+      console.log('find by:', v)
+      if (!v) {
+        setFindResult([])
+        return
+      }
 
-    setIsSearching(true)
-    let result = await actions.findBy(v, {
-      is_regexp,
-      is_ignore_case,
-    })
-    setCurrentResultIdx(0)
-    setlastScrollResultIdx(0)
-    setFindResult(result)
-    parsePositionShow(result)
-    setIsSearching(false)
+      setIsSearching(true)
+      let result = await actions.findBy(v, {
+        is_regexp,
+        is_ignore_case,
+      })
+      setCurrentResultIdx(0)
+      setlastScrollResultIdx(0)
+      setFindResult(result)
+      parsePositionShow(result)
+      setIsSearching(false)
 
-    await actions.findAddHistory({
-      value: v,
-      is_regexp,
-      is_ignore_case,
-    })
-  }, 500)
+      await actions.findAddHistory({
+        value: v,
+        is_regexp,
+        is_ignore_case,
+      })
+    },
+    { wait: 500 },
+  )
 
   const toShowSource = async (result_item: IFindPositionShow) => {
     // console.log(result_item)
@@ -262,7 +265,7 @@ const find = (props: Props) => {
         scrollIntoView(el.current, {
           behavior: 'smooth',
           scrollMode: 'if-needed',
-        })
+        }).catch((e) => console.error(e))
       }
     }, [el, current_result_idx, last_scroll_result_idx])
 
