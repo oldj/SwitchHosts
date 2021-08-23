@@ -6,15 +6,15 @@ module.exports = {
   mode: 'development',
   output: {
     path: path.resolve(__dirname, '..', 'build'),
-    filename: '[name].js'
+    filename: '[name].js',
   },
   node: {
     __dirname: false,
-    __filename: false
+    __filename: false,
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js', '.json']
+    extensions: ['.tsx', '.ts', '.js', '.json'],
   },
   devtool: 'source-map',
-  plugins: []
+  plugins: [],
 }

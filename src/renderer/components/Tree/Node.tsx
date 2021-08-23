@@ -4,12 +4,13 @@
  * @homepage: https://oldj.net
  */
 
+import { ITreeNodeData, NodeIdType } from '@root/common/tree'
 import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useRef } from 'react'
 import { isChildOf, isSelfOrChild } from './fn'
 import styles from './style.less'
-import { DropWhereType, MultipleSelectType, NodeIdType } from './Tree'
+import { DropWhereType, MultipleSelectType } from './Tree'
 
 declare global {
   interface Window {
@@ -19,20 +20,6 @@ declare global {
 }
 
 export type NodeUpdate = (data: Partial<ITreeNodeData>) => void
-
-export interface ITreeNodeData {
-  id: NodeIdType
-  title?: string
-  can_select?: boolean // 是否可以被选中，默认为 true
-  can_drag?: boolean // 是否可以拖动，默认为 true
-  can_drop_before?: boolean // 是否可以接受 drop before，默认为 true
-  can_drop_in?: boolean // 是否可以接受 drop in，默认为 true
-  can_drop_after?: boolean // 是否可以接受 drop after，默认为 true
-  is_collapsed?: boolean
-  children?: ITreeNodeData[]
-
-  [key: string]: any
-}
 
 interface INodeProps {
   tree: ITreeNodeData[]

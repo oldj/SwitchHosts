@@ -4,6 +4,7 @@
  * @homepage: https://oldj.net
  */
 
+import { ITreeNodeData, NodeIdType } from '@root/common/tree'
 import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
@@ -14,10 +15,9 @@ import {
   selectTo,
   treeMoveNode,
 } from './fn'
-import Node, { ITreeNodeData, NodeUpdate } from './Node'
+import Node, { NodeUpdate } from './Node'
 import styles from './style.less'
 
-export type NodeIdType = string
 export type DropWhereType = 'before' | 'in' | 'after'
 export type MultipleSelectType = 0 | 1 | 2
 

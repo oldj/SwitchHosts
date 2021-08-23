@@ -5,8 +5,11 @@
 
 import { getList, setList } from '@main/actions'
 import { swhdb } from '@main/data'
-import { getNodeById } from '@renderer/components/Tree/fn'
-import { ITrashcanListObject } from '@root/common/data'
+import { getNodeById } from '@root/common/tree'
+import {
+  IHostsListObject,
+  ITrashcanListObject,
+} from '@root/common/data'
 
 export default async (id: string): Promise<boolean> => {
   let trashcan_item: ITrashcanListObject = await swhdb.list.trashcan.find(
@@ -30,7 +33,7 @@ export default async (id: string): Promise<boolean> => {
   if (!parent_id) {
     await setList([...list, hosts])
   } else {
-    let parent_hosts = getNodeById(list, parent_id)
+    let parent_hosts = getNodeById<IHostsListObject>(list, parent_id)
     if (!parent_hosts) {
       console.log(`can't find parent_hosts with id #${parent_id}.`)
       return false

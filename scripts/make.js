@@ -19,38 +19,38 @@ const electronLanguages = ['en', 'zh_CN']
 
 const TARGET_PLATFORMS_configs = {
   mac: {
-    mac: ['default']
+    mac: ['default'],
   },
   mas: {
-    mac: ['mas']
+    mac: ['mas'],
   },
   macs: {
-    mac: ['default', 'mas']
+    mac: ['default', 'mas'],
   },
   win: {
-    win: ['nsis:ia32', 'portable:ia32']
+    win: ['nsis:ia32', 'portable:ia32'],
   },
   all: {
     mac: ['default'],
-    linux: [/*'zip:x64', */'AppImage:x64', 'deb:x64'],
-    win: ['nsis:ia32', 'nsis:x64', 'portable:ia32']
-  }
+    linux: [/*'zip:x64', */ 'AppImage:x64', 'deb:x64'],
+    win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
+  },
 }
 
 const APP_NAME = 'SwitchHosts'
 const { IDENTITY } = process.env
 
 const cfg_common = {
-  copyright: `Copyright © ${(new Date()).getFullYear()}`,
+  copyright: `Copyright © ${new Date().getFullYear()}`,
   buildVersion: version[3].toString(),
   directories: {
     buildResources: 'build',
-    app: 'build'
+    app: 'build',
   },
   electronDownload: {
     cache: path.join(homedir, '.electron'),
-    mirror: 'https://npm.taobao.org/mirrors/electron/'
-  }
+    mirror: 'https://npm.taobao.org/mirrors/electron/',
+  },
 }
 
 const sign = async () => {
@@ -79,8 +79,8 @@ const beforeMake = async () => {
   const to_cp = [
     [
       path.join(root_dir, 'assets', 'app.png'),
-      path.join(root_dir, 'build', 'assets', 'app.png')
-    ]
+      path.join(root_dir, 'build', 'assets', 'app.png'),
+    ],
   ]
 
   to_cp.map(([src, target]) => {
@@ -97,7 +97,7 @@ const beforeMake = async () => {
   fse.writeFileSync(
     path.join(root_dir, 'build', 'package.json'),
     JSON.stringify(pkg_app, null, 2),
-    'utf-8'
+    'utf-8',
   )
 }
 
@@ -119,9 +119,9 @@ const makeMacArm = async () => {
             target: 'dmg',
             arch: [
               //'x64',
-              'arm64'
-            ]
-          }
+              'arm64',
+            ],
+          },
         ],
         category: 'public.app-category.productivity',
         icon: 'assets/app.icns',
@@ -132,7 +132,7 @@ const makeMacArm = async () => {
         entitlements: 'scripts/entitlements.mac.plist',
         entitlementsInherit: 'scripts/entitlements.mac.plist',
         provisioningProfile: 'scripts/app.provisionprofile',
-        artifactName: '${productName}_arm64_${version}(${buildVersion}).${ext}'
+        artifactName: '${productName}_arm64_${version}(${buildVersion}).${ext}',
       },
       dmg: {
         //backgroundColor: '#f1f1f6',
@@ -141,21 +141,24 @@ const makeMacArm = async () => {
         iconSize: 160,
         window: {
           width: 600,
-          height: 420
+          height: 420,
         },
-        contents: [{
-          x: 150,
-          y: 200
-        }, {
-          x: 450,
-          y: 200,
-          type: 'link',
-          path: '/Applications'
-        }],
+        contents: [
+          {
+            x: 150,
+            y: 200,
+          },
+          {
+            x: 450,
+            y: 200,
+            type: 'link',
+            path: '/Applications',
+          },
+        ],
         sign: false,
-        artifactName: '${productName}_arm64_${version}(${buildVersion}).${ext}'
-      }
-    }
+        artifactName: '${productName}_arm64_${version}(${buildVersion}).${ext}',
+      },
+    },
   })
 
   console.log('done!')
@@ -184,7 +187,7 @@ const makeDefault = async () => {
         entitlements: 'scripts/entitlements.mac.plist',
         entitlementsInherit: 'scripts/entitlements.mac.plist',
         provisioningProfile: 'scripts/app.provisionprofile',
-        artifactName: '${productName}_${version}(${buildVersion}).${ext}'
+        artifactName: '${productName}_${version}(${buildVersion}).${ext}',
       },
       dmg: {
         //backgroundColor: '#f1f1f6',
@@ -193,45 +196,50 @@ const makeDefault = async () => {
         iconSize: 160,
         window: {
           width: 600,
-          height: 420
+          height: 420,
         },
-        contents: [{
-          x: 150,
-          y: 200
-        }, {
-          x: 450,
-          y: 200,
-          type: 'link',
-          path: '/Applications'
-        }],
+        contents: [
+          {
+            x: 150,
+            y: 200,
+          },
+          {
+            x: 450,
+            y: 200,
+            type: 'link',
+            path: '/Applications',
+          },
+        ],
         sign: false,
-        artifactName: '${productName}_${version}(${buildVersion}).${ext}'
+        artifactName: '${productName}_${version}(${buildVersion}).${ext}',
       },
       win: {
-        icon: 'assets/app.ico'
+        icon: 'assets/app.ico',
         //requestedExecutionLevel: 'requireAdministrator'
       },
       nsis: {
         installerIcon: 'assets/installer-icon.ico',
         oneClick: false,
         allowToChangeInstallationDirectory: true,
-        artifactName: '${productName}_installer_${version}(${buildVersion}).${ext}'
+        artifactName:
+          '${productName}_installer_${version}(${buildVersion}).${ext}',
       },
       portable: {
-        artifactName: '${productName}_portable_${version}(${buildVersion}).${ext}'
+        artifactName:
+          '${productName}_portable_${version}(${buildVersion}).${ext}',
       },
       linux: {
         icon: 'assets/app.png',
         artifactName: '${productName}_linux_${version}(${buildVersion}).${ext}',
-        category: 'Office'
-      }
-    }
+        category: 'Office',
+      },
+    },
   })
 
   console.log('done!')
 }
 
-(async () => {
+;(async () => {
   try {
     await beforeMake()
 

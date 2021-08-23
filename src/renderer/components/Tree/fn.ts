@@ -1,6 +1,6 @@
+import { ITreeNodeData, NodeIdType } from '@root/common/tree'
 import lodash from 'lodash'
-import { ITreeNodeData } from './Node'
-import { DropWhereType, NodeIdType } from './Tree'
+import { DropWhereType } from './Tree'
 
 interface IObj {
   [key: string]: any

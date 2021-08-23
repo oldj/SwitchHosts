@@ -1,4 +1,4 @@
-import { ITreeNodeData } from '@renderer/components/Tree/Node'
+import { ITreeNodeData } from './tree'
 
 export type HostsType = 'local' | 'remote' | 'group' | 'folder'
 export type FolderModeType = 0 | 1 | 2 // 0: 默认; 1: 单选; 2: 多选
