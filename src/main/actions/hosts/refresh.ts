@@ -13,6 +13,8 @@ import { IHostsListObject, IOperationResult } from '@root/common/data'
 import events from '@root/common/events'
 import * as hostsFn from '@root/common/hostsFn'
 import dayjs from 'dayjs'
+import * as fs from 'fs'
+import { URL } from 'url'
 
 export default async (hosts_id: string): Promise<IOperationResult> => {
   let list = await swhdb.list.tree.all()
@@ -45,8 +47,12 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
   let new_content: string
   try {
     console.log(`-> refreshHosts URL: "${url}"`)
-    let resp = await GET(url)
-    new_content = resp.data
+    if (url.startsWith('file://')) {
+      new_content = await fs.promises.readFile(new URL(url) ,'utf-8')
+    } else {
+      let resp = await GET(url)
+      new_content = resp.data
+    }
   } catch (e) {
     console.error(e)
     return {
