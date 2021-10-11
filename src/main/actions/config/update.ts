@@ -22,11 +22,17 @@ export default async (data: Partial<ConfigsType>) => {
 
   if (old_configs.http_api_on !== data.http_api_on) {
     if (data.http_api_on) {
-      http_api.start()
+      http_api.start(<boolean>data.http_api_only_local)
     } else {
       http_api.stop()
     }
+  } else if (old_configs.http_api_only_local !== data.http_api_only_local) {
+    if (data.http_api_on) {
+      await http_api.stop()
+      http_api.start(<boolean>data.http_api_only_local)
+    }
   }
+
 
   if (old_configs.hide_dock_icon !== data.hide_dock_icon) {
     if (data.hide_dock_icon) {

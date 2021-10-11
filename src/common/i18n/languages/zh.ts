@@ -70,6 +70,7 @@ const lang: LanguageDict = {
   hours: '小时',
   http_api_on: '开启 HTTP API',
   http_api_on_desc: '运行于 {0} 端口，可用于 Alfred 等第三方软件切换 hosts。',
+  http_api_only_local: 'HTTP API 仅监听 127.0.0.1',
   ignore_case: '忽略大小写',
   import: '导入',
   import_done: '导入已完成。',
