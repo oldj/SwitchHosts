@@ -148,8 +148,9 @@ app.on('ready', async () => {
   cron.start()
 
   let http_api_on = await configGet('http_api_on')
+  let http_api_only_local = await configGet('http_api_only_local')
   if (http_api_on) {
-    http_api.start()
+    http_api.start(http_api_only_local)
   }
 
   find.makeWindow()

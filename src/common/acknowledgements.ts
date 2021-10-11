@@ -23,4 +23,6 @@ export default [
   { name: 'TooBug', link: 'https://github.com/TooBug' },
   { name: 'Lussac', link: 'https://github.com/LussacZheng' },
   { name: 'Aktilor', link: 'https://github.com/Aktilor' },
+  { name: 'LiangLong', link: 'https://github.com/xxccll' },
+  { name: 'ClDaniel1', link: 'https://github.com/ClDaniel1' },
 ]

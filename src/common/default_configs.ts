@@ -26,6 +26,7 @@ const configs = {
   proxy_host: '',
   proxy_port: 0,
   http_api_on: false,
+  http_api_only_local: true,
 
   // other
   env: 'PROD' as 'PROD' | 'DEV',

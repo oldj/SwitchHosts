@@ -72,6 +72,7 @@ export default {
   http_api_on: 'Activer HTTP API',
   http_api_on_desc:
     "Actif sur le port {0}, peut être utilisé par un logiciel tier comme Alfred pour changer d'hosts",
+  http_api_only_local: "L'API HTTP n'écoute que sur 127.0.0.1",
   ignore_case: 'Ignorer la casse',
   import: 'Importer',
   import_done: "L'importation est terminée",
