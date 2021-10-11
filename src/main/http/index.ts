@@ -33,13 +33,14 @@ app.use('/api', api_router)
 
 let server: Server
 
-export const start = (): boolean => {
+export const start = (http_api_only_local: boolean): boolean => {
   try {
-    server = app.listen(http_api_port, '127.0.0.1', function () {
+    let listenIp = http_api_only_local ? '127.0.0.1' : '0.0.0.0'
+    server = app.listen(http_api_port, listenIp, function () {
       console.log(
         `SwitchHosts HTTP server is listening on port ${http_api_port}!`,
       )
-      console.log(`-> http://127.0.0.1:${http_api_port}`)
+      console.log(`-> http://${listenIp}:${http_api_port}`)
     })
   } catch (e) {
     console.error(e)

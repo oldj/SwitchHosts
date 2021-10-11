@@ -16,6 +16,7 @@ import {
   RadioGroup,
   Select,
   VStack,
+  Stack
 } from '@chakra-ui/react'
 import { agent } from '@renderer/core/agent'
 import { http_api_port } from '@root/common/constants'
@@ -160,6 +161,15 @@ const General = (props: IProps) => {
           <FormHelperText pl="20px">
             {i18n.trans('http_api_on_desc', [http_api_port.toString()])}
           </FormHelperText>
+          <Stack pl={6} mt={1} spacing={1}>
+            <Checkbox
+                isDisabled={!data.http_api_on}
+                isChecked={data.http_api_only_local}
+                onChange={(e) => onChange({ http_api_only_local: e.target.checked })}
+            >
+              {lang.http_api_only_local}
+            </Checkbox>
+          </Stack>
         </VStack>
       </FormControl>
     </VStack>
