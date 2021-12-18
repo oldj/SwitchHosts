@@ -7,7 +7,7 @@
 require('dotenv').config()
 const version = require('../src/version.json')
 const builder = require('electron-builder')
-const execa = require('execa')
+const myExec = require('./libs/my_exec')
 const fse = require('fs-extra')
 const homedir = require('os').homedir()
 const path = require('path')
@@ -15,24 +15,21 @@ const path = require('path')
 const root_dir = path.normalize(path.join(__dirname, '..'))
 const dist_dir = path.normalize(path.join(__dirname, '..', 'dist'))
 
-const electronLanguages = ['en', 'zh_CN']
+const electronLanguages = ['en', 'fr', 'zh_CN']
 
 const TARGET_PLATFORMS_configs = {
   mac: {
     mac: ['default'],
   },
-  mas: {
-    mac: ['mas'],
-  },
   macs: {
-    mac: ['default', 'mas'],
+    mac: ['dmg:x64', 'dmg:arm64'],
   },
   win: {
-    win: ['nsis:ia32', 'portable:ia32'],
+    win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
   },
   all: {
-    mac: ['default'],
-    linux: [/*'zip:x64', */ 'AppImage:x64', 'deb:x64'],
+    mac: ['dmg:x64', 'dmg:arm64'],
+    linux: ['AppImage:x64', 'deb:x64'],
     win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
   },
 }
@@ -51,24 +48,6 @@ const cfg_common = {
     cache: path.join(homedir, '.electron'),
     mirror: 'https://npm.taobao.org/mirrors/electron/',
   },
-}
-
-const sign = async () => {
-  console.log('-> to sign...')
-  let wd = process.cwd()
-  process.chdir(__dirname)
-
-  let cmd = path.join(__dirname, 'sign-mac.sh')
-  try {
-    const { stdout } = await execa(cmd)
-    console.log(stdout)
-  } catch (e) {
-    //console.error(e)
-    console.log(e.stdout)
-    console.error(e.stderr)
-  }
-
-  process.chdir(wd)
 }
 
 const beforeMake = async () => {
@@ -105,79 +84,27 @@ const afterMake = async () => {
   console.log('-> afterMake...')
 }
 
-const makeMacArm = async () => {
-  console.log('-> makeMacArm...')
+const doMake = async () => {
+  console.log('-> make...')
 
-  await builder.build({
-    config: {
-      ...cfg_common,
-      appId: 'SwitchHosts',
-      productName: APP_NAME,
-      mac: {
-        target: [
-          {
-            target: 'dmg',
-            arch: [
-              //'x64',
-              'arm64',
-            ],
-          },
-        ],
-        category: 'public.app-category.productivity',
-        icon: 'assets/app.icns',
-        gatekeeperAssess: false,
-        electronLanguages,
-        identity: IDENTITY,
-        hardenedRuntime: true,
-        entitlements: 'scripts/entitlements.mac.plist',
-        entitlementsInherit: 'scripts/entitlements.mac.plist',
-        provisioningProfile: 'scripts/app.provisionprofile',
-        artifactName: '${productName}_arm64_${version}(${buildVersion}).${ext}',
-      },
-      dmg: {
-        //backgroundColor: '#f1f1f6',
-        background: 'assets/dmg-bg.png',
-        //icon: 'assets/dmg-icon.icns',
-        iconSize: 160,
-        window: {
-          width: 600,
-          height: 420,
-        },
-        contents: [
-          {
-            x: 150,
-            y: 200,
-          },
-          {
-            x: 450,
-            y: 200,
-            type: 'link',
-            path: '/Applications',
-          },
-        ],
-        sign: false,
-        artifactName: '${productName}_arm64_${version}(${buildVersion}).${ext}',
-      },
-    },
-  })
-
-  console.log('done!')
-}
-
-const makeDefault = async () => {
-  console.log('-> makeDefault...')
-  // forFullVersion.task(APP_NAME)
+  let targets = TARGET_PLATFORMS_configs.all
+  if (process.env.MAKE_FOR === 'dev') {
+    targets = TARGET_PLATFORMS_configs.macs
+  } else if (process.env.MAKE_FOR === 'mac') {
+    targets = TARGET_PLATFORMS_configs.mac
+  } else if (process.env.MAKE_FOR === 'win') {
+    targets = TARGET_PLATFORMS_configs.win
+  }
 
   await builder.build({
     //targets: Platform.MAC.createTarget(),
-    //...TARGET_PLATFORMS_configs.mac,
-    //...TARGET_PLATFORMS_configs.win,
-    ...TARGET_PLATFORMS_configs.all,
+    ...targets,
     config: {
       ...cfg_common,
       appId: 'SwitchHosts',
       productName: APP_NAME,
       mac: {
+        type: 'distribution',
         category: 'public.app-category.productivity',
         icon: 'assets/app.icns',
         gatekeeperAssess: false,
@@ -187,7 +114,11 @@ const makeDefault = async () => {
         entitlements: 'scripts/entitlements.mac.plist',
         entitlementsInherit: 'scripts/entitlements.mac.plist',
         provisioningProfile: 'scripts/app.provisionprofile',
-        artifactName: '${productName}_${version}(${buildVersion}).${ext}',
+        extendInfo: {
+          ITSAppUsesNonExemptEncryption: false,
+          CFBundleLocalizations: electronLanguages,
+          CFBundleDevelopmentRegion: 'en',
+        },
       },
       dmg: {
         //backgroundColor: '#f1f1f6',
@@ -211,7 +142,8 @@ const makeDefault = async () => {
           },
         ],
         sign: false,
-        artifactName: '${productName}_${version}(${buildVersion}).${ext}',
+        artifactName:
+          '${productName}_mac_${arch}_${version}(${buildVersion}).${ext}',
       },
       win: {
         icon: 'assets/app.ico',
@@ -222,16 +154,23 @@ const makeDefault = async () => {
         oneClick: false,
         allowToChangeInstallationDirectory: true,
         artifactName:
-          '${productName}_installer_${version}(${buildVersion}).${ext}',
+          '${productName}_installer_${arch}_${version}(${buildVersion}).${ext}',
       },
       portable: {
         artifactName:
-          '${productName}_portable_${version}(${buildVersion}).${ext}',
+          '${productName}_portable_${arch}_${version}(${buildVersion}).${ext}',
       },
       linux: {
         icon: 'assets/app.png',
-        artifactName: '${productName}_linux_${version}(${buildVersion}).${ext}',
-        category: 'Office',
+        artifactName:
+          '${productName}_linux_${arch}_${version}(${buildVersion}).${ext}',
+        category: 'Utility',
+        synopsis: 'An App for hosts management and switching.',
+        desktop: {
+          Name: 'SwitchHosts',
+          Type: 'Application',
+          GenericName: 'An App for hosts management and switching.',
+        },
       },
     },
   })
@@ -242,15 +181,10 @@ const makeDefault = async () => {
 ;(async () => {
   try {
     await beforeMake()
-
-    await makeMacArm()
-    await makeDefault()
-
+    await doMake()
     await afterMake()
-    await sign()
-
-    console.log('-> meke Done!')
+    console.log('-> make Done!')
   } catch (e) {
-    console.log(e)
+    console.error(e)
   }
 })()
