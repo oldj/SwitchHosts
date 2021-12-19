@@ -4,32 +4,15 @@
  * @homepage: https://oldj.net
  */
 
-import getDataFolder from '@main/libs/getDataFolder'
-import { app } from 'electron'
 import * as path from 'path'
 import PotDb from 'potdb'
+import { app } from 'electron'
+import getDataFolder from '@main/libs/getDataDir'
+import getConfigFolder from '@main/libs/getConfigDir'
 
-let swhdb: PotDb
-let cfgdb: PotDb
 let localdb: PotDb
-
-if (!global.swhdb) {
-  let db_dir: string = path.join(getDataFolder(), 'data')
-  swhdb = new PotDb(db_dir)
-  console.log(`data db: ${swhdb.dir}`)
-  global.swhdb = swhdb
-} else {
-  swhdb = global.swhdb
-}
-
-if (!global.cfgdb) {
-  let db_dir: string = path.join(getDataFolder(), 'config')
-  cfgdb = new PotDb(db_dir)
-  console.log(`config db: ${cfgdb.dir}`)
-  global.cfgdb = cfgdb
-} else {
-  cfgdb = global.cfgdb
-}
+let cfgdb: PotDb
+let swhdb: PotDb
 
 if (!global.localdb) {
   let db_dir: string = path.join(app.getPath('userData'), 'swh_local')
@@ -40,4 +23,25 @@ if (!global.localdb) {
   localdb = global.localdb
 }
 
-export { swhdb, cfgdb, localdb }
+if (!global.cfgdb) {
+  let db_dir: string = path.join(getConfigFolder(), 'config')
+  cfgdb = new PotDb(db_dir)
+  console.log(`config db: ${cfgdb.dir}`)
+  global.cfgdb = cfgdb
+} else {
+  cfgdb = global.cfgdb
+}
+
+async function getSwhDb(): Promise<PotDb> {
+  if (!swhdb) {
+    global.data_dir = await localdb.dict.local.get('data_dir')
+    let db_dir: string = path.join(getDataFolder(), 'data')
+    swhdb = new PotDb(db_dir)
+    console.log(`data db: ${swhdb.dir}`)
+    global.swhdb = swhdb
+  }
+
+  return swhdb
+}
+
+export { localdb, cfgdb, swhdb, getSwhDb }

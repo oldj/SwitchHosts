@@ -13,6 +13,7 @@ export default {
   auto_refresh: 'Auto refresh',
   btn_cancel: 'Cancel',
   btn_ok: 'OK',
+  change: 'Change',
   check_update: 'Check update',
   choice_mode: 'Choice mode',
   choice_mode_default: 'Default',
@@ -99,6 +100,8 @@ export default {
   move_items_to_trashcan: 'Move {0} items to trashcan',
   move_to_trashcan: 'Move to trashcan',
   need_to_relaunch: 'Need to relaunch',
+  need_to_relaunch_after_setting_changed:
+    'The setting has been changed and will take effect after the app is restarted.',
   never: 'Never',
   new: 'New',
   new_version_found: 'New version found',
@@ -125,6 +128,9 @@ export default {
   replace: 'Replace',
   replace_all: 'Replace all',
   replace_history: 'Replace history',
+  reset: 'Reset',
+  reset_data_dir_confirm:
+    'Are you sure you want to restore the data folder to the default address ({0})?',
   reset_zoom: 'Reset zoom',
   search: 'Search',
   select_all: 'Select all',

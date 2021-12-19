@@ -5,7 +5,7 @@
  * @homepage: https://oldj.net
  */
 
-import getDataFolder from '@main/libs/getDataFolder'
+import getDataFolder from '@main/libs/getDataDir'
 import { isDir } from '@main/utils/fs2'
 import * as fs from 'fs'
 import * as path from 'path'

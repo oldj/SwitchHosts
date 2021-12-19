@@ -6,8 +6,9 @@
 
 export { default as ping } from './ping'
 
-export { default as getDataFolder } from './getDataFolder'
 export { default as getBasicData } from './getBasicData'
+export { default as getDataDir } from './getDataDir'
+export { default as getDefaultDataDir } from './getDefaultDataDir'
 
 export { default as configGet } from './config/get'
 export { default as configSet } from './config/set'
@@ -40,6 +41,7 @@ export { default as cmdDeleteHistory } from './cmd/deleteHistory'
 export { default as cmdClearHistory } from './cmd/clearHistory'
 export { default as cmdFocusMainWindow } from './cmd/focusMainWindow'
 export { default as cmdToggleDevTools } from './cmd/toggleDevTools'
+export { default as cmdChangeDataDir } from './cmd/changeDataDir'
 
 export { default as openUrl } from './openUrl'
 export { default as showItemInFolder } from './showItemInFolder'

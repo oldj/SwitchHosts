@@ -5,7 +5,7 @@
  */
 
 import * as actions from '@main/actions'
-import { ActionData } from '@main/types'
+import { ActionData, IActionFunc } from '@main/types'
 import { ipcMain } from 'electron'
 import { EventEmitter } from 'events'
 
@@ -79,8 +79,9 @@ ipcMain.on('x_action', async (e, action_data: ActionData) => {
     }
 
     try {
+      let obj: IActionFunc = { sender }
       // @ts-ignore
-      let v = await fn(...params)
+      let v = await fn.call(obj, ...params)
       sendBack(sender, callback, [null, v])
     } catch (e) {
       console.error(e)
