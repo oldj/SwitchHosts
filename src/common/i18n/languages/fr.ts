@@ -5,6 +5,7 @@
 
 export default {
   _app_name: 'SwitchHosts',
+  _key: 'fr',
   _name: 'Français',
   about: 'À propos',
   acknowledgement: 'Remerciements',

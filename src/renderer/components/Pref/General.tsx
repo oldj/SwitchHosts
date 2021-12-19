@@ -88,7 +88,7 @@ const General = (props: IProps) => {
                 </Radio>
               </HStack>
             </RadioGroup>
-            <FormHelperText>
+            <FormHelperText maxW={'350px'}>
               {data.write_mode === 'append' && lang.write_mode_append_help}
               {data.write_mode === 'overwrite' &&
                 lang.write_mode_overwrite_help}
@@ -120,7 +120,9 @@ const General = (props: IProps) => {
                 </Radio>
               </HStack>
             </RadioGroup>
-            <FormHelperText>{lang.choice_mode_desc}</FormHelperText>
+            <FormHelperText maxW={'350px'}>
+              {lang.choice_mode_desc}
+            </FormHelperText>
           </VStack>
         </HStack>
       </FormControl>
