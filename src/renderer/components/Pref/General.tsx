@@ -68,35 +68,7 @@ const General = (props: IProps) => {
       </FormControl>
 
       <FormControl>
-        <HStack>
-          <FormLabel w={label_width}>{lang.choice_mode}</FormLabel>
-          <VStack align="left">
-            <RadioGroup
-              value={data.choice_mode.toString()}
-              onChange={(v) =>
-                onChange({
-                  choice_mode: parseInt(
-                    v.toString(),
-                  ) as ConfigsType['choice_mode'],
-                })
-              }
-            >
-              <HStack spacing={10}>
-                <Radio value="1">
-                  <Box>{lang.choice_mode_single}</Box>
-                </Radio>
-                <Radio value="2">
-                  <Box>{lang.choice_mode_multiple}</Box>
-                </Radio>
-              </HStack>
-            </RadioGroup>
-            <FormHelperText>{lang.choice_mode_desc}</FormHelperText>
-          </VStack>
-        </HStack>
-      </FormControl>
-
-      <FormControl pb={6}>
-        <HStack>
+        <HStack alignItems={'flex-start'}>
           <FormLabel w={label_width}>{lang.write_mode}</FormLabel>
           <VStack align="left">
             <RadioGroup
@@ -121,6 +93,34 @@ const General = (props: IProps) => {
               {data.write_mode === 'overwrite' &&
                 lang.write_mode_overwrite_help}
             </FormHelperText>
+          </VStack>
+        </HStack>
+      </FormControl>
+
+      <FormControl pb={6}>
+        <HStack alignItems={'flex-start'}>
+          <FormLabel w={label_width}>{lang.choice_mode}</FormLabel>
+          <VStack align="left">
+            <RadioGroup
+              value={data.choice_mode.toString()}
+              onChange={(v) =>
+                onChange({
+                  choice_mode: parseInt(
+                    v.toString(),
+                  ) as ConfigsType['choice_mode'],
+                })
+              }
+            >
+              <HStack spacing={10}>
+                <Radio value="1">
+                  <Box>{lang.choice_mode_single}</Box>
+                </Radio>
+                <Radio value="2">
+                  <Box>{lang.choice_mode_multiple}</Box>
+                </Radio>
+              </HStack>
+            </RadioGroup>
+            <FormHelperText>{lang.choice_mode_desc}</FormHelperText>
           </VStack>
         </HStack>
       </FormControl>

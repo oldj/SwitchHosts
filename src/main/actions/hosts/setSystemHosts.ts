@@ -33,6 +33,8 @@ interface IWriteResult {
   new_content?: string
 }
 
+const CONTENT_START = '# --- SWITCHHOSTS_CONTENT_START ---'
+
 let sudo_pswd: string = ''
 
 const checkAccess = async (fn: string): Promise<boolean> => {
@@ -160,7 +162,7 @@ const write = async (
 
   try {
     await fs.promises.writeFile(sys_hosts_path, content, 'utf-8')
-  } catch (e) {
+  } catch (e: any) {
     console.error(e)
     let code = 'fail'
     if (e.code === 'EPERM' || e.message.include('operation not permitted')) {
@@ -177,10 +179,31 @@ const write = async (
   return { success: true, old_content, new_content: content }
 }
 
+const makeAppendContent = async (content: string): Promise<string> => {
+  const sys_hosts_path = await getPathOfSystemHosts()
+  const old_content = await fs.promises.readFile(sys_hosts_path, 'utf-8')
+
+  let index = old_content.indexOf(CONTENT_START)
+  let new_content =
+    index > -1 ? old_content.substring(0, index).trimEnd() : old_content
+
+  if (!content) {
+    return new_content + '\n'
+  }
+
+  return `${new_content}\n\n${CONTENT_START}\n\n${content}`
+}
+
 const setSystemHosts = async (
   content: string,
   options?: IHostsWriteOptions,
 ): Promise<IWriteResult> => {
+  let write_mode = await configGet('write_mode')
+  console.log(`write_mode: ${write_mode}`)
+  if (write_mode === 'append') {
+    content = await makeAppendContent(content)
+  }
+
   let result = await write(content, options)
   let { success, old_content } = result
 

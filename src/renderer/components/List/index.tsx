@@ -84,8 +84,6 @@ const List = (props: Props) => {
     }
   }
 
-  const toSetWriteMode = async () => {}
-
   const writeHostsToSystem = async (
     list?: IHostsListObject[],
     options?: IHostsWriteOptions,

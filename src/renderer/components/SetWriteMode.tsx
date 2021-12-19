@@ -19,7 +19,6 @@ import {
 } from '@chakra-ui/react'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IHostsListObject } from '@root/common/data'
 import events from '@root/common/events'
 import React, { useState } from 'react'
 import styles from './SetWriteMode.less'
@@ -33,7 +32,7 @@ interface IPendingData {
 }
 
 const SetWriteMode = (props: Props) => {
-  const { configs, updateConfigs } = useModel('useConfigs')
+  const { updateConfigs } = useModel('useConfigs')
   const { lang } = useModel('useI18n')
   const [is_show, setIsShow] = useState(false)
   const ipt_ref = React.useRef<HTMLInputElement>(null)
