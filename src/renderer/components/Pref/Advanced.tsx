@@ -6,10 +6,12 @@
 
 import { useModel } from '@@/plugin-model/useModel'
 import {
+  Button,
   Checkbox,
   FormControl,
   FormHelperText,
   FormLabel,
+  HStack,
   Link,
   Tooltip,
   VStack,
@@ -80,7 +82,18 @@ const Advanced = (props: IProps) => {
       <FormControl>
         <FormLabel>{lang.where_is_my_data}</FormLabel>
         <FormHelperText mb={2}>{lang.your_data_is}</FormHelperText>
-        <PathLink link={data_path} />
+        <HStack>
+          <PathLink link={data_path} />
+          <Button
+            variant="link"
+            onClick={async () => {
+              let r = await actions.cmdChangeDataDir()
+              console.log(r)
+            }}
+          >
+            {lang.change}
+          </Button>
+        </HStack>
       </FormControl>
     </VStack>
   )

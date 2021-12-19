@@ -9,5 +9,5 @@ import { homedir } from 'os'
 export default (): string => {
   // todo data folder should be current working dir for portable version
 
-  return global.db_dir || path.join(homedir(), '.SwitchHosts')
+  return path.join(homedir(), '.SwitchHosts')
 }

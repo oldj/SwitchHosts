@@ -13,6 +13,7 @@ export default {
   auto_refresh: 'Rafraîchissement automatique',
   btn_cancel: 'Annuler',
   btn_ok: 'OK',
+  change: 'Changer',
   check_update: 'Vérifier les mises à jour',
   choice_mode: 'Choice mode',
   choice_mode_default: 'Défaut',
@@ -99,6 +100,8 @@ export default {
   move_items_to_trashcan: 'Déplacer {0} éléments dans la corbeille',
   move_to_trashcan: 'Déplacer dans la corbeille',
   need_to_relaunch: 'Besoin de redémarrer',
+  need_to_relaunch_after_setting_changed:
+    "Le paramètre a été modifié et prendra effet après le redémarrage de l'application.",
   never: 'Jamais',
   new: 'Nouveau',
   new_version_found: 'Nouvelle version trouvée',

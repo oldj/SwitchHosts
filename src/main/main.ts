@@ -17,10 +17,12 @@ import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron'
 import windowStateKeeper from 'electron-window-state'
 import * as path from 'path'
 import { v4 as uuid4 } from 'uuid'
+import { getSwhDb } from '@main/data'
 
 let win: BrowserWindow | null
 
 const createWindow = async () => {
+  await getSwhDb()
   const configs = await configAll()
 
   let main_window_state = windowStateKeeper({

@@ -7,7 +7,7 @@
 // migrate data from v3 to v4
 
 import importV3Data from '@main/actions/migrate/importV3Data'
-import getDataFolder from '@main/libs/getDataFolder'
+import getDataFolder from '@main/libs/getDataDir'
 import { IHostsBasicData, VersionType } from '@root/common/data'
 import { cleanHostsList } from '@root/common/hostsFn'
 import version from '@root/version.json'
