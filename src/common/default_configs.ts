@@ -1,6 +1,7 @@
 import { LocaleName } from '@root/common/i18n'
 import { FolderModeType } from './data.d'
 
+export type WriteModeType = null | 'overwrite' | 'append'
 export type ThemeType = 'light' | 'dark' | 'system'
 export type ProtocolType = 'http' | 'https'
 export type DefaultLocaleType = LocaleName | undefined
@@ -11,6 +12,7 @@ const configs = {
   left_panel_width: 270,
 
   // preferences
+  write_mode: null as WriteModeType,
   history_limit: 50,
   locale: undefined as DefaultLocaleType,
   theme: 'light' as ThemeType,

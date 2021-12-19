@@ -5,11 +5,13 @@
 
 export default {
   _app_name: 'SwitchHosts',
+  _key: 'en',
   _name: 'English',
   about: 'About',
   acknowledgement: 'Acknowledgement',
   advanced: 'Advanced',
   all: 'All',
+  append: 'Append',
   auto_refresh: 'Auto refresh',
   btn_cancel: 'Cancel',
   btn_ok: 'OK',
@@ -108,6 +110,7 @@ export default {
   next: 'Next',
   no_access_to_hosts: 'No permission to write to the Hosts file.',
   no_record: 'No record',
+  overwrite: 'Overwrite',
   password: 'Password',
   paste: 'Paste',
   port: 'Port',
@@ -175,6 +178,12 @@ export default {
   where_is_my_data: 'Where is my data stored?',
   where_is_my_hosts: 'Where is my hosts file?',
   window: 'Window',
+  write_mode: 'Write mode',
+  write_mode_append_help:
+    'Append the new records to the end of the system hosts file.',
+  write_mode_overwrite_help:
+    'Overwrite the system hosts file with the new records.',
+  write_mode_set: 'Set the write mode',
   your_data_is: 'Your data files are stored in:',
   your_hosts_file_is: 'Your hosts file is located at:',
   zoom: 'Zoom',

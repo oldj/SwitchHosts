@@ -16,7 +16,7 @@ import {
   RadioGroup,
   Select,
   VStack,
-  Stack
+  Stack,
 } from '@chakra-ui/react'
 import { agent } from '@renderer/core/agent'
 import { http_api_port } from '@root/common/constants'
@@ -67,8 +67,38 @@ const General = (props: IProps) => {
         </HStack>
       </FormControl>
 
+      <FormControl>
+        <HStack alignItems={'flex-start'}>
+          <FormLabel w={label_width}>{lang.write_mode}</FormLabel>
+          <VStack align="left">
+            <RadioGroup
+              value={data.write_mode || ''}
+              onChange={(v) =>
+                onChange({
+                  write_mode: v as ConfigsType['write_mode'],
+                })
+              }
+            >
+              <HStack spacing={10}>
+                <Radio value="append">
+                  <Box>{lang.append}</Box>
+                </Radio>
+                <Radio value="overwrite">
+                  <Box>{lang.overwrite}</Box>
+                </Radio>
+              </HStack>
+            </RadioGroup>
+            <FormHelperText maxW={'350px'}>
+              {data.write_mode === 'append' && lang.write_mode_append_help}
+              {data.write_mode === 'overwrite' &&
+                lang.write_mode_overwrite_help}
+            </FormHelperText>
+          </VStack>
+        </HStack>
+      </FormControl>
+
       <FormControl pb={6}>
-        <HStack>
+        <HStack alignItems={'flex-start'}>
           <FormLabel w={label_width}>{lang.choice_mode}</FormLabel>
           <VStack align="left">
             <RadioGroup
@@ -90,7 +120,9 @@ const General = (props: IProps) => {
                 </Radio>
               </HStack>
             </RadioGroup>
-            <FormHelperText>{lang.choice_mode_desc}</FormHelperText>
+            <FormHelperText maxW={'350px'}>
+              {lang.choice_mode_desc}
+            </FormHelperText>
           </VStack>
         </HStack>
       </FormControl>
@@ -163,9 +195,11 @@ const General = (props: IProps) => {
           </FormHelperText>
           <Stack pl={6} mt={1} spacing={1}>
             <Checkbox
-                isDisabled={!data.http_api_on}
-                isChecked={data.http_api_only_local}
-                onChange={(e) => onChange({ http_api_only_local: e.target.checked })}
+              isDisabled={!data.http_api_on}
+              isChecked={data.http_api_only_local}
+              onChange={(e) =>
+                onChange({ http_api_only_local: e.target.checked })
+              }
             >
               {lang.http_api_only_local}
             </Checkbox>
