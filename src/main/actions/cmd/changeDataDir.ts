@@ -3,26 +3,56 @@
  * @homepage: https://oldj.net
  */
 
-import { app, dialog } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  OpenDialogOptions,
+  OpenDialogReturnValue,
+} from 'electron'
 import { localdb } from '@main/data'
-import getDataFolder from '@main/libs/getDataDir'
+import getDataFolder, { getDefaultDataDir } from '@main/libs/getDataDir'
 import getI18N from '@main/core/getI18N'
+import { IActionFunc } from '@root/main/types'
 
-export default async (): Promise<string | undefined> => {
+export default async function (
+  this: IActionFunc,
+  to_default?: boolean,
+): Promise<string | undefined> {
+  let { sender } = this
   let { lang } = await getI18N()
   let current_dir = getDataFolder()
+  let dir: string = ''
 
-  let r = await dialog.showOpenDialog({
-    title: '选择数据目录',
-    defaultPath: current_dir,
-    properties: ['openDirectory', 'createDirectory'],
-  })
+  if (to_default) {
+    dir = getDefaultDataDir()
+  } else {
+    let parent = BrowserWindow.fromWebContents(sender)
+    if (parent?.isFullScreen()) {
+      parent?.setFullScreen(false)
+    }
 
-  if (r.canceled) {
-    return
+    let options: OpenDialogOptions = {
+      // title: '选择数据目录',
+      defaultPath: current_dir,
+      properties: ['openDirectory', 'createDirectory'],
+    }
+
+    let r: OpenDialogReturnValue
+
+    if (parent) {
+      r = await dialog.showOpenDialog(parent, options)
+    } else {
+      r = await dialog.showOpenDialog(options)
+    }
+
+    if (r.canceled) {
+      return
+    }
+
+    dir = r.filePaths[0]
   }
 
-  let dir = r.filePaths[0]
   if (!dir || dir === current_dir) {
     return
   }

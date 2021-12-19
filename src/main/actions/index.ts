@@ -6,9 +6,9 @@
 
 export { default as ping } from './ping'
 
-export { default as getDataFolder } from './getDataDir'
 export { default as getBasicData } from './getBasicData'
-export { default as getDefaultDataFolder } from './getDefaultDataDir'
+export { default as getDataDir } from './getDataDir'
+export { default as getDefaultDataDir } from './getDefaultDataDir'
 
 export { default as configGet } from './config/get'
 export { default as configSet } from './config/set'

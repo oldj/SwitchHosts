@@ -128,6 +128,9 @@ export default {
   replace: 'Remplacer',
   replace_all: 'Tout remplacer',
   replace_history: "Remplacer l'historique",
+  reset: 'Réinitialiser',
+  reset_data_dir_confirm:
+    "Êtes-vous sûr de vouloir réinitialiser le dossier de données à l'adresse par défaut?({0})?",
   reset_zoom: 'Réinitialiser le zoom',
   search: 'Rechercher',
   select_all: 'Tout sélectionner',

@@ -128,6 +128,9 @@ export default {
   replace: 'Replace',
   replace_all: 'Replace all',
   replace_history: 'Replace history',
+  reset: 'Reset',
+  reset_data_dir_confirm:
+    'Are you sure you want to restore the data folder to the default address ({0})?',
   reset_zoom: 'Reset zoom',
   search: 'Search',
   select_all: 'Select all',

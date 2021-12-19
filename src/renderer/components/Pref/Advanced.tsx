@@ -49,15 +49,19 @@ const PathLink = (props: { link: string }) => {
 
 const Advanced = (props: IProps) => {
   const { data, onChange } = props
-  const { lang } = useModel('useI18n')
+  const { i18n, lang } = useModel('useI18n')
   const [hosts_path, setHostsPath] = useState('')
-  const [data_path, setDataPath] = useState('')
+  const [data_dir, setDataDir] = useState('')
+  const [default_data_dir, setDefaultDataDir] = useState('')
 
   useEffect(() => {
     actions
       .getPathOfSystemHosts()
       .then((hosts_path) => setHostsPath(hosts_path))
-    actions.getDataFolder().then((data_path) => setDataPath(data_path))
+    actions.getDataDir().then((data_dir) => setDataDir(data_dir))
+    actions
+      .getDefaultDataDir()
+      .then((default_data_dir) => setDefaultDataDir(default_data_dir))
   }, [])
 
   return (
@@ -83,7 +87,7 @@ const Advanced = (props: IProps) => {
         <FormLabel>{lang.where_is_my_data}</FormLabel>
         <FormHelperText mb={2}>{lang.your_data_is}</FormHelperText>
         <HStack>
-          <PathLink link={data_path} />
+          <PathLink link={data_dir} />
           <Button
             variant="link"
             onClick={async () => {
@@ -93,6 +97,25 @@ const Advanced = (props: IProps) => {
           >
             {lang.change}
           </Button>
+
+          {data_dir !== default_data_dir && (
+            <Button
+              variant="link"
+              onClick={async () => {
+                if (
+                  !confirm(
+                    i18n.trans('reset_data_dir_confirm', [default_data_dir]),
+                  )
+                ) {
+                  return
+                }
+                let r = await actions.cmdChangeDataDir(true)
+                console.log(r)
+              }}
+            >
+              {lang.reset}
+            </Button>
+          )}
         </HStack>
       </FormControl>
     </VStack>
