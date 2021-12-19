@@ -16,6 +16,7 @@ import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import TopBar from '../components/TopBar'
 import styles from './index.less'
+import SetWriteMode from '@renderer/components/SetWriteMode'
 
 export default () => {
   const [loading, setLoading] = useState(true)
@@ -135,6 +136,7 @@ export default () => {
 
       <EditHostsInfo />
       <SudoPasswordInput />
+      <SetWriteMode />
       <PreferencePanel />
       <History />
       <About />

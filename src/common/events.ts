@@ -23,6 +23,7 @@ export default {
   show_about: 'show_about',
   show_history: 'show_history',
   show_preferences: 'show_preferences',
+  show_set_write_mode: 'show_set_write_mode',
   show_source: 'show_source',
   show_sudo_password_input: 'show_sudo_password_input',
   system_hosts_updated: 'system_hosts_updated',

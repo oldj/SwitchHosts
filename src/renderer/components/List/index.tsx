@@ -57,7 +57,14 @@ const List = (props: Props) => {
   }, [hosts_data])
 
   const onToggleItem = async (id: string, on: boolean) => {
+    console.log(`writeMode: ${configs?.write_mode}`)
     console.log(`toggle hosts #${id} as ${on ? 'on' : 'off'}`)
+
+    if (!configs?.write_mode) {
+      agent.broadcast(events.show_set_write_mode, { id, on })
+      return
+    }
+
     const new_list = setOnStateOfItem(
       hosts_data.list,
       id,
@@ -76,6 +83,8 @@ const List = (props: Props) => {
       agent.broadcast(events.set_hosts_on_status, id, !on)
     }
   }
+
+  const toSetWriteMode = async () => {}
 
   const writeHostsToSystem = async (
     list?: IHostsListObject[],
@@ -134,7 +143,7 @@ const List = (props: Props) => {
   }
 
   if (!is_tray) {
-    useOnBroadcast(events.toggle_item, onToggleItem, [hosts_data])
+    useOnBroadcast(events.toggle_item, onToggleItem, [hosts_data, configs])
     useOnBroadcast(events.write_hosts_to_system, writeHostsToSystem, [
       hosts_data,
     ])

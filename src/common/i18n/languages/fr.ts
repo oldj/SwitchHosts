@@ -10,6 +10,7 @@ export default {
   acknowledgement: 'Remerciements',
   advanced: 'Avancé',
   all: 'Tout',
+  append: 'Ajouter',
   auto_refresh: 'Rafraîchissement automatique',
   btn_cancel: 'Annuler',
   btn_ok: 'OK',
@@ -108,6 +109,7 @@ export default {
   next: 'Suivant',
   no_access_to_hosts: 'Aucune autorisation pour écrire dans le fichier hosts.',
   no_record: 'Aucun enregistrement',
+  overwrite: 'Écraser',
   password: 'Mot de passe',
   paste: 'Coller',
   port: 'Port',
@@ -176,6 +178,12 @@ export default {
   where_is_my_data: 'Où sont stockées mes données ?',
   where_is_my_hosts: 'Où est mon fichier hosts ?',
   window: 'Fenêtre',
+  write_mode: "Mode d'écriture",
+  write_mode_append_help:
+    "Ajoutez les nouveaux enregistrements à la fin du fichier d'hôtes système.",
+  write_mode_overwrite_help:
+    "Écrasez le fichier d'hôtes système avec les nouveaux enregistrements.",
+  write_mode_set: "Définir le mode d'écriture",
   your_data_is: 'Les fichiers contenant vos données sont stockés ici :',
   your_hosts_file_is: 'Votre fichier hosts est situé ici :',
   zoom: 'Zoom',
