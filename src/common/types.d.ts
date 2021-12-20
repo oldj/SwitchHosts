@@ -34,7 +34,7 @@ export interface IFindPosition {
   after: string
 }
 
-export interface IFindSpliter {
+export interface IFindSplitter {
   before: string
   match: string
   after: string
@@ -46,7 +46,7 @@ export interface IFindItem {
   item_title: string
   item_type: HostsType
   positions: IFindPosition[]
-  spliters: IFindSpliter[]
+  splitters: IFindSplitter[]
 }
 
 export type IFindShowSourceParam = IFindPosition & {

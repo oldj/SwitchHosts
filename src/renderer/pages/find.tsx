@@ -211,12 +211,12 @@ const find = (props: Props) => {
 
     let r = find_result.find((i) => i.item_id === pos.item_id)
     if (!r) return
-    let spliters = r.spliters
-    let sp = spliters[pos.index]
+    let splitters = r.splitters
+    let sp = splitters[pos.index]
     if (!sp) return
     sp.replace = replace_to
 
-    const content = spliters
+    const content = splitters
       .map((sp) => `${sp.before}${sp.replace ?? sp.match}${sp.after}`)
       .join('')
     await actions.setHostsContent(pos.item_id, content)
@@ -229,9 +229,9 @@ const find = (props: Props) => {
 
   const replaceAll = async () => {
     for (let item of find_result) {
-      let { item_id, item_type, spliters } = item
-      if (item_type !== 'local') continue
-      const content = spliters
+      let { item_id, item_type, splitters } = item
+      if (item_type !== 'local' || splitters.length === 0) continue
+      const content = splitters
         .map((sp) => `${sp.before}${replace_to}${sp.after}`)
         .join('')
       await actions.setHostsContent(item_id, content)

@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import { IFindPosition, IFindSpliter } from '@root/common/types'
+import { IFindPosition, IFindSplitter } from '@root/common/types'
 
 type MatchResult = Pick<IFindPosition, 'start' | 'end' | 'match'> & {
   [key: string]: any
@@ -12,8 +12,8 @@ type MatchResult = Pick<IFindPosition, 'start' | 'end' | 'match'> & {
 export default (
   content: string,
   find_results: MatchResult[],
-): IFindSpliter[] => {
-  let spliters: IFindSpliter[] = []
+): IFindSplitter[] => {
+  let spliters: IFindSplitter[] = []
 
   let last_end = 0
   find_results.map((r, idx) => {
@@ -26,7 +26,7 @@ export default (
       after = content.slice(last_end)
     }
 
-    let spliter: IFindSpliter = {
+    let spliter: IFindSplitter = {
       before,
       after,
       match,

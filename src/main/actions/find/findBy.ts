@@ -40,13 +40,16 @@ export default async (
     }
     let content = await getContentOfHosts(item.id)
     let positions = findInContent(content, exp)
+    if (positions.length === 0) {
+      continue
+    }
 
     result_items.push({
       item_title: item.title || '',
       item_id: item.id,
       item_type,
       positions,
-      spliters: splitContent(content, positions),
+      splitters: splitContent(content, positions),
     })
   }
 
