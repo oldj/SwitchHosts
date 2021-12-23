@@ -25,4 +25,5 @@ export default [
   { name: 'Aktilor', link: 'https://github.com/Aktilor' },
   { name: 'LiangLong', link: 'https://github.com/xxccll' },
   { name: 'ClDaniel1', link: 'https://github.com/ClDaniel1' },
+  { name: 'Aaron Xie', link: 'https://github.com/Aaron00101010' },
 ]
