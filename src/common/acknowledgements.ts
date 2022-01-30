@@ -26,4 +26,5 @@ export default [
   { name: 'LiangLong', link: 'https://github.com/xxccll' },
   { name: 'ClDaniel1', link: 'https://github.com/ClDaniel1' },
   { name: 'Aaron Xie', link: 'https://github.com/Aaron00101010' },
+  { name: 'Stefan Berger', link: 'https://github.com/bergo' },
 ]
