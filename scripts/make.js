@@ -15,7 +15,7 @@ const path = require('path')
 const root_dir = path.normalize(path.join(__dirname, '..'))
 const dist_dir = path.normalize(path.join(__dirname, '..', 'dist'))
 
-const electronLanguages = ['en', 'fr', 'zh_CN']
+const electronLanguages = ['en', 'fr', 'zh_CN', 'de']
 
 const TARGET_PLATFORMS_configs = {
   mac: {
