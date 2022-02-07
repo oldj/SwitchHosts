@@ -23,6 +23,8 @@ export default async () => {
     locale = 'zh'
   } else if (locale.startsWith('fr')) {
     locale = 'fr'
+  } else if (locale.startsWith('de')) {
+    locale = 'de'
   }
 
   if (!isLocaleName(locale)) {
