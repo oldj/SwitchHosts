@@ -28,7 +28,7 @@ const TARGET_PLATFORMS_configs = {
     win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
   },
   all: {
-    mac: ['dmg:x64', 'dmg:arm64'],
+    mac: ['dmg:x64', 'dmg:arm64', 'dmg:universal'],
     linux: ['AppImage:x64', 'deb:x64'],
     win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
   },
