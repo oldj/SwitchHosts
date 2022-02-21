@@ -78,8 +78,8 @@ const SetWriteMode = (props: Props) => {
             onChange={(v) => setWriteMode(v as WriteModeType)}
           >
             <HStack spacing={10}>
-              <Radio value={'append'}>追加</Radio>
-              <Radio value={'overwrite'}>覆盖</Radio>
+              <Radio value={'append'}>{lang.append}</Radio>
+              <Radio value={'overwrite'}>{lang.overwrite}</Radio>
             </HStack>
           </RadioGroup>
 
