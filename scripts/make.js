@@ -161,7 +161,7 @@ const doMake = async () => {
           '${productName}_portable_${arch}_${version}(${buildVersion}).${ext}',
       },
       linux: {
-        icon: 'assets/app.png',
+        icon: 'assets/app.icns',
         artifactName:
           '${productName}_linux_${arch}_${version}(${buildVersion}).${ext}',
         category: 'Utility',
