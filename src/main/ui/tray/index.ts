@@ -36,33 +36,50 @@ const makeTray = async () => {
 
   tray.setToolTip('SwitchHosts')
 
-  tray.on('click', () => {
-    if (!win) {
-      makeWindow()
-      return
-    }
+  let locale = await configGet('locale')
+  if (process.platform === 'linux') {
+    locale = global.system_locale  // configGet() always get undefined on Linux
+  }
+  const i18n = new I18N(locale)
+  const { lang } = i18n
 
-    if (win.isVisible()) {
-      if (win.isFocused()) {
-        win.hide()
-      } else {
-        show()
-        win.focus()
-      }
-    } else {
-      show()
-    }
-  })
+  const ver = version.slice(0, 3).join('.') + ` (${version[3]})`
+
+  if (process.platform === 'linux') {
+    const menu = Menu.buildFromTemplate([
+      {
+        label: lang.click_to_open,
+        click: () => window(),
+      },
+      { type: 'separator' },
+      {
+        label: lang._app_name,
+        toolTip: lang.show_main_window,
+        click: () => {
+          broadcast(events.active_main_window)
+        },
+      },
+      {
+        label: `v${ver}`,
+        enabled: false,
+      },
+      { type: 'separator' },
+      {
+        label: lang.quit,
+        role: 'quit',
+      },
+    ])
+
+    // Linux requires setContextMenu to be called in order for the context menu to populate correctly
+    tray.setContextMenu(menu)
+    return
+  }
+
+  tray.on('click', () => window())
 
   tray.on('double-click', () => broadcast(events.active_main_window))
 
   tray.on('right-click', async () => {
-    let locale = await configGet('locale')
-    const i18n = new I18N(locale)
-    const { lang } = i18n
-
-    const ver = version.slice(0, 3).join('.') + ` (${version[3]})`
-
     const menu = Menu.buildFromTemplate([
       {
         label: lang._app_name,
@@ -139,8 +156,52 @@ const getPosition = () => {
   return { x, y }
 }
 
+const getLinuxPosition = () => {
+  const window_bounds = win.getBounds()
+  const point = screen.getCursorScreenPoint()
+  const screen_bounds0 = screen.getDisplayNearestPoint(point).bounds
+  const screen_bounds = screen.getDisplayNearestPoint(point).workAreaSize
+
+  let x: number
+  let y: number
+
+  if (point.x - screen_bounds0.x > screen_bounds.width / 2) {  // display on the right of the active screen
+    x = screen_bounds0.x + screen_bounds0.width - window_bounds.width
+  } else {
+    x = 0
+  }
+  if (point.y < screen_bounds.height / 2) {  // display on the top of the active screen
+    y = 0
+  } else {
+    y = screen_bounds.height - window_bounds.height
+  }
+
+  x = Math.round(x)
+  y = Math.round(y)
+
+  return {x, y}
+}
+
+const window = () => {
+  if (!win) {
+    makeWindow()
+    return
+  }
+
+  if (win.isVisible()) {
+    if (win.isFocused()) {
+      win.hide()
+    } else {
+      show()
+      win.focus()
+    }
+  } else {
+    show()
+  }
+}
+
 const show = () => {
-  const { x, y } = getPosition()
+  let {x, y} = process.platform === 'linux' ? getLinuxPosition(): getPosition()
   win.setPosition(x, y, true)
   win.show()
   // win.focus()
