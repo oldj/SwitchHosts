@@ -30,6 +30,13 @@ const createWindow = async () => {
     defaultHeight: 480,
   })
 
+  let linux_icon = {}
+  if (process.platform === 'linux') {
+    linux_icon = {
+      icon: path.join(__dirname, '/assets/icon.png'),
+    }
+  }
+
   win = new BrowserWindow({
     x: main_window_state.x,
     y: main_window_state.y,
@@ -45,6 +52,7 @@ const createWindow = async () => {
       preload: path.join(__dirname, 'preload.js'),
       spellcheck: true,
     },
+    ...linux_icon,
   })
 
   main_window_state.manage(win)
