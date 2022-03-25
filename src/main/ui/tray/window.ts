@@ -11,6 +11,13 @@ import path from 'path'
 
 const makeWindow = () => {
   let win: BrowserWindow | null
+  // Linux AppImage APP can't automatically recognize dock icon, requires special configuration to display correctly
+  let linux_icon = {}
+  if (process.platform === 'linux') {
+    linux_icon = {
+      icon: path.join(__dirname, '/assets/icon.png'),
+    }
+  }
   win = new BrowserWindow({
     frame: false,
     // titleBarStyle: 'hidden',
@@ -30,6 +37,7 @@ const makeWindow = () => {
       preload: path.join(__dirname, 'preload.js'),
       spellcheck: true,
     },
+    ...linux_icon,
   })
 
   win.setVisibleOnAllWorkspaces(true, {
