@@ -75,7 +75,10 @@ const makeTray = async () => {
     return
   }
 
-  tray.on('click', () => window())
+  tray.on('click', async () => {
+    let tray_mini_window = await configGet('tray_mini_window')
+    tray_mini_window ? window() : broadcast(events.active_main_window)
+  })
 
   tray.on('double-click', () => broadcast(events.active_main_window))
 
