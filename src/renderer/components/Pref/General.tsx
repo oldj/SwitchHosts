@@ -186,6 +186,19 @@ const General = (props: IProps) => {
       <FormControl>
         <VStack align="left">
           <Checkbox
+              isChecked={data.tray_mini_window}
+              onChange={(e) =>
+                  onChange({ tray_mini_window: e.target.checked })
+              }
+          >
+            {lang.tray_mini_window}
+          </Checkbox>
+        </VStack>
+      </FormControl>
+
+      <FormControl>
+        <VStack align="left">
+          <Checkbox
             isChecked={data.http_api_on}
             onChange={(e) => onChange({ http_api_on: e.target.checked })}
           >
