@@ -77,6 +77,7 @@ export const setOnStateOfItem = (
   id: string,
   on: boolean,
   default_choice_mode: FolderModeType = 0,
+  multi_chose_folder_switch_all: boolean = false
 ): IHostsListObject[] => {
   let new_list: IHostsListObject[] = lodash.cloneDeep(list)
 
@@ -85,13 +86,24 @@ export const setOnStateOfItem = (
 
   item.on = on
 
-  if (!on) return new_list
+  let itemIsInTopLevel = isInTopLevel(list, id);
+  if (multi_chose_folder_switch_all) {
+    item = switchFolderChild(item, on)
+    !itemIsInTopLevel && switchItemParentIsON(new_list, item, on)
+  }
 
-  if (isInTopLevel(list, id)) {
+  if (!on) {
+    return new_list
+  }
+
+  if (itemIsInTopLevel) {
     if (default_choice_mode === 1) {
       new_list.map((item) => {
         if (item.id !== id) {
           item.on = false
+          if (multi_chose_folder_switch_all) {
+            item = switchFolderChild(item, false)
+          }
         }
       })
     }
@@ -104,6 +116,9 @@ export const setOnStateOfItem = (
         parent.children.map((item) => {
           if (item.id !== id) {
             item.on = false
+            if (multi_chose_folder_switch_all) {
+              item = switchFolderChild(item, false)
+            }
           }
         })
       }
@@ -111,6 +126,60 @@ export const setOnStateOfItem = (
   }
 
   return new_list
+}
+
+export const switchItemParentIsON = (
+    list: IHostsListObject[],
+    item: IHostsListObject,
+    on: boolean
+) => {
+  let parent = getParentOfItem(list, item.id)
+
+  if (parent) {
+    if (parent.folder_mode === 1) {
+      return
+    }
+    if (!on) {
+      parent.on = on
+    } else if (parent.children) {
+      let parentOn = true
+      parent.children.map((item) => {
+        if (!item.on) {
+          parentOn = false
+        }
+      })
+      parent.on = parentOn
+    }
+
+    let itemIsInTopLevel = isInTopLevel(list, parent.id)
+    if (!itemIsInTopLevel) {
+      switchItemParentIsON(list, parent, on)
+    }
+  }
+}
+
+export const switchFolderChild = (
+    item: IHostsListObject,
+    on: boolean,
+): IHostsListObject => {
+  if (item.type != 'folder') {
+    return item
+  }
+  let folder_mode = item.folder_mode
+  if (folder_mode === 1) {
+    return item
+  }
+
+  if (item.children) {
+    item.children.map((item) => {
+      item.on = on
+      if (item.type == 'folder') {
+        item = switchFolderChild(item, on)
+      }
+    })
+  }
+
+  return item;
 }
 
 export const deleteItemById = (list: IHostsListObject[], id: string) => {

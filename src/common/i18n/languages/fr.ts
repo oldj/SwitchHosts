@@ -77,6 +77,7 @@ export default {
     "Actif sur le port {0}, peut être utilisé par un logiciel tier comme Alfred pour changer d'hosts",
   http_api_only_local: "L'API HTTP n'écoute que sur 127.0.0.1",
   tray_mini_window: 'raccourci de l\'icône de la barre des tâches',
+  multi_chose_folder_switch_all: 'Commutateur de dossier à sélection multiple pour contrôler les sous-éléments',
   ignore_case: 'Ignorer la casse',
   import: 'Importer',
   import_done: "L'importation est terminée",

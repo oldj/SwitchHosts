@@ -70,6 +70,7 @@ const List = (props: Props) => {
       id,
       on,
       configs?.choice_mode ?? 0,
+      configs?.multi_chose_folder_switch_all ?? false,
     )
     let success = await writeHostsToSystem(new_list)
     if (success) {
