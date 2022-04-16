@@ -28,4 +28,5 @@ export default [
   { name: 'Aaron Xie', link: 'https://github.com/Aaron00101010' },
   { name: 'Stefan Berger', link: 'https://github.com/bergo' },
   { name: 'EmeryWan', link: 'https://github.com/EmeryWan' },
+  { name: 'ClDaniel1', link: 'https://github.com/ClDaniel1' },
 ]
