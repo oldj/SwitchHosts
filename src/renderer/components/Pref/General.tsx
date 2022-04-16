@@ -201,7 +201,7 @@ const General = (props: IProps) => {
           <Checkbox
               isChecked={data.multi_chose_folder_switch_all}
               onChange={(e) =>
-                  onChange({ tray_mini_window: e.target.checked })
+                  onChange({ multi_chose_folder_switch_all: e.target.checked })
               }
           >
             {lang.multi_chose_folder_switch_all}
