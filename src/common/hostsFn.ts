@@ -143,7 +143,7 @@ export const switchItemParentIsON = (
       parent.on = on
     } else if (parent.children) {
       let parentOn = true
-      parent.children.map((item) => {
+      parent.children.forEach((item) => {
         if (!item.on) {
           parentOn = false
         }
@@ -171,7 +171,7 @@ export const switchFolderChild = (
   }
 
   if (item.children) {
-    item.children.map((item) => {
+    item.children.forEach((item) => {
       item.on = on
       if (item.type == 'folder') {
         item = switchFolderChild(item, on)
