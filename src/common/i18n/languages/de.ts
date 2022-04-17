@@ -77,6 +77,7 @@
       'Läuft auf Port {0}, kann von Software von Drittanbietern wie Alfred verwendet werden, um den Host zu wechseln.',
     http_api_only_local: 'HTTP-API hört nur auf 127.0.0.1',
     tray_mini_window: 'Taskleistensymbol-Verknüpfung',
+    multi_chose_folder_switch_all: 'Mehrfachauswahl-Ordnerschalter zur Steuerung von Unterelementen',
     ignore_case: 'Groß- und Kleinschreibung ignorieren',
     import: 'Importieren',
     import_done: 'Der Import ist abgeschlossen.',

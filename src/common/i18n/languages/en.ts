@@ -77,6 +77,7 @@ export default {
     'Runs on port {0}, can be used by third-party software such as Alfred to switch hosts.',
   http_api_only_local: 'HTTP API only listen 127.0.0.1',
   tray_mini_window: 'taskbar icon shortcut',
+  multi_chose_folder_switch_all: 'multi-select folder switch to control sub-items',
   ignore_case: 'Ignore case',
   import: 'Import',
   import_done: 'The import is complete.',

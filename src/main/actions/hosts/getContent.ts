@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import { getItemFromList, getList } from '@main/actions'
+import { configGet, getItemFromList, getList } from '@main/actions'
 import { swhdb } from '@main/data'
 import { IHostsContentObject } from '@root/common/data'
 import { findItemById, flatten } from '@root/common/hostsFn'
@@ -28,7 +28,10 @@ const getContentOfHosts = async (id: string): Promise<string> => {
 
   let list = await getList()
 
-  if (type === 'folder') {
+  let multi_chose_folder_switch_all = await configGet('multi_chose_folder_switch_all');
+  let isSkipFolder = multi_chose_folder_switch_all && hosts.folder_mode !== 1
+
+  if (type === 'folder' && !isSkipFolder) {
     const items = flatten(hosts.children || [])
 
     let a = await Promise.all(

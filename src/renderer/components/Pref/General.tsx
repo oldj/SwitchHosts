@@ -199,6 +199,19 @@ const General = (props: IProps) => {
       <FormControl>
         <VStack align="left">
           <Checkbox
+              isChecked={data.multi_chose_folder_switch_all}
+              onChange={(e) =>
+                  onChange({ multi_chose_folder_switch_all: e.target.checked })
+              }
+          >
+            {lang.multi_chose_folder_switch_all}
+          </Checkbox>
+        </VStack>
+      </FormControl>
+
+      <FormControl>
+        <VStack align="left">
+          <Checkbox
             isChecked={data.http_api_on}
             onChange={(e) => onChange({ http_api_on: e.target.checked })}
           >
