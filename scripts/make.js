@@ -24,12 +24,29 @@ const TARGET_PLATFORMS_configs = {
   macs: {
     mac: ['dmg:x64', 'dmg:arm64'],
   },
+  linux: {
+    linux: [
+      'AppImage:x64',
+      'deb:x64',
+      'AppImage:arm64',
+      'deb:arm64',
+      'AppImage:armv7l',
+      'deb:armv7l',
+    ],
+  },
   win: {
     win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
   },
   all: {
     mac: ['dmg:x64', 'dmg:arm64', 'dmg:universal'],
-    linux: ['AppImage:x64', 'deb:x64'],
+    linux: [
+      'AppImage:x64',
+      'deb:x64',
+      'AppImage:arm64',
+      'deb:arm64',
+      'AppImage:armv7l',
+      'deb:armv7l',
+    ],
     win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
   },
 }
@@ -94,6 +111,8 @@ const doMake = async () => {
     targets = TARGET_PLATFORMS_configs.mac
   } else if (process.env.MAKE_FOR === 'win') {
     targets = TARGET_PLATFORMS_configs.win
+  } else if (process.env.MAKE_FOR === 'linux') {
+    targets = TARGET_PLATFORMS_configs.linux
   }
 
   await builder.build({

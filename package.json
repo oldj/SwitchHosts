@@ -14,7 +14,9 @@
     "build:main": "cross-env NODE_ENV=production webpack --config scripts/webpack.main.prod.config.js",
     "build:renderer": "cross-env APP_ROOT=src/renderer umi build",
     "make": "node scripts/make.js",
-    "make:dev": "cross-env SKIP_NOTARIZATION=1 cross-env MAKE_FOR=dev npm run make"
+    "make:dev": "cross-env SKIP_NOTARIZATION=1 cross-env MAKE_FOR=dev npm run make",
+    "make:linux": "cross-env SKIP_NOTARIZATION=1 cross-env MAKE_FOR=linux npm run make",
+    "make:win": "cross-env SKIP_NOTARIZATION=1 cross-env MAKE_FOR=win npm run make"
   },
   "dependencies": {
     "axios": "^0.25.0",
