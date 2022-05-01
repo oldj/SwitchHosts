@@ -176,6 +176,7 @@
       'Möchten Sie uns helfen, SwitchHosts zu verbessern, indem Sie regelmäßig anonyme Nutzungsdaten übermitteln?',
     usage_data_title: 'Machen Sie SwitchHosts besser!',
     use_proxy: 'Proxy verwenden',
+    use_system_window_frame: 'System-Fensterrahmen verwenden',
     view: 'Ansicht',
     where_is_my_data: 'Wo sind meine Daten gespeichert?',
     where_is_my_hosts: 'Wo ist meine Hosts-Datei?',

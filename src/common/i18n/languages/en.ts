@@ -176,6 +176,7 @@ export default {
     'Would you like to help us improve SwitchHosts by periodically submitting anonymous usage data?',
   usage_data_title: 'Make SwitchHosts better!',
   use_proxy: 'Use proxy',
+  use_system_window_frame: 'Use system window frame',
   view: 'View',
   where_is_my_data: 'Where is my data stored?',
   where_is_my_hosts: 'Where is my hosts file?',
