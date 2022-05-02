@@ -25,6 +25,7 @@ export default () => {
   const { configs } = useModel('useConfigs')
   const [left_width, setLeftWidth] = useState(0)
   const [left_show, setLeftShow] = useState(true)
+  const [use_system_window_frame, setSystemFrame] = useState(false)
   const [show_migration, setShowMigration] = useState(false)
   const toast = useToast()
 
@@ -55,6 +56,7 @@ export default () => {
     setLocale(configs.locale)
     setLeftWidth(configs.left_panel_width)
     setLeftShow(configs.left_panel_show)
+    setSystemFrame(configs.use_system_window_frame)
 
     let theme = configs.theme
     let cls = document.body.className
@@ -114,7 +116,7 @@ export default () => {
 
   return (
     <div className={styles.root}>
-      <TopBar show_left_panel={left_show} />
+      <TopBar show_left_panel={left_show} use_system_window_frame={use_system_window_frame} />
 
       <div>
         <div

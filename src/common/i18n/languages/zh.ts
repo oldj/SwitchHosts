@@ -172,7 +172,7 @@ const lang: LanguageDict = {
     '您愿意发送匿名的使用数据来帮助我们改进 SwitchHosts 吗？数据中不会包含任何隐私信息。',
   usage_data_title: '帮助改进 SwitchHosts',
   use_proxy: '使用代理',
-  use_system_window_frame: '使用系统窗口框架',
+  use_system_window_frame: '使用系统窗口框架，需要重启程序',
   view: '视图',
   where_is_my_data: '我的数据存储在哪里？',
   where_is_my_hosts: '我的 hosts 文件在哪里？',

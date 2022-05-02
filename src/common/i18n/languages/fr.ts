@@ -177,7 +177,7 @@ export default {
     "Voulez-vous nous aider à améliorer SwitchHosts en soumettant périodiquement vos données d'utilisation de manière anonyme ?",
   usage_data_title: 'Rendez SwitchHosts meilleur !',
   use_proxy: 'Utiliser un proxy',
-  use_system_window_frame: 'Utiliser la bordure de fenêtre du système',
+  use_system_window_frame: 'Utiliser le cadre de la fenêtre système, le redémarrage de l\'application est requis',
   view: 'Vue',
   where_is_my_data: 'Où sont stockées mes données ?',
   where_is_my_hosts: 'Où est mon fichier hosts ?',
