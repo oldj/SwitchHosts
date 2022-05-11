@@ -29,4 +29,6 @@ export default [
   { name: 'Stefan Berger', link: 'https://github.com/bergo' },
   { name: 'EmeryWan', link: 'https://github.com/EmeryWan' },
   { name: 'ClDaniel1', link: 'https://github.com/ClDaniel1' },
+  { name: 'moonheart', link: 'https://github.com/moonheart' },
+  { name: 'Wang Weitao', link: 'https://github.com/watonyweng' },
 ]
