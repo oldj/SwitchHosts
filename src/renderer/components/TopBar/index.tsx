@@ -18,10 +18,11 @@ import styles from './index.less'
 
 interface IProps {
   show_left_panel: boolean
+  use_system_window_frame: boolean
 }
 
 export default (props: IProps) => {
-  const { show_left_panel } = props
+  const { show_left_panel, use_system_window_frame } = props
   const { lang } = useModel('useI18n')
   const { isHostsInTrashcan, current_hosts, isReadOnly } =
     useModel('useHostsData')
@@ -30,7 +31,7 @@ export default (props: IProps) => {
   const show_toggle_switch =
     !show_left_panel && current_hosts && !isHostsInTrashcan(current_hosts.id)
   const show_history = !current_hosts
-  const show_close_button = agent.platform !== 'darwin'
+  const show_close_button = agent.platform === 'linux' && !use_system_window_frame || agent.platform !== 'darwin' && agent.platform !== 'linux'
 
   useEffect(() => {
     setIsOn(!!current_hosts?.on)

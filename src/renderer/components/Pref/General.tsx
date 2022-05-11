@@ -154,6 +154,19 @@ const General = (props: IProps) => {
         </HStack>
       </FormControl>
 
+      {agent.platform === 'linux' ? (
+        <FormControl>
+          <HStack>
+            <Checkbox
+              isChecked={data.use_system_window_frame}
+              onChange={(e) => onChange({ use_system_window_frame: e.target.checked })}
+            >
+              {lang.use_system_window_frame}
+            </Checkbox>
+          </HStack>
+        </FormControl>
+      ) : null}
+
       {agent.platform === 'darwin' ? (
         <FormControl>
           <HStack>

@@ -10,6 +10,7 @@ const configs = {
   // UI
   left_panel_show: true,
   left_panel_width: 270,
+  use_system_window_frame: false,
 
   // preferences
   write_mode: null as WriteModeType,
