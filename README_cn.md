@@ -48,7 +48,7 @@ SwitchHosts 的数据文件存储于 `~/.SwitchHosts` (Windows 下存储于用�
 - 运行 `npm run build`
 - 运行 `npm run make`，如果一切顺利，可在 `./dist` 目录下找到打包后的文件
 - 首次运行可能需要花费一些时间，因为需要下载相关依赖文件。你也可以从 [这儿](https://github.com/electron/electron/releases)
-  或者 [淘宝镜像](https://npm.taobao.org/mirrors/electron/) 手动下载，并保存到 `~/.electron`
+  或者 [淘宝镜像](https://npmmirror.com/mirrors/electron/) 手动下载，并保存到 `~/.electron`
   目录下。更多信息可访问 [Electron 文档](http://electron.atom.io/docs/)。
 
 ```bash
