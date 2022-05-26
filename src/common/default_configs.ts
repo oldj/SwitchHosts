@@ -13,7 +13,7 @@ const configs = {
   use_system_window_frame: false,
 
   // preferences
-  write_mode: null as WriteModeType,
+  write_mode: 'append' as WriteModeType,
   history_limit: 50,
   locale: undefined as DefaultLocaleType,
   theme: 'light' as ThemeType,
