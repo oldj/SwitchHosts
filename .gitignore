@@ -28,3 +28,4 @@ tmp
 test/tmp
 
 .env
+*.provisionprofile

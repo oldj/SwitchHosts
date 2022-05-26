@@ -132,7 +132,6 @@ const doMake = async () => {
         hardenedRuntime: true,
         entitlements: 'scripts/entitlements.mac.plist',
         entitlementsInherit: 'scripts/entitlements.mac.plist',
-        provisioningProfile: 'scripts/app.provisionprofile',
         extendInfo: {
           ITSAppUsesNonExemptEncryption: false,
           CFBundleLocalizations: electronLanguages,
