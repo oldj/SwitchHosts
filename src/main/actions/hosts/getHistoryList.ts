@@ -8,5 +8,12 @@ import { swhdb } from '@main/data'
 import { IHostsHistoryObject } from '@root/common/data'
 
 export default async (): Promise<IHostsHistoryObject[]> => {
-  return await swhdb.collection.history.all()
+  let list = await swhdb.collection.history.all<IHostsHistoryObject>()
+
+  list = list.map((item) => {
+    item.content = item.content || ''
+    return item
+  })
+
+  return list
 }
