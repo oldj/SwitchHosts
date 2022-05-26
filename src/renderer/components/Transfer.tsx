@@ -5,7 +5,7 @@
  */
 
 import { useModel } from '@@/plugin-model/useModel'
-import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
+import { IoArrowForward, IoArrowBack } from 'react-icons/io5'
 import { Box, Center, Grid, IconButton, VStack } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import clsx from 'clsx'
@@ -112,7 +112,7 @@ const Transfer = (props: Props) => {
               size="sm"
               variant="outline"
               aria-label="Move to right"
-              icon={<ArrowForwardIcon />}
+              icon={<IoArrowForward />}
               isDisabled={left_selectd_keys.length === 0}
               onClick={moveLeftToRight}
             />
@@ -120,7 +120,7 @@ const Transfer = (props: Props) => {
               size="sm"
               variant="outline"
               aria-label="Move to left"
-              icon={<ArrowBackIcon />}
+              icon={<IoArrowBack />}
               isDisabled={right_selectd_keys.length === 0}
               onClick={moveRightToLeft}
             />

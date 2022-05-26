@@ -40,7 +40,6 @@ import {
   IoChevronDownOutline,
   IoSearch,
 } from 'react-icons/io5'
-import AutoSizer from 'react-virtualized-auto-sizer'
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './find.less'
@@ -71,6 +70,7 @@ const find = (props: Props) => {
   const [last_scroll_result_idx, setlastScrollResultIdx] = useState(-1)
   const debounced_keyword = useDebounce(keyword, { wait: 500 })
   const ipt_kw = useRef<HTMLInputElement>(null)
+  const ref_result_box = useRef<HTMLDivElement>(null)
 
   const init = async () => {
     if (!configs) return
@@ -426,19 +426,18 @@ const find = (props: Props) => {
           w="100%"
           flex="1"
           bgColor={configs?.theme === 'dark' ? 'gray.700' : 'gray.100'}
+          ref={ref_result_box}
         >
-          <AutoSizer>
-            {({ width, height }) => (
-              <List
-                width={width}
-                height={height}
-                itemCount={find_positions.length}
-                itemSize={28}
-              >
-                {ResultRow}
-              </List>
-            )}
-          </AutoSizer>
+          <List
+            width={'100%'}
+            height={
+              ref_result_box.current ? ref_result_box.current.clientHeight : 0
+            }
+            itemCount={find_positions.length}
+            itemSize={28}
+          >
+            {ResultRow}
+          </List>
         </Box>
 
         <HStack
