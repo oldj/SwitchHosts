@@ -53,7 +53,7 @@ folder contains various configuration information.
 - This command may take several minutes to finish when you run it the first time, as it needs time
   to download dependent files. You can download the dependencies
   manually [here](https://github.com/electron/electron/releases),
-  or [Taobao mirror](https://npm.taobao.org/mirrors/electron/), then save the files to `~/.electron`
+  or [Taobao mirror](https://npmmirror.com/mirrors/electron/), then save the files to `~/.electron`
   . You can check the [Electron Docs](http://electron.atom.io/docs/) for more infomation.
 
 ```bash
