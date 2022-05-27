@@ -32,6 +32,7 @@ import { BiSliderAlt } from 'react-icons/bi'
 import Advanced from './Advanced'
 import Commands from './Commands'
 import General from './General'
+import styles from './styles.less'
 
 interface Props {}
 
@@ -91,7 +92,7 @@ const PreferencePanel = (props: Props) => {
         </DrawerHeader>
 
         <DrawerBody>
-          <Tabs>
+          <Tabs className={styles.tabs}>
             <TabList>
               <Tab>{lang.general}</Tab>
               <Tab>{lang.commands}</Tab>
@@ -99,7 +100,7 @@ const PreferencePanel = (props: Props) => {
               <Tab>{lang.advanced}</Tab>
             </TabList>
 
-            <TabPanels>
+            <TabPanels className={styles.tab_panels}>
               <TabPanel>
                 <General data={data} onChange={onUpdate} />
               </TabPanel>
