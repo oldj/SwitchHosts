@@ -1,5 +1,5 @@
 /**
- * EditHosts
+ * EditHostsInfo
  * @author: oldj
  * @homepage: https://oldj.net
  */

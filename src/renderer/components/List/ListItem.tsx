@@ -7,17 +7,18 @@
 import { useModel } from '@@/plugin-model/useModel'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
-import { agent } from '@renderer/core/agent'
+import { actions, agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
 import { IHostsListObject } from '@root/common/data'
 import { updateOneItem } from '@root/common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
 import { BiEdit } from 'react-icons/bi'
-import { Center } from '@chakra-ui/react'
+import { Center, ToastId, useToast } from '@chakra-ui/react'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.less'
 import events from '@root/common/events'
+import { IMenuItemOption } from '@root/common/types'
 
 interface Props {
   data: IHostsListObject
@@ -34,6 +35,9 @@ const ListItem = (props: Props) => {
   const [is_on, setIsOn] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
+  const ref_toast_refresh = useRef<ToastId | null>(null)
+
+  const toast = useToast()
 
   useEffect(() => {
     setIsOn(data.on)
@@ -95,11 +99,53 @@ const ListItem = (props: Props) => {
           deal_count = selected_ids.length
         }
 
-        const menu = new PopupMenu([
+        let menu_items: IMenuItemOption[] = [
           {
             label: lang.edit,
             click() {
               agent.broadcast(events.edit_hosts_info, data)
+            },
+          },
+          {
+            label: lang.refresh,
+            async click() {
+              ref_toast_refresh.current = toast({
+                status: 'loading',
+                description: lang.loading,
+              })
+
+              actions
+                .refreshHosts(data.id)
+                .then((r) => {
+                  console.log(r)
+                  if (!r.success) {
+                    toast({
+                      status: 'error',
+                      description: r.message || r.code || 'Error!',
+                      isClosable: true,
+                    })
+                    return
+                  }
+
+                  toast({
+                    status: 'success',
+                    description: 'OK!',
+                    isClosable: true,
+                  })
+                })
+                .catch((e) => {
+                  console.log(e)
+                  toast({
+                    status: 'error',
+                    description: e.message,
+                    isClosable: true,
+                  })
+                })
+                .finally(() => {
+                  if (ref_toast_refresh.current) {
+                    toast.close(ref_toast_refresh.current)
+                  }
+                })
             },
           },
           {
@@ -117,7 +163,13 @@ const ListItem = (props: Props) => {
               agent.broadcast(events.move_to_trashcan, ids)
             },
           },
-        ])
+        ]
+
+        if (data.type !== 'remote') {
+          menu_items = menu_items.filter((i) => i.label !== lang.refresh)
+        }
+
+        const menu = new PopupMenu(menu_items)
 
         !data.is_sys && !is_tray && menu.show()
         e.preventDefault()

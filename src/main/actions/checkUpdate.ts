@@ -14,7 +14,7 @@ import compareVersions from 'compare-versions'
 import { v4 as uuid4 } from 'uuid'
 
 const getUniqueId = async (): Promise<string> => {
-  let uid: string = await localdb.dict.local.get('uid', '')
+  let uid: string | undefined = await localdb.dict.local.get('uid')
   if (!uid) {
     uid = uuid4()
     await localdb.dict.local.set('uid', uid)
