@@ -11,12 +11,14 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import events from '@root/common/events'
 import React, { useEffect, useState } from 'react'
 import styles from './index.less'
+import { useToast } from '@chakra-ui/react'
 
 interface Props {}
 
 const MainPanel = (props: Props) => {
   const { current_hosts } = useModel('useHostsData')
   const [system_hosts_content, setSystemHostsContent] = useState('')
+  const toast = useToast()
 
   useEffect(() => {
     if (!current_hosts) {
@@ -33,6 +35,17 @@ const MainPanel = (props: Props) => {
     },
     [current_hosts],
   )
+
+  useOnBroadcast(events.cmd_run_result, (result) => {
+    // console.log(result)
+    if (!result.success) {
+      toast({
+        status: 'error',
+        description: result.stderr || 'cmd run error',
+        isClosable: true,
+      })
+    }
+  })
 
   return (
     <div className={styles.root}>

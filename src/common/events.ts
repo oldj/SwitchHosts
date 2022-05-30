@@ -8,6 +8,7 @@ export default {
   add_new: 'add_new',
   browser_link: 'browser_link',
   close_find: 'close_find',
+  cmd_run_result: 'cmd_run_result',
   config_updated: 'config_updated',
   edit_hosts_info: 'edit_hosts_info',
   editor_content_change: 'editor:content_change',

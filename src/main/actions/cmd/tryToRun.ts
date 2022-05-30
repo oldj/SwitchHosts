@@ -7,6 +7,8 @@
 import { cfgdb } from '@main/data'
 import { ICommandRunResult } from '@root/common/data'
 import { exec } from 'child_process'
+import { broadcast } from '@main/core/agent'
+import events from '@root/common/events'
 
 const run = (cmd: string): Promise<ICommandRunResult> =>
   new Promise((resolve) => {
@@ -34,6 +36,7 @@ export default async () => {
   let result = await run(cmd)
   console.log(result)
   await cfgdb.collection.cmd_history.insert(result)
+  broadcast(events.cmd_run_result, result)
 
   // auto delete old records
   const max_records = 200
