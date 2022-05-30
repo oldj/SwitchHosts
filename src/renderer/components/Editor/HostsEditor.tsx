@@ -24,24 +24,18 @@ import styles from './HostsEditor.less'
 
 modeHosts()
 
-interface Props {
-  hosts: {
-    id: string
-    content?: string
-  }
-}
+interface Props {}
 
 const HostsEditor = (props: Props) => {
-  const { hosts } = props
-  const { hosts_data, isReadOnly } = useModel('useHostsData')
-  const [hosts_id, setHostsId] = useState(hosts.id)
-  const [content, setContent] = useState(hosts.content || '')
+  const { current_hosts, hosts_data, isReadOnly } = useModel('useHostsData')
+  const [hosts_id, setHostsId] = useState(current_hosts?.id || '0')
+  const [content, setContent] = useState('')
   const [is_read_only, setIsReadOnly] = useState(true)
   const [find_params, setFindParams] = useState<IFindShowSourceParam | null>(null)
   const ref_el = useRef<HTMLTextAreaElement>(null)
   const ref_cm = useRef<CodeMirror.EditorFromTextArea | null>(null)
 
-  const loadContent = async () => {
+  const loadContent = async (is_new = false) => {
     let cm_editor = ref_cm.current
     if (!cm_editor) {
       setTimeout(loadContent, 100)
@@ -52,24 +46,25 @@ const HostsEditor = (props: Props) => {
       hosts_id === '0' ? await actions.getSystemHosts() : await actions.getHostsContent(hosts_id)
     setContent(content)
     cm_editor.setValue(content)
-    cm_editor.setOption('readOnly', isReadOnly(hosts))
+    if (is_new) {
+      cm_editor.clearHistory()
+    }
   }
 
   useEffect(() => {
-    loadContent()
-      .then(() => {
-        let cm_editor = ref_cm.current
-        if (cm_editor) {
-          cm_editor.clearHistory()
-        }
-      })
-      .catch((e) => console.error(e))
-  }, [hosts_id])
+    console.log(current_hosts)
+    setHostsId(current_hosts?.id || '0')
+    let is_readonly = isReadOnly(current_hosts)
+    setIsReadOnly(is_readonly)
+    if (ref_cm.current) {
+      ref_cm.current.setOption('readOnly', is_readonly)
+    }
+  }, [current_hosts])
 
   useEffect(() => {
-    setHostsId(hosts.id)
-    setIsReadOnly(isReadOnly(hosts))
-  }, [hosts])
+    console.log(hosts_id)
+    loadContent(true).catch((e) => console.error(e))
+  }, [hosts_id])
 
   const { run: toSave } = useDebounceFn(
     (id: string, content: string) => {
@@ -83,7 +78,7 @@ const HostsEditor = (props: Props) => {
 
   const onChange = (content: string) => {
     setContent(content)
-    toSave(hosts.id, content)
+    toSave(hosts_id, content)
   }
 
   const toggleComment = () => {
@@ -140,10 +135,10 @@ const HostsEditor = (props: Props) => {
   }, [])
 
   useEffect(() => {
-    if (find_params && find_params.item_id === hosts.id) {
-      setSelection(find_params).catch((e) => console.error(e))
+    if (find_params && find_params.item_id === hosts_id) {
+      setSelection(find_params, true).catch((e) => console.error(e))
     }
-  }, [hosts, find_params])
+  }, [hosts_id, find_params])
 
   useOnBroadcast(
     events.editor_content_change,
@@ -151,7 +146,7 @@ const HostsEditor = (props: Props) => {
       if (new_content === content) return
       onChange(new_content)
     },
-    [hosts, hosts_id, content],
+    [hosts_id, content],
   )
 
   useOnBroadcast(
@@ -166,26 +161,36 @@ const HostsEditor = (props: Props) => {
   useOnBroadcast(
     events.hosts_refreshed_by_id,
     (id: string) => {
-      if (hosts.id !== '0' && id !== hosts.id) return
+      if (hosts_id !== '0' && hosts_id !== id) return
       loadContent().catch((e) => console.error(e))
     },
-    [hosts, hosts_data],
+    [hosts_id, hosts_data],
   )
 
   useOnBroadcast(
     events.set_hosts_on_status,
     () => {
-      if (hosts.id === '0') {
+      if (hosts_id === '0') {
         loadContent().catch((e) => console.error(e))
       }
     },
-    [hosts],
+    [hosts_id],
+  )
+
+  useOnBroadcast(
+    events.system_hosts_updated,
+    () => {
+      if (hosts_id === '0') {
+        loadContent().catch((e) => console.error(e))
+      }
+    },
+    [hosts_id],
   )
 
   useOnBroadcast(events.editor_gutter_click, onGutterClick, [is_read_only])
   useOnBroadcast(events.toggle_comment, toggleComment, [is_read_only])
 
-  const setSelection = async (params: IFindShowSourceParam) => {
+  const setSelection = async (params: IFindShowSourceParam, repeat = false) => {
     let cm_editor = ref_cm.current
     if (!cm_editor) return
     let doc = cm_editor.getDoc()
@@ -214,7 +219,7 @@ const HostsEditor = (props: Props) => {
     async (params: IFindShowSourceParam) => {
       if (!ref_cm.current) return
 
-      if (params.item_id !== hosts.id) {
+      if (params.item_id !== hosts_id) {
         setFindParams(params)
         setTimeout(() => {
           setFindParams(null)
@@ -224,7 +229,7 @@ const HostsEditor = (props: Props) => {
 
       setSelection(params).catch((e) => console.error(e))
     },
-    [hosts],
+    [hosts_id],
   )
 
   return (
