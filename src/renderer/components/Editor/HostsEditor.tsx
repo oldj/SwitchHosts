@@ -37,34 +37,36 @@ const HostsEditor = (props: Props) => {
   const [hosts_id, setHostsId] = useState(hosts.id)
   const [content, setContent] = useState(hosts.content || '')
   const [is_read_only, setIsReadOnly] = useState(true)
-  const [cm_editor, setCMEditor] =
-    useState<CodeMirror.EditorFromTextArea | null>(null)
-  const el_ref = useRef<HTMLTextAreaElement>(null)
-  const [find_params, setFindParams] = useState<IFindShowSourceParam | null>(
-    null,
-  )
+  const [find_params, setFindParams] = useState<IFindShowSourceParam | null>(null)
+  const ref_el = useRef<HTMLTextAreaElement>(null)
+  const ref_cm = useRef<CodeMirror.EditorFromTextArea | null>(null)
 
   const loadContent = async () => {
-    if (!cm_editor) return
+    let cm_editor = ref_cm.current
+    if (!cm_editor) {
+      setTimeout(loadContent, 100)
+      return
+    }
 
     let content =
-      hosts.id === '0'
-        ? await actions.getSystemHosts()
-        : await actions.getHostsContent(hosts.id)
+      hosts_id === '0' ? await actions.getSystemHosts() : await actions.getHostsContent(hosts_id)
     setContent(content)
     cm_editor.setValue(content)
     cm_editor.setOption('readOnly', isReadOnly(hosts))
   }
 
   useEffect(() => {
-    loadContent().catch((e) => console.error(e))
-  }, [hosts_id, cm_editor])
+    loadContent()
+      .then(() => {
+        let cm_editor = ref_cm.current
+        if (cm_editor) {
+          cm_editor.clearHistory()
+        }
+      })
+      .catch((e) => console.error(e))
+  }, [hosts_id])
 
   useEffect(() => {
-    if (cm_editor && hosts_id !== hosts.id) {
-      setTimeout(() => cm_editor.clearHistory(), 300)
-    }
-
     setHostsId(hosts.id)
     setIsReadOnly(isReadOnly(hosts))
   }, [hosts])
@@ -85,6 +87,7 @@ const HostsEditor = (props: Props) => {
   }
 
   const toggleComment = () => {
+    let cm_editor = ref_cm.current
     if (is_read_only || !cm_editor) return
     cm_editor.toggleComment()
 
@@ -95,6 +98,7 @@ const HostsEditor = (props: Props) => {
   }
 
   const onGutterClick = (n: number) => {
+    let cm_editor = ref_cm.current
     if (is_read_only || !cm_editor) return
 
     let info = cm_editor.lineInfo(n)
@@ -110,22 +114,18 @@ const HostsEditor = (props: Props) => {
 
     cm_editor
       .getDoc()
-      .replaceRange(
-        new_line,
-        { line: info.line, ch: 0 },
-        { line: info.line, ch: line.length },
-      )
+      .replaceRange(new_line, { line: info.line, ch: 0 }, { line: info.line, ch: line.length })
   }
 
   useEffect(() => {
-    if (!el_ref.current) return
+    if (!ref_el.current) return
 
-    let cm = CodeMirror.fromTextArea(el_ref.current, {
+    let cm = CodeMirror.fromTextArea(ref_el.current, {
       lineNumbers: true,
       readOnly: is_read_only,
       mode: 'hosts',
     })
-    setCMEditor(cm)
+    ref_cm.current = cm
 
     cm.setSize('100%', '100%')
 
@@ -154,18 +154,13 @@ const HostsEditor = (props: Props) => {
     [hosts, hosts_id, content],
   )
 
-  useOnBroadcast(events.editor_gutter_click, onGutterClick, [
-    cm_editor,
-    is_read_only,
-  ])
-
   useOnBroadcast(
     events.hosts_refreshed,
     (h: IHostsListObject) => {
-      if (hosts.id !== '0' && h.id !== hosts.id) return
+      if (hosts_id !== '0' && h.id !== hosts_id) return
       loadContent().catch((e) => console.error(e))
     },
-    [hosts, hosts_data, cm_editor],
+    [hosts_id],
   )
 
   useOnBroadcast(
@@ -174,13 +169,8 @@ const HostsEditor = (props: Props) => {
       if (hosts.id !== '0' && id !== hosts.id) return
       loadContent().catch((e) => console.error(e))
     },
-    [hosts, hosts_data, cm_editor],
+    [hosts, hosts_data],
   )
-
-  useOnBroadcast(events.toggle_comment, toggleComment, [
-    cm_editor,
-    is_read_only,
-  ])
 
   useOnBroadcast(
     events.set_hosts_on_status,
@@ -189,10 +179,14 @@ const HostsEditor = (props: Props) => {
         loadContent().catch((e) => console.error(e))
       }
     },
-    [hosts, cm_editor],
+    [hosts],
   )
 
+  useOnBroadcast(events.editor_gutter_click, onGutterClick, [is_read_only])
+  useOnBroadcast(events.toggle_comment, toggleComment, [is_read_only])
+
   const setSelection = async (params: IFindShowSourceParam) => {
+    let cm_editor = ref_cm.current
     if (!cm_editor) return
     let doc = cm_editor.getDoc()
 
@@ -218,7 +212,7 @@ const HostsEditor = (props: Props) => {
   useOnBroadcast(
     events.show_source,
     async (params: IFindShowSourceParam) => {
-      if (!cm_editor) return
+      if (!ref_cm.current) return
 
       if (params.item_id !== hosts.id) {
         setFindParams(params)
@@ -230,16 +224,14 @@ const HostsEditor = (props: Props) => {
 
       setSelection(params).catch((e) => console.error(e))
     },
-    [hosts, cm_editor],
+    [hosts],
   )
 
   return (
     <div className={styles.root}>
-      <div
-        className={clsx(styles.editor, is_read_only && styles.read_only_tag)}
-      >
+      <div className={clsx(styles.editor, is_read_only && styles.read_only_tag)}>
         <textarea
-          ref={el_ref}
+          ref={ref_el}
           defaultValue={content}
           // onChange={e => onChange(e.target.value)}
           // disabled={is_read_only}
