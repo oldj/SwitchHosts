@@ -164,7 +164,7 @@ const doMake = async () => {
           '${productName}_mac_${arch}_${version}(${buildVersion}).${ext}',
       },
       win: {
-        icon: 'assets/app.ico',
+        icon: 'assets/icon.ico',
         //requestedExecutionLevel: 'requireAdministrator'
       },
       nsis: {
