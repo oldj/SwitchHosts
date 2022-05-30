@@ -38,7 +38,7 @@ const makeTray = async () => {
 
   let locale = await configGet('locale')
   if (process.platform === 'linux') {
-    locale = global.system_locale  // configGet() always get undefined on Linux
+    locale = global.system_locale // configGet() always get undefined on Linux
   }
   const i18n = new I18N(locale)
   const { lang } = i18n
@@ -83,6 +83,8 @@ const makeTray = async () => {
   tray.on('double-click', () => broadcast(events.active_main_window))
 
   tray.on('right-click', async () => {
+    let hide_dock_icon = await configGet('hide_dock_icon')
+
     const menu = Menu.buildFromTemplate([
       {
         label: lang._app_name,
@@ -99,7 +101,7 @@ const makeTray = async () => {
         ? <MenuItemConstructorOptions[]>[
             { type: 'separator' },
             {
-              label: lang.toggle_dock_icon,
+              label: hide_dock_icon ? lang.show_dock_icon : lang.hide_dock_icon,
               async click() {
                 let hide_dock_icon = await configGet('hide_dock_icon')
                 hide_dock_icon = !hide_dock_icon
@@ -168,12 +170,14 @@ const getLinuxPosition = () => {
   let x: number
   let y: number
 
-  if (point.x - screen_bounds0.x > screen_bounds.width / 2) {  // display on the right of the active screen
+  if (point.x - screen_bounds0.x > screen_bounds.width / 2) {
+    // display on the right of the active screen
     x = screen_bounds0.x + screen_bounds0.width - window_bounds.width
   } else {
     x = 0
   }
-  if (point.y < screen_bounds.height / 2) {  // display on the top of the active screen
+  if (point.y < screen_bounds.height / 2) {
+    // display on the top of the active screen
     y = 0
   } else {
     y = screen_bounds.height - window_bounds.height
@@ -182,7 +186,7 @@ const getLinuxPosition = () => {
   x = Math.round(x)
   y = Math.round(y)
 
-  return {x, y}
+  return { x, y }
 }
 
 const window = () => {
@@ -204,7 +208,8 @@ const window = () => {
 }
 
 const show = () => {
-  let {x, y} = process.platform === 'linux' ? getLinuxPosition(): getPosition()
+  let { x, y } =
+    process.platform === 'linux' ? getLinuxPosition() : getPosition()
   win.setPosition(x, y, true)
   win.show()
   // win.focus()

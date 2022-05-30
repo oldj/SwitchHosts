@@ -58,7 +58,7 @@ export default {
   help: 'Help',
   hide: 'Hide',
   hide_at_launch: 'Hide at launch',
-  hide_dock_icon: 'Hide dock icon',
+  hide_dock_icon: 'Hide the dock icon',
   hide_history: 'Hide history',
   hide_others: 'Hide others',
   homepage: 'Homepage',
@@ -76,8 +76,6 @@ export default {
   http_api_on_desc:
     'Runs on port {0}, can be used by third-party software such as Alfred to switch hosts.',
   http_api_only_local: 'HTTP API only listen 127.0.0.1',
-  tray_mini_window: 'taskbar icon shortcut',
-  multi_chose_folder_switch_all: 'multi-select folder switch to control sub-items',
   ignore_case: 'Ignore case',
   import: 'Import',
   import_done: 'The import is complete.',
@@ -103,6 +101,8 @@ export default {
   minutes: 'minutes',
   move_items_to_trashcan: 'Move {0} items to trashcan',
   move_to_trashcan: 'Move to trashcan',
+  multi_chose_folder_switch_all:
+    'multi-select folder switch to control sub-items',
   need_to_relaunch: 'Need to relaunch',
   need_to_relaunch_after_setting_changed:
     'The setting has been changed and will take effect after the app is restarted.',
@@ -140,6 +140,7 @@ export default {
   search: 'Search',
   select_all: 'Select all',
   selected: 'Selected',
+  show_dock_icon: 'Show the dock icon',
   show_history: 'Show history',
   show_main_window: 'Show main window',
   show_title_on_tray: 'Show title on tray',
@@ -167,6 +168,7 @@ export default {
   trashcan_clear_confirm: 'Are you sure you want to empty the trashcan?',
   trashcan_delete_confirm: 'Do you want to delete this item completely?',
   trashcan_restore: 'Restore',
+  tray_mini_window: 'taskbar icon shortcut',
   undo: 'Undo',
   unhide: 'Unhide',
   untitled: 'Untitled',
@@ -176,7 +178,8 @@ export default {
     'Would you like to help us improve SwitchHosts by periodically submitting anonymous usage data?',
   usage_data_title: 'Make SwitchHosts better!',
   use_proxy: 'Use proxy',
-  use_system_window_frame: 'Use system window frame, application restart is required',
+  use_system_window_frame:
+    'Use system window frame, application restart is required',
   view: 'View',
   where_is_my_data: 'Where is my data stored?',
   where_is_my_hosts: 'Where is my hosts file?',

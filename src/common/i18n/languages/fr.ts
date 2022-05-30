@@ -1,9 +1,11 @@
 /**
- * @author: oldj
- * @homepage: https://oldj.net
+ * @author: Aktilor
+ * @homepage: https://github.com/Aktilor
  */
 
-export default {
+import { LanguageDict } from '@root/common/types'
+
+const lang: LanguageDict = {
   _app_name: 'SwitchHosts',
   _key: 'fr',
   _name: 'Français',
@@ -76,8 +78,6 @@ export default {
   http_api_on_desc:
     "Actif sur le port {0}, peut être utilisé par un logiciel tier comme Alfred pour changer d'hosts",
   http_api_only_local: "L'API HTTP n'écoute que sur 127.0.0.1",
-  tray_mini_window: 'raccourci de l\'icône de la barre des tâches',
-  multi_chose_folder_switch_all: 'Commutateur de dossier à sélection multiple pour contrôler les sous-éléments',
   ignore_case: 'Ignorer la casse',
   import: 'Importer',
   import_done: "L'importation est terminée",
@@ -103,6 +103,8 @@ export default {
   minutes: 'minutes',
   move_items_to_trashcan: 'Déplacer {0} éléments dans la corbeille',
   move_to_trashcan: 'Déplacer dans la corbeille',
+  multi_chose_folder_switch_all:
+    'Commutateur de dossier à sélection multiple pour contrôler les sous-éléments',
   need_to_relaunch: 'Besoin de redémarrer',
   need_to_relaunch_after_setting_changed:
     "Le paramètre a été modifié et prendra effet après le redémarrage de l'application.",
@@ -140,6 +142,7 @@ export default {
   search: 'Rechercher',
   select_all: 'Tout sélectionner',
   selected: 'Sélectionné',
+  show_dock_icon: "Afficher l'icone dans le Dock",
   show_history: "Afficher l'historique",
   show_main_window: 'Afficher la fenêtre principale',
   show_title_on_tray: 'Afficher le titre dans la barre des menus',
@@ -167,6 +170,7 @@ export default {
   trashcan_clear_confirm: 'Êtes-vous sûr de vouloir vider la corbeille ?',
   trashcan_delete_confirm: 'Voulez-vous supprimer définitivement cet élément ?',
   trashcan_restore: 'Restaurer',
+  tray_mini_window: "raccourci de l'icône de la barre des tâches",
   undo: 'Annuler',
   unhide: 'Démasquer',
   untitled: 'Sans titre',
@@ -177,7 +181,8 @@ export default {
     "Voulez-vous nous aider à améliorer SwitchHosts en soumettant périodiquement vos données d'utilisation de manière anonyme ?",
   usage_data_title: 'Rendez SwitchHosts meilleur !',
   use_proxy: 'Utiliser un proxy',
-  use_system_window_frame: 'Utiliser le cadre de la fenêtre système, le redémarrage de l\'application est requis',
+  use_system_window_frame:
+    "Utiliser le cadre de la fenêtre système, le redémarrage de l'application est requis",
   view: 'Vue',
   where_is_my_data: 'Où sont stockées mes données ?',
   where_is_my_hosts: 'Où est mon fichier hosts ?',
@@ -194,3 +199,5 @@ export default {
   zoom_in: 'Zoommer',
   zoom_out: 'Dézoommer',
 }
+
+export default lang
