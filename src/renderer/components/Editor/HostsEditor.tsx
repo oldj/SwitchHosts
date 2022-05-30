@@ -87,6 +87,11 @@ const HostsEditor = (props: Props) => {
   const toggleComment = () => {
     if (is_read_only || !cm_editor) return
     cm_editor.toggleComment()
+
+    // 光标移到下一行
+    let cursor = cm_editor.getCursor()
+    cursor.line += 1
+    cm_editor.setCursor(cursor)
   }
 
   const onGutterClick = (n: number) => {
