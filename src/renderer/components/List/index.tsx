@@ -13,11 +13,7 @@ import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
 import events from '@root/common/events'
-import {
-  findItemById,
-  getNextSelectedItem,
-  setOnStateOfItem,
-} from '@root/common/hostsFn'
+import { findItemById, getNextSelectedItem, setOnStateOfItem } from '@root/common/hostsFn'
 import { IFindShowSourceParam } from '@root/common/types'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
@@ -35,9 +31,7 @@ const List = (props: Props) => {
     useModel('useHostsData')
   const { configs } = useModel('useConfigs')
   const { lang } = useModel('useI18n')
-  const [selected_ids, setSelectedIds] = useState<string[]>([
-    current_hosts?.id || '0',
-  ])
+  const [selected_ids, setSelectedIds] = useState<string[]>([current_hosts?.id || '0'])
   const [show_list, setShowList] = useState<IHostsListObject[]>([])
   const toast = useToast()
 
@@ -104,11 +98,7 @@ const List = (props: Props) => {
       if (current_hosts) {
         let hosts = findItemById(list, current_hosts.id)
         if (hosts) {
-          agent.broadcast(
-            events.set_hosts_on_status,
-            current_hosts.id,
-            hosts.on,
-          )
+          agent.broadcast(events.set_hosts_on_status, current_hosts.id, hosts.on)
         }
       }
     } else {
@@ -143,9 +133,7 @@ const List = (props: Props) => {
 
   if (!is_tray) {
     useOnBroadcast(events.toggle_item, onToggleItem, [hosts_data, configs])
-    useOnBroadcast(events.write_hosts_to_system, writeHostsToSystem, [
-      hosts_data,
-    ])
+    useOnBroadcast(events.write_hosts_to_system, writeHostsToSystem, [hosts_data])
   } else {
     useOnBroadcast(events.tray_list_updated, loadHostsData)
   }
@@ -159,9 +147,7 @@ const List = (props: Props) => {
 
       if (current_hosts && ids.includes(current_hosts.id)) {
         // 选中删除指定节点后的兄弟节点
-        let next_item = getNextSelectedItem(hosts_data.list, (i) =>
-          ids.includes(i.id),
-        )
+        let next_item = getNextSelectedItem(hosts_data.list, (i) => ids.includes(i.id))
         setCurrentHosts(next_item || null)
         setSelectedIds(next_item ? [next_item.id] : [])
       }
@@ -214,16 +200,11 @@ const List = (props: Props) => {
           setList(list).catch((e) => console.error(e))
         }}
         onSelect={(ids: string[]) => {
-          console.log(ids)
+          // console.log(ids)
           setSelectedIds(ids)
         }}
         nodeRender={(data) => (
-          <ListItem
-            key={data.id}
-            data={data}
-            is_tray={is_tray}
-            selected_ids={selected_ids}
-          />
+          <ListItem key={data.id} data={data} is_tray={is_tray} selected_ids={selected_ids} />
         )}
         collapseArrow={
           <Center w="20px" h="20px">
@@ -241,12 +222,7 @@ const List = (props: Props) => {
         draggingNodeRender={(data) => {
           return (
             <div className={clsx(styles.for_drag)}>
-              <span
-                className={clsx(
-                  styles.icon,
-                  data.type === 'folder' && styles.folder,
-                )}
-              >
+              <span className={clsx(styles.icon, data.type === 'folder' && styles.folder)}>
                 <ItemIcon
                   type={data.is_sys ? 'system' : data.type}
                   is_collapsed={data.is_collapsed}

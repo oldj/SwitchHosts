@@ -29,8 +29,7 @@ interface Props {
 const ListItem = (props: Props) => {
   const { data, is_tray, selected_ids } = props
   const { lang, i18n } = useModel('useI18n')
-  const { hosts_data, setList, current_hosts, setCurrentHosts } =
-    useModel('useHostsData')
+  const { hosts_data, setList, current_hosts, setCurrentHosts } = useModel('useHostsData')
   const [is_collapsed, setIsCollapsed] = useState(!!data.is_collapsed)
   const [is_on, setIsOn] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
@@ -86,11 +85,7 @@ const ListItem = (props: Props) => {
 
   return (
     <div
-      className={clsx(
-        styles.root,
-        is_selected && styles.selected,
-        is_tray && styles.is_tray,
-      )}
+      className={clsx(styles.root, is_selected && styles.selected, is_tray && styles.is_tray)}
       // className={clsx(styles.item, is_selected && styles.selected, is_collapsed && styles.is_collapsed)}
       // style={{ paddingLeft: `${1.3 * level}em` }}
       onContextMenu={(e) => {
@@ -155,9 +150,7 @@ const ListItem = (props: Props) => {
             label:
               deal_count === 1
                 ? lang.move_to_trashcan
-                : i18n.trans('move_items_to_trashcan', [
-                    deal_count.toLocaleString(),
-                  ]),
+                : i18n.trans('move_items_to_trashcan', [deal_count.toLocaleString()]),
             click() {
               let ids = deal_count === 1 ? [data.id] : selected_ids
               agent.broadcast(events.move_to_trashcan, ids)
@@ -184,14 +177,8 @@ const ListItem = (props: Props) => {
       }}
     >
       <div className={styles.title} onClick={onSelect}>
-        <span
-          className={clsx(styles.icon, is_folder && styles.folder)}
-          onClick={toggleIsCollapsed}
-        >
-          <ItemIcon
-            type={data.is_sys ? 'system' : data.type}
-            is_collapsed={data.is_collapsed}
-          />
+        <span className={clsx(styles.icon, is_folder && styles.folder)} onClick={toggleIsCollapsed}>
+          <ItemIcon type={data.is_sys ? 'system' : data.type} is_collapsed={data.is_collapsed} />
         </span>
         {data.title || lang.untitled}
       </div>

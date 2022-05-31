@@ -5,11 +5,7 @@
  */
 
 import { actions } from '@renderer/core/agent'
-import {
-  IHostsBasicData,
-  IHostsListObject,
-  VersionType,
-} from '@root/common/data'
+import { IHostsBasicData, IHostsListObject, VersionType } from '@root/common/data'
 import version from '@root/version.json'
 import { useState } from 'react'
 
@@ -19,9 +15,7 @@ export default function useHostsData() {
     trashcan: [],
     version: version as VersionType,
   })
-  const [current_hosts, setCurrentHosts] = useState<IHostsListObject | null>(
-    null,
-  )
+  const [current_hosts, setCurrentHosts] = useState<IHostsListObject | null>(null)
 
   const loadHostsData = async () => {
     setHostsData(await actions.getBasicData())
@@ -56,10 +50,7 @@ export default function useHostsData() {
       return true // system hosts
     }
 
-    if (
-      hosts.type &&
-      ['group', 'remote', 'folder', 'trashcan'].includes(hosts.type)
-    ) {
+    if (hosts.type && ['group', 'remote', 'folder', 'trashcan'].includes(hosts.type)) {
       return true
     }
 
@@ -75,10 +66,13 @@ export default function useHostsData() {
     hosts_data,
     setHostsData,
     loadHostsData,
+
     setList,
-    isHostsInTrashcan,
-    isReadOnly,
+
     current_hosts,
     setCurrentHosts,
+
+    isHostsInTrashcan,
+    isReadOnly,
   }
 }
