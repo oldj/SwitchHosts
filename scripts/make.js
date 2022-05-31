@@ -73,10 +73,7 @@ const beforeMake = async () => {
   fse.ensureDirSync(dist_dir)
 
   const to_cp = [
-    [
-      path.join(root_dir, 'assets', 'app.png'),
-      path.join(root_dir, 'build', 'assets', 'app.png'),
-    ],
+    [path.join(root_dir, 'assets', 'app.png'), path.join(root_dir, 'build', 'assets', 'app.png')],
   ]
 
   to_cp.map(([src, target]) => {
@@ -160,8 +157,7 @@ const doMake = async () => {
           },
         ],
         sign: false,
-        artifactName:
-          '${productName}_mac_${arch}_${version}(${buildVersion}).${ext}',
+        artifactName: '${productName}_mac_${arch}_${version}(${buildVersion}).${ext}',
       },
       win: {
         icon: 'assets/icon.ico',
@@ -171,17 +167,14 @@ const doMake = async () => {
         installerIcon: 'assets/installer-icon.ico',
         oneClick: false,
         allowToChangeInstallationDirectory: true,
-        artifactName:
-          '${productName}_installer_${arch}_${version}(${buildVersion}).${ext}',
+        artifactName: '${productName}_windows_installer_${arch}_${version}(${buildVersion}).${ext}',
       },
       portable: {
-        artifactName:
-          '${productName}_portable_${arch}_${version}(${buildVersion}).${ext}',
+        artifactName: '${productName}_windows_portable_${arch}_${version}(${buildVersion}).${ext}',
       },
       linux: {
         icon: 'assets/app.icns',
-        artifactName:
-          '${productName}_linux_${arch}_${version}(${buildVersion}).${ext}',
+        artifactName: '${productName}_linux_${arch}_${version}(${buildVersion}).${ext}',
         category: 'Utility',
         synopsis: 'An App for hosts management and switching.',
         desktop: {
