@@ -52,7 +52,7 @@ const HostsEditor = (props: Props) => {
   }
 
   useEffect(() => {
-    console.log(current_hosts)
+    // console.log(current_hosts)
     setHostsId(current_hosts?.id || '0')
     let is_readonly = isReadOnly(current_hosts)
     setIsReadOnly(is_readonly)
@@ -234,7 +234,7 @@ const HostsEditor = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      <div className={clsx(styles.editor, is_read_only && styles.read_only_tag)}>
+      <div className={clsx(styles.editor, is_read_only && styles.read_only)}>
         <textarea
           ref={ref_el}
           defaultValue={content}
