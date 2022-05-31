@@ -48,12 +48,12 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
   try {
     console.log(`-> refreshHosts URL: "${url}"`)
     if (url.startsWith('file://')) {
-      new_content = await fs.promises.readFile(new URL(url) ,'utf-8')
+      new_content = await fs.promises.readFile(new URL(url), 'utf-8')
     } else {
       let resp = await GET(url)
       new_content = resp.data
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error(e)
     return {
       success: false,
