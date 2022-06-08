@@ -7,7 +7,6 @@
 require('dotenv').config()
 const version = require('../src/version.json')
 const builder = require('electron-builder')
-const myExec = require('./libs/my_exec')
 const fse = require('fs-extra')
 const homedir = require('os').homedir()
 const path = require('path')
