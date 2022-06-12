@@ -16,7 +16,7 @@ export default async () => {
     return
   }
 
-  console.log(`Systel locale: ${locale}`)
+  console.log(`System locale: ${locale}`)
   if (locale.startsWith('en')) {
     locale = 'en'
   } else if (locale.startsWith('zh')) {
@@ -25,6 +25,8 @@ export default async () => {
     locale = 'fr'
   } else if (locale.startsWith('de')) {
     locale = 'de'
+  } else if (locale.startsWith('ja')) {
+    locale = 'ja'
   }
 
   if (!isLocaleName(locale)) {

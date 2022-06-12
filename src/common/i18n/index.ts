@@ -8,6 +8,7 @@ import en from './languages/en'
 import zh from './languages/zh'
 import fr from './languages/fr'
 import de from './languages/de'
+import ja from './languages/ja'
 import { LanguageDict, LanguageKey } from '@root/common/types'
 
 export const languages = {
@@ -17,6 +18,7 @@ export const languages = {
   'zh-CN': zh,
   fr,
   de,
+  ja,
 }
 
 export type LocaleName = keyof typeof languages
