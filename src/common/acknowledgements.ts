@@ -31,4 +31,5 @@ export default [
   { name: 'ClDaniel1', link: 'https://github.com/ClDaniel1' },
   { name: 'moonheart', link: 'https://github.com/moonheart' },
   { name: 'Wang Weitao', link: 'https://github.com/watonyweng' },
+  { name: 'kamatte', link: 'https://github.com/kamatte-me' },
 ]
