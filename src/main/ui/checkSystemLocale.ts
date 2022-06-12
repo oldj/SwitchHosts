@@ -25,6 +25,8 @@ export default async () => {
     locale = 'fr'
   } else if (locale.startsWith('de')) {
     locale = 'de'
+  } else if (locale.startsWith('ja')) {
+    locale = 'ja'
   }
 
   if (!isLocaleName(locale)) {
