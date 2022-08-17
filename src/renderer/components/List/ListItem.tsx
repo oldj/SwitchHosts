@@ -143,10 +143,10 @@ const ListItem = (props: Props) => {
                 })
             },
           },
-          {
+          !is_on ? {
             type: 'separator',
-          },
-          {
+          } : {},
+          !is_on ? {
             label:
               deal_count === 1
                 ? lang.move_to_trashcan
@@ -155,14 +155,14 @@ const ListItem = (props: Props) => {
               let ids = deal_count === 1 ? [data.id] : selected_ids
               agent.broadcast(events.move_to_trashcan, ids)
             },
-          },
+          } : {},
         ]
 
         if (data.type !== 'remote') {
           menu_items = menu_items.filter((i) => i.label !== lang.refresh)
         }
 
-        const menu = new PopupMenu(menu_items)
+        const menu = new PopupMenu(menu_items.filter(item => Object.keys(item).length))
 
         !data.is_sys && !is_tray && menu.show()
         e.preventDefault()
