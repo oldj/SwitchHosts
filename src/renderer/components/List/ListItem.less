@@ -1,8 +1,7 @@
 @import "../../styles/common";
 
 .root {
-  display: grid;
-  grid-template-columns: 1fr 30px;
+  display: flex;
 
   &.selected:not(.is_tray):hover {
     .edit {
@@ -11,9 +10,8 @@
   }
 
   .edit {
-    position: absolute;
     z-index: 10;
-    margin-left: -24px;
+
     //background: var(--swh-selected-bg);
     padding: 0 2px;
     display: none;
@@ -33,6 +31,7 @@
 }
 
 .title {
+  flex: 1 1 auto;
   position: relative;
   //padding-left: 10px;
   height: var(--swh-tree-row-height);
@@ -75,7 +74,9 @@
 }
 
 .status {
-  text-align: right;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
   margin: auto 6px auto auto;
 }
 
