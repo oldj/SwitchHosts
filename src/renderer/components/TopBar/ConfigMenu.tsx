@@ -50,6 +50,8 @@ const ConfigMenu = (props: Props) => {
         <MenuList
           borderColor="var(--swh-border-color-0)"
           className={styles.menu_list}
+          maxH={"calc(100vh - 80px)"}
+          overflowY={"scroll"}
         >
           <MenuItem
             icon={<BiInfoCircle />}
