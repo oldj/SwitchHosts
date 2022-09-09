@@ -12,6 +12,7 @@ import events from '@root/common/events'
 import version from '@root/version.json'
 import compareVersions from 'compare-versions'
 import { v4 as uuid4 } from 'uuid'
+import type { AxiosResponse } from 'axios'
 
 const getUniqueId = async (): Promise<string> => {
   let uid: string | undefined = await localdb.dict.local.get('uid')
@@ -25,13 +26,18 @@ const getUniqueId = async (): Promise<string> => {
 export default async (): Promise<boolean | null> => {
   // Check the latest version, also used for anonymous statistics of DAU,
   // no personal information will be sent.
+  let r: AxiosResponse | null = null
 
-  let r = await GET(`${server_url}/api/check/`, {
-    sid: global.session_id,
-    uid: await getUniqueId(),
-  })
+  try {
+    r = await GET(`${server_url}/api/check/`, {
+      sid: global.session_id,
+      uid: await getUniqueId(),
+    })
+  } catch (e) {
+    console.error(e)
+  }
 
-  if (r.status !== 200 || !r.data?.success) {
+  if (!r || r.status !== 200 || !r.data?.success) {
     return null
   }
 

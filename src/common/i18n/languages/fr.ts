@@ -84,6 +84,7 @@ const lang: LanguageDict = {
   import_fail: "Échec de l'importation !",
   import_from_url: "Importer à partir d'une URL",
   is_latest_version_inform: 'Super, vous avez la dernière version !',
+  check_update_failed: 'La vérification des mises à jour a échoué !',
   item_found: '{0} élément trouvé.',
   items: 'éléments',
   items_found: '{0} éléments trouvés.',
