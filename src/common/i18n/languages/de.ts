@@ -85,6 +85,7 @@ const lang: LanguageDict = {
   import_fail: 'Der Import ist fehlgeschlagen!',
   import_from_url: 'Importieren von URL',
   is_latest_version_inform: 'Super, Sie haben die neueste Version!',
+  check_update_failed: 'Suche nach Updates fehlgeschlagen!',
   item_found: '{0} Einträge gefunden.',
   items: 'items',
   items_found: '{0} Einträge gefunden.',

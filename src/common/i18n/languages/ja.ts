@@ -84,6 +84,7 @@ const lang: LanguageDict = {
   import_fail: 'インポートに失敗しました！',
   import_from_url: 'URLからインポート',
   is_latest_version_inform: 'ご利用のバージョンは最新です！',
+  check_update_failed: 'アップデートの確認に失敗しました！',
   item_found: '{0}件見つかりました。',
   items: '件',
   items_found: '{0}件見つかりました。',

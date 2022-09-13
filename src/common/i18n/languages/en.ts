@@ -82,6 +82,7 @@ export default {
   import_fail: 'Import failed!',
   import_from_url: 'Import from URL',
   is_latest_version_inform: 'Great, you are running the latest version!',
+  check_update_failed: 'Check for updates failed!',
   item_found: '{0} item found.',
   items: 'items',
   items_found: '{0} items found.',

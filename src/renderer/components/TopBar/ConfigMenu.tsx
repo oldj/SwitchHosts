@@ -73,6 +73,13 @@ const ConfigMenu = (props: Props) => {
                   duration: 3000,
                   isClosable: true,
                 })
+              } else if (r === null) {
+                toast({
+                  description: lang.check_update_failed,
+                  status: 'error',
+                  duration: 3000,
+                  isClosable: true,
+                })
               }
             }}
           >

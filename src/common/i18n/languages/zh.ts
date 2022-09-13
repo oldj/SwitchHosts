@@ -81,6 +81,7 @@ const lang: LanguageDict = {
   import_fail: '导入失败！',
   import_from_url: '从 URL 导入',
   is_latest_version_inform: '太棒了，你正在运行的是最新版本！',
+  check_update_failed: '检查更新失败！',
   item_found: '{0} 项匹配',
   items: '项',
   items_found: '{0} 项匹配',
