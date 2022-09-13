@@ -32,4 +32,5 @@ export default [
   { name: 'moonheart', link: 'https://github.com/moonheart' },
   { name: 'Wang Weitao', link: 'https://github.com/watonyweng' },
   { name: 'kamatte', link: 'https://github.com/kamatte-me' },
+  { name: 'Yuyao Nie', link: 'https://github.com/nieyuyao' },
 ]
