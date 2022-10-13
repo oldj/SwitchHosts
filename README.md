@@ -28,6 +28,11 @@ links:
 
 - [SwitchHosts Download Page (GitHub release)](https://github.com/oldj/SwitchHosts/releases)
 
+You can also install the built version using the [package manager Chocolatey](https://community.chocolatey.org/packages/switchhosts):
+```powershell
+choco install switchhosts
+```
+
 ## Backup
 
 SwitchHosts stores data at `~/.SwitchHosts` (Or folder `.SwitchHosts` under the current user's home
