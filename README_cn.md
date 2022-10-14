@@ -27,6 +27,11 @@ SwitchHosts 是一个管理 hosts 文件的应用，基于 [Electron](http://ele
 
 - [SwitchHosts Download Page (GitHub release)](https://github.com/oldj/SwitchHosts/releases)
 
+你也可以通过 [Chocolatey 包管理器](https://community.chocolatey.org/packages/switchhosts)安装已构建好的版本：
+```powershell
+choco install switchhosts
+```
+
 ## 数据备份
 
 SwitchHosts 的数据文件存储于 `~/.SwitchHosts` (Windows 下存储于用户个人文件夹下的 `.SwitchHosts` 文件夹），
