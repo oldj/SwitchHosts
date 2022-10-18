@@ -1,6 +1,7 @@
 # SwitchHosts
 
 - [English](README.md)
+- [简体中文](README.zh_hans.md)
 
 項目主頁：[https://swh.app](https://swh.app)
 
