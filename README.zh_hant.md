@@ -43,7 +43,7 @@ SwitchHosts 的數據文件儲存於 `~/.SwitchHosts` (Windows 下儲存使用�
 ### 開發
 
 - 安裝 [Node.js](https://nodejs.org/)
-- 在項目根目錄 `./` 下，執行 `npm install` 指令安裝依賴
+- 在項目根目錄 `./` 下，執行 `npm install` 指令安裝前置
 - 執行 `npm run dev` 指令啟動開發服務
 - 執行 `npm run start` 啟動應用程式，即可開始開發及測試
 
