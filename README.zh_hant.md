@@ -24,7 +24,7 @@ SwitchHosts 是一個管理 hosts 檔案的應用程式，基於 [Electron](http
 
 ### 下載
 
-你可以下載原始碼並自行建置，也可以從以下網址下載已經夠建好的版本：
+你可以下載原始碼並自行建置，也可以從以下網址下載已經建置好的版本：
 
 - [SwitchHosts Download Page (GitHub release)](https://github.com/oldj/SwitchHosts/releases)
 
