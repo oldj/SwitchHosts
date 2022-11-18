@@ -62,7 +62,7 @@
     "copy-webpack-plugin": "^11.0.0",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.1",
-    "electron": "^19.0.1",
+    "electron": "^19.0.11",
     "electron-builder": "^23.0.9",
     "electron-notarize": "^1.2.1",
     "espower-typescript": "^10.0.0",
