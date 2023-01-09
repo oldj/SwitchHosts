@@ -3,7 +3,7 @@
 - [简体中文](README.zh_hans.md)
 - [繁體中文](README.zh_hant.md)
 
-Homepage: [https://swh.app](https://swh.app)
+Homepage: [https://switchhosts.vercel.app](https://switchhosts.vercel.app)
 
 SwitchHosts is an App for managing hosts file, it is based on [Electron](http://electron.atom.io/)
 , [React](https://facebook.github.io/react/), [UmiJS](https://umijs.org/)
