@@ -3,7 +3,7 @@
 - [English](README.md)
 - [繁體中文](README.zh_hant.md)
 
-项目主页：[https://swh.app](https://swh.app)
+项目主页：[https://switchhosts.vercel.app](https://switchhosts.vercel.app)
 
 SwitchHosts 是一个管理 hosts 文件的应用，基于 [Electron](http://electron.atom.io/)
 、[React](https://facebook.github.io/react/)、[UmiJS](https://umijs.org/)

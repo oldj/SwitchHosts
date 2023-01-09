@@ -155,7 +155,7 @@ function run(argv) {
 	<key>readme</key>
 	<string>This workflow is for the SwitchHosts App.
 
-https://swh.app</string>
+https://switchhosts.vercel.app</string>
 	<key>uidata</key>
 	<dict>
 		<key>78D17FD5-9628-4901-A01A-511528D5FC14</key>
@@ -178,6 +178,6 @@ https://swh.app</string>
 	<key>version</key>
 	<string>1.3.0</string>
 	<key>webaddress</key>
-	<string>https://swh.app</string>
+	<string>https://switchhosts.vercel.app</string>
 </dict>
 </plist>
