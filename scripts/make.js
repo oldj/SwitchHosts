@@ -37,7 +37,7 @@ const TARGET_PLATFORMS_configs = {
     win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
   },
   all: {
-    mac: ['dmg:x64', 'dmg:arm64', 'dmg:universal'],
+    mac: ['dmg:x64', 'dmg:arm64'],
     linux: [
       'AppImage:x64',
       'deb:x64',
@@ -100,14 +100,21 @@ const afterMake = async () => {
 const doMake = async () => {
   console.log('-> make...')
 
+  const { MAKE_FOR } = process.env
   let targets = TARGET_PLATFORMS_configs.all
-  if (process.env.MAKE_FOR === 'dev') {
-    targets = TARGET_PLATFORMS_configs.macs
-  } else if (process.env.MAKE_FOR === 'mac') {
+
+  cfg_common.compression = 'maximum'
+  if (MAKE_FOR && MAKE_FOR !== 'all') {
+    cfg_common.compression = 'store'
+  }
+
+  if (MAKE_FOR === 'dev') {
     targets = TARGET_PLATFORMS_configs.mac
-  } else if (process.env.MAKE_FOR === 'win') {
+  } else if (MAKE_FOR === 'mac') {
+    targets = TARGET_PLATFORMS_configs.macs
+  } else if (MAKE_FOR === 'win') {
     targets = TARGET_PLATFORMS_configs.win
-  } else if (process.env.MAKE_FOR === 'linux') {
+  } else if (MAKE_FOR === 'linux') {
     targets = TARGET_PLATFORMS_configs.linux
   }
 

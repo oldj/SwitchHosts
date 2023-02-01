@@ -18,12 +18,14 @@ class Tracer {
 
     let send_usage_data = await configGet('send_usage_data')
     if (send_usage_data) {
-      console.log('send usage data...')
-      await GET(`${server_url}/api/tick/`, {
-        sid: global.session_id,
-        t: 1,
-        a: this.data.join(','),
-      })
+      // Tracking is temporarily disabled.
+      console.log('Tracking is temporarily disabled.')
+      // console.log('send usage data...')
+      // await GET(`${server_url}/api/tick/`, {
+      //   sid: global.session_id,
+      //   t: 1,
+      //   a: this.data.join(','),
+      // })
     }
 
     this.data = []
