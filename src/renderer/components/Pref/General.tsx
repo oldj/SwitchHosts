@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Box,
   Checkbox,
@@ -15,13 +14,14 @@ import {
   Radio,
   RadioGroup,
   Select,
-  VStack,
   Stack,
+  VStack,
 } from '@chakra-ui/react'
 import { agent } from '@renderer/core/agent'
 import { http_api_port } from '@root/common/constants'
 import { ConfigsType, ThemeType } from '@root/common/default_configs'
 import { LocaleName } from '@root/common/i18n'
+import useI18n from '@root/renderer/models/useI18n'
 import React from 'react'
 
 interface IProps {
@@ -31,7 +31,7 @@ interface IProps {
 
 const General = (props: IProps) => {
   const { data, onChange } = props
-  const { i18n, lang } = useModel('useI18n')
+  const { i18n, lang } = useI18n()
   const { platform } = agent
 
   const label_width = 20
@@ -92,8 +92,7 @@ const General = (props: IProps) => {
             </RadioGroup>
             <FormHelperText maxW={'350px'}>
               {data.write_mode === 'append' && lang.write_mode_append_help}
-              {data.write_mode === 'overwrite' &&
-                lang.write_mode_overwrite_help}
+              {data.write_mode === 'overwrite' && lang.write_mode_overwrite_help}
             </FormHelperText>
           </VStack>
         </HStack>
@@ -107,9 +106,7 @@ const General = (props: IProps) => {
               value={data.choice_mode.toString()}
               onChange={(v) =>
                 onChange({
-                  choice_mode: parseInt(
-                    v.toString(),
-                  ) as ConfigsType['choice_mode'],
+                  choice_mode: parseInt(v.toString()) as ConfigsType['choice_mode'],
                 })
               }
             >
@@ -122,9 +119,7 @@ const General = (props: IProps) => {
                 </Radio>
               </HStack>
             </RadioGroup>
-            <FormHelperText maxW={'350px'}>
-              {lang.choice_mode_desc}
-            </FormHelperText>
+            <FormHelperText maxW={'350px'}>{lang.choice_mode_desc}</FormHelperText>
           </VStack>
         </HStack>
       </FormControl>
@@ -134,9 +129,7 @@ const General = (props: IProps) => {
           <HStack>
             <Checkbox
               isChecked={data.show_title_on_tray}
-              onChange={(e) =>
-                onChange({ show_title_on_tray: e.target.checked })
-              }
+              onChange={(e) => onChange({ show_title_on_tray: e.target.checked })}
             >
               {lang.show_title_on_tray}
             </Checkbox>
@@ -185,25 +178,19 @@ const General = (props: IProps) => {
         <VStack align="left">
           <Checkbox
             isChecked={data.remove_duplicate_records}
-            onChange={(e) =>
-              onChange({ remove_duplicate_records: e.target.checked })
-            }
+            onChange={(e) => onChange({ remove_duplicate_records: e.target.checked })}
           >
             {lang.remove_duplicate_records}
           </Checkbox>
-          <FormHelperText pl="20px">
-            {lang.remove_duplicate_records_desc}
-          </FormHelperText>
+          <FormHelperText pl="20px">{lang.remove_duplicate_records_desc}</FormHelperText>
         </VStack>
       </FormControl>
 
       <FormControl>
         <VStack align="left">
           <Checkbox
-              isChecked={data.tray_mini_window}
-              onChange={(e) =>
-                  onChange({ tray_mini_window: e.target.checked })
-              }
+            isChecked={data.tray_mini_window}
+            onChange={(e) => onChange({ tray_mini_window: e.target.checked })}
           >
             {lang.tray_mini_window}
           </Checkbox>
@@ -213,10 +200,8 @@ const General = (props: IProps) => {
       <FormControl>
         <VStack align="left">
           <Checkbox
-              isChecked={data.multi_chose_folder_switch_all}
-              onChange={(e) =>
-                  onChange({ multi_chose_folder_switch_all: e.target.checked })
-              }
+            isChecked={data.multi_chose_folder_switch_all}
+            onChange={(e) => onChange({ multi_chose_folder_switch_all: e.target.checked })}
           >
             {lang.multi_chose_folder_switch_all}
           </Checkbox>
@@ -238,9 +223,7 @@ const General = (props: IProps) => {
             <Checkbox
               isDisabled={!data.http_api_on}
               isChecked={data.http_api_only_local}
-              onChange={(e) =>
-                onChange({ http_api_only_local: e.target.checked })
-              }
+              onChange={(e) => onChange({ http_api_only_local: e.target.checked })}
             >
               {lang.http_api_only_local}
             </Checkbox>

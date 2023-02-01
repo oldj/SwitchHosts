@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { actions, agent } from '@renderer/core/agent'
@@ -19,6 +18,8 @@ import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.less'
 import events from '@root/common/events'
 import { IMenuItemOption } from '@root/common/types'
+import useI18n from '@renderer/models/useI18n'
+import useHostsData from '@renderer/models/useHostsData'
 
 interface Props {
   data: IHostsListObject
@@ -28,8 +29,8 @@ interface Props {
 
 const ListItem = (props: Props) => {
   const { data, is_tray, selected_ids } = props
-  const { lang, i18n } = useModel('useI18n')
-  const { hosts_data, setList, current_hosts, setCurrentHosts } = useModel('useHostsData')
+  const { lang, i18n } = useI18n()
+  const { hosts_data, setList, current_hosts, setCurrentHosts } = useHostsData()
   const [is_collapsed, setIsCollapsed] = useState(!!data.is_collapsed)
   const [is_on, setIsOn] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)

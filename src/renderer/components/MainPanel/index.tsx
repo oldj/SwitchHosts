@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import HostsEditor from '@renderer/components/Editor/HostsEditor'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import events from '@root/common/events'
@@ -12,9 +11,7 @@ import React from 'react'
 import styles from './index.less'
 import { useToast } from '@chakra-ui/react'
 
-interface Props {}
-
-const MainPanel = (props: Props) => {
+const MainPanel = () => {
   const toast = useToast()
 
   useOnBroadcast(events.cmd_run_result, (result) => {

@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Button,
   Input,
@@ -18,6 +17,8 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import { actions } from '@renderer/core/agent'
+import useHostsData from '@root/renderer/models/useHostsData'
+import useI18n from '@root/renderer/models/useI18n'
 import React, { useRef, useState } from 'react'
 import styles from './ImportFromUrl.less'
 
@@ -28,8 +29,8 @@ interface Props {
 
 const ImportFromUrl = (props: Props) => {
   const { is_show, setIsShow } = props
-  const { lang } = useModel('useI18n')
-  const { loadHostsData, setCurrentHosts } = useModel('useHostsData')
+  const { lang } = useI18n()
+  const { loadHostsData, setCurrentHosts } = useHostsData()
   const [url, setUrl] = useState('')
   const ipt_ref = React.useRef<HTMLInputElement>(null)
   const toast = useToast()

@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Box,
   Button,
@@ -16,6 +15,7 @@ import {
 } from '@chakra-ui/react'
 import CommandsHistory from '@renderer/components/Pref/CommandsHistory'
 import { ConfigsType } from '@root/common/default_configs'
+import useI18n from '@root/renderer/models/useI18n'
 import React, { useState } from 'react'
 
 interface IProps {
@@ -25,7 +25,7 @@ interface IProps {
 
 const Commands = (props: IProps) => {
   const { data, onChange } = props
-  const { lang } = useModel('useI18n')
+  const { lang } = useI18n()
   const [show_history, setShowHistory] = useState(false)
 
   const toggleShowHistory = () => {

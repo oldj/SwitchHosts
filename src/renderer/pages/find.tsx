@@ -3,7 +3,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Box,
   Button,
@@ -25,11 +24,7 @@ import { PopupMenu } from '@renderer/core/PopupMenu'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { HostsType } from '@root/common/data'
 import events from '@root/common/events'
-import {
-  IFindItem,
-  IFindPosition,
-  IFindShowSourceParam,
-} from '@root/common/types'
+import { IFindItem, IFindPosition, IFindShowSourceParam } from '@root/common/types'
 import { useDebounce, useDebounceFn } from 'ahooks'
 import clsx from 'clsx'
 import lodash from 'lodash'
@@ -42,9 +37,9 @@ import {
 } from 'react-icons/io5'
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
+import useConfigs from '../models/useConfigs'
+import useI18n from '../models/useI18n'
 import styles from './find.less'
-
-interface Props {}
 
 interface IFindPositionShow extends IFindPosition {
   item_id: string
@@ -55,9 +50,9 @@ interface IFindPositionShow extends IFindPosition {
   is_readonly?: boolean
 }
 
-const find = (props: Props) => {
-  const { lang, i18n, setLocale } = useModel('useI18n')
-  const { configs, loadConfigs } = useModel('useConfigs')
+const find = () => {
+  const { lang, i18n, setLocale } = useI18n()
+  const { configs, loadConfigs } = useConfigs()
   const { colorMode, setColorMode } = useColorMode()
   const [keyword, setKeyword] = useState('')
   const [replace_to, setReplaceTo] = useState('')
@@ -231,9 +226,7 @@ const find = (props: Props) => {
     for (let item of find_result) {
       let { item_id, item_type, splitters } = item
       if (item_type !== 'local' || splitters.length === 0) continue
-      const content = splitters
-        .map((sp) => `${sp.before}${replace_to}${sp.after}`)
-        .join('')
+      const content = splitters.map((sp) => `${sp.before}${replace_to}${sp.after}`).join('')
       await actions.setHostsContent(item_id, content)
       agent.broadcast(events.hosts_refreshed_by_id, item_id)
     }
@@ -256,11 +249,7 @@ const find = (props: Props) => {
     const is_selected = current_result_idx === row_data.index
 
     useEffect(() => {
-      if (
-        el.current &&
-        is_selected &&
-        current_result_idx !== last_scroll_result_idx
-      ) {
+      if (el.current && is_selected && current_result_idx !== last_scroll_result_idx) {
         setlastScrollResultIdx(current_result_idx)
         scrollIntoView(el.current, {
           behavior: 'smooth',
@@ -288,9 +277,7 @@ const find = (props: Props) => {
         title={lang.to_show_source}
       >
         <div className={styles.result_content}>
-          {data.is_readonly ? (
-            <span className={styles.read_only}>{lang.read_only}</span>
-          ) : null}
+          {data.is_readonly ? <span className={styles.read_only}>{lang.read_only}</span> : null}
           <span>{data.before}</span>
           <span className={styles.highlight}>{data.match}</span>
           <span>{data.after}</span>
@@ -400,16 +387,10 @@ const find = (props: Props) => {
           spacing={4}
           // justifyContent="flex-start"
         >
-          <Checkbox
-            checked={is_regexp}
-            onChange={(e) => setIsRegExp(e.target.checked)}
-          >
+          <Checkbox checked={is_regexp} onChange={(e) => setIsRegExp(e.target.checked)}>
             {lang.regexp}
           </Checkbox>
-          <Checkbox
-            checked={is_ignore_case}
-            onChange={(e) => setIsIgnoreCase(e.target.checked)}
-          >
+          <Checkbox checked={is_ignore_case} onChange={(e) => setIsIgnoreCase(e.target.checked)}>
             {lang.ignore_case}
           </Checkbox>
         </HStack>
@@ -430,9 +411,7 @@ const find = (props: Props) => {
         >
           <List
             width={'100%'}
-            height={
-              ref_result_box.current ? ref_result_box.current.clientHeight : 0
-            }
+            height={ref_result_box.current ? ref_result_box.current.clientHeight : 0}
             itemCount={find_positions.length}
             itemSize={28}
           >
@@ -451,10 +430,9 @@ const find = (props: Props) => {
             <Spinner />
           ) : (
             <span>
-              {i18n.trans(
-                find_positions.length > 1 ? 'items_found' : 'item_found',
-                [find_positions.length.toLocaleString()],
-              )}
+              {i18n.trans(find_positions.length > 1 ? 'items_found' : 'item_found', [
+                find_positions.length.toLocaleString(),
+              ])}
             </span>
           )}
           <Spacer />
@@ -470,9 +448,7 @@ const find = (props: Props) => {
             size="sm"
             variant="solid"
             colorScheme="blue"
-            isDisabled={
-              is_searching || find_positions.length === 0 || !can_replace
-            }
+            isDisabled={is_searching || find_positions.length === 0 || !can_replace}
             onClick={replaceOne}
           >
             {lang.replace}
@@ -499,8 +475,7 @@ const find = (props: Props) => {
               icon={<IoArrowForwardOutline />}
               onClick={() => {
                 let idx = current_result_idx + 1
-                if (idx > find_positions.length - 1)
-                  idx = find_positions.length - 1
+                if (idx > find_positions.length - 1) idx = find_positions.length - 1
                 setCurrentResultIdx(idx)
               }}
               isDisabled={current_result_idx >= find_positions.length - 1}

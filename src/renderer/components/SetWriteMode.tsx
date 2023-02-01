@@ -3,7 +3,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Box,
   Button,
@@ -23,6 +22,8 @@ import events from '@root/common/events'
 import React, { useState } from 'react'
 import styles from './SetWriteMode.less'
 import { WriteModeType } from '@root/common/default_configs'
+import useI18n from '@renderer/models/useI18n'
+import useConfigs from '../models/useConfigs'
 
 interface Props {}
 
@@ -31,15 +32,13 @@ interface IPendingData {
   on: boolean
 }
 
-const SetWriteMode = (props: Props) => {
-  const { updateConfigs } = useModel('useConfigs')
-  const { lang } = useModel('useI18n')
+const SetWriteMode = () => {
+  const { updateConfigs } = useConfigs()
+  const { lang } = useI18n()
   const [is_show, setIsShow] = useState(false)
   const ipt_ref = React.useRef<HTMLInputElement>(null)
   const [write_mode, setWriteMode] = useState<WriteModeType>(null)
-  const [pending_data, setPendingData] = useState<IPendingData | undefined>(
-    undefined,
-  )
+  const [pending_data, setPendingData] = useState<IPendingData | undefined>(undefined)
 
   const onCancel = () => {
     setIsShow(false)

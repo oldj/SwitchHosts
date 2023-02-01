@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Button,
   Input,
@@ -20,12 +19,11 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@root/common/data'
 import events from '@root/common/events'
 import React, { useState } from 'react'
+import useI18n from '../models/useI18n'
 import styles from './SudoPasswordInput.less'
 
-interface Props {}
-
-const SudoPasswordInput = (props: Props) => {
-  const { lang } = useModel('useI18n')
+const SudoPasswordInput = () => {
+  const { lang } = useI18n()
   const [is_show, setIsShow] = useState(false)
   const [pswd, setPswd] = useState('')
   const [tmp_list, setTmpList] = useState<IHostsListObject[] | undefined>()

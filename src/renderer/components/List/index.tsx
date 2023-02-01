@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import { Center, useToast } from '@chakra-ui/react'
 import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
@@ -15,11 +14,14 @@ import { IHostsListObject } from '@root/common/data'
 import events from '@root/common/events'
 import { findItemById, getNextSelectedItem, setOnStateOfItem } from '@root/common/hostsFn'
 import { IFindShowSourceParam } from '@root/common/types'
+import useI18n from '@root/renderer/models/useI18n'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
 import styles from './index.less'
 import ListItem from './ListItem'
+import useConfigs from '@renderer/models/useConfigs'
+import useHostsData from '@root/renderer/models/useHostsData'
 
 interface Props {
   is_tray?: boolean
@@ -27,10 +29,9 @@ interface Props {
 
 const List = (props: Props) => {
   const { is_tray } = props
-  const { hosts_data, loadHostsData, setList, current_hosts, setCurrentHosts } =
-    useModel('useHostsData')
-  const { configs } = useModel('useConfigs')
-  const { lang } = useModel('useI18n')
+  const { hosts_data, loadHostsData, setList, current_hosts, setCurrentHosts } = useHostsData()
+  const { configs } = useConfigs()
+  const { lang } = useI18n()
   const [selected_ids, setSelectedIds] = useState<string[]>([current_hosts?.id || '0'])
   const [show_list, setShowList] = useState<IHostsListObject[]>([])
   const toast = useToast()
@@ -112,7 +113,7 @@ const List = (props: Props) => {
           agent.broadcast(events.show_sudo_password_input, list)
         }
         // } else {
-        // body = result.message || 'Unknow error!'
+        // body = result.message || 'Unknown error!'
         err_desc = lang.no_access_to_hosts
       }
 

@@ -4,11 +4,11 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import { Box, Flex, HStack, Spacer } from '@chakra-ui/react'
 import React from 'react'
 import prettyBytes from 'pretty-bytes'
 import styles from './StatusBar.less'
+import useI18n from '../models/useI18n'
 
 interface Props {
   line_count: number
@@ -18,7 +18,7 @@ interface Props {
 
 const StatusBar = (props: Props) => {
   const { line_count, bytes, read_only } = props
-  const { i18n } = useModel('useI18n')
+  const { i18n } = useI18n()
 
   return (
     <Flex className={styles.root} px="10px" userSelect="none">

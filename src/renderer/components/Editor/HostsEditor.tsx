@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import StatusBar from '@renderer/components/StatusBar'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -21,13 +20,12 @@ import React, { useEffect, useRef, useState } from 'react'
 import modeHosts from './cm_hl'
 import './codemirror.less'
 import styles from './HostsEditor.less'
+import useHostsData from '@renderer/models/useHostsData'
 
 modeHosts()
 
-interface Props {}
-
-const HostsEditor = (props: Props) => {
-  const { current_hosts, hosts_data, isReadOnly } = useModel('useHostsData')
+const HostsEditor = () => {
+  const { current_hosts, hosts_data, isReadOnly } = useHostsData()
   const [hosts_id, setHostsId] = useState(current_hosts?.id || '0')
   const [content, setContent] = useState('')
   const [is_read_only, setIsReadOnly] = useState(true)

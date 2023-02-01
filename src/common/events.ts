@@ -31,7 +31,7 @@ export default {
   toggle_comment: 'toggle_comment',
   toggle_developer_tools: 'toggle_developer_tools',
   toggle_item: 'toggle_item',
-  toggle_left_pannel: 'toggle_left_pannel',
+  toggle_left_panel: 'toggle_left_panel',
   tray_list_updated: 'tray:list_updated',
   write_hosts_to_system: 'write_hosts_to_system',
 }

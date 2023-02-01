@@ -4,17 +4,16 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import ItemIcon from '@renderer/components/ItemIcon'
 import clsx from 'clsx'
 import React from 'react'
 import styles from './SystemHostsItem.less'
+import useI18n from '@renderer/models/useI18n'
+import useHostsData from '@renderer/models/useHostsData'
 
-interface Props {}
-
-const SystemHostsItem = (props: Props) => {
-  const { i18n } = useModel('useI18n')
-  const { current_hosts, setCurrentHosts } = useModel('useHostsData')
+const SystemHostsItem = () => {
+  const { i18n } = useI18n()
+  const { current_hosts, setCurrentHosts } = useHostsData()
 
   const is_selected = !current_hosts
 
@@ -23,10 +22,7 @@ const SystemHostsItem = (props: Props) => {
   }
 
   return (
-    <div
-      className={clsx(styles.root, is_selected && styles.selected)}
-      onClick={showSystemHosts}
-    >
+    <div className={clsx(styles.root, is_selected && styles.selected)} onClick={showSystemHosts}>
       <span className={styles.icon}>
         <ItemIcon type="system" />
       </span>

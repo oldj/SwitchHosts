@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Checkbox,
   FormControl,
@@ -17,6 +16,7 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { ConfigsType, ProtocolType } from '@root/common/default_configs'
+import useI18n from '@root/renderer/models/useI18n'
 import React, { useState } from 'react'
 
 interface IProps {
@@ -26,7 +26,7 @@ interface IProps {
 
 const General = (props: IProps) => {
   const { data, onChange } = props
-  const { lang } = useModel('useI18n')
+  const { lang } = useI18n()
   const [is_use, setIsUse] = useState(data.use_proxy)
 
   const label_width = 20
@@ -55,9 +55,7 @@ const General = (props: IProps) => {
             w="200px"
             isDisabled={!is_use}
             value={data.proxy_protocol}
-            onChange={(e) =>
-              onChange({ proxy_protocol: e.target.value as ProtocolType })
-            }
+            onChange={(e) => onChange({ proxy_protocol: e.target.value as ProtocolType })}
           >
             <option value="http">HTTP</option>
             <option value="https">HTTPS</option>

@@ -6,10 +6,11 @@
 
 import { actions } from '@renderer/core/agent'
 import { ConfigsType } from '@root/common/default_configs'
-import { useEffect, useState } from 'react'
+import { useAtom } from 'jotai'
+import { configs_atom } from '@renderer/stores/configs'
 
 export default function useConfigs() {
-  const [configs, setConfigs] = useState<ConfigsType | null>(null)
+  const [configs, setConfigs] = useAtom(configs_atom)
 
   const loadConfigs = async () => {
     setConfigs(await actions.configAll())
@@ -22,10 +23,6 @@ export default function useConfigs() {
     setConfigs(new_configs)
     await actions.configUpdate(new_configs)
   }
-
-  useEffect(() => {
-    loadConfigs()
-  }, [])
 
   return {
     configs,

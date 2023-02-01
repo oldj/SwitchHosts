@@ -4,9 +4,9 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import { LocaleName } from '@root/common/i18n'
 import React from 'react'
+import useI18n from '@renderer/models/useI18n'
 
 interface Props {
   locale: LocaleName
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const Lang = (props: Props): React.ReactElement | null => {
-  const { locale } = useModel('useI18n')
+  const { locale } = useI18n()
 
   if (locale !== props.locale) {
     return null
