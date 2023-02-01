@@ -4,16 +4,16 @@
  * @homepage: https://oldj.net
  */
 
-import { Center } from '@chakra-ui/react'
 import TrashcanItem from '@renderer/components/LeftPanel/TrashcanItem'
 import list_styles from '@renderer/components/List/index.module.scss'
 import { Tree } from '@renderer/components/Tree'
 import { ITrashcanListObject } from '@common/data'
 import React, { useEffect, useState } from 'react'
-import { BiChevronRight } from 'react-icons/bi'
 import styles from './Trashcan.module.scss'
 import useI18n from '@renderer/models/useI18n'
 import useHostsData from '@renderer/models/useHostsData'
+import { IconChevronRight } from '@tabler/icons-react'
+import Center from '../../widgets/Center'
 
 const Trashcan = () => {
   const { lang } = useI18n()
@@ -67,7 +67,7 @@ const Trashcan = () => {
         nodeRender={(item) => <TrashcanItem data={item as ITrashcanListObject} />}
         collapseArrow={
           <Center w="20px" h="20px">
-            <BiChevronRight />
+            <IconChevronRight size={12} stroke={3} />
           </Center>
         }
         nodeClassName={list_styles.node}

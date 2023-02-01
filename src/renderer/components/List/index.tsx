@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { Center, useToast } from '@chakra-ui/react'
+import { useToast } from '@chakra-ui/react'
 import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { Tree } from '@renderer/components/Tree'
@@ -17,11 +17,12 @@ import { IFindShowSourceParam } from '@common/types'
 import useI18n from '@renderer/models/useI18n'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
-import { BiChevronRight } from 'react-icons/bi'
 import styles from './index.module.scss'
 import ListItem from './ListItem'
 import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
+import { IconChevronRight } from '@tabler/icons-react'
+import Center from '@renderer/widgets/Center'
 
 interface Props {
   is_tray?: boolean
@@ -209,7 +210,7 @@ const List = (props: Props) => {
         )}
         collapseArrow={
           <Center w="20px" h="20px">
-            <BiChevronRight />
+            <IconChevronRight size={12} stroke={3} />
           </Center>
         }
         nodeAttr={(item) => {

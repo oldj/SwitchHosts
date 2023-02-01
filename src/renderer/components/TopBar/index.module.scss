@@ -14,11 +14,19 @@
   -webkit-user-select: none;
 
   .title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     max-width: calc(100vw - ($w + $p) * 2);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     margin: 0 auto;
+  }
+
+  button[data-role="icon-button"] {
+    width: 32px;
+    height: 32px;
   }
 }
 
@@ -31,6 +39,9 @@
 }
 
 .left, .right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .left {

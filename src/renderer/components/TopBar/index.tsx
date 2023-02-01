@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { Box, Flex, HStack, IconButton } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import ConfigMenu from '@renderer/components/TopBar/ConfigMenu'
@@ -14,8 +13,15 @@ import events from '@common/events'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import React, { useEffect, useState } from 'react'
-import { BiHistory, BiPlus, BiSidebar, BiX } from 'react-icons/bi'
 import styles from './index.module.scss'
+import IconButton from '../../widgets/IconButton'
+import {
+  IconHistory,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
+  IconPlus,
+  IconX,
+} from '@tabler/icons-react'
 
 interface IProps {
   show_left_panel: boolean
@@ -51,26 +57,25 @@ export default (props: IProps) => {
 
   return (
     <div className={styles.root}>
-      <Flex align="center" className={styles.left}>
+      <div className={styles.left}>
         <IconButton
-          aria-label="Toggle sidebar"
-          icon={<BiSidebar />}
           onClick={() => {
             agent.broadcast(events.toggle_left_panel, !show_left_panel)
           }}
-          variant="ghost"
-          mr={1}
-        />
-        <IconButton
-          aria-label="Add"
-          icon={<BiPlus />}
-          onClick={() => agent.broadcast(events.add_new)}
-          variant="ghost"
-        />
-      </Flex>
+        >
+          {show_left_panel ? (
+            <IconLayoutSidebarLeftCollapse size={20} stroke={1.5} />
+          ) : (
+            <IconLayoutSidebarLeftExpand size={20} stroke={1.5} />
+          )}
+        </IconButton>
+        <IconButton aria-label="Add" onClick={() => agent.broadcast(events.add_new)}>
+          <IconPlus size={20} stroke={1.5} />
+        </IconButton>
+      </div>
 
-      <Box className={styles.title_wrapper}>
-        <HStack className={styles.title}>
+      <div className={styles.title_wrapper}>
+        <div className={styles.title}>
           {current_hosts ? (
             <>
               <span className={styles.hosts_icon}>
@@ -90,25 +95,23 @@ export default (props: IProps) => {
           {isReadOnly(current_hosts) ? (
             <span className={styles.read_only}>{lang.read_only}</span>
           ) : null}
-        </HStack>
-      </Box>
+        </div>
+      </div>
 
-      <Flex align="center" justifyContent="flex-end" className={styles.right}>
+      <div className={styles.right}>
         {show_toggle_switch ? (
-          <Box mr={3}>
+          <div>
             <SwitchButton
               on={is_on}
               onChange={(on) => {
                 current_hosts && agent.broadcast(events.toggle_item, current_hosts.id, on)
               }}
             />
-          </Box>
+          </div>
         ) : null}
         {show_history ? (
           <IconButton
-            aria-label="Show history"
-            icon={<BiHistory />}
-            variant="ghost"
+            icon={<IconHistory stroke={1.5} size={20} />}
             onClick={() => agent.broadcast(events.show_history)}
           />
         ) : null}
@@ -117,14 +120,11 @@ export default (props: IProps) => {
 
         {show_close_button ? (
           <IconButton
-            aria-label="Close window"
-            fontSize="20px"
-            icon={<BiX />}
-            variant="ghost"
+            icon={<IconX stroke={1.5} size={20} />}
             onClick={() => actions.closeMainWindow()}
           />
         ) : null}
-      </Flex>
+      </div>
     </div>
   )
 }

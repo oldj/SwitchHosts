@@ -1,4 +1,18 @@
 @import "./themes/light";
 @import "./themes/dark";
 
+:root {
+  --swh-border-radius: 4px;
+  --swh-top-bar-height: 40px;
+  --swh-top-tool-bar-height: 28px;
+
+  --swh-tree-row-height: 2em;
+  --swh-status-bar-height: 22px;
+  --swh-status-bar-font-size: 10px;
+  --swh-right-bar-width: 48px;
+
+  --swh-editor-font-size: 1em;
+  --swh-editor-line-height: 1.8em;
+}
+
 $font-editor: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;

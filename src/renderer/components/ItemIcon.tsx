@@ -4,16 +4,15 @@
  * @homepage: https://oldj.net
  */
 
-import React from 'react'
 import {
-  BiDesktop,
-  BiFile,
-  BiFolder,
-  BiFolderOpen,
-  BiGlobe,
-  BiLayer,
-  BiTrash,
-} from 'react-icons/bi'
+  IconComponents,
+  IconDeviceDesktop,
+  IconFileDescription,
+  IconFolder,
+  IconTrash,
+  IconWorld,
+} from '@tabler/icons-react'
+import React from 'react'
 
 interface Props {
   type?: string
@@ -22,21 +21,33 @@ interface Props {
 
 const ItemIcon = (props: Props) => {
   const { type, is_collapsed } = props
+  let icon: React.ReactNode
 
   switch (type) {
     case 'folder':
-      return is_collapsed ? <BiFolder /> : <BiFolderOpen />
+      icon = is_collapsed ? (
+        <IconFolder size={16} stroke={1.5} />
+      ) : (
+        <IconFolder size={16} stroke={1.5} />
+      )
+      break
     case 'remote':
-      return <BiGlobe />
+      icon = <IconWorld size={16} stroke={1.5} />
+      break
     case 'group':
-      return <BiLayer />
+      icon = <IconComponents size={16} stroke={1.5} />
+      break
     case 'system':
-      return <BiDesktop />
+      icon = <IconDeviceDesktop size={16} stroke={1.5} />
+      break
     case 'trashcan':
-      return <BiTrash />
+      icon = <IconTrash size={16} stroke={1.5} />
+      break
     default:
-      return <BiFile />
+      icon = <IconFileDescription size={16} stroke={1.5} />
   }
+
+  return <div>{icon}</div>
 }
 
 export default ItemIcon

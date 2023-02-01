@@ -1,0 +1,15 @@
+@import "@styles/common.scss";
+
+.root {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  transition: 0.3s;
+  border-radius: 2px;
+
+  &:hover {
+    background: var(--swh-hover-bg);
+  }
+}

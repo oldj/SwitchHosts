@@ -1,4 +1,7 @@
 :global(.theme-light) {
+  //color-scheme
+  --swh-color-scheme: light;
+
   --swh-primary-color: #007aff;
   --swh-border-color-0: #ccc;
   --swh-border-color-1: #d5d3d9;
@@ -6,19 +9,16 @@
   --swh-font-color: #000;
   --swh-font-color-weak: #999;
   --swh-font-color-reverse: #fff;
-  --swh-border-radius: 4px;
   --swh-highlight-bg: #ee0;
+  --swh-hover-bg: #f2f1f5;
 
   //  top bar
-  --swh-top-bar-height: 40px;
-  --swh-top-tool-bar-height: 28px;
   --swh-top-bar-bg: #fff;
   --swh-top-bar-read-only-bg: #f5f5f5;
 
   // left
   --swh-left-panel-bg: #edebf1;
   //--swh-left-panel-status-bar-bg: #f6f6f6;
-  --swh-tree-row-height: 2em;
   --swh-tree-node-drag-bg: #fff;
   --swh-tree-selected-bg: #cbdef6;
   --swh-tree-hover-bg: #f2f1f5;
@@ -27,13 +27,10 @@
   --swh-main-bg: #fff;
 
   // status bar
-  --swh-status-bar-height: 22px;
   --swh-status-bar-bg: #f0f1f1;
   --swh-status-bar-font-color: var(--swh-font-color-weak);
-  --swh-status-bar-font-size: 10px;
 
   // right bar
-  --swh-right-bar-width: 48px;
   --swh-right-bar-bg: #f6f6f6;
 
   // switch button
@@ -50,8 +47,6 @@
   --swh-editor-line-number-color: #999;
   --swh-editor-line-number-bg: #fff;
   --swh-editor-read-only-bg: #f5f5f5;
-  --swh-editor-font-size: 1em;
-  --swh-editor-line-height: 1.8em;
 
   --swh-editor-bg-color: #fff;
   --swh-editor-ip: #096dd9;
@@ -74,7 +69,4 @@
   // other componets
   --tree-drag-select-bg-color: var(--swh-tree-selected-bg);
   --tree-drag-indicator-color: var(--swh-primary-color);
-
-  //color-scheme
-  --swh-color-scheme: light;
 }
