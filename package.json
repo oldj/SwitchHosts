@@ -33,10 +33,6 @@
     "uuid": "8.3.2"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-class-properties": "7.17.12",
-    "@babel/plugin-proposal-decorators": "7.18.2",
-    "@babel/preset-env": "7.18.2",
-    "@babel/preset-typescript": "7.17.12",
     "@chakra-ui/react": "2.1.2",
     "@emotion/react": "11.9.0",
     "@emotion/styled": "11.8.1",
@@ -54,11 +50,9 @@
     "@types/uuid": "8.3.4",
     "@vitejs/plugin-react": "3.0.1",
     "ahooks": "3.4.0",
-    "babel-loader": "8.2.5",
     "clsx": "1.1.1",
     "codemirror": "5.65.4",
     "concurrently": "7.2.1",
-    "copy-webpack-plugin": "11.0.0",
     "cross-env": "7.0.3",
     "dotenv": "16.0.1",
     "electron": "19.1.8",
@@ -66,7 +60,6 @@
     "electron-notarize": "1.2.1",
     "espower-typescript": "10.0.0",
     "execa": "6.1.0",
-    "fork-ts-checker-webpack-plugin": "7.2.11",
     "fs-extra": "10.1.0",
     "jotai": "2.0.0",
     "mocha": "10.0.0",
@@ -82,17 +75,11 @@
     "sass": "1.58.0",
     "smooth-scroll-into-view-if-needed": "1.1.33",
     "ts-node": "10.8.0",
-    "tsconfig-paths-webpack-plugin": "3.5.2",
     "typescript": "4.7.2",
     "vite": "4.0.4",
     "vite-plugin-static-copy": "0.13.0",
     "vite-plugin-svgr": "2.4.0",
-    "vite-tsconfig-paths": "4.0.5",
-    "webpack": "5.72.1",
-    "webpack-cli": "4.9.2",
-    "webpack-merge": "5.8.0",
-    "webpack-node-externals": "3.0.0",
-    "yorkie": "2.0.0"
+    "vite-tsconfig-paths": "4.0.5"
   },
   "build": {
     "afterSign": "scripts/notarize.js"
