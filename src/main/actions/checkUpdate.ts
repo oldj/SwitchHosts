@@ -10,7 +10,7 @@ import { GET } from '@main/libs/request'
 import { server_url } from '@common/constants'
 import events from '@common/events'
 import version from '@/version.json'
-import compareVersions from 'compare-versions'
+import { compareVersions } from 'compare-versions'
 import { v4 as uuid4 } from 'uuid'
 import type { AxiosResponse } from 'axios'
 
