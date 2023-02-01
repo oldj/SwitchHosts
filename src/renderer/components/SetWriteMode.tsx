@@ -18,10 +18,10 @@ import {
 } from '@chakra-ui/react'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@root/common/events'
+import events from '@common/events'
 import React, { useState } from 'react'
-import styles from './SetWriteMode.less'
-import { WriteModeType } from '@root/common/default_configs'
+import styles from './SetWriteMode.module.scss'
+import { WriteModeType } from '@common/default_configs'
 import useI18n from '@renderer/models/useI18n'
 import useConfigs from '../models/useConfigs'
 

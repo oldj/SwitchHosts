@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { LocaleName } from '@root/common/i18n'
+import { LocaleName } from '@common/i18n'
 import React from 'react'
 import useI18n from '@renderer/models/useI18n'
 

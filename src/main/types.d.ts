@@ -5,7 +5,7 @@
  */
 
 import Tracer from '@main/libs/tracer'
-import { LocaleName } from '@root/common/i18n'
+import { LocaleName } from '@common/i18n'
 import SwhDb from 'potdb'
 import { BrowserWindow, WebContents } from 'electron'
 import * as actions from './actions'

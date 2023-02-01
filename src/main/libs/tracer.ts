@@ -1,6 +1,6 @@
 import { configGet } from '@main/actions'
 import { GET } from '@main/libs/request'
-import { server_url } from '@root/common/constants'
+import { server_url } from '@common/constants'
 
 class Tracer {
   data: string[]

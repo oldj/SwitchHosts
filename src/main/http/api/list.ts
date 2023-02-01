@@ -5,15 +5,15 @@
  */
 
 import { getList } from '@main/actions'
-import { IHostsListObject } from '@root/common/data'
-import { flatten } from '@root/common/hostsFn'
+import { IHostsListObject } from '@common/data'
+import { flatten } from '@common/hostsFn'
 import { Request, Response } from 'express'
 
 const list = async (req: Request, res: Response) => {
   let list: IHostsListObject[]
   try {
     list = await getList()
-  } catch (e) {
+  } catch (e: any) {
     res.end(
       JSON.stringify({
         success: false,

@@ -5,8 +5,8 @@
  */
 
 import { configGet } from '@main/actions'
-import { LocaleName } from '@root/common/i18n'
-import { I18N } from '@root/common/i18n'
+import { LocaleName } from '@common/i18n'
+import { I18N } from '@common/i18n'
 
 export default async (locale?: LocaleName): Promise<I18N> => {
   if (!locale) {

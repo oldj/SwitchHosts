@@ -3,11 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  FolderModeType,
-  IHostsBasicData,
-  IHostsListObject,
-} from '@root/common/data'
+import { FolderModeType, IHostsBasicData, IHostsListObject } from '@common/data'
 import lodash from 'lodash'
 
 type PartHostsObjectType = Partial<IHostsListObject> & { id: string }
@@ -77,7 +73,7 @@ export const setOnStateOfItem = (
   id: string,
   on: boolean,
   default_choice_mode: FolderModeType = 0,
-  multi_chose_folder_switch_all: boolean = false
+  multi_chose_folder_switch_all: boolean = false,
 ): IHostsListObject[] => {
   let new_list: IHostsListObject[] = lodash.cloneDeep(list)
 
@@ -86,7 +82,7 @@ export const setOnStateOfItem = (
 
   item.on = on
 
-  let itemIsInTopLevel = isInTopLevel(list, id);
+  let itemIsInTopLevel = isInTopLevel(list, id)
   if (multi_chose_folder_switch_all) {
     item = switchFolderChild(item, on)
     !itemIsInTopLevel && switchItemParentIsON(new_list, item, on)
@@ -129,9 +125,9 @@ export const setOnStateOfItem = (
 }
 
 export const switchItemParentIsON = (
-    list: IHostsListObject[],
-    item: IHostsListObject,
-    on: boolean
+  list: IHostsListObject[],
+  item: IHostsListObject,
+  on: boolean,
 ) => {
   let parent = getParentOfItem(list, item.id)
 
@@ -158,10 +154,7 @@ export const switchItemParentIsON = (
   }
 }
 
-export const switchFolderChild = (
-    item: IHostsListObject,
-    on: boolean,
-): IHostsListObject => {
+export const switchFolderChild = (item: IHostsListObject, on: boolean): IHostsListObject => {
   if (item.type != 'folder') {
     return item
   }
@@ -179,7 +172,7 @@ export const switchFolderChild = (
     })
   }
 
-  return item;
+  return item
 }
 
 export const deleteItemById = (list: IHostsListObject[], id: string) => {

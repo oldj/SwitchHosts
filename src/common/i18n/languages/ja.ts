@@ -3,7 +3,7 @@
  * @homepage: https://kamatte.me
  */
 
-import { LanguageDict } from '@root/common/types'
+import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
   _app_name: 'SwitchHosts',
@@ -22,7 +22,7 @@ const lang: LanguageDict = {
   choice_mode: '選択モード',
   choice_mode_default: 'デフォルト',
   choice_mode_desc:
-      '最上位階層のhostsにのみ有効で、各フォルダーでは独自に選択モードを設定できます。',
+    '最上位階層のhostsにのみ有効で、各フォルダーでは独自に選択モードを設定できます。',
   choice_mode_multiple: '複数',
   choice_mode_single: '単一',
   choices: '選択',
@@ -32,8 +32,7 @@ const lang: LanguageDict = {
   close: '閉じる',
   colon: ': ',
   commands: 'コマンド',
-  commands_help:
-      'hostsが適用されたとき、以下のシステムコマンドを実行します:',
+  commands_help: 'hostsが適用されたとき、以下のシステムコマンドを実行します:',
   commands_title: 'hosts適用後のコマンド',
   comment_current_line: '現在の行をコメントアウト',
   content: '内容',
@@ -76,7 +75,7 @@ const lang: LanguageDict = {
   hours: '時間',
   http_api_on: 'HTTP APIを有効化',
   http_api_on_desc:
-      '{0}番ポートで実行され、Alfredなどのサードパーティソフトウェアでhostsを切り替えるために使用できます。',
+    '{0}番ポートで実行され、Alfredなどのサードパーティソフトウェアでhostsを切り替えるために使用できます。',
   http_api_only_local: 'HTTP APIを 127.0.0.1 のみでリッスンする',
   ignore_case: '大文字と小文字を区別しない',
   import: 'インポート',
@@ -97,18 +96,17 @@ const lang: LanguageDict = {
   local: 'ローカル',
   match: '一致',
   migrate_confirm:
-      'SwitchHosts v4.0は新しいデータ保存形式を使用します。古いデータを新しい形式に移行しますか？',
+    'SwitchHosts v4.0は新しいデータ保存形式を使用します。古いデータを新しい形式に移行しますか？',
   migrate_data: 'データ移行',
   minimize: '最小化',
   minute: '分',
   minutes: '分',
   move_items_to_trashcan: '{0}件をごみ箱に入れる',
   move_to_trashcan: 'ゴミ箱に入れる',
-  multi_chose_folder_switch_all:
-      'フォルダーの切り替えで配下のアイテムを一括操作',
+  multi_chose_folder_switch_all: 'フォルダーの切り替えで配下のアイテムを一括操作',
   need_to_relaunch: '再起動が必要です',
   need_to_relaunch_after_setting_changed:
-      '変更された設定はアプリケーションの再起動後に有効になります。',
+    '変更された設定はアプリケーションの再起動後に有効になります。',
   never: 'なし',
   new: '新規',
   new_version_found: '新しいバージョンが見つかりました',
@@ -132,13 +130,12 @@ const lang: LanguageDict = {
   remote: 'リモート',
   remove_duplicate_records: '重複レコードを削除',
   remove_duplicate_records_desc:
-      '1つのドメインに複数のIPアドレスを指定している場合、先頭のIPアドレスのみが有効になり、以降のIPアドレスはコメントに変換されます。',
+    '1つのドメインに複数のIPアドレスを指定している場合、先頭のIPアドレスのみが有効になり、以降のIPアドレスはコメントに変換されます。',
   replace: '置換',
   replace_all: 'すべて置換',
   replace_history: '置換履歴',
   reset: 'リセット',
-  reset_data_dir_confirm:
-      'データフォルダーの場所をデフォルト ({0}) に戻してもよろしいですか？',
+  reset_data_dir_confirm: 'データフォルダーの場所をデフォルト ({0}) に戻してもよろしいですか？',
   reset_zoom: 'ズームをリセット',
   search: '検索',
   select_all: 'すべて選択',
@@ -152,8 +149,7 @@ const lang: LanguageDict = {
   sudo_prompt_title: '管理者パスワードを入力してください',
   system_hosts: 'システムhosts',
   system_hosts_history: 'システムhostsのバージョン履歴',
-  system_hosts_history_delete_confirm:
-      'この履歴を削除してもよろしいですか？',
+  system_hosts_history_delete_confirm: 'この履歴を削除してもよろしいですか？',
   system_hosts_history_help: '履歴件数がこれを超えると、最も古い履歴が削除されます。',
   system_hosts_history_limit: '履歴の最大件数: ',
   test: 'テスト',
@@ -176,21 +172,18 @@ const lang: LanguageDict = {
   untitled: '無題',
   url_placeholder: 'http:// または https:// または file://',
   usage_data_agree: 'はい、匿名の利用データを送信します。',
-  usage_data_help:
-      '匿名の利用データを定期的に送信し、SwitchHostsの改善にご協力いただけませんか？',
+  usage_data_help: '匿名の利用データを定期的に送信し、SwitchHostsの改善にご協力いただけませんか？',
   usage_data_title: 'SwitchHostsの改善に協力する',
   use_proxy: 'プロキシを使用',
   use_system_window_frame:
-      'システムのウィンドウフレームを使用。アプリケーションの再起動が必要です。',
+    'システムのウィンドウフレームを使用。アプリケーションの再起動が必要です。',
   view: '表示',
   where_is_my_data: 'データはどこに保存されますか？',
   where_is_my_hosts: 'hostsファイルはどこにありますか？',
   window: 'ウィンドウ',
   write_mode: '書き込みモード',
-  write_mode_append_help:
-      '新しいレコードをシステムhostsの末尾に追記します。',
-  write_mode_overwrite_help:
-      '新しいレコードでシステムhostsを上書きします。',
+  write_mode_append_help: '新しいレコードをシステムhostsの末尾に追記します。',
+  write_mode_overwrite_help: '新しいレコードでシステムhostsを上書きします。',
   write_mode_set: '書き込みモードを設定',
   your_data_is: 'あなたのデータファイルはこちらに保存されています:',
   your_hosts_file_is: 'あなたのhostsファイルはこちらにあります:',

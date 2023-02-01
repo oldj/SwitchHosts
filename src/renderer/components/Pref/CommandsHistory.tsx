@@ -18,8 +18,8 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { actions } from '@renderer/core/agent'
-import { ICommandRunResult } from '@root/common/data'
-import useI18n from '@root/renderer/models/useI18n'
+import { ICommandRunResult } from '@common/data'
+import useI18n from '@renderer/models/useI18n'
 import dayjs from 'dayjs'
 import React, { useEffect, useState } from 'react'
 import { BiTrash } from 'react-icons/bi'

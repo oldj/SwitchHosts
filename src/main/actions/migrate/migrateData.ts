@@ -8,9 +8,9 @@
 
 import importV3Data from '@main/actions/migrate/importV3Data'
 import getDataFolder from '@main/libs/getDataDir'
-import { IHostsBasicData, VersionType } from '@root/common/data'
-import { cleanHostsList } from '@root/common/hostsFn'
-import version from '@root/version.json'
+import { IHostsBasicData, VersionType } from '@common/data'
+import { cleanHostsList } from '@common/hostsFn'
+import version from '@/version.json'
 import * as fs from 'fs'
 import path from 'path'
 

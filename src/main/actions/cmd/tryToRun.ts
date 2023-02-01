@@ -5,10 +5,10 @@
  */
 
 import { cfgdb } from '@main/data'
-import { ICommandRunResult } from '@root/common/data'
+import { ICommandRunResult } from '@common/data'
 import { exec } from 'child_process'
 import { broadcast } from '@main/core/agent'
-import events from '@root/common/events'
+import events from '@common/events'
 
 const run = (cmd: string): Promise<ICommandRunResult> =>
   new Promise((resolve) => {
@@ -44,9 +44,7 @@ export default async () => {
   if (all.length > max_records) {
     let n = all.length - max_records
     for (let i = 0; i < n; i++) {
-      await cfgdb.collection.cmd_history.delete(
-        (item) => item._id === all[i]._id,
-      )
+      await cfgdb.collection.cmd_history.delete((item) => item._id === all[i]._id)
     }
   }
 

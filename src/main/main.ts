@@ -1,3 +1,9 @@
+/**
+ * main.ts
+ * @author oldj
+ * @homepage https://oldj.net
+ */
+
 import { configAll, configGet } from '@main/actions'
 import '@main/core/agent'
 import * as message from '@main/core/message'
@@ -12,7 +18,7 @@ import checkSystemLocale from '@main/ui/checkSystemLocale'
 import * as find from '@main/ui/find'
 import { makeMainMenu } from '@main/ui/menu'
 import '@main/ui/tray'
-import version from '@root/version.json'
+import version from '@/version.json'
 import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron'
 import windowStateKeeper from 'electron-window-state'
 import * as path from 'path'

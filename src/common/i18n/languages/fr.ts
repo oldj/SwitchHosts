@@ -3,7 +3,7 @@
  * @homepage: https://github.com/Aktilor
  */
 
-import { LanguageDict } from '@root/common/types'
+import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
   _app_name: 'SwitchHosts',
@@ -32,8 +32,7 @@ const lang: LanguageDict = {
   close: 'Fermer',
   colon: ' : ',
   commands: 'Commandes',
-  commands_help:
-    "Les commandes systèmes suivantes seront exécutées quand l'hosts sera activé :",
+  commands_help: "Les commandes systèmes suivantes seront exécutées quand l'hosts sera activé :",
   commands_title: "Commandes une fois qu'un hosts est activé",
   comment_current_line: 'Commenter cette ligne',
   content: 'Contenu',
@@ -152,8 +151,7 @@ const lang: LanguageDict = {
   sudo_prompt_title: 'Entrez votre mot de passe sudo',
   system_hosts: 'Hosts du système',
   system_hosts_history: 'Historique des versions hosts du système',
-  system_hosts_history_delete_confirm:
-    'Êtes-vous sûr de vouloir supprimer cet élément ?',
+  system_hosts_history_delete_confirm: 'Êtes-vous sûr de vouloir supprimer cet élément ?',
   system_hosts_history_help:
     "Si le nombre total d'enregistrements dépasse cette limite, l'enregistrement le plus ancien sera supprimé.",
   system_hosts_history_limit: "Nombre max. d'enregistrements : ",
@@ -176,8 +174,7 @@ const lang: LanguageDict = {
   unhide: 'Démasquer',
   untitled: 'Sans titre',
   url_placeholder: 'http:// ou https:// ou file://',
-  usage_data_agree:
-    "Oui, soumettre de manière anonyme mes données d'utilisation",
+  usage_data_agree: "Oui, soumettre de manière anonyme mes données d'utilisation",
   usage_data_help:
     "Voulez-vous nous aider à améliorer SwitchHosts en soumettant périodiquement vos données d'utilisation de manière anonyme ?",
   usage_data_title: 'Rendez SwitchHosts meilleur !',

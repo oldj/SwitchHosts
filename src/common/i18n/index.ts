@@ -9,7 +9,7 @@ import zh from './languages/zh'
 import fr from './languages/fr'
 import de from './languages/de'
 import ja from './languages/ja'
-import { LanguageDict, LanguageKey } from '@root/common/types'
+import { LanguageDict, LanguageKey } from '@common/types'
 
 export const languages = {
   en,

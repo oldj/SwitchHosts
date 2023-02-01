@@ -1,20 +1,20 @@
 @import "../../styles/common";
 
 .root {
-  @w: 150px;
-  @p: 10px;
+  $w: 150px;
+  $p: 10px;
 
   background: var(--swh-top-bar-bg);
   border-bottom: 1px solid var(--swh-border-color-0);
   display: flex;
   width: 100%;
-  padding: 0 @p;
+  padding: 0 $p;
   align-items: center;
   align-content: center;
   -webkit-user-select: none;
 
   .title {
-    max-width: calc(100vw - (@w + @p) * 2);
+    max-width: calc(100vw - ($w + $p) * 2);
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -27,7 +27,7 @@
   height: 100%;
   display: flex;
 
-  .win-drag;
+  @include win-drag;
 }
 
 .left, .right {

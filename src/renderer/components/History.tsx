@@ -27,8 +27,8 @@ import {
 import HostsViewer from '@renderer/components/HostsViewer'
 import { actions } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IHostsHistoryObject } from '@root/common/data'
-import events from '@root/common/events'
+import { IHostsHistoryObject } from '@common/data'
+import events from '@common/events'
 import clsx from 'clsx'
 import dayjs from 'dayjs'
 import prettyBytes from 'pretty-bytes'
@@ -36,7 +36,7 @@ import React, { useState } from 'react'
 import { BiDetail, BiHelpCircle, BiHistory, BiTrash } from 'react-icons/bi'
 import useConfigs from '../models/useConfigs'
 import useI18n from '../models/useI18n'
-import styles from './History.less'
+import styles from './History.module.scss'
 
 interface IHistoryProps {
   list: IHostsHistoryObject[]

@@ -18,10 +18,10 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { agent } from '@renderer/core/agent'
-import { http_api_port } from '@root/common/constants'
-import { ConfigsType, ThemeType } from '@root/common/default_configs'
-import { LocaleName } from '@root/common/i18n'
-import useI18n from '@root/renderer/models/useI18n'
+import { http_api_port } from '@common/constants'
+import { ConfigsType, ThemeType } from '@common/default_configs'
+import { LocaleName } from '@common/i18n'
+import useI18n from '@renderer/models/useI18n'
 import React from 'react'
 
 interface IProps {

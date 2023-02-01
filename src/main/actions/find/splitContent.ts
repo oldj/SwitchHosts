@@ -3,16 +3,13 @@
  * @homepage: https://oldj.net
  */
 
-import { IFindPosition, IFindSplitter } from '@root/common/types'
+import { IFindPosition, IFindSplitter } from '@common/types'
 
 type MatchResult = Pick<IFindPosition, 'start' | 'end' | 'match'> & {
   [key: string]: any
 }
 
-export default (
-  content: string,
-  find_results: MatchResult[],
-): IFindSplitter[] => {
+export default (content: string, find_results: MatchResult[]): IFindSplitter[] => {
   let spliters: IFindSplitter[] = []
 
   let last_end = 0

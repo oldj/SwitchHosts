@@ -6,9 +6,9 @@
 
 import HostsEditor from '@renderer/components/Editor/HostsEditor'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@root/common/events'
+import events from '@common/events'
 import React from 'react'
-import styles from './index.less'
+import styles from './index.module.scss'
 import { useToast } from '@chakra-ui/react'
 
 const MainPanel = () => {

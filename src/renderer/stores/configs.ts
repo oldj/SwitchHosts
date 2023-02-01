@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { ConfigsType } from '@root/common/default_configs'
+import { ConfigsType } from '@common/default_configs'
 import { actions } from '@renderer/core/agent'
 import { atom } from 'jotai'
 

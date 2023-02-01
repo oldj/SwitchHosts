@@ -32,8 +32,8 @@
 .result_content {
   //display: flex;
 
-  .code;
-  .ell;
+  @include code;
+  @include ell;
 
   span {
     //display: inline-block;
@@ -53,7 +53,7 @@
   span {
     display: inline-block;
     margin-left: 4px;
-    .ell;
+    @include ell;
   }
 }
 

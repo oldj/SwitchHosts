@@ -1,4 +1,4 @@
-import { ITreeNodeData, NodeIdType } from '@root/common/tree'
+import { ITreeNodeData, NodeIdType } from '@common/tree'
 import lodash from 'lodash'
 import { DropWhereType } from './Tree'
 
@@ -26,20 +26,14 @@ export function flatten(tree_list: ITreeNodeData[]): ITreeNodeData[] {
   return arr
 }
 
-export function getParentList(
-  tree_list: ITreeNodeData[],
-  id: NodeIdType,
-): ITreeNodeData[] {
+export function getParentList(tree_list: ITreeNodeData[], id: NodeIdType): ITreeNodeData[] {
   if (tree_list.findIndex((i) => i.id === id) > -1) {
     return tree_list
   }
 
   let flat = flatten(tree_list)
   for (let node of flat) {
-    if (
-      Array.isArray(node.children) &&
-      node.children.findIndex((i) => i.id === id) > -1
-    ) {
+    if (Array.isArray(node.children) && node.children.findIndex((i) => i.id === id) > -1) {
       return node.children
     }
   }
@@ -91,21 +85,14 @@ export const treeMoveNode = (
   return tree_list
 }
 
-export function getNodeById(
-  tree_list: ITreeNodeData[],
-  id: NodeIdType,
-): ITreeNodeData | undefined {
+export function getNodeById(tree_list: ITreeNodeData[], id: NodeIdType): ITreeNodeData | undefined {
   return flatten(tree_list).find((i) => i.id === id)
 }
 
 /**
  * a is child of b
  */
-export function isChildOf(
-  tree_list: ITreeNodeData[],
-  a_id: NodeIdType,
-  b_id: NodeIdType,
-): boolean {
+export function isChildOf(tree_list: ITreeNodeData[], a_id: NodeIdType, b_id: NodeIdType): boolean {
   if (a_id === b_id) return false
 
   let target_node = getNodeById(tree_list, b_id)
@@ -114,20 +101,13 @@ export function isChildOf(
   return flatten(target_node.children).findIndex((i) => i.id === a_id) > -1
 }
 
-export function isSelfOrChild(
-  item: ITreeNodeData,
-  id: NodeIdType | null,
-): boolean {
+export function isSelfOrChild(item: ITreeNodeData, id: NodeIdType | null): boolean {
   if (!id) return false
   if (item.id === id) return true
   return flatten(item.children || []).findIndex((i) => i.id === id) > -1
 }
 
-export function objKeyMap(
-  obj: IObj,
-  key_maps: KeyMapType[],
-  reversed: boolean = false,
-): IObj {
+export function objKeyMap(obj: IObj, key_maps: KeyMapType[], reversed: boolean = false): IObj {
   if (reversed) {
     key_maps = keyMapReverse(key_maps)
   }
@@ -171,11 +151,7 @@ export function keyMapReverse(key_maps: KeyMapType[]): KeyMapType[] {
   return key_maps.map(([a, b]) => [b, a])
 }
 
-export function isParent(
-  tree_list: ITreeNodeData[],
-  item: ITreeNodeData,
-  id: string,
-): boolean {
+export function isParent(tree_list: ITreeNodeData[], item: ITreeNodeData, id: string): boolean {
   let parents = getParentList(tree_list, item.id)
   return parents.findIndex((i) => i.id === id) > -1
 }
@@ -196,9 +172,7 @@ export function canBeSelected(
   }
 
   let flat = flatten(tree_list)
-  let parent = flat.find(
-    (i) => i.children && i.children.findIndex((j) => j.id === id_one) > -1,
-  )
+  let parent = flat.find((i) => i.children && i.children.findIndex((j) => j.id === id_one) > -1)
   if (!parent || !parent.children) {
     return false
   }
@@ -220,9 +194,7 @@ export function selectTo(
     list = tree_list
   } else {
     let flat = flatten(tree_list)
-    let parent = flat.find(
-      (i) => i.children && i.children.findIndex((j) => j.id === new_id) > -1,
-    )
+    let parent = flat.find((i) => i.children && i.children.findIndex((j) => j.id === new_id) > -1)
     if (!parent || !parent.children) {
       return selected_ids
     }

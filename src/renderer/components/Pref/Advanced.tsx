@@ -16,10 +16,10 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { actions } from '@renderer/core/agent'
-import { ConfigsType } from '@root/common/default_configs'
-import useI18n from '@root/renderer/models/useI18n'
+import { ConfigsType } from '@common/default_configs'
+import useI18n from '@renderer/models/useI18n'
 import React, { useEffect, useState } from 'react'
-import styles from './styles.less'
+import styles from './styles.module.scss'
 
 interface IProps {
   data: ConfigsType

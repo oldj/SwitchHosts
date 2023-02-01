@@ -17,10 +17,10 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import { actions } from '@renderer/core/agent'
-import useHostsData from '@root/renderer/models/useHostsData'
-import useI18n from '@root/renderer/models/useI18n'
+import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
 import React, { useRef, useState } from 'react'
-import styles from './ImportFromUrl.less'
+import styles from './ImportFromUrl.module.scss'
 
 interface Props {
   is_show: boolean

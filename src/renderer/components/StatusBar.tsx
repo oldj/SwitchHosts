@@ -7,7 +7,7 @@
 import { Box, Flex, HStack, Spacer } from '@chakra-ui/react'
 import React from 'react'
 import prettyBytes from 'pretty-bytes'
-import styles from './StatusBar.less'
+import styles from './StatusBar.module.scss'
 import useI18n from '../models/useI18n'
 
 interface Props {

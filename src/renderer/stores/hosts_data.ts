@@ -4,10 +4,9 @@
  * @homepage: https://oldj.net
  */
 
-import { actions } from '@renderer/core/agent'
-import { IHostsBasicData, IHostsListObject, VersionType } from '@root/common/data'
+import { IHostsBasicData, IHostsListObject, VersionType } from '@common/data'
 import { atom } from 'jotai'
-import version from '@root/version.json'
+import version from '@/version.json'
 
 export const hosts_data_atom = atom<IHostsBasicData>({
   list: [],

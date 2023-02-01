@@ -9,6 +9,6 @@
 
 :global(.platform-win32) {
   .list {
-    .swh-scroll-y();
+    @include swh-scroll-y();
   }
 }

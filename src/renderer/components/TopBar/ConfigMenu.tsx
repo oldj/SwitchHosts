@@ -15,10 +15,10 @@ import {
 } from '@chakra-ui/react'
 import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
 import { actions, agent } from '@renderer/core/agent'
-import { feedback_url, homepage_url } from '@root/common/constants'
-import events from '@root/common/events'
-import useHostsData from '@root/renderer/models/useHostsData'
-import useI18n from '@root/renderer/models/useI18n'
+import { feedback_url, homepage_url } from '@common/constants'
+import events from '@common/events'
+import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
 import React, { useState } from 'react'
 import {
   BiCog,
@@ -32,7 +32,7 @@ import {
   BiSliderAlt,
   BiWrench,
 } from 'react-icons/bi'
-import styles from './ConfigMenu.less'
+import styles from './ConfigMenu.module.scss'
 
 const ConfigMenu = () => {
   const { lang } = useI18n()

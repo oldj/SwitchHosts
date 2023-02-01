@@ -6,7 +6,7 @@
 
 import StatusBar from '@renderer/components/StatusBar'
 import React from 'react'
-import styles from './HostsViewer.less'
+import styles from './HostsViewer.module.scss'
 
 interface Props {
   content: string
@@ -27,11 +27,7 @@ const HostsViewer = (props: Props) => {
           <Line line={line} key={idx} />
         ))}
       </div>
-      <StatusBar
-        line_count={lines.length}
-        bytes={content.length}
-        read_only={true}
-      />
+      <StatusBar line_count={lines.length} bytes={content.length} read_only={true} />
     </div>
   )
 }

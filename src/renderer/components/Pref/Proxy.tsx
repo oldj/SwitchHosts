@@ -15,8 +15,8 @@ import {
   Select,
   VStack,
 } from '@chakra-ui/react'
-import { ConfigsType, ProtocolType } from '@root/common/default_configs'
-import useI18n from '@root/renderer/models/useI18n'
+import { ConfigsType, ProtocolType } from '@common/default_configs'
+import useI18n from '@renderer/models/useI18n'
 import React, { useState } from 'react'
 
 interface IProps {

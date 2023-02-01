@@ -4,12 +4,10 @@
  */
 
 import { swhdb } from '@main/data'
-import { IHostsContentObject } from '@root/common/data'
+import { IHostsContentObject } from '@common/data'
 
 export default async (id: string, content: string) => {
-  let d = await swhdb.collection.hosts.find<IHostsContentObject>(
-    (i) => i.id === id,
-  )
+  let d = await swhdb.collection.hosts.find<IHostsContentObject>((i) => i.id === id)
   if (!d || !d._id) {
     await swhdb.collection.hosts.insert({ id, content })
   } else {

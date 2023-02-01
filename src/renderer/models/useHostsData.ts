@@ -5,8 +5,8 @@
  */
 
 import { actions } from '@renderer/core/agent'
-import { IHostsBasicData, IHostsListObject, VersionType } from '@root/common/data'
-import version from '@root/version.json'
+import { IHostsBasicData, IHostsListObject, VersionType } from '@common/data'
+import version from '@/version.json'
 import { useState } from 'react'
 import { useAtom } from 'jotai'
 import { current_hosts_atom, hosts_data_atom } from '@renderer/stores/hosts_data'

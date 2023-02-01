@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { LocaleName } from '@root/common/i18n'
+import { LocaleName } from '@common/i18n'
 import { useAtom } from 'jotai'
 import { i18n_atom, lang_atom, locale_atom } from '@renderer/stores/i18n'
 

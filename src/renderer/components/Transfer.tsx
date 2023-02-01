@@ -8,7 +8,7 @@ import { IoArrowBack, IoArrowForward } from 'react-icons/io5'
 import { Box, Center, Grid, IconButton, VStack } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import clsx from 'clsx'
-import styles from './Transfer.less'
+import styles from './Transfer.module.scss'
 import useI18n from '../models/useI18n'
 
 type IdType = string

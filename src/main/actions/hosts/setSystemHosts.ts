@@ -3,19 +3,14 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  configGet,
-  deleteHistory,
-  getHistoryList,
-  updateTrayTitle,
-} from '@main/actions'
+import { configGet, deleteHistory, getHistoryList, updateTrayTitle } from '@main/actions'
 import tryToRun from '@main/actions/cmd/tryToRun'
 import { broadcast } from '@main/core/agent'
 import { swhdb } from '@main/data'
 import safePSWD from '@main/libs/safePSWD'
 import { IHostsWriteOptions } from '@main/types'
-import { IHostsHistoryObject } from '@root/common/data'
-import events from '@root/common/events'
+import { IHostsHistoryObject } from '@common/data'
+import events from '@common/events'
 import { exec } from 'child_process'
 import * as fs from 'fs'
 import md5 from 'md5'
@@ -68,15 +63,9 @@ const addHistory = async (content: string) => {
   }
 }
 
-const writeWithSudo = (
-  sys_hosts_path: string,
-  content: string,
-): Promise<IWriteResult> =>
+const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteResult> =>
   new Promise((resolve) => {
-    let tmp_fn = path.join(
-      os.tmpdir(),
-      `swh_${new Date().getTime()}_${Math.random()}.txt`,
-    )
+    let tmp_fn = path.join(os.tmpdir(), `swh_${new Date().getTime()}_${Math.random()}.txt`)
     fs.writeFileSync(tmp_fn, content, 'utf-8')
 
     let cmd = [
@@ -117,10 +106,7 @@ const writeWithSudo = (
     })
   })
 
-const write = async (
-  content: string,
-  options?: IHostsWriteOptions,
-): Promise<IWriteResult> => {
+const write = async (content: string, options?: IHostsWriteOptions): Promise<IWriteResult> => {
   const sys_hosts_path = await getPathOfSystemHosts()
   const fn_md5 = await md5File(sys_hosts_path)
   const content_md5 = md5(content)
@@ -184,8 +170,7 @@ const makeAppendContent = async (content: string): Promise<string> => {
   const old_content = await fs.promises.readFile(sys_hosts_path, 'utf-8')
 
   let index = old_content.indexOf(CONTENT_START)
-  let new_content =
-    index > -1 ? old_content.substring(0, index).trimEnd() : old_content
+  let new_content = index > -1 ? old_content.substring(0, index).trimEnd() : old_content
 
   if (!content) {
     return new_content + '\n'
@@ -210,10 +195,7 @@ const setSystemHosts = async (
   if (success) {
     if (typeof old_content === 'string') {
       let histories = await getHistoryList()
-      if (
-        histories.length === 0 ||
-        histories[histories.length - 1].content !== old_content
-      ) {
+      if (histories.length === 0 || histories[histories.length - 1].content !== old_content) {
         await addHistory(old_content)
       }
     }

@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { I18N, LocaleName } from '@root/common/i18n'
+import { I18N, LocaleName } from '@common/i18n'
 import { atom } from 'jotai'
 
 let _locale = localStorage.getItem('locale') as LocaleName | undefined

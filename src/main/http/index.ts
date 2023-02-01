@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { http_api_port } from '@root/common/constants'
+import { http_api_port } from '@common/constants'
 import express from 'express'
 import { Server } from 'http'
 import api_router from './api/index'
@@ -37,9 +37,7 @@ export const start = (http_api_only_local: boolean): boolean => {
   try {
     let listenIp = http_api_only_local ? '127.0.0.1' : '0.0.0.0'
     server = app.listen(http_api_port, listenIp, function () {
-      console.log(
-        `SwitchHosts HTTP server is listening on port ${http_api_port}!`,
-      )
+      console.log(`SwitchHosts HTTP server is listening on port ${http_api_port}!`)
       console.log(`-> http://${listenIp}:${http_api_port}`)
     })
   } catch (e) {

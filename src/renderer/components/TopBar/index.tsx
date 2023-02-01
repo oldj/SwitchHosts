@@ -10,12 +10,12 @@ import SwitchButton from '@renderer/components/SwitchButton'
 import ConfigMenu from '@renderer/components/TopBar/ConfigMenu'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@root/common/events'
-import useHostsData from '@root/renderer/models/useHostsData'
-import useI18n from '@root/renderer/models/useI18n'
+import events from '@common/events'
+import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
 import React, { useEffect, useState } from 'react'
 import { BiHistory, BiPlus, BiSidebar, BiX } from 'react-icons/bi'
-import styles from './index.less'
+import styles from './index.module.scss'
 
 interface IProps {
   show_left_panel: boolean

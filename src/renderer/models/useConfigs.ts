@@ -5,7 +5,7 @@
  */
 
 import { actions } from '@renderer/core/agent'
-import { ConfigsType } from '@root/common/default_configs'
+import { ConfigsType } from '@common/default_configs'
 import { useAtom } from 'jotai'
 import { configs_atom } from '@renderer/stores/configs'
 

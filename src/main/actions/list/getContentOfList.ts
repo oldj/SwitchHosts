@@ -4,9 +4,9 @@
  */
 
 import { configGet, getHostsContent } from '@main/actions'
-import { IHostsListObject } from '@root/common/data'
-import { flatten } from '@root/common/hostsFn'
-import normalize, { INormalizeOptions } from '@root/common/normalize'
+import { IHostsListObject } from '@common/data'
+import { flatten } from '@common/hostsFn'
+import normalize, { INormalizeOptions } from '@common/normalize'
 
 const getContentOfList = async (list: IHostsListObject[]): Promise<string> => {
   const content_list: string[] = []

@@ -5,8 +5,8 @@
 
 import splitContent from '@main/actions/find/splitContent'
 import getContentOfHosts from '@main/actions/hosts/getContent'
-import { flatten } from '@root/common/hostsFn'
-import { IFindItem } from '@root/common/types'
+import { flatten } from '@common/hostsFn'
+import { IFindItem } from '@common/types'
 import findInContent from 'src/main/actions/find/findPositionsInContent'
 import { getList } from '../index'
 
@@ -15,10 +15,7 @@ export interface IFindOptions {
   is_ignore_case: boolean
 }
 
-export default async (
-  keyword: string,
-  options: IFindOptions,
-): Promise<IFindItem[]> => {
+export default async (keyword: string, options: IFindOptions): Promise<IFindItem[]> => {
   console.log(keyword)
   let result_items: IFindItem[] = []
 

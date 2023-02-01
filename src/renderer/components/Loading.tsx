@@ -5,7 +5,7 @@
  */
 
 import React from 'react'
-import styles from './Loading.less'
+import styles from './Loading.module.scss'
 import useI18n from '@renderer/models/useI18n'
 
 const Loading = () => {

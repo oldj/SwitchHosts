@@ -7,7 +7,7 @@
 import ItemIcon from '@renderer/components/ItemIcon'
 import clsx from 'clsx'
 import React from 'react'
-import styles from './SystemHostsItem.less'
+import styles from './SystemHostsItem.module.scss'
 import useI18n from '@renderer/models/useI18n'
 import useHostsData from '@renderer/models/useHostsData'
 

@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { HostsType } from '@root/common/data'
+import { HostsType } from '@common/data'
 import { MenuItemConstructorOptions } from 'electron'
 import { default as lang } from './i18n/languages/en'
 

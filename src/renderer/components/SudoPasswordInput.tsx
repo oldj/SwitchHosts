@@ -16,11 +16,11 @@ import {
 } from '@chakra-ui/react'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IHostsListObject } from '@root/common/data'
-import events from '@root/common/events'
+import { IHostsListObject } from '@common/data'
+import events from '@common/events'
 import React, { useState } from 'react'
 import useI18n from '../models/useI18n'
-import styles from './SudoPasswordInput.less'
+import styles from './SudoPasswordInput.module.scss'
 
 const SudoPasswordInput = () => {
   const { lang } = useI18n()

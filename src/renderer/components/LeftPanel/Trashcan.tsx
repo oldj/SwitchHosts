@@ -6,12 +6,12 @@
 
 import { Center } from '@chakra-ui/react'
 import TrashcanItem from '@renderer/components/LeftPanel/TrashcanItem'
-import list_styles from '@renderer/components/List/index.less'
+import list_styles from '@renderer/components/List/index.module.scss'
 import { Tree } from '@renderer/components/Tree'
-import { ITrashcanListObject } from '@root/common/data'
+import { ITrashcanListObject } from '@common/data'
 import React, { useEffect, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
-import styles from './Trashcan.less'
+import styles from './Trashcan.module.scss'
 import useI18n from '@renderer/models/useI18n'
 import useHostsData from '@renderer/models/useHostsData'
 

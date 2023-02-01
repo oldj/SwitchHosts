@@ -4,12 +4,12 @@
  * @homepage: https://oldj.net
  */
 
-import { ITreeNodeData, NodeIdType } from '@root/common/tree'
+import { ITreeNodeData, NodeIdType } from '@common/tree'
 import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useRef } from 'react'
 import { isChildOf, isSelfOrChild } from './fn'
-import styles from './style.less'
+import styles from './style.module.scss'
 import { DropWhereType, MultipleSelectType } from './Tree'
 
 declare global {
@@ -39,14 +39,8 @@ interface INodeProps {
   onSelect: (id: NodeIdType, multiple_type?: MultipleSelectType) => void
   level: number
   is_dragging: boolean
-  render?: (
-    data: ITreeNodeData,
-    update: NodeUpdate,
-  ) => React.ReactElement | null
-  draggingNodeRender?: (
-    data: ITreeNodeData,
-    source_ids: string[],
-  ) => React.ReactElement
+  render?: (data: ITreeNodeData, update: NodeUpdate) => React.ReactElement | null
+  draggingNodeRender?: (data: ITreeNodeData, source_ids: string[]) => React.ReactElement
   collapseArrow?: string | React.ReactElement
   onChange: (id: NodeIdType, data: Partial<ITreeNodeData>) => void
   indent_px?: number
@@ -135,11 +129,7 @@ const Node = (props: INodeProps) => {
       window._t_dragover_id = data.id
       window._t_dragover_ts = now
     }
-    if (
-      data.children?.length &&
-      data.is_collapsed &&
-      now - window._t_dragover_ts > 1000
-    ) {
+    if (data.children?.length && data.is_collapsed && now - window._t_dragover_ts > 1000) {
       props.onChange(data.id, { is_collapsed: false })
     }
 
@@ -208,9 +198,7 @@ const Node = (props: INodeProps) => {
           styles.node,
           is_dragging && styles.is_dragging,
           (is_drag_source || is_parent_is_drag_source) && styles.is_source,
-          is_drop_target &&
-            drag_target_where === 'before' &&
-            styles.drop_before,
+          is_drop_target && drag_target_where === 'before' && styles.drop_before,
           is_drop_target &&
             drag_target_where === 'in' &&
             (props.nodeDropInClassName || styles.drop_in),
@@ -246,9 +234,7 @@ const Node = (props: INodeProps) => {
         <div
           className={clsx(
             styles.content,
-            props.has_no_child &&
-              props.no_child_no_indent &&
-              styles.no_children,
+            props.has_no_child && props.no_child_no_indent && styles.no_children,
           )}
         >
           <div className={styles.ln_header} data-role="tree-node-header">
@@ -275,10 +261,7 @@ const Node = (props: INodeProps) => {
       </div>
       {draggingNodeRender && (
         <div ref={el_dragging} className={styles.for_dragging}>
-          {draggingNodeRender(
-            data,
-            selected_ids.includes(data.id) ? selected_ids : [data.id],
-          )}
+          {draggingNodeRender(data, selected_ids.includes(data.id) ? selected_ids : [data.id])}
         </div>
       )}
       {has_children && data.children && !data.is_collapsed
@@ -291,10 +274,7 @@ const Node = (props: INodeProps) => {
 }
 
 function diff<T>(a: T[], b: T[]): T[] {
-  return [
-    ...a.filter((i) => !b.includes(i)),
-    ...b.filter((i) => !a.includes(i)),
-  ]
+  return [...a.filter((i) => !b.includes(i)), ...b.filter((i) => !a.includes(i))]
 }
 
 function isEqual(prevProps: INodeProps, nextProps: INodeProps): boolean {

@@ -6,13 +6,13 @@
 
 import { Box, HStack, Image, VStack } from '@chakra-ui/react'
 import { default as Link } from '@renderer/components/BrowserLink'
-import logo from '@root/assets/logo@512w.png'
-import acknowledgements from '@root/common/acknowledgements'
-import { homepage_url, source_url } from '@root/common/constants'
-import useI18n from '@root/renderer/models/useI18n'
-import version from '@root/version.json'
+import logo from '@/assets/logo@512w.png'
+import acknowledgements from '@common/acknowledgements'
+import { homepage_url, source_url } from '@common/constants'
+import useI18n from '@renderer/models/useI18n'
+import version from '@/version.json'
 import React from 'react'
-import styles from './AboutContent.less'
+import styles from './AboutContent.module.scss'
 
 const AboutContent = () => {
   const { lang } = useI18n()

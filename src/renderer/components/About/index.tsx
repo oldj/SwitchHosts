@@ -7,9 +7,9 @@
 import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalOverlay } from '@chakra-ui/react'
 import AboutContent from '@renderer/components/About/AboutContent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@root/common/events'
+import events from '@common/events'
 import React, { useState } from 'react'
-import styles from './index.less'
+import styles from './index.module.scss'
 import useI18n from '@renderer/models/useI18n'
 
 const About = () => {

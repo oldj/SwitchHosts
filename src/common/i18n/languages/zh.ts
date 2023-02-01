@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import { LanguageDict } from '@root/common/types'
+import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
   _app_name: 'SwitchHosts',
@@ -93,8 +93,7 @@ const lang: LanguageDict = {
   loading: '加载中...',
   local: '本地',
   match: '匹配',
-  migrate_confirm:
-    'SwitchHosts v4.0 使用了新的数据存储格式，是否迁移旧数据为新格式？',
+  migrate_confirm: 'SwitchHosts v4.0 使用了新的数据存储格式，是否迁移旧数据为新格式？',
   migrate_data: '迁移数据',
   minimize: '最小化',
   minute: '分钟',
@@ -126,8 +125,7 @@ const lang: LanguageDict = {
   reload: '重载',
   remote: '远程',
   remove_duplicate_records: '移除重复的记录',
-  remove_duplicate_records_desc:
-    '如果一个域名指向多个 IP，只有第一条会生效，后面的将被转为注释。',
+  remove_duplicate_records_desc: '如果一个域名指向多个 IP，只有第一条会生效，后面的将被转为注释。',
   replace: '替换',
   replace_all: '替换所有',
   replace_history: '替换历史',
@@ -147,8 +145,7 @@ const lang: LanguageDict = {
   system_hosts: '系统 Hosts',
   system_hosts_history: '系统 Hosts 历史版本',
   system_hosts_history_delete_confirm: '确实要删除该项记录吗？',
-  system_hosts_history_help:
-    '如果历史记录的总数超过这个限制，最老的记录将被删除。',
+  system_hosts_history_help: '如果历史记录的总数超过这个限制，最老的记录将被删除。',
   system_hosts_history_limit: '最大记录数：',
   test: '测试',
   theme: '主题',

@@ -3,19 +3,11 @@
  * @homepage: https://oldj.net
  */
 
-import { IFindPosition } from '@root/common/types'
+import { IFindPosition } from '@common/types'
 
 type MatchResult = Pick<
   IFindPosition,
-  | 'start'
-  | 'end'
-  | 'before'
-  | 'match'
-  | 'after'
-  | 'line'
-  | 'line_pos'
-  | 'end_line'
-  | 'end_line_pos'
+  'start' | 'end' | 'before' | 'match' | 'after' | 'line' | 'line_pos' | 'end_line' | 'end_line_pos'
 >
 
 export default (content: string, exp: RegExp): MatchResult[] => {

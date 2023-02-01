@@ -6,9 +6,9 @@
 import { getList } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { swhdb } from '@main/data'
-import { IHostsListObject, ITrashcanObject } from '@root/common/data'
-import events from '@root/common/events'
-import * as hostsFn from '@root/common/hostsFn'
+import { IHostsListObject, ITrashcanObject } from '@common/data'
+import events from '@common/events'
+import * as hostsFn from '@common/hostsFn'
 
 export default async (id: string) => {
   let list: IHostsListObject[] = await getList()
