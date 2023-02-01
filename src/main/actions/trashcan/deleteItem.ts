@@ -10,7 +10,9 @@ import { flatten } from '@common/hostsFn'
 export default async (id: string): Promise<boolean> => {
   // Permanently delete the specified item with id.
 
-  let trashcan_item: ITrashcanListObject = await swhdb.list.trashcan.find((i) => i.data.id === id)
+  let trashcan_item: ITrashcanListObject | undefined = await swhdb.list.trashcan.find(
+    (i) => i.data.id === id,
+  )
 
   if (!trashcan_item) {
     console.log(`can't find trashcan_item with id #${id}.`)

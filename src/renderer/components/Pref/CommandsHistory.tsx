@@ -75,7 +75,7 @@ const CommandsHistory = (props: Props) => {
           >
             <AlertIcon />
             <Box flex="1">
-              <AlertTitle d="block">
+              <AlertTitle>
                 <HStack>
                   <span>#{item._id}</span>
                   <span style={{ fontWeight: 'normal' }}>
@@ -91,7 +91,7 @@ const CommandsHistory = (props: Props) => {
                   />
                 </HStack>
               </AlertTitle>
-              <AlertDescription d="block" spacing={3}>
+              <AlertDescription>
                 {item.stdout ? (
                   <>
                     <Box>

@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { Actions } from '@main/types'
+import { Actions } from '@common/types'
 import { IPopupMenuOption } from '@common/types'
 import { contextBridge, ipcRenderer } from 'electron'
 import { EventEmitter } from 'events'
