@@ -6,9 +6,9 @@
 
 import { checkUpdate, getList, refreshHosts } from '@main/actions'
 import { broadcast } from '@main/core/agent'
-import { IHostsListObject } from '@root/common/data'
-import events from '@root/common/events'
-import { flatten } from '@root/common/hostsFn'
+import { IHostsListObject } from '@common/data'
+import events from '@common/events'
+import { flatten } from '@common/hostsFn'
 
 let t: any
 let ts_last_server_check = 0

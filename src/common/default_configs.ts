@@ -1,4 +1,4 @@
-import { LocaleName } from '@root/common/i18n'
+import { LocaleName } from '@common/i18n'
 import { FolderModeType } from './data.d'
 
 export type WriteModeType = null | 'overwrite' | 'append'

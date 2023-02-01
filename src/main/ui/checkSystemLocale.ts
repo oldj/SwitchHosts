@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import { languages, LocaleName } from '@root/common/i18n'
+import { languages, LocaleName } from '@common/i18n'
 import { app } from 'electron'
 
 const isLocaleName = (locale: string): locale is LocaleName => {

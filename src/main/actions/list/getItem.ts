@@ -4,8 +4,8 @@
  */
 
 import { getList } from '@main/actions'
-import { IHostsListObject } from '@root/common/data'
-import { findItemById } from '@root/common/hostsFn'
+import { IHostsListObject } from '@common/data'
+import { findItemById } from '@common/hostsFn'
 
 export default async (id: string): Promise<IHostsListObject | undefined> => {
   let list = await getList()

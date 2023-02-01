@@ -7,7 +7,7 @@
 import { configGet } from '@main/actions'
 import axios, { AxiosRequestConfig } from 'axios'
 import querystring from 'querystring'
-import version from '@root/version.json'
+import version from '@/version.json'
 
 interface IParams {
   [key: string]: string | string[] | number

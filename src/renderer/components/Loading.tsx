@@ -4,14 +4,12 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import React from 'react'
-import styles from './Loading.less'
+import styles from './Loading.module.scss'
+import useI18n from '@renderer/models/useI18n'
 
-interface Props {}
-
-const Loading = (props: Props) => {
-  const { i18n } = useModel('useI18n')
+const Loading = () => {
+  const { i18n } = useI18n()
 
   return <div className={styles.root}>{i18n.lang.loading}</div>
 }

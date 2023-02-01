@@ -5,7 +5,7 @@
  */
 
 import { agent } from '@renderer/core/agent'
-import { IMenuItemOption } from '@root/common/types'
+import { IMenuItemOption } from '@common/types'
 
 let _idx: number = 0
 

@@ -4,12 +4,19 @@
  * @homepage: https://oldj.net
  */
 
-import { HostsType } from '@root/common/data'
-import { MenuItemConstructorOptions } from 'electron'
+import { HostsType } from '@common/data'
+import { MenuItemConstructorOptions, WebContents } from 'electron'
 import { default as lang } from './i18n/languages/en'
+import * as actions from '@main/actions'
 
 export type LanguageDict = typeof lang
 export type LanguageKey = keyof LanguageDict
+
+export interface IActionFunc {
+  sender: WebContents
+}
+
+export type Actions = typeof actions & IActionFunc
 
 export interface IMenuItemOption extends MenuItemConstructorOptions {
   // 参见：https://www.electronjs.org/docs/api/menu-item

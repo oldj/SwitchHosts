@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Box,
   Button,
@@ -28,14 +27,16 @@ import {
 import HostsViewer from '@renderer/components/HostsViewer'
 import { actions } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IHostsHistoryObject } from '@root/common/data'
-import events from '@root/common/events'
+import { IHostsHistoryObject } from '@common/data'
+import events from '@common/events'
 import clsx from 'clsx'
 import dayjs from 'dayjs'
 import prettyBytes from 'pretty-bytes'
 import React, { useState } from 'react'
 import { BiDetail, BiHelpCircle, BiHistory, BiTrash } from 'react-icons/bi'
-import styles from './History.less'
+import useConfigs from '../models/useConfigs'
+import useI18n from '../models/useI18n'
+import styles from './History.module.scss'
 
 interface IHistoryProps {
   list: IHostsHistoryObject[]
@@ -45,7 +46,7 @@ interface IHistoryProps {
 
 const HistoryList = (props: IHistoryProps): React.ReactElement => {
   const { list, selected_item, setSelectedItem } = props
-  const { lang } = useModel('useI18n')
+  const { lang } = useI18n()
 
   if (list.length === 0) {
     return (
@@ -60,13 +61,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
       <Box flex={1} mr={3} borderWidth="1px" borderRadius="md">
         <HostsViewer content={selected_item ? selected_item.content : ''} />
       </Box>
-      <List
-        w="200px"
-        h="100%"
-        overflow="auto"
-        borderWidth="1px"
-        borderRadius="md"
-      >
+      <List w="200px" h="100%" overflow="auto" borderWidth="1px" borderRadius="md">
         {list.map((item) => (
           <ListItem
             key={item.id}
@@ -81,9 +76,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
                 <BiDetail />
               </Box>
               <VStack align="left" spacing={0}>
-                <Box>
-                  {dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}
-                </Box>
+                <Box>{dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}</Box>
                 <HStack lineHeight="14px" fontSize="9px" opacity={0.6}>
                   <Box>{item.content.split('\n').length} lines</Box>
                   <Box>{prettyBytes(item.content.length)}</Box>
@@ -107,14 +100,14 @@ const Loading = (): React.ReactElement => {
 }
 
 const History = () => {
-  const { configs, updateConfigs } = useModel('useConfigs')
+  const { configs, updateConfigs } = useConfigs()
   const [is_open, setIsOpen] = useState(false)
   const [is_loading, setIsLoading] = useState(false)
   const [list, setList] = useState<IHostsHistoryObject[]>([])
   const [selected_item, setSelectedItem] = useState<IHostsHistoryObject>()
   // const btn_close = useRef(null)
 
-  const { lang } = useModel('useI18n')
+  const { lang } = useI18n()
 
   const loadData = async () => {
     setIsLoading(true)
@@ -213,10 +206,7 @@ const History = () => {
                 ))}
               </Select>
             </Box>
-            <Tooltip
-              label={lang.system_hosts_history_help}
-              aria-label="A tooltip"
-            >
+            <Tooltip label={lang.system_hosts_history_help} aria-label="A tooltip">
               <Box ml={3}>
                 <BiHelpCircle />
               </Box>

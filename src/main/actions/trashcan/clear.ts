@@ -4,7 +4,7 @@
  */
 
 import { swhdb } from '@main/data'
-import { flatten } from '@root/common/hostsFn'
+import { flatten } from '@common/hostsFn'
 
 export default async () => {
   let trashcan_items = await swhdb.list.trashcan.all()

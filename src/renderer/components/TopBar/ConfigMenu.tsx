@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Button,
   Menu,
@@ -16,8 +15,10 @@ import {
 } from '@chakra-ui/react'
 import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
 import { actions, agent } from '@renderer/core/agent'
-import { feedback_url, homepage_url } from '@root/common/constants'
-import events from '@root/common/events'
+import { feedback_url, homepage_url } from '@common/constants'
+import events from '@common/events'
+import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
 import React, { useState } from 'react'
 import {
   BiCog,
@@ -31,13 +32,11 @@ import {
   BiSliderAlt,
   BiWrench,
 } from 'react-icons/bi'
-import styles from './ConfigMenu.less'
+import styles from './ConfigMenu.module.scss'
 
-interface Props {}
-
-const ConfigMenu = (props: Props) => {
-  const { lang } = useModel('useI18n')
-  const { loadHostsData, setCurrentHosts } = useModel('useHostsData')
+const ConfigMenu = () => {
+  const { lang } = useI18n()
+  const { loadHostsData, setCurrentHosts } = useHostsData()
   const [show_import_from_url, setShowImportFromUrl] = useState(false)
   const toast = useToast()
 
@@ -50,13 +49,10 @@ const ConfigMenu = (props: Props) => {
         <MenuList
           borderColor="var(--swh-border-color-0)"
           className={styles.menu_list}
-          maxH={"calc(100vh - 80px)"}
-          overflowY={"scroll"}
+          maxH={'calc(100vh - 80px)'}
+          overflowY={'scroll'}
         >
-          <MenuItem
-            icon={<BiInfoCircle />}
-            onClick={() => agent.broadcast(events.show_about)}
-          >
+          <MenuItem icon={<BiInfoCircle />} onClick={() => agent.broadcast(events.show_about)}>
             {lang.about}
           </MenuItem>
 
@@ -85,16 +81,10 @@ const ConfigMenu = (props: Props) => {
           >
             {lang.check_update}
           </MenuItem>
-          <MenuItem
-            icon={<BiMessageDetail />}
-            onClick={() => actions.openUrl(feedback_url)}
-          >
+          <MenuItem icon={<BiMessageDetail />} onClick={() => actions.openUrl(feedback_url)}>
             {lang.feedback}
           </MenuItem>
-          <MenuItem
-            icon={<BiHomeCircle />}
-            onClick={() => actions.openUrl(homepage_url)}
-          >
+          <MenuItem icon={<BiHomeCircle />} onClick={() => actions.openUrl(homepage_url)}>
             {lang.homepage}
           </MenuItem>
 
@@ -164,16 +154,10 @@ const ConfigMenu = (props: Props) => {
 
           <MenuDivider />
 
-          <MenuItem
-            icon={<BiSliderAlt />}
-            onClick={() => agent.broadcast(events.show_preferences)}
-          >
+          <MenuItem icon={<BiSliderAlt />} onClick={() => agent.broadcast(events.show_preferences)}>
             {lang.preferences}
           </MenuItem>
-          <MenuItem
-            icon={<BiWrench />}
-            onClick={() => actions.cmdToggleDevTools()}
-          >
+          <MenuItem icon={<BiWrench />} onClick={() => actions.cmdToggleDevTools()}>
             {lang.toggle_developer_tools}
           </MenuItem>
 
@@ -184,10 +168,7 @@ const ConfigMenu = (props: Props) => {
           </MenuItem>
         </MenuList>
       </Menu>
-      <ImportFromUrl
-        is_show={show_import_from_url}
-        setIsShow={setShowImportFromUrl}
-      />
+      <ImportFromUrl is_show={show_import_from_url} setIsShow={setShowImportFromUrl} />
     </>
   )
 }

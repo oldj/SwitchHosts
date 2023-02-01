@@ -1,7 +1,7 @@
 {
   "name": "switchhosts",
   "productName": "SwitchHosts",
-  "version": "4.0.0",
+  "version": "4.2.0.6099",
   "description": "Switch hosts quickly!",
   "main": "./main.js",
   "author": {
@@ -10,8 +10,7 @@
     "url": "https://github.com/oldj/SwitchHosts"
   },
   "homepage": "https://switchhosts.vercel.app",
-  "scripts": {
-  },
+  "scripts": {},
   "license": "Apache-2.0",
   "dependencies": {}
 }

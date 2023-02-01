@@ -6,7 +6,7 @@
 import { broadcast } from '@main/core/agent'
 import getIndex from '@main/libs/getIndex'
 import isDev from '@main/libs/isDev'
-import events from '@root/common/events'
+import events from '@common/events'
 import { BrowserWindow } from 'electron'
 import path from 'path'
 

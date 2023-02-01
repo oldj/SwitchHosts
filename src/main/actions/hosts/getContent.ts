@@ -5,13 +5,11 @@
 
 import { configGet, getItemFromList, getList } from '@main/actions'
 import { swhdb } from '@main/data'
-import { IHostsContentObject } from '@root/common/data'
-import { findItemById, flatten } from '@root/common/hostsFn'
+import { IHostsContentObject } from '@common/data'
+import { findItemById, flatten } from '@common/hostsFn'
 
 const getContentById = async (id: string) => {
-  let hosts_content = await swhdb.collection.hosts.find<IHostsContentObject>(
-    (i) => i.id === id,
-  )
+  let hosts_content = await swhdb.collection.hosts.find<IHostsContentObject>((i) => i.id === id)
   return hosts_content?.content || ''
 }
 
@@ -28,7 +26,7 @@ const getContentOfHosts = async (id: string): Promise<string> => {
 
   let list = await getList()
 
-  let multi_chose_folder_switch_all = await configGet('multi_chose_folder_switch_all');
+  let multi_chose_folder_switch_all = await configGet('multi_chose_folder_switch_all')
   let isSkipFolder = multi_chose_folder_switch_all && hosts.folder_mode !== 1
 
   if (type === 'folder' && !isSkipFolder) {

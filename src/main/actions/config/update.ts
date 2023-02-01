@@ -7,7 +7,7 @@ import { updateTrayTitle } from '@main/actions'
 import { cfgdb } from '@main/data'
 import * as http_api from '@main/http'
 import { makeMainMenu } from '@main/ui/menu'
-import { ConfigsType } from '@root/common/default_configs'
+import { ConfigsType } from '@common/default_configs'
 import { app } from 'electron'
 
 export default async (data: Partial<ConfigsType>) => {
@@ -32,7 +32,6 @@ export default async (data: Partial<ConfigsType>) => {
       http_api.start(<boolean>data.http_api_only_local)
     }
   }
-
 
   if (old_configs.hide_dock_icon !== data.hide_dock_icon) {
     if (data.hide_dock_icon) {

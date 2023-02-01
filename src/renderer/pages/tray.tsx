@@ -1,17 +1,19 @@
-import { useModel } from '@@/plugin-model/useModel'
 import { useColorMode } from '@chakra-ui/react'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@root/common/events'
+import events from '@common/events'
 import React, { useEffect } from 'react'
 import { BiArea } from 'react-icons/bi'
-import styles from './tray.less'
+import styles from './tray.module.scss'
+import useI18n from '@renderer/models/useI18n'
+import useConfigs from '@renderer/models/useConfigs'
+import useHostsData from '@renderer/models/useHostsData'
 
 export default () => {
-  const { loadHostsData } = useModel('useHostsData')
-  const { setLocale } = useModel('useI18n')
-  const { configs, loadConfigs } = useModel('useConfigs')
+  const { loadHostsData } = useHostsData()
+  const { setLocale } = useI18n()
+  const { configs, loadConfigs } = useConfigs()
   const { colorMode, setColorMode } = useColorMode()
 
   const update = () => {
@@ -26,10 +28,7 @@ export default () => {
 
     let cls = document.body.className
     document.body.className = cls.replace(/\btheme-\w+/gi, '')
-    document.body.classList.add(
-      `platform-${agent.platform}`,
-      `theme-${configs.theme}`,
-    )
+    document.body.classList.add(`platform-${agent.platform}`, `theme-${configs.theme}`)
   }
 
   useEffect(update, [configs])

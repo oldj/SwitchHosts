@@ -5,17 +5,15 @@
  */
 
 import { actions } from '@renderer/core/agent'
-import { IHostsBasicData, IHostsListObject, VersionType } from '@root/common/data'
-import version from '@root/version.json'
+import { IHostsBasicData, IHostsListObject, VersionType } from '@common/data'
+import version from '@/version.json'
 import { useState } from 'react'
+import { useAtom } from 'jotai'
+import { current_hosts_atom, hosts_data_atom } from '@renderer/stores/hosts_data'
 
 export default function useHostsData() {
-  const [hosts_data, setHostsData] = useState<IHostsBasicData>({
-    list: [],
-    trashcan: [],
-    version: version as VersionType,
-  })
-  const [current_hosts, setCurrentHosts] = useState<IHostsListObject | null>(null)
+  const [hosts_data, setHostsData] = useAtom(hosts_data_atom)
+  const [current_hosts, setCurrentHosts] = useAtom(current_hosts_atom)
 
   const loadHostsData = async () => {
     setHostsData(await actions.getBasicData())

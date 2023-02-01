@@ -1,5 +1,4 @@
-import { useModel } from '@@/plugin-model/useModel'
-import { useToast, Button } from '@chakra-ui/react'
+import { Button, useToast } from '@chakra-ui/react'
 import About from '@renderer/components/About'
 import EditHostsInfo from '@renderer/components/EditHostsInfo'
 import History from '@renderer/components/History'
@@ -10,19 +9,22 @@ import PreferencePanel from '@renderer/components/Pref'
 import SudoPasswordInput from '@renderer/components/SudoPasswordInput'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { download_url } from '@root/common/constants'
-import events from '@root/common/events'
+import { download_url } from '@common/constants'
+import events from '@common/events'
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
 import TopBar from '../components/TopBar'
-import styles from './index.less'
+import styles from './index.module.scss'
 import SetWriteMode from '@renderer/components/SetWriteMode'
+import useI18n from '../models/useI18n'
+import useConfigs from '@renderer/models/useConfigs'
+import useHostsData from '../models/useHostsData'
 
 export default () => {
   const [loading, setLoading] = useState(true)
-  const { i18n, lang, setLocale } = useModel('useI18n')
-  const { loadHostsData } = useModel('useHostsData')
-  const { configs } = useModel('useConfigs')
+  const { i18n, lang, setLocale } = useI18n()
+  const { loadHostsData } = useHostsData()
+  const { configs } = useConfigs()
   const [left_width, setLeftWidth] = useState(0)
   const [left_show, setLeftShow] = useState(true)
   const [use_system_window_frame, setSystemFrame] = useState(false)
@@ -73,9 +75,7 @@ export default () => {
     onConfigsUpdate().catch((e) => console.error(e))
   }, [configs])
 
-  useOnBroadcast(events.toggle_left_pannel, (show: boolean) =>
-    setLeftShow(show),
-  )
+  useOnBroadcast(events.toggle_left_panel, (show: boolean) => setLeftShow(show))
 
   useOnBroadcast(
     events.new_version,

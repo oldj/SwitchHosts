@@ -4,22 +4,20 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import { Center } from '@chakra-ui/react'
 import TrashcanItem from '@renderer/components/LeftPanel/TrashcanItem'
-import list_styles from '@renderer/components/List/index.less'
+import list_styles from '@renderer/components/List/index.module.scss'
 import { Tree } from '@renderer/components/Tree'
-import { ITrashcanListObject } from '@root/common/data'
+import { ITrashcanListObject } from '@common/data'
 import React, { useEffect, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
-import styles from './Trashcan.less'
+import styles from './Trashcan.module.scss'
+import useI18n from '@renderer/models/useI18n'
+import useHostsData from '@renderer/models/useHostsData'
 
-interface Props {}
-
-const Trashcan = (props: Props) => {
-  const { lang } = useModel('useI18n')
-  const { hosts_data, current_hosts, setCurrentHosts } =
-    useModel('useHostsData')
+const Trashcan = () => {
+  const { lang } = useI18n()
+  const { hosts_data, current_hosts, setCurrentHosts } = useHostsData()
   const [trash_list, setTrashList] = useState<ITrashcanListObject[]>([])
   const [is_collapsed, setIsCollapsed] = useState(true)
 
@@ -66,9 +64,7 @@ const Trashcan = (props: Props) => {
     <div className={styles.root}>
       <Tree
         data={trash_list}
-        nodeRender={(item) => (
-          <TrashcanItem data={item as ITrashcanListObject} />
-        )}
+        nodeRender={(item) => <TrashcanItem data={item as ITrashcanListObject} />}
         collapseArrow={
           <Center w="20px" h="20px">
             <BiChevronRight />

@@ -4,15 +4,16 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import ItemIcon from '@renderer/components/ItemIcon'
-import list_item_styles from '@renderer/components/List/ListItem.less'
+import list_item_styles from '@renderer/components/List/ListItem.module.scss'
 import { actions } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
-import { ITrashcanListObject } from '@root/common/data'
+import { ITrashcanListObject } from '@common/data'
+import useI18n from '@renderer/models/useI18n'
 import clsx from 'clsx'
 import React from 'react'
-import styles from './TrashcanItem.less'
+import styles from './TrashcanItem.module.scss'
+import useHostsData from '@renderer/models/useHostsData'
 
 interface Props {
   data: ITrashcanListObject
@@ -20,8 +21,8 @@ interface Props {
 
 const TrashcanItem = (props: Props) => {
   const { data } = props
-  const { lang } = useModel('useI18n')
-  const { hosts_data, loadHostsData } = useModel('useHostsData')
+  const { lang } = useI18n()
+  const { hosts_data, loadHostsData } = useHostsData()
 
   const onSelect = (i: any) => {
     console.log(i)
@@ -87,9 +88,7 @@ const TrashcanItem = (props: Props) => {
 
         {data.data.title || lang.untitled}
 
-        {data.is_root ? (
-          <span className={styles.count}>{data.children?.length || 0}</span>
-        ) : null}
+        {data.is_root ? <span className={styles.count}>{data.children?.length || 0}</span> : null}
       </div>
     </div>
   )

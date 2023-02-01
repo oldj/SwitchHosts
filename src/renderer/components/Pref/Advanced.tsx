@@ -1,10 +1,9 @@
 /**
- * General
+ * Advanced.tsx
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Button,
   Checkbox,
@@ -17,9 +16,10 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { actions } from '@renderer/core/agent'
-import { ConfigsType } from '@root/common/default_configs'
+import { ConfigsType } from '@common/default_configs'
+import useI18n from '@renderer/models/useI18n'
 import React, { useEffect, useState } from 'react'
-import styles from './styles.less'
+import styles from './styles.module.scss'
 
 interface IProps {
   data: ConfigsType
@@ -28,7 +28,7 @@ interface IProps {
 
 const PathLink = (props: { link: string }) => {
   const { link } = props
-  const { lang } = useModel('useI18n')
+  const { lang } = useI18n()
 
   return (
     <Tooltip label={lang.click_to_open}>
@@ -49,19 +49,15 @@ const PathLink = (props: { link: string }) => {
 
 const Advanced = (props: IProps) => {
   const { data, onChange } = props
-  const { i18n, lang } = useModel('useI18n')
+  const { i18n, lang } = useI18n()
   const [hosts_path, setHostsPath] = useState('')
   const [data_dir, setDataDir] = useState('')
   const [default_data_dir, setDefaultDataDir] = useState('')
 
   useEffect(() => {
-    actions
-      .getPathOfSystemHosts()
-      .then((hosts_path) => setHostsPath(hosts_path))
+    actions.getPathOfSystemHosts().then((hosts_path) => setHostsPath(hosts_path))
     actions.getDataDir().then((data_dir) => setDataDir(data_dir))
-    actions
-      .getDefaultDataDir()
-      .then((default_data_dir) => setDefaultDataDir(default_data_dir))
+    actions.getDefaultDataDir().then((default_data_dir) => setDefaultDataDir(default_data_dir))
   }, [])
 
   return (
@@ -102,11 +98,7 @@ const Advanced = (props: IProps) => {
             <Button
               variant="link"
               onClick={async () => {
-                if (
-                  !confirm(
-                    i18n.trans('reset_data_dir_confirm', [default_data_dir]),
-                  )
-                ) {
+                if (!confirm(i18n.trans('reset_data_dir_confirm', [default_data_dir]))) {
                   return
                 }
                 let r = await actions.cmdChangeDataDir(true)

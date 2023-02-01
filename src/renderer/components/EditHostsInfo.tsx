@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Box,
   Button,
@@ -30,20 +29,21 @@ import ItemIcon from '@renderer/components/ItemIcon'
 import Transfer from '@renderer/components/Transfer'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { FolderModeType, HostsType, IHostsListObject } from '@root/common/data'
-import events from '@root/common/events'
-import * as hostsFn from '@root/common/hostsFn'
+import { FolderModeType, HostsType, IHostsListObject } from '@common/data'
+import events from '@common/events'
+import * as hostsFn from '@common/hostsFn'
 import lodash from 'lodash'
 import React, { useRef, useState } from 'react'
 import { BiEdit, BiTrash } from 'react-icons/bi'
 import { v4 as uuidv4 } from 'uuid'
-import styles from './EditHostsInfo.less'
+import useHostsData from '../models/useHostsData'
+import useI18n from '../models/useI18n'
+import styles from './EditHostsInfo.module.scss'
 
 const EditHostsInfo = () => {
-  const { lang } = useModel('useI18n')
+  const { lang } = useI18n()
   const [hosts, setHosts] = useState<IHostsListObject | null>(null)
-  const { hosts_data, setList, current_hosts, setCurrentHosts } =
-    useModel('useHostsData')
+  const { hosts_data, setList, current_hosts, setCurrentHosts } = useHostsData()
   const [is_show, setIsShow] = useState(false)
   const [is_add, setIsAdd] = useState(true)
   const [is_refreshing, setIsRefreshing] = useState(false)
@@ -77,10 +77,7 @@ const EditHostsInfo = () => {
       agent.broadcast(events.select_hosts, h.id, 1000)
     } else if (data && data.id) {
       // edit
-      let h: IHostsListObject | undefined = hostsFn.findItemById(
-        hosts_data.list,
-        data.id,
-      )
+      let h: IHostsListObject | undefined = hostsFn.findItemById(hosts_data.list, data.id)
       if (h) {
         Object.assign(h, data)
         await setList([...hosts_data.list])
@@ -95,8 +92,8 @@ const EditHostsInfo = () => {
         return
       }
     } else {
-      // unknow error
-      alert('unknow error!')
+      // unknown error
+      alert('unknown error!')
     }
 
     setIsShow(false)
@@ -147,9 +144,7 @@ const EditHostsInfo = () => {
           <div>
             <Select
               value={hosts?.refresh_interval || 0}
-              onChange={(e) =>
-                onUpdate({ refresh_interval: parseInt(e.target.value) || 0 })
-              }
+              onChange={(e) => onUpdate({ refresh_interval: parseInt(e.target.value) || 0 })}
               style={{ minWidth: 120 }}
             >
               <option value={0}>{lang.never}</option>
@@ -231,9 +226,7 @@ const EditHostsInfo = () => {
     const list = hostsFn.flatten(hosts_data.list)
 
     let source_list: IHostsListObject[] = list
-      .filter(
-        (item) => !item.type || item.type === 'local' || item.type === 'remote',
-      )
+      .filter((item) => !item.type || item.type === 'local' || item.type === 'remote')
       .map((item) => {
         let o = { ...item }
         o.key = o.id
@@ -263,9 +256,7 @@ const EditHostsInfo = () => {
         <FormLabel>{lang.choice_mode}</FormLabel>
         <RadioGroup
           value={(hosts?.folder_mode || 0).toString()}
-          onChange={(v: string) =>
-            onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })
-          }
+          onChange={(v: string) => onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })}
         >
           <HStack spacing={3}>
             <Radio value="0">{lang.choice_mode_default}</Radio>
@@ -312,12 +303,7 @@ const EditHostsInfo = () => {
   )
 
   return (
-    <Drawer
-      initialFocusRef={ipt_title_ref}
-      isOpen={is_show}
-      onClose={onCancel}
-      size="lg"
-    >
+    <Drawer initialFocusRef={ipt_title_ref} isOpen={is_show} onClose={onCancel} size="lg">
       <DrawerOverlay />
       <DrawerContent>
         <DrawerHeader>

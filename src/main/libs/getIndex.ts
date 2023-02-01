@@ -14,7 +14,7 @@ export default (): string => {
     index = 'http://127.0.0.1:8220'
   } else {
     index = url.format({
-      pathname: path.join(__dirname, 'renderer', 'index.html'),
+      pathname: path.join(__dirname, 'index.html'),
       protocol: 'file:',
       slashes: true,
     })

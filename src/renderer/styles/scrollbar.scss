@@ -1,12 +1,12 @@
 @import "./var";
 
-@swh-scroll-size: 8px;
+$swh-scroll-size: 8px;
 
-.swh-scroll-0() {
+@mixin swh-scroll-0() {
   &::-webkit-scrollbar {
     position: absolute;
-    width: @swh-scroll-size;
-    height: @swh-scroll-size;
+    width: $swh-scroll-size;
+    height: $swh-scroll-size;
   }
   &::-webkit-scrollbar-track {
     background: var(--swh-scrollbar-track);
@@ -21,13 +21,13 @@
   }
 }
 
-.swh-scroll-none() {
+@mixin swh-scroll-none() {
   &::-webkit-scrollbar {
     display: none;
   }
 }
 
-.swh-scroll-x() {
+@mixin swh-scroll-x() {
   overflow-x: auto;
   overflow-y: hidden;
 
@@ -37,25 +37,25 @@
   }
 
   &:hover {
-    .swh-scroll-0();
+    @include swh-scroll-0();
   }
 }
 
-.swh-scroll-y() {
+@mixin swh-scroll-y() {
   overflow-x: hidden;
   overflow-y: auto;
 
   &::-webkit-scrollbar {
-    width: @swh-scroll-size;
+    width: $swh-scroll-size;
     height: 0;
   }
 
   //&:hover {
-  .swh-scroll-0();
+  @include swh-scroll-0();
   //}
 }
 
-.swh-scroll-xy() {
+@mixin swh-scroll-xy() {
   overflow: auto;
 
   &::-webkit-scrollbar {
@@ -65,8 +65,8 @@
 
   &:hover {
     &::-webkit-scrollbar {
-      width: @swh-scroll-size;
-      height: @swh-scroll-size;
+      width: $swh-scroll-size;
+      height: $swh-scroll-size;
     }
   }
 }

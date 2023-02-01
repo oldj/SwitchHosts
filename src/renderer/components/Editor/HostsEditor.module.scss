@@ -1,7 +1,7 @@
 @import "../../styles/common";
 
 .root {
-  .code;
+  @include code;
   width: 100%;
   height: 100%;
 }
@@ -34,7 +34,7 @@
 
   :global {
     .CodeMirror {
-      font-family: @font-editor;
+      font-family: $font-editor;
       background: var(--swh-editor-bg-color);
       color: var(--swh-editor-text-color);
     }
