@@ -7,4 +7,6 @@
   border-top: 1px solid var(--swh-border-color-1);
   background: var(--swh-status-bar-bg);
   font-size: var(--swh-status-bar-font-size);
+
+  user-select: none;
 }

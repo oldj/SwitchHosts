@@ -2,7 +2,7 @@ import { LocaleName } from '@common/i18n'
 import { FolderModeType } from './data.d'
 
 export type WriteModeType = null | 'overwrite' | 'append'
-export type ThemeType = 'light' | 'dark' | 'system'
+export type ThemeType = 'light' | 'dark'
 export type ProtocolType = 'http' | 'https'
 export type DefaultLocaleType = LocaleName | undefined
 

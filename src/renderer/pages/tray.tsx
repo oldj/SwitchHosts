@@ -1,4 +1,3 @@
-import { useColorMode } from '@chakra-ui/react'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -9,12 +8,13 @@ import styles from './tray.module.scss'
 import useI18n from '@renderer/models/useI18n'
 import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
+import { useMantineColorScheme } from '@mantine/core'
 
 export default () => {
   const { loadHostsData } = useHostsData()
   const { setLocale } = useI18n()
   const { configs, loadConfigs } = useConfigs()
-  const { colorMode, setColorMode } = useColorMode()
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme()
 
   const update = () => {
     if (!configs) return
@@ -22,8 +22,8 @@ export default () => {
     setLocale(configs.locale)
     loadHostsData().catch((e) => console.error(e))
 
-    if (colorMode !== configs.theme) {
-      setColorMode(configs.theme)
+    if (colorScheme !== configs.theme) {
+      toggleColorScheme(configs.theme)
     }
 
     let cls = document.body.className

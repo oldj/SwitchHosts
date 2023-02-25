@@ -4,11 +4,11 @@
  * @homepage: https://oldj.net
  */
 
-import { Box, Flex, HStack, Spacer } from '@chakra-ui/react'
 import React from 'react'
 import prettyBytes from 'pretty-bytes'
 import styles from './StatusBar.module.scss'
 import useI18n from '../models/useI18n'
+import { Flex, Group, Space } from '@mantine/core'
 
 interface Props {
   line_count: number
@@ -21,16 +21,16 @@ const StatusBar = (props: Props) => {
   const { i18n } = useI18n()
 
   return (
-    <Flex className={styles.root} px="10px" userSelect="none">
-      <HStack spacing={4}>
-        <Box>
+    <Flex className={styles.root} px="10px">
+      <Group spacing={16}>
+        <Group>
           {line_count} {line_count > 1 ? i18n.lang.lines : i18n.lang.line}
-        </Box>
-        <Box>{prettyBytes(bytes)}</Box>
-        <Box>{read_only ? i18n.lang.read_only : ''}</Box>
-      </HStack>
-      <Spacer />
-      <Box>{/* right */}</Box>
+        </Group>
+        <Group>{prettyBytes(bytes)}</Group>
+        <Group>{read_only ? i18n.lang.read_only : ''}</Group>
+      </Group>
+      <Space />
+      <Group>{/* right */}</Group>
     </Flex>
   )
 }

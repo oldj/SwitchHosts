@@ -4,19 +4,11 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  Box,
-  Button,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  Textarea,
-  VStack,
-} from '@chakra-ui/react'
 import CommandsHistory from '@renderer/components/Pref/CommandsHistory'
 import { ConfigsType } from '@common/default_configs'
 import useI18n from '@renderer/models/useI18n'
 import React, { useState } from 'react'
+import { Button, Stack, Textarea } from '@mantine/core'
 
 interface IProps {
   data: ConfigsType
@@ -33,28 +25,22 @@ const Commands = (props: IProps) => {
   }
 
   return (
-    <VStack spacing={4}>
-      <FormControl>
-        <FormLabel>{lang.commands_title}</FormLabel>
-        <FormHelperText mb={3}>{lang.commands_help}</FormHelperText>
-        <Textarea
-          minHeight="200px"
-          placeholder={'# echo "ok!"'}
-          value={data.cmd_after_hosts_apply}
-          onChange={(e) => onChange({ cmd_after_hosts_apply: e.target.value })}
-        />
-      </FormControl>
+    <Stack spacing={'lg'}>
+      <div>{lang.commands_help}</div>
+      <Textarea
+        label={lang.commands_title}
+        minRows={6}
+        placeholder={'# echo "ok!"'}
+        value={data.cmd_after_hosts_apply}
+        onChange={(e) => onChange({ cmd_after_hosts_apply: e.target.value })}
+      />
 
-      <Box>
-        <Button variant="link" onClick={toggleShowHistory}>
-          {show_history ? lang.hide_history : lang.show_history}
-        </Button>
-      </Box>
+      <Button variant="subtle" onClick={toggleShowHistory}>
+        {show_history ? lang.hide_history : lang.show_history}
+      </Button>
 
-      <Box w="100%">
-        <CommandsHistory is_show={show_history} />
-      </Box>
-    </VStack>
+      <CommandsHistory is_show={show_history} />
+    </Stack>
   )
 }
 

@@ -4,6 +4,7 @@
  * @homepage: https://oldj.net
  */
 
+import { hideNotification, showNotification } from '@mantine/notifications'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { actions, agent } from '@renderer/core/agent'
@@ -13,7 +14,6 @@ import { updateOneItem } from '@common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
 import { BiEdit } from 'react-icons/bi'
-import { Center, ToastId, useToast } from '@chakra-ui/react'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.module.scss'
 import events from '@common/events'
@@ -35,9 +35,7 @@ const ListItem = (props: Props) => {
   const [is_on, setIsOn] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
-  const ref_toast_refresh = useRef<ToastId | null>(null)
-
-  const toast = useToast()
+  const ref_toast_refresh = useRef<string | null>(null)
 
   useEffect(() => {
     setIsOn(data.on)
@@ -105,9 +103,12 @@ const ListItem = (props: Props) => {
           {
             label: lang.refresh,
             async click() {
-              ref_toast_refresh.current = toast({
-                status: 'loading',
-                description: lang.loading,
+              let id = Math.random().toString(36)
+              ref_toast_refresh.current = id
+              showNotification({
+                id,
+                loading: true,
+                message: lang.loading,
               })
 
               actions
@@ -115,31 +116,31 @@ const ListItem = (props: Props) => {
                 .then((r) => {
                   console.log(r)
                   if (!r.success) {
-                    toast({
-                      status: 'error',
-                      description: r.message || r.code || 'Error!',
-                      isClosable: true,
+                    showNotification({
+                      // status: 'error',
+                      color: 'red',
+                      message: r.message || r.code || 'Error!',
                     })
                     return
                   }
 
-                  toast({
-                    status: 'success',
-                    description: 'OK!',
-                    isClosable: true,
+                  showNotification({
+                    // status: 'success',
+                    color: 'green',
+                    message: 'OK!',
                   })
                 })
                 .catch((e) => {
                   console.log(e)
-                  toast({
-                    status: 'error',
-                    description: e.message,
-                    isClosable: true,
+                  showNotification({
+                    // status: 'error',
+                    color: 'red',
+                    message: e.message,
                   })
                 })
                 .finally(() => {
                   if (ref_toast_refresh.current) {
-                    toast.close(ref_toast_refresh.current)
+                    hideNotification(ref_toast_refresh.current)
                   }
                 })
             },
@@ -187,14 +188,12 @@ const ListItem = (props: Props) => {
         {data.is_sys ? null : (
           <>
             <div className={styles.edit}>
-              <Center h="var(--swh-tree-row-height)">
-                <BiEdit
-                  title={lang.edit}
-                  onClick={() => {
-                    agent.broadcast(events.edit_hosts_info, data)
-                  }}
-                />
-              </Center>
+              <BiEdit
+                title={lang.edit}
+                onClick={() => {
+                  agent.broadcast(events.edit_hosts_info, data)
+                }}
+              />
             </div>
             <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)} />
           </>

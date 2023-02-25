@@ -13,6 +13,7 @@ import {
   IconWorld,
 } from '@tabler/icons-react'
 import React from 'react'
+import styles from './ItemIcon.module.scss'
 
 interface Props {
   type?: string
@@ -47,7 +48,7 @@ const ItemIcon = (props: Props) => {
       icon = <IconFileDescription size={16} stroke={1.5} />
   }
 
-  return <div>{icon}</div>
+  return <div className={styles.root}>{icon}</div>
 }
 
 export default ItemIcon

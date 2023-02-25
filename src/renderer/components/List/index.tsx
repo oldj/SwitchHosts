@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { useToast } from '@chakra-ui/react'
+import { showNotification } from '@mantine/notifications'
 import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { Tree } from '@renderer/components/Tree'
@@ -35,7 +35,6 @@ const List = (props: Props) => {
   const { lang } = useI18n()
   const [selected_ids, setSelectedIds] = useState<string[]>([current_hosts?.id || '0'])
   const [show_list, setShowList] = useState<IHostsListObject[]>([])
-  const toast = useToast()
 
   useEffect(() => {
     if (!is_tray) {
@@ -70,10 +69,10 @@ const List = (props: Props) => {
     )
     let success = await writeHostsToSystem(new_list)
     if (success) {
-      toast({
-        status: 'success',
-        description: lang.success,
-        isClosable: true,
+      showNotification({
+        // status: 'success',
+        color: 'green',
+        message: lang.success,
       })
       agent.broadcast(events.set_hosts_on_status, id, on)
     } else {
@@ -121,10 +120,10 @@ const List = (props: Props) => {
       // new Notification(lang.fail, {
       //   body,
       // })
-      toast({
-        status: 'error',
-        description: err_desc,
-        isClosable: true,
+      showNotification({
+        // status: 'error',
+        color: 'red',
+        message: err_desc,
       })
     }
 

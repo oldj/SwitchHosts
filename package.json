@@ -33,10 +33,10 @@
     "uuid": "9.0.0"
   },
   "devDependencies": {
-    "@chakra-ui/react": "2.4.9",
-    "@emotion/react": "11.10.5",
-    "@emotion/styled": "11.10.5",
-    "@tabler/icons-react": "^2.1.2",
+    "@mantine/core": "5.10.4",
+    "@mantine/hooks": "5.10.4",
+    "@mantine/notifications": "5.10.4",
+    "@tabler/icons-react": "2.1.2",
     "@types/assert": "1.5.6",
     "@types/codemirror": "5.60.7",
     "@types/express": "4.17.16",
@@ -72,7 +72,7 @@
     "react-icons": "4.7.1",
     "react-router-dom": "6.8.0",
     "react-window": "1.8.8",
-    "rimraf": "^4.1.2",
+    "rimraf": "4.1.2",
     "sass": "1.58.0",
     "smooth-scroll-into-view-if-needed": "1.1.33",
     "ts-node": "10.9.1",

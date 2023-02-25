@@ -4,22 +4,12 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  Button,
-  Checkbox,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  HStack,
-  Link,
-  Tooltip,
-  VStack,
-} from '@chakra-ui/react'
 import { actions } from '@renderer/core/agent'
 import { ConfigsType } from '@common/default_configs'
 import useI18n from '@renderer/models/useI18n'
 import React, { useEffect, useState } from 'react'
 import styles from './styles.module.scss'
+import { Button, Checkbox, Group, Stack, Tooltip } from '@mantine/core'
 
 interface IProps {
   data: ConfigsType
@@ -31,8 +21,8 @@ const PathLink = (props: { link: string }) => {
   const { lang } = useI18n()
 
   return (
-    <Tooltip label={lang.click_to_open}>
-      <Link
+    <Tooltip label={lang.click_to_open} withArrow arrowSize={10}>
+      <a
         className={styles.link}
         onClick={(e: React.MouseEvent) => {
           e.preventDefault()
@@ -42,7 +32,7 @@ const PathLink = (props: { link: string }) => {
         href={'file://' + link}
       >
         {link}
-      </Link>
+      </a>
     </Tooltip>
   )
 }
@@ -61,31 +51,30 @@ const Advanced = (props: IProps) => {
   }, [])
 
   return (
-    <VStack spacing={10}>
-      <FormControl>
-        <FormLabel>{lang.usage_data_title}</FormLabel>
-        <FormHelperText mb={2}>{lang.usage_data_help}</FormHelperText>
+    <Stack spacing={'xl'}>
+      <Stack spacing={8}>
+        <h3>{lang.usage_data_title}</h3>
+        <div className={styles.info}>{lang.usage_data_help}</div>
         <Checkbox
-          isChecked={data.send_usage_data}
+          label={lang.usage_data_agree}
+          checked={data.send_usage_data}
           onChange={(e) => onChange({ send_usage_data: e.target.checked })}
-        >
-          {lang.usage_data_agree}
-        </Checkbox>
-      </FormControl>
+        />
+      </Stack>
 
-      <FormControl>
-        <FormLabel>{lang.where_is_my_hosts}</FormLabel>
-        <FormHelperText mb={2}>{lang.your_hosts_file_is}</FormHelperText>
+      <Stack align={'flex-start'} spacing={8}>
+        <h3>{lang.where_is_my_hosts}</h3>
+        <div className={styles.info}>{lang.your_hosts_file_is}</div>
         <PathLink link={hosts_path} />
-      </FormControl>
+      </Stack>
 
-      <FormControl>
-        <FormLabel>{lang.where_is_my_data}</FormLabel>
-        <FormHelperText mb={2}>{lang.your_data_is}</FormHelperText>
-        <HStack>
+      <Stack align={'flex-start'} spacing={8}>
+        <h3>{lang.where_is_my_data}</h3>
+        <div className={styles.info}>{lang.your_data_is}</div>
+        <Group>
           <PathLink link={data_dir} />
           <Button
-            variant="link"
+            variant="subtle"
             onClick={async () => {
               let r = await actions.cmdChangeDataDir()
               console.log(r)
@@ -96,7 +85,7 @@ const Advanced = (props: IProps) => {
 
           {data_dir !== default_data_dir && (
             <Button
-              variant="link"
+              variant="subtle"
               onClick={async () => {
                 if (!confirm(i18n.trans('reset_data_dir_confirm', [default_data_dir]))) {
                   return
@@ -108,9 +97,9 @@ const Advanced = (props: IProps) => {
               {lang.reset}
             </Button>
           )}
-        </HStack>
-      </FormControl>
-    </VStack>
+        </Group>
+      </Stack>
+    </Stack>
   )
 }
 

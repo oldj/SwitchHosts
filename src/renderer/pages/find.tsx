@@ -3,21 +3,6 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  Checkbox,
-  HStack,
-  IconButton,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Spacer,
-  Spinner,
-  useColorMode,
-  VStack,
-} from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
@@ -33,13 +18,27 @@ import {
   IoArrowBackOutline,
   IoArrowForwardOutline,
   IoChevronDownOutline,
+  IoPencil,
   IoSearch,
 } from 'react-icons/io5'
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
-import useConfigs from '../models/useConfigs'
-import useI18n from '../models/useI18n'
+import useConfigs from '@renderer/models/useConfigs'
+import useI18n from '@renderer/models/useI18n'
 import styles from './find.module.scss'
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Checkbox,
+  Group,
+  Input,
+  Loader,
+  Space,
+  Stack,
+  useMantineColorScheme,
+  useMantineTheme,
+} from '@mantine/core'
 
 interface IFindPositionShow extends IFindPosition {
   item_id: string
@@ -53,7 +52,8 @@ interface IFindPositionShow extends IFindPosition {
 const find = () => {
   const { lang, i18n, setLocale } = useI18n()
   const { configs, loadConfigs } = useConfigs()
-  const { colorMode, setColorMode } = useColorMode()
+  const theme = useMantineTheme()
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme()
   const [keyword, setKeyword] = useState('')
   const [replace_to, setReplaceTo] = useState('')
   const [is_regexp, setIsRegExp] = useState(false)
@@ -64,7 +64,6 @@ const find = () => {
   const [current_result_idx, setCurrentResultIdx] = useState(0)
   const [last_scroll_result_idx, setlastScrollResultIdx] = useState(-1)
   const debounced_keyword = useDebounce(keyword, { wait: 500 })
-  const ipt_kw = useRef<HTMLInputElement>(null)
   const ref_result_box = useRef<HTMLDivElement>(null)
 
   const init = async () => {
@@ -82,8 +81,8 @@ const find = () => {
     if (!configs) return
     init().catch((e) => console.error(e))
     console.log(configs.theme)
-    if (colorMode !== configs.theme) {
-      setColorMode(configs.theme)
+    if (colorScheme !== configs.theme) {
+      toggleColorScheme(configs.theme)
     }
   }, [configs])
 
@@ -95,17 +94,6 @@ const find = () => {
   useEffect(() => {
     doFind(debounced_keyword)
   }, [debounced_keyword, is_regexp, is_ignore_case])
-
-  useEffect(() => {
-    const onFocus = () => {
-      if (ipt_kw.current) {
-        ipt_kw.current.focus()
-      }
-    }
-
-    window.addEventListener('focus', onFocus, false)
-    return () => window.removeEventListener('focus', onFocus, false)
-  }, [ipt_kw])
 
   useOnBroadcast(events.config_updated, loadConfigs)
 
@@ -259,7 +247,7 @@ const find = () => {
     }, [el, current_result_idx, last_scroll_result_idx])
 
     return (
-      <Box
+      <div
         style={row_data.style}
         className={clsx(
           styles.result_row,
@@ -267,8 +255,8 @@ const find = () => {
           data.is_disabled && styles.disabled,
           data.is_readonly && styles.readonly,
         )}
-        borderBottomWidth={1}
-        borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
+        // borderBottomWidth={1}
+        // borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
         onClick={() => {
           setCurrentResultIdx(row_data.index)
         }}
@@ -287,7 +275,7 @@ const find = () => {
           <span>{data.item_title}</span>
         </div>
         <div className={styles.result_line}>{data.line}</div>
-      </Box>
+      </div>
     )
   }
 
@@ -335,78 +323,66 @@ const find = () => {
 
   return (
     <div className={styles.root}>
-      <VStack spacing={0} h="100%">
-        <InputGroup>
-          <InputLeftElement
-            // pointerEvents="none"
-            children={
-              <HStack spacing={0}>
-                <IoSearch />
-                <IoChevronDownOutline style={{ fontSize: 10 }} />
-              </HStack>
-            }
-            onClick={showKeywordHistory}
-          />
+      <Stack spacing={0} h="100%">
+        <div className={styles.ln}>
+          <Group spacing={4} onClick={showKeywordHistory}>
+            <IoSearch />
+            <IoChevronDownOutline style={{ fontSize: 10 }} />
+          </Group>
           <Input
+            className={styles.ipt}
             autoFocus={true}
             placeholder="keywords"
-            variant="flushed"
+            variant="filled"
             value={keyword}
+            size={'xs'}
             onChange={(e) => {
               setKeyword(e.target.value)
             }}
-            ref={ipt_kw}
           />
-        </InputGroup>
+        </div>
 
-        <InputGroup>
-          <InputLeftElement
-            // pointerEvents="none"
-            children={
-              <HStack spacing={0}>
-                <IoSearch />
-                <IoChevronDownOutline style={{ fontSize: 10 }} />
-              </HStack>
-            }
-            onClick={showReplaceHistory}
-          />
+        <div className={styles.ln}>
+          <Group spacing={4} onClick={showReplaceHistory}>
+            <IoPencil />
+            <IoChevronDownOutline style={{ fontSize: 10 }} />
+          </Group>
           <Input
+            className={styles.ipt}
             placeholder="replace to"
-            variant="flushed"
+            variant="filled"
             value={replace_to}
+            size={'xs'}
             onChange={(e) => {
               setReplaceTo(e.target.value)
             }}
           />
-        </InputGroup>
+        </div>
 
-        <HStack
-          w="100%"
-          py={2}
-          px={4}
-          spacing={4}
-          // justifyContent="flex-start"
-        >
-          <Checkbox checked={is_regexp} onChange={(e) => setIsRegExp(e.target.checked)}>
-            {lang.regexp}
-          </Checkbox>
-          <Checkbox checked={is_ignore_case} onChange={(e) => setIsIgnoreCase(e.target.checked)}>
-            {lang.ignore_case}
-          </Checkbox>
-        </HStack>
+        <div className={styles.ln}>
+          <Checkbox
+            checked={is_regexp}
+            onChange={(e) => setIsRegExp(e.target.checked)}
+            label={lang.regexp}
+          />
+          <Space w={20} />
+          <Checkbox
+            checked={is_ignore_case}
+            onChange={(e) => setIsIgnoreCase(e.target.checked)}
+            label={lang.ignore_case}
+          />
+        </div>
 
-        <Box w="100%" borderTopWidth={1}>
-          <div className={styles.result_row}>
-            <div>{lang.match}</div>
-            <div>{lang.title}</div>
-            <div>{lang.line}</div>
-          </div>
-        </Box>
+        <div className={styles.result_row}>
+          <div>{lang.match}</div>
+          <div>{lang.title}</div>
+          <div>{lang.line}</div>
+        </div>
 
         <Box
           w="100%"
-          flex="1"
-          bgColor={configs?.theme === 'dark' ? 'gray.700' : 'gray.100'}
+          sx={{ flex: 1 }}
+          bg={configs?.theme === 'dark' ? theme.colors.gray[7] : theme.colors.gray[1]}
           ref={ref_result_box}
         >
           <List
@@ -419,15 +395,14 @@ const find = () => {
           </List>
         </Box>
 
-        <HStack
-          w="100%"
-          py={2}
-          px={4}
+        <Group
+          h={40}
+          px={16}
           spacing={4}
           // justifyContent="flex-end"
         >
           {is_searching ? (
-            <Spinner />
+            <Loader />
           ) : (
             <span>
               {i18n.trans(find_positions.length > 1 ? 'items_found' : 'item_found', [
@@ -435,54 +410,53 @@ const find = () => {
               ])}
             </span>
           )}
-          <Spacer />
+          <div style={{ flex: 1 }} />
           <Button
-            size="sm"
+            size="xs"
             variant="outline"
-            isDisabled={is_searching || find_positions.length === 0}
+            disabled={is_searching || find_positions.length === 0}
             onClick={replaceAll}
           >
             {lang.replace_all}
           </Button>
           <Button
-            size="sm"
-            variant="solid"
-            colorScheme="blue"
-            isDisabled={is_searching || find_positions.length === 0 || !can_replace}
+            size="xs"
+            disabled={is_searching || find_positions.length === 0 || !can_replace}
             onClick={replaceOne}
           >
             {lang.replace}
           </Button>
 
-          <ButtonGroup
-            size="sm"
-            isAttached
-            variant="outline"
-            isDisabled={is_searching || find_positions.length === 0}
-          >
-            <IconButton
+          <Button.Group>
+            <ActionIcon
               aria-label="previous"
-              icon={<IoArrowBackOutline />}
               onClick={() => {
                 let idx = current_result_idx - 1
                 if (idx < 0) idx = 0
                 setCurrentResultIdx(idx)
               }}
-              isDisabled={current_result_idx <= 0}
-            />
-            <IconButton
+              disabled={is_searching || find_positions.length === 0 || current_result_idx <= 0}
+            >
+              <IoArrowBackOutline />
+            </ActionIcon>
+            <ActionIcon
               aria-label="next"
-              icon={<IoArrowForwardOutline />}
               onClick={() => {
                 let idx = current_result_idx + 1
                 if (idx > find_positions.length - 1) idx = find_positions.length - 1
                 setCurrentResultIdx(idx)
               }}
-              isDisabled={current_result_idx >= find_positions.length - 1}
-            />
-          </ButtonGroup>
-        </HStack>
-      </VStack>
+              disabled={
+                is_searching ||
+                find_positions.length === 0 ||
+                current_result_idx >= find_positions.length - 1
+              }
+            >
+              <IoArrowForwardOutline />
+            </ActionIcon>
+          </Button.Group>
+        </Group>
+      </Stack>
     </div>
   )
 }

@@ -1,14 +1,21 @@
 @import "../../styles/common";
 
 .root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding-bottom: 20px;
 
   a {
-    color: var(--swh-primary-color);
-
     &:hover {
       opacity: 0.8;
     }
+  }
+
+  h2 {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-top: 1em;
   }
 }
 
@@ -16,16 +23,35 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  box-shadow: 0 1px 1px 1px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 4px 2px rgba(0, 0, 0, 0.1);
+}
+
+.app_name {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-top: 0.5em;
+}
+
+.version {
+  font-size: 0.8em;
+  opacity: 0.5;
+}
+
+.links {
+  display: flex;
+  gap: 1em;
+  margin-top: 0.3em;
 }
 
 .names {
-  text-align: center;
-  margin: 8px 0 20px 0;
-  max-width: 350px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 8px 20px 20px 20px;
+  gap: 0 1em;
+  //max-width: 350px;
 
   a {
-    margin: 0 0.5em;
     display: inline-block;
   }
 }

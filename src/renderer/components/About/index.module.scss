@@ -1,5 +1,7 @@
-@import "../../styles/common";
+@import "@styles/common.scss";
 
 .footer {
-  border-top: 1px solid var(--swh-border-color-1);
+  //border-top: 1px solid var(--swh-border-color-1);
+  display: flex;
+  justify-content: center;
 }

@@ -4,25 +4,14 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  Alert,
-  AlertDescription,
-  AlertIcon,
-  AlertTitle,
-  Box,
-  Button,
-  Center,
-  HStack,
-  IconButton,
-  Spacer,
-  VStack,
-} from '@chakra-ui/react'
 import { actions } from '@renderer/core/agent'
 import { ICommandRunResult } from '@common/data'
 import useI18n from '@renderer/models/useI18n'
 import dayjs from 'dayjs'
 import React, { useEffect, useState } from 'react'
 import { BiTrash } from 'react-icons/bi'
+import { ActionIcon, Alert, Button, Center, Group, Space, Stack } from '@mantine/core'
+import { IconCheck, IconX } from '@tabler/icons-react'
 
 interface Props {
   is_show: boolean
@@ -64,66 +53,65 @@ const CommandsHistory = (props: Props) => {
   }
 
   return (
-    <VStack w="100%">
+    <Stack w="100%">
       {list.map((item, idx) => {
         return (
           <Alert
             key={idx}
-            status={item.success ? 'success' : 'error'}
-            w="100%"
+            // status={item.success ? 'success' : 'error'}
+            color={item.success ? 'green' : 'red'}
+            // w="100%"
             // alignItems="top"
+            icon={item.success ? <IconCheck /> : <IconX />}
+            title={
+              <Group>
+                <span>#{item._id}</span>
+                <span style={{ fontWeight: 'normal' }}>
+                  {dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}
+                </span>
+                <Space />
+                <ActionIcon
+                  size="sm"
+                  variant="subtle"
+                  onClick={() => item._id && deleteOneRecord(item._id)}
+                >
+                  <BiTrash />
+                </ActionIcon>
+              </Group>
+            }
           >
-            <AlertIcon />
-            <Box flex="1">
-              <AlertTitle>
-                <HStack>
-                  <span>#{item._id}</span>
-                  <span style={{ fontWeight: 'normal' }}>
-                    {dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}
-                  </span>
-                  <Spacer />
-                  <IconButton
-                    aria-label="delete"
-                    icon={<BiTrash />}
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => item._id && deleteOneRecord(item._id)}
-                  />
-                </HStack>
-              </AlertTitle>
-              <AlertDescription>
-                {item.stdout ? (
-                  <>
-                    <Box>
-                      <strong>stdout:</strong>
-                    </Box>
-                    <Box>
-                      <pre>{item.stdout}</pre>
-                    </Box>
-                  </>
-                ) : null}
-                {item.stderr ? (
-                  <>
-                    <Box>
-                      <strong>stderr:</strong>
-                    </Box>
-                    <Box>
-                      <pre>{item.stderr}</pre>
-                    </Box>
-                  </>
-                ) : null}
-              </AlertDescription>
-            </Box>
+            <Stack>
+              {item.stdout ? (
+                <>
+                  <div>
+                    <strong>stdout:</strong>
+                  </div>
+                  <div>
+                    <pre>{item.stdout}</pre>
+                  </div>
+                </>
+              ) : null}
+              {item.stderr ? (
+                <>
+                  <div>
+                    <strong>stderr:</strong>
+                  </div>
+                  <div>
+                    <pre>{item.stderr}</pre>
+                  </div>
+                </>
+              ) : null}
+            </Stack>
           </Alert>
         )
       })}
 
-      <Box pt={10}>
-        <Button onClick={clearAll} variant="link">
+      <Group>
+        <Button onClick={clearAll} variant="subtle">
           {lang.clear_history}
         </Button>
-      </Box>
-    </VStack>
+      </Group>
+    </Stack>
   )
 }
 

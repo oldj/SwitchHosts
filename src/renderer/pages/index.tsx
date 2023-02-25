@@ -1,4 +1,4 @@
-import { Button, useToast } from '@chakra-ui/react'
+import { showNotification } from '@mantine/notifications'
 import About from '@renderer/components/About'
 import EditHostsInfo from '@renderer/components/EditHostsInfo'
 import History from '@renderer/components/History'
@@ -19,6 +19,7 @@ import SetWriteMode from '@renderer/components/SetWriteMode'
 import useI18n from '../models/useI18n'
 import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '../models/useHostsData'
+import { Button } from '@mantine/core'
 
 export default () => {
   const [loading, setLoading] = useState(true)
@@ -29,7 +30,6 @@ export default () => {
   const [left_show, setLeftShow] = useState(true)
   const [use_system_window_frame, setSystemFrame] = useState(false)
   const [show_migration, setShowMigration] = useState(false)
-  const toast = useToast()
 
   const migrate = async (do_migrate: boolean) => {
     if (do_migrate) {
@@ -80,14 +80,14 @@ export default () => {
   useOnBroadcast(
     events.new_version,
     (new_version: string) => {
-      toast({
+      showNotification({
         title: lang.new_version_found,
-        description: (
+        message: (
           <div className={styles.new_version}>
             <span>{i18n.trans('latest_version_desc', [new_version])}</span>
             <Button
               ml="10px"
-              variant="link"
+              variant="subtle"
               onClick={() => {
                 actions.openUrl(download_url)
               }}
@@ -96,9 +96,7 @@ export default () => {
             </Button>
           </div>
         ),
-        status: 'info',
-        duration: 10000,
-        isClosable: true,
+        autoClose: 10000,
       })
     },
     [lang, i18n],

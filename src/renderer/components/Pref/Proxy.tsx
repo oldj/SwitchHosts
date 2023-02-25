@@ -4,18 +4,8 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  Checkbox,
-  FormControl,
-  FormLabel,
-  HStack,
-  Input,
-  NumberInput,
-  NumberInputField,
-  Select,
-  VStack,
-} from '@chakra-ui/react'
 import { ConfigsType, ProtocolType } from '@common/default_configs'
+import { Checkbox, Group, Input, NumberInput, Select, Stack } from '@mantine/core'
 import useI18n from '@renderer/models/useI18n'
 import React, { useState } from 'react'
 
@@ -32,63 +22,53 @@ const General = (props: IProps) => {
   const label_width = 20
 
   return (
-    <VStack spacing={4}>
-      <FormControl>
-        <HStack>
-          <Checkbox
-            isChecked={data.use_proxy}
-            onChange={(e) => {
-              let is_use = e.target.checked
-              setIsUse(is_use)
-              onChange({ use_proxy: is_use })
-            }}
-          >
-            {lang.use_proxy}
-          </Checkbox>
-        </HStack>
-      </FormControl>
+    <Stack spacing={'lg'}>
+      <Group>
+        <Checkbox
+          label={lang.use_proxy}
+          checked={data.use_proxy}
+          onChange={(e) => {
+            let is_use = e.target.checked
+            setIsUse(is_use)
+            onChange({ use_proxy: is_use })
+          }}
+        />
+      </Group>
 
-      <FormControl>
-        <HStack>
-          <FormLabel w={label_width}>{lang.protocol}</FormLabel>
-          <Select
-            w="200px"
-            isDisabled={!is_use}
-            value={data.proxy_protocol}
-            onChange={(e) => onChange({ proxy_protocol: e.target.value as ProtocolType })}
-          >
-            <option value="http">HTTP</option>
-            <option value="https">HTTPS</option>
-          </Select>
-        </HStack>
-      </FormControl>
+      <Group>
+        <Select
+          label={lang.protocol}
+          w="200px"
+          disabled={!is_use}
+          value={data.proxy_protocol}
+          data={[
+            { label: 'HTTP', value: 'http' },
+            { label: 'HTTPS', value: 'https' },
+          ]}
+          onChange={(v) => onChange({ proxy_protocol: v as ProtocolType })}
+        />
+      </Group>
 
-      <FormControl>
-        <HStack>
-          <FormLabel w={label_width}>{lang.host}</FormLabel>
+      <Group>
+        <Input.Wrapper label={lang.host} w={'100%'}>
           <Input
-            w="200px"
-            isDisabled={!is_use}
+            disabled={!is_use}
             value={data.proxy_host}
             onChange={(e) => onChange({ proxy_host: e.target.value })}
           />
-        </HStack>
-      </FormControl>
+        </Input.Wrapper>
+      </Group>
 
-      <FormControl>
-        <HStack>
-          <FormLabel w={label_width}>{lang.port}</FormLabel>
-          <NumberInput
-            w="80px"
-            isDisabled={!is_use}
-            value={data.proxy_port || ''}
-            onChange={(_, vn) => onChange({ proxy_port: vn })}
-          >
-            <NumberInputField />
-          </NumberInput>
-        </HStack>
-      </FormControl>
-    </VStack>
+      <Group>
+        <NumberInput
+          label={lang.port}
+          disabled={!is_use}
+          value={data.proxy_port || undefined}
+          min={0}
+          onChange={(vn) => onChange({ proxy_port: vn })}
+        />
+      </Group>
+    </Stack>
   )
 }
 

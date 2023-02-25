@@ -1,21 +1,11 @@
 /**
- * SudoPasswordInput
+ * @file: ImportFromUrl.tsx
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import {
-  Button,
-  Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalOverlay,
-  ToastId,
-  useToast,
-} from '@chakra-ui/react'
+import { Button, Input, Modal, Group } from '@mantine/core'
+import { hideNotification, showNotification } from '@mantine/notifications'
 import { actions } from '@renderer/core/agent'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
@@ -33,8 +23,7 @@ const ImportFromUrl = (props: Props) => {
   const { loadHostsData, setCurrentHosts } = useHostsData()
   const [url, setUrl] = useState('')
   const ipt_ref = React.useRef<HTMLInputElement>(null)
-  const toast = useToast()
-  const toast_ref = useRef<ToastId>()
+  const toast_ref = useRef<string>('')
 
   const onCancel = () => {
     setIsShow(false)
@@ -44,10 +33,12 @@ const ImportFromUrl = (props: Props) => {
   const onOk = async () => {
     setIsShow(false)
     console.log(`url: ${url}`)
-    toast_ref.current = toast({
-      description: 'loading...',
-      duration: null,
-      isClosable: true,
+    const id = Math.random().toString(36)
+    toast_ref.current = id
+    showNotification({
+      id,
+      message: 'loading...',
+      autoClose: false,
     })
 
     let t0 = new Date().getTime()
@@ -58,23 +49,23 @@ const ImportFromUrl = (props: Props) => {
 
       if (r === true) {
         // import success
-        toast({
-          status: 'success',
-          description: lang.import_done,
-          isClosable: true,
+        showNotification({
+          // status: 'success',
+          color: 'green',
+          message: lang.import_done,
         })
         await loadHostsData()
         setCurrentHosts(null)
       } else {
-        let description = lang.import_fail
+        let message = lang.import_fail
         if (typeof r === 'string') {
-          description += ` [${r}]`
+          message += ` [${r}]`
         }
 
-        toast({
-          status: 'error',
-          description,
-          isClosable: true,
+        showNotification({
+          // status: 'error',
+          color: 'red',
+          message,
         })
       }
     }
@@ -83,7 +74,7 @@ const ImportFromUrl = (props: Props) => {
     setTimeout(
       () => {
         if (toast_ref.current) {
-          toast.close(toast_ref.current)
+          hideNotification(toast_ref.current)
         }
       },
       t1 - t0 > 1000 ? 0 : 1000,
@@ -94,36 +85,28 @@ const ImportFromUrl = (props: Props) => {
   if (!is_show) return null
 
   return (
-    <Modal initialFocusRef={ipt_ref} isOpen={is_show} onClose={onCancel}>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalCloseButton />
-        <ModalBody pb={6}>
-          <div className={styles.label}>{lang.import_from_url}</div>
-          <Input
-            ref={ipt_ref}
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            autoFocus={true}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') onOk()
-            }}
-            placeholder={'http:// or https://'}
-          />
-        </ModalBody>
-        <ModalFooter>
-          <Button variant="outline" onClick={onCancel} mr={3}>
-            {lang.btn_cancel}
-          </Button>
-          <Button
-            colorScheme="blue"
-            onClick={onOk}
-            isDisabled={!url || !url.match(/^https?:\/\/\w+/i)}
-          >
-            {lang.btn_ok}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
+    <Modal opened={is_show} onClose={onCancel} title={lang.import_from_url}>
+      <Input
+        ref={ipt_ref}
+        data-autofocus
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        autoFocus={true}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            onOk()
+          }
+        }}
+        placeholder={'http:// or https://'}
+      />
+      <Group position={'center'} pt={20}>
+        <Button variant="outline" onClick={onCancel} mr={3}>
+          {lang.btn_cancel}
+        </Button>
+        <Button onClick={onOk} disabled={!url || !url.match(/^https?:\/\/\w+/i)}>
+          {lang.btn_ok}
+        </Button>
+      </Group>
     </Modal>
   )
 }

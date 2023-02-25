@@ -10,8 +10,6 @@ import TrayPage from '@renderer/pages/tray'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { createHashRouter, RouterProvider } from 'react-router-dom'
-import { ChakraProvider, ColorModeScript } from '@chakra-ui/react'
-import theme from './theme'
 
 const router = createHashRouter([
   {
@@ -33,10 +31,7 @@ if (container == null) throw new Error('container is null')
 
 const root = createRoot(container)
 root.render(
-  <ChakraProvider>
-    <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-    <PageWrapper>
-      <RouterProvider router={router} />
-    </PageWrapper>
-  </ChakraProvider>,
+  <PageWrapper>
+    <RouterProvider router={router} />
+  </PageWrapper>,
 )

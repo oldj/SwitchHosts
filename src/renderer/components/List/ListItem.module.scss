@@ -5,12 +5,14 @@
 
   &.selected:not(.is_tray):hover {
     .edit {
-      display: block;
+      display: flex;
     }
   }
 
   .edit {
     z-index: 10;
+    align-items: center;
+    height: var(--swh-tree-row-height);
 
     //background: var(--swh-selected-bg);
     padding: 0 2px;
@@ -23,6 +25,8 @@
     }
 
     &:hover {
+      display: flex;
+
       svg {
         opacity: 1;
       }
@@ -74,10 +78,11 @@
 }
 
 .status {
-  flex: 0 0 auto;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   margin: auto 6px auto auto;
+  gap: 8px;
 }
 
 .children {

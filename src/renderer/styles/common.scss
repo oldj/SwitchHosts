@@ -17,3 +17,13 @@ button, a, input {
   }
 }
 
+a {
+  color: var(--swh-primary-color);
+  text-decoration: none;
+  transition: 0.3s;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}

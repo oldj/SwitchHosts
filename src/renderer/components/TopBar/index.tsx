@@ -9,12 +9,12 @@ import SwitchButton from '@renderer/components/SwitchButton'
 import ConfigMenu from '@renderer/components/TopBar/ConfigMenu'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import { ActionIcon } from '@mantine/core'
 import events from '@common/events'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import React, { useEffect, useState } from 'react'
 import styles from './index.module.scss'
-import IconButton from '../../widgets/IconButton'
 import {
   IconHistory,
   IconLayoutSidebarLeftCollapse,
@@ -58,7 +58,8 @@ export default (props: IProps) => {
   return (
     <div className={styles.root}>
       <div className={styles.left}>
-        <IconButton
+        <ActionIcon
+          variant="subtle"
           onClick={() => {
             agent.broadcast(events.toggle_left_panel, !show_left_panel)
           }}
@@ -68,10 +69,10 @@ export default (props: IProps) => {
           ) : (
             <IconLayoutSidebarLeftExpand size={20} stroke={1.5} />
           )}
-        </IconButton>
-        <IconButton aria-label="Add" onClick={() => agent.broadcast(events.add_new)}>
+        </ActionIcon>
+        <ActionIcon variant="subtle" onClick={() => agent.broadcast(events.add_new)}>
           <IconPlus size={20} stroke={1.5} />
-        </IconButton>
+        </ActionIcon>
       </div>
 
       <div className={styles.title_wrapper}>
@@ -110,19 +111,17 @@ export default (props: IProps) => {
           </div>
         ) : null}
         {show_history ? (
-          <IconButton
-            icon={<IconHistory stroke={1.5} size={20} />}
-            onClick={() => agent.broadcast(events.show_history)}
-          />
+          <ActionIcon variant="subtle" onClick={() => agent.broadcast(events.show_history)}>
+            <IconHistory stroke={1.5} size={20} />
+          </ActionIcon>
         ) : null}
 
         <ConfigMenu />
 
         {show_close_button ? (
-          <IconButton
-            icon={<IconX stroke={1.5} size={20} />}
-            onClick={() => actions.closeMainWindow()}
-          />
+          <ActionIcon variant="subtle" onClick={() => actions.closeMainWindow()}>
+            <IconX stroke={1.5} size={20} />
+          </ActionIcon>
         ) : null}
       </div>
     </div>

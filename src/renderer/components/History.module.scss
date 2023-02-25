@@ -1,5 +1,28 @@
 @import "../styles/common";
 
+.root {
+  //height: 100%;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  //height: calc(100% - 80px);
+  overflow: auto;
+}
+
+.list {
+  overflow: auto;
+  border: 1px solid var(--swh-border-color-1);
+  border-radius: 4px;
+}
+
 .selected {
   background: var(--swh-tree-selected-bg);
 }

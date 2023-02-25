@@ -1,24 +1,34 @@
-@import "../../styles/common";
+@import "@styles/common.scss";
 
-.link {
-  text-decoration: underline;
-  color: inherit;
+.root {
+  h3 {
+    font-size: 1em;
+    font-weight: bold;
+  }
+
+  .info {
+    opacity: 0.5;
+  }
 }
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+//.link {
+//  text-decoration: underline;
+//  color: inherit;
+//}
 
 .tabs {
   height: 100%;
 }
 
 .tab_panels {
-  height: calc(100% - 37px);
+  height: calc(100vh - 180px);
+  margin-bottom: 20px;
   overflow: auto;
-}
-
-:global {
-  label {
-    span.chakra-radio__control {
-      width: 16px;
-      height: 16px;
-    }
-  }
+  padding: 16px 0;
 }
