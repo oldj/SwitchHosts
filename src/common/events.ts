@@ -33,5 +33,7 @@ export default {
   toggle_item: 'toggle_item',
   toggle_left_panel: 'toggle_left_panel',
   tray_list_updated: 'tray:list_updated',
+  update_download_progress: 'update_download_progress',
+  update_downloaded: 'update_downloaded',
   write_hosts_to_system: 'write_hosts_to_system',
 }

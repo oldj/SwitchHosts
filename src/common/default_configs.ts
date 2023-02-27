@@ -33,6 +33,8 @@ const configs = {
   tray_mini_window: true,
   multi_chose_folder_switch_all: false,
 
+  auto_download_update: true,
+
   // other
   env: 'PROD' as 'PROD' | 'DEV',
 }

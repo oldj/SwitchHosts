@@ -12,6 +12,7 @@ import events from '@common/events'
 import version from '@/version.json'
 import { compareVersions } from 'compare-versions'
 import { v4 as uuid4 } from 'uuid'
+import * as updater from '@main/core/updater'
 import type { AxiosResponse } from 'axios'
 
 const getUniqueId = async (): Promise<string> => {
@@ -24,24 +25,12 @@ const getUniqueId = async (): Promise<string> => {
 }
 
 export default async (): Promise<boolean | null> => {
-  // Check the latest version, also used for anonymous statistics of DAU,
-  // no personal information will be sent.
-  let r: AxiosResponse | null = null
-
-  try {
-    r = await GET(`${server_url}/api/check/`, {
-      sid: global.session_id,
-      uid: await getUniqueId(),
-    })
-  } catch (e) {
-    console.error(e)
+  let server_version = await updater.checkUpdate()
+  console.log(1111, server_version)
+  if (!server_version) {
+    return false
   }
 
-  if (!r || r.status !== 200 || !r.data?.success) {
-    return null
-  }
-
-  let server_version = r.data.data.version
   let local_version = version.slice(0, 3).join('.')
 
   if (compareVersions(server_version, local_version) === 1) {
