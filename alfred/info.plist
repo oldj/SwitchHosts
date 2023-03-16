@@ -67,7 +67,7 @@
 				<key>argumenttrimmode</key>
 				<integer>0</integer>
 				<key>argumenttype</key>
-				<integer>2</integer>
+				<integer>1</integer>
 				<key>escaping</key>
 				<integer>68</integer>
 				<key>keyword</key>
@@ -105,6 +105,7 @@ function run(argv) {
   let result
   try {
     result = JSON.parse(requestString)
+    result.data = result.data.filter((item)=&gt;item.title.includes("{query}"))
   } catch (e) {
     console.log(e)
     return JSON.stringify({
@@ -132,7 +133,7 @@ function run(argv) {
   })
 }</string>
 				<key>scriptargtype</key>
-				<integer>1</integer>
+				<integer>0</integer>
 				<key>scriptfile</key>
 				<string></string>
 				<key>subtext</key>
@@ -142,7 +143,7 @@ function run(argv) {
 				<key>type</key>
 				<integer>7</integer>
 				<key>withspace</key>
-				<false/>
+				<true/>
 			</dict>
 			<key>type</key>
 			<string>alfred.workflow.input.scriptfilter</string>
