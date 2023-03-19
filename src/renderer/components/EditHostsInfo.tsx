@@ -282,7 +282,7 @@ const EditHostsInfo = () => {
   const footer_buttons = (
     <Grid templateColumns="1fr 1fr" style={{ width: '100%' }}>
       <Box>
-        {is_add ? null : (
+        {is_add ? null :hosts?.on?null: (
           <Button
             leftIcon={<BiTrash />}
             mr={3}

@@ -68,6 +68,7 @@
     "espower-typescript": "^10.0.0",
     "execa": "^6.1.0",
     "fork-ts-checker-webpack-plugin": "^7.2.11",
+    "framer-motion": "^7.2.0",
     "fs-extra": "^10.1.0",
     "mocha": "^10.0.0",
     "power-assert": "^1.6.1",
