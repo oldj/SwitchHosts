@@ -1,15 +1,16 @@
+@use "sass:math";
 @import "../styles/common";
 
-@swh-btn-width: 1.2em;
-@swh-btn-height: 0.6em;
+$swh-btn-width: 1.2em;
+$swh-btn-height: 0.6em;
 
 .root {
   position: relative;
   display: inline-block;
   top: -1px;
-  width: @swh-btn-width;
-  height: @swh-btn-height;
-  border-radius: @swh-btn-height / 2;
+  width: $swh-btn-width;
+  height: $swh-btn-height;
+  border-radius: math.div($swh-btn-height, 2);
   background: var(--swh-switch-button-bg-color-off);
   box-shadow: 0 0 0 1px var(--swh-switch-button-main-color-off);
   cursor: pointer;
@@ -19,10 +20,10 @@
 .handler {
   position: absolute;
   //right: unset;
-  right: @swh-btn-width - @swh-btn-height;
-  width: @swh-btn-height;
-  height: @swh-btn-height;
-  border-radius: @swh-btn-height / 2;
+  right: $swh-btn-width - $swh-btn-height;
+  width: $swh-btn-height;
+  height: $swh-btn-height;
+  border-radius: math.div($swh-btn-height, 2);
   background: var(--swh-switch-button-main-color-off);
   border: 1px solid var(--swh-switch-button-bg-color-off);
   transition: 0.3s;

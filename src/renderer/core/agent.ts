@@ -4,7 +4,7 @@
  * @homepage: https://oldj.net
  */
 
-import { Actions } from '@main/types'
+import { Actions } from '@common/types'
 
 export const actions: Actions = new Proxy(
   {},

@@ -3,17 +3,11 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  app,
-  BrowserWindow,
-  dialog,
-  OpenDialogOptions,
-  OpenDialogReturnValue,
-} from 'electron'
+import { app, BrowserWindow, dialog, OpenDialogOptions, OpenDialogReturnValue } from 'electron'
 import { localdb } from '@main/data'
 import getDataFolder, { getDefaultDataDir } from '@main/libs/getDataDir'
 import getI18N from '@main/core/getI18N'
-import { IActionFunc } from '@root/main/types'
+import { IActionFunc } from '@common/types'
 
 export default async function (
   this: IActionFunc,

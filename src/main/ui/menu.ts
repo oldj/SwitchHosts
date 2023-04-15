@@ -4,16 +4,10 @@
  */
 
 import { findShow } from '@main/actions'
-import events from '@root/common/events'
-import {
-  BrowserWindow,
-  Menu,
-  MenuItem,
-  MenuItemConstructorOptions,
-  shell,
-} from 'electron'
-import { I18N, LocaleName } from '@root/common/i18n'
-import { homepage_url, feedback_url } from '@root/common/constants'
+import events from '@common/events'
+import { BrowserWindow, Menu, MenuItem, MenuItemConstructorOptions, shell } from 'electron'
+import { I18N, LocaleName } from '@common/i18n'
+import { homepage_url, feedback_url } from '@common/constants'
 import { broadcast } from '@main/core/agent'
 
 export const makeMainMenu = (locale: LocaleName = 'en') => {
@@ -123,8 +117,7 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         },
         {
           label: lang.toggle_developer_tools, // 'Toggle Developer Tools',
-          accelerator:
-            process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
+          accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
           click(item: MenuItem, focusedWindow: BrowserWindow | undefined) {
             if (focusedWindow) focusedWindow.webContents.toggleDevTools()
           },
@@ -282,8 +275,7 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
       // },
     ]
   } else if (os === 'win32' || os === 'linux') {
-    let submenu = (template[0] &&
-      template[0].submenu) as MenuItemConstructorOptions[]
+    let submenu = (template[0] && template[0].submenu) as MenuItemConstructorOptions[]
 
     if (submenu) {
       submenu.unshift({
@@ -308,8 +300,7 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
     }
 
     // VIEW
-    submenu = (template[2] &&
-      template[2].submenu) as MenuItemConstructorOptions[]
+    submenu = (template[2] && template[2].submenu) as MenuItemConstructorOptions[]
     submenu.splice(0, 4)
   }
 

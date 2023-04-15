@@ -9,7 +9,7 @@ import { swhdb } from '@main/data'
 import { dialog } from 'electron'
 import { promises as fs } from 'fs'
 import * as path from 'path'
-import version from '@root/version.json'
+import version from '@/version.json'
 
 export default async (): Promise<string | null | false> => {
   let { lang } = await getI18N()

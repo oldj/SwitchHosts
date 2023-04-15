@@ -5,7 +5,7 @@
  */
 
 import { swhdb } from '@main/data'
-import { IHostsHistoryObject } from '@root/common/data'
+import { IHostsHistoryObject } from '@common/data'
 
 export default async (): Promise<IHostsHistoryObject[]> => {
   let list = await swhdb.collection.history.all<IHostsHistoryObject>()

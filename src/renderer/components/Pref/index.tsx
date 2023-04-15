@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Box,
   Button,
@@ -25,22 +24,22 @@ import {
 import Proxy from '@renderer/components/Pref/Proxy'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { ConfigsType } from '@root/common/default_configs'
-import events from '@root/common/events'
+import { ConfigsType } from '@common/default_configs'
+import events from '@common/events'
+import useConfigs from '@renderer/models/useConfigs'
+import useI18n from '@renderer/models/useI18n'
 import React, { useEffect, useState } from 'react'
-import { BiSliderAlt } from 'react-icons/bi'
 import Advanced from './Advanced'
 import Commands from './Commands'
 import General from './General'
-import styles from './styles.less'
+import styles from './styles.module.scss'
+import { IconAdjustments } from '@tabler/icons-react'
 
-interface Props {}
-
-const PreferencePanel = (props: Props) => {
+const PreferencePanel = () => {
   const [is_open, setIsOpen] = useState(false)
-  const { configs, updateConfigs } = useModel('useConfigs')
+  const { configs, updateConfigs } = useConfigs()
   const [data, setData] = useState<ConfigsType | null>(configs)
-  const { lang } = useModel('useI18n')
+  const { lang } = useI18n()
   const { colorMode, setColorMode } = useColorMode()
 
   const onClose = () => {
@@ -85,7 +84,7 @@ const PreferencePanel = (props: Props) => {
         <DrawerHeader>
           <HStack>
             <Box mr={1}>
-              <BiSliderAlt />
+              <IconAdjustments size={16} />
             </Box>
             <Box>{lang.preferences}</Box>
           </HStack>

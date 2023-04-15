@@ -1,4 +1,4 @@
-import { LocaleName } from '@root/common/i18n'
+import { LocaleName } from '@common/i18n'
 import { FolderModeType } from './data.d'
 
 export type WriteModeType = null | 'overwrite' | 'append'
@@ -32,6 +32,8 @@ const configs = {
   http_api_only_local: true,
   tray_mini_window: true,
   multi_chose_folder_switch_all: false,
+
+  auto_download_update: true,
 
   // other
   env: 'PROD' as 'PROD' | 'DEV',

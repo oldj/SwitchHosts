@@ -4,7 +4,6 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import {
   Alert,
   AlertDescription,
@@ -19,7 +18,8 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import { actions } from '@renderer/core/agent'
-import { ICommandRunResult } from '@root/common/data'
+import { ICommandRunResult } from '@common/data'
+import useI18n from '@renderer/models/useI18n'
 import dayjs from 'dayjs'
 import React, { useEffect, useState } from 'react'
 import { BiTrash } from 'react-icons/bi'
@@ -31,7 +31,7 @@ interface Props {
 const CommandsHistory = (props: Props) => {
   const { is_show } = props
   const [list, setList] = useState<ICommandRunResult[]>([])
-  const { lang } = useModel('useI18n')
+  const { lang } = useI18n()
 
   const loadData = async () => {
     let data = await actions.cmdGetHistoryList()
@@ -75,7 +75,7 @@ const CommandsHistory = (props: Props) => {
           >
             <AlertIcon />
             <Box flex="1">
-              <AlertTitle d="block">
+              <AlertTitle>
                 <HStack>
                   <span>#{item._id}</span>
                   <span style={{ fontWeight: 'normal' }}>
@@ -91,7 +91,7 @@ const CommandsHistory = (props: Props) => {
                   />
                 </HStack>
               </AlertTitle>
-              <AlertDescription d="block" spacing={3}>
+              <AlertDescription>
                 {item.stdout ? (
                   <>
                     <Box>

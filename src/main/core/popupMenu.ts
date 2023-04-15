@@ -5,7 +5,7 @@
  */
 
 import { broadcast } from '@main/core/agent'
-import { IPopupMenuOption } from '@root/common/types'
+import { IPopupMenuOption } from '@common/types'
 import { ipcMain, Menu, MenuItem } from 'electron'
 
 ipcMain.on('x_popup_menu', (e, options: IPopupMenuOption) => {

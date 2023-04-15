@@ -4,14 +4,13 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import StatusBar from '@renderer/components/StatusBar'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IHostsListObject } from '@root/common/data'
-import events from '@root/common/events'
-import { IFindShowSourceParam } from '@root/common/types'
-import wait from '@root/common/utils/wait'
+import { IHostsListObject } from '@common/data'
+import events from '@common/events'
+import { IFindShowSourceParam } from '@common/types'
+import wait from '@common/utils/wait'
 import { useDebounceFn } from 'ahooks'
 import clsx from 'clsx'
 import CodeMirror from 'codemirror'
@@ -19,15 +18,14 @@ import 'codemirror/addon/comment/comment'
 import 'codemirror/addon/selection/mark-selection'
 import React, { useEffect, useRef, useState } from 'react'
 import modeHosts from './cm_hl'
-import './codemirror.less'
-import styles from './HostsEditor.less'
+import './codemirror.module.scss'
+import styles from './HostsEditor.module.scss'
+import useHostsData from '@renderer/models/useHostsData'
 
 modeHosts()
 
-interface Props {}
-
-const HostsEditor = (props: Props) => {
-  const { current_hosts, hosts_data, isReadOnly } = useModel('useHostsData')
+const HostsEditor = () => {
+  const { current_hosts, hosts_data, isReadOnly } = useHostsData()
   const [hosts_id, setHostsId] = useState(current_hosts?.id || '0')
   const [content, setContent] = useState('')
   const [is_read_only, setIsReadOnly] = useState(true)

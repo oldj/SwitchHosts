@@ -7,8 +7,8 @@
 // import data from v3 to v4
 
 import { swhdb } from '@main/data'
-import { cleanHostsList, flatten } from '@root/common/hostsFn'
-import version from '@root/version.json'
+import { cleanHostsList, flatten } from '@common/hostsFn'
+import version from '@/version.json'
 
 export default async (old_data: any) => {
   old_data = cleanHostsList(old_data)

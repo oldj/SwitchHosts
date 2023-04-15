@@ -1,6 +1,6 @@
 .root {
-  @select-bg-color: var(--tree-drag-select-bg-color);
-  @drop-indicator-color: var(--tree-drag-indicator-color);
+  $select-bg-color: var(--tree-drag-select-bg-color);
+  $drop-indicator-color: var(--tree-drag-indicator-color);
 
   .node {
     &.is_dragging {
@@ -11,7 +11,7 @@
     }
 
     &.selected {
-      background: @select-bg-color;
+      background: $select-bg-color;
       color: #fff;
     }
   }
@@ -43,41 +43,45 @@
     text-overflow: ellipsis;
   }
 
-  .indicator_circle {
+  @mixin indicator_circle {
     content: "";
     display: block;
     position: absolute;
-    border: 2px solid @drop-indicator-color;
-    width: 6px;
-    height: 6px;
+    border: 2px solid $drop-indicator-color;
+    width: 4px;
+    height: 4px;
     border-radius: 50%;
     z-index: 1000;
   }
 
+  .indicator_circle {
+    @include indicator_circle;
+  }
+
   .drop_before {
     .ln_body {
-      box-shadow: 0 -2px 0 0 @drop-indicator-color;
+      box-shadow: 0 -2px 0 0 $drop-indicator-color;
 
       &:before {
-        .indicator_circle;
-        margin: -4px 0 0 -4px;
+        @include indicator_circle;
+        margin: -5px 0 0 -6px;
       }
     }
   }
 
   .drop_in {
     .ln_body {
-      background: @drop-indicator-color;
+      background: $drop-indicator-color;
     }
   }
 
   .drop_after {
     .ln_body {
-      box-shadow: 0 2px 0 0 @drop-indicator-color;
+      box-shadow: 0 2px 0 0 $drop-indicator-color;
 
       &:after {
-        .indicator_circle;
-        margin: -2px 0 0 -4px;
+        @include indicator_circle;
+        margin: -3px 0 0 -6px;
       }
     }
   }

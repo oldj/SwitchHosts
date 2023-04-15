@@ -4,11 +4,11 @@
  * @homepage: https://oldj.net
  */
 
-import { checkUpdate, getList, refreshHosts } from '@main/actions'
+import { checkUpdate, configGet, getList, refreshHosts } from '@main/actions'
 import { broadcast } from '@main/core/agent'
-import { IHostsListObject } from '@root/common/data'
-import events from '@root/common/events'
-import { flatten } from '@root/common/hostsFn'
+import { IHostsListObject } from '@common/data'
+import events from '@common/events'
+import { flatten } from '@common/hostsFn'
 
 let t: any
 let ts_last_server_check = 0
@@ -49,6 +49,9 @@ const checkRefresh = async () => {
 }
 
 const checkServer = async () => {
+  let auto_download_update = await configGet('auto_download_update')
+  if (!auto_download_update) return
+
   let ts = new Date().getTime()
   if (!ts_last_server_check || ts - ts_last_server_check > 3600 * 1000) {
     await checkUpdate()

@@ -3,7 +3,7 @@
  * @homepage: https://bergo.dev
  */
 
-import { LanguageDict } from '@root/common/types'
+import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
   _app_name: 'SwitchHosts',
@@ -32,8 +32,7 @@ const lang: LanguageDict = {
   close: 'Schließen',
   colon: ': ',
   commands: 'Befehle',
-  commands_help:
-    'Die folgenden Systembefehle werden ausgeführt, wenn Hosts angewendet werden:',
+  commands_help: 'Die folgenden Systembefehle werden ausgeführt, wenn Hosts angewendet werden:',
   commands_title: 'Befehl nach dem Anlegen eines Hosts',
   comment_current_line: 'Aktuelle Zeile kommentieren',
   content: 'Inhalt',
@@ -67,8 +66,7 @@ const lang: LanguageDict = {
   host: 'Gastgeber',
   hosts_add: 'Neue Hosts hinzufügen',
   hosts_delete: 'Diesen Host löschen',
-  hosts_delete_confirm:
-    'Sind Sie sicher, dass Sie die aktuellen Hosts löschen wollen?',
+  hosts_delete_confirm: 'Sind Sie sicher, dass Sie die aktuellen Hosts löschen wollen?',
   hosts_edit: 'Hosts bearbeiten',
   hosts_title: 'Titel des Hosts',
   hosts_type: 'Hosts Typ',
@@ -105,8 +103,7 @@ const lang: LanguageDict = {
   minutes: 'Minuten',
   move_items_to_trashcan: 'Verschiebe {0} Objekte in den Mülleimer',
   move_to_trashcan: 'In die Mülltonne verschieben',
-  multi_chose_folder_switch_all:
-    'Mehrfachauswahl-Ordnerschalter zur Steuerung von Unterelementen',
+  multi_chose_folder_switch_all: 'Mehrfachauswahl-Ordnerschalter zur Steuerung von Unterelementen',
   need_to_relaunch: 'Muss neu gestartet werden',
   need_to_relaunch_after_setting_changed:
     'Die Einstellungen wurden geändert und werden erst nach einem Neustart der App wirksam.',
@@ -153,8 +150,7 @@ const lang: LanguageDict = {
   sudo_prompt_title: 'Geben Sie Ihr sudo-Passwort ein',
   system_hosts: 'System-Hosts',
   system_hosts_history: 'Historische Versionen der System-Hosts',
-  system_hosts_history_delete_confirm:
-    'Sind Sie sicher, dass Sie dieses Element löschen wollen?',
+  system_hosts_history_delete_confirm: 'Sind Sie sicher, dass Sie dieses Element löschen wollen?',
   system_hosts_history_help:
     'Wenn die Gesamtzahl der historischen Einträge diese Grenze überschreitet, wird der älteste Eintrag gelöscht.',
   system_hosts_history_limit: 'Maximale Anzahl von Datensätzen: ',
@@ -169,8 +165,7 @@ const lang: LanguageDict = {
   toggle_full_screen: 'Vollbildmodus einschalten',
   trashcan: 'Mülleimer',
   trashcan_clear: 'Den Mülleimer leeren',
-  trashcan_clear_confirm:
-    'Sind Sie sicher, dass Sie den Mülleimer leeren wollen?',
+  trashcan_clear_confirm: 'Sind Sie sicher, dass Sie den Mülleimer leeren wollen?',
   trashcan_delete_confirm: 'Möchten Sie dieses Objekt vollständig löschen?',
   trashcan_restore: 'Wiederherstellen',
   tray_mini_window: 'Taskleistensymbol-Verknüpfung',
@@ -192,8 +187,7 @@ const lang: LanguageDict = {
   write_mode: 'Schreibmodus',
   write_mode_append_help:
     'Hängen Sie die neuen Datensätze an das Ende der Hosts-Datei des Systems an.',
-  write_mode_overwrite_help:
-    'Überschreibt die Systemhosts-Datei mit den neuen Datensätzen.',
+  write_mode_overwrite_help: 'Überschreibt die Systemhosts-Datei mit den neuen Datensätzen.',
   write_mode_set: 'Schreibmodus einstellen',
   your_data_is: 'Ihre Datendateien sind gespeichert in:',
   your_hosts_file_is: 'Ihre Hosts-Datei befindet sich in:',

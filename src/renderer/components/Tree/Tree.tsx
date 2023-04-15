@@ -4,19 +4,13 @@
  * @homepage: https://oldj.net
  */
 
-import { ITreeNodeData, NodeIdType } from '@root/common/tree'
+import { ITreeNodeData, NodeIdType } from '@common/tree'
 import clsx from 'clsx'
 import lodash from 'lodash'
 import React, { useEffect, useState } from 'react'
-import {
-  canBeSelected,
-  flatten,
-  getNodeById,
-  selectTo,
-  treeMoveNode,
-} from './fn'
+import { canBeSelected, flatten, getNodeById, selectTo, treeMoveNode } from './fn'
 import Node, { NodeUpdate } from './Node'
-import styles from './style.less'
+import styles from './style.module.scss'
 
 export type DropWhereType = 'before' | 'in' | 'after'
 export type MultipleSelectType = 0 | 1 | 2
@@ -28,15 +22,9 @@ interface ITreeProps {
   nodeSelectedClassName?: string
   nodeDropInClassName?: string
   nodeCollapseArrowClassName?: string
-  nodeRender?: (
-    node: ITreeNodeData,
-    update: NodeUpdate,
-  ) => React.ReactElement | null
+  nodeRender?: (node: ITreeNodeData, update: NodeUpdate) => React.ReactElement | null
   nodeAttr?: (node: ITreeNodeData) => Partial<ITreeNodeData>
-  draggingNodeRender?: (
-    node: ITreeNodeData,
-    source_ids: string[],
-  ) => React.ReactElement
+  draggingNodeRender?: (node: ITreeNodeData, source_ids: string[]) => React.ReactElement
   collapseArrow?: string | React.ReactElement
   onChange?: (tree: ITreeNodeData[]) => void
   indent_px?: number
@@ -52,9 +40,7 @@ const Tree = (props: ITreeProps) => {
   const [is_dragging, setIsDragging] = useState(false)
   const [drag_source_id, setDragSourceId] = useState<NodeIdType | null>(null)
   const [drop_target_id, setDropTargetId] = useState<NodeIdType | null>(null)
-  const [selected_ids, setSelectedIds] = useState<NodeIdType[]>(
-    props.selected_ids || [],
-  )
+  const [selected_ids, setSelectedIds] = useState<NodeIdType[]>(props.selected_ids || [])
   const [drop_where, setDropWhere] = useState<DropWhereType | null>(null)
 
   useEffect(() => {
@@ -62,10 +48,7 @@ const Tree = (props: ITreeProps) => {
   }, [data])
 
   useEffect(() => {
-    if (
-      props.selected_ids &&
-      props.selected_ids.join(',') !== selected_ids.join(',')
-    ) {
+    if (props.selected_ids && props.selected_ids.join(',') !== selected_ids.join(',')) {
       setSelectedIds(props.selected_ids)
     }
   }, [props.selected_ids])
@@ -118,10 +101,7 @@ const Tree = (props: ITreeProps) => {
     onTreeChange(tree2)
   }
 
-  const onSelectOne = (
-    id: NodeIdType,
-    multiple_type: MultipleSelectType = 0,
-  ) => {
+  const onSelectOne = (id: NodeIdType, multiple_type: MultipleSelectType = 0) => {
     // console.log('multiple_type:', multiple_type, 'ids:', selected_ids, 'id:', id)
     const { onSelect } = props
     let new_selected_ids: NodeIdType[] = []

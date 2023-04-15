@@ -7,17 +7,10 @@
 import { configGet, configSet, updateTrayTitle } from '@main/actions'
 import { broadcast } from '@main/core/agent'
 import { makeWindow } from '@main/ui/tray/window'
-import events from '@root/common/events'
-import { I18N } from '@root/common/i18n'
-import version from '@root/version.json'
-import {
-  app,
-  BrowserWindow,
-  Menu,
-  MenuItemConstructorOptions,
-  screen,
-  Tray,
-} from 'electron'
+import events from '@common/events'
+import { I18N } from '@common/i18n'
+import version from '@/version.json'
+import { app, BrowserWindow, Menu, MenuItemConstructorOptions, screen, Tray } from 'electron'
 import * as path from 'path'
 
 let tray: Tray
@@ -152,8 +145,7 @@ const getPosition = () => {
   }
 
   if (x < 0) x = 0
-  if (x + window_bounds.width > screen_bounds.width)
-    x = screen_bounds.width - window_bounds.width
+  if (x + window_bounds.width > screen_bounds.width) x = screen_bounds.width - window_bounds.width
 
   x = Math.round(x)
   y = Math.round(y)
@@ -208,8 +200,7 @@ const window = () => {
 }
 
 const show = () => {
-  let { x, y } =
-    process.platform === 'linux' ? getLinuxPosition() : getPosition()
+  let { x, y } = process.platform === 'linux' ? getLinuxPosition() : getPosition()
   win.setPosition(x, y, true)
   win.show()
   // win.focus()

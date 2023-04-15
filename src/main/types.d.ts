@@ -5,25 +5,19 @@
  */
 
 import Tracer from '@main/libs/tracer'
-import { LocaleName } from '@root/common/i18n'
+import { LocaleName } from '@common/i18n'
 import SwhDb from 'potdb'
-import { BrowserWindow, WebContents } from 'electron'
-import * as actions from './actions'
-
-export type Actions = typeof actions
+import { BrowserWindow } from 'electron'
+import * as actions from '@main/actions'
 
 export interface ActionData {
-  action: keyof Actions
+  action: keyof typeof actions
   data?: any
   callback: string
 }
 
 export interface IHostsWriteOptions {
   sudo_pswd?: string
-}
-
-export interface IActionFunc {
-  sender: WebContents
 }
 
 declare global {

@@ -4,7 +4,7 @@
  */
 
 import { cfgdb } from '@main/data'
-import default_configs, { ConfigsType } from '@root/common/default_configs'
+import default_configs, { ConfigsType } from '@common/default_configs'
 
 export default async (): Promise<ConfigsType> => {
   if (!default_configs.locale && global.system_locale) {

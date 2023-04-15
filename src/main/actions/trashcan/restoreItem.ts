@@ -5,14 +5,11 @@
 
 import { getList, setList } from '@main/actions'
 import { swhdb } from '@main/data'
-import { getNodeById } from '@root/common/tree'
-import {
-  IHostsListObject,
-  ITrashcanListObject,
-} from '@root/common/data'
+import { getNodeById } from '@common/tree'
+import { IHostsListObject, ITrashcanListObject } from '@common/data'
 
 export default async (id: string): Promise<boolean> => {
-  let trashcan_item: ITrashcanListObject = await swhdb.list.trashcan.find(
+  let trashcan_item: ITrashcanListObject | undefined = await swhdb.list.trashcan.find(
     (i) => i.data.id === id,
   )
 

@@ -6,7 +6,7 @@
 
 import clsx from 'clsx'
 import React, { useEffect, useState } from 'react'
-import styles from './SwitchButton.less'
+import styles from './SwitchButton.module.scss'
 
 interface Props {
   on: boolean
@@ -36,11 +36,7 @@ const SwitchButton = (props: Props) => {
 
   return (
     <div
-      className={clsx(
-        styles.root,
-        is_on && styles.on,
-        is_disabled && styles.disabled,
-      )}
+      className={clsx(styles.root, is_on && styles.on, is_disabled && styles.disabled)}
       onClick={onClick}
     >
       <div className={styles.handler} />

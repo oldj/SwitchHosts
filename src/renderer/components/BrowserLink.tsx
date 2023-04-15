@@ -5,7 +5,7 @@
  */
 
 import { actions, agent } from '@renderer/core/agent'
-import events from '@root/common/events'
+import events from '@common/events'
 import React from 'react'
 
 interface Props {

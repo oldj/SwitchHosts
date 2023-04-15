@@ -4,17 +4,24 @@
  * @homepage: https://oldj.net
  */
 
-import { useModel } from '@@/plugin-model/useModel'
 import { Box, Flex, HStack, IconButton } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import ConfigMenu from '@renderer/components/TopBar/ConfigMenu'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@root/common/events'
+import events from '@common/events'
+import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
 import React, { useEffect, useState } from 'react'
-import { BiHistory, BiPlus, BiSidebar, BiX } from 'react-icons/bi'
-import styles from './index.less'
+import { BiX } from 'react-icons/bi'
+import {
+  IconHistory,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
+  IconPlus,
+} from '@tabler/icons-react'
+import styles from './index.module.scss'
 
 interface IProps {
   show_left_panel: boolean
@@ -23,15 +30,16 @@ interface IProps {
 
 export default (props: IProps) => {
   const { show_left_panel, use_system_window_frame } = props
-  const { lang } = useModel('useI18n')
-  const { isHostsInTrashcan, current_hosts, isReadOnly } =
-    useModel('useHostsData')
+  const { lang } = useI18n()
+  const { isHostsInTrashcan, current_hosts, isReadOnly } = useHostsData()
   const [is_on, setIsOn] = useState(!!current_hosts?.on)
 
   const show_toggle_switch =
     !show_left_panel && current_hosts && !isHostsInTrashcan(current_hosts.id)
   const show_history = !current_hosts
-  const show_close_button = agent.platform === 'linux' && !use_system_window_frame || agent.platform !== 'darwin' && agent.platform !== 'linux'
+  const show_close_button =
+    (agent.platform === 'linux' && !use_system_window_frame) ||
+    (agent.platform !== 'darwin' && agent.platform !== 'linux')
 
   useEffect(() => {
     setIsOn(!!current_hosts?.on)
@@ -52,16 +60,22 @@ export default (props: IProps) => {
       <Flex align="center" className={styles.left}>
         <IconButton
           aria-label="Toggle sidebar"
-          icon={<BiSidebar />}
+          icon={
+            show_left_panel ? (
+              <IconLayoutSidebarLeftCollapse size={16} />
+            ) : (
+              <IconLayoutSidebarLeftExpand size={16} />
+            )
+          }
           onClick={() => {
-            agent.broadcast(events.toggle_left_pannel, !show_left_panel)
+            agent.broadcast(events.toggle_left_panel, !show_left_panel)
           }}
           variant="ghost"
           mr={1}
         />
         <IconButton
           aria-label="Add"
-          icon={<BiPlus />}
+          icon={<IconPlus size={16} />}
           onClick={() => agent.broadcast(events.add_new)}
           variant="ghost"
         />
@@ -72,14 +86,9 @@ export default (props: IProps) => {
           {current_hosts ? (
             <>
               <span className={styles.hosts_icon}>
-                <ItemIcon
-                  type={current_hosts.type}
-                  is_collapsed={!current_hosts.folder_open}
-                />
+                <ItemIcon type={current_hosts.type} is_collapsed={!current_hosts.folder_open} />
               </span>
-              <span className={styles.hosts_title}>
-                {current_hosts.title || lang.untitled}
-              </span>
+              <span className={styles.hosts_title}>{current_hosts.title || lang.untitled}</span>
             </>
           ) : (
             <>
@@ -102,8 +111,7 @@ export default (props: IProps) => {
             <SwitchButton
               on={is_on}
               onChange={(on) => {
-                current_hosts &&
-                  agent.broadcast(events.toggle_item, current_hosts.id, on)
+                current_hosts && agent.broadcast(events.toggle_item, current_hosts.id, on)
               }}
             />
           </Box>
@@ -111,7 +119,7 @@ export default (props: IProps) => {
         {show_history ? (
           <IconButton
             aria-label="Show history"
-            icon={<BiHistory />}
+            icon={<IconHistory size={16} />}
             variant="ghost"
             onClick={() => agent.broadcast(events.show_history)}
           />

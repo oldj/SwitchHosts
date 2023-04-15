@@ -5,9 +5,10 @@
  */
 
 import * as actions from '@main/actions'
-import { ActionData, IActionFunc } from '@main/types'
+import { ActionData } from '@main/types'
 import { ipcMain } from 'electron'
 import { EventEmitter } from 'events'
+import { IActionFunc } from '@common/types'
 
 const ee = new EventEmitter()
 const registered_clients: { [key: string]: any } = {}
@@ -32,10 +33,7 @@ ipcMain.on('x_unreg', (e, d) => {
     delete registered_clients[name]
   } else {
     for (let k in registered_clients) {
-      if (
-        registered_clients.hasOwnProperty(k) &&
-        registered_clients[k] === e.sender
-      ) {
+      if (registered_clients.hasOwnProperty(k) && registered_clients[k] === e.sender) {
         delete registered_clients[k]
         break
       }
