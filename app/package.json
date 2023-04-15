@@ -1,7 +1,7 @@
 {
   "name": "switchhosts",
   "productName": "SwitchHosts",
-  "version": "4.2.0.6104",
+  "version": "4.2.0.6105",
   "description": "Switch hosts quickly!",
   "main": "./main.js",
   "author": {
