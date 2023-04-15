@@ -48,8 +48,8 @@
     display: block;
     position: absolute;
     border: 2px solid $drop-indicator-color;
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
     border-radius: 50%;
     z-index: 1000;
   }
@@ -64,7 +64,7 @@
 
       &:before {
         @include indicator_circle;
-        margin: -4px 0 0 -4px;
+        margin: -5px 0 0 -6px;
       }
     }
   }
@@ -81,7 +81,7 @@
 
       &:after {
         @include indicator_circle;
-        margin: -2px 0 0 -4px;
+        margin: -3px 0 0 -6px;
       }
     }
   }
