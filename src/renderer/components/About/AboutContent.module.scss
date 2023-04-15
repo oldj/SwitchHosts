@@ -16,13 +16,21 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  box-shadow: 0 1px 1px 1px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 1px 1px rgba(0, 0, 0, 0.1);
 }
 
 .names {
-  text-align: center;
+  @include swh-scroll-y;
+  display: flex;
+  flex-wrap: wrap;
+  //justify-content: center;
   margin: 8px 0 20px 0;
-  max-width: 350px;
+  //max-width: 350px;
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid var(--swh-border-color-1);
+  border-radius: 4px;
+  padding: 8px 4px;
 
   a {
     margin: 0 0.5em;

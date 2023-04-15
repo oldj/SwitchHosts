@@ -33,4 +33,7 @@ export default [
   { name: 'Wang Weitao', link: 'https://github.com/watonyweng' },
   { name: 'kamatte', link: 'https://github.com/kamatte-me' },
   { name: 'Yuyao Nie', link: 'https://github.com/nieyuyao' },
+  { name: 'Xav83', link: 'https://github.com/Xav83' },
+  { name: 'Mango Jelly Pudding', link: 'https://github.com/EvanHsieh0415' },
+  { name: 'Alex Zappa', link: 'https://github.com/reatlat' },
 ]
