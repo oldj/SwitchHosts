@@ -14,7 +14,13 @@ import events from '@common/events'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import React, { useEffect, useState } from 'react'
-import { BiHistory, BiPlus, BiSidebar, BiX } from 'react-icons/bi'
+import { BiX } from 'react-icons/bi'
+import {
+  IconHistory,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
+  IconPlus,
+} from '@tabler/icons-react'
 import styles from './index.module.scss'
 
 interface IProps {
@@ -54,7 +60,13 @@ export default (props: IProps) => {
       <Flex align="center" className={styles.left}>
         <IconButton
           aria-label="Toggle sidebar"
-          icon={<BiSidebar />}
+          icon={
+            show_left_panel ? (
+              <IconLayoutSidebarLeftCollapse size={16} />
+            ) : (
+              <IconLayoutSidebarLeftExpand size={16} />
+            )
+          }
           onClick={() => {
             agent.broadcast(events.toggle_left_panel, !show_left_panel)
           }}
@@ -63,7 +75,7 @@ export default (props: IProps) => {
         />
         <IconButton
           aria-label="Add"
-          icon={<BiPlus />}
+          icon={<IconPlus size={16} />}
           onClick={() => agent.broadcast(events.add_new)}
           variant="ghost"
         />
@@ -107,7 +119,7 @@ export default (props: IProps) => {
         {show_history ? (
           <IconButton
             aria-label="Show history"
-            icon={<BiHistory />}
+            icon={<IconHistory size={16} />}
             variant="ghost"
             onClick={() => agent.broadcast(events.show_history)}
           />

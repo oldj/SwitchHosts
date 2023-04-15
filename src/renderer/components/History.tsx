@@ -33,10 +33,10 @@ import clsx from 'clsx'
 import dayjs from 'dayjs'
 import prettyBytes from 'pretty-bytes'
 import React, { useState } from 'react'
-import { BiDetail, BiHelpCircle, BiHistory, BiTrash } from 'react-icons/bi'
-import useConfigs from '../models/useConfigs'
-import useI18n from '../models/useI18n'
+import useConfigs from '@renderer/models/useConfigs'
+import useI18n from '@renderer/models/useI18n'
 import styles from './History.module.scss'
+import { IconFileTime, IconHelpCircle, IconHistory, IconX } from '@tabler/icons-react'
 
 interface IHistoryProps {
   list: IHostsHistoryObject[]
@@ -73,7 +73,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
           >
             <HStack>
               <Box>
-                <BiDetail />
+                <IconFileTime size={16} />
               </Box>
               <VStack align="left" spacing={0}>
                 <Box>{dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}</Box>
@@ -152,7 +152,9 @@ const History = () => {
 
   useOnBroadcast(events.show_history, () => {
     setIsOpen(true)
-    loadData()
+    loadData().catch((e) => {
+      console.error(e)
+    })
   })
 
   let history_limit_values: number[] = [10, 50, 100, 500]
@@ -175,7 +177,7 @@ const History = () => {
         <DrawerHeader>
           <HStack>
             <Box mr={1}>
-              <BiHistory />
+              <IconHistory size={16} />
             </Box>
             <Box>{lang.system_hosts_history}</Box>
           </HStack>
@@ -208,12 +210,12 @@ const History = () => {
             </Box>
             <Tooltip label={lang.system_hosts_history_help} aria-label="A tooltip">
               <Box ml={3}>
-                <BiHelpCircle />
+                <IconHelpCircle size={16} />
               </Box>
             </Tooltip>
             <Spacer />
             <Button
-              leftIcon={<BiTrash />}
+              leftIcon={<IconX size={16} />}
               variant="outline"
               mr={3}
               colorScheme="pink"

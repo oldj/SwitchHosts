@@ -6,14 +6,13 @@
 
 import React from 'react'
 import {
-  BiDesktop,
-  BiFile,
-  BiFolder,
-  BiFolderOpen,
-  BiGlobe,
-  BiLayer,
-  BiTrash,
-} from 'react-icons/bi'
+  IconDeviceDesktop,
+  IconFileText,
+  IconFolder,
+  IconStack2,
+  IconTrash,
+  IconWorld,
+} from '@tabler/icons-react'
 
 interface Props {
   type?: string
@@ -25,17 +24,17 @@ const ItemIcon = (props: Props) => {
 
   switch (type) {
     case 'folder':
-      return is_collapsed ? <BiFolder /> : <BiFolderOpen />
+      return is_collapsed ? <IconFolder size={16} /> : <IconFolder size={16} />
     case 'remote':
-      return <BiGlobe />
+      return <IconWorld size={16} />
     case 'group':
-      return <BiLayer />
+      return <IconStack2 size={16} />
     case 'system':
-      return <BiDesktop />
+      return <IconDeviceDesktop size={16} />
     case 'trashcan':
-      return <BiTrash />
+      return <IconTrash size={16} />
     default:
-      return <BiFile />
+      return <IconFileText size={16} />
   }
 }
 

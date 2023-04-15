@@ -38,6 +38,7 @@
     "@chakra-ui/react": "2.5.5",
     "@emotion/react": "11.10.6",
     "@emotion/styled": "11.10.6",
+    "@tabler/icons-react": "2.16.0",
     "@types/assert": "1.5.6",
     "@types/codemirror": "5.60.7",
     "@types/express": "4.17.17",
