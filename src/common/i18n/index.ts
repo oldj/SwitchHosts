@@ -6,6 +6,7 @@
 
 import en from './languages/en'
 import zh from './languages/zh'
+import zh_hant from './languages/zh-hant'
 import fr from './languages/fr'
 import de from './languages/de'
 import ja from './languages/ja'
@@ -16,6 +17,8 @@ export const languages = {
   zh,
   cn: zh,
   'zh-CN': zh,
+  zh_hant: zh_hant,
+  'zh-TW': zh_hant,
   fr,
   de,
   ja,
