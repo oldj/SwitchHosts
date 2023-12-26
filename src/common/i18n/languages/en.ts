@@ -32,7 +32,7 @@ export default {
   commands: 'Commands',
   commands_help:
     'The following system commands will be executed when Hosts applied:',
-  commands_title: 'Command after a hosts be applied',
+  commands_title: 'Command after hosts are applied',
   comment_current_line: 'Comment current line',
   content: 'Content',
   copy: 'Copy',
