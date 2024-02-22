@@ -36,4 +36,7 @@ export default [
   { name: 'Xav83', link: 'https://github.com/Xav83' },
   { name: 'Mango Jelly Pudding', link: 'https://github.com/EvanHsieh0415' },
   { name: 'Alex Zappa', link: 'https://github.com/reatlat' },
+  { name: 'shenshen', link: 'https://github.com/imshenshen' },
+  { name: 'ChunRen Zhang', link: 'https://github.com/rayatn1011' },
+  { name: 'Barış Uzun', link: 'https://github.com/barisuzunn' },
 ]
