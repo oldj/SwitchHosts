@@ -59,7 +59,7 @@
     "cross-env": "7.0.3",
     "dotenv": "16.0.3",
     "electron": "24.8.5",
-    "electron-builder": "23.6.0",
+    "electron-builder": "24.13.3",
     "electron-notarize": "1.2.1",
     "espower-typescript": "10.0.1",
     "execa": "7.1.1",
