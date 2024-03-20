@@ -11,6 +11,7 @@ import fr from './languages/fr'
 import de from './languages/de'
 import ja from './languages/ja'
 import tr from './languages/tr'
+import ko from './languages/ko'
 import { LanguageDict, LanguageKey } from '@common/types'
 
 export const languages = {
@@ -24,6 +25,7 @@ export const languages = {
   de,
   ja,
   tr,
+  ko,
 }
 
 export type LocaleName = keyof typeof languages
