@@ -23,7 +23,7 @@ export default {
   choice_mode_multiple: '다중모드',
   choice_mode_single: '단일모드',
   choices: '선택',
-  chosen: '선택된',
+  chosen: '선택됨',
   clear_history: '이력 삭제',
   click_to_open: '클릭하여 열기',
   close: '닫기',
@@ -190,7 +190,7 @@ export default {
   write_mode_overwrite_help:
     '시스템 호스트 파일에 새 레코드로 덮어씁니다.',
   write_mode_set: '쓰기 모드 설정',
-  your_data_is: '데이터 저장위치:',
+  your_data_is: '데이터 저장 위치:',
   your_hosts_file_is: '호스트 파일 위치:',
   zoom: '확대',
   zoom_in: '확대',
