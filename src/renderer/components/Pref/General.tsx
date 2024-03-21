@@ -53,6 +53,7 @@ const General = (props: IProps) => {
             <option value="de">Deutsch</option>
             <option value="ja">日本語</option>
             <option value="tr">Türkçe</option>
+            <option value="ko">한국어</option>
           </Select>
         </HStack>
       </FormControl>
