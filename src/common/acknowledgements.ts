@@ -39,4 +39,5 @@ export default [
   { name: 'shenshen', link: 'https://github.com/imshenshen' },
   { name: 'ChunRen Zhang', link: 'https://github.com/rayatn1011' },
   { name: 'Barış Uzun', link: 'https://github.com/barisuzunn' },
+  { name: 'Hwang In-wook', link: 'https://github.com/wooklab' },
 ]
