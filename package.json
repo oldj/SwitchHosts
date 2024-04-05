@@ -79,7 +79,7 @@
     "smooth-scroll-into-view-if-needed": "2.0.0",
     "ts-node": "10.9.1",
     "typescript": "5.0.4",
-    "vite": "4.5.2",
+    "vite": "4.5.3",
     "vite-plugin-static-copy": "0.13.1",
     "vite-plugin-svgr": "2.4.0",
     "vite-tsconfig-paths": "4.2.0"
