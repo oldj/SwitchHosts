@@ -6,15 +6,7 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    tsconfigPaths(),
-    svgr({
-      // Set it to `true` to export React component as default.
-      // Notice that it will overrides the default behavior of Vite.
-      exportAsDefault: true,
-    }),
-    react(),
-  ],
+  plugins: [tsconfigPaths(), svgr({}), react()],
   base: './',
   root: path.join(__dirname, 'src', 'renderer'),
   build: {

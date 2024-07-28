@@ -254,7 +254,7 @@ const find = () => {
         scrollIntoView(el.current, {
           behavior: 'smooth',
           scrollMode: 'if-needed',
-        }).catch((e) => console.error(e))
+        })
       }
     }, [el, current_result_idx, last_scroll_result_idx])
 
