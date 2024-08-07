@@ -1,57 +1,36 @@
 /**
- * make
+ * make.js
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
 require('dotenv').config()
+const path = require('path')
+const fse = require('fs-extra')
 const version = require('../src/version.json')
 const builder = require('electron-builder')
-const fse = require('fs-extra')
 const homedir = require('os').homedir()
-const path = require('path')
-
-const root_dir = path.normalize(path.join(__dirname, '..'))
-const dist_dir = path.normalize(path.join(__dirname, '..', 'dist'))
-
-const electronLanguages = ['en', 'fr', 'zh_CN', 'de', 'ja', 'tr', 'ko']
+const { APP_NAME, root_dir, dist_dir, electronLanguages } = require('./vars')
 
 const TARGET_PLATFORMS_configs = {
   mac: {
-    mac: ['default'],
-  },
-  macs: {
     mac: ['dmg:x64', 'dmg:arm64'],
-  },
-  linux: {
-    linux: [
-      'AppImage:x64',
-      'deb:x64',
-      'AppImage:arm64',
-      'deb:arm64',
-      'AppImage:armv7l',
-      'deb:armv7l',
-    ],
   },
   win: {
-    win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
+    win: ['nsis:ia32', 'nsis:x64', 'nsis:arm64', 'portable:x64'],
+  },
+  linux: {
+    linux: ['AppImage:x64', 'AppImage:arm64', 'deb:x64', 'deb:arm64'],
   },
   all: {
-    mac: ['dmg:x64', 'dmg:arm64'],
-    linux: [
-      'AppImage:x64',
-      'deb:x64',
-      'AppImage:arm64',
-      'deb:arm64',
-      'AppImage:armv7l',
-      'deb:armv7l',
-    ],
-    win: ['nsis:ia32', 'nsis:x64', 'portable:ia32'],
+    mac: ['dmg:x64', 'dmg:arm64', 'zip:universal'],
+    win: ['nsis:ia32', 'nsis:x64', 'nsis:arm64', 'portable:x64', 'zip:x64' /* , 'appx:x64'*/],
+    linux: ['AppImage:x64', 'AppImage:arm64', 'deb:x64', 'deb:arm64'],
   },
 }
 
-const APP_NAME = 'SwitchHosts'
-const { IDENTITY } = process.env
+const { APP_BUNDLE_ID, IDENTITY } = process.env
+console.log(`APP_BUNDLE_ID: ${APP_BUNDLE_ID}`)
 
 const cfg_common = {
   copyright: `Copyright © ${new Date().getFullYear()}`,
@@ -62,8 +41,9 @@ const cfg_common = {
   },
   electronDownload: {
     cache: path.join(homedir, '.electron'),
-    mirror: 'https://npm.taobao.org/mirrors/electron/',
+    mirror: 'https://registry.npmmirror.com/-/binary/electron/',
   },
+  asar: true,
 }
 
 const beforeMake = async () => {
@@ -104,14 +84,12 @@ const doMake = async () => {
   let targets = TARGET_PLATFORMS_configs.all
 
   cfg_common.compression = 'maximum'
-  if (MAKE_FOR && MAKE_FOR !== 'all') {
-    cfg_common.compression = 'store'
-  }
 
   if (MAKE_FOR === 'dev') {
     targets = TARGET_PLATFORMS_configs.mac
+    cfg_common.compression = 'store'
   } else if (MAKE_FOR === 'mac') {
-    targets = TARGET_PLATFORMS_configs.macs
+    targets = TARGET_PLATFORMS_configs.mac
   } else if (MAKE_FOR === 'win') {
     targets = TARGET_PLATFORMS_configs.win
   } else if (MAKE_FOR === 'linux') {
@@ -140,6 +118,7 @@ const doMake = async () => {
           CFBundleLocalizations: electronLanguages,
           CFBundleDevelopmentRegion: 'en',
         },
+        notarize: false,
       },
       dmg: {
         //backgroundColor: '#f1f1f6',
@@ -173,6 +152,8 @@ const doMake = async () => {
         installerIcon: 'assets/installer-icon.ico',
         oneClick: false,
         allowToChangeInstallationDirectory: true,
+        deleteAppDataOnUninstall: false,
+        shortcutName: 'SwitchHosts',
         artifactName: '${productName}_windows_installer_${arch}_${version}(${buildVersion}).${ext}',
       },
       portable: {
@@ -205,8 +186,10 @@ const doMake = async () => {
     await beforeMake()
     await doMake()
     await afterMake()
+    //await macSign()
+
     console.log('-> make Done!')
   } catch (e) {
-    console.error(e)
+    console.log(e)
   }
 })()

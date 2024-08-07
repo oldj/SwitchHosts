@@ -5,7 +5,21 @@
  */
 
 require('dotenv').config()
-const { notarize } = require('electron-notarize')
+const { notarize } = require('@electron/notarize')
+const { exec } = require('child_process')
+
+function getPasswordFromKeychain(account, service) {
+  return new Promise((resolve, reject) => {
+    const command = `security find-generic-password -a '${account}' -s '${service}' -w`
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error(`Error fetching password: ${stderr}`))
+      } else {
+        resolve(stdout.trim())
+      }
+    })
+  })
+}
 
 exports.default = async function notarizing(context) {
   const appName = context.packager.appInfo.productFilename
@@ -21,23 +35,32 @@ exports.default = async function notarizing(context) {
   }
 
   let appPath = `${appOutDir}/${appName}.app`
-  let { appleId, appBundleId, ascProvider, appleIdPassword } = process.env
+  let {
+    APP_BUNDLE_ID: appBundleId,
+    TEAM_ID: teamId,
+    APPLE_ID: appleId,
+    APPLE_APP_SPECIFIC_PASSWORD: appleIdPassword,
+  } = process.env
   if (!appleIdPassword) {
-    appleIdPassword = `@keychain:Apple Notarize: ${appleId}`
+    //appleIdPassword = `@keychain:"Apple Notarize: ${appleId}"`
+    appleIdPassword = await getPasswordFromKeychain(appleId, `Apple Notarize: ${appleId}`)
+    process.env.APPLE_APP_SPECIFIC_PASSWORD = appleIdPassword
   }
 
-  if (!appleId || !appBundleId || !ascProvider || !appleIdPassword) {
+  if (!appleId || !appBundleId || !teamId || !appleIdPassword) {
     console.log('Not notarized.')
     return
   }
 
   console.log('Start notarizing...')
   await notarize({
-    appBundleId,
     appPath,
-    ascProvider,
+    tool: 'notarytool',
+    //appBundleId,
+    //ascProvider,
     appleId,
     appleIdPassword,
+    teamId,
   })
   console.log('Notarize done.')
 }
