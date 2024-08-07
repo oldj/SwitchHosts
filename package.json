@@ -23,7 +23,7 @@
     "axios": "1.6.0",
     "compare-versions": "5.0.3",
     "dayjs": "1.11.7",
-    "electron-updater": "5.3.0",
+    "electron-updater": "6.3.0",
     "electron-window-state": "5.0.3",
     "express": "4.19.2",
     "lodash": "4.17.21",
