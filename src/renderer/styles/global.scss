@@ -1,0 +1,16 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.5em;
+  box-sizing: border-box;
+  color: var(--swh-font-color);
+  color-scheme: var(--swh-color-scheme);
+}
+
+button, a, input {
+  &:focus:not(:focus-visible) {
+    outline: 0;
+    box-shadow: none;
+  }
+}
