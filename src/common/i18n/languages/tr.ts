@@ -50,6 +50,7 @@ export default {
   find_and_replace: 'Bul ve Değiştir',
   find_history: 'Arama Geçmişi',
   folder: 'Klasör',
+  folder_import: 'İçe Aktar Klasör',
   front: 'Ön',
   general: 'Genel',
   group: 'Grup',

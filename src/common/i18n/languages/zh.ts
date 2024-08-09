@@ -52,6 +52,7 @@ const lang: LanguageDict = {
   find_and_replace: '查找并替换',
   find_history: '查找历史',
   folder: '文件夹',
+  folder_import: '导入文件夹',
   front: '前置',
   general: '通用',
   group: '组合',

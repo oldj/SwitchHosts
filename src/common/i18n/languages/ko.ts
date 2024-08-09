@@ -51,6 +51,7 @@ export default {
   find_and_replace: '찾기 및 바꾸기',
   find_history: '이력 찾기',
   folder: '폴더',
+  folder_import: '가져오기 폴더',
   front: '앞쪽',
   general: '일반',
   group: '그룹',
