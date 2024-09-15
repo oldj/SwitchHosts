@@ -25,7 +25,7 @@
     "dayjs": "1.11.12",
     "electron-updater": "6.3.0",
     "electron-window-state": "5.0.3",
-    "express": "4.19.2",
+    "express": "4.21.0",
     "lodash": "4.17.21",
     "md5": "2.3.0",
     "md5-file": "5.0.0",
