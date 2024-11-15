@@ -1,8 +1,8 @@
-### System (Mac, Windows 7/8/10, Linux) / 操作系统
+### System (Mac, Windows 10/11, Linux) / 操作系统
 
 
 
-### SwitchHosts! Version / SwitchHosts! 版本
+### SwitchHosts Version / SwitchHosts 版本
 
 
 
