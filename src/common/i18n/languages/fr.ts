@@ -53,6 +53,7 @@ const lang: LanguageDict = {
   find_and_replace: 'Rechercher et remplacer',
   find_history: 'Historique des recherches',
   folder: 'Dossier',
+  folder_import: 'Importer dossier',
   front: 'Front',
   general: 'Général',
   group: 'Groupe',
