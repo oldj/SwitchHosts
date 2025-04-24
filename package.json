@@ -20,7 +20,7 @@
     "publish": "electron-builder --mac --win --linux -p always"
   },
   "dependencies": {
-    "axios": "1.7.4",
+    "axios": "1.8.2",
     "compare-versions": "6.1.1",
     "dayjs": "1.11.12",
     "electron-updater": "6.3.0",
