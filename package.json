@@ -72,7 +72,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-icons": "5.2.1",
-    "react-router-dom": "6.25.1",
+    "react-router-dom": "7.5.2",
     "react-window": "1.8.10",
     "rimraf": "^6.0.1",
     "sass": "1.77.8",
