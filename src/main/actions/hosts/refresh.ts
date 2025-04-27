@@ -57,7 +57,6 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
         const hostname = urlObj.hostname;
         const pathname = urlObj.pathname;
         const newUrl = `${protocol}//${token}@${hostname}${pathname}`;
-        console.log('Request URL:', newUrl);
         resp = await GET(newUrl);
       } else {
         resp = await GET(url)
