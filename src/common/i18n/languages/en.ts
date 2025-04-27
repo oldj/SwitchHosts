@@ -23,6 +23,9 @@ export default {
     'Only valid for the topmost item, each folder can set its own choice mode.',
   choice_mode_multiple: 'Multiple',
   choice_mode_single: 'Single',
+  choice_mode_for_github: 'For GitHub',
+  choice_mode_for_gitee: 'For Gitee',
+  choice_mode_for_gitlab: 'For GitLab',
   choices: 'Choices',
   chosen: 'Chosen',
   clear_history: 'Clear history',
@@ -174,6 +177,7 @@ export default {
   unhide: 'Unhide',
   untitled: 'Untitled',
   url_placeholder: 'http:// or https:// or file://',
+  token_placeholder: 'Access token',
   usage_data_agree: 'Yes, submit anonymized usage data',
   usage_data_help:
     'Would you like to help us improve SwitchHosts by periodically submitting anonymous usage data?',

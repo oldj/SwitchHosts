@@ -24,6 +24,9 @@ const lang: LanguageDict = {
   choice_mode_desc: '只對頂層項目有效，每個資料夾可設定自己的選擇模式。',
   choice_mode_multiple: '多選',
   choice_mode_single: '單選',
+  choice_mode_for_github: '為了 GitHub',
+  choice_mode_for_gitee: '為了 Gitee',
+  choice_mode_for_gitlab: '為了 GitLab',
   choices: '選項',
   chosen: '已選',
   clear_history: '清除歷史紀錄',
@@ -166,6 +169,7 @@ const lang: LanguageDict = {
   unhide: '取消隱藏',
   untitled: '未命名',
   url_placeholder: 'http:// 或 https:// 或 file://',
+  token_placeholder: '訪問令牌',
   usage_data_agree: '好的，寄送匿名的使用資料',
   usage_data_help:
     '您願意寄送匿名的使用資料來幫助我們改善 SwitchHosts 嗎？資料中不會包含任何隱私資訊。',
