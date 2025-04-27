@@ -173,6 +173,7 @@ const lang: LanguageDict = {
   unhide: 'Einblenden',
   untitled: 'Ohne Titel',
   url_placeholder: 'http:// oder https:// oder file://',
+  token_placeholder: 'Zugriffstoken',
   usage_data_agree: 'Ja, übermitteln Sie anonymisierte Nutzungsdaten',
   usage_data_help:
     'Möchten Sie uns helfen, SwitchHosts zu verbessern, indem Sie regelmäßig anonyme Nutzungsdaten übermitteln?',

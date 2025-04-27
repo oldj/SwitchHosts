@@ -166,6 +166,7 @@ const lang: LanguageDict = {
   unhide: '取消隱藏',
   untitled: '未命名',
   url_placeholder: 'http:// 或 https:// 或 file://',
+  token_placeholder: '訪問令牌',
   usage_data_agree: '好的，寄送匿名的使用資料',
   usage_data_help:
     '您願意寄送匿名的使用資料來幫助我們改善 SwitchHosts 嗎？資料中不會包含任何隱私資訊。',

@@ -173,6 +173,7 @@ export default {
   unhide: '숨김해제',
   untitled: '제목없음',
   url_placeholder: 'http:// or https:// or file://',
+  token_placeholder: '접근 토큰',
   usage_data_agree: '익명화된 사용 데이터 제출에 동의합니다',
   usage_data_help:
     '주기적으로 익명의 사용 데이터를 제출하여 SwitchHost를 개선하는 데 도움을 주시겠습니까?',

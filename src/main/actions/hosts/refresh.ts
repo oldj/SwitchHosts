@@ -27,7 +27,7 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
     }
   }
 
-  let { type, url } = hosts
+  let { type, url, token } = hosts
 
   if (type !== 'remote') {
     return {
@@ -50,7 +50,18 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
     if (url.startsWith('file://')) {
       new_content = await fs.promises.readFile(new URL(url), 'utf-8')
     } else {
-      let resp = await GET(url)
+      let resp: any = null
+      if(token) {
+        const urlObj = new URL(url);
+        const protocol = urlObj.protocol;
+        const hostname = urlObj.hostname;
+        const pathname = urlObj.pathname;
+        const newUrl = `${protocol}//${token}@${hostname}${pathname}`;
+        console.log('Request URL:', newUrl);
+        resp = await GET(newUrl);
+      } else {
+        resp = await GET(url)
+      }
       new_content = resp.data
     }
   } catch (e: any) {

@@ -166,6 +166,7 @@ export default {
   unhide: 'Gizlemeyi Kaldır',
   untitled: 'Başlıksız',
   url_placeholder: 'http:// veya https:// veya file://',
+  token_placeholder: 'Erişim belirteci',
   usage_data_agree: 'Evet, anonimleştirilmiş kullanım verilerini gönder',
   usage_data_help:
     'Anonim kullanım verilerini periyodik olarak göndererek SwitchHosts\'u iyileştirmemize yardımcı olmak ister misiniz?',

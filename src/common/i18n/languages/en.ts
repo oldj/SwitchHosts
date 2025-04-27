@@ -174,6 +174,7 @@ export default {
   unhide: 'Unhide',
   untitled: 'Untitled',
   url_placeholder: 'http:// or https:// or file://',
+  token_placeholder: 'Access token',
   usage_data_agree: 'Yes, submit anonymized usage data',
   usage_data_help:
     'Would you like to help us improve SwitchHosts by periodically submitting anonymous usage data?',

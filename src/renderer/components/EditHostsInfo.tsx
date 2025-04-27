@@ -140,6 +140,16 @@ const EditHostsInfo = () => {
         </FormControl>
 
         <FormControl className={styles.ln}>
+          <FormLabel>Token(now, only for GitHub Raw Url)</FormLabel>
+          <Input
+            value={hosts?.token || ''}
+            onChange={(e) => onUpdate({ token: e.target.value })}
+            placeholder={lang.token_placeholder}
+            onKeyDown={(e) => e.key === 'Enter' && onSave()}
+          />
+        </FormControl>
+
+        <FormControl className={styles.ln}>
           <FormLabel>{lang.auto_refresh}</FormLabel>
           <div>
             <Select
