@@ -29,6 +29,12 @@ const Index = (props: Props) => {
         agent.broadcast(events.add_new)
       },
     },
+    {
+      label: lang.folder_import,
+      click() {
+        agent.broadcast(events.import_folder)
+      },
+    },
   ])
 
   return (
