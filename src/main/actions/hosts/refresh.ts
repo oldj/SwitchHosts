@@ -27,7 +27,7 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
     }
   }
 
-  let { type, url, token } = hosts
+  let { type, url, token, accessType } = hosts
 
   if (type !== 'remote') {
     return {
@@ -50,18 +50,51 @@ export default async (hosts_id: string): Promise<IOperationResult> => {
     if (url.startsWith('file://')) {
       new_content = await fs.promises.readFile(new URL(url), 'utf-8')
     } else {
-      let resp: any = null
       if(token) {
         const urlObj = new URL(url);
         const protocol = urlObj.protocol;
         const hostname = urlObj.hostname;
         const pathname = urlObj.pathname;
-        const newUrl = `${protocol}//${token}@${hostname}${pathname}`;
-        resp = await GET(newUrl);
+        const ref = urlObj.searchParams.get('ref');
+        let resp: any = null
+        switch (accessType) {
+          default:
+          case 0:
+            const newUrl = `${protocol}//${token}@${hostname}${pathname}`;
+            resp = await GET(newUrl);
+            new_content = resp.data
+            break;
+          case 1:
+            let newUrl1 = '';
+            if(ref) {
+              newUrl1 = `${protocol}//${hostname}${pathname}?access_token=${token}&ref=${ref}`;
+            } else {
+              newUrl1 = `${protocol}//${hostname}${pathname}?access_token=${token}`;
+            }
+            resp = await GET(newUrl1);
+            console.log('newUrl1:', newUrl1);
+            if (resp && resp.data.content) {
+              // Base64 解码
+              const decodedContent = Buffer.from(resp.data.content, 'base64').toString('utf-8');
+              new_content = decodedContent;
+            } else {
+              console.error('resp1.content is undefined or null');
+            }
+            break;
+          case 2:
+            resp = await GET(url, null, {
+              headers: {
+                'PRIVATE-TOKEN': token,
+              },
+            });
+            new_content = resp.data
+            break;
+        }
       } else {
+        let resp: any = null
         resp = await GET(url)
+        new_content = resp.data
       }
-      new_content = resp.data
     }
   } catch (e: any) {
     console.error(e)

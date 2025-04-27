@@ -29,7 +29,7 @@ import ItemIcon from '@renderer/components/ItemIcon'
 import Transfer from '@renderer/components/Transfer'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { FolderModeType, HostsType, IHostsListObject } from '@common/data'
+import { AccessType, FolderModeType, HostsType, IHostsListObject } from '@common/data'
 import events from '@common/events'
 import * as hostsFn from '@common/hostsFn'
 import lodash from 'lodash'
@@ -140,7 +140,7 @@ const EditHostsInfo = () => {
         </FormControl>
 
         <FormControl className={styles.ln}>
-          <FormLabel>Token(now, only for GitHub Raw Url)</FormLabel>
+          <FormLabel>Token</FormLabel>
           <Input
             value={hosts?.token || ''}
             onChange={(e) => onUpdate({ token: e.target.value })}
@@ -148,6 +148,20 @@ const EditHostsInfo = () => {
             onKeyDown={(e) => e.key === 'Enter' && onSave()}
           />
         </FormControl>
+
+        <FormControl className={styles.ln}>
+        <FormLabel>{lang.choice_mode}</FormLabel>
+        <RadioGroup
+          value={(hosts?.accessType || 0).toString()}
+          onChange={(v: string) => onUpdate({ accessType: (parseInt(v) || 0) as AccessType })}
+        >
+          <HStack spacing={3}>
+            <Radio value="0">{lang.choice_mode_for_github}</Radio>
+            <Radio value="1">{lang.choice_mode_for_gitee}</Radio>
+            <Radio value="2">{lang.choice_mode_for_gitlab}</Radio>
+          </HStack>
+        </RadioGroup>
+      </FormControl>
 
         <FormControl className={styles.ln}>
           <FormLabel>{lang.auto_refresh}</FormLabel>

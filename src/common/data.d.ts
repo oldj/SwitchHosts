@@ -2,6 +2,7 @@ import { ITreeNodeData } from './tree'
 
 export type HostsType = 'local' | 'remote' | 'group' | 'folder'
 export type FolderModeType = 0 | 1 | 2 // 0: 默认; 1: 单选; 2: 多选
+export type AccessType = 0 | 1 | 2 // 0: token@xxx.com, 1: the_url?access_token=xxx, 2: the_header_PRIVATE-TOKEN
 
 export interface IHostsListObject {
   id: string
@@ -12,6 +13,7 @@ export interface IHostsListObject {
   // remote
   url?: string
   token?: string
+  accessType?: AccessType
   last_refresh?: string
   last_refresh_ms?: number
   refresh_interval?: number // 单位：秒
