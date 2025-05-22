@@ -25,6 +25,9 @@ const lang: LanguageDict = {
     'Gilt nur für das oberste Element, jeder Ordner kann seinen eigenen Auswahlmodus festlegen.',
   choice_mode_multiple: 'Mehrfach',
   choice_mode_single: 'Einfach',
+  choice_mode_for_github: 'For GitHub',
+  choice_mode_for_gitee: 'For Gitee',
+  choice_mode_for_gitlab: 'For GitLab',
   choices: 'Auswahlen',
   chosen: 'Ausgewählt',
   clear_history: 'Verlauf löschen',
@@ -173,6 +176,7 @@ const lang: LanguageDict = {
   unhide: 'Einblenden',
   untitled: 'Ohne Titel',
   url_placeholder: 'http:// oder https:// oder file://',
+  token_placeholder: 'Zugriffstoken',
   usage_data_agree: 'Ja, übermitteln Sie anonymisierte Nutzungsdaten',
   usage_data_help:
     'Möchten Sie uns helfen, SwitchHosts zu verbessern, indem Sie regelmäßig anonyme Nutzungsdaten übermitteln?',

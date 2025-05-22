@@ -25,6 +25,9 @@ const lang: LanguageDict = {
     "Uniquement valable pour l'élément le plus haut, chaque dossier peut définir son propre mode.",
   choice_mode_multiple: 'Multiple',
   choice_mode_single: 'Seul',
+  choice_mode_for_github: 'For GitHub',
+  choice_mode_for_gitee: 'For Gitee',
+  choice_mode_for_gitlab: 'For GitLab',
   choices: 'Choix',
   chosen: 'Choisi',
   clear_history: "Effacer l'historique",
@@ -174,6 +177,7 @@ const lang: LanguageDict = {
   unhide: 'Démasquer',
   untitled: 'Sans titre',
   url_placeholder: 'http:// ou https:// ou file://',
+  token_placeholder: 'Jeton d\'accès',
   usage_data_agree: "Oui, soumettre de manière anonyme mes données d'utilisation",
   usage_data_help:
     "Voulez-vous nous aider à améliorer SwitchHosts en soumettant périodiquement vos données d'utilisation de manière anonyme ?",

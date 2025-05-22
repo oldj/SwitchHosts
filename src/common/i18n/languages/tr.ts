@@ -22,6 +22,9 @@ export default {
   choice_mode_desc: 'Sadece en üstteki öğe için geçerlidir, her klasör kendi seçim modunu ayarlayabilir.',
   choice_mode_multiple: 'Çoklu',
   choice_mode_single: 'Tekli',
+  choice_mode_for_github: 'GitHub için',
+  choice_mode_for_gitee: 'Gitee için',
+  choice_mode_for_gitlab: 'GitLab için',
   choices: 'Seçenekler',
   chosen: 'Seçildi',
   clear_history: 'Geçmişi Temizle',
@@ -166,6 +169,7 @@ export default {
   unhide: 'Gizlemeyi Kaldır',
   untitled: 'Başlıksız',
   url_placeholder: 'http:// veya https:// veya file://',
+  token_placeholder: 'Erişim belirteci',
   usage_data_agree: 'Evet, anonimleştirilmiş kullanım verilerini gönder',
   usage_data_help:
     'Anonim kullanım verilerini periyodik olarak göndererek SwitchHosts\'u iyileştirmemize yardımcı olmak ister misiniz?',

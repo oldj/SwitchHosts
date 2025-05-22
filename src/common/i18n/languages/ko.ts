@@ -22,6 +22,9 @@ export default {
     '최상위 항목에만 유효하며, 각 폴더는 고유의 선택 모드를 설정할 수 있습니다.',
   choice_mode_multiple: '다중모드',
   choice_mode_single: '단일모드',
+  choice_mode_for_github: 'For GitHub',
+  choice_mode_for_gitee: 'For Gitee',
+  choice_mode_for_gitlab: 'For GitLab',
   choices: '선택',
   chosen: '선택됨',
   clear_history: '이력 삭제',
@@ -173,6 +176,7 @@ export default {
   unhide: '숨김해제',
   untitled: '제목없음',
   url_placeholder: 'http:// or https:// or file://',
+  token_placeholder: '접근 토큰',
   usage_data_agree: '익명화된 사용 데이터 제출에 동의합니다',
   usage_data_help:
     '주기적으로 익명의 사용 데이터를 제출하여 SwitchHost를 개선하는 데 도움을 주시겠습니까?',
