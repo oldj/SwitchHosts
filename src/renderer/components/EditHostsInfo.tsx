@@ -43,7 +43,7 @@ import styles from './EditHostsInfo.module.scss'
 const EditHostsInfo = () => {
   const { lang } = useI18n()
   const [hosts, setHosts] = useState<IHostsListObject | null>(null)
-  const { hosts_data, setList, current_hosts, setCurrentHosts } = useHostsData()
+  const { hosts_data, setList, current_hosts, setCurrentHosts, loadHostsData } = useHostsData()
   const [is_show, setIsShow] = useState(false)
   const [is_add, setIsAdd] = useState(true)
   const [is_refreshing, setIsRefreshing] = useState(false)
@@ -114,6 +114,32 @@ const EditHostsInfo = () => {
     setHosts(null)
     setIsAdd(true)
     setIsShow(true)
+  })
+
+  useOnBroadcast(events.import_folder, async () => {
+    let r = await actions.importFolder()
+    if (r === null) {
+      return
+    } else if (r === true) {
+      toast({
+        status: 'success',
+        description: lang.import_done,
+        isClosable: true,
+      })
+      await loadHostsData()
+      setCurrentHosts(null)
+    } else {
+      let description = lang.import_fail
+      if (typeof r === 'string') {
+        description += ` [${r}]`
+      }
+
+      toast({
+        status: 'error',
+        description,
+        isClosable: true,
+      })
+    }
   })
 
   useOnBroadcast(
