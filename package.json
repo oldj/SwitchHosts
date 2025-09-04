@@ -59,7 +59,7 @@
     "concurrently": "8.2.2",
     "cross-env": "7.0.3",
     "dotenv": "16.4.5",
-    "electron": "30.1.2",
+    "electron": "35.7.5",
     "electron-builder": "24.13.3",
     "espower-typescript": "10.0.1",
     "execa": "9.3.0",
