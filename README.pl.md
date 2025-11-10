@@ -10,7 +10,7 @@ SwitchHosts to aplikacja do zarządzania plikiem hosts, zbudowana na bazie [Elec
 
 ## Zrzut ekranu
 
-<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/screenshots/sh_light.png" alt="Zrzut" width="960">
+<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/screenshots/sh_light.png" alt="Zrzut aplikacji" width="960">
 
 ## Funkcje
 
@@ -25,9 +25,9 @@ SwitchHosts to aplikacja do zarządzania plikiem hosts, zbudowana na bazie [Elec
 
 Możesz pobrać kod źródłowy i zbudować go samodzielnie, lub pobrać wbudowaną wersję z poniższych linków:
 
-- [Strona pobierania SwitchHosts (GitHub release)](https://github.com/oldj/SwitchHosts/releases)
+- [Pobierz najnowszą wersję SwitchHosts (GitHub release)](https://github.com/oldj/SwitchHosts/releases)
 
-Możesz także zainstalować wbudowaną wersję używając [menedżera pakietów Chocolatey](https://community.chocolatey.org/packages/switchhosts):
+Możesz także zainstalować build używając [menedżera pakietów Chocolatey](https://community.chocolatey.org/packages/switchhosts):
 ```powershell
 choco install switchhosts
 ```
@@ -47,7 +47,7 @@ SwitchHosts przechowuje dane w `~/.SwitchHosts` (lub folder `.SwitchHosts` w śc
 
 ### Budowanie i pakowanie
 
-- Zaleca się użycie [electron-builder](https://github.com/electron-userland/electron-builder) do pakowania
+- Zaleca się użycie [electron-builder](https://github.com/electron-userland/electron-builder) do budowania
 - Przejdź do folderu `./`
 - Uruchom `npm run build`
 - Uruchom `npm run make`, jeśli wszystko pójdzie dobrze, spakowane pliki będą w folderze `./dist`.
