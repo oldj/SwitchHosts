@@ -2,7 +2,7 @@
   <sup>Special thanks to:</sup>
   <br>
   <a href="https://go.warp.dev/SwitchHosts">
-    <img alt="Warp sponsorship" width="400" src="https://github.com/user-attachments/assets/ab8dd143-b0fd-4904-bdc5-dd7ecac94eae">
+    <img alt="Warp sponsorship" width="400" src="https://github.com/user-attachments/assets/352a755a-6776-43fd-b324-19dc649747b2" />
   </a>
 
 ### [Warp, the intelligent terminal for developers](https://go.warp.dev/SwitchHosts)
