@@ -1,4 +1,4 @@
-<div style="text-align: center;" markdown="1">
+<div align="center" markdown="1">
   <sup>Special thanks to:</sup>
   <br>
   <a href="https://go.warp.dev/SwitchHosts">
