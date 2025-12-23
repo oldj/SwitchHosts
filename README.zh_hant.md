@@ -15,6 +15,7 @@
 # SwitchHosts
 
 - [English](README.md)
+- [Polski](README.pl.md)
 - [简体中文](README.zh_hans.md)
 
 項目主頁：[https://switchhosts.vercel.app](https://switchhosts.vercel.app)
