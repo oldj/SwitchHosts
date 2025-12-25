@@ -3,8 +3,8 @@
   "scripts": {
     "start": "cross-env NODE_ENV=development electron ./build/main.js",
     "test": "rm -rf ./test/tmp/* && mocha -r espower-typescript/guess -r tsconfig-paths/register \"test/**/*.test.ts\"",
-    "clean:dist": "rimraf ./dist/*",
-    "clean:build": "rimraf ./build/*",
+    "clean:dist": "rimraf ./dist",
+    "clean:build": "rimraf ./build",
     "dev": "npm run clean:build && concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
     "dev:main": "vite build --watch --config ./vite.main.config.mts",
     "dev:renderer": "vite --config ./vite.render.config.mts",
