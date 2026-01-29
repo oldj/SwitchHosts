@@ -53,6 +53,7 @@ const lang: LanguageDict = {
   find_and_replace: '検索と置換',
   find_history: '検索履歴',
   folder: 'フォルダー',
+  folder_import: 'フォルダーをインポート',
   front: '前面',
   general: '一般',
   group: 'グループ',

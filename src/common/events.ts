@@ -6,6 +6,7 @@
 export default {
   active_main_window: 'active_main_window',
   add_new: 'add_new',
+  import_folder: 'import_folder',
   browser_link: 'browser_link',
   close_find: 'close_find',
   cmd_run_result: 'cmd_run_result',

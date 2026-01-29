@@ -52,6 +52,7 @@ export default {
   find_and_replace: 'Find and replace',
   find_history: 'Find history',
   folder: 'Folder',
+  folder_import: 'Import folder',
   front: 'Front',
   general: 'General',
   group: 'Group',
