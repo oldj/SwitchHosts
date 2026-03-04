@@ -6,13 +6,9 @@
 
 import {
   Button,
+  Dialog,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalOverlay,
+  Portal,
 } from '@chakra-ui/react'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -28,6 +24,8 @@ const SudoPasswordInput = () => {
   const [pswd, setPswd] = useState('')
   const [tmp_list, setTmpList] = useState<IHostsListObject[] | undefined>()
   const ipt_ref = React.useRef<HTMLInputElement>(null)
+  const DialogPositioner = Dialog.Positioner as unknown as React.FC<React.PropsWithChildren>
+  const DialogContent = Dialog.Content as unknown as React.FC<React.PropsWithChildren>
 
   const onCancel = () => {
     setIsShow(false)
@@ -54,11 +52,13 @@ const SudoPasswordInput = () => {
   if (!is_show) return null
 
   return (
-    <Modal initialFocusRef={ipt_ref} isOpen={is_show} onClose={onCancel}>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalCloseButton />
-        <ModalBody pb={6}>
+    <Dialog.Root open={is_show} onOpenChange={(e: { open: boolean }) => setIsShow(e.open)}>
+      <Portal>
+        <Dialog.Backdrop />
+        <DialogPositioner>
+          <DialogContent>
+            <Dialog.CloseTrigger />
+            <Dialog.Body pb={6}>
           <div className={styles.label}>{lang.sudo_prompt_title}</div>
           <Input
             ref={ipt_ref}
@@ -70,17 +70,19 @@ const SudoPasswordInput = () => {
               if (e.key === 'Enter') onOk()
             }}
           />
-        </ModalBody>
-        <ModalFooter>
-          <Button variant="outline" onClick={onCancel} mr={3}>
-            {lang.btn_cancel}
-          </Button>
-          <Button colorScheme="blue" onClick={onOk}>
-            {lang.btn_ok}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Button variant="outline" onClick={onCancel} mr={3}>
+                {lang.btn_cancel}
+              </Button>
+              <Button colorPalette="blue" onClick={onOk}>
+                {lang.btn_ok}
+              </Button>
+            </Dialog.Footer>
+          </DialogContent>
+        </DialogPositioner>
+      </Portal>
+    </Dialog.Root>
   )
 }
 

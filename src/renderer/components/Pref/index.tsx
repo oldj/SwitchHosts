@@ -8,18 +8,9 @@ import {
   Box,
   Button,
   Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
   HStack,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
   Tabs,
-  useColorMode,
+  Portal,
 } from '@chakra-ui/react'
 import Proxy from '@renderer/components/Pref/Proxy'
 import { agent } from '@renderer/core/agent'
@@ -40,7 +31,11 @@ const PreferencePanel = () => {
   const { configs, updateConfigs } = useConfigs()
   const [data, setData] = useState<ConfigsType | null>(configs)
   const { lang } = useI18n()
-  const { colorMode, setColorMode } = useColorMode()
+  const DrawerPositioner = Drawer.Positioner as unknown as React.FC<React.PropsWithChildren>
+  const DrawerContent = Drawer.Content as unknown as React.FC<React.PropsWithChildren>
+  const TabsList = Tabs.List as unknown as React.FC<React.PropsWithChildren>
+  const TabsTrigger = Tabs.Trigger as unknown as React.FC<React.PropsWithChildren<{ value: string }>>
+  const TabsContent = Tabs.Content as unknown as React.FC<React.PropsWithChildren<{ value: string }>>
 
   const onClose = () => {
     setIsOpen(false)
@@ -56,10 +51,6 @@ const PreferencePanel = () => {
     if (!data) return
     await updateConfigs(data)
     setIsOpen(false)
-
-    if (colorMode !== data.theme) {
-      setColorMode(data.theme)
-    }
 
     agent.broadcast(events.config_updated, data)
   }
@@ -78,54 +69,63 @@ const PreferencePanel = () => {
   }
 
   return (
-    <Drawer size="lg" isOpen={is_open} placement="right" onClose={onClose}>
-      <DrawerOverlay />
-      <DrawerContent>
-        <DrawerHeader>
+    <Drawer.Root
+      size="lg"
+      open={is_open}
+      placement="end"
+      onOpenChange={(e: { open: boolean }) => setIsOpen(e.open)}
+    >
+      <Portal>
+        <Drawer.Backdrop />
+        <DrawerPositioner>
+          <DrawerContent>
+            <Drawer.Header>
           <HStack>
             <Box mr={1}>
               <IconAdjustments size={16} />
             </Box>
             <Box>{lang.preferences}</Box>
           </HStack>
-        </DrawerHeader>
+            </Drawer.Header>
 
-        <DrawerBody>
-          <Tabs className={styles.tabs}>
-            <TabList>
-              <Tab>{lang.general}</Tab>
-              <Tab>{lang.commands}</Tab>
-              <Tab>{lang.proxy}</Tab>
-              <Tab>{lang.advanced}</Tab>
-            </TabList>
+            <Drawer.Body>
+              <Tabs.Root className={styles.tabs} defaultValue="general">
+                <TabsList>
+                  <TabsTrigger value="general">{lang.general}</TabsTrigger>
+                  <TabsTrigger value="commands">{lang.commands}</TabsTrigger>
+                  <TabsTrigger value="proxy">{lang.proxy}</TabsTrigger>
+                  <TabsTrigger value="advanced">{lang.advanced}</TabsTrigger>
+                </TabsList>
 
-            <TabPanels className={styles.tab_panels}>
-              <TabPanel>
-                <General data={data} onChange={onUpdate} />
-              </TabPanel>
-              <TabPanel>
-                <Commands data={data} onChange={onUpdate} />
-              </TabPanel>
-              <TabPanel>
-                <Proxy data={data} onChange={onUpdate} />
-              </TabPanel>
-              <TabPanel>
-                <Advanced data={data} onChange={onUpdate} />
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
-        </DrawerBody>
+                <Box className={styles.tab_panels}>
+                  <TabsContent value="general">
+                    <General data={data} onChange={onUpdate} />
+                  </TabsContent>
+                  <TabsContent value="commands">
+                    <Commands data={data} onChange={onUpdate} />
+                  </TabsContent>
+                  <TabsContent value="proxy">
+                    <Proxy data={data} onChange={onUpdate} />
+                  </TabsContent>
+                  <TabsContent value="advanced">
+                    <Advanced data={data} onChange={onUpdate} />
+                  </TabsContent>
+                </Box>
+              </Tabs.Root>
+            </Drawer.Body>
 
-        <DrawerFooter>
-          <Button variant="outline" onClick={onClose} mr={3}>
-            {lang.btn_cancel}
-          </Button>
-          <Button onClick={onSave} colorScheme="blue">
-            {lang.btn_ok}
-          </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+            <Drawer.Footer>
+              <Button variant="outline" onClick={onClose} mr={3}>
+                {lang.btn_cancel}
+              </Button>
+              <Button onClick={onSave} colorPalette="blue">
+                {lang.btn_ok}
+              </Button>
+            </Drawer.Footer>
+          </DrawerContent>
+        </DrawerPositioner>
+      </Portal>
+    </Drawer.Root>
   )
 }
 

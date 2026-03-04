@@ -13,7 +13,7 @@ import { updateOneItem } from '@common/hostsFn'
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
 import { BiEdit } from 'react-icons/bi'
-import { Center, ToastId, useToast } from '@chakra-ui/react'
+import { Center } from '@chakra-ui/react'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.module.scss'
 import events from '@common/events'
@@ -35,9 +35,7 @@ const ListItem = (props: Props) => {
   const [is_on, setIsOn] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
-  const ref_toast_refresh = useRef<ToastId | null>(null)
-
-  const toast = useToast()
+  const ref_toast_refresh = useRef<string | null>(null)
 
   useEffect(() => {
     setIsOn(data.on)
@@ -105,41 +103,26 @@ const ListItem = (props: Props) => {
           {
             label: lang.refresh,
             async click() {
-              ref_toast_refresh.current = toast({
-                status: 'loading',
-                description: lang.loading,
-              })
+              ref_toast_refresh.current = `${Date.now()}`
 
               actions
                 .refreshHosts(data.id)
                 .then((r) => {
                   console.log(r)
                   if (!r.success) {
-                    toast({
-                      status: 'error',
-                      description: r.message || r.code || 'Error!',
-                      isClosable: true,
-                    })
+                    console.error(r.message || r.code || 'Error!')
                     return
                   }
 
-                  toast({
-                    status: 'success',
-                    description: 'OK!',
-                    isClosable: true,
-                  })
+                  console.log('OK!')
                 })
                 .catch((e) => {
                   console.log(e)
-                  toast({
-                    status: 'error',
-                    description: e.message,
-                    isClosable: true,
-                  })
+                  console.error(e.message)
                 })
                 .finally(() => {
                   if (ref_toast_refresh.current) {
-                    toast.close(ref_toast_refresh.current)
+                    ref_toast_refresh.current = null
                   }
                 })
             },

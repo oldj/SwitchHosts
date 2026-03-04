@@ -1,12 +1,25 @@
 import react from '@vitejs/plugin-react'
 import * as path from 'path'
-import { defineConfig } from 'vite'
+import { defineConfig, normalizePath } from 'vite'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 import svgr from 'vite-plugin-svgr'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [tsconfigPaths(), svgr({}), react()],
+  plugins: [
+    tsconfigPaths(),
+    svgr({}),
+    react(),
+    viteStaticCopy({
+      targets: [
+        {
+          src: normalizePath(path.resolve(__dirname, 'src', 'assets', 'logoTemplate*.png')),
+          dest: 'assets',
+        },
+      ],
+    }),
+  ],
   base: './',
   root: path.join(__dirname, 'src', 'renderer'),
   build: {

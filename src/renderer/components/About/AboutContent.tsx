@@ -20,7 +20,7 @@ const AboutContent = () => {
 
   return (
     <div className={styles.root}>
-      <VStack spacing={1}>
+      <VStack gap={1}>
         <Box pt={8} pb={3}>
           <Image className={styles.logo} src={logo} />
         </Box>

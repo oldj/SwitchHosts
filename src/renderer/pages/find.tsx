@@ -12,10 +12,8 @@ import {
   IconButton,
   Input,
   InputGroup,
-  InputLeftElement,
   Spacer,
   Spinner,
-  useColorMode,
   VStack,
 } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
@@ -35,7 +33,6 @@ import {
   IoChevronDownOutline,
   IoSearch,
 } from 'react-icons/io5'
-import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import useConfigs from '../models/useConfigs'
 import useI18n from '../models/useI18n'
@@ -53,7 +50,6 @@ interface IFindPositionShow extends IFindPosition {
 const find = () => {
   const { lang, i18n, setLocale } = useI18n()
   const { configs, loadConfigs } = useConfigs()
-  const { colorMode, setColorMode } = useColorMode()
   const [keyword, setKeyword] = useState('')
   const [replace_to, setReplaceTo] = useState('')
   const [is_regexp, setIsRegExp] = useState(false)
@@ -82,9 +78,6 @@ const find = () => {
     if (!configs) return
     init().catch((e) => console.error(e))
     console.log(configs.theme)
-    if (colorMode !== configs.theme) {
-      setColorMode(configs.theme)
-    }
   }, [configs])
 
   useEffect(() => {
@@ -243,10 +236,9 @@ const find = () => {
     }
   }
 
-  const ResultRow = (row_data: ListChildComponentProps) => {
-    const data = find_positions[row_data.index]
+  const ResultRow = ({ data, index }: { data: IFindPositionShow; index: number }) => {
     const el = useRef<HTMLDivElement>(null)
-    const is_selected = current_result_idx === row_data.index
+    const is_selected = current_result_idx === index
 
     useEffect(() => {
       if (el.current && is_selected && current_result_idx !== last_scroll_result_idx) {
@@ -260,7 +252,6 @@ const find = () => {
 
     return (
       <Box
-        style={row_data.style}
         className={clsx(
           styles.result_row,
           is_selected && styles.selected,
@@ -270,7 +261,7 @@ const find = () => {
         borderBottomWidth={1}
         borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
         onClick={() => {
-          setCurrentResultIdx(row_data.index)
+          setCurrentResultIdx(index)
         }}
         onDoubleClick={() => toShowSource(data)}
         ref={el}
@@ -335,18 +326,16 @@ const find = () => {
 
   return (
     <div className={styles.root}>
-      <VStack spacing={0} h="100%">
-        <InputGroup>
-          <InputLeftElement
-            // pointerEvents="none"
-            children={
-              <HStack spacing={0}>
-                <IoSearch />
-                <IoChevronDownOutline style={{ fontSize: 10 }} />
-              </HStack>
-            }
-            onClick={showKeywordHistory}
-          />
+      <VStack gap={0} h="100%">
+        <InputGroup
+          startElement={
+            <HStack gap={0}>
+              <IoSearch />
+              <IoChevronDownOutline style={{ fontSize: 10 }} />
+            </HStack>
+          }
+          startElementProps={{ onClick: showKeywordHistory }}
+        >
           <Input
             autoFocus={true}
             placeholder="keywords"
@@ -359,17 +348,15 @@ const find = () => {
           />
         </InputGroup>
 
-        <InputGroup>
-          <InputLeftElement
-            // pointerEvents="none"
-            children={
-              <HStack spacing={0}>
-                <IoSearch />
-                <IoChevronDownOutline style={{ fontSize: 10 }} />
-              </HStack>
-            }
-            onClick={showReplaceHistory}
-          />
+        <InputGroup
+          startElement={
+            <HStack gap={0}>
+              <IoSearch />
+              <IoChevronDownOutline style={{ fontSize: 10 }} />
+            </HStack>
+          }
+          startElementProps={{ onClick: showReplaceHistory }}
+        >
           <Input
             placeholder="replace to"
             variant="flushed"
@@ -384,15 +371,27 @@ const find = () => {
           w="100%"
           py={2}
           px={4}
-          spacing={4}
+          gap={4}
           // justifyContent="flex-start"
         >
-          <Checkbox checked={is_regexp} onChange={(e) => setIsRegExp(e.target.checked)}>
-            {lang.regexp}
-          </Checkbox>
-          <Checkbox checked={is_ignore_case} onChange={(e) => setIsIgnoreCase(e.target.checked)}>
-            {lang.ignore_case}
-          </Checkbox>
+          <Checkbox.Root
+            checked={is_regexp}
+          >
+            <Checkbox.HiddenInput
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsRegExp(e.target.checked)}
+            />
+            <Checkbox.Control />
+            <span>{lang.regexp}</span>
+          </Checkbox.Root>
+          <Checkbox.Root checked={is_ignore_case}>
+            <Checkbox.HiddenInput
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setIsIgnoreCase(e.target.checked)
+              }
+            />
+            <Checkbox.Control />
+            <span>{lang.ignore_case}</span>
+          </Checkbox.Root>
         </HStack>
 
         <Box w="100%" borderTopWidth={1}>
@@ -408,22 +407,18 @@ const find = () => {
           flex="1"
           bgColor={configs?.theme === 'dark' ? 'gray.700' : 'gray.100'}
           ref={ref_result_box}
+          overflowY="auto"
         >
-          <List
-            width={'100%'}
-            height={ref_result_box.current ? ref_result_box.current.clientHeight : 0}
-            itemCount={find_positions.length}
-            itemSize={28}
-          >
-            {ResultRow}
-          </List>
+          {find_positions.map((item, idx) => (
+            <ResultRow key={`${item.item_id}-${idx}`} data={item} index={idx} />
+          ))}
         </Box>
 
         <HStack
           w="100%"
           py={2}
           px={4}
-          spacing={4}
+          gap={4}
           // justifyContent="flex-end"
         >
           {is_searching ? (
@@ -439,7 +434,7 @@ const find = () => {
           <Button
             size="sm"
             variant="outline"
-            isDisabled={is_searching || find_positions.length === 0}
+            disabled={is_searching || find_positions.length === 0}
             onClick={replaceAll}
           >
             {lang.replace_all}
@@ -448,7 +443,7 @@ const find = () => {
             size="sm"
             variant="solid"
             colorScheme="blue"
-            isDisabled={is_searching || find_positions.length === 0 || !can_replace}
+            disabled={is_searching || find_positions.length === 0 || !can_replace}
             onClick={replaceOne}
           >
             {lang.replace}
@@ -456,29 +451,28 @@ const find = () => {
 
           <ButtonGroup
             size="sm"
-            isAttached
+            attached
             variant="outline"
-            isDisabled={is_searching || find_positions.length === 0}
           >
             <IconButton
               aria-label="previous"
-              icon={<IoArrowBackOutline />}
+              children={<IoArrowBackOutline />}
               onClick={() => {
                 let idx = current_result_idx - 1
                 if (idx < 0) idx = 0
                 setCurrentResultIdx(idx)
               }}
-              isDisabled={current_result_idx <= 0}
+              disabled={current_result_idx <= 0}
             />
             <IconButton
               aria-label="next"
-              icon={<IoArrowForwardOutline />}
+              children={<IoArrowForwardOutline />}
               onClick={() => {
                 let idx = current_result_idx + 1
                 if (idx > find_positions.length - 1) idx = find_positions.length - 1
                 setCurrentResultIdx(idx)
               }}
-              isDisabled={current_result_idx >= find_positions.length - 1}
+              disabled={current_result_idx >= find_positions.length - 1}
             />
           </ButtonGroup>
         </HStack>

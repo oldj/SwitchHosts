@@ -8,22 +8,11 @@ import {
   Box,
   Button,
   Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
-  FormControl,
-  FormHelperText,
-  FormLabel,
   Grid,
   HStack,
   Input,
-  Radio,
-  RadioGroup,
-  Select,
+  Portal,
   Stack,
-  useToast,
 } from '@chakra-ui/react'
 import ItemIcon from '@renderer/components/ItemIcon'
 import Transfer from '@renderer/components/Transfer'
@@ -48,8 +37,8 @@ const EditHostsInfo = () => {
   const [is_add, setIsAdd] = useState(true)
   const [is_refreshing, setIsRefreshing] = useState(false)
   const ipt_title_ref = useRef<HTMLInputElement>(null)
-
-  const toast = useToast()
+  const DrawerPositioner = Drawer.Positioner as unknown as React.FC<React.PropsWithChildren>
+  const DrawerContent = Drawer.Content as unknown as React.FC<React.PropsWithChildren>
 
   const onCancel = () => {
     setHosts(null)
@@ -129,23 +118,23 @@ const EditHostsInfo = () => {
   const forRemote = (): React.ReactElement => {
     return (
       <>
-        <FormControl className={styles.ln}>
-          <FormLabel>URL</FormLabel>
+        <Box className={styles.ln}>
+          <Box mb={2}>URL</Box>
           <Input
             value={hosts?.url || ''}
             onChange={(e) => onUpdate({ url: e.target.value })}
             placeholder={lang.url_placeholder}
             onKeyDown={(e) => e.key === 'Enter' && onSave()}
           />
-        </FormControl>
+        </Box>
 
-        <FormControl className={styles.ln}>
-          <FormLabel>{lang.auto_refresh}</FormLabel>
+        <Box className={styles.ln}>
+          <Box mb={2}>{lang.auto_refresh}</Box>
           <div>
-            <Select
+            <select
               value={hosts?.refresh_interval || 0}
               onChange={(e) => onUpdate({ refresh_interval: parseInt(e.target.value) || 0 })}
-              style={{ minWidth: 120 }}
+              style={{ minWidth: 120, padding: '6px 10px' }}
             >
               <option value={0}>{lang.never}</option>
               <option value={60}>1 {lang.minute}</option>
@@ -154,16 +143,16 @@ const EditHostsInfo = () => {
               <option value={60 * 60}>1 {lang.hour}</option>
               <option value={60 * 60 * 24}>24 {lang.hours}</option>
               <option value={60 * 60 * 24 * 7}>7 {lang.days}</option>
-            </Select>
+            </select>
           </div>
           {is_add ? null : (
-            <FormHelperText className={styles.refresh_info}>
+            <Box className={styles.refresh_info}>
               <span>
                 {lang.last_refresh}
                 {hosts?.last_refresh || 'N/A'}
               </span>
               <Button
-                size="small"
+                size="sm"
                 variant="ghost"
                 disabled={is_refreshing}
                 onClick={() => {
@@ -175,19 +164,11 @@ const EditHostsInfo = () => {
                     .then((r) => {
                       console.log(r)
                       if (!r.success) {
-                        toast({
-                          status: 'error',
-                          description: r.message || r.code || 'Error!',
-                          isClosable: true,
-                        })
+                        console.error(r.message || r.code || 'Error!')
                         return
                       }
 
-                      toast({
-                        status: 'success',
-                        description: 'OK!',
-                        isClosable: true,
-                      })
+                      console.log('OK!')
                       onUpdate({
                         last_refresh: r.data.last_refresh,
                         last_refresh_ms: r.data.last_refresh_ms,
@@ -195,20 +176,16 @@ const EditHostsInfo = () => {
                     })
                     .catch((e) => {
                       console.log(e)
-                      toast({
-                        status: 'error',
-                        description: e.message,
-                        isClosable: true,
-                      })
+                      console.error(e.message)
                     })
                     .finally(() => setIsRefreshing(false))
                 }}
               >
                 {lang.refresh}
               </Button>
-            </FormHelperText>
+            </Box>
           )}
-        </FormControl>
+        </Box>
       </>
     )
   }
@@ -236,8 +213,8 @@ const EditHostsInfo = () => {
     let target_keys: string[] = hosts?.include || []
 
     return (
-      <FormControl className={styles.ln}>
-        <FormLabel>{lang.content}</FormLabel>
+      <Box className={styles.ln}>
+        <Box mb={2}>{lang.content}</Box>
         <Transfer
           dataSource={source_list}
           targetKeys={target_keys}
@@ -246,25 +223,47 @@ const EditHostsInfo = () => {
             onUpdate({ include: next_target_keys })
           }}
         />
-      </FormControl>
+      </Box>
     )
   }
 
   const forFolder = (): React.ReactElement => {
     return (
-      <FormControl className={styles.ln}>
-        <FormLabel>{lang.choice_mode}</FormLabel>
-        <RadioGroup
-          value={(hosts?.folder_mode || 0).toString()}
-          onChange={(v: string) => onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })}
-        >
-          <HStack spacing={3}>
-            <Radio value="0">{lang.choice_mode_default}</Radio>
-            <Radio value="1">{lang.choice_mode_single}</Radio>
-            <Radio value="2">{lang.choice_mode_multiple}</Radio>
-          </HStack>
-        </RadioGroup>
-      </FormControl>
+      <Box className={styles.ln}>
+        <Box mb={2}>{lang.choice_mode}</Box>
+        <HStack gap={3}>
+          <label>
+            <input
+              type="radio"
+              name="folder_mode"
+              value="0"
+              checked={(hosts?.folder_mode || 0).toString() === '0'}
+              onChange={(e) => onUpdate({ folder_mode: (parseInt(e.target.value) || 0) as FolderModeType })}
+            />
+            {lang.choice_mode_default}
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="folder_mode"
+              value="1"
+              checked={(hosts?.folder_mode || 0).toString() === '1'}
+              onChange={(e) => onUpdate({ folder_mode: (parseInt(e.target.value) || 0) as FolderModeType })}
+            />
+            {lang.choice_mode_single}
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="folder_mode"
+              value="2"
+              checked={(hosts?.folder_mode || 0).toString() === '2'}
+              onChange={(e) => onUpdate({ folder_mode: (parseInt(e.target.value) || 0) as FolderModeType })}
+            />
+            {lang.choice_mode_multiple}
+          </label>
+        </HStack>
+      </Box>
     )
   }
 
@@ -275,7 +274,6 @@ const EditHostsInfo = () => {
       <Box>
         {is_add ? null : (
           <Button
-            leftIcon={<BiTrash />}
             mr={3}
             variant="outline"
             disabled={!hosts}
@@ -287,6 +285,7 @@ const EditHostsInfo = () => {
               }
             }}
           >
+            <BiTrash />
             {lang.move_to_trashcan}
           </Button>
         )}
@@ -303,56 +302,63 @@ const EditHostsInfo = () => {
   )
 
   return (
-    <Drawer initialFocusRef={ipt_title_ref} isOpen={is_show} onClose={onCancel} size="lg">
-      <DrawerOverlay />
-      <DrawerContent>
-        <DrawerHeader>
+    <Drawer.Root open={is_show} onOpenChange={(e: { open: boolean }) => setIsShow(e.open)} size="lg">
+      <Portal>
+        <Drawer.Backdrop />
+        <DrawerPositioner>
+          <DrawerContent>
+            <Drawer.Header>
           <HStack>
             <Box mr={1}>
               <BiEdit />
             </Box>
             <Box>{is_add ? lang.hosts_add : lang.hosts_edit}</Box>
           </HStack>
-        </DrawerHeader>
-        <DrawerBody pb={6}>
-          <FormControl className={styles.ln}>
-            <FormLabel>{lang.hosts_type}</FormLabel>
-            <RadioGroup
-              onChange={(type: HostsType) => onUpdate({ type: type })}
-              value={hosts?.type || 'local'}
-            >
-              <Stack direction="row" spacing={6}>
-                {types.map((type) => (
-                  <Radio value={type} key={type} isDisabled={!is_add}>
-                    <HStack spacing="4px">
+            </Drawer.Header>
+            <Drawer.Body pb={6}>
+              <Box className={styles.ln}>
+                <Box mb={2}>{lang.hosts_type}</Box>
+                <Stack direction="row" gap={6}>
+                  {types.map((type) => (
+                    <label key={type} style={{ opacity: !is_add && hosts?.type !== type ? 0.6 : 1 }}>
+                      <input
+                        type="radio"
+                        name="hosts_type"
+                        value={type}
+                        disabled={!is_add}
+                        checked={(hosts?.type || 'local') === type}
+                        onChange={(e) => onUpdate({ type: e.target.value as HostsType })}
+                      />
+                    <HStack gap="4px">
                       <ItemIcon type={type} />
                       <span>{lang[type]}</span>
                     </HStack>
-                  </Radio>
-                ))}
-              </Stack>
-            </RadioGroup>
-          </FormControl>
+                    </label>
+                  ))}
+                </Stack>
+              </Box>
 
-          <FormControl className={styles.ln}>
-            <FormLabel>{lang.hosts_title}</FormLabel>
-            <Input
-              ref={ipt_title_ref}
-              value={hosts?.title || ''}
-              maxLength={50}
-              onChange={(e) => onUpdate({ title: e.target.value })}
-              onKeyDown={(e) => e.key === 'Enter' && onSave()}
-            />
-          </FormControl>
+              <Box className={styles.ln}>
+                <Box mb={2}>{lang.hosts_title}</Box>
+                <Input
+                  ref={ipt_title_ref}
+                  value={hosts?.title || ''}
+                  maxLength={50}
+                  onChange={(e) => onUpdate({ title: e.target.value })}
+                  onKeyDown={(e) => e.key === 'Enter' && onSave()}
+                />
+              </Box>
 
-          {hosts?.type === 'remote' ? forRemote() : null}
-          {hosts?.type === 'group' ? forGroup() : null}
-          {hosts?.type === 'folder' ? forFolder() : null}
-        </DrawerBody>
+              {hosts?.type === 'remote' ? forRemote() : null}
+              {hosts?.type === 'group' ? forGroup() : null}
+              {hosts?.type === 'folder' ? forFolder() : null}
+            </Drawer.Body>
 
-        <DrawerFooter>{footer_buttons}</DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+            <Drawer.Footer>{footer_buttons}</Drawer.Footer>
+          </DrawerContent>
+        </DrawerPositioner>
+      </Portal>
+    </Drawer.Root>
   )
 }
 

@@ -1,4 +1,3 @@
-import { useColorMode } from '@chakra-ui/react'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -14,17 +13,12 @@ export default () => {
   const { loadHostsData } = useHostsData()
   const { setLocale } = useI18n()
   const { configs, loadConfigs } = useConfigs()
-  const { colorMode, setColorMode } = useColorMode()
 
   const update = () => {
     if (!configs) return
 
     setLocale(configs.locale)
     loadHostsData().catch((e) => console.error(e))
-
-    if (colorMode !== configs.theme) {
-      setColorMode(configs.theme)
-    }
 
     let cls = document.body.className
     document.body.className = cls.replace(/\btheme-\w+/gi, '')

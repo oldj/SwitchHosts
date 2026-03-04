@@ -110,18 +110,20 @@ const Transfer = (props: Props) => {
               size="sm"
               variant="outline"
               aria-label="Move to right"
-              icon={<IoArrowForward />}
-              isDisabled={left_selected_keys.length === 0}
+              disabled={left_selected_keys.length === 0}
               onClick={moveLeftToRight}
-            />
+            >
+              <IoArrowForward />
+            </IconButton>
             <IconButton
               size="sm"
               variant="outline"
               aria-label="Move to left"
-              icon={<IoArrowBack />}
-              isDisabled={right_selected_keys.length === 0}
+              disabled={right_selected_keys.length === 0}
               onClick={moveRightToLeft}
-            />
+            >
+              <IoArrowBack />
+            </IconButton>
           </VStack>
         </Center>
         <Box borderWidth="1px" borderRadius="md">

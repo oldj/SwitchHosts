@@ -1,4 +1,4 @@
-@import "../styles/common";
+@use "../styles/common" as *;
 
 .root {
   color: var(--swh-status-bar-font-color);

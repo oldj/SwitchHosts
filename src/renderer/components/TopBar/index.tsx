@@ -60,25 +60,25 @@ export default (props: IProps) => {
       <Flex align="center" className={styles.left}>
         <IconButton
           aria-label="Toggle sidebar"
-          icon={
-            show_left_panel ? (
-              <IconLayoutSidebarLeftCollapse size={16} />
-            ) : (
-              <IconLayoutSidebarLeftExpand size={16} />
-            )
-          }
           onClick={() => {
             agent.broadcast(events.toggle_left_panel, !show_left_panel)
           }}
           variant="ghost"
           mr={1}
-        />
+        >
+          {show_left_panel ? (
+            <IconLayoutSidebarLeftCollapse size={16} />
+          ) : (
+            <IconLayoutSidebarLeftExpand size={16} />
+          )}
+        </IconButton>
         <IconButton
           aria-label="Add"
-          icon={<IconPlus size={16} />}
           onClick={() => agent.broadcast(events.add_new)}
           variant="ghost"
-        />
+        >
+          <IconPlus size={16} />
+        </IconButton>
       </Flex>
 
       <Box className={styles.title_wrapper}>
@@ -119,10 +119,11 @@ export default (props: IProps) => {
         {show_history ? (
           <IconButton
             aria-label="Show history"
-            icon={<IconHistory size={16} />}
             variant="ghost"
             onClick={() => agent.broadcast(events.show_history)}
-          />
+          >
+            <IconHistory size={16} />
+          </IconButton>
         ) : null}
 
         <ConfigMenu />
@@ -131,10 +132,11 @@ export default (props: IProps) => {
           <IconButton
             aria-label="Close window"
             fontSize="20px"
-            icon={<BiX />}
             variant="ghost"
             onClick={() => actions.closeMainWindow()}
-          />
+          >
+            <BiX />
+          </IconButton>
         ) : null}
       </Flex>
     </div>

@@ -7,13 +7,7 @@
 import {
   Box,
   Checkbox,
-  FormControl,
-  FormHelperText,
-  FormLabel,
   HStack,
-  Radio,
-  RadioGroup,
-  Select,
   Stack,
   VStack,
 } from '@chakra-ui/react'
@@ -37,14 +31,14 @@ const General = (props: IProps) => {
   const label_width = 20
 
   return (
-    <VStack spacing={4}>
-      <FormControl>
+    <VStack gap={4}>
+      <Box w="100%">
         <HStack>
-          <FormLabel w={label_width}>{lang.language}</FormLabel>
-          <Select
-            w="200px"
+          <Box w={label_width}>{lang.language}</Box>
+          <select
             value={data.locale}
             onChange={(e) => onChange({ locale: e.target.value as LocaleName })}
+            style={{ width: '200px', padding: '6px 10px' }}
           >
             <option value="zh">简体中文</option>
             <option value="zh_hant">繁體中文</option>
@@ -54,185 +48,225 @@ const General = (props: IProps) => {
             <option value="ja">日本語</option>
             <option value="tr">Türkçe</option>
             <option value="ko">한국어</option>
-          </Select>
+          </select>
         </HStack>
-      </FormControl>
+      </Box>
 
-      <FormControl>
+      <Box w="100%">
         <HStack>
-          <FormLabel w={label_width}>{lang.theme}</FormLabel>
-          <Select
-            w="200px"
+          <Box w={label_width}>{lang.theme}</Box>
+          <select
             value={data.theme}
             onChange={(e) => onChange({ theme: e.target.value as ThemeType })}
+            style={{ width: '200px', padding: '6px 10px' }}
           >
             <option value="light">{lang.theme_light}</option>
             <option value="dark">{lang.theme_dark}</option>
-          </Select>
+          </select>
         </HStack>
-      </FormControl>
+      </Box>
 
-      <FormControl>
+      <Box w="100%">
         <HStack alignItems={'flex-start'}>
-          <FormLabel w={label_width}>{lang.write_mode}</FormLabel>
+          <Box w={label_width}>{lang.write_mode}</Box>
           <VStack align="left">
-            <RadioGroup
-              value={data.write_mode || ''}
-              onChange={(v) =>
-                onChange({
-                  write_mode: v as ConfigsType['write_mode'],
-                })
-              }
-            >
-              <HStack spacing={10}>
-                <Radio value="append">
+            <HStack gap={10}>
+              <label>
+                <input
+                  type="radio"
+                  name="write_mode"
+                  value="append"
+                  checked={(data.write_mode || '') === 'append'}
+                  onChange={(e) => onChange({ write_mode: e.target.value as ConfigsType['write_mode'] })}
+                />
                   <Box>{lang.append}</Box>
-                </Radio>
-                <Radio value="overwrite">
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="write_mode"
+                  value="overwrite"
+                  checked={(data.write_mode || '') === 'overwrite'}
+                  onChange={(e) => onChange({ write_mode: e.target.value as ConfigsType['write_mode'] })}
+                />
                   <Box>{lang.overwrite}</Box>
-                </Radio>
-              </HStack>
-            </RadioGroup>
-            <FormHelperText maxW={'350px'}>
+              </label>
+            </HStack>
+            <Box maxW={'350px'} opacity={0.7} fontSize="sm">
               {data.write_mode === 'append' && lang.write_mode_append_help}
               {data.write_mode === 'overwrite' && lang.write_mode_overwrite_help}
-            </FormHelperText>
+            </Box>
           </VStack>
         </HStack>
-      </FormControl>
+      </Box>
 
-      <FormControl pb={6}>
+      <Box pb={6} w="100%">
         <HStack alignItems={'flex-start'}>
-          <FormLabel w={label_width}>{lang.choice_mode}</FormLabel>
+          <Box w={label_width}>{lang.choice_mode}</Box>
           <VStack align="left">
-            <RadioGroup
-              value={data.choice_mode.toString()}
-              onChange={(v) =>
-                onChange({
-                  choice_mode: parseInt(v.toString()) as ConfigsType['choice_mode'],
-                })
-              }
-            >
-              <HStack spacing={10}>
-                <Radio value="1">
+            <HStack gap={10}>
+              <label>
+                <input
+                  type="radio"
+                  name="choice_mode"
+                  value="1"
+                  checked={data.choice_mode.toString() === '1'}
+                  onChange={(e) =>
+                    onChange({
+                      choice_mode: parseInt(e.target.value) as ConfigsType['choice_mode'],
+                    })
+                  }
+                />
                   <Box>{lang.choice_mode_single}</Box>
-                </Radio>
-                <Radio value="2">
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="choice_mode"
+                  value="2"
+                  checked={data.choice_mode.toString() === '2'}
+                  onChange={(e) =>
+                    onChange({
+                      choice_mode: parseInt(e.target.value) as ConfigsType['choice_mode'],
+                    })
+                  }
+                />
                   <Box>{lang.choice_mode_multiple}</Box>
-                </Radio>
-              </HStack>
-            </RadioGroup>
-            <FormHelperText maxW={'350px'}>{lang.choice_mode_desc}</FormHelperText>
+              </label>
+            </HStack>
+            <Box maxW={'350px'} opacity={0.7} fontSize="sm">
+              {lang.choice_mode_desc}
+            </Box>
           </VStack>
         </HStack>
-      </FormControl>
+      </Box>
 
       {platform === 'darwin' ? (
-        <FormControl>
+        <Box w="100%">
           <HStack>
-            <Checkbox
-              isChecked={data.show_title_on_tray}
-              onChange={(e) => onChange({ show_title_on_tray: e.target.checked })}
+            <Checkbox.Root
+              checked={data.show_title_on_tray}
+              onCheckedChange={(e: { checked: boolean }) => onChange({ show_title_on_tray: !!e.checked })}
             >
-              {lang.show_title_on_tray}
-            </Checkbox>
+              <Checkbox.HiddenInput />
+              <Checkbox.Control />
+              <span>{lang.show_title_on_tray}</span>
+            </Checkbox.Root>
           </HStack>
-        </FormControl>
+        </Box>
       ) : null}
 
-      <FormControl>
+      <Box w="100%">
         <HStack>
-          <Checkbox
-            isChecked={data.hide_at_launch}
-            onChange={(e) => onChange({ hide_at_launch: e.target.checked })}
+          <Checkbox.Root
+            checked={data.hide_at_launch}
+            onCheckedChange={(e: { checked: boolean }) => onChange({ hide_at_launch: !!e.checked })}
           >
-            {lang.hide_at_launch}
-          </Checkbox>
+            <Checkbox.HiddenInput />
+            <Checkbox.Control />
+            <span>{lang.hide_at_launch}</span>
+          </Checkbox.Root>
         </HStack>
-      </FormControl>
+      </Box>
 
       {agent.platform === 'linux' ? (
-        <FormControl>
+        <Box w="100%">
           <HStack>
-            <Checkbox
-              isChecked={data.use_system_window_frame}
-              onChange={(e) => onChange({ use_system_window_frame: e.target.checked })}
+            <Checkbox.Root
+              checked={data.use_system_window_frame}
+              onCheckedChange={(e: { checked: boolean }) => onChange({ use_system_window_frame: !!e.checked })}
             >
-              {lang.use_system_window_frame}
-            </Checkbox>
+              <Checkbox.HiddenInput />
+              <Checkbox.Control />
+              <span>{lang.use_system_window_frame}</span>
+            </Checkbox.Root>
           </HStack>
-        </FormControl>
+        </Box>
       ) : null}
 
       {agent.platform === 'darwin' ? (
-        <FormControl>
+        <Box w="100%">
           <HStack>
-            <Checkbox
-              isChecked={data.hide_dock_icon}
-              onChange={(e) => onChange({ hide_dock_icon: e.target.checked })}
+            <Checkbox.Root
+              checked={data.hide_dock_icon}
+              onCheckedChange={(e: { checked: boolean }) => onChange({ hide_dock_icon: !!e.checked })}
             >
-              {lang.hide_dock_icon}
-            </Checkbox>
+              <Checkbox.HiddenInput />
+              <Checkbox.Control />
+              <span>{lang.hide_dock_icon}</span>
+            </Checkbox.Root>
           </HStack>
-        </FormControl>
+        </Box>
       ) : null}
 
-      <FormControl>
+      <Box w="100%">
         <VStack align="left">
-          <Checkbox
-            isChecked={data.remove_duplicate_records}
-            onChange={(e) => onChange({ remove_duplicate_records: e.target.checked })}
+          <Checkbox.Root
+            checked={data.remove_duplicate_records}
+            onCheckedChange={(e: { checked: boolean }) => onChange({ remove_duplicate_records: !!e.checked })}
           >
-            {lang.remove_duplicate_records}
-          </Checkbox>
-          <FormHelperText pl="20px">{lang.remove_duplicate_records_desc}</FormHelperText>
+            <Checkbox.HiddenInput />
+            <Checkbox.Control />
+            <span>{lang.remove_duplicate_records}</span>
+          </Checkbox.Root>
+          <Box pl="20px" opacity={0.7} fontSize="sm">
+            {lang.remove_duplicate_records_desc}
+          </Box>
         </VStack>
-      </FormControl>
+      </Box>
 
-      <FormControl>
+      <Box w="100%">
         <VStack align="left">
-          <Checkbox
-            isChecked={data.tray_mini_window}
-            onChange={(e) => onChange({ tray_mini_window: e.target.checked })}
+          <Checkbox.Root
+            checked={data.tray_mini_window}
+            onCheckedChange={(e: { checked: boolean }) => onChange({ tray_mini_window: !!e.checked })}
           >
-            {lang.tray_mini_window}
-          </Checkbox>
+            <Checkbox.HiddenInput />
+            <Checkbox.Control />
+            <span>{lang.tray_mini_window}</span>
+          </Checkbox.Root>
         </VStack>
-      </FormControl>
+      </Box>
 
-      <FormControl>
+      <Box w="100%">
         <VStack align="left">
-          <Checkbox
-            isChecked={data.multi_chose_folder_switch_all}
-            onChange={(e) => onChange({ multi_chose_folder_switch_all: e.target.checked })}
+          <Checkbox.Root
+            checked={data.multi_chose_folder_switch_all}
+            onCheckedChange={(e: { checked: boolean }) => onChange({ multi_chose_folder_switch_all: !!e.checked })}
           >
-            {lang.multi_chose_folder_switch_all}
-          </Checkbox>
+            <Checkbox.HiddenInput />
+            <Checkbox.Control />
+            <span>{lang.multi_chose_folder_switch_all}</span>
+          </Checkbox.Root>
         </VStack>
-      </FormControl>
+      </Box>
 
-      <FormControl>
+      <Box w="100%">
         <VStack align="left">
-          <Checkbox
-            isChecked={data.http_api_on}
-            onChange={(e) => onChange({ http_api_on: e.target.checked })}
+          <Checkbox.Root
+            checked={data.http_api_on}
+            onCheckedChange={(e: { checked: boolean }) => onChange({ http_api_on: !!e.checked })}
           >
-            {lang.http_api_on}
-          </Checkbox>
-          <FormHelperText pl="20px">
+            <Checkbox.HiddenInput />
+            <Checkbox.Control />
+            <span>{lang.http_api_on}</span>
+          </Checkbox.Root>
+          <Box pl="20px" opacity={0.7} fontSize="sm">
             {i18n.trans('http_api_on_desc', [http_api_port.toString()])}
-          </FormHelperText>
-          <Stack pl={6} mt={1} spacing={1}>
-            <Checkbox
-              isDisabled={!data.http_api_on}
-              isChecked={data.http_api_only_local}
-              onChange={(e) => onChange({ http_api_only_local: e.target.checked })}
+          </Box>
+          <Stack pl={6} mt={1} gap={1}>
+            <Checkbox.Root
+              disabled={!data.http_api_on}
+              checked={data.http_api_only_local}
+              onCheckedChange={(e: { checked: boolean }) => onChange({ http_api_only_local: !!e.checked })}
             >
-              {lang.http_api_only_local}
-            </Checkbox>
+              <Checkbox.HiddenInput />
+              <Checkbox.Control />
+              <span>{lang.http_api_only_local}</span>
+            </Checkbox.Root>
           </Stack>
         </VStack>
-      </FormControl>
+      </Box>
     </VStack>
   )
 }

@@ -6,9 +6,6 @@
 
 import {
   Alert,
-  AlertDescription,
-  AlertIcon,
-  AlertTitle,
   Box,
   Button,
   Center,
@@ -67,15 +64,15 @@ const CommandsHistory = (props: Props) => {
     <VStack w="100%">
       {list.map((item, idx) => {
         return (
-          <Alert
+          <Alert.Root
             key={idx}
             status={item.success ? 'success' : 'error'}
             w="100%"
             // alignItems="top"
           >
-            <AlertIcon />
-            <Box flex="1">
-              <AlertTitle>
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>
                 <HStack>
                   <span>#{item._id}</span>
                   <span style={{ fontWeight: 'normal' }}>
@@ -84,14 +81,14 @@ const CommandsHistory = (props: Props) => {
                   <Spacer />
                   <IconButton
                     aria-label="delete"
-                    icon={<BiTrash />}
+                    children={<BiTrash />}
                     size="sm"
                     variant="ghost"
                     onClick={() => item._id && deleteOneRecord(item._id)}
                   />
                 </HStack>
-              </AlertTitle>
-              <AlertDescription>
+              </Alert.Title>
+              <Alert.Description>
                 {item.stdout ? (
                   <>
                     <Box>
@@ -112,14 +109,14 @@ const CommandsHistory = (props: Props) => {
                     </Box>
                   </>
                 ) : null}
-              </AlertDescription>
-            </Box>
-          </Alert>
+              </Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
         )
       })}
 
       <Box pt={10}>
-        <Button onClick={clearAll} variant="link">
+        <Button onClick={clearAll} variant="plain">
           {lang.clear_history}
         </Button>
       </Box>

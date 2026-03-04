@@ -6,13 +6,9 @@
 
 import {
   Checkbox,
-  FormControl,
-  FormLabel,
+  Box,
   HStack,
   Input,
-  NumberInput,
-  NumberInputField,
-  Select,
   VStack,
 } from '@chakra-ui/react'
 import { ConfigsType, ProtocolType } from '@common/default_configs'
@@ -32,62 +28,64 @@ const General = (props: IProps) => {
   const label_width = 20
 
   return (
-    <VStack spacing={4}>
-      <FormControl>
+    <VStack gap={4}>
+      <Box w="100%">
         <HStack>
-          <Checkbox
-            isChecked={data.use_proxy}
-            onChange={(e) => {
-              let is_use = e.target.checked
-              setIsUse(is_use)
-              onChange({ use_proxy: is_use })
-            }}
+          <Checkbox.Root
+            checked={data.use_proxy}
           >
-            {lang.use_proxy}
-          </Checkbox>
+            <Checkbox.HiddenInput
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                let is_use = e.target.checked
+                setIsUse(is_use)
+                onChange({ use_proxy: is_use })
+              }}
+            />
+            <Checkbox.Control />
+            <span>{lang.use_proxy}</span>
+          </Checkbox.Root>
         </HStack>
-      </FormControl>
+      </Box>
 
-      <FormControl>
+      <Box w="100%">
         <HStack>
-          <FormLabel w={label_width}>{lang.protocol}</FormLabel>
-          <Select
-            w="200px"
-            isDisabled={!is_use}
+          <Box w={label_width}>{lang.protocol}</Box>
+          <select
+            disabled={!is_use}
             value={data.proxy_protocol}
             onChange={(e) => onChange({ proxy_protocol: e.target.value as ProtocolType })}
+            style={{ width: '200px', padding: '6px 10px' }}
           >
             <option value="http">HTTP</option>
             <option value="https">HTTPS</option>
-          </Select>
+          </select>
         </HStack>
-      </FormControl>
+      </Box>
 
-      <FormControl>
+      <Box w="100%">
         <HStack>
-          <FormLabel w={label_width}>{lang.host}</FormLabel>
+          <Box w={label_width}>{lang.host}</Box>
           <Input
             w="200px"
-            isDisabled={!is_use}
+            disabled={!is_use}
             value={data.proxy_host}
             onChange={(e) => onChange({ proxy_host: e.target.value })}
           />
         </HStack>
-      </FormControl>
+      </Box>
 
-      <FormControl>
+      <Box w="100%">
         <HStack>
-          <FormLabel w={label_width}>{lang.port}</FormLabel>
-          <NumberInput
+          <Box w={label_width}>{lang.port}</Box>
+          <Input
             w="80px"
-            isDisabled={!is_use}
+            disabled={!is_use}
+            type="number"
             value={data.proxy_port || ''}
-            onChange={(_, vn) => onChange({ proxy_port: vn })}
-          >
-            <NumberInputField />
-          </NumberInput>
+            onChange={(e) => onChange({ proxy_port: parseInt(e.target.value) || 0 })}
+          />
         </HStack>
-      </FormControl>
+      </Box>
     </VStack>
   )
 }

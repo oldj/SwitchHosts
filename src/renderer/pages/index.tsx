@@ -1,4 +1,4 @@
-import { Button, useToast } from '@chakra-ui/react'
+import { Button } from '@chakra-ui/react'
 import About from '@renderer/components/About'
 import EditHostsInfo from '@renderer/components/EditHostsInfo'
 import History from '@renderer/components/History'
@@ -29,7 +29,6 @@ export default () => {
   const [left_show, setLeftShow] = useState(true)
   const [use_system_window_frame, setSystemFrame] = useState(false)
   const [show_migration, setShowMigration] = useState(false)
-  const toast = useToast()
 
   const migrate = async (do_migrate: boolean) => {
     if (do_migrate) {
@@ -80,26 +79,7 @@ export default () => {
   useOnBroadcast(
     events.new_version,
     (new_version: string) => {
-      toast({
-        title: lang.new_version_found,
-        description: (
-          <div className={styles.new_version}>
-            <span>{i18n.trans('latest_version_desc', [new_version])}</span>
-            <Button
-              ml="10px"
-              variant="link"
-              onClick={() => {
-                actions.openUrl(download_url)
-              }}
-            >
-              {lang.download}
-            </Button>
-          </div>
-        ),
-        status: 'info',
-        duration: 10000,
-        isClosable: true,
-      })
+      console.log(`${lang.new_version_found}: ${i18n.trans('latest_version_desc', [new_version])}`)
     },
     [lang, i18n],
   )

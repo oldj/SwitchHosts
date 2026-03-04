@@ -7,9 +7,6 @@
 import {
   Box,
   Button,
-  FormControl,
-  FormHelperText,
-  FormLabel,
   Textarea,
   VStack,
 } from '@chakra-ui/react'
@@ -33,20 +30,22 @@ const Commands = (props: IProps) => {
   }
 
   return (
-    <VStack spacing={4}>
-      <FormControl>
-        <FormLabel>{lang.commands_title}</FormLabel>
-        <FormHelperText mb={3}>{lang.commands_help}</FormHelperText>
+    <VStack gap={4}>
+      <Box w="100%">
+        <Box>{lang.commands_title}</Box>
+        <Box mb={3} opacity={0.7} fontSize="sm">
+          {lang.commands_help}
+        </Box>
         <Textarea
           minHeight="200px"
           placeholder={'# echo "ok!"'}
           value={data.cmd_after_hosts_apply}
           onChange={(e) => onChange({ cmd_after_hosts_apply: e.target.value })}
         />
-      </FormControl>
+      </Box>
 
       <Box>
-        <Button variant="link" onClick={toggleShowHistory}>
+        <Button variant="plain" onClick={toggleShowHistory}>
           {show_history ? lang.hide_history : lang.show_history}
         </Button>
       </Box>

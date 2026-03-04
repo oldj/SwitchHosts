@@ -9,16 +9,12 @@ import {
   Button,
   Center,
   Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
   Flex,
   HStack,
   List,
   ListItem,
-  Select,
+  NativeSelect,
+  Portal,
   Spacer,
   Spinner,
   Tooltip,
@@ -47,6 +43,8 @@ interface IHistoryProps {
 const HistoryList = (props: IHistoryProps): React.ReactElement => {
   const { list, selected_item, setSelectedItem } = props
   const { lang } = useI18n()
+  const ListRoot = List.Root as unknown as React.FC<React.PropsWithChildren<any>>
+  const ListItemComp = List.Item as unknown as React.FC<React.PropsWithChildren<any>>
 
   if (list.length === 0) {
     return (
@@ -61,9 +59,9 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
       <Box flex={1} mr={3} borderWidth="1px" borderRadius="md">
         <HostsViewer content={selected_item ? selected_item.content : ''} />
       </Box>
-      <List w="200px" h="100%" overflow="auto" borderWidth="1px" borderRadius="md">
+      <ListRoot w="200px" h="100%" overflow="auto" borderWidth="1px" borderRadius="md">
         {list.map((item) => (
-          <ListItem
+          <ListItemComp
             key={item.id}
             onClick={() => setSelectedItem(item)}
             px={3}
@@ -75,7 +73,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
               <Box>
                 <IconFileTime size={16} />
               </Box>
-              <VStack align="left" spacing={0}>
+              <VStack align="left" gap={0}>
                 <Box>{dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}</Box>
                 <HStack lineHeight="14px" fontSize="9px" opacity={0.6}>
                   <Box>{item.content.split('\n').length} lines</Box>
@@ -83,9 +81,9 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
                 </HStack>
               </VStack>
             </HStack>
-          </ListItem>
+          </ListItemComp>
         ))}
-      </List>
+      </ListRoot>
     </Flex>
   )
 }
@@ -93,7 +91,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
 const Loading = (): React.ReactElement => {
   return (
     <Center h="300px">
-      <Spinner speed="1s" emptyColor="gray.200" size="lg" mr={3} />
+      <Spinner size="lg" mr={3} />
       <Box>Loading...</Box>
     </Center>
   )
@@ -108,6 +106,11 @@ const History = () => {
   // const btn_close = useRef(null)
 
   const { lang } = useI18n()
+  const DrawerPositioner = Drawer.Positioner as unknown as React.FC<React.PropsWithChildren>
+  const DrawerContent = Drawer.Content as unknown as React.FC<React.PropsWithChildren>
+  const TooltipTrigger = Tooltip.Trigger as unknown as React.FC<React.PropsWithChildren<{ asChild?: boolean }>>
+  const TooltipPositioner = Tooltip.Positioner as unknown as React.FC<React.PropsWithChildren>
+  const TooltipContent = Tooltip.Content as unknown as React.FC<React.PropsWithChildren>
 
   const loadData = async () => {
     setIsLoading(true)
@@ -164,25 +167,27 @@ const History = () => {
   }
 
   return (
-    <Drawer
+    <Drawer.Root
       size="lg"
-      placement="right"
-      isOpen={is_open}
-      onClose={onClose}
+      placement="end"
+      open={is_open}
+      onOpenChange={(e: { open: boolean }) => setIsOpen(e.open)}
       // initialFocusRef={btn_close}
     >
-      <DrawerOverlay />
-      <DrawerContent>
+      <Portal>
+        <Drawer.Backdrop />
+        <DrawerPositioner>
+          <DrawerContent>
         {/*<DrawerCloseButton/>*/}
-        <DrawerHeader>
+            <Drawer.Header>
           <HStack>
             <Box mr={1}>
               <IconHistory size={16} />
             </Box>
             <Box>{lang.system_hosts_history}</Box>
           </HStack>
-        </DrawerHeader>
-        <DrawerBody>
+            </Drawer.Header>
+            <Drawer.Body>
           {is_loading ? (
             <Loading />
           ) : (
@@ -192,36 +197,43 @@ const History = () => {
               setSelectedItem={setSelectedItem}
             />
           )}
-        </DrawerBody>
-        <DrawerFooter>
+            </Drawer.Body>
+            <Drawer.Footer>
           <Flex width="100%" align="center">
             <Box mr={3}>{lang.system_hosts_history_limit}</Box>
             <Box>
-              <Select
-                value={configs?.history_limit}
-                onChange={(e) => updateHistoryLimit(parseInt(e.target.value))}
-              >
-                {history_limit_values.map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
-              </Select>
+              <NativeSelect.Root>
+                <NativeSelect.Field
+                  value={configs?.history_limit}
+                  onChange={(e) => updateHistoryLimit(parseInt(e.target.value))}
+                >
+                  {history_limit_values.map((v) => (
+                    <option key={v} value={v}>
+                      {v}
+                    </option>
+                  ))}
+                </NativeSelect.Field>
+              </NativeSelect.Root>
             </Box>
-            <Tooltip label={lang.system_hosts_history_help} aria-label="A tooltip">
-              <Box ml={3}>
-                <IconHelpCircle size={16} />
-              </Box>
-            </Tooltip>
+            <Tooltip.Root>
+              <TooltipTrigger asChild>
+                <Box ml={3}>
+                  <IconHelpCircle size={16} />
+                </Box>
+              </TooltipTrigger>
+              <TooltipPositioner>
+                <TooltipContent>{lang.system_hosts_history_help}</TooltipContent>
+              </TooltipPositioner>
+            </Tooltip.Root>
             <Spacer />
             <Button
-              leftIcon={<IconX size={16} />}
               variant="outline"
               mr={3}
               colorScheme="pink"
-              isDisabled={!selected_item}
+              disabled={!selected_item}
               onClick={() => selected_item && deleteItem(selected_item.id)}
             >
+              <IconX size={16} />
               {lang.delete}
             </Button>
             <Button
@@ -232,9 +244,11 @@ const History = () => {
               {lang.close}
             </Button>
           </Flex>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+            </Drawer.Footer>
+          </DrawerContent>
+        </DrawerPositioner>
+      </Portal>
+    </Drawer.Root>
   )
 }
 

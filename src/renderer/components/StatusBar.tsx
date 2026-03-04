@@ -22,7 +22,7 @@ const StatusBar = (props: Props) => {
 
   return (
     <Flex className={styles.root} px="10px" userSelect="none">
-      <HStack spacing={4}>
+      <HStack gap={4}>
         <Box>
           {line_count} {line_count > 1 ? i18n.lang.lines : i18n.lang.line}
         </Box>
