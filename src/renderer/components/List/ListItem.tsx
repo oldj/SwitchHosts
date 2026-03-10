@@ -1,25 +1,23 @@
 /**
- * ListItem
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
+import { IHostsListObject } from '@common/data'
+import events from '@common/events'
+import { updateOneItem } from '@common/hostsFn'
+import { IMenuItemOption } from '@common/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { actions, agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
-import { IHostsListObject } from '@common/data'
-import { updateOneItem } from '@common/hostsFn'
+import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
 import { BiEdit } from 'react-icons/bi'
-import { Center } from '@chakra-ui/react'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.module.scss'
-import events from '@common/events'
-import { IMenuItemOption } from '@common/types'
-import useI18n from '@renderer/models/useI18n'
-import useHostsData from '@renderer/models/useHostsData'
 
 interface Props {
   data: IHostsListObject
@@ -170,14 +168,20 @@ const ListItem = (props: Props) => {
         {data.is_sys ? null : (
           <>
             <div className={styles.edit}>
-              <Center h="var(--swh-tree-row-height)">
+              <div
+                style={{
+                  height: 'var(--swh-tree-row-height)',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
                 <BiEdit
                   title={lang.edit}
                   onClick={() => {
                     agent.broadcast(events.edit_hosts_info, data)
                   }}
                 />
-              </Center>
+              </div>
             </div>
             <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)} />
           </>

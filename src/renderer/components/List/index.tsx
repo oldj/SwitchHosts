@@ -1,27 +1,25 @@
 /**
- * List
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { Center } from '@chakra-ui/react'
+import { IHostsListObject } from '@common/data'
+import events from '@common/events'
+import { findItemById, getNextSelectedItem, setOnStateOfItem } from '@common/hostsFn'
+import { IFindShowSourceParam } from '@common/types'
 import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IHostsListObject } from '@common/data'
-import events from '@common/events'
-import { findItemById, getNextSelectedItem, setOnStateOfItem } from '@common/hostsFn'
-import { IFindShowSourceParam } from '@common/types'
+import useConfigs from '@renderer/models/useConfigs'
+import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import clsx from 'clsx'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
 import styles from './index.module.scss'
 import ListItem from './ListItem'
-import useConfigs from '@renderer/models/useConfigs'
-import useHostsData from '@renderer/models/useHostsData'
 
 interface Props {
   is_tray?: boolean
@@ -199,9 +197,17 @@ const List = (props: Props) => {
           <ListItem key={data.id} data={data} is_tray={is_tray} selected_ids={selected_ids} />
         )}
         collapseArrow={
-          <Center w="20px" h="20px">
+          <div
+            style={{
+              width: '20px',
+              height: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <BiChevronRight />
-          </Center>
+          </div>
         }
         nodeAttr={(item) => {
           return {

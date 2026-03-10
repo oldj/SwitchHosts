@@ -1,19 +1,13 @@
 /**
- * Commands.tsx
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import {
-  Box,
-  Button,
-  Textarea,
-  VStack,
-} from '@chakra-ui/react'
-import CommandsHistory from '@renderer/components/Pref/CommandsHistory'
 import { ConfigsType } from '@common/default_configs'
+import { Box, Button, Stack, Textarea } from '@mantine/core'
+import CommandsHistory from '@renderer/components/Pref/CommandsHistory'
 import useI18n from '@renderer/models/useI18n'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 interface IProps {
   data: ConfigsType
@@ -30,14 +24,12 @@ const Commands = (props: IProps) => {
   }
 
   return (
-    <VStack gap={4}>
+    <Stack gap="16px">
       <Box w="100%">
         <Box>{lang.commands_title}</Box>
-        <Box mb={3} opacity={0.7} fontSize="sm">
-          {lang.commands_help}
-        </Box>
+        <Box style={{ marginBottom: 12, opacity: 0.7, fontSize: 12 }}>{lang.commands_help}</Box>
         <Textarea
-          minHeight="200px"
+          rows={6}
           placeholder={'# echo "ok!"'}
           value={data.cmd_after_hosts_apply}
           onChange={(e) => onChange({ cmd_after_hosts_apply: e.target.value })}
@@ -45,7 +37,7 @@ const Commands = (props: IProps) => {
       </Box>
 
       <Box>
-        <Button variant="plain" onClick={toggleShowHistory}>
+        <Button variant="light" onClick={toggleShowHistory}>
           {show_history ? lang.hide_history : lang.show_history}
         </Button>
       </Box>
@@ -53,7 +45,7 @@ const Commands = (props: IProps) => {
       <Box w="100%">
         <CommandsHistory is_show={show_history} />
       </Box>
-    </VStack>
+    </Stack>
   )
 }
 

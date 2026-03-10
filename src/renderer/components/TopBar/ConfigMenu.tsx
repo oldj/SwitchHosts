@@ -1,22 +1,15 @@
 /**
- * ConfigMenu
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import {
-  Button,
-  Menu,
-  HStack,
-  Portal,
-} from '@chakra-ui/react'
-import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
-import { actions, agent } from '@renderer/core/agent'
 import { feedback_url, homepage_url } from '@common/constants'
 import events from '@common/events'
+import { ActionIcon, Menu } from '@mantine/core'
+import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
+import { actions, agent } from '@renderer/core/agent'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
-import React, { useState } from 'react'
 import {
   IconAdjustments,
   IconCloudDownload,
@@ -30,50 +23,44 @@ import {
   IconSettings,
   IconUpload,
 } from '@tabler/icons-react'
+import { useState } from 'react'
 import styles from './ConfigMenu.module.scss'
 
-const MenuItem = Menu.Item as unknown as React.FC<
-  React.PropsWithChildren<{
-    value: string
-    onClick?: () => void | Promise<void>
-  }>
->
-const MenuTrigger = Menu.Trigger as unknown as React.FC<React.PropsWithChildren<{ asChild?: boolean }>>
-const MenuPositioner = Menu.Positioner as unknown as React.FC<React.PropsWithChildren>
-const MenuContent = Menu.Content as unknown as React.FC<React.PropsWithChildren<any>>
+interface IProps {
+  iconSize?: number
+}
 
-const ConfigMenu = () => {
+const ConfigMenu = (props: IProps) => {
+  const { iconSize = 16 } = props
   const { lang } = useI18n()
   const { loadHostsData, setCurrentHosts } = useHostsData()
   const [show_import_from_url, setShowImportFromUrl] = useState(false)
 
+  const strokeWidth = 1.5
+
   return (
     <>
-      <Menu.Root>
-        <MenuTrigger asChild>
-          <Button variant="ghost" width="35px" px="10.5px">
-            <IconSettings size={16} />
-          </Button>
-        </MenuTrigger>
-        <Portal>
-          <MenuPositioner>
-            <MenuContent
-              borderColor="var(--swh-border-color-0)"
-              className={styles.menu_list}
-              maxH={'calc(100vh - 80px)'}
-              overflowY={'scroll'}
-            >
-              <MenuItem value="about" onClick={() => agent.broadcast(events.show_about)}>
-                <HStack>
-                  <IconInfoCircle size={16} />
-                  <span>{lang.about}</span>
-                </HStack>
-              </MenuItem>
+      <Menu shadow="md" withinPortal>
+        <Menu.Target>
+          <ActionIcon variant="subtle" color="gray">
+            <IconSettings size={iconSize} />
+          </ActionIcon>
+        </Menu.Target>
+        <Menu.Dropdown
+          className={styles.menu_list}
+          style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'scroll' }}
+        >
+          <Menu.Item
+            leftSection={<IconInfoCircle size={iconSize} stroke={strokeWidth} />}
+            onClick={() => agent.broadcast(events.show_about)}
+          >
+            {lang.about}
+          </Menu.Item>
 
-              <Menu.Separator />
+          <Menu.Divider />
 
-              <MenuItem
-                value="check-update"
+          <Menu.Item
+            leftSection={<IconRefresh size={iconSize} stroke={strokeWidth} />}
             onClick={async () => {
               let r = await actions.checkUpdate()
               if (r === false) {
@@ -82,29 +69,26 @@ const ConfigMenu = () => {
                 console.error(lang.check_update_failed)
               }
             }}
-              >
-                <HStack>
-                  <IconRefresh size={16} />
-                  <span>{lang.check_update}</span>
-                </HStack>
-              </MenuItem>
-              <MenuItem value="feedback" onClick={() => actions.openUrl(feedback_url)}>
-                <HStack>
-                  <IconMessage2 size={16} />
-                  <span>{lang.feedback}</span>
-                </HStack>
-              </MenuItem>
-              <MenuItem value="homepage" onClick={() => actions.openUrl(homepage_url)}>
-                <HStack>
-                  <IconHome size={16} />
-                  <span>{lang.homepage}</span>
-                </HStack>
-              </MenuItem>
+          >
+            {lang.check_update}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconMessage2 size={iconSize} stroke={strokeWidth} />}
+            onClick={() => actions.openUrl(feedback_url)}
+          >
+            {lang.feedback}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconHome size={iconSize} stroke={strokeWidth} />}
+            onClick={() => actions.openUrl(homepage_url)}
+          >
+            {lang.homepage}
+          </Menu.Item>
 
-              <Menu.Separator />
+          <Menu.Divider />
 
-              <MenuItem
-                value="export"
+          <Menu.Item
+            leftSection={<IconUpload size={iconSize} stroke={strokeWidth} />}
             onClick={async () => {
               let r = await actions.exportData()
               if (r === null) {
@@ -115,14 +99,11 @@ const ConfigMenu = () => {
                 console.log(lang.export_done)
               }
             }}
-              >
-                <HStack>
-                  <IconUpload size={16} />
-                  <span>{lang.export}</span>
-                </HStack>
-              </MenuItem>
-              <MenuItem
-                value="import"
+          >
+            {lang.export}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconDownload size={iconSize} stroke={strokeWidth} />}
             onClick={async () => {
               let r = await actions.importData()
               if (r === null) {
@@ -140,51 +121,43 @@ const ConfigMenu = () => {
                 console.error(description)
               }
             }}
-              >
-                <HStack>
-                  <IconDownload size={16} />
-                  <span>{lang.import}</span>
-                </HStack>
-              </MenuItem>
-              <MenuItem
-                value="import-url"
+          >
+            {lang.import}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconCloudDownload size={iconSize} stroke={strokeWidth} />}
             onClick={async () => {
               setShowImportFromUrl(true)
             }}
-              >
-                <HStack>
-                  <IconCloudDownload size={16} />
-                  <span>{lang.import_from_url}</span>
-                </HStack>
-              </MenuItem>
+          >
+            {lang.import_from_url}
+          </Menu.Item>
 
-              <Menu.Separator />
+          <Menu.Divider />
 
-              <MenuItem value="prefs" onClick={() => agent.broadcast(events.show_preferences)}>
-                <HStack>
-                  <IconAdjustments size={16} />
-                  <span>{lang.preferences}</span>
-                </HStack>
-              </MenuItem>
-              <MenuItem value="devtools" onClick={() => actions.cmdToggleDevTools()}>
-                <HStack>
-                  <IconCode size={16} />
-                  <span>{lang.toggle_developer_tools}</span>
-                </HStack>
-              </MenuItem>
+          <Menu.Item
+            leftSection={<IconAdjustments size={iconSize} stroke={strokeWidth} />}
+            onClick={() => agent.broadcast(events.show_preferences)}
+          >
+            {lang.preferences}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconCode size={iconSize} stroke={strokeWidth} />}
+            onClick={() => actions.cmdToggleDevTools()}
+          >
+            {lang.toggle_developer_tools}
+          </Menu.Item>
 
-              <Menu.Separator />
+          <Menu.Divider />
 
-              <MenuItem value="quit" onClick={() => actions.quit()}>
-                <HStack>
-                  <IconLogout size={16} />
-                  <span>{lang.quit}</span>
-                </HStack>
-              </MenuItem>
-            </MenuContent>
-          </MenuPositioner>
-        </Portal>
-      </Menu.Root>
+          <Menu.Item
+            leftSection={<IconLogout size={iconSize} stroke={strokeWidth} />}
+            onClick={() => actions.quit()}
+          >
+            {lang.quit}
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
       <ImportFromUrl is_show={show_import_from_url} setIsShow={setShowImportFromUrl} />
     </>
   )

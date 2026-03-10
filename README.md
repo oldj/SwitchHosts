@@ -22,7 +22,7 @@ Homepage: [https://switchhosts.vercel.app](https://switchhosts.vercel.app)
 
 SwitchHosts is an App for managing hosts file, it is based on [Electron](http://electron.atom.io/)
 , [React](https://facebook.github.io/react/), [Jotai](https://jotai.org/)
-, [Chakra UI](https://chakra-ui.com/), [CodeMirror](http://codemirror.net/), etc.
+, [Mantine](https://mantine.dev/), [CodeMirror](http://codemirror.net/), etc.
 
 ## Screenshot
 

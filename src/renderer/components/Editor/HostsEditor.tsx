@@ -1,26 +1,25 @@
 /**
- * HostsEditor
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import StatusBar from '@renderer/components/StatusBar'
-import { actions, agent } from '@renderer/core/agent'
-import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { IHostsListObject } from '@common/data'
 import events from '@common/events'
 import { IFindShowSourceParam } from '@common/types'
 import wait from '@common/utils/wait'
+import StatusBar from '@renderer/components/StatusBar'
+import { actions, agent } from '@renderer/core/agent'
+import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import useHostsData from '@renderer/models/useHostsData'
 import { useDebounceFn } from 'ahooks'
 import clsx from 'clsx'
 import CodeMirror from 'codemirror'
 import 'codemirror/addon/comment/comment'
 import 'codemirror/addon/selection/mark-selection'
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import modeHosts from './cm_hl'
 import './codemirror.module.scss'
 import styles from './HostsEditor.module.scss'
-import useHostsData from '@renderer/models/useHostsData'
 
 modeHosts()
 

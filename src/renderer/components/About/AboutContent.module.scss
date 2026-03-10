@@ -1,7 +1,7 @@
-@use "../../styles/common" as *;
+@use '../../styles/common';
 
 .root {
-  padding-bottom: 20px;
+  // padding-bottom: 20px;
 
   a {
     color: var(--swh-primary-color);
@@ -20,9 +20,10 @@
 }
 
 .names {
-  @include swh-scroll-y;
+  @include common.swh-scroll-y;
   display: flex;
   flex-wrap: wrap;
+  gap: 4px 16px;
   //justify-content: center;
   margin: 8px 0 20px 0;
   //max-width: 350px;
@@ -30,10 +31,10 @@
   overflow-y: auto;
   border: 1px solid var(--swh-border-color-1);
   border-radius: 4px;
-  padding: 8px 4px;
+  padding: 8px;
 
-  a {
-    margin: 0 0.5em;
-    display: inline-block;
-  }
+  // a {
+  //   margin: 0 0.5em;
+  //   display: inline-block;
+  // }
 }

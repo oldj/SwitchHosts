@@ -1,19 +1,12 @@
 /**
- * Proxy.tsx
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import {
-  Checkbox,
-  Box,
-  HStack,
-  Input,
-  VStack,
-} from '@chakra-ui/react'
 import { ConfigsType, ProtocolType } from '@common/default_configs'
+import { Box, Checkbox, Group, NativeSelect, Stack, TextInput } from '@mantine/core'
 import useI18n from '@renderer/models/useI18n'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 interface IProps {
   data: ConfigsType
@@ -25,68 +18,65 @@ const General = (props: IProps) => {
   const { lang } = useI18n()
   const [is_use, setIsUse] = useState(data.use_proxy)
 
-  const label_width = 20
+  const label_width = 80
 
   return (
-    <VStack gap={4}>
+    <Stack gap="16px">
       <Box w="100%">
-        <HStack>
-          <Checkbox.Root
+        <Group gap="8px">
+          <Checkbox
             checked={data.use_proxy}
-          >
-            <Checkbox.HiddenInput
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                let is_use = e.target.checked
-                setIsUse(is_use)
-                onChange({ use_proxy: is_use })
-              }}
-            />
-            <Checkbox.Control />
-            <span>{lang.use_proxy}</span>
-          </Checkbox.Root>
-        </HStack>
+            onChange={(e) => {
+              let is_use = e.target.checked
+              setIsUse(is_use)
+              onChange({ use_proxy: is_use })
+            }}
+            label={lang.use_proxy}
+          />
+        </Group>
       </Box>
 
       <Box w="100%">
-        <HStack>
+        <Group gap="8px">
           <Box w={label_width}>{lang.protocol}</Box>
-          <select
+          <NativeSelect
             disabled={!is_use}
             value={data.proxy_protocol}
             onChange={(e) => onChange({ proxy_protocol: e.target.value as ProtocolType })}
-            style={{ width: '200px', padding: '6px 10px' }}
-          >
-            <option value="http">HTTP</option>
-            <option value="https">HTTPS</option>
-          </select>
-        </HStack>
+            data={[
+              { value: 'http', label: 'HTTP' },
+              { value: 'https', label: 'HTTPS' },
+            ]}
+            w={200}
+          />
+        </Group>
       </Box>
 
       <Box w="100%">
-        <HStack>
+        <Group gap="8px">
           <Box w={label_width}>{lang.host}</Box>
-          <Input
-            w="200px"
+          <TextInput
+            style={{ width: '200px' }}
             disabled={!is_use}
             value={data.proxy_host}
             onChange={(e) => onChange({ proxy_host: e.target.value })}
           />
-        </HStack>
+        </Group>
       </Box>
 
       <Box w="100%">
-        <HStack>
+        <Group gap="8px">
           <Box w={label_width}>{lang.port}</Box>
-          <Input
-            w="80px"
+          <TextInput
+            style={{ width: '80px' }}
             disabled={!is_use}
             type="number"
             value={data.proxy_port || ''}
             onChange={(e) => onChange({ proxy_port: parseInt(e.target.value) || 0 })}
           />
-        </HStack>
+        </Group>
       </Box>
-    </VStack>
+    </Stack>
   )
 }
 

@@ -1,18 +1,16 @@
 /**
- * LeftPanel
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
+import events from '@common/events'
 import Trashcan from '@renderer/components/LeftPanel/Trashcan'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
-import events from '@common/events'
-import useI18n from '@renderer/models/useI18n'
-import React from 'react'
-import styles from './index.module.scss'
 import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
+import styles from './index.module.scss'
 
 interface Props {
   width: number

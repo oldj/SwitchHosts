@@ -1,20 +1,11 @@
 /**
- * Advanced.tsx
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import {
-  Box,
-  Button,
-  Checkbox,
-  HStack,
-  Link,
-  Tooltip,
-  VStack,
-} from '@chakra-ui/react'
-import { actions } from '@renderer/core/agent'
 import { ConfigsType } from '@common/default_configs'
+import { Button, Checkbox, Group, Stack, Tooltip } from '@mantine/core'
+import { actions } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
 import React, { useEffect, useState } from 'react'
 import styles from './styles.module.scss'
@@ -28,32 +19,22 @@ const PathLink = (props: { link: string }) => {
   const { link } = props
   const { lang } = useI18n()
   const isDisabled = !link
-  const TooltipTrigger = Tooltip.Trigger as unknown as React.FC<React.PropsWithChildren<{ asChild?: boolean }>>
-  const TooltipPositioner = Tooltip.Positioner as unknown as React.FC<React.PropsWithChildren>
-  const TooltipContent = Tooltip.Content as unknown as React.FC<React.PropsWithChildren>
-
   return (
-    <Tooltip.Root>
-      <TooltipTrigger asChild>
-        <Link
-          className={styles.link}
-          onClick={(e: React.MouseEvent) => {
-            e.preventDefault()
-            e.stopPropagation()
-            if (isDisabled) return
-            actions.showItemInFolder(link)
-          }}
-          href={isDisabled ? undefined : 'file://' + link}
-          opacity={isDisabled ? 0.5 : 1}
-          pointerEvents={isDisabled ? 'none' : 'auto'}
-        >
-          {link}
-        </Link>
-      </TooltipTrigger>
-      <TooltipPositioner>
-        <TooltipContent>{lang.click_to_open}</TooltipContent>
-      </TooltipPositioner>
-    </Tooltip.Root>
+    <Tooltip label={lang.click_to_open}>
+      <a
+        className={styles.link}
+        onClick={(e: React.MouseEvent) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (isDisabled) return
+          actions.showItemInFolder(link)
+        }}
+        href={isDisabled ? undefined : 'file://' + link}
+        style={{ opacity: isDisabled ? 0.5 : 1, pointerEvents: isDisabled ? 'none' : 'auto' }}
+      >
+        {link}
+      </a>
+    </Tooltip>
   )
 }
 
@@ -71,42 +52,30 @@ const Advanced = (props: IProps) => {
   }, [])
 
   return (
-    <VStack gap={10}>
-      <Box w="100%">
-        <Box>{lang.usage_data_title}</Box>
-        <Box mb={2} opacity={0.7} fontSize="sm">
-          {lang.usage_data_help}
-        </Box>
-        <Checkbox.Root
+    <Stack gap="40px">
+      <div style={{ width: '100%' }}>
+        <div>{lang.usage_data_title}</div>
+        <div style={{ marginBottom: 8, opacity: 0.7, fontSize: 12 }}>{lang.usage_data_help}</div>
+        <Checkbox
           checked={data.send_usage_data}
-        >
-          <Checkbox.HiddenInput
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onChange({ send_usage_data: e.target.checked })
-            }
-          />
-          <Checkbox.Control />
-          <span>{lang.usage_data_agree}</span>
-        </Checkbox.Root>
-      </Box>
+          label={lang.usage_data_agree}
+          onChange={(e) => onChange({ send_usage_data: e.target.checked })}
+        />
+      </div>
 
-      <Box w="100%">
-        <Box>{lang.where_is_my_hosts}</Box>
-        <Box mb={2} opacity={0.7} fontSize="sm">
-          {lang.your_hosts_file_is}
-        </Box>
+      <div style={{ width: '100%' }}>
+        <div>{lang.where_is_my_hosts}</div>
+        <div style={{ marginBottom: 8, opacity: 0.7, fontSize: 12 }}>{lang.your_hosts_file_is}</div>
         <PathLink link={hosts_path} />
-      </Box>
+      </div>
 
-      <Box w="100%">
-        <Box>{lang.where_is_my_data}</Box>
-        <Box mb={2} opacity={0.7} fontSize="sm">
-          {lang.your_data_is}
-        </Box>
-        <HStack>
+      <div style={{ width: '100%' }}>
+        <div>{lang.where_is_my_data}</div>
+        <div style={{ marginBottom: 8, opacity: 0.7, fontSize: 12 }}>{lang.your_data_is}</div>
+        <Group gap="8px">
           <PathLink link={data_dir} />
           <Button
-            variant="plain"
+            variant="subtle"
             onClick={async () => {
               let r = await actions.cmdChangeDataDir()
               console.log(r)
@@ -117,7 +86,7 @@ const Advanced = (props: IProps) => {
 
           {data_dir !== default_data_dir && (
             <Button
-              variant="plain"
+              variant="subtle"
               onClick={async () => {
                 if (!confirm(i18n.trans('reset_data_dir_confirm', [default_data_dir]))) {
                   return
@@ -129,9 +98,9 @@ const Advanced = (props: IProps) => {
               {lang.reset}
             </Button>
           )}
-        </HStack>
-      </Box>
-    </VStack>
+        </Group>
+      </div>
+    </Stack>
   )
 }
 

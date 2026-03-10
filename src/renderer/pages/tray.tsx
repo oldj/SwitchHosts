@@ -1,13 +1,13 @@
+import events from '@common/events'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@common/events'
-import React, { useEffect } from 'react'
-import { BiArea } from 'react-icons/bi'
-import styles from './tray.module.scss'
-import useI18n from '@renderer/models/useI18n'
 import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
+import { useEffect } from 'react'
+import { BiArea } from 'react-icons/bi'
+import styles from './tray.module.scss'
 
 export default () => {
   const { loadHostsData } = useHostsData()

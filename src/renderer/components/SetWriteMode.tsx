@@ -3,22 +3,15 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  Box,
-  Button,
-  Dialog,
-  HStack,
-  RadioGroup,
-  Portal,
-} from '@chakra-ui/react'
+import { WriteModeType } from '@common/default_configs'
+import events from '@common/events'
+import { Button, Group, Modal, Radio, Text } from '@mantine/core'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@common/events'
-import React, { useState } from 'react'
-import styles from './SetWriteMode.module.scss'
-import { WriteModeType } from '@common/default_configs'
 import useI18n from '@renderer/models/useI18n'
+import { useState } from 'react'
 import useConfigs from '../models/useConfigs'
+import styles from './SetWriteMode.module.scss'
 
 interface Props {}
 
@@ -30,84 +23,71 @@ interface IPendingData {
 const SetWriteMode = () => {
   const { updateConfigs } = useConfigs()
   const { lang } = useI18n()
-  const [is_show, setIsShow] = useState(false)
-  const ipt_ref = React.useRef<HTMLInputElement>(null)
-  const [write_mode, setWriteMode] = useState<WriteModeType>(null)
-  const [pending_data, setPendingData] = useState<IPendingData | undefined>(undefined)
-  const DialogPositioner = Dialog.Positioner as unknown as React.FC<React.PropsWithChildren>
-  const DialogContent = Dialog.Content as unknown as React.FC<React.PropsWithChildren>
-  const RadioItem = RadioGroup.Item as unknown as React.FC<React.PropsWithChildren<{ value: string }>>
-  const RadioItemText = RadioGroup.ItemText as unknown as React.FC<React.PropsWithChildren>
+  const [opened, setOpened] = useState(false)
+  const [writeMode, setWriteMode] = useState<WriteModeType>(null)
+  const [pendingData, setPendingData] = useState<IPendingData | undefined>(undefined)
 
   const onCancel = () => {
-    setIsShow(false)
+    setOpened(false)
   }
 
   const onOk = async () => {
-    await updateConfigs({ write_mode })
-    setIsShow(false)
+    await updateConfigs({ write_mode: writeMode })
+    setOpened(false)
 
-    if (pending_data && pending_data.id) {
-      agent.broadcast(events.toggle_item, pending_data.id, pending_data.on)
+    if (pendingData && pendingData.id) {
+      agent.broadcast(events.toggle_item, pendingData.id, pendingData.on)
     }
   }
 
   useOnBroadcast(
     events.show_set_write_mode,
     (data?: IPendingData) => {
-      setIsShow(true)
+      setOpened(true)
       setPendingData(data)
       agent.broadcast(events.active_main_window)
     },
     [],
   )
 
-  if (!is_show) return null
-
   return (
-    <Dialog.Root open={is_show} onOpenChange={(e: { open: boolean }) => setIsShow(e.open)}>
-      <Portal>
-        <Dialog.Backdrop />
-        <DialogPositioner>
-          <DialogContent>
-            <Dialog.CloseTrigger />
-            <Dialog.Body pb={6}>
+    <Modal opened={opened} onClose={onCancel} centered padding={0} withCloseButton={false}>
+      <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Modal.CloseButton />
+        <div style={{ padding: 'var(--mantine-spacing-md)', paddingBottom: 24 }}>
           <div className={styles.label}>{lang.write_mode_set}</div>
-            <RadioGroup.Root
-              value={write_mode || undefined}
-              onValueChange={(v: { value: string }) => setWriteMode(v.value as WriteModeType)}
-            >
-              <HStack gap={10}>
-                <RadioItem value={'append'}>
-                  <RadioGroup.ItemHiddenInput />
-                  <RadioGroup.ItemIndicator />
-                  <RadioItemText>{lang.append}</RadioItemText>
-                </RadioItem>
-                <RadioItem value={'overwrite'}>
-                  <RadioGroup.ItemHiddenInput />
-                  <RadioGroup.ItemIndicator />
-                  <RadioItemText>{lang.overwrite}</RadioItemText>
-                </RadioItem>
-              </HStack>
-            </RadioGroup.Root>
+          <Radio.Group
+            value={writeMode || ''}
+            onChange={(v) => setWriteMode((v || null) as WriteModeType)}
+          >
+            <Group gap="40px">
+              <Radio value="append" label={lang.append} />
+              <Radio value="overwrite" label={lang.overwrite} />
+            </Group>
+          </Radio.Group>
 
-            <Box h={8} mt={4} opacity={0.5}>
-              {write_mode === 'append' && lang.write_mode_append_help}
-              {write_mode === 'overwrite' && lang.write_mode_overwrite_help}
-            </Box>
-            </Dialog.Body>
-            <Dialog.Footer>
-              <Button variant="outline" onClick={onCancel} mr={3}>
-                {lang.btn_cancel}
-              </Button>
-              <Button colorPalette="blue" onClick={onOk}>
-                {lang.btn_ok}
-              </Button>
-            </Dialog.Footer>
-          </DialogContent>
-        </DialogPositioner>
-      </Portal>
-    </Dialog.Root>
+          <Text size="sm" mt="16px" mih="32px" c="dimmed">
+            {writeMode === 'append' && lang.write_mode_append_help}
+            {writeMode === 'overwrite' && lang.write_mode_overwrite_help}
+          </Text>
+        </div>
+        <Group
+          justify="flex-end"
+          gap="12px"
+          style={{
+            borderTop: '1px solid var(--swh-border-color-1)',
+            padding: 'var(--mantine-spacing-md)',
+          }}
+        >
+          <Button variant="outline" onClick={onCancel}>
+            {lang.btn_cancel}
+          </Button>
+          <Button color="blue" onClick={onOk}>
+            {lang.btn_ok}
+          </Button>
+        </Group>
+      </div>
+    </Modal>
   )
 }
 

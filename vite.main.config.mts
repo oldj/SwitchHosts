@@ -1,24 +1,39 @@
+import * as fs from 'fs/promises'
 import * as path from 'path'
-import { defineConfig, normalizePath } from 'vite'
-import { viteStaticCopy } from 'vite-plugin-static-copy'
+import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
-// https://vitejs.dev/config/
+const copyMainAssetsPlugin = () => ({
+  name: 'copy-main-assets',
+  apply: 'build' as const,
+  async closeBundle() {
+    const outAssetsDir = path.resolve(__dirname, 'build', 'assets')
+    const srcDirs = [path.resolve(__dirname, 'assets'), path.resolve(__dirname, 'src', 'assets')]
+
+    await fs.mkdir(outAssetsDir, { recursive: true })
+
+    for (const srcDir of srcDirs) {
+      let entries: string[] = []
+      try {
+        entries = await fs.readdir(srcDir)
+      } catch {
+        continue
+      }
+
+      for (const entry of entries) {
+        if (!entry.endsWith('.png')) {
+          continue
+        }
+        await fs.copyFile(path.join(srcDir, entry), path.join(outAssetsDir, entry))
+      }
+    }
+  },
+})
+
 export default defineConfig({
   plugins: [
     tsconfigPaths(),
-    viteStaticCopy({
-      targets: [
-        {
-          src: normalizePath(path.resolve(__dirname, 'assets', '*.png')),
-          dest: 'assets',
-        },
-        {
-          src: normalizePath(path.resolve(__dirname, 'src', 'assets', '*.png')),
-          dest: 'assets',
-        },
-      ],
-    }),
+    copyMainAssetsPlugin(),
   ],
   // root: path.join(__dirname, 'src', 'main'),
   base: './',

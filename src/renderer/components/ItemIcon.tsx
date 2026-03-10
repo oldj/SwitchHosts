@@ -1,10 +1,8 @@
 /**
- * ItemIcon
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import React from 'react'
 import {
   IconDeviceDesktop,
   IconFileText,

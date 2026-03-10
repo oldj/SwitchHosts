@@ -1,24 +1,14 @@
 /**
- * CommandsHistory
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import {
-  Alert,
-  Box,
-  Button,
-  Center,
-  HStack,
-  IconButton,
-  Spacer,
-  VStack,
-} from '@chakra-ui/react'
-import { actions } from '@renderer/core/agent'
 import { ICommandRunResult } from '@common/data'
+import { ActionIcon, Alert, Box, Button, Center, Group, Stack } from '@mantine/core'
+import { actions } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
 import dayjs from 'dayjs'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BiTrash } from 'react-icons/bi'
 
 interface Props {
@@ -61,66 +51,57 @@ const CommandsHistory = (props: Props) => {
   }
 
   return (
-    <VStack w="100%">
+    <Stack gap="8px">
       {list.map((item, idx) => {
         return (
-          <Alert.Root
-            key={idx}
-            status={item.success ? 'success' : 'error'}
-            w="100%"
-            // alignItems="top"
-          >
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title>
-                <HStack>
-                  <span>#{item._id}</span>
-                  <span style={{ fontWeight: 'normal' }}>
-                    {dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}
-                  </span>
-                  <Spacer />
-                  <IconButton
-                    aria-label="delete"
-                    children={<BiTrash />}
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => item._id && deleteOneRecord(item._id)}
-                  />
-                </HStack>
-              </Alert.Title>
-              <Alert.Description>
-                {item.stdout ? (
-                  <>
-                    <Box>
-                      <strong>stdout:</strong>
-                    </Box>
-                    <Box>
-                      <pre>{item.stdout}</pre>
-                    </Box>
-                  </>
-                ) : null}
-                {item.stderr ? (
-                  <>
-                    <Box>
-                      <strong>stderr:</strong>
-                    </Box>
-                    <Box>
-                      <pre>{item.stderr}</pre>
-                    </Box>
-                  </>
-                ) : null}
-              </Alert.Description>
-            </Alert.Content>
-          </Alert.Root>
+          <Alert key={idx} color={item.success ? 'green' : 'red'} style={{ width: '100%' }}>
+            <div>
+              <Group gap="8px">
+                <span>#{item._id}</span>
+                <span style={{ fontWeight: 'normal' }}>
+                  {dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}
+                </span>
+                <Box style={{ flex: 1 }} />
+                <ActionIcon
+                  aria-label="delete"
+                  size="sm"
+                  variant="subtle"
+                  onClick={() => item._id && deleteOneRecord(item._id)}
+                >
+                  <BiTrash />
+                </ActionIcon>
+              </Group>
+              {item.stdout ? (
+                <>
+                  <Box>
+                    <strong>stdout:</strong>
+                  </Box>
+                  <Box>
+                    <pre>{item.stdout}</pre>
+                  </Box>
+                </>
+              ) : null}
+              {item.stderr ? (
+                <>
+                  <Box>
+                    <strong>stderr:</strong>
+                  </Box>
+                  <Box>
+                    <pre>{item.stderr}</pre>
+                  </Box>
+                </>
+              ) : null}
+            </div>
+          </Alert>
         )
       })}
 
-      <Box pt={10}>
-        <Button onClick={clearAll} variant="plain">
+      <Box pt="40px">
+        <Button onClick={clearAll} variant="subtle">
           {lang.clear_history}
         </Button>
       </Box>
-    </VStack>
+    </Stack>
   )
 }
 

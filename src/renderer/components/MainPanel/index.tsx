@@ -1,13 +1,11 @@
 /**
- * index
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
+import events from '@common/events'
 import HostsEditor from '@renderer/components/Editor/HostsEditor'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@common/events'
-import React from 'react'
 import styles from './index.module.scss'
 
 const MainPanel = () => {

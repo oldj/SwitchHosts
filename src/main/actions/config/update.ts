@@ -34,6 +34,10 @@ export default async (data: Partial<ConfigsType>) => {
   }
 
   if (old_configs.hide_dock_icon !== data.hide_dock_icon) {
+    if (!app.dock) {
+      return
+    }
+
     if (data.hide_dock_icon) {
       app.dock.hide()
     } else {

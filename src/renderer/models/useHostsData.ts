@@ -1,15 +1,13 @@
 /**
- * useHostsData
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { actions } from '@renderer/core/agent'
-import { IHostsBasicData, IHostsListObject, VersionType } from '@common/data'
 import version from '@/version.json'
-import { useState } from 'react'
-import { useAtom } from 'jotai'
+import { IHostsBasicData, IHostsListObject, VersionType } from '@common/data'
+import { actions } from '@renderer/core/agent'
 import { current_hosts_atom, hosts_data_atom } from '@renderer/stores/hosts_data'
+import { useAtom } from 'jotai'
 
 export default function useHostsData() {
   const [hosts_data, setHostsData] = useAtom(hosts_data_atom)

@@ -22,7 +22,7 @@
 
 SwitchHosts 是一個管理 hosts 檔案的應用程式，基於 [Electron](http://electron.atom.io/)
 、[React](https://facebook.github.io/react/)、[Jotai](https://jotai.org/)
-、[Chakra UI](https://chakra-ui.com/)、[CodeMirror](http://codemirror.net/) 等技術開發。
+、[Mantine](https://mantine.dev/)、[CodeMirror](http://codemirror.net/) 等技術開發。
 
 ## 螢幕截圖
 
