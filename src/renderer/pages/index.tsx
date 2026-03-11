@@ -8,6 +8,7 @@ import MainPanel from '@renderer/components/MainPanel'
 import PreferencePanel from '@renderer/components/Pref'
 import SetWriteMode from '@renderer/components/SetWriteMode'
 import SudoPasswordInput from '@renderer/components/SudoPasswordInput'
+import UpdateDialog from '@renderer/components/UpdateDialog'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
@@ -20,7 +21,7 @@ import styles from './index.module.scss'
 
 export default () => {
   const [loading, setLoading] = useState(true)
-  const { i18n, lang, setLocale } = useI18n()
+  const { lang, setLocale } = useI18n()
   const { loadHostsData } = useHostsData()
   const { configs } = useConfigs()
   const [left_width, setLeftWidth] = useState(0)
@@ -74,14 +75,6 @@ export default () => {
 
   useOnBroadcast(events.toggle_left_panel, (show: boolean) => setLeftShow(show))
 
-  useOnBroadcast(
-    events.new_version,
-    (new_version: string) => {
-      console.log(`${lang.new_version_found}: ${i18n.trans('latest_version_desc', [new_version])}`)
-    },
-    [lang, i18n],
-  )
-
   if (loading) {
     if (show_migration) {
       setTimeout(() => {
@@ -119,6 +112,7 @@ export default () => {
       <SetWriteMode />
       <PreferencePanel />
       <History />
+      <UpdateDialog />
       <About />
     </div>
   )

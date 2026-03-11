@@ -5,6 +5,7 @@
 
 import { Arch } from 'builder-util'
 import chalk from 'chalk'
+import dayjs from 'dayjs'
 import { config as loadEnv } from 'dotenv'
 import fse from 'fs-extra'
 import { createRequire } from 'node:module'
@@ -12,6 +13,7 @@ import { homedir } from 'node:os'
 import path from 'node:path'
 import artifactBuildCompletedHook from './hooks/artifactBuildCompleted.mjs'
 import { prepareNotarizeEnv } from './hooks/notarize-options.mjs'
+import { resolveGithubRepository } from './release-config.mjs'
 import { APP_NAME, distDir, electronLanguages, rootDir } from './vars.mjs'
 
 loadEnv()
@@ -53,6 +55,15 @@ const { APP_BUNDLE_ID, IDENTITY, MAKE_FOR, SKIP_NOTARIZATION } = process.env
 const appId = APP_BUNDLE_ID || 'SwitchHosts'
 const fullVersion = `${version[0]}.${version[1]}.${version[2]}.${version[3]}`
 const publishMode = process.env.PUBLISH_POLICY || 'never'
+const githubRepository = resolveGithubRepository(process.env)
+
+function formatTimestamp(date = new Date()) {
+  return dayjs(date).format('YYYY-MM-DD HH:mm:ss')
+}
+
+function formatLogLine(message) {
+  return `${formatTimestamp()} ${message}`
+}
 
 function formatDuration(ms) {
   const totalSeconds = Math.floor(ms / 1000)
@@ -72,25 +83,25 @@ function formatDuration(ms) {
 }
 
 function logBanner(message) {
-  console.log(chalk.bold.blue(`\n=== ${message} ===`))
+  console.log(chalk.bold.blue(`\n${formatLogLine(`=== ${message} ===`)}`))
 }
 
 function logStep(message) {
-  console.log(chalk.blue(`-> ${message}`))
+  console.log(chalk.blue(formatLogLine(`-> ${message}`)))
 }
 
 function logSuccess(message) {
-  console.log(chalk.green(`✓ ${message}`))
+  console.log(chalk.green(formatLogLine(`✓ ${message}`)))
 }
 
 function logWarning(message) {
-  console.log(chalk.yellow(`! ${message}`))
+  console.log(chalk.yellow(formatLogLine(`! ${message}`)))
 }
 
 function logPlatform(platform, message) {
   const color = PLATFORM_COLORS[platform] || chalk.white
   const label = PLATFORM_LABELS[platform] || platform
-  console.log(color(`[${label}] ${message}`))
+  console.log(color(formatLogLine(`[${label}] ${message}`)))
 }
 
 function resolvePlatformName(name) {
@@ -143,8 +154,8 @@ function getBuildPlan() {
 }
 
 function createBuildTracker(plan) {
-  // Track platform timing through electron-builder hooks so we keep a single
-  // builder.build() invocation and avoid changing the packaging execution model.
+  // Track platform timing through electron-builder hooks while the outer loop
+  // runs one platform build at a time for cleaner, non-interleaved logging.
   const stats = new Map(
     plan.map(({ platform, targets }) => [
       platform,
@@ -247,7 +258,7 @@ function createBuildTracker(plan) {
 
 function createBuilderConfig(hooks) {
   // Build the full electron-builder config in one place so every entrypoint
-  // (`make`, `make:*`, `publish`) stays on the same packaging pipeline.
+  // (`make`, `make:*`) stays on the same packaging pipeline.
   return {
     ...cfgCommon,
     appId,
@@ -321,9 +332,13 @@ function createBuilderConfig(hooks) {
       },
     },
     publish: {
+      // Keep the GitHub provider configured so electron-builder emits update metadata
+      // for GitHub Releases, while the actual asset upload stays in scripts/upload-release.mjs.
       provider: 'github',
-      owner: 'oldj',
-      repo: 'SwitchHosts',
+      owner: githubRepository.owner,
+      repo: githubRepository.repo,
+      releaseType: 'draft',
+      vPrefixedTagName: true,
     },
     beforePack: hooks.beforePack,
     afterPack: hooks.afterPack,
@@ -398,7 +413,6 @@ const doMake = async () => {
   // the same plan and timing model.
   const plan = getBuildPlan()
   const tracker = createBuildTracker(plan)
-  const targetOptions = Object.fromEntries(plan.map(({ platform, targets }) => [platform, targets]))
 
   logBanner('Build Plan')
   logStep(`MAKE_FOR: ${MAKE_FOR || 'all'}`)
@@ -422,13 +436,17 @@ const doMake = async () => {
   const builder = eb.default || eb
   logSuccess('electron-builder loaded')
 
-  // Keep packaging in a single electron-builder invocation so cross-platform runs
-  // behave the same as before while still emitting our custom timing logs.
-  await builder.build({
-    ...targetOptions,
-    publish: publishMode,
-    config: createBuilderConfig(tracker.hooks),
-  })
+  // Build one platform per invocation so electron-builder's own logs stay grouped
+  // and easy to read even when each platform expands to multiple arch/target jobs.
+  for (const { platform, targets } of plan) {
+    logPlatform(platform, 'starting electron-builder run...')
+    await builder.build({
+      [platform]: targets,
+      publish: publishMode,
+      config: createBuilderConfig(tracker.hooks),
+    })
+    logPlatform(platform, 'electron-builder run finished.')
+  }
 
   tracker.printSummary()
 }
