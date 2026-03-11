@@ -48,6 +48,13 @@ const List = (props: Props) => {
     }
   }, [hosts_data])
 
+  useEffect(() => {
+    if (is_tray || !current_hosts) return
+    if (!hosts_data.trashcan.find((item) => item.data.id === current_hosts.id)) return
+
+    setSelectedIds([])
+  }, [current_hosts, hosts_data.trashcan, is_tray])
+
   const onToggleItem = async (id: string, on: boolean) => {
     console.log(`writeMode: ${configs?.write_mode}`)
     console.log(`toggle hosts #${id} as ${on ? 'on' : 'off'}`)
