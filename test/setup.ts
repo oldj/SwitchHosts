@@ -150,6 +150,7 @@ const electronMock = {
     },
   },
   ipcMain: {
+    emit() {},
     on() {},
     handle() {},
     removeHandler() {},

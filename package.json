@@ -22,12 +22,13 @@
     "publish": "electron-builder --mac --win --linux -p always"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.11",
     "axios": "1.13.6",
     "compare-versions": "6.1.1",
     "dayjs": "1.11.19",
     "electron-updater": "6.8.3",
     "electron-window-state": "5.0.3",
-    "express": "5.2.1",
+    "hono": "^4.12.7",
     "lodash": "4.17.23",
     "md5": "2.3.0",
     "md5-file": "5.0.0",
@@ -43,7 +44,6 @@
     "@tabler/icons-react": "3.38.0",
     "@types/assert": "1.5.11",
     "@types/codemirror": "5.60.15",
-    "@types/express": "5.0.6",
     "@types/lodash": "4.17.24",
     "@types/md5": "2.3.6",
     "@types/mkdirp": "2.0.0",

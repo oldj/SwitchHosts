@@ -1,45 +1,56 @@
 /**
- * index
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
 import { http_api_port } from '@common/constants'
-import express from 'express'
-import { Server } from 'http'
+import { serve } from '@hono/node-server'
+import { Hono } from 'hono'
+import type { Context, Next } from 'hono'
 import api_router from './api/index'
 
-const app = express()
+export const app = new Hono()
 
-app.use((req, res, next) => {
+export const requestLogger = async (c: Context, next: Next) => {
+  const url = new URL(c.req.url)
+
   console.log(
     `> "${new Date().toString()}"`,
-    req.method,
-    req.originalUrl,
-    `"${req.headers['user-agent']}"`,
+    c.req.method,
+    `${url.pathname}${url.search}`,
+    `"${c.req.header('user-agent')}"`,
   )
-  next()
-})
+  await next()
+}
 
-app.get('/', (req, res) => {
-  res.send('Hello SwitchHosts!')
-})
+export const homeHandler = (c: Context) => c.text('Hello SwitchHosts!')
 
-app.get('/remote-test', (req, res) => {
-  res.send(`# remote-test\n# ${new Date().toString()}`)
-})
+export const remoteTestHandler = (c: Context) => c.text(`# remote-test\n# ${new Date().toString()}`)
 
-app.use('/api', api_router)
+app.use('*', requestLogger)
 
-let server: Server
+app.get('/', homeHandler)
+
+app.get('/remote-test', remoteTestHandler)
+
+app.route('/api', api_router)
+
+let server: ReturnType<typeof serve> | undefined
 
 export const start = (http_api_only_local: boolean): boolean => {
   try {
     let listenIp = http_api_only_local ? '127.0.0.1' : '0.0.0.0'
-    server = app.listen(http_api_port, listenIp, function () {
-      console.log(`SwitchHosts HTTP server is listening on port ${http_api_port}!`)
-      console.log(`-> http://${listenIp}:${http_api_port}`)
-    })
+    server = serve(
+      {
+        fetch: app.fetch,
+        port: http_api_port,
+        hostname: listenIp,
+      },
+      () => {
+        console.log(`SwitchHosts HTTP server is listening on port ${http_api_port}!`)
+        console.log(`-> http://${listenIp}:${http_api_port}`)
+      },
+    )
   } catch (e) {
     console.error(e)
     return false
@@ -53,6 +64,7 @@ export const stop = () => {
 
   try {
     server.close()
+    server = undefined
   } catch (e) {
     console.error(e)
   }
