@@ -8,6 +8,7 @@ import { Modal } from '@mantine/core'
 import AboutContent from '@renderer/components/About/AboutContent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { useState } from 'react'
+import styles from './index.module.scss'
 
 const About = () => {
   const [opened, setOpened] = useState(false)
@@ -17,8 +18,11 @@ const About = () => {
   useOnBroadcast(events.show_about, () => setOpened(true))
 
   return (
-    <Modal opened={opened} onClose={onClose} centered>
-      <AboutContent />
+    <Modal opened={opened} onClose={onClose} centered withCloseButton={false}>
+      <Modal.CloseButton className={styles.close_btn} />
+      <div className={styles.body}>
+        <AboutContent />
+      </div>
     </Modal>
   )
 }

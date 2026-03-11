@@ -1,4 +1,9 @@
-.footer {
-  // border-top: 1px solid var(--swh-border-color-1);
-  padding-top: var(--mantine-spacing-md);
+.close_btn {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+}
+
+.body {
+  padding-top: 10px;
 }
