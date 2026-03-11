@@ -10,16 +10,16 @@
     "dev": "npm run clean:build && concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
     "dev:main": "vite build --watch --config ./vite.main.config.mts",
     "dev:renderer": "vite --config ./vite.render.config.mts",
-    "version:up": "node ./scripts/version_up.js",
+    "version:up": "node ./scripts/version_up.mjs",
     "_build": "npm run clean:build && npm run version:up && concurrently \"npm run build:main\" \"npm run build:renderer\"",
     "build:main": "cross-env NODE_ENV=production vite build --config ./vite.main.config.mts",
     "build:renderer": "cross-env NODE_ENV=production vite build --config ./vite.render.config.mts",
     "build": "npm run _build",
-    "make": "node scripts/make.js",
+    "make": "node scripts/make.mjs",
     "make:dev": "cross-env SKIP_NOTARIZATION=1 cross-env MAKE_FOR=dev npm run make",
     "make:linux": "cross-env SKIP_NOTARIZATION=1 cross-env MAKE_FOR=linux npm run make",
     "make:win": "cross-env SKIP_NOTARIZATION=1 cross-env MAKE_FOR=win npm run make",
-    "publish": "electron-builder --mac --win --linux -p always"
+    "publish": "cross-env PUBLISH_POLICY=always npm run make"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.11",
@@ -54,6 +54,7 @@
     "@types/uuid": "11.0.0",
     "@vitejs/plugin-react": "^5.1.4",
     "ahooks": "3.9.6",
+    "chalk": "^5.6.2",
     "clsx": "2.1.1",
     "codemirror": "5.65.17",
     "concurrently": "9.2.1",
@@ -78,8 +79,5 @@
     "vite-plugin-static-copy": "3.2.0",
     "vite-tsconfig-paths": "6.1.1",
     "vitest": "^3.2.4"
-  },
-  "build": {
-    "afterSign": "scripts/notarize.js"
   }
 }

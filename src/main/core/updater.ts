@@ -1,5 +1,4 @@
 /**
- * updater.ts
  */
 
 import events from '@common/events'

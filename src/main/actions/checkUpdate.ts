@@ -1,5 +1,4 @@
 /**
- * checkVersion
  * @author: oldj
  * @homepage: https://oldj.net
  */
