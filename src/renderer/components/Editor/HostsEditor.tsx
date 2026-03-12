@@ -5,6 +5,7 @@
 
 import { IHostsListObject } from '@common/data'
 import events from '@common/events'
+import { normalizeLineEndings } from '@common/newlines'
 import { IFindShowSourceParam } from '@common/types'
 import StatusBar from '@renderer/components/StatusBar'
 import { actions, agent } from '@renderer/core/agent'
@@ -118,10 +119,11 @@ const HostsEditor = () => {
     const jar = ref_jar.current
     if (!jar) return
 
-    const nextContent =
+    const nextContent = normalizeLineEndings(
       targetHostsId === '0'
         ? await actions.getSystemHosts()
-        : await actions.getHostsContent(targetHostsId)
+        : await actions.getHostsContent(targetHostsId),
+    )
 
     if (ref_hosts_id.current !== targetHostsId) return
 
@@ -159,8 +161,9 @@ const HostsEditor = () => {
   }
 
   const onChange = (nextContent: string) => {
-    setContent(nextContent)
-    toSave(hosts_id, nextContent)
+    const normalizedContent = normalizeLineEndings(nextContent)
+    setContent(normalizedContent)
+    toSave(hosts_id, normalizedContent)
   }
 
   /** Push a programmatic edit into CodeJar: update content, restore selection, and record undo history. */

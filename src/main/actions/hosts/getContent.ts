@@ -7,10 +7,11 @@ import { configGet, getItemFromList, getList } from '@main/actions'
 import { swhdb } from '@main/data'
 import { IHostsContentObject } from '@common/data'
 import { findItemById, flatten } from '@common/hostsFn'
+import { normalizeLineEndings } from '@common/newlines'
 
 const getContentById = async (id: string) => {
   let hosts_content = await swhdb.collection.hosts.find<IHostsContentObject>((i) => i.id === id)
-  return hosts_content?.content || ''
+  return normalizeLineEndings(hosts_content?.content || '')
 }
 
 const getContentOfHosts = async (id: string): Promise<string> => {

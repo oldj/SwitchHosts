@@ -40,6 +40,21 @@ describe('basic test', () => {
     expect(list[0].id).toBe('1')
   })
 
+  it('normalizes CRLF when reading and writing hosts content', async () => {
+    await swhdb.collection.hosts.insert({
+      id: 'crlf-item',
+      content: '127.0.0.1 localhost\r\n# comment\r\n',
+    })
+
+    expect(await getHostsContent('crlf-item')).toBe('127.0.0.1 localhost\n# comment\n')
+
+    await setHostsContent('crlf-item', '127.0.0.1 localhost\r\n# next\r\n')
+
+    const raw = await swhdb.collection.hosts.find<{ content: string }>((i) => i.id === 'crlf-item')
+    expect(raw?.content).toBe('127.0.0.1 localhost\n# next\n')
+    expect(await getHostsContent('crlf-item')).toBe('127.0.0.1 localhost\n# next\n')
+  })
+
   it('group hosts', async () => {
     await setList([
       { id: '1' },

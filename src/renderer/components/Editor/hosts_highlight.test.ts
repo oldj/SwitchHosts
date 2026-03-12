@@ -38,6 +38,12 @@ describe('hosts_highlight', () => {
     )
   })
 
+  it('normalizes CRLF input before highlighting', () => {
+    expect(highlightHostsText('127.0.0.1 localhost\r\n# ok\r\n')).toBe(
+      '<span class="hl-ip">127.0.0.1</span> localhost\n<span class="hl-comment"># ok</span>\n',
+    )
+  })
+
   it('toggles the current line and moves the cursor to the next line', () => {
     const code = '127.0.0.1 localhost\nfoo'
     const result = toggleCommentBySelection(code, 0, 0, true)
@@ -82,5 +88,13 @@ describe('hosts_highlight', () => {
     expect(result.content).toBe('foo\n# bar')
     expect(result.selectionStart).toBe(0)
     expect(result.selectionEnd).toBe(0)
+  })
+
+  it('normalizes CRLF before toggling comments', () => {
+    const result = toggleCommentBySelection('foo\r\nbar', 0, 0, true)
+
+    expect(result.content).toBe('# foo\nbar')
+    expect(result.selectionStart).toBe('# foo\n'.length)
+    expect(result.selectionEnd).toBe('# foo\n'.length)
   })
 })

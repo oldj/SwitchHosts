@@ -9,6 +9,7 @@
  */
 
 import type { Position } from 'codejar'
+import { normalizeLineEndings } from '@common/newlines'
 
 /** Matches a valid hosts entry: optional whitespace, an IPv4/IPv6 address, then a hostname. */
 const HOSTS_LINE_RE = /^\s*([\d.]+|[\da-f:.%lo]+)\s+\w/i
@@ -93,7 +94,7 @@ export function highlightHostsLine(line: string): string {
 }
 
 export function highlightHostsText(code: string): string {
-  return code
+  return normalizeLineEndings(code)
     .split('\n')
     .map((line) => highlightHostsLine(line))
     .join('\n')
@@ -105,7 +106,7 @@ export function highlightHosts(editor: HTMLElement, _pos?: Position): void {
 }
 
 function getLines(code: string): LineInfo[] {
-  const parts = code.split('\n')
+  const parts = normalizeLineEndings(code).split('\n')
   let start = 0
 
   return parts.map((text) => {
@@ -274,14 +275,15 @@ export function toggleCommentBySelection(
   selectionEnd: number,
   moveToNextLine = false,
 ): CommentToggleResult {
-  const lines = getLines(code)
+  const normalizedCode = normalizeLineEndings(code)
+  const lines = getLines(normalizedCode)
   const { start, end } = getSelectionRange(selectionStart, selectionEnd)
   const startLineIndex = getLineIndexAtOffset(lines, start)
   const endLineIndex =
     start === end ? startLineIndex : getLineIndexAtOffset(lines, Math.max(start, end - 1))
 
   return toggleCommentLines(
-    code,
+    normalizedCode,
     selectionStart,
     selectionEnd,
     startLineIndex,
@@ -297,15 +299,23 @@ export function toggleCommentByLine(
   selectionStart: number,
   selectionEnd: number,
 ): CommentToggleResult {
-  const lines = getLines(code)
+  const normalizedCode = normalizeLineEndings(code)
+  const lines = getLines(normalizedCode)
   if (lineIndex < 0 || lineIndex >= lines.length) {
     return {
-      content: code,
+      content: normalizedCode,
       selectionStart,
       selectionEnd,
       changed: false,
     }
   }
 
-  return toggleCommentLines(code, selectionStart, selectionEnd, lineIndex, lineIndex, false)
+  return toggleCommentLines(
+    normalizedCode,
+    selectionStart,
+    selectionEnd,
+    lineIndex,
+    lineIndex,
+    false,
+  )
 }
