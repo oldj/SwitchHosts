@@ -46,10 +46,7 @@ const ConfigMenu = (props: IProps) => {
             <IconSettings size={iconSize} />
           </ActionIcon>
         </Menu.Target>
-        <Menu.Dropdown
-          className={styles.menu_list}
-          style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'scroll' }}
-        >
+        <Menu.Dropdown className={styles.menu_list}>
           <Menu.Item
             leftSection={<IconInfoCircle size={iconSize} stroke={strokeWidth} />}
             onClick={() => agent.broadcast(events.show_about)}
