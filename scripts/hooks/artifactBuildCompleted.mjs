@@ -1,5 +1,6 @@
 import { notarize } from '@electron/notarize'
 import path from 'node:path'
+import { isEnvFlagEnabled } from '../libs/build-env.mjs'
 import { getNotarizeOptions } from './notarize-options.mjs'
 
 export default async function artifactBuildCompleted(context) {
@@ -13,15 +14,14 @@ export default async function artifactBuildCompleted(context) {
     return
   }
 
-  if (process.env.MAKE_FOR === 'dev' || process.env.SKIP_NOTARIZATION) {
+  if (process.env.MAKE_FOR === 'dev' || isEnvFlagEnabled(process.env.SKIP_NOTARIZATION)) {
     console.log(`skip notarization for ${path.basename(file)}.`)
     return
   }
 
   const options = await getNotarizeOptions(file)
   if (!options) {
-    console.log(`Not notarized for ${path.basename(file)}.`)
-    return
+    throw new Error(`Notarization credentials are missing for ${path.basename(file)}.`)
   }
 
   console.log('in artifactBuildCompleted, notarize dmg...')

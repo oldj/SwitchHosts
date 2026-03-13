@@ -3,16 +3,16 @@
  * @homepage: https://oldj.net
  */
 
-import { Arch } from 'builder-util'
 import chalk from 'chalk'
-import dayjs from 'dayjs'
 import { config as loadEnv } from 'dotenv'
 import fse from 'fs-extra'
 import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import artifactBuildCompletedHook from './hooks/artifactBuildCompleted.mjs'
-import { prepareNotarizeEnv } from './hooks/notarize-options.mjs'
+import { PLATFORM_LABELS, formatDuration, logBanner, logPlatform, logStep, logSuccess, logWarning } from './libs/build-log.mjs'
+import { createBuildTracker, getBuildPlan } from './libs/build-plan.mjs'
+import { resolveMacBuildState, resolveWindowsBuildState } from './libs/build-state.mjs'
 import { resolveGithubRepository } from './release-config.mjs'
 import { APP_NAME, distDir, electronLanguages, rootDir } from './vars.mjs'
 
@@ -22,19 +22,8 @@ loadEnv()
 // across Node runtimes without relying on JSON import assertions.
 const require = createRequire(import.meta.url)
 const version = require('../src/version.json')
-const PLATFORM_ORDER = ['mac', 'win', 'linux']
-const PLATFORM_LABELS = {
-  mac: 'macOS',
-  win: 'Windows',
-  linux: 'Linux',
-}
-const PLATFORM_COLORS = {
-  mac: chalk.magenta,
-  win: chalk.cyan,
-  linux: chalk.green,
-}
 
-const TARGET_PLATFORMS_configs = {
+const TARGET_PLATFORMS_CONFIGS = {
   mac: {
     mac: ['dmg:x64', 'dmg:arm64'],
   },
@@ -51,212 +40,14 @@ const TARGET_PLATFORMS_configs = {
   },
 }
 
-const { APP_BUNDLE_ID, IDENTITY, MAKE_FOR, SKIP_NOTARIZATION } = process.env
+const { APP_BUNDLE_ID, IDENTITY, MAKE_FOR } = process.env
 const appId = APP_BUNDLE_ID || 'SwitchHosts'
 const fullVersion = `${version[0]}.${version[1]}.${version[2]}.${version[3]}`
 const publishMode = process.env.PUBLISH_POLICY || 'never'
 const githubRepository = resolveGithubRepository(process.env)
+const WINDOWS_TIMESTAMP_SERVER = 'http://rfc3161timestamp.globalsign.com/advanced'
 
-function formatTimestamp(date = new Date()) {
-  return dayjs(date).format('YYYY-MM-DD HH:mm:ss')
-}
-
-function formatLogLine(message) {
-  return `${formatTimestamp()} ${message}`
-}
-
-function formatDuration(ms) {
-  const totalSeconds = Math.floor(ms / 1000)
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m ${seconds}s`
-  }
-
-  if (minutes > 0) {
-    return `${minutes}m ${seconds}s`
-  }
-
-  return `${seconds}s`
-}
-
-function logBanner(message) {
-  console.log(chalk.bold.blue(`\n${formatLogLine(`=== ${message} ===`)}`))
-}
-
-function logStep(message) {
-  console.log(chalk.blue(formatLogLine(`-> ${message}`)))
-}
-
-function logSuccess(message) {
-  console.log(chalk.green(formatLogLine(`✓ ${message}`)))
-}
-
-function logWarning(message) {
-  console.log(chalk.yellow(formatLogLine(`! ${message}`)))
-}
-
-function logPlatform(platform, message) {
-  const color = PLATFORM_COLORS[platform] || chalk.white
-  const label = PLATFORM_LABELS[platform] || platform
-  console.log(color(formatLogLine(`[${label}] ${message}`)))
-}
-
-function resolvePlatformName(name) {
-  const map = {
-    darwin: 'mac',
-    linux: 'linux',
-    mac: 'mac',
-    win: 'win',
-    win32: 'win',
-    windows: 'win',
-  }
-
-  return map[name] || null
-}
-
-function formatArch(arch) {
-  if (arch == null) {
-    return 'unknown'
-  }
-
-  return Arch[arch] || String(arch)
-}
-
-function getBuildPlan() {
-  // Keep the old target matrix behavior, but normalize it into a single plan shape
-  // so logging and timing can treat single-platform and multi-platform runs uniformly.
-  cfgCommon.compression = 'maximum'
-
-  if (MAKE_FOR === 'dev') {
-    cfgCommon.compression = 'store'
-    return [{ platform: 'mac', targets: TARGET_PLATFORMS_configs.mac.mac }]
-  }
-
-  if (MAKE_FOR === 'mac') {
-    return [{ platform: 'mac', targets: TARGET_PLATFORMS_configs.mac.mac }]
-  }
-
-  if (MAKE_FOR === 'win') {
-    return [{ platform: 'win', targets: TARGET_PLATFORMS_configs.win.win }]
-  }
-
-  if (MAKE_FOR === 'linux') {
-    return [{ platform: 'linux', targets: TARGET_PLATFORMS_configs.linux.linux }]
-  }
-
-  return PLATFORM_ORDER.map((platform) => ({
-    platform,
-    targets: TARGET_PLATFORMS_configs.all[platform],
-  }))
-}
-
-function createBuildTracker(plan) {
-  // Track platform timing through electron-builder hooks while the outer loop
-  // runs one platform build at a time for cleaner, non-interleaved logging.
-  const stats = new Map(
-    plan.map(({ platform, targets }) => [
-      platform,
-      {
-        targets,
-        startedAt: 0,
-        finishedAt: 0,
-      },
-    ]),
-  )
-
-  function getStat(platform) {
-    if (!stats.has(platform)) {
-      stats.set(platform, {
-        targets: [],
-        startedAt: 0,
-        finishedAt: 0,
-      })
-    }
-
-    return stats.get(platform)
-  }
-
-  function markStarted(platform) {
-    const stat = getStat(platform)
-
-    if (!stat.startedAt) {
-      stat.startedAt = Date.now()
-      logBanner(`Build ${PLATFORM_LABELS[platform]}`)
-      logPlatform(platform, `targets: ${stat.targets.join(', ')}`)
-      logPlatform(platform, `compression: ${cfgCommon.compression}`)
-      logPlatform(
-        platform,
-        `notarization: ${MAKE_FOR === 'dev' || SKIP_NOTARIZATION ? 'disabled' : 'auto when credentials are available'}`,
-      )
-    }
-
-    return stat
-  }
-
-  function markFinished(platform) {
-    const stat = getStat(platform)
-    stat.finishedAt = Date.now()
-    return stat
-  }
-
-  return {
-    hooks: {
-      beforePack(context) {
-        const platform = resolvePlatformName(context.electronPlatformName)
-        if (!platform) {
-          return
-        }
-
-        markStarted(platform)
-        // beforePack fires for each arch-specific app bundle preparation.
-        logPlatform(platform, `packaging app bundle for ${formatArch(context.arch)}...`)
-      },
-
-      afterPack(context) {
-        const platform = resolvePlatformName(context.electronPlatformName)
-        if (!platform) {
-          return
-        }
-
-        markFinished(platform)
-        logPlatform(platform, `app bundle ready for ${formatArch(context.arch)}`)
-      },
-
-      async artifactBuildCompleted(context) {
-        const platform = resolvePlatformName(context.packager?.platform?.name)
-        if (platform) {
-          markStarted(platform)
-        }
-
-        // Reuse the DMG notarization hook from the packaging config so logging and
-        // timing stay in one place while the notarization logic remains isolated.
-        await artifactBuildCompletedHook(context)
-
-        if (!platform) {
-          return
-        }
-
-        markFinished(platform)
-        const targetName = context.target?.name || path.extname(context.file).slice(1)
-        logPlatform(platform, `artifact ready (${targetName}): ${path.basename(context.file)}`)
-      },
-    },
-
-    printSummary() {
-      logBanner('Build Summary')
-      for (const { platform } of plan) {
-        const stat = getStat(platform)
-        const elapsed = stat.startedAt && stat.finishedAt ? stat.finishedAt - stat.startedAt : 0
-        logPlatform(platform, `elapsed: ${elapsed > 0 ? formatDuration(elapsed) : 'n/a'}`)
-      }
-    },
-  }
-}
-
-function createBuilderConfig(hooks) {
+function createBuilderConfig(hooks, macBuildState, winBuildState) {
   // Build the full electron-builder config in one place so every entrypoint
   // (`make`, `make:*`) stays on the same packaging pipeline.
   return {
@@ -269,7 +60,7 @@ function createBuilderConfig(hooks) {
       icon: 'assets/app.icns',
       gatekeeperAssess: false,
       electronLanguages,
-      identity: IDENTITY,
+      identity: macBuildState.sign ? IDENTITY : null,
       hardenedRuntime: true,
       entitlements: 'scripts/entitlements.mac.plist',
       entitlementsInherit: 'scripts/entitlements.mac.plist',
@@ -279,7 +70,7 @@ function createBuilderConfig(hooks) {
         CFBundleDevelopmentRegion: 'en',
       },
       artifactName: '${productName}-v' + fullVersion + '-${arch}-mac.${ext}',
-      ...(MAKE_FOR === 'dev' || SKIP_NOTARIZATION ? { notarize: false } : {}),
+      ...(macBuildState.notarize ? {} : { notarize: false }),
     },
     dmg: {
       background: 'assets/dmg-bg.png',
@@ -300,11 +91,27 @@ function createBuilderConfig(hooks) {
           path: '/Applications',
         },
       ],
-      sign: false,
+      sign: macBuildState.sign,
       artifactName: '${productName}-v' + fullVersion + '-mac-${arch}.${ext}',
     },
     win: {
       icon: 'assets/icon.ico',
+      verifyUpdateCodeSignature: winBuildState.sign,
+      signAndEditExecutable: winBuildState.sign,
+      // NSIS/portable targets still try to sign final `.exe` artifacts unless
+      // we explicitly exclude them when Windows signing is disabled.
+      ...(winBuildState.sign ? {} : { signExts: ['!.exe'] }),
+      ...(winBuildState.sign
+        ? {
+            signtoolOptions: {
+              signingHashAlgorithms: ['sha256'],
+              publisherName: winBuildState.publisherName,
+              certificateSubjectName: winBuildState.certificateSubjectName,
+              timeStampServer: WINDOWS_TIMESTAMP_SERVER,
+              rfc3161TimeStampServer: WINDOWS_TIMESTAMP_SERVER,
+            },
+          }
+        : {}),
       artifactName: '${productName}-v' + fullVersion + '-win-${arch}.${ext}',
     },
     nsis: {
@@ -364,6 +171,7 @@ const cfgCommon = {
     mirror: 'https://registry.npmmirror.com/-/binary/electron/',
   },
   asar: true,
+  compression: 'maximum',
 }
 
 const beforeMake = async () => {
@@ -411,8 +219,18 @@ const afterMake = async () => {
 const doMake = async () => {
   // Resolve the requested platform set first so every later step can log against
   // the same plan and timing model.
-  const plan = getBuildPlan()
-  const tracker = createBuildTracker(plan)
+  const compression = MAKE_FOR === 'dev' ? 'store' : 'maximum'
+  cfgCommon.compression = compression
+  const plan = getBuildPlan(MAKE_FOR, TARGET_PLATFORMS_CONFIGS)
+  const macBuildState = await resolveMacBuildState(plan)
+  const winBuildState = resolveWindowsBuildState(plan)
+  const tracker = createBuildTracker({
+    plan,
+    compression,
+    macBuildState,
+    winBuildState,
+    artifactBuildCompletedHook,
+  })
 
   logBanner('Build Plan')
   logStep(`MAKE_FOR: ${MAKE_FOR || 'all'}`)
@@ -421,14 +239,31 @@ const doMake = async () => {
   logStep(`compression: ${cfgCommon.compression}`)
   logStep(`publish: ${publishMode}`)
   logStep(`platforms: ${plan.map(({ platform }) => PLATFORM_LABELS[platform]).join(', ')}`)
+  if (macBuildState.includesMac) {
+    if (macBuildState.logLevel === 'warning') {
+      logWarning(macBuildState.message)
+    } else if (macBuildState.logLevel === 'success') {
+      logSuccess(macBuildState.message)
+    } else {
+      logStep(macBuildState.message)
+    }
+  }
+  if (winBuildState.includesWin) {
+    if (winBuildState.logLevel === 'warning') {
+      logWarning(winBuildState.message)
+    } else if (winBuildState.logLevel === 'success') {
+      logSuccess(winBuildState.message)
+    } else {
+      logStep(winBuildState.message)
+    }
+  }
 
-  if (!(MAKE_FOR === 'dev' || SKIP_NOTARIZATION)) {
-    logStep('preparing notarization environment...')
-    // Normalize official APPLE_* variables before electron-builder reads them.
-    await prepareNotarizeEnv(process.env)
-    logSuccess('notarization environment prepared')
+  if (macBuildState.notarize) {
+    logStep('notarization environment prepared')
+  } else if (macBuildState.includesMac) {
+    logStep('running macOS packaging without notarization')
   } else {
-    logStep('skipping notarization environment preparation')
+    logStep('skipping macOS notarization preparation')
   }
 
   logStep('loading electron-builder...')
@@ -443,7 +278,7 @@ const doMake = async () => {
     await builder.build({
       [platform]: targets,
       publish: publishMode,
-      config: createBuilderConfig(tracker.hooks),
+      config: createBuilderConfig(tracker.hooks, macBuildState, winBuildState),
     })
     logPlatform(platform, 'electron-builder run finished.')
   }

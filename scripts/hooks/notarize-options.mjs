@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process'
+import { isEnvFlagEnabled } from '../libs/build-env.mjs'
 
 function getPasswordFromKeychain(account, service) {
   return new Promise((resolve, reject) => {
@@ -18,7 +19,7 @@ function getPasswordFromKeychain(account, service) {
 }
 
 export async function prepareNotarizeEnv(env = process.env) {
-  if (env.SKIP_NOTARIZATION || env.MAKE_FOR === 'dev') {
+  if (isEnvFlagEnabled(env.SKIP_NOTARIZATION) || env.MAKE_FOR === 'dev') {
     return env
   }
 
@@ -45,6 +46,14 @@ export async function prepareNotarizeEnv(env = process.env) {
   }
 
   return env
+}
+
+export function hasNotarizeCredentials(env = process.env) {
+  return Boolean(
+    env.APPLE_KEYCHAIN_PROFILE ||
+      (env.APPLE_API_KEY && env.APPLE_API_KEY_ID && env.APPLE_API_ISSUER) ||
+      (env.APPLE_ID && env.APPLE_APP_SPECIFIC_PASSWORD && env.APPLE_TEAM_ID),
+  )
 }
 
 export async function getNotarizeOptions(appPath, env = process.env) {
