@@ -1,14 +1,13 @@
 /**
- * index
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import express from 'express'
+import { Hono } from 'hono'
 import list from './list'
 import toggle from './toggle'
 
-const router = express.Router()
+const router = new Hono()
 
 router.get('/list', list)
 router.get('/toggle', toggle)

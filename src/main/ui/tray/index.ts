@@ -11,18 +11,33 @@ import events from '@common/events'
 import { I18N } from '@common/i18n'
 import version from '@/version.json'
 import { app, BrowserWindow, Menu, MenuItemConstructorOptions, screen, Tray } from 'electron'
+import * as fs from 'fs'
 import * as path from 'path'
 
 let tray: Tray
 let win: BrowserWindow
 
-const makeTray = async () => {
-  let icon = 'logo@512w.png'
-  if (process.platform === 'darwin') {
-    icon = 'logoTemplate.png'
+const getTrayIconPath = () => {
+  const iconCandidates =
+    process.platform === 'darwin'
+      ? ['logoTemplate.png', 'logoTemplate@2x.png', 'logo@512w.png']
+      : ['logo@512w.png', 'logo.png']
+  const baseDirCandidates = [path.join(__dirname, 'assets'), path.join(__dirname, '..', 'src', 'assets')]
+
+  for (const icon of iconCandidates) {
+    for (const baseDir of baseDirCandidates) {
+      const iconPath = path.join(baseDir, icon)
+      if (fs.existsSync(iconPath)) {
+        return iconPath
+      }
+    }
   }
 
-  tray = new Tray(path.join(__dirname, 'assets', icon))
+  return path.join(__dirname, 'assets', process.platform === 'darwin' ? 'logoTemplate.png' : 'logo@512w.png')
+}
+
+const makeTray = async () => {
+  tray = new Tray(getTrayIconPath())
   win = makeWindow()
 
   updateTrayTitle().catch((e) => console.error(e))
@@ -99,6 +114,7 @@ const makeTray = async () => {
                 let hide_dock_icon = await configGet('hide_dock_icon')
                 hide_dock_icon = !hide_dock_icon
                 await configSet('hide_dock_icon', hide_dock_icon)
+                if (!app.dock) return
                 if (hide_dock_icon) {
                   app.dock.hide()
                 } else {

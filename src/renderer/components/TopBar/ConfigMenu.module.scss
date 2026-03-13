@@ -1,6 +1,7 @@
-@import "../../styles/common";
-
 .menu_list {
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+
   button > span {
     font-size: 1em;
   }

@@ -6,6 +6,7 @@
   </a>
 
 ### [Warp, the intelligent terminal for developers](https://go.warp.dev/SwitchHosts)
+
 [Available for MacOS, Linux, & Windows](https://go.warp.dev/SwitchHosts)<br>
 
 </div>
@@ -20,9 +21,7 @@
 
 Homepage: [https://switchhosts.vercel.app](https://switchhosts.vercel.app)
 
-SwitchHosts is an App for managing hosts file, it is based on [Electron](http://electron.atom.io/)
-, [React](https://facebook.github.io/react/), [Jotai](https://jotai.org/)
-, [Chakra UI](https://chakra-ui.com/), [CodeMirror](http://codemirror.net/), etc.
+SwitchHosts is an App for managing hosts file, it is based on [Electron](http://electron.atom.io/), [React](https://facebook.github.io/react/), [Jotai](https://jotai.org/), [Mantine](https://mantine.dev/), etc.
 
 ## Screenshot
 
@@ -45,6 +44,7 @@ links:
 - [SwitchHosts Download Page (GitHub release)](https://github.com/oldj/SwitchHosts/releases)
 
 You can also install the built version using the [package manager Chocolatey](https://community.chocolatey.org/packages/switchhosts):
+
 ```powershell
 choco install switchhosts
 ```

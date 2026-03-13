@@ -1,7 +1,4 @@
-@import "../../styles/common";
-
 .root {
-
 }
 
 .count {
@@ -15,6 +12,8 @@
 }
 
 .title {
+  display: flex;
+  align-items: center;
   height: var(--swh-tree-row-height);
   overflow: hidden;
   text-overflow: ellipsis;

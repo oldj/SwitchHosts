@@ -1,16 +1,16 @@
 /**
- * base
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import assert = require('assert')
 import * as path from 'path'
-
-global.db_dir = path.join(__dirname, 'tmp', 'db')
-
-import { swhdb } from '@root/main/data'
 import Db from 'potdb'
+import { fileURLToPath } from 'url'
+import { getSwhDb, swhdb } from '../src/main/data'
+
+const dirname = path.dirname(fileURLToPath(import.meta.url))
+
+global.db_dir = path.join(dirname, 'tmp', 'db')
 
 declare global {
   namespace NodeJS {
@@ -22,12 +22,12 @@ declare global {
 }
 
 const clearData = async () => {
-  await swhdb.collection.hosts.remove()
-  await swhdb.collection.trashcan.remove()
-  await swhdb.list.tree.remove()
+  const db = swhdb || (await getSwhDb())
+  await db.collection.hosts.remove()
+  await db.collection.trashcan.remove()
+  await db.list.tree.remove()
 }
 
 export {
-  assert,
   clearData,
 }

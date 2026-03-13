@@ -5,6 +5,7 @@
 
 import getPathOfSystemHosts from './getPathOfSystemHostsPath'
 import * as fs from 'fs'
+import { normalizeLineEndings } from '@common/newlines'
 
 export default async (): Promise<string> => {
   const fn = await getPathOfSystemHosts()
@@ -13,5 +14,5 @@ export default async (): Promise<string> => {
     return ''
   }
 
-  return await fs.promises.readFile(fn, 'utf-8')
+  return normalizeLineEndings(await fs.promises.readFile(fn, 'utf-8'))
 }

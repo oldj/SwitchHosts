@@ -1,11 +1,10 @@
 /**
- * BrowserLink
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { actions, agent } from '@renderer/core/agent'
 import events from '@common/events'
+import { actions, agent } from '@renderer/core/agent'
 import React from 'react'
 
 interface Props {

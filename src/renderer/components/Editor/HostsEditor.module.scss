@@ -1,7 +1,7 @@
-@import "../../styles/common";
+@use '../../styles/common';
 
 .root {
-  @include code;
+  @include common.code;
   width: 100%;
   height: 100%;
 }
@@ -11,86 +11,92 @@
   background: inherit;
 
   &.read_only {
-    :global {
-      .CodeMirror, .CodeMirror-gutters {
-        //background-color: var(--swh-editor-read-only-bg);
-      }
+    .surface {
+      background: var(--swh-editor-read-only-bg);
+      caret-color: transparent;
+      opacity: 0.8;
+      // box-shadow: inset 0 0 0 1px var(--swh-border-color-0);
+    }
 
-      .CodeMirror-cursor {
-        display: none !important
+    :global {
+      .codejar-linenumbers,
+      .codejar-linenumbers-inner-wrap {
+        background: var(--swh-editor-read-only-bg) !important;
       }
     }
-  }
-
-  textarea {
-    width: 100%;
-    height: 100%;
-    border: none;
-    padding: 10px;
-    resize: none;
-    outline: none;
-    background: inherit;
   }
 
   :global {
-    .CodeMirror {
-      font-family: $font-editor;
-      background: var(--swh-editor-bg-color);
-      color: var(--swh-editor-text-color);
+    .codejar-wrap {
+      height: 100%;
     }
 
-    .cm-s-default .cm-comment {
+    .codejar-linenumbers-inner-wrap {
+      background: var(--swh-editor-gutter-bg) !important;
+    }
+
+    .codejar-linenumbers {
+      border-right: none;
+      padding-right: 6px;
+      background: var(--swh-editor-gutter-bg);
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .codejar-linenumber {
+      color: var(--swh-editor-line-number-color);
+      font-size: 12px;
+    }
+
+    .hl-comment {
       color: var(--swh-editor-comment);
     }
 
-    .cm-s-default .cm-ip {
+    .hl-ip {
       color: var(--swh-editor-ip);
       font-weight: bold;
     }
 
-    .cm-s-default .cm-error {
+    .hl-error {
       color: var(--swh-editor-error);
     }
-
-    .cm-s-default .cm-hl {
-      background: var(--swh-editor-hl-bg);
-    }
-
-    .CodeMirror-gutters {
-      border-right: none;
-      padding-right: 6px;
-      background: var(--swh-editor-gutter-bg);
-    }
-
-    .CodeMirror-linenumber {
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    .CodeMirror-scrollbar-filler{
-      background: var(--swh-scrollbar-filler);
-    }
   }
+}
+
+.mount {
+  height: 100%;
+}
+
+.surface {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 8px 10px;
+  overflow: auto;
+  background: var(--swh-editor-bg-color);
+  color: var(--swh-editor-text-color);
+  font-family: common.$font-editor;
+  font-size: var(--swh-editor-font-size);
+  line-height: var(--swh-editor-line-height);
+  white-space: pre;
+  caret-color: var(--swh-editor-text-color);
+}
+
+.surface:focus {
+  outline: none;
 }
 
 :global(.theme-dark) {
   .editor {
-    :global {
-      .CodeMirror-cursor {
-        border-color: #39c;
+    .surface {
+      caret-color: #39c;
+    }
+
+    &.read_only {
+      .surface {
+        // box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+        caret-color: transparent;
       }
     }
   }
-}
-
-.status_bar {
-  height: var(--swh-status-bar-height);
-  line-height: var(--swh-status-bar-height);
-  border-top: 1px solid var(--swh-border-color-1);
-  padding: 0 10px;
-  font-size: 12px;
-
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  color: var(--swh-font-color-weak);
 }

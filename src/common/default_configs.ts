@@ -33,6 +33,8 @@ const configs = {
   tray_mini_window: true,
   multi_chose_folder_switch_all: false,
 
+  // Legacy key: it now controls background update checks, while the actual
+  // download remains a manual action in the UI.
   auto_download_update: true,
 
   // other

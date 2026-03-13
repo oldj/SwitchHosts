@@ -1,25 +1,24 @@
 /**
- * ListItem
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
+import { IHostsListObject } from '@common/data'
+import events from '@common/events'
+import { updateOneItem } from '@common/hostsFn'
+import { IMenuItemOption } from '@common/types'
+import { ActionIcon } from '@mantine/core'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { actions, agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
-import { IHostsListObject } from '@common/data'
-import { updateOneItem } from '@common/hostsFn'
+import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
+import { IconEdit } from '@tabler/icons-react'
 import clsx from 'clsx'
 import React, { useEffect, useRef, useState } from 'react'
-import { BiEdit } from 'react-icons/bi'
-import { Center, ToastId, useToast } from '@chakra-ui/react'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import styles from './ListItem.module.scss'
-import events from '@common/events'
-import { IMenuItemOption } from '@common/types'
-import useI18n from '@renderer/models/useI18n'
-import useHostsData from '@renderer/models/useHostsData'
 
 interface Props {
   data: IHostsListObject
@@ -35,9 +34,7 @@ const ListItem = (props: Props) => {
   const [is_on, setIsOn] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
-  const ref_toast_refresh = useRef<ToastId | null>(null)
-
-  const toast = useToast()
+  const ref_toast_refresh = useRef<string | null>(null)
 
   useEffect(() => {
     setIsOn(data.on)
@@ -105,41 +102,26 @@ const ListItem = (props: Props) => {
           {
             label: lang.refresh,
             async click() {
-              ref_toast_refresh.current = toast({
-                status: 'loading',
-                description: lang.loading,
-              })
+              ref_toast_refresh.current = `${Date.now()}`
 
               actions
                 .refreshHosts(data.id)
                 .then((r) => {
                   console.log(r)
                   if (!r.success) {
-                    toast({
-                      status: 'error',
-                      description: r.message || r.code || 'Error!',
-                      isClosable: true,
-                    })
+                    console.error(r.message || r.code || 'Error!')
                     return
                   }
 
-                  toast({
-                    status: 'success',
-                    description: 'OK!',
-                    isClosable: true,
-                  })
+                  console.log('OK!')
                 })
                 .catch((e) => {
                   console.log(e)
-                  toast({
-                    status: 'error',
-                    description: e.message,
-                    isClosable: true,
-                  })
+                  console.error(e.message)
                 })
                 .finally(() => {
                   if (ref_toast_refresh.current) {
-                    toast.close(ref_toast_refresh.current)
+                    ref_toast_refresh.current = null
                   }
                 })
             },
@@ -187,14 +169,16 @@ const ListItem = (props: Props) => {
         {data.is_sys ? null : (
           <>
             <div className={styles.edit}>
-              <Center h="var(--swh-tree-row-height)">
-                <BiEdit
-                  title={lang.edit}
-                  onClick={() => {
-                    agent.broadcast(events.edit_hosts_info, data)
-                  }}
-                />
-              </Center>
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={() => {
+                  agent.broadcast(events.edit_hosts_info, data)
+                }}
+                size={24}
+              >
+                <IconEdit size={16} stroke={1.5} />
+              </ActionIcon>
             </div>
             <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)} />
           </>

@@ -1,27 +1,25 @@
 /**
- * List
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { Center, useToast } from '@chakra-ui/react'
+import { IHostsListObject } from '@common/data'
+import events from '@common/events'
+import { findItemById, getNextSelectedItem, setOnStateOfItem } from '@common/hostsFn'
+import { IFindShowSourceParam } from '@common/types'
 import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IHostsListObject } from '@common/data'
-import events from '@common/events'
-import { findItemById, getNextSelectedItem, setOnStateOfItem } from '@common/hostsFn'
-import { IFindShowSourceParam } from '@common/types'
+import useConfigs from '@renderer/models/useConfigs'
+import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import clsx from 'clsx'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
 import styles from './index.module.scss'
 import ListItem from './ListItem'
-import useConfigs from '@renderer/models/useConfigs'
-import useHostsData from '@renderer/models/useHostsData'
 
 interface Props {
   is_tray?: boolean
@@ -34,7 +32,6 @@ const List = (props: Props) => {
   const { lang } = useI18n()
   const [selected_ids, setSelectedIds] = useState<string[]>([current_hosts?.id || '0'])
   const [show_list, setShowList] = useState<IHostsListObject[]>([])
-  const toast = useToast()
 
   useEffect(() => {
     if (!is_tray) {
@@ -50,6 +47,13 @@ const List = (props: Props) => {
       setShowList([...hosts_data.list])
     }
   }, [hosts_data])
+
+  useEffect(() => {
+    if (is_tray || !current_hosts) return
+    if (!hosts_data.trashcan.find((item) => item.data.id === current_hosts.id)) return
+
+    setSelectedIds([])
+  }, [current_hosts, hosts_data.trashcan, is_tray])
 
   const onToggleItem = async (id: string, on: boolean) => {
     console.log(`writeMode: ${configs?.write_mode}`)
@@ -69,11 +73,7 @@ const List = (props: Props) => {
     )
     let success = await writeHostsToSystem(new_list)
     if (success) {
-      toast({
-        status: 'success',
-        description: lang.success,
-        isClosable: true,
-      })
+      console.log(lang.success)
       agent.broadcast(events.set_hosts_on_status, id, on)
     } else {
       agent.broadcast(events.set_hosts_on_status, id, !on)
@@ -120,11 +120,7 @@ const List = (props: Props) => {
       // new Notification(lang.fail, {
       //   body,
       // })
-      toast({
-        status: 'error',
-        description: err_desc,
-        isClosable: true,
-      })
+      console.error(err_desc)
     }
 
     agent.broadcast(events.tray_list_updated)
@@ -208,9 +204,17 @@ const List = (props: Props) => {
           <ListItem key={data.id} data={data} is_tray={is_tray} selected_ids={selected_ids} />
         )}
         collapseArrow={
-          <Center w="20px" h="20px">
+          <div
+            style={{
+              width: '20px',
+              height: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <BiChevronRight />
-          </Center>
+          </div>
         }
         nodeAttr={(item) => {
           return {

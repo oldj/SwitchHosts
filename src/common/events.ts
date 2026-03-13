@@ -11,8 +11,6 @@ export default {
   cmd_run_result: 'cmd_run_result',
   config_updated: 'config_updated',
   edit_hosts_info: 'edit_hosts_info',
-  editor_content_change: 'editor:content_change',
-  editor_gutter_click: 'editor:gutter_click',
   hosts_content_changed: 'hosts_content_changed',
   hosts_refreshed: 'hosts_refreshed',
   hosts_refreshed_by_id: 'hosts_refreshed_by_id',

@@ -1,19 +1,17 @@
 /**
- * Trashcan
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { Center } from '@chakra-ui/react'
+import { ITrashcanListObject } from '@common/data'
 import TrashcanItem from '@renderer/components/LeftPanel/TrashcanItem'
 import list_styles from '@renderer/components/List/index.module.scss'
 import { Tree } from '@renderer/components/Tree'
-import { ITrashcanListObject } from '@common/data'
-import React, { useEffect, useState } from 'react'
+import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
+import { useEffect, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
 import styles from './Trashcan.module.scss'
-import useI18n from '@renderer/models/useI18n'
-import useHostsData from '@renderer/models/useHostsData'
 
 const Trashcan = () => {
   const { lang } = useI18n()
@@ -66,9 +64,17 @@ const Trashcan = () => {
         data={trash_list}
         nodeRender={(item) => <TrashcanItem data={item as ITrashcanListObject} />}
         collapseArrow={
-          <Center w="20px" h="20px">
+          <div
+            style={{
+              width: '20px',
+              height: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <BiChevronRight />
-          </Center>
+          </div>
         }
         nodeClassName={list_styles.node}
         nodeSelectedClassName={list_styles.node_selected}

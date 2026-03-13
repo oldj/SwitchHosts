@@ -1,11 +1,10 @@
 /**
- * ContextMenu
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { agent } from '@renderer/core/agent'
 import { IMenuItemOption } from '@common/types'
+import { agent } from '@renderer/core/agent'
 
 let _idx: number = 0
 

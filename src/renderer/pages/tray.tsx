@@ -1,30 +1,24 @@
-import { useColorMode } from '@chakra-ui/react'
+import events from '@common/events'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@common/events'
-import React, { useEffect } from 'react'
-import { BiArea } from 'react-icons/bi'
-import styles from './tray.module.scss'
-import useI18n from '@renderer/models/useI18n'
 import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
+import useI18n from '@renderer/models/useI18n'
+import { useEffect } from 'react'
+import { BiArea } from 'react-icons/bi'
+import styles from './tray.module.scss'
 
 export default () => {
   const { loadHostsData } = useHostsData()
   const { setLocale } = useI18n()
   const { configs, loadConfigs } = useConfigs()
-  const { colorMode, setColorMode } = useColorMode()
 
   const update = () => {
     if (!configs) return
 
     setLocale(configs.locale)
     loadHostsData().catch((e) => console.error(e))
-
-    if (colorMode !== configs.theme) {
-      setColorMode(configs.theme)
-    }
 
     let cls = document.body.className
     document.body.className = cls.replace(/\btheme-\w+/gi, '')

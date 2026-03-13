@@ -1,15 +1,14 @@
 /**
- * Transfer
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { IoArrowBack, IoArrowForward } from 'react-icons/io5'
-import { Box, Center, Grid, IconButton, VStack } from '@chakra-ui/react'
-import React, { useState } from 'react'
+import { ActionIcon, Box, Center, Stack } from '@mantine/core'
 import clsx from 'clsx'
-import styles from './Transfer.module.scss'
+import React, { useState } from 'react'
+import { IoArrowBack, IoArrowForward } from 'react-icons/io5'
 import useI18n from '../models/useI18n'
+import styles from './Transfer.module.scss'
 
 type IdType = string
 
@@ -58,8 +57,8 @@ const Transfer = (props: Props) => {
             <Box
               key={item.id}
               className={clsx(styles.item, is_selected && styles.selected)}
-              px={3}
-              py={1}
+              px="12px"
+              py="4px"
               onClick={() => toggleSelect(item.id)}
             >
               {render ? render(item) : item.title || item.id}
@@ -86,9 +85,20 @@ const Transfer = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      <Grid templateColumns="minmax(0, 1fr) 40px minmax(0, 1fr)" gap={1}>
-        <Box borderWidth="1px" borderRadius="md">
-          <Box className={styles.title} borderBottomWidth={1} px={3} py={1}>
+      <Box
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) 40px minmax(0, 1fr)',
+          gap: 4,
+        }}
+      >
+        <Box style={{ border: '1px solid var(--swh-border-color-0)', borderRadius: 6 }}>
+          <Box
+            className={styles.title}
+            px="12px"
+            py="4px"
+            style={{ borderBottom: '1px solid var(--swh-border-color-0)' }}
+          >
             {lang.all}{' '}
             <span>
               (
@@ -105,27 +115,34 @@ const Transfer = (props: Props) => {
           />
         </Box>
         <Center h="100%">
-          <VStack>
-            <IconButton
+          <Stack gap="8px">
+            <ActionIcon
               size="sm"
               variant="outline"
               aria-label="Move to right"
-              icon={<IoArrowForward />}
-              isDisabled={left_selected_keys.length === 0}
+              disabled={left_selected_keys.length === 0}
               onClick={moveLeftToRight}
-            />
-            <IconButton
+            >
+              <IoArrowForward />
+            </ActionIcon>
+            <ActionIcon
               size="sm"
               variant="outline"
               aria-label="Move to left"
-              icon={<IoArrowBack />}
-              isDisabled={right_selected_keys.length === 0}
+              disabled={right_selected_keys.length === 0}
               onClick={moveRightToLeft}
-            />
-          </VStack>
+            >
+              <IoArrowBack />
+            </ActionIcon>
+          </Stack>
         </Center>
-        <Box borderWidth="1px" borderRadius="md">
-          <Box className={styles.title} borderBottomWidth={1} px={3} py={1}>
+        <Box style={{ border: '1px solid var(--swh-border-color-0)', borderRadius: 6 }}>
+          <Box
+            className={styles.title}
+            px="12px"
+            py="4px"
+            style={{ borderBottom: '1px solid var(--swh-border-color-0)' }}
+          >
             {lang.selected}{' '}
             <span>
               (
@@ -143,7 +160,7 @@ const Transfer = (props: Props) => {
             setSelectedKeys={setRightSelectedKeys}
           />
         </Box>
-      </Grid>
+      </Box>
     </div>
   )
 }

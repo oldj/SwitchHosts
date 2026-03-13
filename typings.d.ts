@@ -2,10 +2,14 @@ declare module '*.css'
 declare module '*.scss'
 declare module '*.png'
 declare module '*.svg' {
-  export function ReactComponent(props: React.SVGProps<SVGSVGElement>): React.ReactElement
-
   const url: string
   export default url
+}
+
+declare namespace React {
+  interface ReactSVG {
+    [elementName: string]: SVGProps<SVGElement>
+  }
 }
 
 declare module '*.json' {

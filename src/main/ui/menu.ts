@@ -111,14 +111,16 @@ export const makeMainMenu = (locale: LocaleName = 'en') => {
         {
           label: lang.reload,
           accelerator: 'CmdOrCtrl+R',
-          click(item: MenuItem, focusedWindow: BrowserWindow | undefined) {
+          click(_item: MenuItem, focusedWindow) {
+            if (!(focusedWindow instanceof BrowserWindow)) return
             if (focusedWindow) focusedWindow.reload()
           },
         },
         {
           label: lang.toggle_developer_tools, // 'Toggle Developer Tools',
           accelerator: process.platform === 'darwin' ? 'Alt+Command+I' : 'Ctrl+Shift+I',
-          click(item: MenuItem, focusedWindow: BrowserWindow | undefined) {
+          click(_item: MenuItem, focusedWindow) {
+            if (!(focusedWindow instanceof BrowserWindow)) return
             if (focusedWindow) focusedWindow.webContents.toggleDevTools()
           },
         },

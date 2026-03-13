@@ -1,15 +1,13 @@
 /**
- * hostsFn.test.ts
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import assert = require('assert')
-import { IHostsListObject } from '@root/common/data'
-import { findItemById, setOnStateOfItem } from '@root/common/hostsFn'
+import { describe, expect, it } from 'vitest'
+import type { IHostsListObject } from '../../src/common/data'
+import { findItemById, setOnStateOfItem } from '../../src/common/hostsFn'
 
-describe('hostsFn test', function () {
-
+describe('hostsFn test', () => {
   const makeAList = (): IHostsListObject[] => {
     return [
       { id: '1' },
@@ -54,163 +52,154 @@ describe('hostsFn test', function () {
   }
 
   const getItem = (list: IHostsListObject[], id: string): any => findItemById(list, id) || {}
+  const expectItemOn = (list: IHostsListObject[], id: string, value: boolean) => {
+    expect(Boolean(getItem(list, id).on)).toBe(value)
+  }
+  const expectTopLevelOn = (list: IHostsListObject[], expected: boolean[]) => {
+    expect(list.slice(0, expected.length).map((item) => Boolean(item.on))).toEqual(expected)
+  }
 
   it('updateOneItem top level test', () => {
     let list: IHostsListObject[] = [
       { id: '1' },
     ]
     list = setOnStateOfItem(list, '1', true, 0)
-    assert(list[0].on)
+    expectTopLevelOn(list, [true])
 
     list = [
       { id: '1' },
       { id: '2' },
     ]
     list = setOnStateOfItem(list, '1', true, 0)
-    assert(list[0].on)
-    assert(!list[1].on)
+    expectTopLevelOn(list, [true, false])
 
     list = setOnStateOfItem(list, '2', true, 0)
-    assert(list[0].on)
-    assert(list[1].on)
+    expectTopLevelOn(list, [true, true])
 
-    // 单选
     list = [
       { id: '1' },
       { id: '2', on: true },
       { id: '3', on: true },
     ]
     list = setOnStateOfItem(list, '1', true, 1)
-    assert(list[0].on)
-    assert(!list[1].on)
-    assert(!list[2].on)
+    expectTopLevelOn(list, [true, false, false])
 
-    // 多选
     list = [
       { id: '1' },
       { id: '2', on: true },
       { id: '3', on: true },
     ]
     list = setOnStateOfItem(list, '1', true, 2)
-    assert(list[0].on)
-    assert(list[1].on)
-    assert(list[2].on)
+    expectTopLevelOn(list, [true, true, true])
   })
 
   it('updateOneItem folder test', () => {
-    // default
     let list = makeAList()
     list = setOnStateOfItem(list, '1', true, 1)
-    assert(list[0].on)
-    assert(!list[1].on)
-    assert(!list[2].on)
-    assert(!list[3].on)
+    expectTopLevelOn(list, [true, false, false, false])
 
     list = setOnStateOfItem(list, '2', true, 1)
-    assert(!list[0].on)
-    assert(list[1].on)
-    assert(!list[2].on)
-    assert(!list[3].on)
+    expectTopLevelOn(list, [false, true, false, false])
 
     list = setOnStateOfItem(list, '2.1', true, 0)
-    assert(getItem(list, '2.1').on)
-    assert(!getItem(list, '2.2').on)
-    assert(!getItem(list, '2.3').on)
+    expectItemOn(list, '2.1', true)
+    expectItemOn(list, '2.2', false)
+    expectItemOn(list, '2.3', false)
 
     list = setOnStateOfItem(list, '2.2', true, 0)
-    assert(getItem(list, '2.1').on)
-    assert(getItem(list, '2.2').on)
-    assert(!getItem(list, '2.3').on)
+    expectItemOn(list, '2.1', true)
+    expectItemOn(list, '2.2', true)
+    expectItemOn(list, '2.3', false)
 
     list = setOnStateOfItem(list, '2.3', true, 1)
-    assert(!getItem(list, '2.1').on)
-    assert(!getItem(list, '2.2').on)
-    assert(getItem(list, '2.3').on)
+    expectItemOn(list, '2.1', false)
+    expectItemOn(list, '2.2', false)
+    expectItemOn(list, '2.3', true)
 
     list = setOnStateOfItem(list, '2.1', true, 1)
-    assert(getItem(list, '2.1').on)
-    assert(!getItem(list, '2.2').on)
-    assert(!getItem(list, '2.3').on)
+    expectItemOn(list, '2.1', true)
+    expectItemOn(list, '2.2', false)
+    expectItemOn(list, '2.3', false)
 
     list = setOnStateOfItem(list, '2.2', true, 2)
-    assert(getItem(list, '2.1').on)
-    assert(getItem(list, '2.2').on)
-    assert(!getItem(list, '2.3').on)
+    expectItemOn(list, '2.1', true)
+    expectItemOn(list, '2.2', true)
+    expectItemOn(list, '2.3', false)
 
     list = setOnStateOfItem(list, '3.1', true, 0)
-    assert(getItem(list, '3.1').on)
-    assert(!getItem(list, '3.2').on)
-    assert(!getItem(list, '3.3').on)
+    expectItemOn(list, '3.1', true)
+    expectItemOn(list, '3.2', false)
+    expectItemOn(list, '3.3', false)
 
     list = setOnStateOfItem(list, '3.2', true, 0)
-    assert(!getItem(list, '3.1').on)
-    assert(getItem(list, '3.2').on)
-    assert(!getItem(list, '3.3').on)
+    expectItemOn(list, '3.1', false)
+    expectItemOn(list, '3.2', true)
+    expectItemOn(list, '3.3', false)
 
     list = setOnStateOfItem(list, '3.3', true, 1)
-    assert(!getItem(list, '3.1').on)
-    assert(!getItem(list, '3.2').on)
-    assert(getItem(list, '3.3').on)
+    expectItemOn(list, '3.1', false)
+    expectItemOn(list, '3.2', false)
+    expectItemOn(list, '3.3', true)
 
     list = setOnStateOfItem(list, '3.1', true, 2)
-    assert(getItem(list, '3.1').on)
-    assert(!getItem(list, '3.2').on)
-    assert(!getItem(list, '3.3').on)
-    assert(!getItem(list, '3.4').on)
+    expectItemOn(list, '3.1', true)
+    expectItemOn(list, '3.2', false)
+    expectItemOn(list, '3.3', false)
+    expectItemOn(list, '3.4', false)
 
     list = setOnStateOfItem(list, '3.4.1', true, 0)
-    assert(getItem(list, '3.4.1').on)
-    assert(!getItem(list, '3.4.2').on)
-    assert(!getItem(list, '3.4.3').on)
+    expectItemOn(list, '3.4.1', true)
+    expectItemOn(list, '3.4.2', false)
+    expectItemOn(list, '3.4.3', false)
 
     list = setOnStateOfItem(list, '3.4.2', true, 0)
-    assert(getItem(list, '3.4.1').on)
-    assert(getItem(list, '3.4.2').on)
-    assert(!getItem(list, '3.4.3').on)
+    expectItemOn(list, '3.4.1', true)
+    expectItemOn(list, '3.4.2', true)
+    expectItemOn(list, '3.4.3', false)
 
     list = setOnStateOfItem(list, '3.4.3', true, 1)
-    assert(getItem(list, '3.4.1').on)
-    assert(getItem(list, '3.4.2').on)
-    assert(getItem(list, '3.4.3').on)
+    expectItemOn(list, '3.4.1', true)
+    expectItemOn(list, '3.4.2', true)
+    expectItemOn(list, '3.4.3', true)
 
     list = setOnStateOfItem(list, '3.4.3', false, 2)
-    assert(getItem(list, '3.4.1').on)
-    assert(getItem(list, '3.4.2').on)
-    assert(!getItem(list, '3.4.3').on)
+    expectItemOn(list, '3.4.1', true)
+    expectItemOn(list, '3.4.2', true)
+    expectItemOn(list, '3.4.3', false)
 
     list = setOnStateOfItem(list, '4.1', true, 0)
-    assert(getItem(list, '4.1').on)
-    assert(!getItem(list, '4.2').on)
-    assert(!getItem(list, '4.3').on)
+    expectItemOn(list, '4.1', true)
+    expectItemOn(list, '4.2', false)
+    expectItemOn(list, '4.3', false)
 
     list = setOnStateOfItem(list, '4.2', true, 1)
-    assert(getItem(list, '4.1').on)
-    assert(getItem(list, '4.2').on)
-    assert(!getItem(list, '4.3').on)
+    expectItemOn(list, '4.1', true)
+    expectItemOn(list, '4.2', true)
+    expectItemOn(list, '4.3', false)
 
     list = setOnStateOfItem(list, '4.3', true, 2)
-    assert(getItem(list, '4.1').on)
-    assert(getItem(list, '4.2').on)
-    assert(getItem(list, '4.3').on)
+    expectItemOn(list, '4.1', true)
+    expectItemOn(list, '4.2', true)
+    expectItemOn(list, '4.3', true)
 
     list = setOnStateOfItem(list, '4.4.1', true, 0)
-    assert(getItem(list, '4.4.1').on)
-    assert(!getItem(list, '4.4.2').on)
-    assert(!getItem(list, '4.4.3').on)
+    expectItemOn(list, '4.4.1', true)
+    expectItemOn(list, '4.4.2', false)
+    expectItemOn(list, '4.4.3', false)
 
     list = setOnStateOfItem(list, '4.4.2', true, 1)
-    assert(!getItem(list, '4.4.1').on)
-    assert(getItem(list, '4.4.2').on)
-    assert(!getItem(list, '4.4.3').on)
+    expectItemOn(list, '4.4.1', false)
+    expectItemOn(list, '4.4.2', true)
+    expectItemOn(list, '4.4.3', false)
 
     list = setOnStateOfItem(list, '4.4.3', true, 2)
-    assert(!getItem(list, '4.4.1').on)
-    assert(!getItem(list, '4.4.2').on)
-    assert(getItem(list, '4.4.3').on)
+    expectItemOn(list, '4.4.1', false)
+    expectItemOn(list, '4.4.2', false)
+    expectItemOn(list, '4.4.3', true)
 
     list = setOnStateOfItem(list, '4.4.3', false, 2)
-    assert(!getItem(list, '4.4.1').on)
-    assert(!getItem(list, '4.4.2').on)
-    assert(!getItem(list, '4.4.3').on)
+    expectItemOn(list, '4.4.1', false)
+    expectItemOn(list, '4.4.2', false)
+    expectItemOn(list, '4.4.3', false)
   })
 })

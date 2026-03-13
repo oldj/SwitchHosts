@@ -1,5 +1,4 @@
 /**
- * i18n.ts
  * @author: oldj
  * @homepage: https://oldj.net
  */

@@ -20,9 +20,7 @@
 
 项目主页：[https://switchhosts.vercel.app](https://switchhosts.vercel.app)
 
-SwitchHosts 是一个管理 hosts 文件的应用，基于 [Electron](http://electron.atom.io/)
-、[React](https://facebook.github.io/react/)、[Jotai](https://jotai.org/)
-、[Chakra UI](https://chakra-ui.com/)、[CodeMirror](http://codemirror.net/) 等技术开发。
+SwitchHosts 是一个管理 hosts 文件的应用，基于 [Electron](http://electron.atom.io/)、[React](https://facebook.github.io/react/)、[Jotai](https://jotai.org/)、[Mantine](https://mantine.dev/) 等技术开发。
 
 ## 截图
 

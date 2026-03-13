@@ -1,13 +1,12 @@
 /**
- * useConfigs
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { actions } from '@renderer/core/agent'
 import { ConfigsType } from '@common/default_configs'
-import { useAtom } from 'jotai'
+import { actions } from '@renderer/core/agent'
 import { configs_atom } from '@renderer/stores/configs'
+import { useAtom } from 'jotai'
 
 export default function useConfigs() {
   const [configs, setConfigs] = useAtom(configs_atom)

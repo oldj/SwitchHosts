@@ -1,50 +1,139 @@
-/**
- * updater.ts
- */
-
 import events from '@common/events'
+import { AppDownloadedUpdateInfo, AppUpdateInfo, AppUpdateProgress } from '@common/update'
 import { broadcast } from '@main/core/agent'
-import { autoUpdater, ProgressInfo } from 'electron-updater'
+import { autoUpdater } from 'electron-updater'
+import type { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 
-export async function checkUpdate(): Promise<string | null> {
-  return new Promise((resolve, reject) => {
-    autoUpdater.autoDownload = true
+let isBound = false
+let currentUpdateInfo: AppUpdateInfo | null = null
+let downloadedUpdateInfo: AppDownloadedUpdateInfo | null = null
 
-    autoUpdater
-      .checkForUpdatesAndNotify()
-      .then((check_result) => {
-        console.log('updater checkForUpdates', check_result)
-      })
-      .catch((e) => {
-        console.error(e)
-        reject(e)
-      })
+function normalizeReleaseNotes(releaseNotes: UpdateInfo['releaseNotes']): string | null {
+  if (!releaseNotes) {
+    return null
+  }
 
-    autoUpdater.on('update-available', (info) => {
-      console.log('update-available', info)
-      resolve(info.version)
+  if (typeof releaseNotes === 'string') {
+    return releaseNotes
+  }
+
+  return releaseNotes
+    .map((item) => {
+      if (!item.note) {
+        return ''
+      }
+
+      if (!item.version) {
+        return item.note
+      }
+
+      return `## ${item.version}\n${item.note}`
     })
+    .filter(Boolean)
+    .join('\n\n')
+}
 
-    autoUpdater.on('update-not-available', (info) => {
-      console.log('update-not-available', info)
-      // resolve(info.version)
-      resolve(null)
-    })
+function toAppUpdateInfo(info: UpdateInfo): AppUpdateInfo {
+  return {
+    version: info.version,
+    releaseName: info.releaseName || null,
+    releaseNotes: normalizeReleaseNotes(info.releaseNotes),
+  }
+}
 
-    autoUpdater.on('download-progress', (info: ProgressInfo) => {
-      console.log('download-progress')
-      console.log(info)
-      broadcast(events.update_download_progress, info)
-    })
+function toProgressPayload(info: ProgressInfo): AppUpdateProgress {
+  return {
+    percent: info.percent,
+    transferred: info.transferred,
+    total: info.total,
+    bytesPerSecond: info.bytesPerSecond,
+  }
+}
 
-    autoUpdater.on('update-downloaded', async (e) => {
-      console.log('update-downloaded')
-      broadcast(events.update_downloaded, e.version)
-    })
+function toDownloadedUpdateInfo(event: UpdateDownloadedEvent): AppDownloadedUpdateInfo {
+  return {
+    ...(currentUpdateInfo || toAppUpdateInfo(event)),
+    downloadedFile: event.downloadedFile || null,
+  }
+}
+
+function bindUpdaterEvents() {
+  if (isBound) {
+    return
+  }
+
+  // Bind lazily so test environments that stub Electron do not initialize
+  // the updater before an explicit update action is requested.
+  isBound = true
+  autoUpdater.autoDownload = false
+  autoUpdater.allowPrerelease = false
+  autoUpdater.autoInstallOnAppQuit = false
+
+  autoUpdater.on('update-available', (info) => {
+    currentUpdateInfo = toAppUpdateInfo(info)
+    downloadedUpdateInfo = null
+    console.log('update-available', currentUpdateInfo)
+    broadcast(events.new_version, currentUpdateInfo)
+  })
+
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('update-not-available', info)
+    currentUpdateInfo = null
+    downloadedUpdateInfo = null
+  })
+
+  autoUpdater.on('download-progress', (info) => {
+    const payload = toProgressPayload(info)
+    console.log('download-progress', payload)
+    broadcast(events.update_download_progress, payload)
+  })
+
+  autoUpdater.on('update-downloaded', (event) => {
+    downloadedUpdateInfo = toDownloadedUpdateInfo(event)
+    console.log('update-downloaded', downloadedUpdateInfo)
+    broadcast(events.update_downloaded, downloadedUpdateInfo)
+  })
+
+  autoUpdater.on('error', (error, message) => {
+    console.error('autoUpdater error', message || '', error)
   })
 }
 
-export async function quiteAndInstall() {
+export async function checkUpdate(): Promise<AppUpdateInfo | null> {
+  bindUpdaterEvents()
+  const result = await autoUpdater.checkForUpdates()
+  console.log('updater checkForUpdates', result)
+
+  if (!result?.isUpdateAvailable) {
+    currentUpdateInfo = null
+    downloadedUpdateInfo = null
+    return null
+  }
+
+  // Normalize the updater payload so renderer code does not depend on
+  // electron-updater's version-specific event shape.
+  currentUpdateInfo = toAppUpdateInfo(result.updateInfo)
+  return currentUpdateInfo
+}
+
+export async function downloadUpdate() {
+  bindUpdaterEvents()
+
+  if (!currentUpdateInfo) {
+    throw new Error('No update is available to download.')
+  }
+
+  downloadedUpdateInfo = null
+  return autoUpdater.downloadUpdate()
+}
+
+export async function installUpdate() {
+  bindUpdaterEvents()
+
+  if (!downloadedUpdateInfo) {
+    throw new Error('No downloaded update is ready to install.')
+  }
+
   global.is_will_quit = true
   autoUpdater.quitAndInstall()
 }

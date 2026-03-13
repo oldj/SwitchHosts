@@ -1,26 +1,25 @@
 /**
- * index
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { Box, Flex, HStack, IconButton } from '@chakra-ui/react'
+import events from '@common/events'
+import { ActionIcon, Box, Flex } from '@mantine/core'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import ConfigMenu from '@renderer/components/TopBar/ConfigMenu'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import events from '@common/events'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
-import React, { useEffect, useState } from 'react'
-import { BiX } from 'react-icons/bi'
 import {
   IconHistory,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
   IconPlus,
+  IconX,
 } from '@tabler/icons-react'
+import { useEffect, useState } from 'react'
 import styles from './index.module.scss'
 
 interface IProps {
@@ -33,6 +32,7 @@ export default (props: IProps) => {
   const { lang } = useI18n()
   const { isHostsInTrashcan, current_hosts, isReadOnly } = useHostsData()
   const [is_on, setIsOn] = useState(!!current_hosts?.on)
+  const iconSize = 20
 
   const show_toggle_switch =
     !show_left_panel && current_hosts && !isHostsInTrashcan(current_hosts.id)
@@ -57,32 +57,33 @@ export default (props: IProps) => {
 
   return (
     <div className={styles.root}>
-      <Flex align="center" className={styles.left}>
-        <IconButton
+      <Flex align="center" justify="center" gap={8}>
+        <ActionIcon
           aria-label="Toggle sidebar"
-          icon={
-            show_left_panel ? (
-              <IconLayoutSidebarLeftCollapse size={16} />
-            ) : (
-              <IconLayoutSidebarLeftExpand size={16} />
-            )
-          }
           onClick={() => {
             agent.broadcast(events.toggle_left_panel, !show_left_panel)
           }}
-          variant="ghost"
-          mr={1}
-        />
-        <IconButton
+          variant="subtle"
+          color="gray"
+        >
+          {show_left_panel ? (
+            <IconLayoutSidebarLeftCollapse size={iconSize} />
+          ) : (
+            <IconLayoutSidebarLeftExpand size={iconSize} />
+          )}
+        </ActionIcon>
+        <ActionIcon
           aria-label="Add"
-          icon={<IconPlus size={16} />}
           onClick={() => agent.broadcast(events.add_new)}
-          variant="ghost"
-        />
+          variant="subtle"
+          color="gray"
+        >
+          <IconPlus size={iconSize} />
+        </ActionIcon>
       </Flex>
 
       <Box className={styles.title_wrapper}>
-        <HStack className={styles.title}>
+        <Flex className={styles.title} gap={8} align="center" justify="center">
           {current_hosts ? (
             <>
               <span className={styles.hosts_icon}>
@@ -102,12 +103,12 @@ export default (props: IProps) => {
           {isReadOnly(current_hosts) ? (
             <span className={styles.read_only}>{lang.read_only}</span>
           ) : null}
-        </HStack>
+        </Flex>
       </Box>
 
-      <Flex align="center" justifyContent="flex-end" className={styles.right}>
+      <Flex align="center" justify="flex-end" gap={8}>
         {show_toggle_switch ? (
-          <Box mr={3}>
+          <Box mr="12px">
             <SwitchButton
               on={is_on}
               onChange={(on) => {
@@ -117,24 +118,27 @@ export default (props: IProps) => {
           </Box>
         ) : null}
         {show_history ? (
-          <IconButton
+          <ActionIcon
             aria-label="Show history"
-            icon={<IconHistory size={16} />}
-            variant="ghost"
+            variant="subtle"
+            color="gray"
             onClick={() => agent.broadcast(events.show_history)}
-          />
+          >
+            <IconHistory size={iconSize} />
+          </ActionIcon>
         ) : null}
 
-        <ConfigMenu />
+        <ConfigMenu iconSize={iconSize} />
 
         {show_close_button ? (
-          <IconButton
+          <ActionIcon
             aria-label="Close window"
-            fontSize="20px"
-            icon={<BiX />}
-            variant="ghost"
+            variant="subtle"
+            color="gray"
             onClick={() => actions.closeMainWindow()}
-          />
+          >
+            <IconX size={iconSize} />
+          </ActionIcon>
         ) : null}
       </Flex>
     </div>

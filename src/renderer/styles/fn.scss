@@ -1,8 +1,5 @@
-@import "var";
-@import "scrollbar";
-
 @mixin code {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
 
 @mixin ell {
