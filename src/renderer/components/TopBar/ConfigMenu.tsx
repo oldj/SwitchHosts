@@ -8,6 +8,7 @@ import events from '@common/events'
 import { ActionIcon, Menu } from '@mantine/core'
 import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
 import { actions, agent } from '@renderer/core/agent'
+import { getErrorMessage, showErrorNotification, showSuccessNotification } from '@renderer/core/notify'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import {
@@ -35,6 +36,7 @@ const ConfigMenu = (props: IProps) => {
   const { lang } = useI18n()
   const { loadHostsData, setCurrentHosts } = useHostsData()
   const [show_import_from_url, setShowImportFromUrl] = useState(false)
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
 
   const strokeWidth = 1.5
 
@@ -58,12 +60,28 @@ const ConfigMenu = (props: IProps) => {
 
           <Menu.Item
             leftSection={<IconRefresh size={iconSize} stroke={strokeWidth} />}
+            disabled={isCheckingUpdate}
             onClick={async () => {
-              let r = await actions.checkUpdate()
-              if (r === false) {
-                console.log(lang.is_latest_version_inform)
-              } else if (r === null) {
-                console.error(lang.check_update_failed)
+              if (isCheckingUpdate) {
+                return
+              }
+
+              setIsCheckingUpdate(true)
+              try {
+                const hasUpdate = await actions.checkUpdate()
+                if (!hasUpdate) {
+                  showSuccessNotification({
+                    title: lang.check_update,
+                    message: lang.is_latest_version_inform,
+                  })
+                }
+              } catch (error) {
+                showErrorNotification({
+                  title: lang.check_update,
+                  message: getErrorMessage(error, lang.check_update_failed),
+                })
+              } finally {
+                setIsCheckingUpdate(false)
               }
             }}
           >

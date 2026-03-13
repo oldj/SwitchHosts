@@ -10,7 +10,15 @@ import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import artifactBuildCompletedHook from './hooks/artifactBuildCompleted.mjs'
-import { PLATFORM_LABELS, formatDuration, logBanner, logPlatform, logStep, logSuccess, logWarning } from './libs/build-log.mjs'
+import {
+  PLATFORM_LABELS,
+  formatDuration,
+  logBanner,
+  logPlatform,
+  logStep,
+  logSuccess,
+  logWarning,
+} from './libs/build-log.mjs'
 import { createBuildTracker, getBuildPlan } from './libs/build-plan.mjs'
 import { resolveMacBuildState, resolveWindowsBuildState } from './libs/build-state.mjs'
 import { resolveGithubRepository } from './release-config.mjs'
@@ -34,8 +42,8 @@ const TARGET_PLATFORMS_CONFIGS = {
     linux: ['AppImage:x64', 'AppImage:arm64', 'deb:x64', 'deb:arm64'],
   },
   all: {
-    mac: ['dmg:x64', 'dmg:arm64', 'zip:universal'],
-    win: ['nsis:ia32', 'nsis:x64', 'nsis:arm64', 'portable:x64', 'zip:x64' /* , 'appx:x64'*/],
+    mac: ['dmg:x64', 'dmg:arm64'],
+    win: ['nsis:ia32', 'nsis:x64', 'nsis:arm64', 'portable:x64' /* , 'appx:x64'*/],
     linux: ['AppImage:x64', 'AppImage:arm64', 'deb:x64', 'deb:arm64'],
   },
 }
@@ -120,6 +128,10 @@ function createBuilderConfig(hooks, macBuildState, winBuildState) {
       allowToChangeInstallationDirectory: true,
       deleteAppDataOnUninstall: false,
       shortcutName: 'SwitchHosts',
+      // electron-builder enables a combined NSIS installer by default when
+      // multiple Windows architectures are built together; keep only per-arch
+      // installers so release artifacts stay explicit and predictable.
+      buildUniversalInstaller: false,
       artifactName: '${productName}-v' + fullVersion + '-win-${arch}-installer.${ext}',
     },
     portable: {
@@ -184,7 +196,9 @@ const beforeMake = async () => {
   fse.ensureDirSync(distDir)
   logStep(`dist cleaned: ${distDir}`)
 
-  const toCopy = [[path.join(rootDir, 'assets', 'app.png'), path.join(rootDir, 'build', 'assets', 'app.png')]]
+  const toCopy = [
+    [path.join(rootDir, 'assets', 'app.png'), path.join(rootDir, 'build', 'assets', 'app.png')],
+  ]
 
   toCopy.map(([src, target]) => {
     fse.copySync(src, target)

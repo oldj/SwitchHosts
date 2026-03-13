@@ -1,6 +1,11 @@
 import events from '@common/events'
 import { AppDownloadedUpdateInfo, AppUpdateInfo, AppUpdateProgress } from '@common/update'
 import { broadcast } from '@main/core/agent'
+import {
+  buildUpdaterMetadataMissingMessage,
+  shouldSkipUpdateCheckForUnpublishedBuild,
+} from '@main/core/updater-helpers'
+import { app } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import type { ProgressInfo, UpdateDownloadedEvent, UpdateInfo } from 'electron-updater'
 
@@ -101,7 +106,39 @@ function bindUpdaterEvents() {
 
 export async function checkUpdate(): Promise<AppUpdateInfo | null> {
   bindUpdaterEvents()
-  const result = await autoUpdater.checkForUpdates()
+  if (app.isPackaged) {
+    try {
+      const shouldSkip = await shouldSkipUpdateCheckForUnpublishedBuild(
+        app.getVersion(),
+        process.resourcesPath,
+      )
+      if (shouldSkip) {
+        console.log(
+          'skip update check because the packaged app version is newer than the latest public GitHub release',
+        )
+        currentUpdateInfo = null
+        downloadedUpdateInfo = null
+        return null
+      }
+    } catch (error) {
+      console.warn('update preflight failed, falling back to electron-updater', error)
+    }
+  }
+
+  let result
+  try {
+    result = await autoUpdater.checkForUpdates()
+  } catch (error) {
+    const metadataMissingMessage = buildUpdaterMetadataMissingMessage(error)
+    if (metadataMissingMessage) {
+      throw new Error(metadataMissingMessage, {
+        cause: error instanceof Error ? error : undefined,
+      })
+    }
+
+    throw error
+  }
+
   console.log('updater checkForUpdates', result)
 
   if (!result?.isUpdateAvailable) {

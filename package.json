@@ -23,6 +23,7 @@
     "make:win": "cross-env SKIP_NOTARIZATION=1 cross-env MAKE_FOR=win npm run make",
     "release:upload": "node ./scripts/upload-release.mjs",
     "release:upload:dry-run": "cross-env DRY_RUN=1 node ./scripts/upload-release.mjs",
+    "sort-lang": "node ./scripts/sort-lang.mjs",
     "publish": "npm run release:upload"
   },
   "dependencies": {
@@ -45,6 +46,7 @@
     "@electron/notarize": "^3.1.1",
     "@mantine/core": "^8.3.16",
     "@mantine/hooks": "^8.3.16",
+    "@mantine/notifications": "^8.3.16",
     "@tabler/icons-react": "3.38.0",
     "@types/assert": "1.5.11",
     "@types/lodash": "4.17.24",

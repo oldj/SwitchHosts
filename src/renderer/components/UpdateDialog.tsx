@@ -2,6 +2,7 @@ import events from '@common/events'
 import { AppDownloadedUpdateInfo, AppUpdateInfo, AppUpdateProgress } from '@common/update'
 import { Button, Group, Modal, Progress, Stack, Text } from '@mantine/core'
 import { actions } from '@renderer/core/agent'
+import { getErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useI18n from '@renderer/models/useI18n'
 import { useState } from 'react'
@@ -69,7 +70,10 @@ const UpdateDialog = () => {
     } catch (error) {
       console.error(error)
       setStage('available')
-      alert(error instanceof Error ? error.message : String(error))
+      showErrorNotification({
+        title: lang.update_download_now,
+        message: getErrorMessage(error, lang.fail),
+      })
     }
   }
 
@@ -81,7 +85,10 @@ const UpdateDialog = () => {
     } catch (error) {
       console.error(error)
       setIsInstalling(false)
-      alert(error instanceof Error ? error.message : String(error))
+      showErrorNotification({
+        title: lang.update_install_now,
+        message: getErrorMessage(error, lang.fail),
+      })
     }
   }
 

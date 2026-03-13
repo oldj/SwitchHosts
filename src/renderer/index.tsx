@@ -5,6 +5,8 @@
 
 import { MantineProvider } from '@mantine/core'
 import '@mantine/core/styles.css'
+import { Notifications } from '@mantine/notifications'
+import '@mantine/notifications/styles.css'
 import PageWrapper from '@renderer/common/PageWrapper'
 import useConfigs from '@renderer/models/useConfigs'
 import IndexPage from '@renderer/pages'
@@ -37,6 +39,7 @@ const AppRoot = () => {
 
   return (
     <MantineProvider forceColorScheme={configs?.theme === 'dark' ? 'dark' : 'light'}>
+      <Notifications position="top-center" />
       <PageWrapper>
         <RouterProvider router={router} />
       </PageWrapper>
