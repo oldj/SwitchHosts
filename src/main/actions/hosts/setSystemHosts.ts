@@ -155,7 +155,7 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
   } catch (e: any) {
     console.error(e)
     let code = 'fail'
-    if (e.code === 'EPERM' || e.message.include('operation not permitted')) {
+    if (e.code === 'EPERM' || e.message.includes('operation not permitted')) {
       code = 'no_access'
     }
 
