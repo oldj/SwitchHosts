@@ -1,25 +1,15 @@
 /**
- * ConfigMenu
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import {
-  Button,
-  Menu,
-  MenuButton,
-  MenuDivider,
-  MenuItem,
-  MenuList,
-  useToast,
-} from '@chakra-ui/react'
-import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
-import { actions, agent } from '@renderer/core/agent'
 import { feedback_url, homepage_url } from '@common/constants'
 import events from '@common/events'
+import { ActionIcon, Menu } from '@mantine/core'
+import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
+import { actions, agent } from '@renderer/core/agent'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
-import React, { useState } from 'react'
 import {
   IconAdjustments,
   IconCloudDownload,
@@ -33,102 +23,90 @@ import {
   IconSettings,
   IconUpload,
 } from '@tabler/icons-react'
+import { useState } from 'react'
 import styles from './ConfigMenu.module.scss'
 
-const ConfigMenu = () => {
+interface IProps {
+  iconSize?: number
+}
+
+const ConfigMenu = (props: IProps) => {
+  const { iconSize = 16 } = props
   const { lang } = useI18n()
   const { loadHostsData, setCurrentHosts } = useHostsData()
   const [show_import_from_url, setShowImportFromUrl] = useState(false)
-  const toast = useToast()
+
+  const strokeWidth = 1.5
 
   return (
     <>
-      <Menu>
-        <MenuButton as={Button} variant="ghost" width="35px" px="10.5px">
-          <IconSettings size={16} />
-        </MenuButton>
-        <MenuList
-          borderColor="var(--swh-border-color-0)"
-          className={styles.menu_list}
-          maxH={'calc(100vh - 80px)'}
-          overflowY={'scroll'}
-        >
-          <MenuItem
-            icon={<IconInfoCircle size={16} />}
+      <Menu shadow="md" withinPortal>
+        <Menu.Target>
+          <ActionIcon variant="subtle" color="gray">
+            <IconSettings size={iconSize} />
+          </ActionIcon>
+        </Menu.Target>
+        <Menu.Dropdown className={styles.menu_list}>
+          <Menu.Item
+            leftSection={<IconInfoCircle size={iconSize} stroke={strokeWidth} />}
             onClick={() => agent.broadcast(events.show_about)}
           >
             {lang.about}
-          </MenuItem>
+          </Menu.Item>
 
-          <MenuDivider />
+          <Menu.Divider />
 
-          <MenuItem
-            icon={<IconRefresh size={16} />}
+          <Menu.Item
+            leftSection={<IconRefresh size={iconSize} stroke={strokeWidth} />}
             onClick={async () => {
               let r = await actions.checkUpdate()
               if (r === false) {
-                toast({
-                  description: lang.is_latest_version_inform,
-                  status: 'info',
-                  duration: 3000,
-                  isClosable: true,
-                })
+                console.log(lang.is_latest_version_inform)
               } else if (r === null) {
-                toast({
-                  description: lang.check_update_failed,
-                  status: 'error',
-                  duration: 3000,
-                  isClosable: true,
-                })
+                console.error(lang.check_update_failed)
               }
             }}
           >
             {lang.check_update}
-          </MenuItem>
-          <MenuItem icon={<IconMessage2 size={16} />} onClick={() => actions.openUrl(feedback_url)}>
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconMessage2 size={iconSize} stroke={strokeWidth} />}
+            onClick={() => actions.openUrl(feedback_url)}
+          >
             {lang.feedback}
-          </MenuItem>
-          <MenuItem icon={<IconHome size={16} />} onClick={() => actions.openUrl(homepage_url)}>
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconHome size={iconSize} stroke={strokeWidth} />}
+            onClick={() => actions.openUrl(homepage_url)}
+          >
             {lang.homepage}
-          </MenuItem>
+          </Menu.Item>
 
-          <MenuDivider />
+          <Menu.Divider />
 
-          <MenuItem
-            icon={<IconUpload size={16} />}
+          <Menu.Item
+            leftSection={<IconUpload size={iconSize} stroke={strokeWidth} />}
             onClick={async () => {
               let r = await actions.exportData()
               if (r === null) {
                 return
               } else if (r === false) {
-                toast({
-                  status: 'error',
-                  description: lang.import_fail,
-                  isClosable: true,
-                })
+                console.error(lang.import_fail)
               } else {
-                toast({
-                  status: 'success',
-                  description: lang.export_done,
-                  isClosable: true,
-                })
+                console.log(lang.export_done)
               }
             }}
           >
             {lang.export}
-          </MenuItem>
-          <MenuItem
-            icon={<IconDownload size={16} />}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconDownload size={iconSize} stroke={strokeWidth} />}
             onClick={async () => {
               let r = await actions.importData()
               if (r === null) {
                 return
               } else if (r === true) {
-                toast({
-                  status: 'success',
-                  description: lang.import_done,
-                  isClosable: true,
-                })
+                console.log(lang.import_done)
                 await loadHostsData()
                 setCurrentHosts(null)
               } else {
@@ -137,43 +115,45 @@ const ConfigMenu = () => {
                   description += ` [${r}]`
                 }
 
-                toast({
-                  status: 'error',
-                  description,
-                  isClosable: true,
-                })
+                console.error(description)
               }
             }}
           >
             {lang.import}
-          </MenuItem>
-          <MenuItem
-            icon={<IconCloudDownload size={16} />}
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconCloudDownload size={iconSize} stroke={strokeWidth} />}
             onClick={async () => {
               setShowImportFromUrl(true)
             }}
           >
             {lang.import_from_url}
-          </MenuItem>
+          </Menu.Item>
 
-          <MenuDivider />
+          <Menu.Divider />
 
-          <MenuItem
-            icon={<IconAdjustments size={16} />}
+          <Menu.Item
+            leftSection={<IconAdjustments size={iconSize} stroke={strokeWidth} />}
             onClick={() => agent.broadcast(events.show_preferences)}
           >
             {lang.preferences}
-          </MenuItem>
-          <MenuItem icon={<IconCode size={16} />} onClick={() => actions.cmdToggleDevTools()}>
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconCode size={iconSize} stroke={strokeWidth} />}
+            onClick={() => actions.cmdToggleDevTools()}
+          >
             {lang.toggle_developer_tools}
-          </MenuItem>
+          </Menu.Item>
 
-          <MenuDivider />
+          <Menu.Divider />
 
-          <MenuItem icon={<IconLogout size={16} />} onClick={() => actions.quit()}>
+          <Menu.Item
+            leftSection={<IconLogout size={iconSize} stroke={strokeWidth} />}
+            onClick={() => actions.quit()}
+          >
             {lang.quit}
-          </MenuItem>
-        </MenuList>
+          </Menu.Item>
+        </Menu.Dropdown>
       </Menu>
       <ImportFromUrl is_show={show_import_from_url} setIsShow={setShowImportFromUrl} />
     </>

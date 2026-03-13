@@ -1,42 +1,33 @@
 /**
- * History
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
+import { IHostsHistoryObject } from '@common/data'
+import events from '@common/events'
 import {
   Box,
   Button,
   Center,
-  Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
   Flex,
-  HStack,
-  List,
-  ListItem,
-  Select,
-  Spacer,
-  Spinner,
+  Group,
+  Loader,
+  NativeSelect,
+  Text,
   Tooltip,
-  VStack,
-} from '@chakra-ui/react'
+} from '@mantine/core'
 import HostsViewer from '@renderer/components/HostsViewer'
+import SideDrawer from '@renderer/components/SideDrawer'
 import { actions } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { IHostsHistoryObject } from '@common/data'
-import events from '@common/events'
+import useConfigs from '@renderer/models/useConfigs'
+import useI18n from '@renderer/models/useI18n'
+import { IconFileTime, IconHelpCircle, IconHistory, IconX } from '@tabler/icons-react'
 import clsx from 'clsx'
 import dayjs from 'dayjs'
 import prettyBytes from 'pretty-bytes'
 import React, { useState } from 'react'
-import useConfigs from '@renderer/models/useConfigs'
-import useI18n from '@renderer/models/useI18n'
 import styles from './History.module.scss'
-import { IconFileTime, IconHelpCircle, IconHistory, IconX } from '@tabler/icons-react'
 
 interface IHistoryProps {
   list: IHostsHistoryObject[]
@@ -50,54 +41,77 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
 
   if (list.length === 0) {
     return (
-      <Center h="100%" opacity={0.5} fontSize="lg">
+      <Center h="100%" style={{ opacity: 0.5, fontSize: 'var(--mantine-font-size-lg)' }}>
         {lang.no_record}
       </Center>
     )
   }
 
   return (
-    <Flex h="100%" minHeight="300px">
-      <Box flex={1} mr={3} borderWidth="1px" borderRadius="md">
+    <Flex h="100%" mih={300}>
+      <Box
+        style={{
+          flex: 1,
+          marginRight: 12,
+          border: '1px solid var(--swh-border-color-0)',
+          borderRadius: 6,
+          overflow: 'hidden',
+        }}
+      >
         <HostsViewer content={selected_item ? selected_item.content : ''} />
       </Box>
-      <List w="200px" h="100%" overflow="auto" borderWidth="1px" borderRadius="md">
+      <Box
+        w={200}
+        h="100%"
+        style={{
+          overflow: 'auto',
+          border: '1px solid var(--swh-border-color-0)',
+          borderRadius: 6,
+        }}
+      >
         {list.map((item) => (
-          <ListItem
+          <Box
             key={item.id}
             onClick={() => setSelectedItem(item)}
-            px={3}
-            py={2}
-            userSelect="none"
+            px="12px"
+            py="8px"
+            style={{ userSelect: 'none' }}
             className={clsx(item.id === selected_item?.id && styles.selected)}
           >
-            <HStack>
+            <Group gap="8px" wrap="nowrap" align="flex-start">
               <Box>
                 <IconFileTime size={16} />
               </Box>
-              <VStack align="left" spacing={0}>
-                <Box>{dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}</Box>
-                <HStack lineHeight="14px" fontSize="9px" opacity={0.6}>
+              <Box style={{ minWidth: 0 }}>
+                <Text size="sm">{dayjs(item.add_time_ms).format('YYYY-MM-DD HH:mm:ss')}</Text>
+                <Group
+                  gap="8px"
+                  style={{
+                    lineHeight: '14px',
+                    fontSize: 9,
+                    opacity: 0.6,
+                  }}
+                >
                   <Box>{item.content.split('\n').length} lines</Box>
                   <Box>{prettyBytes(item.content.length)}</Box>
-                </HStack>
-              </VStack>
-            </HStack>
-          </ListItem>
+                </Group>
+              </Box>
+            </Group>
+          </Box>
         ))}
-      </List>
+      </Box>
     </Flex>
   )
 }
 
-const Loading = (): React.ReactElement => {
-  return (
-    <Center h="300px">
-      <Spinner speed="1s" emptyColor="gray.200" size="lg" mr={3} />
-      <Box>Loading...</Box>
-    </Center>
-  )
-}
+const Loading = () => (
+  <Center h={300}>
+    <Group gap="12px">
+      <Loader size="lg" />
+      <Text>Loading...</Text>
+    </Group>
+  </Center>
+)
 
 const History = () => {
   const { configs, updateConfigs } = useConfigs()
@@ -105,22 +119,20 @@ const History = () => {
   const [is_loading, setIsLoading] = useState(false)
   const [list, setList] = useState<IHostsHistoryObject[]>([])
   const [selected_item, setSelectedItem] = useState<IHostsHistoryObject>()
-  // const btn_close = useRef(null)
 
   const { lang } = useI18n()
 
   const loadData = async () => {
     setIsLoading(true)
-    let list = await actions.getHistoryList()
-    list = list.reverse()
-    setList(list)
+    let next_list = await actions.getHistoryList()
+    next_list = next_list.reverse()
+    setList(next_list)
     if (!selected_item) {
-      setSelectedItem(list[0])
+      setSelectedItem(next_list[0])
     }
-
     setIsLoading(false)
 
-    return list
+    return next_list
   }
 
   const onClose = () => {
@@ -146,7 +158,6 @@ const History = () => {
 
   const updateHistoryLimit = async (value: number) => {
     if (!value || value < 0) return
-
     await updateConfigs({ history_limit: value })
   }
 
@@ -164,77 +175,58 @@ const History = () => {
   }
 
   return (
-    <Drawer
-      size="lg"
-      placement="right"
-      isOpen={is_open}
+    <SideDrawer
+      opened={is_open}
       onClose={onClose}
-      // initialFocusRef={btn_close}
+      size="lg"
+      title={
+        <Group gap="8px">
+          <IconHistory size={16} />
+          <Box>{lang.system_hosts_history}</Box>
+        </Group>
+      }
+      footer={
+        <Flex align="center" gap="12px">
+          <Box>{lang.system_hosts_history_limit}</Box>
+          <NativeSelect
+            data={history_limit_values.map((v) => v.toString())}
+            value={String(configs?.history_limit ?? '')}
+            onChange={(e) => updateHistoryLimit(parseInt(e.target.value || '0'))}
+            w={100}
+          />
+          <Tooltip label={lang.system_hosts_history_help}>
+            <Box style={{ display: 'flex' }}>
+              <IconHelpCircle size={16} />
+            </Box>
+          </Tooltip>
+          <Box style={{ flex: 1 }} />
+          <Button
+            variant="outline"
+            color="red"
+            disabled={!selected_item}
+            onClick={() => selected_item && deleteItem(selected_item.id)}
+            leftSection={<IconX size={16} />}
+          >
+            {lang.delete}
+          </Button>
+          <Button onClick={onClose} variant="outline">
+            {lang.close}
+          </Button>
+        </Flex>
+      }
     >
-      <DrawerOverlay />
-      <DrawerContent>
-        {/*<DrawerCloseButton/>*/}
-        <DrawerHeader>
-          <HStack>
-            <Box mr={1}>
-              <IconHistory size={16} />
-            </Box>
-            <Box>{lang.system_hosts_history}</Box>
-          </HStack>
-        </DrawerHeader>
-        <DrawerBody>
-          {is_loading ? (
-            <Loading />
-          ) : (
-            <HistoryList
-              list={list}
-              selected_item={selected_item}
-              setSelectedItem={setSelectedItem}
-            />
-          )}
-        </DrawerBody>
-        <DrawerFooter>
-          <Flex width="100%" align="center">
-            <Box mr={3}>{lang.system_hosts_history_limit}</Box>
-            <Box>
-              <Select
-                value={configs?.history_limit}
-                onChange={(e) => updateHistoryLimit(parseInt(e.target.value))}
-              >
-                {history_limit_values.map((v) => (
-                  <option key={v} value={v}>
-                    {v}
-                  </option>
-                ))}
-              </Select>
-            </Box>
-            <Tooltip label={lang.system_hosts_history_help} aria-label="A tooltip">
-              <Box ml={3}>
-                <IconHelpCircle size={16} />
-              </Box>
-            </Tooltip>
-            <Spacer />
-            <Button
-              leftIcon={<IconX size={16} />}
-              variant="outline"
-              mr={3}
-              colorScheme="pink"
-              isDisabled={!selected_item}
-              onClick={() => selected_item && deleteItem(selected_item.id)}
-            >
-              {lang.delete}
-            </Button>
-            <Button
-              onClick={onClose}
-              // ref={btn_close}
-              variant="outline"
-            >
-              {lang.close}
-            </Button>
-          </Flex>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+      <Box style={{ height: '100%' }}>
+        {is_loading ? (
+          <Loading />
+        ) : (
+          <HistoryList
+            list={list}
+            selected_item={selected_item}
+            setSelectedItem={setSelectedItem}
+          />
+        )}
+      </Box>
+    </SideDrawer>
   )
 }
 

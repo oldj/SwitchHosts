@@ -11,6 +11,7 @@ import safePSWD from '@main/libs/safePSWD'
 import { IHostsWriteOptions } from '@main/types'
 import { IHostsHistoryObject } from '@common/data'
 import events from '@common/events'
+import { getLineEndingForPlatform, normalizeLineEndings, restoreLineEndings } from '@common/newlines'
 import { exec } from 'child_process'
 import * as fs from 'fs'
 import md5 from 'md5'
@@ -108,20 +109,23 @@ const writeWithSudo = (sys_hosts_path: string, content: string): Promise<IWriteR
 
 const write = async (content: string, options?: IHostsWriteOptions): Promise<IWriteResult> => {
   const sys_hosts_path = await getPathOfSystemHosts()
+  let old_content_raw = ''
+  try {
+    old_content_raw = await fs.promises.readFile(sys_hosts_path, 'utf-8')
+  } catch (e) {
+    console.error(e)
+  }
+  const lineEnding = getLineEndingForPlatform()
+  const diskContent = restoreLineEndings(content, lineEnding)
   const fn_md5 = await md5File(sys_hosts_path)
-  const content_md5 = md5(content)
+  const content_md5 = md5(diskContent)
 
   if (fn_md5 === content_md5) {
     // file not change
     return { success: true }
   }
 
-  let old_content: string = ''
-  try {
-    old_content = await fs.promises.readFile(sys_hosts_path, 'utf-8')
-  } catch (e) {
-    console.error(e)
-  }
+  const old_content = normalizeLineEndings(old_content_raw)
 
   let has_access = await checkAccess(sys_hosts_path)
   if (!has_access) {
@@ -131,7 +135,7 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
 
     let platform = process.platform
     if ((platform === 'darwin' || platform === 'linux') && sudo_pswd) {
-      let result = await writeWithSudo(sys_hosts_path, content)
+      let result = await writeWithSudo(sys_hosts_path, diskContent)
       if (result.success) {
         result.old_content = old_content
         result.new_content = content
@@ -147,11 +151,11 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
   }
 
   try {
-    await fs.promises.writeFile(sys_hosts_path, content, 'utf-8')
+    await fs.promises.writeFile(sys_hosts_path, diskContent, 'utf-8')
   } catch (e: any) {
     console.error(e)
     let code = 'fail'
-    if (e.code === 'EPERM' || e.message.include('operation not permitted')) {
+    if (e.code === 'EPERM' || e.message.includes('operation not permitted')) {
       code = 'no_access'
     }
 
@@ -167,7 +171,7 @@ const write = async (content: string, options?: IHostsWriteOptions): Promise<IWr
 
 const makeAppendContent = async (content: string): Promise<string> => {
   const sys_hosts_path = await getPathOfSystemHosts()
-  const old_content = await fs.promises.readFile(sys_hosts_path, 'utf-8')
+  const old_content = normalizeLineEndings(await fs.promises.readFile(sys_hosts_path, 'utf-8'))
 
   let index = old_content.indexOf(CONTENT_START)
   let new_content = index > -1 ? old_content.substring(0, index).trimEnd() : old_content
@@ -183,6 +187,7 @@ const setSystemHosts = async (
   content: string,
   options?: IHostsWriteOptions,
 ): Promise<IWriteResult> => {
+  content = normalizeLineEndings(content)
   let write_mode = await configGet('write_mode')
   console.log(`write_mode: ${write_mode}`)
   if (write_mode === 'append') {

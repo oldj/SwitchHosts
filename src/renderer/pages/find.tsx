@@ -3,28 +3,14 @@
  * @homepage: https://oldj.net
  */
 
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  Checkbox,
-  HStack,
-  IconButton,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Spacer,
-  Spinner,
-  useColorMode,
-  VStack,
-} from '@chakra-ui/react'
+import { HostsType } from '@common/data'
+import events from '@common/events'
+import { IFindItem, IFindPosition, IFindShowSourceParam } from '@common/types'
+import { ActionIcon, Box, Button, Checkbox, Group, Loader, Stack, TextInput } from '@mantine/core'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { HostsType } from '@common/data'
-import events from '@common/events'
-import { IFindItem, IFindPosition, IFindShowSourceParam } from '@common/types'
 import { useDebounce, useDebounceFn } from 'ahooks'
 import clsx from 'clsx'
 import lodash from 'lodash'
@@ -35,7 +21,6 @@ import {
   IoChevronDownOutline,
   IoSearch,
 } from 'react-icons/io5'
-import { FixedSizeList as List, ListChildComponentProps } from 'react-window'
 import scrollIntoView from 'smooth-scroll-into-view-if-needed'
 import useConfigs from '../models/useConfigs'
 import useI18n from '../models/useI18n'
@@ -50,10 +35,29 @@ interface IFindPositionShow extends IFindPosition {
   is_readonly?: boolean
 }
 
-const find = () => {
+const flushedInputStyles = {
+  input: {
+    borderTop: 0,
+    borderLeft: 0,
+    borderRight: 0,
+    borderRadius: 0,
+    borderBottom: '1px solid var(--swh-border-color-0)',
+    backgroundColor: 'transparent',
+    paddingLeft: 52,
+    paddingRight: 12,
+    '&:focus': {
+      borderBottomColor: 'var(--swh-primary-color)',
+    },
+  },
+  section: {
+    width: 52,
+    color: 'var(--swh-font-color-weak)',
+  },
+} as const
+
+const FindPage = () => {
   const { lang, i18n, setLocale } = useI18n()
   const { configs, loadConfigs } = useConfigs()
-  const { colorMode, setColorMode } = useColorMode()
   const [keyword, setKeyword] = useState('')
   const [replace_to, setReplaceTo] = useState('')
   const [is_regexp, setIsRegExp] = useState(false)
@@ -65,7 +69,6 @@ const find = () => {
   const [last_scroll_result_idx, setlastScrollResultIdx] = useState(-1)
   const debounced_keyword = useDebounce(keyword, { wait: 500 })
   const ipt_kw = useRef<HTMLInputElement>(null)
-  const ref_result_box = useRef<HTMLDivElement>(null)
 
   const init = async () => {
     if (!configs) return
@@ -81,14 +84,9 @@ const find = () => {
   useEffect(() => {
     if (!configs) return
     init().catch((e) => console.error(e))
-    console.log(configs.theme)
-    if (colorMode !== configs.theme) {
-      setColorMode(configs.theme)
-    }
   }, [configs])
 
   useEffect(() => {
-    console.log(lang.find_and_replace)
     document.title = lang.find_and_replace
   }, [lang])
 
@@ -105,12 +103,11 @@ const find = () => {
 
     window.addEventListener('focus', onFocus, false)
     return () => window.removeEventListener('focus', onFocus, false)
-  }, [ipt_kw])
+  }, [])
 
   useOnBroadcast(events.config_updated, loadConfigs)
 
   useOnBroadcast(events.close_find, () => {
-    console.log('on close find...')
     setFindResult([])
     setFindPositions([])
     setKeyword('')
@@ -143,9 +140,9 @@ const find = () => {
 
   const { run: doFind } = useDebounceFn(
     async (v: string) => {
-      console.log('find by:', v)
       if (!v) {
         setFindResult([])
+        setFindPositions([])
         return
       }
 
@@ -170,7 +167,6 @@ const find = () => {
   )
 
   const toShowSource = async (result_item: IFindPositionShow) => {
-    // console.log(result_item)
     await actions.cmdFocusMainWindow()
     agent.broadcast(
       events.show_source,
@@ -212,7 +208,7 @@ const find = () => {
     sp.replace = replace_to
 
     const content = splitters
-      .map((sp) => `${sp.before}${sp.replace ?? sp.match}${sp.after}`)
+      .map((splitter) => `${splitter.before}${splitter.replace ?? splitter.match}${splitter.after}`)
       .join('')
     await actions.setHostsContent(pos.item_id, content)
     agent.broadcast(events.hosts_refreshed_by_id, pos.item_id)
@@ -226,7 +222,9 @@ const find = () => {
     for (let item of find_result) {
       let { item_id, item_type, splitters } = item
       if (item_type !== 'local' || splitters.length === 0) continue
-      const content = splitters.map((sp) => `${sp.before}${replace_to}${sp.after}`).join('')
+      const content = splitters
+        .map((splitter) => `${splitter.before}${replace_to}${splitter.after}`)
+        .join('')
       await actions.setHostsContent(item_id, content)
       agent.broadcast(events.hosts_refreshed_by_id, item_id)
     }
@@ -243,10 +241,9 @@ const find = () => {
     }
   }
 
-  const ResultRow = (row_data: ListChildComponentProps) => {
-    const data = find_positions[row_data.index]
+  const ResultRow = ({ data, index }: { data: IFindPositionShow; index: number }) => {
     const el = useRef<HTMLDivElement>(null)
-    const is_selected = current_result_idx === row_data.index
+    const is_selected = current_result_idx === index
 
     useEffect(() => {
       if (el.current && is_selected && current_result_idx !== last_scroll_result_idx) {
@@ -256,21 +253,18 @@ const find = () => {
           scrollMode: 'if-needed',
         })
       }
-    }, [el, current_result_idx, last_scroll_result_idx])
+    }, [current_result_idx, is_selected, last_scroll_result_idx])
 
     return (
       <Box
-        style={row_data.style}
         className={clsx(
           styles.result_row,
           is_selected && styles.selected,
           data.is_disabled && styles.disabled,
           data.is_readonly && styles.readonly,
         )}
-        borderBottomWidth={1}
-        borderBottomColor={configs?.theme === 'dark' ? 'gray.600' : 'gray.200'}
         onClick={() => {
-          setCurrentResultIdx(row_data.index)
+          setCurrentResultIdx(index)
         }}
         onDoubleClick={() => toShowSource(data)}
         ref={el}
@@ -333,69 +327,54 @@ const find = () => {
     }
   }
 
+  const leftSection = (onClick: () => void) => (
+    <Group gap={0} wrap="nowrap" onClick={onClick} style={{ cursor: 'pointer' }}>
+      <IoSearch />
+      <IoChevronDownOutline style={{ fontSize: 10 }} />
+    </Group>
+  )
+
   return (
     <div className={styles.root}>
-      <VStack spacing={0} h="100%">
-        <InputGroup>
-          <InputLeftElement
-            // pointerEvents="none"
-            children={
-              <HStack spacing={0}>
-                <IoSearch />
-                <IoChevronDownOutline style={{ fontSize: 10 }} />
-              </HStack>
-            }
-            onClick={showKeywordHistory}
-          />
-          <Input
-            autoFocus={true}
-            placeholder="keywords"
-            variant="flushed"
-            value={keyword}
-            onChange={(e) => {
-              setKeyword(e.target.value)
-            }}
-            ref={ipt_kw}
-          />
-        </InputGroup>
+      <Stack gap={0} h="100%">
+        <TextInput
+          autoFocus={true}
+          placeholder="keywords"
+          value={keyword}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setKeyword(e.target.value)
+          }}
+          ref={ipt_kw}
+          leftSection={leftSection(showKeywordHistory)}
+          leftSectionPointerEvents="all"
+          styles={flushedInputStyles}
+        />
 
-        <InputGroup>
-          <InputLeftElement
-            // pointerEvents="none"
-            children={
-              <HStack spacing={0}>
-                <IoSearch />
-                <IoChevronDownOutline style={{ fontSize: 10 }} />
-              </HStack>
-            }
-            onClick={showReplaceHistory}
-          />
-          <Input
-            placeholder="replace to"
-            variant="flushed"
-            value={replace_to}
-            onChange={(e) => {
-              setReplaceTo(e.target.value)
-            }}
-          />
-        </InputGroup>
+        <TextInput
+          placeholder="replace to"
+          value={replace_to}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setReplaceTo(e.target.value)
+          }}
+          leftSection={leftSection(showReplaceHistory)}
+          leftSectionPointerEvents="all"
+          styles={flushedInputStyles}
+        />
 
-        <HStack
-          w="100%"
-          py={2}
-          px={4}
-          spacing={4}
-          // justifyContent="flex-start"
-        >
-          <Checkbox checked={is_regexp} onChange={(e) => setIsRegExp(e.target.checked)}>
-            {lang.regexp}
-          </Checkbox>
-          <Checkbox checked={is_ignore_case} onChange={(e) => setIsIgnoreCase(e.target.checked)}>
-            {lang.ignore_case}
-          </Checkbox>
-        </HStack>
+        <Group w="100%" py="8px" px="16px" gap="16px">
+          <Checkbox
+            checked={is_regexp}
+            onChange={(e) => setIsRegExp(e.target.checked)}
+            label={lang.regexp}
+          />
+          <Checkbox
+            checked={is_ignore_case}
+            onChange={(e) => setIsIgnoreCase(e.target.checked)}
+            label={lang.ignore_case}
+          />
+        </Group>
 
-        <Box w="100%" borderTopWidth={1}>
+        <Box w="100%" style={{ borderTop: '1px solid var(--swh-border-color-0)' }}>
           <div className={styles.result_row}>
             <div>{lang.match}</div>
             <div>{lang.title}</div>
@@ -405,29 +384,20 @@ const find = () => {
 
         <Box
           w="100%"
-          flex="1"
-          bgColor={configs?.theme === 'dark' ? 'gray.700' : 'gray.100'}
-          ref={ref_result_box}
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            backgroundColor: 'var(--swh-editor-read-only-bg)',
+          }}
         >
-          <List
-            width={'100%'}
-            height={ref_result_box.current ? ref_result_box.current.clientHeight : 0}
-            itemCount={find_positions.length}
-            itemSize={28}
-          >
-            {ResultRow}
-          </List>
+          {find_positions.map((item, idx) => (
+            <ResultRow key={`${item.item_id}-${idx}`} data={item} index={idx} />
+          ))}
         </Box>
 
-        <HStack
-          w="100%"
-          py={2}
-          px={4}
-          spacing={4}
-          // justifyContent="flex-end"
-        >
+        <Group w="100%" py="8px" px="16px" gap="16px">
           {is_searching ? (
-            <Spinner />
+            <Loader size="sm" />
           ) : (
             <span>
               {i18n.trans(find_positions.length > 1 ? 'items_found' : 'item_found', [
@@ -435,56 +405,57 @@ const find = () => {
               ])}
             </span>
           )}
-          <Spacer />
+          <Box style={{ flex: 1 }} />
           <Button
             size="sm"
             variant="outline"
-            isDisabled={is_searching || find_positions.length === 0}
+            disabled={is_searching || find_positions.length === 0}
             onClick={replaceAll}
           >
             {lang.replace_all}
           </Button>
           <Button
             size="sm"
-            variant="solid"
-            colorScheme="blue"
-            isDisabled={is_searching || find_positions.length === 0 || !can_replace}
+            variant="filled"
+            color="blue"
+            disabled={is_searching || find_positions.length === 0 || !can_replace}
             onClick={replaceOne}
           >
             {lang.replace}
           </Button>
 
-          <ButtonGroup
-            size="sm"
-            isAttached
-            variant="outline"
-            isDisabled={is_searching || find_positions.length === 0}
-          >
-            <IconButton
+          <Group gap={0}>
+            <ActionIcon
               aria-label="previous"
-              icon={<IoArrowBackOutline />}
+              variant="outline"
+              size="lg"
               onClick={() => {
                 let idx = current_result_idx - 1
                 if (idx < 0) idx = 0
                 setCurrentResultIdx(idx)
               }}
-              isDisabled={current_result_idx <= 0}
-            />
-            <IconButton
+              disabled={current_result_idx <= 0}
+            >
+              <IoArrowBackOutline />
+            </ActionIcon>
+            <ActionIcon
               aria-label="next"
-              icon={<IoArrowForwardOutline />}
+              variant="outline"
+              size="lg"
               onClick={() => {
                 let idx = current_result_idx + 1
                 if (idx > find_positions.length - 1) idx = find_positions.length - 1
                 setCurrentResultIdx(idx)
               }}
-              isDisabled={current_result_idx >= find_positions.length - 1}
-            />
-          </ButtonGroup>
-        </HStack>
-      </VStack>
+              disabled={current_result_idx >= find_positions.length - 1}
+            >
+              <IoArrowForwardOutline />
+            </ActionIcon>
+          </Group>
+        </Group>
+      </Stack>
     </div>
   )
 }
 
-export default find
+export default FindPage

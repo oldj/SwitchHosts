@@ -1,4 +1,4 @@
-@import "../../styles/common";
+@use "../../styles/common";
 
 .list {
   position: relative;
@@ -9,6 +9,6 @@
 
 :global(.platform-win32) {
   .list {
-    @include swh-scroll-y();
+    @include common.swh-scroll-y();
   }
 }

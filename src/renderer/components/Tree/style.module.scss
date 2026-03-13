@@ -44,12 +44,12 @@
   }
 
   @mixin indicator_circle {
-    content: "";
+    content: '';
     display: block;
     position: absolute;
     border: 2px solid $drop-indicator-color;
-    width: 4px;
-    height: 4px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     z-index: 1000;
   }
@@ -102,5 +102,5 @@
   position: absolute;
   z-index: 100000;
   top: -100000px;
-  left: -100000px
+  left: -100000px;
 }

@@ -26,6 +26,9 @@
       "@src/*": [
         "src/*"
       ],
+      "@/*": [
+        "src/*"
+      ],
       "@styles/*": [
         "src/renderer/styles/*"
       ],

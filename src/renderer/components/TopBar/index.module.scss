@@ -1,4 +1,4 @@
-@import "../../styles/common";
+@use '../../styles/common';
 
 .root {
   $w: 150px;
@@ -11,7 +11,7 @@
   padding: 0 $p;
   align-items: center;
   align-content: center;
-  -webkit-user-select: none;
+  user-select: none;
 
   .title {
     max-width: calc(100vw - ($w + $p) * 2);
@@ -23,33 +23,28 @@
 }
 
 .title_wrapper {
-  width: 100%;
-  height: 100%;
   display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
 
-  @include win-drag;
+  @include common.win-drag;
 }
 
-.left, .right {
-}
-
-.left {
-  left: 10px;
-}
-
-.right {
-  right: 10px;
+.hosts_icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 :global(.platform-darwin) {
   .root {
-    padding-left: 80px;
+    padding-left: 88px;
   }
 }
 
-
 .read_only {
-  color: var(--swh-font-color-weak);
+  // color: var(--swh-font-color-weak);
   background-color: var(--swh-top-bar-read-only-bg);
   border-radius: var(--swh-border-radius);
   font-size: 10px;

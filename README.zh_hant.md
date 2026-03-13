@@ -6,6 +6,7 @@
   </a>
 
 ### [Warp, the intelligent terminal for developers](https://go.warp.dev/SwitchHosts)
+
 [Available for MacOS, Linux, & Windows](https://go.warp.dev/SwitchHosts)<br>
 
 </div>
@@ -20,9 +21,7 @@
 
 項目主頁：[https://switchhosts.vercel.app](https://switchhosts.vercel.app)
 
-SwitchHosts 是一個管理 hosts 檔案的應用程式，基於 [Electron](http://electron.atom.io/)
-、[React](https://facebook.github.io/react/)、[Jotai](https://jotai.org/)
-、[Chakra UI](https://chakra-ui.com/)、[CodeMirror](http://codemirror.net/) 等技術開發。
+SwitchHosts 是一個管理 hosts 檔案的應用程式，基於 [Electron](http://electron.atom.io/)、[React](https://facebook.github.io/react/)、[Jotai](https://jotai.org/)、[Mantine](https://mantine.dev/) 等技術開發。
 
 ## 螢幕截圖
 
@@ -44,6 +43,7 @@ SwitchHosts 是一個管理 hosts 檔案的應用程式，基於 [Electron](http
 - [SwitchHosts Download Page (GitHub release)](https://github.com/oldj/SwitchHosts/releases)
 
 你也可以通過 [Chocolatey 包管理器](https://community.chocolatey.org/packages/switchhosts)安裝已經建置好的版本：
+
 ```powershell
 choco install switchhosts
 ```

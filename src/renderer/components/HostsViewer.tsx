@@ -1,11 +1,9 @@
 /**
- * HostsViewer
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
 import StatusBar from '@renderer/components/StatusBar'
-import React from 'react'
 import styles from './HostsViewer.module.scss'
 
 interface Props {

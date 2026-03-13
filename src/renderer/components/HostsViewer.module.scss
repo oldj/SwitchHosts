@@ -1,7 +1,7 @@
-@import "../styles/common";
+@use "../styles/common";
 
 .root {
-  @include code;
+  @include common.code;
   height: 100%;
 }
 

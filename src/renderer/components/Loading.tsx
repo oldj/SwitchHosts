@@ -1,12 +1,10 @@
 /**
- * Loading
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import React from 'react'
-import styles from './Loading.module.scss'
 import useI18n from '@renderer/models/useI18n'
+import styles from './Loading.module.scss'
 
 const Loading = () => {
   const { i18n } = useI18n()

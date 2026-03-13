@@ -3,16 +3,16 @@
  * @homepage: https://oldj.net
  */
 
+import { MantineProvider } from '@mantine/core'
+import '@mantine/core/styles.css'
 import PageWrapper from '@renderer/common/PageWrapper'
+import useConfigs from '@renderer/models/useConfigs'
 import IndexPage from '@renderer/pages'
 import FindPage from '@renderer/pages/find'
 import TrayPage from '@renderer/pages/tray'
-import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { createHashRouter, RouterProvider } from 'react-router-dom'
-import { ChakraProvider, ColorModeScript } from '@chakra-ui/react'
-import './styles/common.scss'
-import theme from './theme'
+import { createHashRouter, RouterProvider } from 'react-router'
+import './styles/global.scss'
 
 const router = createHashRouter([
   {
@@ -32,12 +32,17 @@ const router = createHashRouter([
 const container = document.getElementById('root')
 if (container == null) throw new Error('container is null')
 
+const AppRoot = () => {
+  const { configs } = useConfigs()
+
+  return (
+    <MantineProvider forceColorScheme={configs?.theme === 'dark' ? 'dark' : 'light'}>
+      <PageWrapper>
+        <RouterProvider router={router} />
+      </PageWrapper>
+    </MantineProvider>
+  )
+}
+
 const root = createRoot(container)
-root.render(
-  <ChakraProvider>
-    <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-    <PageWrapper>
-      <RouterProvider router={router} />
-    </PageWrapper>
-  </ChakraProvider>,
-)
+root.render(<AppRoot />)

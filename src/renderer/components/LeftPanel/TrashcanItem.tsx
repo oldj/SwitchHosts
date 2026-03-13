@@ -1,19 +1,17 @@
 /**
- * TrashcanItem
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
+import { ITrashcanListObject } from '@common/data'
 import ItemIcon from '@renderer/components/ItemIcon'
 import list_item_styles from '@renderer/components/List/ListItem.module.scss'
 import { actions } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
-import { ITrashcanListObject } from '@common/data'
+import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import clsx from 'clsx'
-import React from 'react'
 import styles from './TrashcanItem.module.scss'
-import useHostsData from '@renderer/models/useHostsData'
 
 interface Props {
   data: ITrashcanListObject

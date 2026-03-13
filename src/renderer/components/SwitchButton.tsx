@@ -1,11 +1,10 @@
 /**
- * SwitchButton
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
 import clsx from 'clsx'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import styles from './SwitchButton.module.scss'
 
 interface Props {

@@ -20,7 +20,7 @@
 
 Strona główna: [https://switchhosts.vercel.app](https://switchhosts.vercel.app)
 
-SwitchHosts to aplikacja do zarządzania plikiem hosts, zbudowana na bazie [Electron](http://electron.atom.io/), [React](https://facebook.github.io/react/), [Jotai](https://jotai.org/), [Chakra UI](https://chakra-ui.com/), [CodeMirror](http://codemirror.net/) i innych.
+SwitchHosts to aplikacja do zarządzania plikiem hosts, zbudowana na bazie [Electron](http://electron.atom.io/), [React](https://facebook.github.io/react/), [Jotai](https://jotai.org/), [Mantine](https://mantine.dev/) i innych.
 
 ## Zrzut ekranu
 

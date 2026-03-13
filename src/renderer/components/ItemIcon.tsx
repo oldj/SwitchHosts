@@ -1,10 +1,8 @@
 /**
- * ItemIcon
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import React from 'react'
 import {
   IconDeviceDesktop,
   IconFileText,
@@ -22,19 +20,24 @@ interface Props {
 const ItemIcon = (props: Props) => {
   const { type, is_collapsed } = props
 
+  const iconAttrs = {
+    size: 16,
+    stroke: 1.5,
+  }
+
   switch (type) {
     case 'folder':
-      return is_collapsed ? <IconFolder size={16} /> : <IconFolder size={16} />
+      return is_collapsed ? <IconFolder {...iconAttrs} /> : <IconFolder {...iconAttrs} />
     case 'remote':
-      return <IconWorld size={16} />
+      return <IconWorld {...iconAttrs} />
     case 'group':
-      return <IconStack2 size={16} />
+      return <IconStack2 {...iconAttrs} />
     case 'system':
-      return <IconDeviceDesktop size={16} />
+      return <IconDeviceDesktop {...iconAttrs} />
     case 'trashcan':
-      return <IconTrash size={16} />
+      return <IconTrash {...iconAttrs} />
     default:
-      return <IconFileText size={16} />
+      return <IconFileText {...iconAttrs} />
   }
 }
 

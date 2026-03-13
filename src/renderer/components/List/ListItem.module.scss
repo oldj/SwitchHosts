@@ -1,36 +1,21 @@
-@import "../../styles/common";
-
 .root {
   display: flex;
 
   &.selected:not(.is_tray):hover {
     .edit {
-      display: block;
+      display: flex;
     }
   }
 
   .edit {
-    z-index: 10;
-
-    //background: var(--swh-selected-bg);
-    padding: 0 2px;
     display: none;
-    cursor: pointer;
-
-    svg {
-      opacity: 0.5;
-      transition: 0.3s;
-    }
-
-    &:hover {
-      svg {
-        opacity: 1;
-      }
-    }
+    align-items: center;
   }
 }
 
 .title {
+  display: flex;
+  align-items: center;
   flex: 1 1 auto;
   position: relative;
   //padding-left: 10px;
@@ -60,8 +45,9 @@
 
 .icon {
   margin-right: 0.5em;
-  display: inline-block;
-  vertical-align: middle;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &.folder {
     cursor: pointer;

@@ -1,5 +1,4 @@
 /**
- * configs.ts
  * @author: oldj
  * @homepage: https://oldj.net
  */

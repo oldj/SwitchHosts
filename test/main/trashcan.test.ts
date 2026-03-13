@@ -4,9 +4,9 @@
  * @homepage: https://oldj.net
  */
 
-import assert = require('assert')
-import { clearData } from '@_t/_base'
-import { IHostsContentObject } from '@root/common/data'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { clearData } from '../_base'
+import type { IHostsContentObject } from '../../src/common/data'
 import {
   clearTrashcan,
   deleteItemFromTrashcan,
@@ -18,8 +18,8 @@ import {
   restoreItemFromTrashcan,
   setHostsContent,
   setList,
-} from '@root/main/actions'
-import { swhdb } from '@root/main/data'
+} from '../../src/main/actions'
+import { swhdb } from '../../src/main/data'
 
 describe('trashcan test', () => {
   beforeEach(async () => {
@@ -28,42 +28,43 @@ describe('trashcan test', () => {
 
   it('basic add and delete hosts', async () => {
     let { list, trashcan } = await getBasicData()
-    assert(list.length === 0)
-    assert(trashcan.length === 0)
+    expect(list).toHaveLength(0)
+    expect(trashcan).toHaveLength(0)
 
     await setList([ { id: '111' } ])
     list = await getList()
-    assert(list.length === 1)
-    assert((await getBasicData()).list.length === 1)
-    assert((await getTrashcanList()).length === 0)
+    expect(list).toHaveLength(1)
+    expect((await getBasicData()).list).toHaveLength(1)
+    expect(await getTrashcanList()).toHaveLength(0)
 
     await moveToTrashcan('111')
-    assert((await getList()).length === 0)
+    expect(await getList()).toHaveLength(0)
 
     let tlist = await getTrashcanList()
-    assert(tlist.length === 1)
-    assert(tlist[0].data.id === '111')
-    let ts = (new Date()).getTime()
-    assert(tlist[0].add_time_ms > ts - 1000 && tlist[0].add_time_ms <= ts)
+    expect(tlist).toHaveLength(1)
+    expect(tlist[0].data.id).toBe('111')
+    const ts = (new Date()).getTime()
+    expect(tlist[0].add_time_ms).toBeGreaterThan(ts - 1000)
+    expect(tlist[0].add_time_ms).toBeLessThanOrEqual(ts)
 
     await restoreItemFromTrashcan(tlist[0].data.id)
     list = await getList()
-    assert(list.length === 1)
-    assert(list[0].id === '111')
-    assert((await getTrashcanList()).length === 0)
+    expect(list).toHaveLength(1)
+    expect(list[0].id).toBe('111')
+    expect(await getTrashcanList()).toHaveLength(0)
 
     await setHostsContent('111', 'hosts_111')
-    assert((await getHostsContent('111')) === 'hosts_111')
+    expect(await getHostsContent('111')).toBe('hosts_111')
 
     await moveToTrashcan('111')
-    assert((await getList()).length === 0)
-    assert((await getTrashcanList()).length === 1)
-    assert((await getHostsContent('111')) === 'hosts_111')
+    expect(await getList()).toHaveLength(0)
+    expect(await getTrashcanList()).toHaveLength(1)
+    expect(await getHostsContent('111')).toBe('hosts_111')
 
     await deleteItemFromTrashcan('111')
-    assert((await getList()).length === 0)
-    assert((await getTrashcanList()).length === 0)
-    assert((await getHostsContent('111')) === '')
+    expect(await getList()).toHaveLength(0)
+    expect(await getTrashcanList()).toHaveLength(0)
+    expect(await getHostsContent('111')).toBe('')
   })
 
   it('folder test', async () => {
@@ -88,44 +89,42 @@ describe('trashcan test', () => {
     ])
 
     let list = await getList()
-    assert(list.length === 4)
+    expect(list).toHaveLength(4)
     let tlist = await getTrashcanList()
-    assert(tlist.length === 0)
+    expect(tlist).toHaveLength(0)
 
     await moveToTrashcan('2')
     list = await getList()
-    assert(list.length === 3)
+    expect(list).toHaveLength(3)
     tlist = await getTrashcanList()
-    assert(tlist.length === 1)
-    assert(tlist[0].data.id === '2')
-    assert(tlist[0].parent_id === null)
+    expect(tlist).toHaveLength(1)
+    expect(tlist[0].data.id).toBe('2')
+    expect(tlist[0].parent_id).toBeNull()
 
     await restoreItemFromTrashcan('2')
     list = await getList()
-    assert(list.length === 4)
-    assert(list[3].id === '2')
+    expect(list).toHaveLength(4)
+    expect(list[3].id).toBe('2')
 
     await moveToTrashcan('3.3.1')
     list = await getList()
-    assert(list.length === 4)
-    assert(list[1].id === '3')
-    assert(list[1].children && list[1].children[2].id === '3.3')
-    assert(list[1].children[2].children && list[1].children[2].children.length === 2)
-    assert(list[1].children[2].children[0].id === '3.3.2')
+    expect(list).toHaveLength(4)
+    expect(list[1].id).toBe('3')
+    expect(list[1].children?.[2].id).toBe('3.3')
+    expect(list[1].children?.[2].children).toHaveLength(2)
+    expect(list[1].children?.[2].children?.[0].id).toBe('3.3.2')
     tlist = await getTrashcanList()
-    assert(tlist.length === 1)
-    assert(tlist[0].data.id === '3.3.1')
-    assert(tlist[0].parent_id === '3.3')
+    expect(tlist).toHaveLength(1)
+    expect(tlist[0].data.id).toBe('3.3.1')
+    expect(tlist[0].parent_id).toBe('3.3')
 
     await restoreItemFromTrashcan('3.3.1')
     list = await getList()
-    // assert(list.length === 4)
-    // assert(list[4].id === '3.3.1')
-    assert(list[1].children && list[1].children[2].id === '3.3')
-    assert(list[1].children[2].children && list[1].children[2].children.length === 3)
-    assert(list[1].children[2].children[0].id === '3.3.2')
-    assert(list[1].children[2].children[1].id === '3.3.3')
-    assert(list[1].children[2].children[2].id === '3.3.1')
+    expect(list[1].children?.[2].id).toBe('3.3')
+    expect(list[1].children?.[2].children).toHaveLength(3)
+    expect(list[1].children?.[2].children?.[0].id).toBe('3.3.2')
+    expect(list[1].children?.[2].children?.[1].id).toBe('3.3.3')
+    expect(list[1].children?.[2].children?.[2].id).toBe('3.3.1')
   })
 
   it('folder delete test', async () => {
@@ -150,7 +149,7 @@ describe('trashcan test', () => {
     ])
 
     let hs: IHostsContentObject[] = await swhdb.collection.hosts.all()
-    assert(hs.length === 0)
+    expect(hs).toHaveLength(0)
 
     await setHostsContent('1', '# 1')
     await setHostsContent('2', '# 2')
@@ -164,28 +163,28 @@ describe('trashcan test', () => {
     await setHostsContent('3.4', '# 3.4')
     await setHostsContent('4', '# 4')
 
-    let list = await getList()
-    assert(list.length === 4)
-    let tlist = await getTrashcanList()
-    assert(tlist.length === 0)
+    const list = await getList()
+    expect(list).toHaveLength(4)
+    const tlist = await getTrashcanList()
+    expect(tlist).toHaveLength(0)
 
     hs = await swhdb.collection.hosts.all()
-    assert(hs.length === 11)
-    assert(hs[0].content === '# 1')
+    expect(hs).toHaveLength(11)
+    expect(hs[0].content).toBe('# 1')
 
     await moveToTrashcan('3.2')
     hs = await swhdb.collection.hosts.all()
-    assert(hs.length === 11)
+    expect(hs).toHaveLength(11)
     await deleteItemFromTrashcan('3.2')
     hs = await swhdb.collection.hosts.all()
-    assert(hs.length === 10)
+    expect(hs).toHaveLength(10)
 
     await moveToTrashcan('3')
     hs = await swhdb.collection.hosts.all()
-    assert(hs.length === 10)
+    expect(hs).toHaveLength(10)
     await deleteItemFromTrashcan('3')
     hs = await swhdb.collection.hosts.all()
-    assert(hs.length === 3)
+    expect(hs).toHaveLength(3)
   })
 
   it('clear test', async () => {
@@ -210,7 +209,7 @@ describe('trashcan test', () => {
     ])
 
     let hs: IHostsContentObject[] = await swhdb.collection.hosts.all()
-    assert(hs.length === 0)
+    expect(hs).toHaveLength(0)
 
     await setHostsContent('1', '# 1')
     await setHostsContent('2', '# 2')
@@ -224,13 +223,13 @@ describe('trashcan test', () => {
     await setHostsContent('3.4', '# 3.4')
     await setHostsContent('4', '# 4')
 
-    let list = await getList()
-    assert(list.length === 4)
-    let tlist = await getTrashcanList()
-    assert(tlist.length === 0)
+    const list = await getList()
+    expect(list).toHaveLength(4)
+    const tlist = await getTrashcanList()
+    expect(tlist).toHaveLength(0)
 
     hs = await swhdb.collection.hosts.all()
-    assert(hs.length === 11)
+    expect(hs).toHaveLength(11)
 
     await moveToTrashcan('1')
     await moveToTrashcan('2')
@@ -238,12 +237,12 @@ describe('trashcan test', () => {
     await moveToTrashcan('4')
 
     hs = await swhdb.collection.hosts.all()
-    assert(hs.length === 11)
+    expect(hs).toHaveLength(11)
 
     await clearTrashcan()
     hs = await swhdb.collection.hosts.all()
-    assert(hs.length === 0)
-    assert((await getList()).length === 0)
-    assert((await getTrashcanList()).length === 0)
+    expect(hs).toHaveLength(0)
+    expect(await getList()).toHaveLength(0)
+    expect(await getTrashcanList()).toHaveLength(0)
   })
 })

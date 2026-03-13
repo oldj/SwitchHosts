@@ -1,14 +1,12 @@
 /**
- * StatusBar
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
-import { Box, Flex, HStack, Spacer } from '@chakra-ui/react'
-import React from 'react'
+import { Box, Flex, Group } from '@mantine/core'
 import prettyBytes from 'pretty-bytes'
-import styles from './StatusBar.module.scss'
 import useI18n from '../models/useI18n'
+import styles from './StatusBar.module.scss'
 
 interface Props {
   line_count: number
@@ -21,15 +19,18 @@ const StatusBar = (props: Props) => {
   const { i18n } = useI18n()
 
   return (
-    <Flex className={styles.root} px="10px" userSelect="none">
-      <HStack spacing={4}>
+    <Flex
+      className={styles.root}
+      style={{ paddingLeft: '10px', paddingRight: '10px', userSelect: 'none' }}
+    >
+      <Group gap="16px">
         <Box>
           {line_count} {line_count > 1 ? i18n.lang.lines : i18n.lang.line}
         </Box>
         <Box>{prettyBytes(bytes)}</Box>
         <Box>{read_only ? i18n.lang.read_only : ''}</Box>
-      </HStack>
-      <Spacer />
+      </Group>
+      <Box style={{ flex: 1 }} />
       <Box>{/* right */}</Box>
     </Flex>
   )

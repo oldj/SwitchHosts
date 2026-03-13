@@ -1,4 +1,4 @@
-import { Button, useToast } from '@chakra-ui/react'
+import events from '@common/events'
 import About from '@renderer/components/About'
 import EditHostsInfo from '@renderer/components/EditHostsInfo'
 import History from '@renderer/components/History'
@@ -6,30 +6,28 @@ import LeftPanel from '@renderer/components/LeftPanel'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
 import PreferencePanel from '@renderer/components/Pref'
+import SetWriteMode from '@renderer/components/SetWriteMode'
 import SudoPasswordInput from '@renderer/components/SudoPasswordInput'
+import UpdateDialog from '@renderer/components/UpdateDialog'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
-import { download_url } from '@common/constants'
-import events from '@common/events'
-import clsx from 'clsx'
-import React, { useEffect, useState } from 'react'
-import TopBar from '../components/TopBar'
-import styles from './index.module.scss'
-import SetWriteMode from '@renderer/components/SetWriteMode'
-import useI18n from '../models/useI18n'
 import useConfigs from '@renderer/models/useConfigs'
+import clsx from 'clsx'
+import { useEffect, useState } from 'react'
+import TopBar from '../components/TopBar'
 import useHostsData from '../models/useHostsData'
+import useI18n from '../models/useI18n'
+import styles from './index.module.scss'
 
 export default () => {
   const [loading, setLoading] = useState(true)
-  const { i18n, lang, setLocale } = useI18n()
+  const { lang, setLocale } = useI18n()
   const { loadHostsData } = useHostsData()
   const { configs } = useConfigs()
   const [left_width, setLeftWidth] = useState(0)
   const [left_show, setLeftShow] = useState(true)
   const [use_system_window_frame, setSystemFrame] = useState(false)
   const [show_migration, setShowMigration] = useState(false)
-  const toast = useToast()
 
   const migrate = async (do_migrate: boolean) => {
     if (do_migrate) {
@@ -77,33 +75,6 @@ export default () => {
 
   useOnBroadcast(events.toggle_left_panel, (show: boolean) => setLeftShow(show))
 
-  useOnBroadcast(
-    events.new_version,
-    (new_version: string) => {
-      toast({
-        title: lang.new_version_found,
-        description: (
-          <div className={styles.new_version}>
-            <span>{i18n.trans('latest_version_desc', [new_version])}</span>
-            <Button
-              ml="10px"
-              variant="link"
-              onClick={() => {
-                actions.openUrl(download_url)
-              }}
-            >
-              {lang.download}
-            </Button>
-          </div>
-        ),
-        status: 'info',
-        duration: 10000,
-        isClosable: true,
-      })
-    },
-    [lang, i18n],
-  )
-
   if (loading) {
     if (show_migration) {
       setTimeout(() => {
@@ -141,6 +112,7 @@ export default () => {
       <SetWriteMode />
       <PreferencePanel />
       <History />
+      <UpdateDialog />
       <About />
     </div>
   )

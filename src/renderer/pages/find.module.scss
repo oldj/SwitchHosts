@@ -1,4 +1,4 @@
-@import "../styles/common";
+@use "../styles/common";
 
 .root {
   width: 100vw;
@@ -32,8 +32,8 @@
 .result_content {
   //display: flex;
 
-  @include code;
-  @include ell;
+  @include common.code;
+  @include common.ell;
 
   span {
     //display: inline-block;
@@ -53,7 +53,7 @@
   span {
     display: inline-block;
     margin-left: 4px;
-    @include ell;
+    @include common.ell;
   }
 }
 
