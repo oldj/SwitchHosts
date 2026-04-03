@@ -64,7 +64,7 @@
     "concurrently": "9.2.1",
     "cross-env": "10.1.0",
     "dotenv": "17.3.1",
-    "electron": "39.5.1",
+    "electron": "39.8.3",
     "electron-builder": "26.8.1",
     "execa": "9.6.1",
     "fs-extra": "11.3.3",
