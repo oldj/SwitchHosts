@@ -39,7 +39,7 @@
     "mkdirp": "3.0.1",
     "potdb": "2.6.6",
     "tslib": "2.8.1",
-    "uuid": "13.0.0"
+    "uuid": "14.0.0"
   },
   "devDependencies": {
     "@electron/notarize": "^3.1.1",
