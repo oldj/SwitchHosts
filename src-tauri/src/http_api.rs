@@ -88,9 +88,22 @@ pub fn start(app: AppHandle<Wry>, only_local: bool) -> Result<(), String> {
     };
     let addr = SocketAddr::new(ip, HTTP_API_PORT);
 
+    // Bind synchronously so port-conflict errors surface to the caller
+    // (and through it the renderer / config-update flow). Doing the
+    // bind inside the spawned task would only log the failure while
+    // `start()` returned `Ok`, leaving the preferences pane reporting
+    // "HTTP API on" against a dead listener and blocking later
+    // same-`only_local` calls via the early-return above. The std
+    // listener is handed off to tokio inside `serve()`.
+    let std_listener =
+        std::net::TcpListener::bind(addr).map_err(|e| format!("bind {addr}: {e}"))?;
+    std_listener
+        .set_nonblocking(true)
+        .map_err(|e| format!("set_nonblocking {addr}: {e}"))?;
+
     let app_for_task = app.clone();
     let task = tauri::async_runtime::spawn(async move {
-        if let Err(e) = serve(app_for_task, addr).await {
+        if let Err(e) = serve(app_for_task, std_listener).await {
             log::error!("serve error: {e}");
         }
     });
@@ -111,7 +124,7 @@ pub fn stop() {
 
 // ---- routes ----------------------------------------------------------------
 
-async fn serve(app: AppHandle<Wry>, addr: SocketAddr) -> Result<(), String> {
+async fn serve(app: AppHandle<Wry>, std_listener: std::net::TcpListener) -> Result<(), String> {
     let router = Router::new()
         .route("/", get(home))
         .route("/remote-test", get(remote_test))
@@ -119,9 +132,8 @@ async fn serve(app: AppHandle<Wry>, addr: SocketAddr) -> Result<(), String> {
         .route("/api/toggle", get(api_toggle))
         .with_state(AppRouterState { app });
 
-    let listener = tokio::net::TcpListener::bind(addr)
-        .await
-        .map_err(|e| format!("bind {addr}: {e}"))?;
+    let listener = tokio::net::TcpListener::from_std(std_listener)
+        .map_err(|e| format!("tokio listener from_std: {e}"))?;
     axum::serve(listener, router)
         .await
         .map_err(|e| e.to_string())

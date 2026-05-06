@@ -27,6 +27,7 @@ src/renderer/dist
 
 tmp
 test/tmp
+plan.md
 
 .env
 *.provisionprofile

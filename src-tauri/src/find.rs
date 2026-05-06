@@ -105,11 +105,11 @@ pub fn find_in_manifest(
                 return;
             }
         };
-        let positions = find_positions_in_content(&content, &regex);
+        let (positions, byte_spans) = find_positions_in_content(&content, &regex);
         if positions.is_empty() {
             return;
         }
-        let splitters = split_content(&content, &positions);
+        let splitters = split_content(&content, &byte_spans);
         out.push(FindItem {
             item_id: id.to_string(),
             item_title: title.to_string(),
@@ -140,33 +140,34 @@ fn build_regex(keyword: &str, options: &FindOptions) -> Result<Regex, String> {
 }
 
 /// Mirror of `src/main/actions/find/findPositionsInContent.ts`. For
-/// each match in `content` we record byte offsets, line numbers, and
-/// the surrounding line slices the renderer needs to render the
-/// result list and jump back to the source view.
-fn find_positions_in_content(content: &str, regex: &Regex) -> Vec<FindPosition> {
-    let mut out = Vec::new();
+/// each match in `content` we record positions (in UTF-16 code units,
+/// matching CodeMirror / JS string indexing), line numbers, and the
+/// surrounding line slices the renderer needs to render the result
+/// list and jump back to the source view.
+///
+/// Returns `(positions, byte_spans)`. `byte_spans` carries the raw
+/// `(start, end)` byte offsets per match so `split_content` can slice
+/// the original `content` correctly — the public `FindPosition.start /
+/// end` fields are UTF-16 offsets and would mis-slice on non-ASCII.
+fn find_positions_in_content(
+    content: &str,
+    regex: &Regex,
+) -> (Vec<FindPosition>, Vec<(usize, usize)>) {
+    let mut positions = Vec::new();
+    let mut byte_spans = Vec::new();
     for mat in regex.find_iter(content) {
         let start = mat.start();
         let end = mat.end();
         let match_text = mat.as_str().to_string();
 
-        // line + line_pos at the match start
         let prefix = &content[..start];
         let line = prefix.matches('\n').count() + 1;
         let last_nl_before = prefix.rfind('\n').map(|i| i + 1).unwrap_or(0);
-        let line_pos = start - last_nl_before;
         let before = content[last_nl_before..start].to_string();
 
-        // line + line_pos at the match end (handle multi-line matches)
         let match_lines = match_text.split('\n').count();
         let end_line = line + match_lines - 1;
-        let end_line_pos = if match_lines > 1 {
-            match_text.rsplit('\n').next().unwrap_or("").len()
-        } else {
-            line_pos + match_text.len()
-        };
 
-        // `after`: rest of the line that contains the match end
         let after_start = end;
         let next_nl = content[after_start..]
             .find('\n')
@@ -174,9 +175,29 @@ fn find_positions_in_content(content: &str, regex: &Regex) -> Vec<FindPosition> 
             .unwrap_or(content.len());
         let after = content[after_start..next_nl].to_string();
 
-        out.push(FindPosition {
-            start,
-            end,
+        // CodeMirror counts offsets in UTF-16 code units (== JS string
+        // length); the regex crate returns UTF-8 byte offsets. Convert
+        // every outgoing offset / position so non-ASCII content (CJK,
+        // emoji) doesn't skew the find-window jump or the result list's
+        // column display.
+        let start_u16 = content[..start].encode_utf16().count();
+        let match_u16 = match_text.encode_utf16().count();
+        let end_u16 = start_u16 + match_u16;
+        let line_pos = before.encode_utf16().count();
+        let end_line_pos = if match_lines > 1 {
+            match_text
+                .rsplit('\n')
+                .next()
+                .unwrap_or("")
+                .encode_utf16()
+                .count()
+        } else {
+            line_pos + match_u16
+        };
+
+        positions.push(FindPosition {
+            start: start_u16,
+            end: end_u16,
             line,
             line_pos,
             end_line,
@@ -185,28 +206,32 @@ fn find_positions_in_content(content: &str, regex: &Regex) -> Vec<FindPosition> 
             match_text,
             after,
         });
+        byte_spans.push((start, end));
     }
-    out
+    (positions, byte_spans)
 }
 
 /// Mirror of `src/main/actions/find/splitContent.ts`. Slices the
 /// content into `[before-of-match-1] [match-1] [before-of-match-2]
 /// [match-2] ... [last-after]` so the renderer can render the
-/// result with the matched substrings highlighted.
-fn split_content(content: &str, positions: &[FindPosition]) -> Vec<FindSplitter> {
-    let mut splitters = Vec::with_capacity(positions.len());
+/// result with the matched substrings highlighted. `byte_spans` are
+/// raw byte offsets into `content` (not the UTF-16 offsets carried in
+/// `FindPosition`) so the slicing stays valid for non-ASCII text.
+fn split_content(content: &str, byte_spans: &[(usize, usize)]) -> Vec<FindSplitter> {
+    let mut splitters = Vec::with_capacity(byte_spans.len());
     let mut last_end = 0;
-    for (idx, pos) in positions.iter().enumerate() {
-        let before = content[last_end..pos.start].to_string();
-        last_end = pos.start + pos.match_text.len();
-        let after = if idx == positions.len() - 1 {
+    for (idx, &(start, end)) in byte_spans.iter().enumerate() {
+        let before = content[last_end..start].to_string();
+        let match_text = content[start..end].to_string();
+        last_end = end;
+        let after = if idx == byte_spans.len() - 1 {
             content[last_end..].to_string()
         } else {
             String::new()
         };
         splitters.push(FindSplitter {
             before,
-            match_text: pos.match_text.clone(),
+            match_text,
             after,
         });
     }
@@ -378,4 +403,57 @@ fn create_find_window<R: Runtime>(
     });
 
     Ok(window)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn re(pattern: &str) -> Regex {
+        Regex::new(pattern).unwrap()
+    }
+
+    #[test]
+    fn positions_are_utf16_for_non_ascii_prefix() {
+        // "前缀" is 6 bytes / 2 UTF-16 units; "😀" is 4 bytes / 2 UTF-16
+        // units (surrogate pair). The byte offset of "match" is 10 but
+        // CodeMirror sees it at UTF-16 index 4.
+        let content = "前缀😀match";
+        let (positions, spans) = find_positions_in_content(content, &re("match"));
+        assert_eq!(positions.len(), 1);
+        let p = &positions[0];
+        assert_eq!(p.start, 4);
+        assert_eq!(p.end, 9);
+        assert_eq!(p.line_pos, 4);
+        assert_eq!(p.end_line_pos, 9);
+        assert_eq!(p.match_text, "match");
+        assert_eq!(spans, vec![(10, 15)]);
+    }
+
+    #[test]
+    fn line_pos_resets_on_each_line() {
+        let content = "abc\n中文 abc";
+        let (positions, _) = find_positions_in_content(content, &re("abc"));
+        assert_eq!(positions.len(), 2);
+        assert_eq!(positions[0].line, 1);
+        assert_eq!(positions[0].line_pos, 0);
+        assert_eq!(positions[1].line, 2);
+        // "中文 " is 3 UTF-16 units before the second "abc"
+        assert_eq!(positions[1].line_pos, 3);
+    }
+
+    #[test]
+    fn split_content_round_trips_with_byte_spans() {
+        // The splitter stream concatenated back must equal the source,
+        // proving byte-span slicing stayed correct after the UTF-16
+        // refactor.
+        let content = "前 abc 缀 abc 尾";
+        let (_, spans) = find_positions_in_content(content, &re("abc"));
+        let splitters = split_content(content, &spans);
+        let joined: String = splitters
+            .iter()
+            .map(|s| format!("{}{}{}", s.before, s.match_text, s.after))
+            .collect();
+        assert_eq!(joined, content);
+    }
 }

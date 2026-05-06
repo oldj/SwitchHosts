@@ -177,13 +177,13 @@ pub fn run() {
             }
 
             // The tray window (P2.B.2) and a few existing dialogs
-            // (SetWriteMode, SudoPasswordInput) all broadcast
-            // `events.active_main_window` when they want the main
-            // window to come forward. The Electron build had a
-            // matching `message.on('active_main_window', onActive)`
-            // handler in `src/main/main.ts`; we mirror it via the
-            // global event bus so the renderer's existing call sites
-            // keep working unchanged.
+            // (e.g. SetWriteMode) broadcast `events.active_main_window`
+            // when they want the main window to come forward. The
+            // Electron build had a matching
+            // `message.on('active_main_window', onActive)` handler in
+            // `src/main/main.ts`; we mirror it via the global event
+            // bus so the renderer's existing call sites keep working
+            // unchanged.
             let active_main_app = app_handle.clone();
             app.listen("active_main_window", move |_event| {
                 lifecycle::focus_main_on_second_instance(
