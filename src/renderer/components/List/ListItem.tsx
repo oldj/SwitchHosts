@@ -38,6 +38,7 @@ const ListItem = (props: Props) => {
   const refToastRefresh = useRef<string | null>(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror prop into local optimistic state
     setIsOn(data.on)
   }, [data])
 

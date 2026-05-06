@@ -38,7 +38,7 @@ const Transfer = (props: Props) => {
   const [leftSelectedKeys, setLeftSelectedKeys] = useState<IdType[]>([])
   const [rightSelectedKeys, setRightSelectedKeys] = useState<IdType[]>([])
 
-  const List = (listProps: IListProps) => {
+  const renderList = (listProps: IListProps) => {
     const { data, selectedKeys, setSelectedKeys } = listProps
 
     const toggleSelect = (id: IdType) => {
@@ -108,11 +108,11 @@ const Transfer = (props: Props) => {
               )
             </span>
           </Box>
-          <List
-            data={dataSource.filter((i) => !rightKeys.includes(i.id))}
-            selectedKeys={leftSelectedKeys}
-            setSelectedKeys={setLeftSelectedKeys}
-          />
+          {renderList({
+            data: dataSource.filter((i) => !rightKeys.includes(i.id)),
+            selectedKeys: leftSelectedKeys,
+            setSelectedKeys: setLeftSelectedKeys,
+          })}
         </Box>
         <Center h="100%">
           <Stack gap="8px">
@@ -152,13 +152,13 @@ const Transfer = (props: Props) => {
               )
             </span>
           </Box>
-          <List
-            data={
-              rightKeys.map((id) => dataSource.find((i) => i.id === id)) as ITransferSourceObject[]
-            }
-            selectedKeys={rightSelectedKeys}
-            setSelectedKeys={setRightSelectedKeys}
-          />
+          {renderList({
+            data: rightKeys.map(
+              (id) => dataSource.find((i) => i.id === id),
+            ) as ITransferSourceObject[],
+            selectedKeys: rightSelectedKeys,
+            setSelectedKeys: setRightSelectedKeys,
+          })}
         </Box>
       </Box>
     </div>

@@ -82,6 +82,7 @@ const Node = (props: INodeProps) => {
   // under the cursor when drag began doesn't stay highlighted, and
   // any state accumulated mid-drag is dropped on dragend.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear stuck hover at every drag boundary (WebKit bug)
     setIsHovered(false)
   }, [isDragging])
 
@@ -142,7 +143,7 @@ const Node = (props: INodeProps) => {
     const ne = e.nativeEvent
     const h = elTarget.offsetHeight
     const y = ne.offsetY
-    let where: DropWhereType | null = null
+    let where: DropWhereType
     const h2 = h >> 1
     const h4 = h >> 2
     const hThreshold = attr.can_drop_in === false ? h2 : h4

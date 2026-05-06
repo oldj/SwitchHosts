@@ -65,6 +65,7 @@ const MainPage = () => {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- apply config side effects (locale, layout, theme) to local state and DOM
     onConfigsUpdate().catch((e) => console.error(e))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configs])

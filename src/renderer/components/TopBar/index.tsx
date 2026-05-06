@@ -46,6 +46,7 @@ const TopBar = (props: IProps) => {
   const showWindowControls = agent.platform !== 'darwin'
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror prop into local optimistic state; also set by useOnBroadcast
     setIsOn(!!currentHosts?.on)
   }, [currentHosts])
 

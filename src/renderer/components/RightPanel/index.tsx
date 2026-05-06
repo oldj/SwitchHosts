@@ -78,6 +78,7 @@ const RightPanel = () => {
   }
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- fetch rule count or reset when current hosts changes */
     if (!hosts) {
       refLoadingId.current = null
       setRuleCount(null)
@@ -88,6 +89,7 @@ const RightPanel = () => {
     } else {
       setRuleCount(null)
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hosts?.id, hosts?.type])
 

@@ -34,6 +34,7 @@ const List = (props: Props) => {
   const [showList, setShowList] = useState<IHostsListObject[]>([])
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- showList also mutated by drag onChange; keep as state synced from hostsData */
     if (!isTray) {
       setShowList([
         {
@@ -46,6 +47,7 @@ const List = (props: Props) => {
     } else {
       setShowList([...hostsData.list])
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hostsData])
 
@@ -53,6 +55,7 @@ const List = (props: Props) => {
     if (isTray || !currentHosts) return
     if (!hostsData.trashcan.find((item) => item.data.id === currentHosts.id)) return
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear selection when current item moves to trashcan
     setSelectedIds([])
   }, [currentHosts, hostsData.trashcan, isTray])
 

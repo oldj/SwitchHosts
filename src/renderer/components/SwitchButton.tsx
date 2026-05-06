@@ -29,8 +29,10 @@ const SwitchButton = (props: Props) => {
   }
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- mirror props into local state; on is also mutated by onClick for optimistic UI */
     setIsOn(on)
     setIsDisabled(disabled)
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [on, disabled])
 
   return (
