@@ -144,6 +144,7 @@ const lang: LanguageDict = {
   source_code: '源码',
   success: '操作成功！',
   sudo_prompt_title: '请输入你的登录密码（sudo 密码）',
+  system: '系统',
   system_hosts: '系统 Hosts',
   system_hosts_history: '系统 Hosts 历史版本',
   system_hosts_history_delete_confirm: '确实要删除该项记录吗？',

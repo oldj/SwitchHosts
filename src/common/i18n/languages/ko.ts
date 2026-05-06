@@ -149,6 +149,7 @@ export default {
   source_code: '소스코드',
   success: '성공!',
   sudo_prompt_title: 'sudo password 입력',
+  system: '시스템',
   system_hosts: '시스템 호스트',
   system_hosts_history: '시스템 호스트의 이력버전',
   system_hosts_history_delete_confirm:

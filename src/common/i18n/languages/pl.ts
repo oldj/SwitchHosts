@@ -142,6 +142,7 @@ export default {
   source_code: 'Kod źródłowy',
   success: 'Sukces!',
   sudo_prompt_title: 'Wpisz swoje hasło sudo',
+  system: 'System',
   system_hosts: 'System Hosts',
   system_hosts_history: 'Historyczne wersje System Hosts',
   system_hosts_history_delete_confirm: 'Czy na pewno chcesz usunąć ten element?',

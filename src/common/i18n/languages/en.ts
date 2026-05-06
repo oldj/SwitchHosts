@@ -150,6 +150,7 @@ export default {
   source_code: 'Souce code',
   success: 'Success!',
   sudo_prompt_title: 'Input your sudo password',
+  system: 'System',
   system_hosts: 'System Hosts',
   system_hosts_history: 'History versions of the System Hosts',
   system_hosts_history_delete_confirm:

@@ -149,6 +149,7 @@ const lang: LanguageDict = {
   source_code: 'ソースコード',
   success: '成功',
   sudo_prompt_title: '管理者パスワードを入力してください',
+  system: 'システム',
   system_hosts: 'システムhosts',
   system_hosts_history: 'システムhostsのバージョン履歴',
   system_hosts_history_delete_confirm: 'この履歴を削除してもよろしいですか？',

@@ -150,6 +150,7 @@ const lang: LanguageDict = {
   source_code: 'Quellcode',
   success: 'Erfolg!',
   sudo_prompt_title: 'Geben Sie Ihr sudo-Passwort ein',
+  system: 'System',
   system_hosts: 'System-Hosts',
   system_hosts_history: 'Historische Versionen der System-Hosts',
   system_hosts_history_delete_confirm: 'Sind Sie sicher, dass Sie dieses Element löschen wollen?',
