@@ -4,7 +4,7 @@
   position: relative;
   height: 100vh;
   background: var(--swh-window-bg);
-  border-radius: 20px;
+  border-radius: 12px;
   overflow: hidden;
   padding: 0;
 }
@@ -36,7 +36,6 @@
   bottom: 30px;
   left: 0;
   right: 0;
-  overflow: auto;
 }
 
 .footer {
