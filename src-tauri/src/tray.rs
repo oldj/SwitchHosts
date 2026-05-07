@@ -319,6 +319,7 @@ fn create_tray_window<R: Runtime>(
         .maximizable(false)
         .minimizable(false)
         .decorations(false)
+        .transparent(true)
         .always_on_top(true)
         .skip_taskbar(true)
         .visible_on_all_workspaces(true)

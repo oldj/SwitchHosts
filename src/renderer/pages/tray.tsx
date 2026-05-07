@@ -22,8 +22,13 @@ const TrayPage = () => {
 
     const cls = document.body.className
     document.body.className = cls.replace(/\btheme-\w+/gi, '')
-    document.body.classList.add(`platform-${agent.platform}`, `theme-${configs.theme}`)
+    document.body.classList.add(`platform-${agent.platform}`, `theme-${configs.theme}`, 'tray-page')
   }
+
+  useEffect(() => {
+    document.documentElement.classList.add('tray-page')
+    document.body.classList.add('tray-page')
+  }, [])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(update, [configs])

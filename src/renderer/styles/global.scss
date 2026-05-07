@@ -41,3 +41,8 @@ textarea,
   user-select: text;
   -webkit-user-select: text;
 }
+
+html.tray-page,
+body.tray-page {
+  background: transparent;
+}
