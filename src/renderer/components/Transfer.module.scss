@@ -14,8 +14,21 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   user-select: none;
+  margin: 0 4px;
+  border-radius: 4px;
 }
 
 .selected {
   background: var(--swh-tree-selected-bg);
+  color: var(--swh-font-color-reverse);
+}
+
+.selected + .selected {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.selected:has(+ .selected) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
