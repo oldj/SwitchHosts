@@ -47,7 +47,6 @@ const General = (props: IProps) => {
           ]}
           w={200}
           allowDeselect={false}
-          comboboxProps={{ shadow: 'md' }}
         />
 
         <Box>{lang.theme}</Box>

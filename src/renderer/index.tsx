@@ -71,6 +71,7 @@ const theme = createTheme({
     Select: Select.extend({
       defaultProps: {
         checkIconPosition: 'right',
+        comboboxProps: { shadow: 'md' },
       },
     }),
   },
