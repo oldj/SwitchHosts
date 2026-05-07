@@ -24,8 +24,8 @@ use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::webview::WebviewWindowBuilder;
 use tauri::{
-    AppHandle, LogicalPosition, Manager, PhysicalPosition, Rect as TauriRect, Runtime,
-    WebviewUrl, WindowEvent,
+    AppHandle, Manager, Monitor, PhysicalPosition, Rect as TauriRect, Runtime, WebviewUrl,
+    WindowEvent,
 };
 
 use crate::lifecycle::{self, MAIN_WINDOW_LABEL};
@@ -294,9 +294,9 @@ fn show_tray_window<R: Runtime>(
         None => create_tray_window(app).map_err(|e| e.to_string())?,
     };
 
-    if let Some(logical_pos) = compute_position(app, cursor, icon_rect) {
+    if let Some(physical_pos) = compute_position(app, cursor, icon_rect) {
         window
-            .set_position(logical_pos)
+            .set_position(physical_pos)
             .map_err(|e| e.to_string())?;
     }
     window.show().map_err(|e| e.to_string())?;
@@ -339,9 +339,27 @@ fn create_tray_window<R: Runtime>(
     Ok(window)
 }
 
-/// Translate the tray icon's physical rect into a logical position
-/// for the mini window so it sits flush against the icon, clamped
-/// inside the active monitor's work area.
+/// Compute the mini window's position so it sits flush against the
+/// tray icon, clamped inside the active monitor's work area.
+///
+/// All math runs in **physical pixels**:
+///
+/// 1. We can't use `app.monitor_from_point(cursor.x, cursor.y)` on
+///    macOS — under the hood tao calls `CGRectContainsPoint` against
+///    `CGDisplayBounds`, which is in **logical** Cocoa points, but
+///    `cursor` and `icon_rect` from the tray-icon crate are already
+///    multiplied by the status item window's `backingScaleFactor`.
+///    On any Retina mac the cursor coords are ~2× too large, so the
+///    lookup misses every display and falls back to the primary
+///    monitor — which made the mini window pop up on the wrong screen
+///    when the user clicked the tray icon on a secondary display.
+///    Instead we iterate `available_monitors()` and pick the one whose
+///    own physical `(position, size)` rect (in the same Tauri-physical
+///    coord frame as `cursor`) contains the cursor.
+///
+/// 2. We pass `set_position` a `PhysicalPosition` rather than a
+///    `LogicalPosition` so Tauri doesn't apply yet another scale
+///    conversion using the window's *current* monitor.
 ///
 /// macOS / Windows: tray icon physical rect is reliable, so we anchor
 /// the window to the icon centre on the X axis and either above or
@@ -356,34 +374,35 @@ fn compute_position<R: Runtime>(
     app: &AppHandle<R>,
     cursor: PhysicalPosition<f64>,
     icon_rect: TauriRect,
-) -> Option<LogicalPosition<f64>> {
-    let monitor = app
-        .monitor_from_point(cursor.x, cursor.y)
-        .ok()
-        .flatten()
-        .or_else(|| app.primary_monitor().ok().flatten())?;
+) -> Option<PhysicalPosition<f64>> {
+    let monitor = pick_monitor_for_cursor(app, cursor, icon_rect)?;
 
     let scale = monitor.scale_factor();
     let work_area = monitor.work_area();
-    let work_x = work_area.position.x as f64 / scale;
-    let work_y = work_area.position.y as f64 / scale;
-    let work_w = work_area.size.width as f64 / scale;
-    let work_h = work_area.size.height as f64 / scale;
+    let work_x = work_area.position.x as f64;
+    let work_y = work_area.position.y as f64;
+    let work_w = work_area.size.width as f64;
+    let work_h = work_area.size.height as f64;
 
-    let icon_logical_pos = icon_rect.position.to_logical::<f64>(scale);
-    let icon_logical_size = icon_rect.size.to_logical::<f64>(scale);
-    let icon_x = icon_logical_pos.x;
-    let icon_y = icon_logical_pos.y;
-    let icon_w = icon_logical_size.width;
-    let icon_h = icon_logical_size.height;
+    let icon_phys_pos = icon_rect.position.to_physical::<f64>(scale);
+    let icon_phys_size = icon_rect.size.to_physical::<f64>(scale);
+    let icon_x = icon_phys_pos.x;
+    let icon_y = icon_phys_pos.y;
+    let icon_w = icon_phys_size.width;
+    let icon_h = icon_phys_size.height;
+
+    // The 300×600 design size is in logical units; scale to this
+    // monitor's physical pixels so the math below stays consistent.
+    let win_w = TRAY_WINDOW_WIDTH * scale;
+    let win_h = TRAY_WINDOW_HEIGHT * scale;
 
     // X: centre under the icon
-    let mut x = icon_x + icon_w / 2.0 - TRAY_WINDOW_WIDTH / 2.0;
+    let mut x = icon_x + icon_w / 2.0 - win_w / 2.0;
     if x < work_x {
         x = work_x;
     }
-    if x + TRAY_WINDOW_WIDTH > work_x + work_w {
-        x = work_x + work_w - TRAY_WINDOW_WIDTH;
+    if x + win_w > work_x + work_w {
+        x = work_x + work_w - win_w;
     }
 
     // Y: below the icon if the icon is in the top half of the screen
@@ -394,14 +413,56 @@ fn compute_position<R: Runtime>(
     let mut y = if icon_centre_y < monitor_centre_y {
         icon_y + icon_h
     } else {
-        icon_y - TRAY_WINDOW_HEIGHT - 2.0
+        icon_y - win_h - 2.0 * scale
     };
     if y < work_y {
         y = work_y;
     }
-    if y + TRAY_WINDOW_HEIGHT > work_y + work_h {
-        y = work_y + work_h - TRAY_WINDOW_HEIGHT;
+    if y + win_h > work_y + work_h {
+        y = work_y + work_h - win_h;
     }
 
-    Some(LogicalPosition::new(x, y))
+    Some(PhysicalPosition::new(x, y))
+}
+
+/// Find the monitor that contains the tray click. We can't use
+/// `app.monitor_from_point` on macOS (it expects logical Quartz points
+/// but the tray-icon crate hands us physical pixels), so we iterate
+/// `available_monitors()` ourselves and check the cursor against each
+/// monitor's full bounds. If the cursor doesn't land inside any
+/// monitor (it can sit a hair outside on the menu bar's very top
+/// edge), we fall back to the icon-centre, then the primary monitor.
+fn pick_monitor_for_cursor<R: Runtime>(
+    app: &AppHandle<R>,
+    cursor: PhysicalPosition<f64>,
+    icon_rect: TauriRect,
+) -> Option<Monitor> {
+    let monitors = app.available_monitors().ok()?;
+
+    let contains = |m: &Monitor, x: f64, y: f64| {
+        let pos = m.position();
+        let size = m.size();
+        let mx = pos.x as f64;
+        let my = pos.y as f64;
+        let mw = size.width as f64;
+        let mh = size.height as f64;
+        x >= mx && x < mx + mw && y >= my && y < my + mh
+    };
+
+    if let Some(m) = monitors.iter().find(|m| contains(m, cursor.x, cursor.y)) {
+        return Some(m.clone());
+    }
+
+    // The icon rect from tray-icon is already physical, in the same
+    // coord frame as the monitors. Centre of the icon is a safer probe
+    // than the cursor when the click lands on the very top edge.
+    let icon_phys_pos = icon_rect.position.to_physical::<f64>(1.0);
+    let icon_phys_size = icon_rect.size.to_physical::<f64>(1.0);
+    let icon_cx = icon_phys_pos.x + icon_phys_size.width / 2.0;
+    let icon_cy = icon_phys_pos.y + icon_phys_size.height / 2.0;
+    if let Some(m) = monitors.iter().find(|m| contains(m, icon_cx, icon_cy)) {
+        return Some(m.clone());
+    }
+
+    app.primary_monitor().ok().flatten()
 }
