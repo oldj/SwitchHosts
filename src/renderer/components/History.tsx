@@ -67,6 +67,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
           overflow: 'auto',
           border: '1px solid var(--swh-border-color-0)',
           borderRadius: 6,
+          padding: 4,
         }}
       >
         {list.map((item) => (
@@ -76,7 +77,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
             px="12px"
             py="8px"
             style={{ userSelect: 'none' }}
-            className={clsx(item.id === selectedItem?.id && styles.selected)}
+            className={clsx(styles.item, item.id === selectedItem?.id && styles.selected)}
           >
             <Group gap="8px" wrap="nowrap" align="flex-start">
               <Box>
