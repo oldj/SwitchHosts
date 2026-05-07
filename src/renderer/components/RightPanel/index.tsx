@@ -15,15 +15,10 @@ import {
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
-import clsx from 'clsx'
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styles from './index.module.scss'
-
-const countRules = (content: string): number =>
-  content.split(/\r?\n/).filter((l) => {
-    const t = l.trim()
-    return t.length > 0 && !t.startsWith('#')
-  }).length
+import SystemHostsPanel from './SystemHostsPanel'
+import { InfoRow, countRules } from './shared'
 
 const formatInterval = (
   seconds: number,
@@ -38,19 +33,6 @@ const formatInterval = (
   const d = Math.round(h / 24)
   return `${d} ${d === 1 ? lang.day : lang.days}`
 }
-
-const InfoRow: React.FC<{
-  label: string
-  value: React.ReactNode
-  mono?: boolean
-}> = ({ label, value, mono }) => (
-  <div className={styles.row}>
-    <Text className={styles.row_label}>{label}</Text>
-    <Text className={clsx(styles.row_value, mono && styles.mono)}>
-      {value}
-    </Text>
-  </div>
-)
 
 const RightPanel = () => {
   const { lang } = useI18n()
@@ -78,6 +60,7 @@ const RightPanel = () => {
   }
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- fetch rule count or reset when current hosts changes */
     if (!hosts) {
       refLoadingId.current = null
       setRuleCount(null)
@@ -88,6 +71,7 @@ const RightPanel = () => {
     } else {
       setRuleCount(null)
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hosts?.id, hosts?.type])
 
@@ -199,12 +183,9 @@ const RightPanel = () => {
   }
 
   if (!hosts) {
-    return (
-      <div className={styles.root}>
-        <div className={styles.body} />
-        <div className={styles.status_bar} />
-      </div>
-    )
+    // currentHosts === null is the convention for "System Hosts is selected"
+    // (see LeftPanel/SystemHostsItem.tsx).
+    return <SystemHostsPanel />
   }
 
   const folderModeLabel: Record<FolderModeType, string> = {

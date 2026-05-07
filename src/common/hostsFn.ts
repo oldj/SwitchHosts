@@ -98,7 +98,7 @@ export const setOnStateOfItem = (
         if (item.id !== id) {
           item.on = false
           if (multiChoseFolderSwitchAll) {
-            item = switchFolderChild(item, false)
+            switchFolderChild(item, false)
           }
         }
       })
@@ -113,7 +113,7 @@ export const setOnStateOfItem = (
           if (item.id !== id) {
             item.on = false
             if (multiChoseFolderSwitchAll) {
-              item = switchFolderChild(item, false)
+              switchFolderChild(item, false)
             }
           }
         })
@@ -167,7 +167,7 @@ export const switchFolderChild = (item: IHostsListObject, on: boolean): IHostsLi
     item.children.forEach((item) => {
       item.on = on
       if (item.type == 'folder') {
-        item = switchFolderChild(item, on)
+        switchFolderChild(item, on)
       }
     })
   }

@@ -1,9 +1,11 @@
+import events from '@common/events'
 import { ActionIcon, Indicator, Stack, Tooltip } from '@mantine/core'
 import ConfigMenu from '@renderer/components/TopBar/ConfigMenu'
+import { agent } from '@renderer/core/agent'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import { leftPanelViewAtom } from '@renderer/stores/ui'
-import { IconList, IconTrash } from '@tabler/icons-react'
+import { IconHistory, IconList, IconTrash } from '@tabler/icons-react'
 import { useAtom } from 'jotai'
 import styles from './index.module.scss'
 
@@ -50,6 +52,17 @@ const LeftSidebar = () => {
       <div className={styles.spacer} />
 
       <Stack gap={20} align="center">
+        <Tooltip label={lang.show_history} position="right">
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size={28}
+            onClick={() => agent.broadcast(events.show_history)}
+            aria-label={lang.show_history}
+          >
+            <IconHistory size={18} stroke={1.5} />
+          </ActionIcon>
+        </Tooltip>
         <ConfigMenu
           size={28}
           iconSize={18}

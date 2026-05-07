@@ -151,6 +151,7 @@ const lang: LanguageDict = {
   source_code: 'Code source',
   success: 'Succès !',
   sudo_prompt_title: 'Entrez votre mot de passe sudo',
+  system: 'Système',
   system_hosts: 'Hosts du système',
   system_hosts_history: 'Historique des versions hosts du système',
   system_hosts_history_delete_confirm: 'Êtes-vous sûr de vouloir supprimer cet élément ?',

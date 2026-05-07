@@ -43,11 +43,13 @@ const Tree = (props: ITreeProps) => {
   const [dropWhere, setDropWhere] = useState<DropWhereType | null>(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- local working copy; mutated mid-drag and reset when source data changes
     setTree(lodash.cloneDeep(data))
   }, [data])
 
   useEffect(() => {
     if (props.selectedIds && props.selectedIds.join(',') !== selectedIds.join(',')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync external selection into local state
       setSelectedIds(props.selectedIds)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

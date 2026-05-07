@@ -144,6 +144,7 @@ export default {
   source_code: 'Kaynak Kod',
   success: 'Başarılı!',
   sudo_prompt_title: 'Sudo parolanızı girin',
+  system: 'Sistem',
   system_hosts: 'Sistem Hostları',
   system_hosts_history: 'Sistem Hostlarının geçmiş sürümleri',
   system_hosts_history_delete_confirm: 'Bu öğeyi silmek istediğinizden emin misiniz?',

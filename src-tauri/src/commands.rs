@@ -507,9 +507,10 @@ pub async fn apply_hosts_selection<R: Runtime>(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, String> {
-    // args[0] = content (string, already aggregated by get_content_of_list)
-    // args[1] = options ({ sudo_pswd? }) — ignored under v5/Tauri because
-    //          OS-native elevation handles credentials.
+    // args[0] = content (string, already aggregated by get_content_of_list).
+    // No further args are read — OS-native elevation handles credentials,
+    // so the legacy `{ sudo_pswd }` options object from the Electron port
+    // has been removed renderer-side.
     let content = match args.first().and_then(Value::as_str) {
         Some(s) => s.to_string(),
         None => {

@@ -24,7 +24,6 @@ export default {
   show_preferences: 'show_preferences',
   show_set_write_mode: 'show_set_write_mode',
   show_source: 'show_source',
-  show_sudo_password_input: 'show_sudo_password_input',
   system_hosts_updated: 'system_hosts_updated',
   toggle_comment: 'toggle_comment',
   toggle_developer_tools: 'toggle_developer_tools',
@@ -34,5 +33,4 @@ export default {
   tray_list_updated: 'tray:list_updated',
   update_download_progress: 'update_download_progress',
   update_downloaded: 'update_downloaded',
-  write_hosts_to_system: 'write_hosts_to_system',
 }

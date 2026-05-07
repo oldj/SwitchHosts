@@ -38,6 +38,7 @@ const CommandsHistory = (props: Props) => {
 
   useEffect(() => {
     if (isShow) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch list when panel becomes visible
       loadData()
     }
   }, [isShow])

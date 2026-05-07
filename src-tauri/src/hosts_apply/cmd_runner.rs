@@ -89,11 +89,12 @@ pub async fn run(cmd: &str) -> Option<CommandRunResult> {
             add_time_ms: now_ms,
         }),
         Err(_elapsed) => {
-            // Timed out — `wait_with_output` already moved the child;
-            // we can't kill it from here. Best we can do is record the
-            // timeout. The OS reaps the orphan when it eventually exits.
-            // tokio::process processes are non-detached on Drop, so the
-            // child is sent SIGKILL when the future is dropped.
+            // Timed out — `wait_with_output` already moved the child,
+            // so we can't kill it from here directly. `spawn_shell`
+            // sets `kill_on_drop(true)`, which makes Tokio send
+            // SIGKILL (POSIX) / TerminateProcess (Windows) when the
+            // future is dropped at the end of this match arm. Without
+            // that flag the process would orphan and keep running.
             Some(CommandRunResult {
                 id,
                 success: false,
@@ -113,6 +114,7 @@ fn spawn_shell(cmd: &str) -> std::io::Result<tokio::process::Child> {
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
+        .kill_on_drop(true)
         .spawn()
 }
 
@@ -126,6 +128,7 @@ fn spawn_shell(cmd: &str) -> std::io::Result<tokio::process::Child> {
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
+        .kill_on_drop(true)
         .spawn()
 }
 

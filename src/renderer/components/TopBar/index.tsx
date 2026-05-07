@@ -12,7 +12,6 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import {
-  IconHistory,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
   IconLayoutSidebarRightCollapse,
@@ -42,10 +41,10 @@ const TopBar = (props: IProps) => {
 
   const showToggleSwitch =
     !showLeftPanel && currentHosts && !isHostsInTrashcan(currentHosts.id)
-  const showHistory = !currentHosts
   const showWindowControls = agent.platform !== 'darwin'
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror prop into local optimistic state; also set by useOnBroadcast
     setIsOn(!!currentHosts?.on)
   }, [currentHosts])
 
@@ -121,17 +120,6 @@ const TopBar = (props: IProps) => {
             />
           </Box>
         ) : null}
-        {showHistory ? (
-          <ActionIcon
-            aria-label="Show history"
-            variant="subtle"
-            color="gray"
-            onClick={() => agent.broadcast(events.show_history)}
-          >
-            <IconHistory size={iconSize} stroke={iconStroke} />
-          </ActionIcon>
-        ) : null}
-
         <ActionIcon
           aria-label="Toggle right panel"
           onClick={() => {

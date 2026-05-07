@@ -21,10 +21,6 @@ export interface IMenuItemOption {
   _click_evt?: string
 }
 
-export interface IHostsWriteOptions {
-  sudo_pswd?: string
-}
-
 export interface IPopupMenuOption {
   menu_id: string
   items: IMenuItemOption[]

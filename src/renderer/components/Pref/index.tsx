@@ -43,6 +43,7 @@ const PreferencePanel = () => {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror configs into editable draft; onUpdate mutates draft locally
     setData(configs)
   }, [configs])
 

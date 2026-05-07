@@ -11,9 +11,10 @@
 //!    writes through the existing handle).
 //!
 //! The OS-native elevation prompt collects credentials, so the v5
-//! Tauri build never asks the user to type a password into our own UI.
-//! The renderer's `show_sudo_password_input` listener becomes dead
-//! code on the Tauri path; it stays for the Electron build.
+//! Tauri build never asks the user to type a password into our own
+//! UI. The renderer's old `SudoPasswordInput` modal was removed in
+//! the Tauri port — `no_access` failures surface through the standard
+//! error notification instead.
 //!
 //! Per-platform helpers:
 //! - macOS: Security.framework `AuthorizationExecuteWithPrivileges`

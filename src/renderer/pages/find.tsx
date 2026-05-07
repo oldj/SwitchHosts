@@ -81,45 +81,6 @@ const FindPage = () => {
     document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
   }
 
-  useEffect(() => {
-    if (!configs) return
-    init().catch((e) => console.error(e))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configs])
-
-  useEffect(() => {
-    document.title = lang.find_and_replace
-  }, [lang])
-
-  useEffect(() => {
-    doFind(debouncedKeyword)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedKeyword, isRegExp, isIgnoreCase])
-
-  useEffect(() => {
-    const onFocus = () => {
-      if (iptKw.current) {
-        iptKw.current.focus()
-      }
-    }
-
-    window.addEventListener('focus', onFocus, false)
-    return () => window.removeEventListener('focus', onFocus, false)
-  }, [])
-
-  useOnBroadcast(events.config_updated, loadConfigs)
-
-  useOnBroadcast(events.close_find, () => {
-    setFindResult([])
-    setFindPositions([])
-    setKeyword('')
-    setReplaceTo('')
-    setIsRegExp(false)
-    setIsIgnoreCase(false)
-    setCurrentResultIdx(-1)
-    setlastScrollResultIdx(-1)
-  })
-
   const parsePositionShow = (findItems: IFindItem[]) => {
     const positionsShow: IFindPositionShow[] = []
 
@@ -167,6 +128,45 @@ const FindPage = () => {
     },
     { wait: 500 },
   )
+
+  useEffect(() => {
+    if (!configs) return
+    init().catch((e) => console.error(e))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configs])
+
+  useEffect(() => {
+    document.title = lang.find_and_replace
+  }, [lang])
+
+  useEffect(() => {
+    doFind(debouncedKeyword)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedKeyword, isRegExp, isIgnoreCase])
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (iptKw.current) {
+        iptKw.current.focus()
+      }
+    }
+
+    window.addEventListener('focus', onFocus, false)
+    return () => window.removeEventListener('focus', onFocus, false)
+  }, [])
+
+  useOnBroadcast(events.config_updated, loadConfigs)
+
+  useOnBroadcast(events.close_find, () => {
+    setFindResult([])
+    setFindPositions([])
+    setKeyword('')
+    setReplaceTo('')
+    setIsRegExp(false)
+    setIsIgnoreCase(false)
+    setCurrentResultIdx(-1)
+    setlastScrollResultIdx(-1)
+  })
 
   const toShowSource = async (resultItem: IFindPositionShow) => {
     await actions.cmdFocusMainWindow()

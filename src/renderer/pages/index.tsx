@@ -9,7 +9,6 @@ import MainPanel from '@renderer/components/MainPanel'
 import PreferencePanel from '@renderer/components/Pref'
 import RightPanel from '@renderer/components/RightPanel'
 import SetWriteMode from '@renderer/components/SetWriteMode'
-import SudoPasswordInput from '@renderer/components/SudoPasswordInput'
 import UpdateDialog from '@renderer/components/UpdateDialog'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -66,6 +65,7 @@ const MainPage = () => {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- apply config side effects (locale, layout, theme) to local state and DOM
     onConfigsUpdate().catch((e) => console.error(e))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configs])
@@ -124,7 +124,6 @@ const MainPage = () => {
       </div>
 
       <EditHostsInfo />
-      <SudoPasswordInput />
       <SetWriteMode />
       <PreferencePanel />
       <History />

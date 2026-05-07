@@ -7,10 +7,10 @@ import { IHostsListObject } from '@common/data'
 import events from '@common/events'
 import { findItemById, flatten, getNextSelectedItem, setOnStateOfItem } from '@common/hostsFn'
 import { IFindShowSourceParam } from '@common/types'
-import { IHostsWriteOptions } from '@common/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
+import { showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
@@ -34,6 +34,7 @@ const List = (props: Props) => {
   const [showList, setShowList] = useState<IHostsListObject[]>([])
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- showList also mutated by drag onChange; keep as state synced from hostsData */
     if (!isTray) {
       setShowList([
         {
@@ -46,6 +47,7 @@ const List = (props: Props) => {
     } else {
       setShowList([...hostsData.list])
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hostsData])
 
@@ -53,6 +55,7 @@ const List = (props: Props) => {
     if (isTray || !currentHosts) return
     if (!hostsData.trashcan.find((item) => item.data.id === currentHosts.id)) return
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear selection when current item moves to trashcan
     setSelectedIds([])
   }, [currentHosts, hostsData.trashcan, isTray])
 
@@ -81,21 +84,15 @@ const List = (props: Props) => {
     }
   }
 
-  const writeHostsToSystem = async (
-    list?: IHostsListObject[],
-    options?: IHostsWriteOptions,
-  ): Promise<boolean> => {
+  const writeHostsToSystem = async (list?: IHostsListObject[]): Promise<boolean> => {
     if (!Array.isArray(list)) {
       list = hostsData.list
     }
 
     const content: string = await actions.getContentOfList(list)
-    const result = await actions.setSystemHosts(content, options)
+    const result = await actions.setSystemHosts(content)
     if (result.success) {
       setList(list).catch((e) => console.error(e))
-      // new Notification(lang.success, {
-      //   body: lang.hosts_updated,
-      // })
 
       if (currentHosts) {
         const hosts = findItemById(list, currentHosts.id)
@@ -106,22 +103,15 @@ const List = (props: Props) => {
     } else {
       console.log(result)
       loadHostsData().catch((e) => console.log(e))
-      let errDesc = lang.fail
-
-      // let body: string = lang.no_access_to_hosts
-      if (result.code === 'no_access') {
-        if (agent.platform === 'darwin' || agent.platform === 'linux') {
-          agent.broadcast(events.show_sudo_password_input, list)
-        }
-        // } else {
-        // body = result.message || 'Unknown error!'
-        errDesc = lang.no_access_to_hosts
+      // `cancelled` means the user dismissed the OS auth prompt — that's
+      // intentional, not an error worth a toast. Other failures surface
+      // through the standard error notification.
+      if (result.code !== 'cancelled') {
+        const errDesc =
+          result.code === 'no_access' ? lang.no_access_to_hosts : result.message || lang.fail
+        showErrorNotification({ title: lang.fail, message: errDesc })
+        console.error(errDesc)
       }
-
-      // new Notification(lang.fail, {
-      //   body,
-      // })
-      console.error(errDesc)
     }
 
     agent.broadcast(events.tray_list_updated)
@@ -136,14 +126,6 @@ const List = (props: Props) => {
       onToggleItem(id, on)
     },
     [hostsData, configs, isTray],
-  )
-  useOnBroadcast(
-    events.write_hosts_to_system,
-    (list?: IHostsListObject[], options?: IHostsWriteOptions) => {
-      if (isTray) return
-      writeHostsToSystem(list, options)
-    },
-    [hostsData, isTray],
   )
   useOnBroadcast(
     events.tray_list_updated,
