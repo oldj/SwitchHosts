@@ -6,7 +6,7 @@
 import { httpApiPort } from '@common/constants'
 import { ConfigsType, ThemeType } from '@common/default_configs'
 import { LocaleName } from '@common/i18n'
-import { Box, Checkbox, Group, NativeSelect, Radio, Stack, Text } from '@mantine/core'
+import { Box, Checkbox, Group, NativeSelect, SegmentedControl, Stack, Text } from '@mantine/core'
 import { agent } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
 
@@ -48,14 +48,13 @@ const General = (props: IProps) => {
       <Box w="100%">
         <Group gap="8px">
           <Box w={labelWidth}>{lang.theme}</Box>
-          <NativeSelect
+          <SegmentedControl
             value={data.theme}
-            onChange={(e) => onChange({ theme: e.target.value as ThemeType })}
+            onChange={(v) => onChange({ theme: v as ThemeType })}
             data={[
               { value: 'light', label: lang.theme_light },
               { value: 'dark', label: lang.theme_dark },
             ]}
-            w={200}
           />
         </Group>
       </Box>
@@ -63,16 +62,15 @@ const General = (props: IProps) => {
       <Box w="100%">
         <Group align="flex-start" gap="8px">
           <Box w={labelWidth}>{lang.write_mode}</Box>
-          <Stack gap="24px">
-            <Radio.Group
-              value={data.write_mode || ''}
+          <Stack gap="8px" align="flex-start">
+            <SegmentedControl
+              value={data.write_mode || 'append'}
               onChange={(v) => onChange({ write_mode: v as ConfigsType['write_mode'] })}
-            >
-              <Group gap="40px">
-                <Radio value="append" label={lang.append} />
-                <Radio value="overwrite" label={lang.overwrite} />
-              </Group>
-            </Radio.Group>
+              data={[
+                { value: 'append', label: lang.append },
+                { value: 'overwrite', label: lang.overwrite },
+              ]}
+            />
             <Text maw={350} c="dimmed" size="sm">
               {data.write_mode === 'append' && lang.write_mode_append_help}
               {data.write_mode === 'overwrite' && lang.write_mode_overwrite_help}
@@ -84,16 +82,15 @@ const General = (props: IProps) => {
       <Box pb="24px" w="100%">
         <Group align="flex-start" gap="8px">
           <Box w={labelWidth}>{lang.choice_mode}</Box>
-          <Stack gap="24px">
-            <Radio.Group
+          <Stack gap="8px" align="flex-start">
+            <SegmentedControl
               value={data.choice_mode.toString()}
               onChange={(v) => onChange({ choice_mode: parseInt(v) as ConfigsType['choice_mode'] })}
-            >
-              <Group gap="40px">
-                <Radio value="1" label={lang.choice_mode_single} />
-                <Radio value="2" label={lang.choice_mode_multiple} />
-              </Group>
-            </Radio.Group>
+              data={[
+                { value: '1', label: lang.choice_mode_single },
+                { value: '2', label: lang.choice_mode_multiple },
+              ]}
+            />
             <Text maw={350} c="dimmed" size="sm">
               {lang.choice_mode_desc}
             </Text>
