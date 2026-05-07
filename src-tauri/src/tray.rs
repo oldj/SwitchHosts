@@ -17,7 +17,8 @@
 //! handler in `lib.rs` can route them in the same dispatch table as
 //! `popup_menu_item_*` events.
 
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
@@ -36,6 +37,29 @@ pub const TRAY_WINDOW_LABEL: &str = "tray";
 
 const TRAY_WINDOW_WIDTH: f64 = 300.0;
 const TRAY_WINDOW_HEIGHT: f64 = 600.0;
+
+/// Click-toggle dedupe window, in milliseconds.
+///
+/// macOS dispatches the tray window's focus-loss event before the
+/// status item's click handler when the user clicks the tray icon
+/// while the mini window is open. Without this dedupe, the focus-loss
+/// handler hides the window and the click handler immediately shows
+/// it again — turning a "click to dismiss" into a no-op flicker.
+/// Recording the auto-hide timestamp and skipping `show` when the click
+/// arrives within this window gives us toggle semantics.
+const TRAY_TOGGLE_DEDUPE_MS: u64 = 300;
+
+/// Wall-clock millis of the last focus-loss-driven auto-hide of the
+/// tray window. 0 means "never". `AtomicU64` keeps it lock-free and
+/// safe to read/write from any thread.
+static LAST_TRAY_AUTO_HIDE_MS: AtomicU64 = AtomicU64::new(0);
+
+fn now_ms() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
+}
 
 pub const MENU_ID_SHOW_MAIN: &str = "tray-show-main";
 pub const MENU_ID_VERSION: &str = "tray-version";
@@ -99,6 +123,27 @@ fn handle_left_click<R: Runtime>(
             .unwrap_or(false)
     };
     if mini_enabled {
+        // Toggle semantics: a click on the icon while the mini window
+        // is open should dismiss it. macOS status-item clicks do not
+        // always steal key-window status from the tray window, so we
+        // can't rely on the focus-loss path alone — handle both:
+        //
+        //   (a) status-item click did NOT blur the tray window —
+        //       the window is still visible here; hide it explicitly.
+        //   (b) status-item click DID blur the tray window — the
+        //       focus-loss handler already hid it and stamped
+        //       LAST_TRAY_AUTO_HIDE_MS; skip the show so the dismissal
+        //       sticks instead of immediately re-showing.
+        if let Some(window) = app.get_webview_window(TRAY_WINDOW_LABEL) {
+            if window.is_visible().unwrap_or(false) {
+                let _ = window.hide();
+                return;
+            }
+        }
+        let last_hide = LAST_TRAY_AUTO_HIDE_MS.load(Ordering::Relaxed);
+        if last_hide != 0 && now_ms().saturating_sub(last_hide) < TRAY_TOGGLE_DEDUPE_MS {
+            return;
+        }
         if let Err(e) = show_tray_window(app, cursor, icon_rect) {
             log::warn!("failed to show mini window: {e}");
         }
@@ -331,9 +376,16 @@ fn create_tray_window<R: Runtime>(
     window.on_window_event(move |event| {
         // Hide on focus loss so the popover behaves like a real
         // menubar mini-window: click outside → it disappears.
-        // The next tray click recreates the position + reshows.
+        // Only stamp the auto-hide timestamp + call hide when the
+        // window is still visible — otherwise this is the trailing
+        // blur from a hide we already performed in handle_left_click,
+        // and re-stamping would freeze the next click out of show via
+        // the dedupe window.
         if let WindowEvent::Focused(false) = event {
-            let _ = window_for_handler.hide();
+            if window_for_handler.is_visible().unwrap_or(false) {
+                LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
+                let _ = window_for_handler.hide();
+            }
         }
     });
 
