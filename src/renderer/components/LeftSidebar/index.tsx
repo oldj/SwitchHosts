@@ -9,10 +9,28 @@ import { IconHistory, IconList, IconTrash } from '@tabler/icons-react'
 import { useAtom } from 'jotai'
 import styles from './index.module.scss'
 
-const LeftSidebar = () => {
+interface IProps {
+  showLeftPanel: boolean
+}
+
+type LeftPanelView = 'list' | 'trashcan'
+
+const LeftSidebar = (props: IProps) => {
+  const { showLeftPanel } = props
   const { lang } = useI18n()
   const { hostsData } = useHostsData()
   const [view, setView] = useAtom(leftPanelViewAtom)
+
+  const handleClick = (target: LeftPanelView) => {
+    if (!showLeftPanel) {
+      setView(target)
+      agent.broadcast(events.toggle_left_panel, true)
+    } else if (view === target) {
+      agent.broadcast(events.toggle_left_panel, false)
+    } else {
+      setView(target)
+    }
+  }
 
   return (
     <div className={styles.root}>
@@ -22,7 +40,7 @@ const LeftSidebar = () => {
             variant={view === 'list' ? 'light' : 'subtle'}
             color={view === 'list' ? undefined : 'gray'}
             size={28}
-            onClick={() => setView('list')}
+            onClick={() => handleClick('list')}
             aria-label={'Hosts'}
           >
             <IconList size={18} stroke={1.5} />
@@ -40,7 +58,7 @@ const LeftSidebar = () => {
               variant={view === 'trashcan' ? 'light' : 'subtle'}
               color={view === 'trashcan' ? undefined : 'gray'}
               size={28}
-              onClick={() => setView('trashcan')}
+              onClick={() => handleClick('trashcan')}
               aria-label={lang.trashcan}
             >
               <IconTrash size={18} stroke={1.5} />

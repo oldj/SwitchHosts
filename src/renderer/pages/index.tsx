@@ -130,7 +130,7 @@ const MainPage = () => {
 
       <div className={clsx(styles.body, { [styles.dragging]: dragging })}>
         <div className={styles.left_sidebar} style={{ width: LEFT_SIDEBAR_WIDTH }}>
-          <LeftSidebar />
+          <LeftSidebar showLeftPanel={leftShow} />
         </div>
         <div
           className={styles.left}
