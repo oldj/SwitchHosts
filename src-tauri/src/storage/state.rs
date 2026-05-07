@@ -50,9 +50,12 @@ pub struct WindowState {
     pub main: Option<WindowGeometry>,
 }
 
-/// Persisted window geometry. Coordinates are physical pixels because
-/// Tauri's set_position / set_size APIs accept the physical variants
-/// directly without an intermediate scale-factor conversion.
+/// Persisted window geometry in the coordinate space accepted by
+/// Tauri's logical window APIs. The position is the outer frame's
+/// top-left corner; the size is the inner content size, matching
+/// Tauri's builder and set_size APIs. On macOS, native AppKit restore
+/// must convert through lifecycle's Tauri-coordinate helper instead
+/// of treating `y` as an `NSScreen::frame` point.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct WindowGeometry {
     pub x: i32,

@@ -4437,6 +4437,8 @@ dependencies = [
  "dirs 5.0.1",
  "libc",
  "log",
+ "objc2",
+ "objc2-foundation",
  "open",
  "regex",
  "reqwest 0.12.28",

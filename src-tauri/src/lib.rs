@@ -12,6 +12,13 @@ mod storage;
 mod tray;
 
 use serde_json::json;
+use std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    time::Duration,
+};
 use tauri::{Emitter, Listener, Manager, RunEvent};
 
 use storage::AppState;
@@ -149,7 +156,35 @@ pub fn run() {
             if hide_at_launch {
                 let _ = main.hide();
             } else {
-                let _ = main.set_focus();
+                let did_show_main = Arc::new(AtomicBool::new(false));
+
+                let ready_app = app_handle.clone();
+                let ready_flag = did_show_main.clone();
+                app.listen("main_window_ready", move |_event| {
+                    if !ready_flag.swap(true, Ordering::SeqCst) {
+                        lifecycle::focus_main_on_second_instance(
+                            &ready_app,
+                            Vec::new(),
+                            String::new(),
+                        );
+                    }
+                });
+
+                let fallback_app = app_handle.clone();
+                let fallback_flag = did_show_main.clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(Duration::from_millis(5000));
+                    if !fallback_flag.swap(true, Ordering::SeqCst) {
+                        let app = fallback_app.clone();
+                        let _ = fallback_app.run_on_main_thread(move || {
+                            lifecycle::focus_main_on_second_instance(
+                                &app,
+                                Vec::new(),
+                                String::new(),
+                            );
+                        });
+                    }
+                });
             }
 
             // Application menu (Phase 2.D minimal: defaults + Find).
