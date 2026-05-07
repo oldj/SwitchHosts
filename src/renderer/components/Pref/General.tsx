@@ -20,82 +20,75 @@ const General = (props: IProps) => {
   const { i18n, lang } = useI18n()
   const { platform } = agent
 
-  const labelWidth = 80
-
   return (
     <Stack gap="16px">
-      <Box w="100%">
-        <Group gap="8px">
-          <Box w={labelWidth}>{lang.language}</Box>
-          <NativeSelect
-            value={data.locale}
-            onChange={(e) => onChange({ locale: e.target.value as LocaleName })}
-            data={[
-              { value: 'zh', label: '简体中文' },
-              { value: 'zh_hant', label: '繁體中文' },
-              { value: 'en', label: 'English' },
-              { value: 'fr', label: 'Français' },
-              { value: 'de', label: 'Deutsch' },
-              { value: 'ja', label: '日本語' },
-              { value: 'tr', label: 'Türkçe' },
-              { value: 'ko', label: '한국어' },
-            ]}
-            w={200}
-          />
-        </Group>
-      </Box>
+      <Box
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'max-content 1fr',
+          columnGap: 16,
+          rowGap: 16,
+          alignItems: 'center',
+        }}
+      >
+        <Box>{lang.language}</Box>
+        <NativeSelect
+          value={data.locale}
+          onChange={(e) => onChange({ locale: e.target.value as LocaleName })}
+          data={[
+            { value: 'zh', label: '简体中文' },
+            { value: 'zh_hant', label: '繁體中文' },
+            { value: 'en', label: 'English' },
+            { value: 'fr', label: 'Français' },
+            { value: 'de', label: 'Deutsch' },
+            { value: 'ja', label: '日本語' },
+            { value: 'tr', label: 'Türkçe' },
+            { value: 'ko', label: '한국어' },
+          ]}
+          w={200}
+        />
 
-      <Box w="100%">
-        <Group gap="8px">
-          <Box w={labelWidth}>{lang.theme}</Box>
+        <Box>{lang.theme}</Box>
+        <SegmentedControl
+          value={data.theme}
+          onChange={(v) => onChange({ theme: v as ThemeType })}
+          data={[
+            { value: 'light', label: lang.theme_light },
+            { value: 'dark', label: lang.theme_dark },
+          ]}
+          style={{ justifySelf: 'start' }}
+        />
+
+        <Box style={{ alignSelf: 'start' }}>{lang.write_mode}</Box>
+        <Stack gap="8px" align="flex-start">
           <SegmentedControl
-            value={data.theme}
-            onChange={(v) => onChange({ theme: v as ThemeType })}
+            value={data.write_mode || 'append'}
+            onChange={(v) => onChange({ write_mode: v as ConfigsType['write_mode'] })}
             data={[
-              { value: 'light', label: lang.theme_light },
-              { value: 'dark', label: lang.theme_dark },
+              { value: 'append', label: lang.append },
+              { value: 'overwrite', label: lang.overwrite },
             ]}
           />
-        </Group>
-      </Box>
+          <Text maw={350} c="dimmed" size="sm">
+            {data.write_mode === 'append' && lang.write_mode_append_help}
+            {data.write_mode === 'overwrite' && lang.write_mode_overwrite_help}
+          </Text>
+        </Stack>
 
-      <Box w="100%">
-        <Group align="flex-start" gap="8px">
-          <Box w={labelWidth}>{lang.write_mode}</Box>
-          <Stack gap="8px" align="flex-start">
-            <SegmentedControl
-              value={data.write_mode || 'append'}
-              onChange={(v) => onChange({ write_mode: v as ConfigsType['write_mode'] })}
-              data={[
-                { value: 'append', label: lang.append },
-                { value: 'overwrite', label: lang.overwrite },
-              ]}
-            />
-            <Text maw={350} c="dimmed" size="sm">
-              {data.write_mode === 'append' && lang.write_mode_append_help}
-              {data.write_mode === 'overwrite' && lang.write_mode_overwrite_help}
-            </Text>
-          </Stack>
-        </Group>
-      </Box>
-
-      <Box pb="24px" w="100%">
-        <Group align="flex-start" gap="8px">
-          <Box w={labelWidth}>{lang.choice_mode}</Box>
-          <Stack gap="8px" align="flex-start">
-            <SegmentedControl
-              value={data.choice_mode.toString()}
-              onChange={(v) => onChange({ choice_mode: parseInt(v) as ConfigsType['choice_mode'] })}
-              data={[
-                { value: '1', label: lang.choice_mode_single },
-                { value: '2', label: lang.choice_mode_multiple },
-              ]}
-            />
-            <Text maw={350} c="dimmed" size="sm">
-              {lang.choice_mode_desc}
-            </Text>
-          </Stack>
-        </Group>
+        <Box style={{ alignSelf: 'start' }}>{lang.choice_mode}</Box>
+        <Stack gap="8px" align="flex-start">
+          <SegmentedControl
+            value={data.choice_mode.toString()}
+            onChange={(v) => onChange({ choice_mode: parseInt(v) as ConfigsType['choice_mode'] })}
+            data={[
+              { value: '1', label: lang.choice_mode_single },
+              { value: '2', label: lang.choice_mode_multiple },
+            ]}
+          />
+          <Text maw={350} c="dimmed" size="sm">
+            {lang.choice_mode_desc}
+          </Text>
+        </Stack>
       </Box>
 
       {platform === 'darwin' ? (
