@@ -55,6 +55,13 @@ const theme = createTheme({
   colors: {
     swhColor,
   },
+  fontSizes: {
+    xs: '0.65625rem',
+    sm: '0.765625rem',
+    md: '0.875rem',
+    lg: '0.984375rem',
+    xl: '1.09375rem',
+  },
   primaryColor: 'swhColor',
   components: {
     Tooltip: Tooltip.extend({
