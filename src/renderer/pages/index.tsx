@@ -15,7 +15,7 @@ import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import clsx from 'clsx'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TopBar from '../components/TopBar'
 import useHostsData from '../models/useHostsData'
 import useI18n from '../models/useI18n'
@@ -26,7 +26,7 @@ const BODY_PADDING_RIGHT = 8
 const PANEL_MIN_WIDTH = 100
 
 const clampPanel = (value: number) =>
-  Math.min(Math.max(value, PANEL_MIN_WIDTH), window.innerWidth * 0.5)
+  Math.round(Math.min(Math.max(value, PANEL_MIN_WIDTH), window.innerWidth * 0.5))
 
 const MainPage = () => {
   const [loading, setLoading] = useState(true)
@@ -86,28 +86,35 @@ const MainPage = () => {
     updateConfigs({ right_panel_show: show }).catch((e) => console.error(e))
   })
 
+  const widthsRef = useRef({ left: leftWidth, right: rightWidth })
+  const updateConfigsRef = useRef(updateConfigs)
+  useEffect(() => {
+    widthsRef.current.left = leftWidth
+    widthsRef.current.right = rightWidth
+    updateConfigsRef.current = updateConfigs
+  })
+
   useEffect(() => {
     const onResize = () => {
       const max = window.innerWidth * 0.5
       const patch: { left_panel_width?: number; right_panel_width?: number } = {}
-      if (leftWidth > max) {
-        const lw = clampPanel(leftWidth)
+      if (widthsRef.current.left > max) {
+        const lw = clampPanel(widthsRef.current.left)
         patch.left_panel_width = lw
         setLeftWidth(lw)
       }
-      if (rightWidth > max) {
-        const rw = clampPanel(rightWidth)
+      if (widthsRef.current.right > max) {
+        const rw = clampPanel(widthsRef.current.right)
         patch.right_panel_width = rw
         setRightWidth(rw)
       }
       if (Object.keys(patch).length > 0) {
-        updateConfigs(patch).catch((e) => console.error(e))
+        updateConfigsRef.current(patch).catch((e) => console.error(e))
       }
     }
-    onResize()
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
-  }, [leftWidth, rightWidth, updateConfigs])
+  }, [])
 
   if (loading) {
     return <Loading />

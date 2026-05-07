@@ -43,7 +43,7 @@ const ResizeHandle = ({
         side === 'left'
           ? stateRef.current.startWidth + dx
           : stateRef.current.startWidth - dx
-      return clamp(raw, min, window.innerWidth * 0.5)
+      return Math.round(clamp(raw, min, window.innerWidth * 0.5))
     },
     [side, min],
   )

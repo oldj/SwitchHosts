@@ -5,6 +5,7 @@
 
 import { ConfigsType } from '@common/default_configs'
 import { actions } from '@renderer/core/agent'
+import { getErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import { configsAtom } from '@renderer/stores/configs'
 import { useAtom } from 'jotai'
 
@@ -16,11 +17,17 @@ export default function useConfigs() {
   }
 
   const updateConfigs = async (kv: Partial<ConfigsType>) => {
-    if (!configs) return
-    // console.log('update configs:', kv)
-    const newConfigs = { ...configs, ...kv }
-    setConfigs(newConfigs)
-    await actions.configUpdate(newConfigs)
+    setConfigs((prev) => (prev ? { ...prev, ...kv } : prev))
+    try {
+      await actions.configUpdate(kv)
+    } catch (e) {
+      console.error('configUpdate failed', kv, e)
+      showErrorNotification({
+        title: 'Failed to save configuration',
+        message: getErrorMessage(e, 'Unknown error'),
+      })
+      throw e
+    }
   }
 
   return {
