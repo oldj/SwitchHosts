@@ -23,6 +23,7 @@ const PreferencePanel = () => {
   const [isOpen, setIsOpen] = useState(false)
   const { configs, updateConfigs } = useConfigs()
   const [data, setData] = useState<ConfigsType | null>(configs)
+  const [activeTab, setActiveTab] = useState<string | null>('general')
   const { lang } = useI18n()
   const onClose = () => {
     setIsOpen(false)
@@ -34,6 +35,12 @@ const PreferencePanel = () => {
     setData({ ...data, ...kv })
   }
 
+  const onSaveImmediate = async (kv: Partial<ConfigsType>) => {
+    setData((prev) => (prev ? { ...prev, ...kv } : prev))
+    await updateConfigs(kv)
+    agent.broadcast(events.config_updated, kv)
+  }
+
   const onSave = async () => {
     if (!data) return
     await updateConfigs(data)
@@ -43,13 +50,22 @@ const PreferencePanel = () => {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror configs into editable draft; onUpdate mutates draft locally
-    setData(configs)
-  }, [configs])
+    if (data === null && configs !== null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time draft init when configs first loads; subsequent configs changes from immediate-save must not clobber unsaved Commands/Proxy drafts
+      setData(configs)
+    }
+  }, [configs, data])
 
-  useOnBroadcast(events.show_preferences, async () => {
-    setIsOpen(true)
-  })
+  useOnBroadcast(
+    events.show_preferences,
+    async () => {
+      setIsOpen(true)
+      setData(configs)
+    },
+    [configs],
+  )
+
+  const showFooter = activeTab === 'commands' || activeTab === 'proxy'
 
   if (!data) {
     console.log('invalid config data!')
@@ -71,18 +87,20 @@ const PreferencePanel = () => {
         overflow: 'hidden',
       }}
       footer={
-        <Group justify="flex-end" gap="12px">
-          <Button variant="outline" onClick={onClose}>
-            {lang.btn_cancel}
-          </Button>
-          <Button onClick={onSave}>
-            {lang.btn_ok}
-          </Button>
-        </Group>
+        showFooter ? (
+          <Group justify="flex-end" gap="12px">
+            <Button variant="outline" onClick={onClose}>
+              {lang.btn_cancel}
+            </Button>
+            <Button onClick={onSave}>
+              {lang.btn_ok}
+            </Button>
+          </Group>
+        ) : null
       }
     >
       <div style={{ display: 'flex', height: '100%', minHeight: 0, flexDirection: 'column' }}>
-        <Tabs defaultValue="general" className={styles.tabs}>
+        <Tabs value={activeTab} onChange={setActiveTab} className={styles.tabs}>
           <Tabs.List>
             <Tabs.Tab value="general">{lang.general}</Tabs.Tab>
             <Tabs.Tab value="commands">{lang.commands}</Tabs.Tab>
@@ -93,7 +111,7 @@ const PreferencePanel = () => {
             <Tabs.Panel value="general" className={styles.tab_panel}>
               <ScrollArea className={styles.scroll_area} offsetScrollbars="y" scrollbars="y">
                 <div className={styles.tab_panel_content}>
-                  <General data={data} onChange={onUpdate} />
+                  <General data={data} onChange={onSaveImmediate} />
                 </div>
               </ScrollArea>
             </Tabs.Panel>
@@ -114,7 +132,7 @@ const PreferencePanel = () => {
             <Tabs.Panel value="advanced" className={styles.tab_panel}>
               <ScrollArea className={styles.scroll_area} offsetScrollbars="y" scrollbars="y">
                 <div className={styles.tab_panel_content}>
-                  <Advanced data={data} onChange={onUpdate} />
+                  <Advanced data={data} onChange={onSaveImmediate} />
                 </div>
               </ScrollArea>
             </Tabs.Panel>
