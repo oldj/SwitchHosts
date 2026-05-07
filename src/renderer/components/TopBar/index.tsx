@@ -120,14 +120,14 @@ const TopBar = (props: IProps) => {
 
       <Flex align="center" justify="flex-end" gap={8}>
         {showToggleSwitch ? (
-          <Box mr="12px">
+          <Flex align="center" mr="12px">
             <SwitchButton
               on={isOn}
               onChange={(on) => {
                 if (currentHosts) agent.broadcast(events.toggle_item, currentHosts.id, on)
               }}
             />
-          </Box>
+          </Flex>
         ) : null}
         <ActionIcon
           aria-label="Toggle right panel"
