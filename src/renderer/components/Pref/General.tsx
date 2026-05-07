@@ -21,7 +21,7 @@ const General = (props: IProps) => {
   const { platform } = agent
 
   return (
-    <Stack gap="16px">
+    <Stack gap="16px" pb={60}>
       <Box
         style={{
           display: 'grid',

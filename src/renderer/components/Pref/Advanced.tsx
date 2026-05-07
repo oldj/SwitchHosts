@@ -58,7 +58,7 @@ const Advanced = (props: IProps) => {
   }, [])
 
   return (
-    <Stack gap="40px">
+    <Stack gap="40px" pb={60}>
       <div style={{ width: '100%' }}>
         <div>{lang.usage_data_title}</div>
         <div style={{ marginBottom: 8, opacity: 0.7, fontSize: 12 }}>{lang.usage_data_help}</div>
