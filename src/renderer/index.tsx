@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import { createTheme, MantineColorsTuple, MantineProvider } from '@mantine/core'
+import { createTheme, MantineColorsTuple, MantineProvider, Tooltip } from '@mantine/core'
 import '@mantine/core/styles.css'
 import { Notifications } from '@mantine/notifications'
 import '@mantine/notifications/styles.css'
@@ -49,6 +49,13 @@ const theme = createTheme({
     swhColor,
   },
   primaryColor: 'swhColor',
+  components: {
+    Tooltip: Tooltip.extend({
+      defaultProps: {
+        withArrow: true,
+      },
+    }),
+  },
 })
 
 const container = document.getElementById('root')
