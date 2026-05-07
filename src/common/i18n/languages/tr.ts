@@ -20,9 +20,14 @@ export default {
   check_update_failed: 'Güncellemeleri kontrol etme başarısız!',
   choice_mode: 'Seçim Modu',
   choice_mode_default: 'Varsayılan',
+  choice_mode_default_effect: 'Tercihlerdeki genel seçim modunu devralır.',
   choice_mode_desc: 'Sadece en üstteki öğe için geçerlidir, her klasör kendi seçim modunu ayarlayabilir.',
   choice_mode_multiple: 'Çoklu',
+  choice_mode_multiple_effect:
+    'Bu klasördeki birden çok doğrudan öğe aynı anda etkin olabilir.',
   choice_mode_single: 'Tekli',
+  choice_mode_single_effect:
+    'Bu klasördeki doğrudan öğelerden aynı anda yalnızca biri etkin olabilir.',
   choices: 'Seçenekler',
   chosen: 'Seçildi',
   clear_history: 'Geçmişi Temizle',

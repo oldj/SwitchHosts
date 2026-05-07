@@ -22,10 +22,15 @@ const lang: LanguageDict = {
   check_update_failed: 'Suche nach Updates fehlgeschlagen!',
   choice_mode: 'Auswahlmodus',
   choice_mode_default: 'Standard',
+  choice_mode_default_effect: 'Übernimmt den globalen Auswahlmodus aus den Einstellungen.',
   choice_mode_desc:
     'Gilt nur für das oberste Element, jeder Ordner kann seinen eigenen Auswahlmodus festlegen.',
   choice_mode_multiple: 'Mehrfach',
+  choice_mode_multiple_effect:
+    'Mehrere direkte Elemente in diesem Ordner können gleichzeitig aktiviert sein.',
   choice_mode_single: 'Einfach',
+  choice_mode_single_effect:
+    'In diesem Ordner kann jeweils nur ein direktes Element aktiviert sein.',
   choices: 'Auswahlen',
   chosen: 'Ausgewählt',
   clear_history: 'Verlauf löschen',

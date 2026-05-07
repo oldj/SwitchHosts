@@ -20,10 +20,15 @@ export default {
   check_update_failed: 'Check for updates failed!',
   choice_mode: 'Choice mode',
   choice_mode_default: 'Default',
+  choice_mode_default_effect: 'Inherits the global choice mode from Preferences.',
   choice_mode_desc:
     'Only valid for the topmost item, each folder can set its own choice mode.',
   choice_mode_multiple: 'Multiple',
+  choice_mode_multiple_effect:
+    'Multiple items directly inside this folder can be enabled at the same time.',
   choice_mode_single: 'Single',
+  choice_mode_single_effect:
+    'Only one item directly inside this folder can be enabled at a time.',
   choices: 'Choices',
   chosen: 'Chosen',
   clear_history: 'Clear history',

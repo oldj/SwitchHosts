@@ -221,11 +221,18 @@ const EditHostsInfo = () => {
   }
 
   const forFolder = (): React.ReactElement => {
+    const folderMode = (hosts?.folder_mode || 0) as FolderModeType
+    const choiceModeEffect: Record<FolderModeType, string> = {
+      0: lang.choice_mode_default_effect,
+      1: lang.choice_mode_single_effect,
+      2: lang.choice_mode_multiple_effect,
+    }
+
     return (
       <Box className={styles.ln}>
         <Text mb="8px">{lang.choice_mode}</Text>
         <SegmentedControl
-          value={(hosts?.folder_mode || 0).toString()}
+          value={folderMode.toString()}
           onChange={(v) => onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })}
           data={[
             { value: '0', label: lang.choice_mode_default },
@@ -233,6 +240,9 @@ const EditHostsInfo = () => {
             { value: '2', label: lang.choice_mode_multiple },
           ]}
         />
+        <Text mt="8px" size="sm" c="dimmed">
+          {choiceModeEffect[folderMode]}
+        </Text>
       </Box>
     )
   }

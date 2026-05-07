@@ -19,10 +19,14 @@ export default {
   check_update_failed: '업데이트 확인에 실패했습니다!',
   choice_mode: '선택 모드',
   choice_mode_default: '기본값',
+  choice_mode_default_effect: '환경설정의 전역 선택 모드를 상속합니다.',
   choice_mode_desc:
     '최상위 항목에만 유효하며, 각 폴더는 고유의 선택 모드를 설정할 수 있습니다.',
   choice_mode_multiple: '다중모드',
+  choice_mode_multiple_effect:
+    '이 폴더의 바로 아래 항목 여러 개를 동시에 켤 수 있습니다.',
   choice_mode_single: '단일모드',
+  choice_mode_single_effect: '이 폴더의 바로 아래 항목은 한 번에 하나만 켤 수 있습니다.',
   choices: '선택',
   chosen: '선택됨',
   clear_history: '이력 삭제',

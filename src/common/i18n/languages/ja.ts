@@ -22,10 +22,14 @@ const lang: LanguageDict = {
   check_update_failed: 'アップデートの確認に失敗しました！',
   choice_mode: '選択モード',
   choice_mode_default: 'デフォルト',
+  choice_mode_default_effect: '設定のグローバル選択モードを継承します。',
   choice_mode_desc:
     '最上位階層のhostsにのみ有効で、各フォルダーでは独自に選択モードを設定できます。',
   choice_mode_multiple: '複数',
+  choice_mode_multiple_effect:
+    'このフォルダー直下の複数の項目を同時に有効にできます。',
   choice_mode_single: '単一',
+  choice_mode_single_effect: 'このフォルダー直下の項目は一度に1つだけ有効にできます。',
   choices: '選択',
   chosen: '選択済み',
   clear_history: '履歴をクリア',

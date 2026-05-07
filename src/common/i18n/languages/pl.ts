@@ -20,9 +20,14 @@ export default {
   check_update_failed: 'Sprawdzanie aktualizacji nie powiodło się!',
   choice_mode: 'Tryb wyboru',
   choice_mode_default: 'Domyślny',
+  choice_mode_default_effect: 'Dziedziczy globalny tryb wyboru z preferencji.',
   choice_mode_desc: 'Obowiązuje tylko dla elementu na górze, każdy folder może mieć własny tryb wyboru.',
   choice_mode_multiple: 'Wiele',
+  choice_mode_multiple_effect:
+    'Wiele bezpośrednich elementów w tym folderze może być włączonych jednocześnie.',
   choice_mode_single: 'Jeden',
+  choice_mode_single_effect:
+    'Tylko jeden bezpośredni element w tym folderze może być włączony jednocześnie.',
   choices: 'Wybory',
   chosen: 'Wybrane',
   clear_history: 'Wyczyść historię',

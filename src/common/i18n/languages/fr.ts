@@ -22,10 +22,15 @@ const lang: LanguageDict = {
   check_update_failed: 'La vérification des mises à jour a échoué !',
   choice_mode: 'Choice mode',
   choice_mode_default: 'Défaut',
+  choice_mode_default_effect: 'Hérite du mode de choix global défini dans les préférences.',
   choice_mode_desc:
     "Uniquement valable pour l'élément le plus haut, chaque dossier peut définir son propre mode.",
   choice_mode_multiple: 'Multiple',
+  choice_mode_multiple_effect:
+    'Plusieurs éléments directement dans ce dossier peuvent être activés en même temps.',
   choice_mode_single: 'Seul',
+  choice_mode_single_effect:
+    'Un seul élément directement dans ce dossier peut être activé à la fois.',
   choices: 'Choix',
   chosen: 'Choisi',
   clear_history: "Effacer l'historique",
