@@ -71,7 +71,7 @@ const General = (props: IProps) => {
               { value: 'overwrite', label: lang.overwrite },
             ]}
           />
-          <Text maw={350} c="dimmed" size="sm">
+          <Text c="dimmed" size="sm" style={{ alignSelf: 'stretch' }}>
             {data.write_mode === 'append' && lang.write_mode_append_help}
             {data.write_mode === 'overwrite' && lang.write_mode_overwrite_help}
           </Text>
@@ -87,7 +87,7 @@ const General = (props: IProps) => {
               { value: '2', label: lang.choice_mode_multiple },
             ]}
           />
-          <Text maw={350} c="dimmed" size="sm">
+          <Text c="dimmed" size="sm" style={{ alignSelf: 'stretch' }}>
             {lang.choice_mode_desc}
           </Text>
         </Stack>
@@ -140,16 +140,12 @@ const General = (props: IProps) => {
       ) : null}
 
       <Box w="100%">
-        <Stack gap="16px">
-          <Checkbox
-            checked={data.remove_duplicate_records}
-            onChange={(e) => onChange({ remove_duplicate_records: e.target.checked })}
-            label={lang.remove_duplicate_records}
-          />
-          <Box pl="20px" c="dimmed" fz="sm">
-            {lang.remove_duplicate_records_desc}
-          </Box>
-        </Stack>
+        <Checkbox
+          checked={data.remove_duplicate_records}
+          onChange={(e) => onChange({ remove_duplicate_records: e.target.checked })}
+          label={lang.remove_duplicate_records}
+          description={lang.remove_duplicate_records_desc}
+        />
       </Box>
 
       <Box w="100%">
@@ -173,23 +169,21 @@ const General = (props: IProps) => {
       </Box>
 
       <Box w="100%">
-        <Stack gap="16px">
+        <Stack gap="8px">
           <Checkbox
             checked={data.http_api_on}
             onChange={(e) => onChange({ http_api_on: e.target.checked })}
             label={lang.http_api_on}
+            description={i18n.trans('http_api_on_desc', [httpApiPort.toString()])}
           />
-          <Box pl="20px" c="dimmed" fz="sm">
-            {i18n.trans('http_api_on_desc', [httpApiPort.toString()])}
-          </Box>
-          <Stack pl="24px" mt="4px" gap="4px">
+          <Box pl="28px">
             <Checkbox
               disabled={!data.http_api_on}
               checked={data.http_api_only_local}
               onChange={(e) => onChange({ http_api_only_local: e.target.checked })}
               label={lang.http_api_only_local}
             />
-          </Stack>
+          </Box>
         </Stack>
       </Box>
     </Stack>
