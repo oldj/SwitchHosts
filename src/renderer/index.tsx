@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import { createTheme, MantineColorsTuple, MantineProvider, Tooltip } from '@mantine/core'
+import { createTheme, Drawer, MantineColorsTuple, MantineProvider, Tooltip } from '@mantine/core'
 import '@mantine/core/styles.css'
 import { Notifications } from '@mantine/notifications'
 import '@mantine/notifications/styles.css'
@@ -53,6 +53,12 @@ const theme = createTheme({
     Tooltip: Tooltip.extend({
       defaultProps: {
         withArrow: true,
+      },
+    }),
+    Drawer: Drawer.extend({
+      defaultProps: {
+        offset: 8,
+        radius: 'md',
       },
     }),
   },
