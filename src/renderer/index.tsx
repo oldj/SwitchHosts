@@ -3,7 +3,14 @@
  * @homepage: https://oldj.net
  */
 
-import { createTheme, MantineColorsTuple, MantineProvider } from '@mantine/core'
+import {
+  createTheme,
+  Drawer,
+  MantineColorsTuple,
+  MantineProvider,
+  Select,
+  Tooltip,
+} from '@mantine/core'
 import '@mantine/core/styles.css'
 import { Notifications } from '@mantine/notifications'
 import '@mantine/notifications/styles.css'
@@ -49,6 +56,24 @@ const theme = createTheme({
     swhColor,
   },
   primaryColor: 'swhColor',
+  components: {
+    Tooltip: Tooltip.extend({
+      defaultProps: {
+        withArrow: true,
+      },
+    }),
+    Drawer: Drawer.extend({
+      defaultProps: {
+        offset: 8,
+        radius: 'md',
+      },
+    }),
+    Select: Select.extend({
+      defaultProps: {
+        checkIconPosition: 'right',
+      },
+    }),
+  },
 })
 
 const container = document.getElementById('root')

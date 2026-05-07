@@ -117,6 +117,13 @@ function resolveCommandName(action: string): string {
 // ---- tauri agent factory ---------------------------------------------------
 
 function detectPlatform(): string {
+  // Dev override: VITE_PLATFORM=darwin|win32|linux at startup forces the
+  // renderer to render the platform-specific layout regardless of the real OS.
+  // Useful for previewing Windows / Linux UI while developing on macOS.
+  const override = import.meta.env.VITE_PLATFORM
+  if (override === 'darwin' || override === 'win32' || override === 'linux') {
+    return override
+  }
   if (typeof navigator === 'undefined') return 'linux'
   const ua = navigator.userAgent.toLowerCase()
   if (ua.includes('mac')) return 'darwin'

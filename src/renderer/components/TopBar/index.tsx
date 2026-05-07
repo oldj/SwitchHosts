@@ -4,7 +4,7 @@
  */
 
 import events from '@common/events'
-import { ActionIcon, Box, Flex } from '@mantine/core'
+import { ActionIcon, Badge, Box, Divider, Flex } from '@mantine/core'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { actions, agent } from '@renderer/core/agent'
@@ -104,21 +104,30 @@ const TopBar = (props: IProps) => {
           )}
 
           {isReadOnly(currentHosts) ? (
-            <span className={styles.read_only}>{lang.read_only}</span>
+            <Badge
+              variant="light"
+              color="gray"
+              size="sm"
+              radius="sm"
+              tt="none"
+              className={styles.read_only}
+            >
+              {lang.read_only}
+            </Badge>
           ) : null}
         </Flex>
       </Box>
 
       <Flex align="center" justify="flex-end" gap={8}>
         {showToggleSwitch ? (
-          <Box mr="12px">
+          <Flex align="center" mr="12px">
             <SwitchButton
               on={isOn}
               onChange={(on) => {
                 if (currentHosts) agent.broadcast(events.toggle_item, currentHosts.id, on)
               }}
             />
-          </Box>
+          </Flex>
         ) : null}
         <ActionIcon
           aria-label="Toggle right panel"
@@ -137,6 +146,7 @@ const TopBar = (props: IProps) => {
 
         {showWindowControls ? (
           <>
+            <Divider orientation="vertical" my={6} mx={4} />
             <ActionIcon
               aria-label="Minimize"
               variant="subtle"

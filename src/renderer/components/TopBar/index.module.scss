@@ -1,7 +1,7 @@
 @use '../../styles/common';
 
 .root {
-  $w: 150px;
+  $w: 230px;
   $p: 10px;
 
   background: transparent;
@@ -11,7 +11,9 @@
   padding: 0 $p;
   align-items: center;
   align-content: center;
+  justify-content: space-between;
   user-select: none;
+  position: relative;
 
   .title {
     max-width: calc(100vw - ($w + $p) * 2);
@@ -23,10 +25,13 @@
 }
 
 .title_wrapper {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
   display: flex;
-  flex: 1;
   align-items: center;
-  justify-content: center;
 }
 
 .hosts_icon {
@@ -42,9 +47,6 @@
 }
 
 .read_only {
-  // color: var(--swh-font-color-weak);
+  --badge-bg: var(--swh-top-bar-read-only-bg);
   background-color: var(--swh-top-bar-read-only-bg);
-  border-radius: var(--swh-border-radius);
-  font-size: 10px;
-  padding: 2px 6px;
 }

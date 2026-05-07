@@ -8,7 +8,6 @@
 .body {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
   background: var(--swh-right-panel-bg);
   border: 1px solid var(--swh-border-color-0);
   border-left: none;
@@ -38,10 +37,6 @@
 
 .section {
   padding: 12px;
-
-  & + & {
-    border-top: 1px dashed var(--swh-border-color-0);
-  }
 }
 
 .section_title {
@@ -53,21 +48,23 @@
 
 .row {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
   font-size: 13px;
   line-height: 1.5em;
+
+  & + & {
+    margin-top: 10px;
+  }
 }
 
 .row_label {
-  flex: 0 0 auto;
-  min-width: 84px;
   opacity: 0.65;
   font-size: 12px;
 }
 
 .row_value {
-  flex: 1;
   min-width: 0;
   word-break: break-all;
 }
@@ -84,7 +81,7 @@
 
 .refresh_btn {
   align-self: flex-start;
-  margin-top: 4px;
+  margin-top: 14px;
 }
 
 .footer {

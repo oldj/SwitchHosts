@@ -1,3 +1,11 @@
+.item {
+  border-radius: 4px;
+
+  & + & {
+    margin-top: 2px;
+  }
+}
+
 .selected {
   background: var(--swh-tree-selected-bg);
   color: var(--swh-font-color-reverse);

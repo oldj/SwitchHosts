@@ -6,7 +6,7 @@
 import { httpApiPort } from '@common/constants'
 import { ConfigsType, ThemeType } from '@common/default_configs'
 import { LocaleName } from '@common/i18n'
-import { Box, Checkbox, Group, NativeSelect, Radio, Stack, Text } from '@mantine/core'
+import { Box, Checkbox, Group, SegmentedControl, Select, Stack, Text } from '@mantine/core'
 import { agent } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
 
@@ -20,85 +20,77 @@ const General = (props: IProps) => {
   const { i18n, lang } = useI18n()
   const { platform } = agent
 
-  const labelWidth = 80
-
   return (
-    <Stack gap="16px">
-      <Box w="100%">
-        <Group gap="8px">
-          <Box w={labelWidth}>{lang.language}</Box>
-          <NativeSelect
-            value={data.locale}
-            onChange={(e) => onChange({ locale: e.target.value as LocaleName })}
+    <Stack gap="16px" pb={60}>
+      <Box
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'max-content 1fr',
+          columnGap: 16,
+          rowGap: 16,
+          alignItems: 'center',
+        }}
+      >
+        <Box>{lang.language}</Box>
+        <Select
+          value={data.locale}
+          onChange={(v) => v && onChange({ locale: v as LocaleName })}
+          data={[
+            { value: 'zh', label: '简体中文' },
+            { value: 'zh_hant', label: '繁體中文' },
+            { value: 'en', label: 'English' },
+            { value: 'fr', label: 'Français' },
+            { value: 'de', label: 'Deutsch' },
+            { value: 'ja', label: '日本語' },
+            { value: 'tr', label: 'Türkçe' },
+            { value: 'ko', label: '한국어' },
+          ]}
+          w={200}
+          allowDeselect={false}
+          comboboxProps={{ shadow: 'md' }}
+        />
+
+        <Box>{lang.theme}</Box>
+        <SegmentedControl
+          value={data.theme}
+          onChange={(v) => onChange({ theme: v as ThemeType })}
+          data={[
+            { value: 'light', label: lang.theme_light },
+            { value: 'dark', label: lang.theme_dark },
+          ]}
+          style={{ justifySelf: 'start' }}
+        />
+
+        <Box style={{ alignSelf: 'start' }}>{lang.write_mode}</Box>
+        <Stack gap="8px" align="flex-start">
+          <SegmentedControl
+            value={data.write_mode || 'append'}
+            onChange={(v) => onChange({ write_mode: v as ConfigsType['write_mode'] })}
             data={[
-              { value: 'zh', label: '简体中文' },
-              { value: 'zh_hant', label: '繁體中文' },
-              { value: 'en', label: 'English' },
-              { value: 'fr', label: 'Français' },
-              { value: 'de', label: 'Deutsch' },
-              { value: 'ja', label: '日本語' },
-              { value: 'tr', label: 'Türkçe' },
-              { value: 'ko', label: '한국어' },
+              { value: 'append', label: lang.append },
+              { value: 'overwrite', label: lang.overwrite },
             ]}
-            w={200}
           />
-        </Group>
-      </Box>
+          <Text c="dimmed" size="sm" style={{ alignSelf: 'stretch' }}>
+            {data.write_mode === 'append' && lang.write_mode_append_help}
+            {data.write_mode === 'overwrite' && lang.write_mode_overwrite_help}
+          </Text>
+        </Stack>
 
-      <Box w="100%">
-        <Group gap="8px">
-          <Box w={labelWidth}>{lang.theme}</Box>
-          <NativeSelect
-            value={data.theme}
-            onChange={(e) => onChange({ theme: e.target.value as ThemeType })}
+        <Box style={{ alignSelf: 'start' }}>{lang.choice_mode}</Box>
+        <Stack gap="8px" align="flex-start">
+          <SegmentedControl
+            value={data.choice_mode.toString()}
+            onChange={(v) => onChange({ choice_mode: parseInt(v) as ConfigsType['choice_mode'] })}
             data={[
-              { value: 'light', label: lang.theme_light },
-              { value: 'dark', label: lang.theme_dark },
+              { value: '1', label: lang.choice_mode_single },
+              { value: '2', label: lang.choice_mode_multiple },
             ]}
-            w={200}
           />
-        </Group>
-      </Box>
-
-      <Box w="100%">
-        <Group align="flex-start" gap="8px">
-          <Box w={labelWidth}>{lang.write_mode}</Box>
-          <Stack gap="24px">
-            <Radio.Group
-              value={data.write_mode || ''}
-              onChange={(v) => onChange({ write_mode: v as ConfigsType['write_mode'] })}
-            >
-              <Group gap="40px">
-                <Radio value="append" label={lang.append} />
-                <Radio value="overwrite" label={lang.overwrite} />
-              </Group>
-            </Radio.Group>
-            <Text maw={350} c="dimmed" size="sm">
-              {data.write_mode === 'append' && lang.write_mode_append_help}
-              {data.write_mode === 'overwrite' && lang.write_mode_overwrite_help}
-            </Text>
-          </Stack>
-        </Group>
-      </Box>
-
-      <Box pb="24px" w="100%">
-        <Group align="flex-start" gap="8px">
-          <Box w={labelWidth}>{lang.choice_mode}</Box>
-          <Stack gap="24px">
-            <Radio.Group
-              value={data.choice_mode.toString()}
-              onChange={(v) => onChange({ choice_mode: parseInt(v) as ConfigsType['choice_mode'] })}
-            >
-              <Group gap="40px">
-                <Radio value="1" label={lang.choice_mode_single} />
-                <Radio value="2" label={lang.choice_mode_multiple} />
-              </Group>
-            </Radio.Group>
-            <Text maw={350} c="dimmed" size="sm">
-              {lang.choice_mode_desc}
-            </Text>
-          </Stack>
-        </Group>
+          <Text c="dimmed" size="sm" style={{ alignSelf: 'stretch' }}>
+            {lang.choice_mode_desc}
+          </Text>
+        </Stack>
       </Box>
 
       {platform === 'darwin' ? (
@@ -148,16 +140,12 @@ const General = (props: IProps) => {
       ) : null}
 
       <Box w="100%">
-        <Stack gap="16px">
-          <Checkbox
-            checked={data.remove_duplicate_records}
-            onChange={(e) => onChange({ remove_duplicate_records: e.target.checked })}
-            label={lang.remove_duplicate_records}
-          />
-          <Box pl="20px" c="dimmed" fz="sm">
-            {lang.remove_duplicate_records_desc}
-          </Box>
-        </Stack>
+        <Checkbox
+          checked={data.remove_duplicate_records}
+          onChange={(e) => onChange({ remove_duplicate_records: e.target.checked })}
+          label={lang.remove_duplicate_records}
+          description={lang.remove_duplicate_records_desc}
+        />
       </Box>
 
       <Box w="100%">
@@ -181,23 +169,21 @@ const General = (props: IProps) => {
       </Box>
 
       <Box w="100%">
-        <Stack gap="16px">
+        <Stack gap="8px">
           <Checkbox
             checked={data.http_api_on}
             onChange={(e) => onChange({ http_api_on: e.target.checked })}
             label={lang.http_api_on}
+            description={i18n.trans('http_api_on_desc', [httpApiPort.toString()])}
           />
-          <Box pl="20px" c="dimmed" fz="sm">
-            {i18n.trans('http_api_on_desc', [httpApiPort.toString()])}
-          </Box>
-          <Stack pl="24px" mt="4px" gap="4px">
+          <Box pl="28px">
             <Checkbox
               disabled={!data.http_api_on}
               checked={data.http_api_only_local}
               onChange={(e) => onChange({ http_api_only_local: e.target.checked })}
               label={lang.http_api_only_local}
             />
-          </Stack>
+          </Box>
         </Stack>
       </Box>
     </Stack>

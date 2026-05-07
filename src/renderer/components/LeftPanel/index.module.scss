@@ -1,5 +1,3 @@
-@use '../../styles/common';
-
 .root {
   display: flex;
   flex-direction: column;
@@ -10,7 +8,6 @@
   position: relative;
   flex: 1;
   min-height: 0;
-  overflow: auto;
   padding: 5px 10px;
   background: var(--swh-left-panel-bg);
   border: 1px solid var(--swh-border-color-0);
@@ -24,10 +21,4 @@
   background: var(--swh-status-bar-bg);
   color: var(--swh-status-bar-font-color);
   font-size: var(--swh-status-bar-font-size);
-}
-
-:global(.platform-win32) {
-  .list {
-    @include common.swh-scroll-y();
-  }
 }

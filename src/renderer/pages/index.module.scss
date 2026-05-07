@@ -10,6 +10,12 @@
   display: flex;
 }
 
+.body.dragging .left,
+.body.dragging .main,
+.body.dragging .right_panel {
+  transition: none;
+}
+
 .left {
   position: fixed;
   top: var(--swh-top-bar-height);
@@ -30,6 +36,8 @@
   top: var(--swh-top-bar-height);
   left: 0;
   bottom: 0;
+  z-index: 1;
+  background: var(--swh-window-bg);
 }
 
 .right_panel {

@@ -16,7 +16,7 @@
   --swh-top-bar-height: 40px;
   --swh-top-tool-bar-height: 28px;
   --swh-top-bar-bg: #fff;
-  --swh-top-bar-read-only-bg: var(--mantine-color-gray-1);
+  --swh-top-bar-read-only-bg: var(--mantine-color-gray-3);
 
   // left
   --swh-left-panel-bg: var(--mantine-color-white);
@@ -74,7 +74,8 @@
   // scroll bar
   --swh-scrollbar-track: rgba(204, 204, 204, 0.25);
   --swh-scrollbar-corner: #fff;
-  --swh-scrollbar-thumb: #ccc;
+  --swh-scrollbar-thumb: rgba(0, 0, 0, 0.4);
+  --swh-scrollbar-thumb-hover: rgba(0, 0, 0, 0.5);
   --swh-scrollbar-filler: #fafafa;
 
   // other componets

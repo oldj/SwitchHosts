@@ -1,20 +1,84 @@
-@use "../styles/common";
+@use '../styles/common';
 
 .root {
   @include common.code;
+  width: 100%;
   height: 100%;
 }
 
-.content {
+.editor {
   height: calc(100% - var(--swh-status-bar-height));
-  background: var(--swh-editor-read-only-bg);
-  font-size: var(--swh-editor-font-size);
-  line-height: var(--swh-editor-line-height);
-  color: var(--swh-editor-text-color);
-  overflow: auto;
-  padding: 8px 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  :global {
+    .cm-editor {
+      height: 100%;
+
+      &.cm-focused {
+        outline: none;
+      }
+
+      .cm-scroller {
+        font-family: common.$font-editor;
+
+        &::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        &::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        &::-webkit-scrollbar-thumb {
+          background: var(--swh-scrollbar-thumb);
+          border-radius: 4px;
+        }
+        &::-webkit-scrollbar-thumb:hover {
+          background: var(--swh-scrollbar-thumb-hover, var(--swh-scrollbar-thumb));
+        }
+        &::-webkit-scrollbar-corner {
+          background: transparent;
+        }
+      }
+    }
+
+    .hl-comment {
+      color: var(--swh-editor-comment);
+    }
+
+    .hl-ip {
+      color: var(--swh-editor-ip);
+      font-weight: bold;
+    }
+
+    .hl-error {
+      color: var(--swh-editor-error);
+    }
+  }
+
+  &.read_only {
+    :global {
+      .cm-editor,
+      .cm-gutters {
+        background: var(--swh-editor-read-only-bg);
+      }
+
+      .cm-content {
+        caret-color: transparent;
+        opacity: 0.8;
+      }
+    }
+  }
 }
 
-.line {
-  min-height: var(--swh-editor-line-height);
+.mount {
+  height: 100%;
+}
+
+:global(.theme-dark) {
+  .editor.read_only {
+    :global(.cm-content) {
+      caret-color: transparent;
+    }
+  }
 }

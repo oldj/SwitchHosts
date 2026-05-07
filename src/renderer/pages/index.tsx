@@ -7,6 +7,7 @@ import LeftSidebar from '@renderer/components/LeftSidebar'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
 import PreferencePanel from '@renderer/components/Pref'
+import ResizeHandle from '@renderer/components/ResizeHandle'
 import RightPanel from '@renderer/components/RightPanel'
 import SetWriteMode from '@renderer/components/SetWriteMode'
 import UpdateDialog from '@renderer/components/UpdateDialog'
@@ -14,24 +15,29 @@ import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import clsx from 'clsx'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import TopBar from '../components/TopBar'
 import useHostsData from '../models/useHostsData'
 import useI18n from '../models/useI18n'
 import styles from './index.module.scss'
 
 const LEFT_SIDEBAR_WIDTH = 40
-const RIGHT_PANEL_WIDTH = 240
 const BODY_PADDING_RIGHT = 8
+const PANEL_MIN_WIDTH = 100
+
+const clampPanel = (value: number) =>
+  Math.round(Math.min(Math.max(value, PANEL_MIN_WIDTH), window.innerWidth * 0.5))
 
 const MainPage = () => {
   const [loading, setLoading] = useState(true)
   const { setLocale } = useI18n()
   const { loadHostsData } = useHostsData()
-  const { configs } = useConfigs()
+  const { configs, updateConfigs } = useConfigs()
   const [leftWidth, setLeftWidth] = useState(0)
+  const [rightWidth, setRightWidth] = useState(240)
   const [leftShow, setLeftShow] = useState(true)
   const [rightShow, setRightShow] = useState(true)
+  const [dragging, setDragging] = useState(false)
   const [useSystemWindowFrame, setSystemFrame] = useState(false)
   const init = async () => {
     // v5: migration is handled automatically by the Rust backend on startup.
@@ -48,6 +54,7 @@ const MainPage = () => {
 
     setLocale(configs.locale)
     setLeftWidth(configs.left_panel_width)
+    setRightWidth(configs.right_panel_width)
     setLeftShow(configs.left_panel_show)
     setRightShow(configs.right_panel_show)
     setSystemFrame(configs.use_system_window_frame)
@@ -70,8 +77,44 @@ const MainPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configs])
 
-  useOnBroadcast(events.toggle_left_panel, (show: boolean) => setLeftShow(show))
-  useOnBroadcast(events.toggle_right_panel, (show: boolean) => setRightShow(show))
+  useOnBroadcast(events.toggle_left_panel, (show: boolean) => {
+    setLeftShow(show)
+    updateConfigs({ left_panel_show: show }).catch((e) => console.error(e))
+  })
+  useOnBroadcast(events.toggle_right_panel, (show: boolean) => {
+    setRightShow(show)
+    updateConfigs({ right_panel_show: show }).catch((e) => console.error(e))
+  })
+
+  const widthsRef = useRef({ left: leftWidth, right: rightWidth })
+  const updateConfigsRef = useRef(updateConfigs)
+  useEffect(() => {
+    widthsRef.current.left = leftWidth
+    widthsRef.current.right = rightWidth
+    updateConfigsRef.current = updateConfigs
+  })
+
+  useEffect(() => {
+    const onResize = () => {
+      const max = window.innerWidth * 0.5
+      const patch: { left_panel_width?: number; right_panel_width?: number } = {}
+      if (widthsRef.current.left > max) {
+        const lw = clampPanel(widthsRef.current.left)
+        patch.left_panel_width = lw
+        setLeftWidth(lw)
+      }
+      if (widthsRef.current.right > max) {
+        const rw = clampPanel(widthsRef.current.right)
+        patch.right_panel_width = rw
+        setRightWidth(rw)
+      }
+      if (Object.keys(patch).length > 0) {
+        updateConfigsRef.current(patch).catch((e) => console.error(e))
+      }
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   if (loading) {
     return <Loading />
@@ -85,9 +128,9 @@ const MainPage = () => {
         useSystemWindowFrame={useSystemWindowFrame}
       />
 
-      <div className={styles.body}>
+      <div className={clsx(styles.body, { [styles.dragging]: dragging })}>
         <div className={styles.left_sidebar} style={{ width: LEFT_SIDEBAR_WIDTH }}>
-          <LeftSidebar />
+          <LeftSidebar showLeftPanel={leftShow} />
         </div>
         <div
           className={styles.left}
@@ -97,13 +140,26 @@ const MainPage = () => {
           }}
         >
           <LeftPanel width={leftWidth} />
+          {leftShow && (
+            <ResizeHandle
+              side="left"
+              current={leftWidth}
+              min={PANEL_MIN_WIDTH}
+              onResize={setLeftWidth}
+              onResizeEnd={(w) => {
+                updateConfigs({ left_panel_width: w }).catch((e) => console.error(e))
+              }}
+              onDragStart={() => setDragging(true)}
+              onDragEnd={() => setDragging(false)}
+            />
+          )}
         </div>
         <div
           className={clsx(styles.main)}
           style={
             {
               left: LEFT_SIDEBAR_WIDTH + (leftShow ? leftWidth : 0),
-              right: BODY_PADDING_RIGHT + (rightShow ? RIGHT_PANEL_WIDTH : 0),
+              right: BODY_PADDING_RIGHT + (rightShow ? rightWidth : 0),
               '--editor-radius-left': leftShow ? '0' : 'var(--swh-border-radius)',
               '--editor-radius-right': rightShow ? '0' : 'var(--swh-border-radius)',
             } as React.CSSProperties
@@ -114,10 +170,23 @@ const MainPage = () => {
         <div
           className={styles.right_panel}
           style={{
-            width: RIGHT_PANEL_WIDTH,
-            right: rightShow ? BODY_PADDING_RIGHT : -RIGHT_PANEL_WIDTH,
+            width: rightWidth,
+            right: rightShow ? BODY_PADDING_RIGHT : -rightWidth,
           }}
         >
+          {rightShow && (
+            <ResizeHandle
+              side="right"
+              current={rightWidth}
+              min={PANEL_MIN_WIDTH}
+              onResize={setRightWidth}
+              onResizeEnd={(w) => {
+                updateConfigs({ right_panel_width: w }).catch((e) => console.error(e))
+              }}
+              onDragStart={() => setDragging(true)}
+              onDragEnd={() => setDragging(false)}
+            />
+          )}
           <RightPanel />
         </div>
         <div className={styles.body_frame} />

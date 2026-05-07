@@ -7,6 +7,7 @@ import { ConfigsType } from '@common/default_configs'
 import { Checkbox, Stack, Tooltip } from '@mantine/core'
 import { actions } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
+import { IconFile, IconFolder } from '@tabler/icons-react'
 import React, { useEffect, useState } from 'react'
 import styles from './styles.module.scss'
 
@@ -15,8 +16,8 @@ interface IProps {
   onChange: (kv: Partial<ConfigsType>) => void
 }
 
-const PathLink = (props: { link: string }) => {
-  const { link } = props
+const PathLink = (props: { link: string; icon?: React.ReactNode }) => {
+  const { link, icon } = props
   const { lang } = useI18n()
   const isDisabled = !link
   return (
@@ -30,8 +31,15 @@ const PathLink = (props: { link: string }) => {
           actions.showItemInFolder(link)
         }}
         href={isDisabled ? undefined : 'file://' + link}
-        style={{ opacity: isDisabled ? 0.5 : 1, pointerEvents: isDisabled ? 'none' : 'auto' }}
+        style={{
+          opacity: isDisabled ? 0.5 : 1,
+          pointerEvents: isDisabled ? 'none' : 'auto',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
       >
+        {icon}
         {link}
       </a>
     </Tooltip>
@@ -50,7 +58,7 @@ const Advanced = (props: IProps) => {
   }, [])
 
   return (
-    <Stack gap="40px">
+    <Stack gap="40px" pb={60}>
       <div style={{ width: '100%' }}>
         <div>{lang.usage_data_title}</div>
         <div style={{ marginBottom: 8, opacity: 0.7, fontSize: 12 }}>{lang.usage_data_help}</div>
@@ -64,13 +72,13 @@ const Advanced = (props: IProps) => {
       <div style={{ width: '100%' }}>
         <div>{lang.where_is_my_hosts}</div>
         <div style={{ marginBottom: 8, opacity: 0.7, fontSize: 12 }}>{lang.your_hosts_file_is}</div>
-        <PathLink link={hostsPath} />
+        <PathLink link={hostsPath} icon={<IconFile size={16} />} />
       </div>
 
       <div style={{ width: '100%' }}>
         <div>{lang.where_is_my_data}</div>
         <div style={{ marginBottom: 8, opacity: 0.7, fontSize: 12 }}>{lang.your_data_is}</div>
-        <PathLink link={dataDir} />
+        <PathLink link={dataDir} icon={<IconFolder size={16} />} />
       </div>
     </Stack>
   )

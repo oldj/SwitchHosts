@@ -13,6 +13,7 @@ import {
   Group,
   Loader,
   NativeSelect,
+  ScrollArea,
   Text,
   Tooltip,
 } from '@mantine/core'
@@ -60,13 +61,15 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
       >
         <HostsViewer content={selectedItem ? selectedItem.content : ''} />
       </Box>
-      <Box
+      <ScrollArea
         w={200}
         h="100%"
+        scrollbars="y"
+        type="hover"
         style={{
-          overflow: 'auto',
           border: '1px solid var(--swh-border-color-0)',
           borderRadius: 6,
+          padding: 4,
         }}
       >
         {list.map((item) => (
@@ -76,7 +79,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
             px="12px"
             py="8px"
             style={{ userSelect: 'none' }}
-            className={clsx(item.id === selectedItem?.id && styles.selected)}
+            className={clsx(styles.item, item.id === selectedItem?.id && styles.selected)}
           >
             <Group gap="8px" wrap="nowrap" align="flex-start">
               <Box>
@@ -99,7 +102,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
             </Group>
           </Box>
         ))}
-      </Box>
+      </ScrollArea>
     </Flex>
   )
 }
@@ -218,11 +221,7 @@ const History = () => {
         {isLoading ? (
           <Loading />
         ) : (
-          <HistoryList
-            list={list}
-            selectedItem={selectedItem}
-            setSelectedItem={setSelectedItem}
-          />
+          <HistoryList list={list} selectedItem={selectedItem} setSelectedItem={setSelectedItem} />
         )}
       </Box>
     </SideDrawer>

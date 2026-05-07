@@ -30,6 +30,24 @@
       // monospace rule which is injected after this stylesheet at runtime.
       .cm-scroller {
         font-family: common.$font-editor;
+
+        &::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        &::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        &::-webkit-scrollbar-thumb {
+          background: var(--swh-scrollbar-thumb);
+          border-radius: 4px;
+        }
+        &::-webkit-scrollbar-thumb:hover {
+          background: var(--swh-scrollbar-thumb-hover, var(--swh-scrollbar-thumb));
+        }
+        &::-webkit-scrollbar-corner {
+          background: transparent;
+        }
       }
     }
 

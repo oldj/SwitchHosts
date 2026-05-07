@@ -3,7 +3,7 @@
  * @homepage: https://oldj.net
  */
 
-import { ActionIcon, Box, Center, Stack } from '@mantine/core'
+import { ActionIcon, Box, Center, ScrollArea, Stack } from '@mantine/core'
 import clsx from 'clsx'
 import React, { useState } from 'react'
 import { IoArrowBack, IoArrowForward } from 'react-icons/io5'
@@ -48,7 +48,7 @@ const Transfer = (props: Props) => {
     }
 
     return (
-      <div className={styles.list}>
+      <ScrollArea h={200} scrollbars="y" type="hover">
         {data.map((item) => {
           if (!item || !item.id) return null
           const isSelected = selectedKeys.includes(item.id)
@@ -65,7 +65,7 @@ const Transfer = (props: Props) => {
             </Box>
           )
         })}
-      </div>
+      </ScrollArea>
     )
   }
 
@@ -153,8 +153,8 @@ const Transfer = (props: Props) => {
             </span>
           </Box>
           {renderList({
-            data: rightKeys.map(
-              (id) => dataSource.find((i) => i.id === id),
+            data: rightKeys.map((id) =>
+              dataSource.find((i) => i.id === id),
             ) as ITransferSourceObject[],
             selectedKeys: rightSelectedKeys,
             setSelectedKeys: setRightSelectedKeys,
