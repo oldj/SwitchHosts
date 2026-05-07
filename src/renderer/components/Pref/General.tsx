@@ -6,7 +6,7 @@
 import { httpApiPort } from '@common/constants'
 import { ConfigsType, ThemeType } from '@common/default_configs'
 import { LocaleName } from '@common/i18n'
-import { Box, Checkbox, Group, NativeSelect, SegmentedControl, Stack, Text } from '@mantine/core'
+import { Box, Checkbox, Group, SegmentedControl, Select, Stack, Text } from '@mantine/core'
 import { agent } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
 
@@ -32,9 +32,9 @@ const General = (props: IProps) => {
         }}
       >
         <Box>{lang.language}</Box>
-        <NativeSelect
+        <Select
           value={data.locale}
-          onChange={(e) => onChange({ locale: e.target.value as LocaleName })}
+          onChange={(v) => v && onChange({ locale: v as LocaleName })}
           data={[
             { value: 'zh', label: '简体中文' },
             { value: 'zh_hant', label: '繁體中文' },
@@ -46,6 +46,8 @@ const General = (props: IProps) => {
             { value: 'ko', label: '한국어' },
           ]}
           w={200}
+          allowDeselect={false}
+          comboboxProps={{ shadow: 'md' }}
         />
 
         <Box>{lang.theme}</Box>
