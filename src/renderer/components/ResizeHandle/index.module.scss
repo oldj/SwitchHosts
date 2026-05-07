@@ -1,0 +1,45 @@
+.handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  z-index: 10;
+  user-select: none;
+  touch-action: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+    background: transparent;
+    transition: background 0.15s;
+  }
+
+  &:hover::after,
+  &.active::after {
+    background: var(--swh-primary-color);
+  }
+}
+
+.left {
+  right: -3px;
+}
+
+.right {
+  left: -3px;
+}
+
+:global(body.swh-resizing) {
+  cursor: ew-resize !important;
+  user-select: none;
+}
+
+:global(body.swh-resizing) * {
+  cursor: ew-resize !important;
+  user-select: none !important;
+}
