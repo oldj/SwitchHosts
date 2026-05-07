@@ -4,6 +4,7 @@
  */
 
 import events from '@common/events'
+import { ScrollArea } from '@mantine/core'
 import Trashcan from '@renderer/components/LeftPanel/Trashcan'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
@@ -37,7 +38,9 @@ const Index = (_props: Props) => {
         if (view === 'list') menu.show()
       }}
     >
-      <div className={styles.content}>{view === 'list' ? <List /> : <Trashcan />}</div>
+      <ScrollArea className={styles.content} scrollbars="y" type="hover">
+        {view === 'list' ? <List /> : <Trashcan />}
+      </ScrollArea>
       <div className={styles.status_bar} />
     </div>
   )

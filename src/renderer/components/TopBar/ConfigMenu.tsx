@@ -5,7 +5,7 @@
 
 import { feedbackUrl, homepageUrl } from '@common/constants'
 import events from '@common/events'
-import { ActionIcon, Menu, type MenuProps, Tooltip } from '@mantine/core'
+import { ActionIcon, Menu, type MenuProps, ScrollArea, Tooltip } from '@mantine/core'
 import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
 import { actions, agent } from '@renderer/core/agent'
 import { getErrorMessage, showErrorNotification, showSuccessNotification } from '@renderer/core/notify'
@@ -61,121 +61,123 @@ const ConfigMenu = (props: IProps) => {
           )}
         </Menu.Target>
         <Menu.Dropdown className={styles.menu_list}>
-          <Menu.Item
-            leftSection={<IconInfoCircle size={iconSize} stroke={strokeWidth} />}
-            onClick={() => agent.broadcast(events.show_about)}
-          >
-            {lang.about}
-          </Menu.Item>
+          <ScrollArea.Autosize mah="calc(100vh - 80px)" scrollbars="y" type="hover">
+            <Menu.Item
+              leftSection={<IconInfoCircle size={iconSize} stroke={strokeWidth} />}
+              onClick={() => agent.broadcast(events.show_about)}
+            >
+              {lang.about}
+            </Menu.Item>
 
-          <Menu.Divider />
+            <Menu.Divider />
 
-          <Menu.Item
-            leftSection={<IconRefresh size={iconSize} stroke={strokeWidth} />}
-            disabled={isCheckingUpdate}
-            onClick={async () => {
-              if (isCheckingUpdate) {
-                return
-              }
+            <Menu.Item
+              leftSection={<IconRefresh size={iconSize} stroke={strokeWidth} />}
+              disabled={isCheckingUpdate}
+              onClick={async () => {
+                if (isCheckingUpdate) {
+                  return
+                }
 
-              setIsCheckingUpdate(true)
-              try {
-                const hasUpdate = await actions.checkUpdate()
-                if (!hasUpdate) {
-                  showSuccessNotification({
+                setIsCheckingUpdate(true)
+                try {
+                  const hasUpdate = await actions.checkUpdate()
+                  if (!hasUpdate) {
+                    showSuccessNotification({
+                      title: lang.check_update,
+                      message: lang.is_latest_version_inform,
+                    })
+                  }
+                } catch (error) {
+                  showErrorNotification({
                     title: lang.check_update,
-                    message: lang.is_latest_version_inform,
+                    message: getErrorMessage(error, lang.check_update_failed),
                   })
+                } finally {
+                  setIsCheckingUpdate(false)
                 }
-              } catch (error) {
-                showErrorNotification({
-                  title: lang.check_update,
-                  message: getErrorMessage(error, lang.check_update_failed),
-                })
-              } finally {
-                setIsCheckingUpdate(false)
-              }
-            }}
-          >
-            {lang.check_update}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconMessage2 size={iconSize} stroke={strokeWidth} />}
-            onClick={() => actions.openUrl(feedbackUrl)}
-          >
-            {lang.feedback}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconHome size={iconSize} stroke={strokeWidth} />}
-            onClick={() => actions.openUrl(homepageUrl)}
-          >
-            {lang.homepage}
-          </Menu.Item>
+              }}
+            >
+              {lang.check_update}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconMessage2 size={iconSize} stroke={strokeWidth} />}
+              onClick={() => actions.openUrl(feedbackUrl)}
+            >
+              {lang.feedback}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconHome size={iconSize} stroke={strokeWidth} />}
+              onClick={() => actions.openUrl(homepageUrl)}
+            >
+              {lang.homepage}
+            </Menu.Item>
 
-          <Menu.Divider />
+            <Menu.Divider />
 
-          <Menu.Item
-            leftSection={<IconUpload size={iconSize} stroke={strokeWidth} />}
-            onClick={async () => {
-              const r = await actions.exportData()
-              if (r === null) {
-                return
-              } else if (r === false) {
-                console.error(lang.import_fail)
-              } else {
-                console.log(lang.export_done)
-              }
-            }}
-          >
-            {lang.export}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconDownload size={iconSize} stroke={strokeWidth} />}
-            onClick={async () => {
-              const r = await actions.importData()
-              if (r === null) {
-                return
-              } else if (r === true) {
-                console.log(lang.import_done)
-                await loadHostsData()
-                setCurrentHosts(null)
-              } else {
-                let description = lang.import_fail
-                if (typeof r === 'string') {
-                  description += ` [${r}]`
+            <Menu.Item
+              leftSection={<IconUpload size={iconSize} stroke={strokeWidth} />}
+              onClick={async () => {
+                const r = await actions.exportData()
+                if (r === null) {
+                  return
+                } else if (r === false) {
+                  console.error(lang.import_fail)
+                } else {
+                  console.log(lang.export_done)
                 }
+              }}
+            >
+              {lang.export}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconDownload size={iconSize} stroke={strokeWidth} />}
+              onClick={async () => {
+                const r = await actions.importData()
+                if (r === null) {
+                  return
+                } else if (r === true) {
+                  console.log(lang.import_done)
+                  await loadHostsData()
+                  setCurrentHosts(null)
+                } else {
+                  let description = lang.import_fail
+                  if (typeof r === 'string') {
+                    description += ` [${r}]`
+                  }
 
-                console.error(description)
-              }
-            }}
-          >
-            {lang.import}
-          </Menu.Item>
-          <Menu.Item
-            leftSection={<IconCloudDownload size={iconSize} stroke={strokeWidth} />}
-            onClick={async () => {
-              setShowImportFromUrl(true)
-            }}
-          >
-            {lang.import_from_url}
-          </Menu.Item>
+                  console.error(description)
+                }
+              }}
+            >
+              {lang.import}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<IconCloudDownload size={iconSize} stroke={strokeWidth} />}
+              onClick={async () => {
+                setShowImportFromUrl(true)
+              }}
+            >
+              {lang.import_from_url}
+            </Menu.Item>
 
-          <Menu.Divider />
+            <Menu.Divider />
 
-          <Menu.Item
-            leftSection={<IconAdjustments size={iconSize} stroke={strokeWidth} />}
-            onClick={() => agent.broadcast(events.show_preferences)}
-          >
-            {lang.preferences}
-          </Menu.Item>
-          <Menu.Divider />
+            <Menu.Item
+              leftSection={<IconAdjustments size={iconSize} stroke={strokeWidth} />}
+              onClick={() => agent.broadcast(events.show_preferences)}
+            >
+              {lang.preferences}
+            </Menu.Item>
+            <Menu.Divider />
 
-          <Menu.Item
-            leftSection={<IconLogout size={iconSize} stroke={strokeWidth} />}
-            onClick={() => actions.quit()}
-          >
-            {lang.quit}
-          </Menu.Item>
+            <Menu.Item
+              leftSection={<IconLogout size={iconSize} stroke={strokeWidth} />}
+              onClick={() => actions.quit()}
+            >
+              {lang.quit}
+            </Menu.Item>
+          </ScrollArea.Autosize>
         </Menu.Dropdown>
       </Menu>
       <ImportFromUrl isShow={showImportFromUrl} setIsShow={setShowImportFromUrl} />

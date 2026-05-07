@@ -1,8 +1,7 @@
 import { FolderModeType, IHostsListObject } from '@common/data'
 import events from '@common/events'
 import * as hostsFn from '@common/hostsFn'
-import { Button, Group, Stack, Text } from '@mantine/core'
-import { IconArrowBackUp, IconEdit, IconRefresh, IconTrash } from '@tabler/icons-react'
+import { Button, Group, ScrollArea, Stack, Text } from '@mantine/core'
 import BrowserLink from '@renderer/components/BrowserLink'
 import ConfirmModal from '@renderer/components/ConfirmModal'
 import ItemIcon from '@renderer/components/ItemIcon'
@@ -15,15 +14,13 @@ import {
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
+import { IconArrowBackUp, IconEdit, IconRefresh, IconTrash } from '@tabler/icons-react'
 import { useEffect, useRef, useState } from 'react'
 import styles from './index.module.scss'
-import SystemHostsPanel from './SystemHostsPanel'
 import { InfoRow, countRules } from './shared'
+import SystemHostsPanel from './SystemHostsPanel'
 
-const formatInterval = (
-  seconds: number,
-  lang: ReturnType<typeof useI18n>['lang'],
-): string => {
+const formatInterval = (seconds: number, lang: ReturnType<typeof useI18n>['lang']): string => {
   if (!seconds) return lang.never
   if (seconds < 60) return `${seconds} s`
   const m = Math.round(seconds / 60)
@@ -206,7 +203,7 @@ const RightPanel = () => {
 
   return (
     <div className={styles.root}>
-      <div className={styles.body}>
+      <ScrollArea className={styles.body} scrollbars="y" type="hover">
         <div className={styles.header}>
           <Group gap="8px" wrap="nowrap" className={styles.title_wrap}>
             <ItemIcon type={type} />
@@ -237,13 +234,7 @@ const RightPanel = () => {
           <Stack gap="8px" className={styles.section}>
             <InfoRow
               label="URL"
-              value={
-                hosts.url ? (
-                  <BrowserLink href={hosts.url}>{hosts.url}</BrowserLink>
-                ) : (
-                  '—'
-                )
-              }
+              value={hosts.url ? <BrowserLink href={hosts.url}>{hosts.url}</BrowserLink> : '—'}
               mono
             />
             {inTrashcan ? null : (
@@ -324,7 +315,7 @@ const RightPanel = () => {
             </Button>
           </div>
         ) : null}
-      </div>
+      </ScrollArea>
       <div className={styles.status_bar} />
 
       <ConfirmModal

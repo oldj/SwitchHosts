@@ -74,7 +74,8 @@
   // scroll bar
   --swh-scrollbar-track: rgba(204, 204, 204, 0.25);
   --swh-scrollbar-corner: #fff;
-  --swh-scrollbar-thumb: #ccc;
+  --swh-scrollbar-thumb: rgba(255, 255, 255, 0.4);
+  --swh-scrollbar-thumb-hover: rgba(255, 255, 255, 0.5);
   --swh-scrollbar-filler: #2b2b2b;
 
   // other componets
