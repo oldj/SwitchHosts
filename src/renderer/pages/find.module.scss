@@ -33,7 +33,36 @@
 .result_list_inner {
   min-height: 100%;
   box-sizing: border-box;
-  padding: 5px 8px;
+  position: relative;
+}
+
+.virtual_result_rows {
+  position: absolute;
+  top: 5px;
+  left: 8px;
+  right: 8px;
+}
+
+.result_scrollbar {
+  background: transparent !important;
+
+  &[data-orientation='vertical'] {
+    width: 12px;
+    padding: 2px;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04) !important;
+  }
+}
+
+.result_scroll_thumb {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-radius: 999px;
+}
+
+.result_scrollbar:hover .result_scroll_thumb {
+  background: rgba(0, 0, 0, 0.45) !important;
 }
 
 .status_bar {
@@ -46,11 +75,14 @@
   display: grid;
   grid-template-columns: 1fr 20% 60px;
   grid-column-gap: 4px;
+  box-sizing: border-box;
+  height: 29px;
   line-height: 28px;
   padding-left: 8px;
   border-radius: var(--swh-border-radius);
   cursor: pointer;
   user-select: none;
+  overflow: hidden;
 
   &.disabled {
     color: var(--swh-font-color-weak);
@@ -114,6 +146,18 @@
   .highlight {
     color: #fff;
   }
+
+  .result_scrollbar:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .result_scroll_thumb {
+    background: rgba(255, 255, 255, 0.32) !important;
+  }
+
+  .result_scrollbar:hover .result_scroll_thumb {
+    background: rgba(255, 255, 255, 0.5) !important;
+  }
 }
 
 .read_only {
@@ -122,4 +166,9 @@
   font-size: 10px;
   color: var(--swh-font-color-weak);
   margin-right: 8px;
+}
+
+.error_text {
+  color: var(--swh-danger-color, #fa5252);
+  @include common.ell;
 }

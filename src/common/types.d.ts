@@ -38,19 +38,11 @@ export interface IFindPosition {
   after: string
 }
 
-export interface IFindSplitter {
-  before: string
-  match: string
-  after: string
-  replace?: string
-}
-
 export interface IFindItem {
   item_id: string
   item_title: string
   item_type: HostsType
   positions: IFindPosition[]
-  splitters: IFindSplitter[]
 }
 
 export type IFindShowSourceParam = IFindPosition & {

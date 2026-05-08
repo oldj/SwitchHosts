@@ -59,6 +59,8 @@ const LEGACY_TO_NEW: Record<string, string> = {
 
   findShow: 'find_show',
   findBy: 'find_by',
+  findReplaceOne: 'find_replace_one',
+  findReplaceAll: 'find_replace_all',
   findAddHistory: 'find_add_history',
   findGetHistory: 'find_get_history',
   findSetHistory: 'find_set_history',

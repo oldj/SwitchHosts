@@ -32,7 +32,11 @@ use tauri::webview::{Color, WebviewWindowBuilder};
 use tauri::{AppHandle, EventId, Listener, Manager, Runtime, Theme, WebviewUrl};
 
 use crate::storage::{
-    atomic::atomic_write, entries, error::StorageError, manifest::Manifest, AppState,
+    atomic::atomic_write,
+    entries,
+    error::StorageError,
+    manifest::{self, Manifest},
+    AppState,
 };
 
 pub const FIND_WINDOW_LABEL: &str = "find";
@@ -58,7 +62,12 @@ impl FindGate {
     /// or fallback timer) takes its early-return branch on next fire.
     fn abandon<R: Runtime>(&self, app: &AppHandle<R>) {
         self.did_show.store(true, Ordering::SeqCst);
-        if let Some(id) = self.listener_id.lock().expect("find listener mutex poisoned").take() {
+        if let Some(id) = self
+            .listener_id
+            .lock()
+            .expect("find listener mutex poisoned")
+            .take()
+        {
             app.unlisten(id);
         }
     }
@@ -99,20 +108,28 @@ pub struct FindPosition {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct FindSplitter {
-    pub before: String,
-    #[serde(rename = "match")]
-    pub match_text: String,
-    pub after: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
 pub struct FindItem {
     pub item_id: String,
     pub item_title: String,
     pub item_type: String,
+    // Keep search payloads lean: the renderer only needs row display data and
+    // jump offsets. Replacement re-reads content on the Rust side.
     pub positions: Vec<FindPosition>,
-    pub splitters: Vec<FindSplitter>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct FindReplaceOneArgs {
+    pub item_id: String,
+    pub start: usize,
+    pub end: usize,
+    pub expected: String,
+    pub replace_to: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct FindReplaceAllOutcome {
+    pub item_ids: Vec<String>,
+    pub replaced_count: usize,
 }
 
 // ---- search engine --------------------------------------------------------
@@ -139,17 +156,15 @@ pub fn find_in_manifest(
                 return;
             }
         };
-        let (positions, byte_spans) = find_positions_in_content(&content, &regex);
+        let positions = find_positions_in_content(&content, &regex);
         if positions.is_empty() {
             return;
         }
-        let splitters = split_content(&content, &byte_spans);
         out.push(FindItem {
             item_id: id.to_string(),
             item_title: title.to_string(),
             item_type: kind.to_string(),
             positions,
-            splitters,
         });
     });
     Ok(out)
@@ -179,55 +194,45 @@ fn build_regex(keyword: &str, options: &FindOptions) -> Result<Regex, String> {
 /// surrounding line slices the renderer needs to render the result
 /// list and jump back to the source view.
 ///
-/// Returns `(positions, byte_spans)`. `byte_spans` carries the raw
-/// `(start, end)` byte offsets per match so `split_content` can slice
-/// the original `content` correctly — the public `FindPosition.start /
-/// end` fields are UTF-16 offsets and would mis-slice on non-ASCII.
-fn find_positions_in_content(
-    content: &str,
-    regex: &Regex,
-) -> (Vec<FindPosition>, Vec<(usize, usize)>) {
+fn find_positions_in_content(content: &str, regex: &Regex) -> Vec<FindPosition> {
+    let line_index = LineIndex::new(content);
     let mut positions = Vec::new();
-    let mut byte_spans = Vec::new();
+    let mut line_idx = 0;
+    let mut utf16_cursor = Utf16Cursor::default();
+
     for mat in regex.find_iter(content) {
         let start = mat.start();
         let end = mat.end();
-        let match_text = mat.as_str().to_string();
-
-        let prefix = &content[..start];
-        let line = prefix.matches('\n').count() + 1;
-        let last_nl_before = prefix.rfind('\n').map(|i| i + 1).unwrap_or(0);
-        let before = content[last_nl_before..start].to_string();
-
-        let match_lines = match_text.split('\n').count();
-        let end_line = line + match_lines - 1;
-
-        let after_start = end;
-        let next_nl = content[after_start..]
-            .find('\n')
-            .map(|i| after_start + i)
-            .unwrap_or(content.len());
-        let after = content[after_start..next_nl].to_string();
 
         // CodeMirror counts offsets in UTF-16 code units (== JS string
         // length); the regex crate returns UTF-8 byte offsets. Convert
         // every outgoing offset / position so non-ASCII content (CJK,
         // emoji) doesn't skew the find-window jump or the result list's
         // column display.
-        let start_u16 = content[..start].encode_utf16().count();
-        let match_u16 = match_text.encode_utf16().count();
-        let end_u16 = start_u16 + match_u16;
-        let line_pos = before.encode_utf16().count();
-        let end_line_pos = if match_lines > 1 {
-            match_text
-                .rsplit('\n')
-                .next()
-                .unwrap_or("")
-                .encode_utf16()
-                .count()
+        let start_u16 = utf16_cursor.advance_to(content, start);
+        line_idx = line_index.line_idx_for_start(line_idx, start);
+        let line_info = &line_index.lines[line_idx];
+        let line = line_idx + 1;
+        let line_pos = start_u16 - line_info.start_u16;
+
+        let match_text = mat.as_str();
+        let metrics = MatchMetrics::new(match_text);
+        let end_u16 = start_u16 + metrics.utf16_len;
+
+        let end_line_idx = line_idx + metrics.newline_count;
+        let end_line = line + metrics.newline_count;
+        let end_line_pos = if metrics.newline_count == 0 {
+            line_pos + metrics.utf16_len
         } else {
-            line_pos + match_u16
+            metrics.utf16_len_after_last_newline
         };
+        let end_line_end_byte = line_index
+            .lines
+            .get(end_line_idx)
+            .map(|line| line.end_byte)
+            .unwrap_or(content.len());
+
+        utf16_cursor.set(end, end_u16);
 
         positions.push(FindPosition {
             start: start_u16,
@@ -236,54 +241,267 @@ fn find_positions_in_content(
             line_pos,
             end_line,
             end_line_pos,
-            before,
-            match_text,
-            after,
+            before: content[line_info.start_byte..start].to_string(),
+            match_text: match_text.to_string(),
+            after: content[end..end_line_end_byte].to_string(),
         });
-        byte_spans.push((start, end));
     }
-    (positions, byte_spans)
+    positions
 }
 
-/// Mirror of `src/main/actions/find/splitContent.ts`. Slices the
-/// content into `[before-of-match-1] [match-1] [before-of-match-2]
-/// [match-2] ... [last-after]` so the renderer can render the
-/// result with the matched substrings highlighted. `byte_spans` are
-/// raw byte offsets into `content` (not the UTF-16 offsets carried in
-/// `FindPosition`) so the slicing stays valid for non-ASCII text.
-fn split_content(content: &str, byte_spans: &[(usize, usize)]) -> Vec<FindSplitter> {
-    let mut splitters = Vec::with_capacity(byte_spans.len());
-    let mut last_end = 0;
-    for (idx, &(start, end)) in byte_spans.iter().enumerate() {
-        let before = content[last_end..start].to_string();
-        let match_text = content[start..end].to_string();
-        last_end = end;
-        let after = if idx == byte_spans.len() - 1 {
-            content[last_end..].to_string()
-        } else {
-            String::new()
-        };
-        splitters.push(FindSplitter {
-            before,
-            match_text,
-            after,
+#[derive(Debug, Clone, Copy)]
+struct LineInfo {
+    start_byte: usize,
+    end_byte: usize,
+    start_u16: usize,
+}
+
+#[derive(Debug)]
+struct LineIndex {
+    lines: Vec<LineInfo>,
+}
+
+impl LineIndex {
+    /// Precompute line byte starts and UTF-16 starts once. High-hit searches
+    /// can otherwise devolve into rescanning the content prefix for each match.
+    fn new(content: &str) -> Self {
+        let mut lines = vec![LineInfo {
+            start_byte: 0,
+            end_byte: content.len(),
+            start_u16: 0,
+        }];
+        let mut utf16_offset = 0;
+
+        for (byte_idx, ch) in content.char_indices() {
+            utf16_offset += ch.len_utf16();
+            if ch == '\n' {
+                if let Some(last) = lines.last_mut() {
+                    last.end_byte = byte_idx;
+                }
+                lines.push(LineInfo {
+                    start_byte: byte_idx + ch.len_utf8(),
+                    end_byte: content.len(),
+                    start_u16: utf16_offset,
+                });
+            }
+        }
+
+        Self { lines }
+    }
+
+    fn line_idx_for_start(&self, mut current_idx: usize, byte_idx: usize) -> usize {
+        while current_idx + 1 < self.lines.len()
+            && self.lines[current_idx + 1].start_byte <= byte_idx
+        {
+            current_idx += 1;
+        }
+        current_idx
+    }
+}
+
+#[derive(Debug, Default)]
+struct Utf16Cursor {
+    byte: usize,
+    utf16: usize,
+}
+
+impl Utf16Cursor {
+    /// Move forward from the last match boundary and return the UTF-16 offset
+    /// for `target_byte`. Regex matches are yielded in byte order, so normal
+    /// search remains linear.
+    fn advance_to(&mut self, content: &str, target_byte: usize) -> usize {
+        if target_byte < self.byte {
+            self.byte = 0;
+            self.utf16 = 0;
+        }
+
+        for ch in content[self.byte..target_byte].chars() {
+            self.utf16 += ch.len_utf16();
+        }
+        self.byte = target_byte;
+        self.utf16
+    }
+
+    fn set(&mut self, byte: usize, utf16: usize) {
+        self.byte = byte;
+        self.utf16 = utf16;
+    }
+}
+
+#[derive(Debug, Default)]
+struct MatchMetrics {
+    utf16_len: usize,
+    newline_count: usize,
+    utf16_len_after_last_newline: usize,
+}
+
+impl MatchMetrics {
+    fn new(match_text: &str) -> Self {
+        let mut out = Self::default();
+        for ch in match_text.chars() {
+            out.utf16_len += ch.len_utf16();
+            if ch == '\n' {
+                out.newline_count += 1;
+                out.utf16_len_after_last_newline = 0;
+            } else {
+                out.utf16_len_after_last_newline += ch.len_utf16();
+            }
+        }
+        out
+    }
+}
+
+pub fn replace_one_in_manifest(state: &AppState, args: FindReplaceOneArgs) -> Result<bool, String> {
+    if args.start > args.end {
+        return Err("find_replace_one: start must be <= end".to_string());
+    }
+
+    let manifest = Manifest::load(&state.paths).map_err(|e| e.to_string())?;
+    let Some(node) = manifest::find_node(&manifest.root, &args.item_id) else {
+        return Ok(false);
+    };
+    // Missing type is treated as local for older/migrated manifests; remote
+    // entries remain read-only from the find window.
+    if node.get("type").and_then(Value::as_str).unwrap_or("local") != "local" {
+        return Ok(false);
+    }
+
+    let mut content =
+        entries::read_entry(&state.paths.entries_dir, &args.item_id).map_err(|e| e.to_string())?;
+    let Some((start, end)) = utf16_range_to_byte_range(&content, args.start, args.end) else {
+        return Ok(false);
+    };
+    if content[start..end] != args.expected {
+        return Ok(false);
+    }
+
+    content.replace_range(start..end, &args.replace_to);
+    entries::write_entry(&state.paths.entries_dir, &args.item_id, &content)
+        .map_err(|e| e.to_string())?;
+    Ok(true)
+}
+
+pub fn replace_all_in_manifest(
+    state: &AppState,
+    keyword: &str,
+    options: &FindOptions,
+    replace_to: &str,
+) -> Result<FindReplaceAllOutcome, String> {
+    if keyword.is_empty() {
+        return Ok(FindReplaceAllOutcome {
+            item_ids: Vec::new(),
+            replaced_count: 0,
         });
     }
-    splitters
+    let regex = build_regex(keyword, options)?;
+    let manifest = Manifest::load(&state.paths).map_err(|e| e.to_string())?;
+    // First read every local entry and compute its replacement. That way a
+    // later read error does not leave earlier entries already written.
+    let mut pending_writes: Vec<(String, String, usize)> = Vec::new();
+    let mut read_error: Option<String> = None;
+
+    walk_searchable(&manifest.root, &mut |id, _title, kind| {
+        if read_error.is_some() {
+            return;
+        }
+        if kind != "local" {
+            return;
+        }
+        let content = match entries::read_entry(&state.paths.entries_dir, id) {
+            Ok(c) => c,
+            Err(e) => {
+                read_error = Some(format!("read {id}: {e}"));
+                return;
+            }
+        };
+        let (next_content, count) = replace_all_in_content(&content, &regex, replace_to);
+        if count > 0 {
+            pending_writes.push((id.to_string(), next_content, count));
+        }
+    });
+
+    if let Some(error) = read_error {
+        return Err(error);
+    }
+
+    let mut item_ids = Vec::new();
+    let mut replaced_count = 0;
+
+    for (id, next_content, count) in pending_writes {
+        entries::write_entry(&state.paths.entries_dir, &id, &next_content)
+            .map_err(|e| format!("write {id}: {e}"))?;
+        item_ids.push(id);
+        replaced_count += count;
+    }
+
+    Ok(FindReplaceAllOutcome {
+        item_ids,
+        replaced_count,
+    })
+}
+
+fn replace_all_in_content(content: &str, regex: &Regex, replace_to: &str) -> (String, usize) {
+    // Do literal replacement. Regex::replace_all would expand `$1`-style
+    // captures, which is not how the existing find window behaved.
+    let mut out = String::with_capacity(content.len());
+    let mut last_end = 0;
+    let mut count = 0;
+
+    for mat in regex.find_iter(content) {
+        out.push_str(&content[last_end..mat.start()]);
+        out.push_str(replace_to);
+        last_end = mat.end();
+        count += 1;
+    }
+
+    if count == 0 {
+        return (content.to_string(), 0);
+    }
+
+    out.push_str(&content[last_end..]);
+    (out, count)
+}
+
+fn utf16_range_to_byte_range(content: &str, start: usize, end: usize) -> Option<(usize, usize)> {
+    let start_byte = utf16_offset_to_byte(content, start)?;
+    let end_byte = utf16_offset_to_byte(content, end)?;
+    Some((start_byte, end_byte))
+}
+
+fn utf16_offset_to_byte(content: &str, target: usize) -> Option<usize> {
+    // Renderer/editor offsets are JS string offsets (UTF-16 code units), while
+    // Rust string slicing needs UTF-8 byte boundaries.
+    if target == 0 {
+        return Some(0);
+    }
+
+    let mut utf16_offset = 0;
+    for (byte_idx, ch) in content.char_indices() {
+        if utf16_offset == target {
+            return Some(byte_idx);
+        }
+        utf16_offset += ch.len_utf16();
+        if utf16_offset == target {
+            return Some(byte_idx + ch.len_utf8());
+        }
+        if utf16_offset > target {
+            return None;
+        }
+    }
+
+    if utf16_offset == target {
+        Some(content.len())
+    } else {
+        None
+    }
 }
 
 fn walk_searchable<F: FnMut(&str, &str, &str)>(nodes: &[Value], visit: &mut F) {
     for node in nodes {
-        let kind = node
-            .get("type")
-            .and_then(Value::as_str)
-            .unwrap_or("local");
+        let kind = node.get("type").and_then(Value::as_str).unwrap_or("local");
         if kind != "group" && kind != "folder" {
             if let Some(id) = node.get("id").and_then(Value::as_str) {
-                let title = node
-                    .get("title")
-                    .and_then(Value::as_str)
-                    .unwrap_or("");
+                let title = node.get("title").and_then(Value::as_str).unwrap_or("");
                 visit(id, title, kind);
             }
         }
@@ -316,10 +534,7 @@ pub fn get_find_history(state: &AppState) -> Result<Vec<FindHistoryEntry>, Stora
     load_json_array(&find_history_path(state))
 }
 
-pub fn set_find_history(
-    state: &AppState,
-    items: &[FindHistoryEntry],
-) -> Result<(), StorageError> {
+pub fn set_find_history(state: &AppState, items: &[FindHistoryEntry]) -> Result<(), StorageError> {
     save_json_array(&find_history_path(state), items)
 }
 
@@ -345,10 +560,7 @@ pub fn set_replace_history(state: &AppState, items: &[String]) -> Result<(), Sto
     save_json_array(&replace_history_path(state), items)
 }
 
-pub fn add_replace_history(
-    state: &AppState,
-    value: String,
-) -> Result<Vec<String>, StorageError> {
+pub fn add_replace_history(state: &AppState, value: String) -> Result<Vec<String>, StorageError> {
     let mut all = get_replace_history(state).unwrap_or_default();
     all.retain(|v| v != &value);
     all.push(value);
@@ -363,16 +575,12 @@ fn load_json_array<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<Vec<T>, 
     if !path.exists() {
         return Ok(Vec::new());
     }
-    let bytes = std::fs::read(path)
-        .map_err(|e| StorageError::io(path.display().to_string(), e))?;
+    let bytes = std::fs::read(path).map_err(|e| StorageError::io(path.display().to_string(), e))?;
     serde_json::from_slice::<Vec<T>>(&bytes).or_else(|_| {
         // Tolerate slight schema drift: anything that doesn't decode
         // as the expected list shape resets to empty rather than
         // crashing the find window.
-        log::warn!(
-            "{} could not be parsed; treating as empty.",
-            path.display()
-        );
+        log::warn!("{} could not be parsed; treating as empty.", path.display());
         Ok(Vec::new())
     })
 }
@@ -460,7 +668,11 @@ fn unlisten_find_window_ready<R: Runtime>(
     app: &AppHandle<R>,
     listener_id: &Arc<Mutex<Option<EventId>>>,
 ) {
-    if let Some(id) = listener_id.lock().expect("find listener mutex poisoned").take() {
+    if let Some(id) = listener_id
+        .lock()
+        .expect("find listener mutex poisoned")
+        .take()
+    {
         app.unlisten(id);
     }
 }
@@ -562,9 +774,35 @@ fn create_find_window<R: Runtime + 'static>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicBool, AtomicU64};
+    use std::sync::Mutex;
+
+    use serde_json::json;
+
+    use crate::storage::{AppConfig, V5Paths};
 
     fn re(pattern: &str) -> Regex {
         Regex::new(pattern).unwrap()
+    }
+
+    fn temp_state(name: &str) -> AppState {
+        let root = std::env::temp_dir().join(format!(
+            "switchhosts-find-test-{name}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let paths = V5Paths::under(root);
+        paths.ensure_dirs().unwrap();
+        AppState {
+            paths,
+            config: Mutex::new(AppConfig::default()),
+            store_lock: Mutex::new(()),
+            is_will_quit: AtomicBool::new(false),
+            last_geometry_persist_ms: AtomicU64::new(0),
+        }
     }
 
     #[test]
@@ -573,7 +811,7 @@ mod tests {
         // units (surrogate pair). The byte offset of "match" is 10 but
         // CodeMirror sees it at UTF-16 index 4.
         let content = "前缀😀match";
-        let (positions, spans) = find_positions_in_content(content, &re("match"));
+        let positions = find_positions_in_content(content, &re("match"));
         assert_eq!(positions.len(), 1);
         let p = &positions[0];
         assert_eq!(p.start, 4);
@@ -581,13 +819,12 @@ mod tests {
         assert_eq!(p.line_pos, 4);
         assert_eq!(p.end_line_pos, 9);
         assert_eq!(p.match_text, "match");
-        assert_eq!(spans, vec![(10, 15)]);
     }
 
     #[test]
     fn line_pos_resets_on_each_line() {
         let content = "abc\n中文 abc";
-        let (positions, _) = find_positions_in_content(content, &re("abc"));
+        let positions = find_positions_in_content(content, &re("abc"));
         assert_eq!(positions.len(), 2);
         assert_eq!(positions[0].line, 1);
         assert_eq!(positions[0].line_pos, 0);
@@ -597,17 +834,250 @@ mod tests {
     }
 
     #[test]
-    fn split_content_round_trips_with_byte_spans() {
-        // The splitter stream concatenated back must equal the source,
-        // proving byte-span slicing stayed correct after the UTF-16
-        // refactor.
-        let content = "前 abc 缀 abc 尾";
-        let (_, spans) = find_positions_in_content(content, &re("abc"));
-        let splitters = split_content(content, &spans);
-        let joined: String = splitters
-            .iter()
-            .map(|s| format!("{}{}{}", s.before, s.match_text, s.after))
-            .collect();
-        assert_eq!(joined, content);
+    fn multiline_match_reports_end_line_and_column() {
+        let content = "before α\nβ after";
+        let positions = find_positions_in_content(content, &re("α\nβ"));
+        assert_eq!(positions.len(), 1);
+        let p = &positions[0];
+        assert_eq!(p.line, 1);
+        assert_eq!(p.line_pos, 7);
+        assert_eq!(p.end_line, 2);
+        assert_eq!(p.end_line_pos, 1);
+        assert_eq!(p.before, "before ");
+        assert_eq!(p.after, " after");
+    }
+
+    #[test]
+    fn many_matches_are_collected_without_prefix_rescans() {
+        let content = "127.0.0.1 example.test\n".repeat(10_000);
+        let positions = find_positions_in_content(&content, &re("127"));
+        assert_eq!(positions.len(), 10_000);
+        assert_eq!(positions[9_999].line, 10_000);
+        assert_eq!(positions[9_999].line_pos, 0);
+    }
+
+    #[test]
+    fn replace_all_treats_replacement_as_literal_text() {
+        let (content, count) = replace_all_in_content("one 123 two 456", &re(r"\d+"), "$1");
+        assert_eq!(count, 2);
+        assert_eq!(content, "one $1 two $1");
+    }
+
+    #[test]
+    fn replace_one_uses_utf16_offsets() {
+        let state = temp_state("replace-one");
+        let manifest = Manifest {
+            root: vec![json!({
+                "id": "local-one",
+                "title": "Local",
+                "type": "local",
+            })],
+            ..Manifest::default()
+        };
+        manifest.save(&state.paths).unwrap();
+        entries::write_entry(&state.paths.entries_dir, "local-one", "前缀😀match tail").unwrap();
+
+        let replaced = replace_one_in_manifest(
+            &state,
+            FindReplaceOneArgs {
+                item_id: "local-one".into(),
+                start: 4,
+                end: 9,
+                expected: "match".into(),
+                replace_to: "done".into(),
+            },
+        )
+        .unwrap();
+
+        assert!(replaced);
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "local-one").unwrap(),
+            "前缀😀done tail"
+        );
+    }
+
+    #[test]
+    fn replace_one_treats_missing_type_as_local() {
+        let state = temp_state("replace-one-missing-type");
+        let manifest = Manifest {
+            root: vec![json!({
+                "id": "local-one",
+                "title": "Local",
+            })],
+            ..Manifest::default()
+        };
+        manifest.save(&state.paths).unwrap();
+        entries::write_entry(&state.paths.entries_dir, "local-one", "foo local").unwrap();
+
+        let replaced = replace_one_in_manifest(
+            &state,
+            FindReplaceOneArgs {
+                item_id: "local-one".into(),
+                start: 0,
+                end: 3,
+                expected: "foo".into(),
+                replace_to: "bar".into(),
+            },
+        )
+        .unwrap();
+
+        assert!(replaced);
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "local-one").unwrap(),
+            "bar local"
+        );
+    }
+
+    #[test]
+    fn replace_one_skips_remote_items() {
+        let state = temp_state("replace-one-remote");
+        let manifest = Manifest {
+            root: vec![json!({
+                "id": "remote-one",
+                "title": "Remote",
+                "type": "remote",
+            })],
+            ..Manifest::default()
+        };
+        manifest.save(&state.paths).unwrap();
+        entries::write_entry(&state.paths.entries_dir, "remote-one", "foo remote").unwrap();
+
+        let replaced = replace_one_in_manifest(
+            &state,
+            FindReplaceOneArgs {
+                item_id: "remote-one".into(),
+                start: 0,
+                end: 3,
+                expected: "foo".into(),
+                replace_to: "bar".into(),
+            },
+        )
+        .unwrap();
+
+        assert!(!replaced);
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "remote-one").unwrap(),
+            "foo remote"
+        );
+    }
+
+    #[test]
+    fn replace_one_returns_false_when_expected_text_changed() {
+        let state = temp_state("replace-one-stale");
+        let manifest = Manifest {
+            root: vec![json!({
+                "id": "local-one",
+                "title": "Local",
+                "type": "local",
+            })],
+            ..Manifest::default()
+        };
+        manifest.save(&state.paths).unwrap();
+        entries::write_entry(&state.paths.entries_dir, "local-one", "foo local").unwrap();
+
+        let replaced = replace_one_in_manifest(
+            &state,
+            FindReplaceOneArgs {
+                item_id: "local-one".into(),
+                start: 0,
+                end: 3,
+                expected: "bar".into(),
+                replace_to: "baz".into(),
+            },
+        )
+        .unwrap();
+
+        assert!(!replaced);
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "local-one").unwrap(),
+            "foo local"
+        );
+    }
+
+    #[test]
+    fn replace_all_skips_remote_items() {
+        let state = temp_state("replace-all-remote");
+        let manifest = Manifest {
+            root: vec![
+                json!({
+                    "id": "local-one",
+                    "title": "Local",
+                    "type": "local",
+                }),
+                json!({
+                    "id": "remote-one",
+                    "title": "Remote",
+                    "type": "remote",
+                }),
+            ],
+            ..Manifest::default()
+        };
+        manifest.save(&state.paths).unwrap();
+        entries::write_entry(&state.paths.entries_dir, "local-one", "foo local").unwrap();
+        entries::write_entry(&state.paths.entries_dir, "remote-one", "foo remote").unwrap();
+
+        let outcome =
+            replace_all_in_manifest(&state, "foo", &FindOptions::default(), "bar").unwrap();
+
+        assert_eq!(outcome.item_ids, vec!["local-one"]);
+        assert_eq!(outcome.replaced_count, 1);
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "local-one").unwrap(),
+            "bar local"
+        );
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "remote-one").unwrap(),
+            "foo remote"
+        );
+    }
+
+    #[test]
+    fn replace_all_reports_local_read_errors() {
+        let state = temp_state("replace-all-read-error");
+        let manifest = Manifest {
+            root: vec![json!({
+                "id": "bad/id",
+                "title": "Bad",
+                "type": "local",
+            })],
+            ..Manifest::default()
+        };
+        manifest.save(&state.paths).unwrap();
+
+        let error = replace_all_in_manifest(&state, "foo", &FindOptions::default(), "bar")
+            .expect_err("invalid local entry id should fail replace all");
+
+        assert!(error.contains("bad/id"));
+    }
+
+    #[test]
+    fn replace_all_does_not_write_before_read_preflight_succeeds() {
+        let state = temp_state("replace-all-read-error-preflight");
+        let manifest = Manifest {
+            root: vec![
+                json!({
+                    "id": "local-one",
+                    "title": "Local",
+                    "type": "local",
+                }),
+                json!({
+                    "id": "bad/id",
+                    "title": "Bad",
+                    "type": "local",
+                }),
+            ],
+            ..Manifest::default()
+        };
+        manifest.save(&state.paths).unwrap();
+        entries::write_entry(&state.paths.entries_dir, "local-one", "foo local").unwrap();
+
+        let error = replace_all_in_manifest(&state, "foo", &FindOptions::default(), "bar")
+            .expect_err("invalid later local entry id should fail replace all");
+
+        assert!(error.contains("bad/id"));
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "local-one").unwrap(),
+            "foo local"
+        );
     }
 }
