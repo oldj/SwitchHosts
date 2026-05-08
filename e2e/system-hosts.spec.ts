@@ -1,7 +1,8 @@
-import { expect, getMockCalls, getMockState, test } from './support/test'
+import { expect, getMockCalls, getMockState, showRightPanel, test } from './support/test'
 
 test.describe('system hosts', () => {
   test('loads system hosts details and the read-only editor', async ({ page }) => {
+    await showRightPanel(page)
     await expect(page.getByText('/etc/hosts')).toBeVisible()
     await expect(page.locator('.cm-content')).toContainText('localhost')
     await expect(page.getByText('Read Only').first()).toBeVisible()
@@ -9,6 +10,7 @@ test.describe('system hosts', () => {
   })
 
   test('opens system hosts history from the details panel', async ({ page }) => {
+    await showRightPanel(page)
     await page.locator('button').filter({ hasText: 'Show History' }).click()
 
     await expect(page.getByText('System Hosts Version History')).toBeVisible()
@@ -17,6 +19,7 @@ test.describe('system hosts', () => {
   })
 
   test('deletes a system hosts history entry', async ({ page }) => {
+    await showRightPanel(page)
     await page.locator('button').filter({ hasText: 'Show History' }).click()
     await expect(page.getByText('System Hosts Version History')).toBeVisible()
     await expect(page.locator('.cm-content').last()).toContainText('api.local')

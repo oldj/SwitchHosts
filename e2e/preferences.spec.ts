@@ -83,13 +83,23 @@ test.describe('preferences', () => {
 
   test('toggles side panels and persists layout preferences', async ({ page }) => {
     await clearMockCalls(page)
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          leftPanelShow: state.configs.left_panel_show,
+          rightPanelShow: state.configs.right_panel_show,
+        }
+      })
+      .toEqual({ leftPanelShow: true, rightPanelShow: false })
     await page.locator('[data-id="local-dev"]').click()
+    await expect(page.getByText('Rules')).not.toBeInViewport()
 
     await page.getByLabel('Toggle sidebar').click()
     await expect(page.locator('[data-id="local-dev"]')).not.toBeInViewport()
 
     await page.getByLabel('Toggle right panel').click()
-    await expect(page.getByText('Rules')).not.toBeInViewport()
+    await expect(page.getByText('Rules')).toBeInViewport()
 
     await expect
       .poll(async () => {
@@ -99,12 +109,12 @@ test.describe('preferences', () => {
           rightPanelShow: state.configs.right_panel_show,
         }
       })
-      .toEqual({ leftPanelShow: false, rightPanelShow: false })
+      .toEqual({ leftPanelShow: false, rightPanelShow: true })
 
     expect(configPatches(await getMockCalls(page))).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ left_panel_show: false }),
-        expect.objectContaining({ right_panel_show: false }),
+        expect.objectContaining({ right_panel_show: true }),
       ]),
     )
   })

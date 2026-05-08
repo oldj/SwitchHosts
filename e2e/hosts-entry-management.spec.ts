@@ -4,6 +4,7 @@ import {
   getMockCalls,
   getMockState,
   setListPayloads,
+  showRightPanel,
   test,
 } from './support/test'
 
@@ -27,6 +28,7 @@ test.describe('hosts entry management', () => {
 
   test('edits a hosts entry title and refreshes list, header, and details', async ({ page }) => {
     await page.locator('[data-id="local-dev"]').click()
+    await showRightPanel(page)
     await page.getByRole('button', { name: 'Edit' }).click()
 
     const drawer = page.getByRole('dialog')
@@ -60,6 +62,7 @@ test.describe('hosts entry management', () => {
     await drawer.getByRole('button', { name: 'OK' }).click()
 
     await expect(page.locator('[data-id]').filter({ hasText: 'QA Group' })).toBeVisible()
+    await showRightPanel(page)
     await expect(page.getByText('Content (1)')).toBeVisible()
     await expect(page.getByText('API Override').last()).toBeVisible()
     await expect
@@ -99,6 +102,7 @@ test.describe('hosts entry management', () => {
         }
       })
       .toMatchObject({ type: 'folder', folderMode: 1 })
+    await showRightPanel(page)
     await expect(page.locator('#root').getByText('Choice Mode')).toBeVisible()
     await expect(page.locator('#root').getByText('Single').last()).toBeVisible()
 
