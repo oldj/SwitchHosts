@@ -30,7 +30,9 @@ const List = (props: Props) => {
   const { hostsData, loadHostsData, setList, currentHosts, setCurrentHosts } = useHostsData()
   const { configs } = useConfigs()
   const { lang } = useI18n()
-  const [selectedIds, setSelectedIds] = useState<string[]>([currentHosts?.id || '0'])
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    isTray ? [] : [currentHosts?.id || '0'],
+  )
   const [showList, setShowList] = useState<IHostsListObject[]>([])
 
   useEffect(() => {
@@ -156,6 +158,7 @@ const List = (props: Props) => {
   useOnBroadcast(
     events.select_hosts,
     async (id: string, waitMs: number = 0) => {
+      if (isTray) return
       const hosts = findItemById(hostsData.list, id)
       if (!hosts) {
         if (waitMs > 0) {
@@ -169,7 +172,7 @@ const List = (props: Props) => {
       setCurrentHosts(hosts)
       setSelectedIds([id])
     },
-    [hostsData],
+    [hostsData, isTray],
   )
 
   useOnBroadcast(events.reload_list, loadHostsData)
@@ -213,7 +216,7 @@ const List = (props: Props) => {
           }
         }}
         onSelect={(ids: string[]) => {
-          // console.log(ids)
+          if (isTray) return
           setSelectedIds(ids)
         }}
         nodeRender={(data) => (

@@ -73,6 +73,7 @@ const ListItem = (props: Props) => {
   }, [data, currentHosts, el])
 
   const onSelect = () => {
+    if (isTray) return
     setCurrentHosts(data.is_sys ? null : data)
   }
 
@@ -179,7 +180,15 @@ const ListItem = (props: Props) => {
         }
       }}
     >
-      <div className={styles.title} onClick={onSelect}>
+      <div
+        className={styles.title}
+        onClick={onSelect}
+        onDoubleClick={() => {
+          if (!isTray) return
+          agent.broadcast(events.select_hosts, data.id, 1000)
+          agent.broadcast(events.active_main_window)
+        }}
+      >
         <span className={clsx(styles.icon, isFolder && styles.folder)} onClick={toggleIsCollapsed}>
           <ItemIcon type={data.is_sys ? 'system' : data.type} isCollapsed={data.isCollapsed} />
         </span>

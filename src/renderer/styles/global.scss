@@ -1,9 +1,20 @@
-html,
-body {
+html {
   margin: 0;
   padding: 0;
-  font-size: 14px;
-  line-height: 1.5em;
+  font-size: 16px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  color: var(--swh-font-color);
+  color-scheme: var(--swh-color-scheme);
+  background: var(--swh-window-bg);
+}
+
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
   box-sizing: border-box;
   color: var(--swh-font-color);
   color-scheme: var(--swh-color-scheme);
@@ -40,4 +51,10 @@ textarea,
 [contenteditable='true'] {
   user-select: text;
   -webkit-user-select: text;
+}
+
+html.tray-page,
+body.tray-page,
+body.tray-page #root {
+  background: transparent;
 }

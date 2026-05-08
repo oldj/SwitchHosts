@@ -1,4 +1,5 @@
 import events from '@common/events'
+import { ScrollArea } from '@mantine/core'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -22,8 +23,13 @@ const TrayPage = () => {
 
     const cls = document.body.className
     document.body.className = cls.replace(/\btheme-\w+/gi, '')
-    document.body.classList.add(`platform-${agent.platform}`, `theme-${configs.theme}`)
+    document.body.classList.add(`platform-${agent.platform}`, `theme-${configs.theme}`, 'tray-page')
   }
+
+  useEffect(() => {
+    document.documentElement.classList.add('tray-page')
+    document.body.classList.add('tray-page')
+  }, [])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(update, [configs])
@@ -36,9 +42,9 @@ const TrayPage = () => {
   return (
     <div className={styles.root}>
       <h1 className={styles.header}>SwitchHosts</h1>
-      <div className={styles.body}>
+      <ScrollArea className={styles.body} scrollbars="y" type="hover">
         <List isTray={true} />
-      </div>
+      </ScrollArea>
       <div className={styles.footer}>
         <span onClick={showMain}>
           <BiArea />

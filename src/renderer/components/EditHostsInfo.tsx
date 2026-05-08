@@ -10,8 +10,8 @@ import {
   Box,
   Button,
   Group,
-  NativeSelect,
-  Radio,
+  Select,
+  SegmentedControl,
   SimpleGrid,
   Text,
   TextInput,
@@ -123,9 +123,9 @@ const EditHostsInfo = () => {
 
         <Box className={styles.ln}>
           <Text mb="8px">{lang.auto_refresh}</Text>
-          <NativeSelect
+          <Select
             value={(hosts?.refresh_interval || 0).toString()}
-            onChange={(e) => onUpdate({ refresh_interval: parseInt(e.target.value) || 0 })}
+            onChange={(v) => onUpdate({ refresh_interval: parseInt(v || '0') || 0 })}
             data={[
               { value: '0', label: lang.never },
               { value: '60', label: `1 ${lang.minute}` },
@@ -136,6 +136,7 @@ const EditHostsInfo = () => {
               { value: `${60 * 60 * 24 * 7}`, label: `7 ${lang.days}` },
             ]}
             maw={160}
+            allowDeselect={false}
           />
           {isAdd ? null : (
             <Box className={styles.refresh_info} mt="8px">
@@ -220,19 +221,28 @@ const EditHostsInfo = () => {
   }
 
   const forFolder = (): React.ReactElement => {
+    const folderMode = (hosts?.folder_mode || 0) as FolderModeType
+    const choiceModeEffect: Record<FolderModeType, string> = {
+      0: lang.choice_mode_default_effect,
+      1: lang.choice_mode_single_effect,
+      2: lang.choice_mode_multiple_effect,
+    }
+
     return (
       <Box className={styles.ln}>
         <Text mb="8px">{lang.choice_mode}</Text>
-        <Radio.Group
-          value={(hosts?.folder_mode || 0).toString()}
+        <SegmentedControl
+          value={folderMode.toString()}
           onChange={(v) => onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })}
-        >
-          <Group gap="12px">
-            <Radio value="0" label={lang.choice_mode_default} />
-            <Radio value="1" label={lang.choice_mode_single} />
-            <Radio value="2" label={lang.choice_mode_multiple} />
-          </Group>
-        </Radio.Group>
+          data={[
+            { value: '0', label: lang.choice_mode_default },
+            { value: '1', label: lang.choice_mode_single },
+            { value: '2', label: lang.choice_mode_multiple },
+          ]}
+        />
+        <Text mt="8px" size="sm" c="dimmed">
+          {choiceModeEffect[folderMode]}
+        </Text>
       </Box>
     )
   }
@@ -286,26 +296,20 @@ const EditHostsInfo = () => {
       <Box>
         <Box className={styles.ln}>
           <Text mb="8px">{lang.hosts_type}</Text>
-          <Radio.Group
+          <SegmentedControl
             value={hosts?.type || 'local'}
             onChange={(v) => onUpdate({ type: v as HostsType })}
-          >
-            <Group gap="24px">
-              {types.map((type) => (
-                <Radio
-                  key={type}
-                  value={type}
-                  disabled={!isAdd}
-                  label={
-                    <Group gap="4px" wrap="nowrap">
-                      <ItemIcon type={type} />
-                      <span>{lang[type]}</span>
-                    </Group>
-                  }
-                />
-              ))}
-            </Group>
-          </Radio.Group>
+            disabled={!isAdd}
+            data={types.map((type) => ({
+              value: type,
+              label: (
+                <Group gap="4px" wrap="nowrap">
+                  <ItemIcon type={type} />
+                  <span>{lang[type]}</span>
+                </Group>
+              ),
+            }))}
+          />
         </Box>
 
         <Box className={styles.ln}>

@@ -1,7 +1,7 @@
 .root {
   display: flex;
 
-  &.selected:not(.is_tray):hover {
+  &.selected:not(.isTray):hover {
     .edit {
       display: flex;
     }

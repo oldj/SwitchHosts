@@ -4433,10 +4433,13 @@ name = "switchhosts"
 version = "4.3.0"
 dependencies = [
  "axum",
+ "block2",
  "chrono",
  "dirs 5.0.1",
  "libc",
  "log",
+ "objc2",
+ "objc2-foundation",
  "open",
  "regex",
  "reqwest 0.12.28",

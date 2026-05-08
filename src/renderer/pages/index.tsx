@@ -30,6 +30,7 @@ const clampPanel = (value: number) =>
 
 const MainPage = () => {
   const [loading, setLoading] = useState(true)
+  const mainWindowReadySentRef = useRef(false)
   const { setLocale } = useI18n()
   const { loadHostsData } = useHostsData()
   const { configs, updateConfigs } = useConfigs()
@@ -76,6 +77,15 @@ const MainPage = () => {
     onConfigsUpdate().catch((e) => console.error(e))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configs])
+
+  useEffect(() => {
+    if (loading || !configs || mainWindowReadySentRef.current) return
+
+    mainWindowReadySentRef.current = true
+    window.setTimeout(() => {
+      Promise.resolve(agent.broadcast(events.main_window_ready)).catch((e) => console.error(e))
+    }, 0)
+  }, [configs, loading])
 
   useOnBroadcast(events.toggle_left_panel, (show: boolean) => {
     setLeftShow(show)

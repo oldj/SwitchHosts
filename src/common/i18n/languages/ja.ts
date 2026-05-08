@@ -22,10 +22,14 @@ const lang: LanguageDict = {
   check_update_failed: 'アップデートの確認に失敗しました！',
   choice_mode: '選択モード',
   choice_mode_default: 'デフォルト',
+  choice_mode_default_effect: '設定のグローバル選択モードを継承します。',
   choice_mode_desc:
     '最上位階層のhostsにのみ有効で、各フォルダーでは独自に選択モードを設定できます。',
   choice_mode_multiple: '複数',
+  choice_mode_multiple_effect:
+    'このフォルダー直下の複数の項目を同時に有効にできます。',
   choice_mode_single: '単一',
+  choice_mode_single_effect: 'このフォルダー直下の項目は一度に1つだけ有効にできます。',
   choices: '選択',
   chosen: '選択済み',
   clear_history: '履歴をクリア',
@@ -77,7 +81,7 @@ const lang: LanguageDict = {
   http_api_on: 'HTTP APIを有効化',
   http_api_on_desc:
     '{0}番ポートで実行され、Alfredなどのサードパーティソフトウェアでhostsを切り替えるために使用できます。',
-  http_api_only_local: 'HTTP APIを 127.0.0.1 のみでリッスンする',
+  http_api_only_local: 'HTTP API を 127.0.0.1 のみでリッスンする',
   ignore_case: '大文字と小文字を区別しない',
   import: 'インポート',
   import_done: 'インポートが完了しました。',
@@ -163,7 +167,7 @@ const lang: LanguageDict = {
   to_show_source: 'ダブルクリックでソースコードを表示する。',
   toggle_developer_tools: '開発者ツールの表示/非表示',
   toggle_dock_icon: 'Dockアイコンの表示/非表示',
-  toggle_full_screen: 'フルスクリーン',
+  toggle_full_screen: 'フルスクリーンを切り替え',
   trashcan: 'ゴミ箱',
   trashcan_clear: 'ゴミ箱を空にする',
   trashcan_clear_confirm: 'ゴミ箱を空にしてもよろしいですか？',

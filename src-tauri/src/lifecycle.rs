@@ -24,6 +24,11 @@ use crate::storage::{
     AppState, StorageError,
 };
 
+#[cfg(target_os = "macos")]
+use objc2::{msg_send, runtime::AnyObject, MainThreadMarker};
+#[cfg(target_os = "macos")]
+use objc2_foundation::{NSPoint, NSSize};
+
 /// Minimum interval between two geometry persists driven by
 /// Moved/Resized events, in milliseconds. macOS fires these events
 /// continuously during a drag (60 Hz), so we coalesce to at most
@@ -72,7 +77,7 @@ pub fn install_main_window_handlers<R: Runtime>(window: &WebviewWindow<R>) {
 
 // ---- geometry persistence --------------------------------------------------
 
-/// Snapshot the window's current outer position + size into
+/// Snapshot the window's current outer position + inner size into
 /// `internal/state.json`. Failures are logged and swallowed because
 /// losing window geometry is annoying but never user-data damaging.
 ///
@@ -127,7 +132,7 @@ fn now_ms() -> u64 {
 fn read_geometry<R: Runtime>(window: &WebviewWindow<R>) -> Result<WindowGeometry, String> {
     let scale = window.scale_factor().map_err(|e| e.to_string())?;
     let pos = window.outer_position().map_err(|e| e.to_string())?;
-    let size = window.outer_size().map_err(|e| e.to_string())?;
+    let size = window.inner_size().map_err(|e| e.to_string())?;
     let maximized = window.is_maximized().unwrap_or(false);
 
     let logical_pos: LogicalPosition<f64> = pos.to_logical(scale);
@@ -144,14 +149,13 @@ fn read_geometry<R: Runtime>(window: &WebviewWindow<R>) -> Result<WindowGeometry
 
 // ---- main window creation --------------------------------------------------
 
-/// Create the main window programmatically, baking any saved geometry
-/// into the `WebviewWindowBuilder` so the window appears at its final
-/// position on the very first frame. We deliberately *don't* declare
-/// the main window in `tauri.conf.json` — doing it there means the
-/// window is created with the conf-level defaults (centered, default
-/// size), and a subsequent `set_position` call from `setup` can't
-/// avoid a one-frame flash between the default position and the
-/// restored position.
+/// Create the main window programmatically, starting it hidden so any
+/// saved geometry can be applied before the compositor gets a visible
+/// first frame. We deliberately *don't* declare the main window in
+/// `tauri.conf.json` — doing it there means the window is created with
+/// the conf-level defaults (centered, default size), and a subsequent
+/// `set_position` call from `setup` can't avoid a one-frame flash
+/// between the default position and the restored position.
 ///
 /// Called once from `lib.rs::run` inside the Builder's setup hook.
 /// Returns the freshly-created main window; the caller installs
@@ -177,6 +181,7 @@ pub fn create_main_window<R: Runtime>(
     .title("SwitchHosts")
     .min_inner_size(300.0, 200.0)
     .resizable(true)
+    .visible(false)
     // Without this Tauri's OS-level drag-drop handler swallows
     // dragstart inside the webview, breaking the hosts tree's
     // HTML5 DnD reordering on the frontend.
@@ -211,39 +216,253 @@ pub fn create_main_window<R: Runtime>(
             reason: e.to_string(),
         })?;
 
-    // Apply maximize after build so it takes priority over the baked
-    // initial size without flashing — the window hasn't been painted
-    // yet at this point.
     if let Some(geom) = saved {
-        if saved_on_screen && geom.maximized {
-            let _ = window.maximize();
+        if saved_on_screen {
+            apply_restored_geometry_before_show(&window, &geom, &monitors);
+            if geom.maximized {
+                let _ = window.maximize();
+            }
         }
     }
 
     Ok(window)
 }
 
-/// Conservative on-screen check: any monitor whose logical bounds
-/// overlap the saved geometry counts as "visible". Multi-monitor
-/// disconnects / DPI changes between launches are the main reason
-/// this matters — we don't want to restore a window onto a monitor
-/// that's no longer plugged in.
+/// Apply restored geometry while the main window is still hidden.
+/// On macOS, Tauri's public `set_position` path queues an async
+/// `setFrameTopLeftPoint:` call; `show()` can then win the race and
+/// paint one frame on the default screen. Calling AppKit synchronously
+/// here keeps the first visible frame on the restored display.
+#[cfg(target_os = "macos")]
+fn apply_restored_geometry_before_show<R: Runtime>(
+    window: &WebviewWindow<R>,
+    geom: &WindowGeometry,
+    monitors: &[Monitor],
+) {
+    if MainThreadMarker::new().is_none() {
+        log::warn!("cannot synchronously restore main window geometry off the main thread");
+        apply_restored_geometry_fallback(window, geom);
+        return;
+    }
+
+    let ns_window = match window.ns_window() {
+        Ok(ptr) => ptr as *mut AnyObject,
+        Err(e) => {
+            log::warn!("failed to get native main window handle for geometry restore: {e}");
+            apply_restored_geometry_fallback(window, geom);
+            return;
+        }
+    };
+
+    let Some((x, y)) =
+        macos_top_left_coordinates_from_monitors(geom.x as f64, geom.y as f64, monitors)
+    else {
+        log::warn!("cannot synchronously restore main window geometry without monitor bounds");
+        apply_restored_geometry_fallback(window, geom);
+        return;
+    };
+
+    let size = NSSize::new(geom.width as f64, geom.height as f64);
+    let point = NSPoint::new(x, y);
+    unsafe {
+        let _: () = msg_send![ns_window, setContentSize: size];
+        let _: () = msg_send![ns_window, setFrameTopLeftPoint: point];
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn apply_restored_geometry_before_show<R: Runtime>(
+    window: &WebviewWindow<R>,
+    geom: &WindowGeometry,
+    _monitors: &[Monitor],
+) {
+    apply_restored_geometry_fallback(window, geom);
+}
+
+fn apply_restored_geometry_fallback<R: Runtime>(window: &WebviewWindow<R>, geom: &WindowGeometry) {
+    let _ = window.set_size(LogicalSize::new(geom.width as f64, geom.height as f64));
+    let _ = window.set_position(LogicalPosition::new(geom.x as f64, geom.y as f64));
+}
+
+/// Bounds in the same top-left coordinate space that Tauri/tao's
+/// `outer_position` and `set_position` use on macOS. This is not
+/// exactly the same as AppKit `NSScreen::frame` points on Retina
+/// displays, so keep native restore math tied to this helper.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct TauriMonitorBounds {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+}
+
+fn tauri_monitor_bounds(monitor: &Monitor) -> Option<TauriMonitorBounds> {
+    let scale = monitor.scale_factor();
+    let pos = monitor.position();
+    let size = monitor.size();
+    tauri_monitor_bounds_from_physical(pos.x, pos.y, size.width, size.height, scale)
+}
+
+fn tauri_monitor_bounds_from_physical(
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+    scale: f64,
+) -> Option<TauriMonitorBounds> {
+    if !scale.is_finite() || scale <= 0.0 {
+        return None;
+    }
+
+    Some(TauriMonitorBounds {
+        x: x as f64 / scale,
+        y: y as f64 / scale,
+        width: width as f64 / scale,
+        height: height as f64 / scale,
+    })
+}
+
+fn geometry_overlaps_monitor_bounds(bounds: TauriMonitorBounds, geom: &WindowGeometry) -> bool {
+    let overlaps_x = (geom.x as f64) < bounds.x + bounds.width
+        && ((geom.x as f64) + geom.width as f64) > bounds.x;
+    let overlaps_y = (geom.y as f64) < bounds.y + bounds.height
+        && ((geom.y as f64) + geom.height as f64) > bounds.y;
+    overlaps_x && overlaps_y
+}
+
+#[cfg(any(target_os = "macos", test))]
+fn primary_tauri_screen_height_from_bounds(bounds: &[TauriMonitorBounds]) -> Option<f64> {
+    bounds
+        .iter()
+        .copied()
+        .find(|b| b.x <= 0.0 && 0.0 < b.x + b.width && b.y <= 0.0 && 0.0 < b.y + b.height)
+        .map(|b| b.height)
+}
+
+#[cfg(target_os = "macos")]
+fn primary_tauri_screen_height(monitors: &[Monitor]) -> Option<f64> {
+    let bounds = monitors
+        .iter()
+        .filter_map(tauri_monitor_bounds)
+        .collect::<Vec<_>>();
+    primary_tauri_screen_height_from_bounds(&bounds)
+}
+
+#[cfg(any(target_os = "macos", test))]
+fn macos_top_left_coordinates_from_tauri_height(
+    x: f64,
+    y: f64,
+    primary_tauri_height: f64,
+) -> (f64, f64) {
+    (x, primary_tauri_height - y)
+}
+
+#[cfg(target_os = "macos")]
+fn macos_top_left_coordinates_from_monitors(
+    x: f64,
+    y: f64,
+    monitors: &[Monitor],
+) -> Option<(f64, f64)> {
+    primary_tauri_screen_height(monitors)
+        .map(|height| macos_top_left_coordinates_from_tauri_height(x, y, height))
+}
+
+/// Conservative on-screen check: any monitor whose Tauri-coordinate
+/// bounds overlap the saved geometry counts as "visible". Multi-
+/// monitor disconnects / DPI changes between launches are the main
+/// reason this matters — we don't want to restore a window onto a
+/// monitor that's no longer plugged in.
 fn geometry_is_visible_on_monitors(monitors: &[Monitor], geom: &WindowGeometry) -> bool {
-    for monitor in monitors {
-        let scale = monitor.scale_factor();
-        let pos = monitor.position().to_logical::<f64>(scale);
-        let size = monitor.size().to_logical::<f64>(scale);
-        let mx = pos.x;
-        let my = pos.y;
-        let mw = size.width;
-        let mh = size.height;
-        let overlaps_x = (geom.x as f64) < mx + mw && ((geom.x as f64) + geom.width as f64) > mx;
-        let overlaps_y = (geom.y as f64) < my + mh && ((geom.y as f64) + geom.height as f64) > my;
-        if overlaps_x && overlaps_y {
-            return true;
+    monitors
+        .iter()
+        .filter_map(tauri_monitor_bounds)
+        .any(|bounds| geometry_overlaps_monitor_bounds(bounds, geom))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn bounds(x: f64, y: f64, width: f64, height: f64) -> TauriMonitorBounds {
+        TauriMonitorBounds {
+            x,
+            y,
+            width,
+            height,
         }
     }
-    false
+
+    fn geometry(x: i32, y: i32, width: u32, height: u32) -> WindowGeometry {
+        WindowGeometry {
+            x,
+            y,
+            width,
+            height,
+            maximized: false,
+        }
+    }
+
+    #[test]
+    fn retina_monitor_bounds_match_tauri_position_units() {
+        // tao's macOS MonitorHandle::size() is built from
+        // CGDisplay::pixels_wide/high as logical units, then converted
+        // to PhysicalSize with the monitor scale factor. After Tauri
+        // callers convert it back with that same scale factor, the
+        // value matches tao's top-left position height.
+        let primary = tauri_monitor_bounds_from_physical(0, 0, 5760, 3600, 2.0)
+            .expect("valid monitor scale");
+
+        assert_eq!(primary, bounds(0.0, 0.0, 2880.0, 1800.0));
+        assert_eq!(
+            primary_tauri_screen_height_from_bounds(&[primary]),
+            Some(1800.0)
+        );
+        assert_eq!(
+            macos_top_left_coordinates_from_tauri_height(40.0, 1020.0, primary.height),
+            (40.0, 780.0)
+        );
+    }
+
+    #[test]
+    fn macos_restore_keeps_negative_global_y_for_monitor_above_primary() {
+        let primary = bounds(0.0, 0.0, 1440.0, 900.0);
+        let above = bounds(0.0, -700.0, 1440.0, 700.0);
+        let geom = geometry(100, -120, 800, 500);
+
+        assert!(geometry_overlaps_monitor_bounds(above, &geom));
+        assert_eq!(
+            primary_tauri_screen_height_from_bounds(&[above, primary]),
+            Some(900.0)
+        );
+        assert_eq!(
+            macos_top_left_coordinates_from_tauri_height(100.0, -120.0, primary.height),
+            (100.0, 1020.0)
+        );
+    }
+
+    #[test]
+    fn macos_restore_keeps_positive_global_y_for_monitor_below_primary() {
+        let primary = bounds(0.0, 0.0, 1440.0, 900.0);
+        let below = bounds(0.0, 900.0, 1440.0, 700.0);
+        let geom = geometry(100, 950, 800, 500);
+
+        assert!(geometry_overlaps_monitor_bounds(below, &geom));
+        assert_eq!(
+            primary_tauri_screen_height_from_bounds(&[below, primary]),
+            Some(900.0)
+        );
+        assert_eq!(
+            macos_top_left_coordinates_from_tauri_height(100.0, 950.0, primary.height),
+            (100.0, -50.0)
+        );
+    }
+
+    #[test]
+    fn primary_height_is_none_when_no_monitor_contains_global_origin() {
+        let detached = bounds(2000.0, 1000.0, 1440.0, 900.0);
+
+        assert_eq!(primary_tauri_screen_height_from_bounds(&[detached]), None);
+    }
 }
 
 // ---- macOS dock icon -------------------------------------------------------
