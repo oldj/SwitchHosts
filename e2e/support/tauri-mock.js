@@ -51,6 +51,9 @@
     http_api_only_local: true,
     tray_mini_window: true,
     multi_chose_folder_switch_all: false,
+    find_is_regexp: false,
+    find_is_ignore_case: false,
+    find_result_column_widths: [],
     auto_download_update: true,
     env: 'DEV',
   }

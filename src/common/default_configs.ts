@@ -38,6 +38,7 @@ const configs = {
   // find window — sticky search options across reopens and restarts
   find_is_regexp: false,
   find_is_ignore_case: false,
+  find_result_column_widths: [] as number[],
 
   // Legacy key: it now controls background update checks, while the actual
   // download remains a manual action in the UI.

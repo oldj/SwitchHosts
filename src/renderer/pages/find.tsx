@@ -43,6 +43,20 @@ import styles from './find.module.scss'
 const RESULT_ROW_HEIGHT = 29
 const RESULT_LIST_PADDING_Y = 5
 const RESULT_LIST_OVERSCAN = 12
+const RESULT_COLUMN_MIN_WIDTH = 60
+const RESULT_COLUMN_GAP = 4
+const RESULT_COLUMN_GAP_COUNT = 2
+const RESULT_HEADER_LEFT_PADDING = 8
+const RESULT_HEADER_RIGHT_PADDING = 20
+const RESULT_ROW_PADDING_LEFT = 8
+const RESULT_ROW_HORIZONTAL_INSET = 8
+const DEFAULT_RESULT_LINE_COLUMN_WIDTH = 60
+const DEFAULT_RESULT_TITLE_COLUMN_RATIO = 0.2
+const RESULT_COLUMN_MAX_WINDOW_RATIO = 0.8
+
+type ResultFixedColumnWidths = [number, number]
+type ResultColumnWidths = [number, number, number]
+type ResultColumnResizeIndex = 0 | 1
 
 interface SearchState {
   keyword: string
@@ -105,6 +119,106 @@ export function getAdjustedReplaceRange(positions: IFindPositionShow[], index: n
   }
 }
 
+export function sanitizeFindResultColumnWidths(widths?: number[] | null): ResultColumnWidths | null {
+  if (!Array.isArray(widths) || widths.length !== 3) return null
+
+  const [match, title, line] = widths.map((width) =>
+    Number.isFinite(width) ? Math.max(RESULT_COLUMN_MIN_WIDTH, Math.round(width)) : RESULT_COLUMN_MIN_WIDTH,
+  )
+
+  return [match, title, line]
+}
+
+export function getDefaultFindResultFixedColumnWidths(
+  availableTrackWidth: number,
+): ResultFixedColumnWidths {
+  const trackWidth = Math.max(RESULT_COLUMN_MIN_WIDTH * 3, Math.round(availableTrackWidth))
+  const titleWidth = Math.max(
+    RESULT_COLUMN_MIN_WIDTH,
+    Math.round(trackWidth * DEFAULT_RESULT_TITLE_COLUMN_RATIO),
+  )
+  const matchWidth = Math.max(
+    RESULT_COLUMN_MIN_WIDTH,
+    trackWidth - titleWidth - DEFAULT_RESULT_LINE_COLUMN_WIDTH,
+  )
+
+  return [matchWidth, titleWidth]
+}
+
+export function getFindResultColumnWidths(
+  fixedWidths: ResultFixedColumnWidths,
+  availableTrackWidth: number,
+): ResultColumnWidths {
+  const matchWidth = Math.max(RESULT_COLUMN_MIN_WIDTH, Math.round(fixedWidths[0]))
+  const titleWidth = Math.max(RESULT_COLUMN_MIN_WIDTH, Math.round(fixedWidths[1]))
+  const lineWidth = Math.max(
+    RESULT_COLUMN_MIN_WIDTH,
+    Math.round(availableTrackWidth - matchWidth - titleWidth),
+  )
+
+  return [matchWidth, titleWidth, lineWidth]
+}
+
+function normalizeFindResultColumnMaxWidth(maxColumnWidth?: number) {
+  return Number.isFinite(maxColumnWidth)
+    ? Math.max(RESULT_COLUMN_MIN_WIDTH, Math.round(maxColumnWidth!))
+    : Number.POSITIVE_INFINITY
+}
+
+function normalizeFindResultColumnWidth(width: number) {
+  return Math.max(RESULT_COLUMN_MIN_WIDTH, Math.round(width))
+}
+
+function getFindResultDragColumnMaxWidth(currentWidth: number, maxColumnWidth: number) {
+  return Math.max(normalizeFindResultColumnWidth(currentWidth), maxColumnWidth)
+}
+
+function clampFindResultColumnWidthForDrag(
+  width: number,
+  currentWidth: number,
+  maxColumnWidth: number,
+) {
+  return Math.min(
+    normalizeFindResultColumnWidth(width),
+    getFindResultDragColumnMaxWidth(currentWidth, maxColumnWidth),
+  )
+}
+
+export function resizeFindResultFixedColumnWidths(
+  startWidths: ResultFixedColumnWidths,
+  resizeIndex: ResultColumnResizeIndex,
+  deltaX: number,
+  maxColumnWidth?: number,
+): ResultFixedColumnWidths {
+  const delta = Math.round(deltaX)
+  const maxWidth = normalizeFindResultColumnMaxWidth(maxColumnWidth)
+  const currentWidths: ResultFixedColumnWidths = [
+    normalizeFindResultColumnWidth(startWidths[0]),
+    normalizeFindResultColumnWidth(startWidths[1]),
+  ]
+
+  if (resizeIndex === 0) {
+    const splitWidth = currentWidths[0] + currentWidths[1]
+    const matchMaxWidth = getFindResultDragColumnMaxWidth(currentWidths[0], maxWidth)
+    const titleMaxWidth = getFindResultDragColumnMaxWidth(currentWidths[1], maxWidth)
+    const minMatchWidth = Math.max(RESULT_COLUMN_MIN_WIDTH, splitWidth - titleMaxWidth)
+    const maxMatchWidth = Math.min(matchMaxWidth, splitWidth - RESULT_COLUMN_MIN_WIDTH)
+    const nextMatchWidth = currentWidths[0] + delta
+
+    if (minMatchWidth <= maxMatchWidth) {
+      const matchWidth = Math.min(Math.max(nextMatchWidth, minMatchWidth), maxMatchWidth)
+      return [matchWidth, splitWidth - matchWidth]
+    }
+
+    return currentWidths
+  }
+
+  return [
+    currentWidths[0],
+    clampFindResultColumnWidthForDrag(currentWidths[1] + delta, currentWidths[1], maxWidth),
+  ]
+}
+
 const flushedInputStyles = {
   input: {
     borderTop: 0,
@@ -145,9 +259,23 @@ const FindPage = () => {
     isIgnoreCase: false,
   }))
   const [currentResultIdx, setCurrentResultIdx] = useState(0)
-  const [resultListMetrics, setResultListMetrics] = useState({ scrollTop: 0, height: 0 })
+  const [resultListMetrics, setResultListMetrics] = useState({
+    height: 0,
+    scrollLeft: 0,
+    scrollTop: 0,
+  })
+  const [resultAvailableTrackWidth, setResultAvailableTrackWidth] = useState(0)
+  const initialResultColumnWidths = sanitizeFindResultColumnWidths(configs?.find_result_column_widths)
+  const [resultFixedColumnWidths, setResultFixedColumnWidths] = useState<ResultFixedColumnWidths>(
+    () =>
+      initialResultColumnWidths
+        ? [initialResultColumnWidths[0], initialResultColumnWidths[1]]
+        : getDefaultFindResultFixedColumnWidths(0),
+  )
+  const [resizingColumnIdx, setResizingColumnIdx] = useState<ResultColumnResizeIndex | null>(null)
   const debouncedKeyword = useDebounce(keyword, { wait: 500 })
   const iptKw = useRef<HTMLInputElement>(null)
+  const resultHeaderRef = useRef<HTMLDivElement>(null)
   const resultListRef = useRef<HTMLDivElement>(null)
   const searchSeqRef = useRef(0)
   // Mirrors input/config changes before the debounce fires, so late async
@@ -155,6 +283,9 @@ const FindPage = () => {
   const latestSearchStateRef = useRef({ keyword: '', isRegExp: false, isIgnoreCase: false })
   const lastAutoScrollResultIdxRef = useRef(-1)
   const findWindowReadySentRef = useRef(false)
+  const resultColumnsHydratedRef = useRef(false)
+  const resultFixedColumnWidthsRef = useRef(resultFixedColumnWidths)
+  const resultResizeCleanupRef = useRef<(() => void) | null>(null)
   const resolvedTheme = useResolvedTheme(configs?.theme)
 
   const isCurrentSearchState = (
@@ -182,6 +313,114 @@ const FindPage = () => {
     resultSearchState.keyword === keyword &&
     resultSearchState.isRegExp === isRegExp &&
     resultSearchState.isIgnoreCase === isIgnoreCase
+
+  const getResultAvailableTrackWidth = (el: HTMLDivElement) =>
+    Math.max(
+      0,
+      el.clientWidth -
+        RESULT_HEADER_LEFT_PADDING -
+        RESULT_HEADER_RIGHT_PADDING -
+        RESULT_ROW_PADDING_LEFT -
+        RESULT_COLUMN_GAP * RESULT_COLUMN_GAP_COUNT,
+    )
+
+  const persistResultColumnWidths = (fixedWidths: ResultFixedColumnWidths) => {
+    updateConfigs({
+      // Persist a snapshot of all columns, but only match/title are restored as fixed widths.
+      find_result_column_widths: getFindResultColumnWidths(fixedWidths, resultAvailableTrackWidth),
+    }).catch((e) => console.error(e))
+  }
+
+  const getCurrentResultColumnMaxWidth = () => {
+    const windowWidth =
+      window.innerWidth || document.documentElement.clientWidth || resultHeaderRef.current?.clientWidth || 0
+
+    return Math.max(RESULT_COLUMN_MIN_WIDTH, Math.round(windowWidth * RESULT_COLUMN_MAX_WINDOW_RATIO))
+  }
+
+  const startResultColumnResize = (
+    resizeIndex: ResultColumnResizeIndex,
+    e: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    resultResizeCleanupRef.current?.()
+
+    const resizeHandle = e.currentTarget
+    if (typeof resizeHandle.setPointerCapture === 'function') {
+      resizeHandle.setPointerCapture(e.pointerId)
+    }
+    const startX = e.clientX
+    const maxColumnWidth = getCurrentResultColumnMaxWidth()
+    const startWidths: ResultFixedColumnWidths = [
+      normalizeFindResultColumnWidth(resultFixedColumnWidthsRef.current[0]),
+      normalizeFindResultColumnWidth(resultFixedColumnWidthsRef.current[1]),
+    ]
+    const originalCursor = document.body.style.cursor
+    const originalUserSelect = document.body.style.userSelect
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    setResultFixedColumnWidths(startWidths)
+    resultFixedColumnWidthsRef.current = startWidths
+    setResizingColumnIdx(resizeIndex)
+
+    let currentWidths = startWidths
+    let previousClientX = startX
+    const getNextWidths = (clientX: number) => {
+      const nextWidths = resizeFindResultFixedColumnWidths(
+        currentWidths,
+        resizeIndex,
+        clientX - previousClientX,
+        maxColumnWidth,
+      )
+      currentWidths = nextWidths
+      previousClientX = clientX
+      return nextWidths
+    }
+
+    let cleanup = () => {}
+
+    const onPointerMove = (event: PointerEvent) => {
+      setResultFixedColumnWidths(getNextWidths(event.clientX))
+    }
+
+    const onPointerUp = (event: PointerEvent) => {
+      const nextWidths = getNextWidths(event.clientX)
+      cleanup()
+      setResultFixedColumnWidths(nextWidths)
+      resultFixedColumnWidthsRef.current = nextWidths
+      setResizingColumnIdx(null)
+      persistResultColumnWidths(nextWidths)
+    }
+
+    const onPointerCancel = () => {
+      cleanup()
+      setResizingColumnIdx(null)
+    }
+
+    cleanup = () => {
+      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointercancel', onPointerCancel)
+      resizeHandle.removeEventListener('lostpointercapture', onLostPointerCapture)
+      document.body.style.cursor = originalCursor
+      document.body.style.userSelect = originalUserSelect
+      resultResizeCleanupRef.current = null
+    }
+
+    const onLostPointerCapture = () => {
+      cleanup()
+      setResizingColumnIdx(null)
+    }
+
+    resultResizeCleanupRef.current = cleanup
+    resizeHandle.addEventListener('lostpointercapture', onLostPointerCapture)
+    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onPointerCancel)
+  }
 
   const init = async () => {
     if (!configs) return
@@ -280,6 +519,68 @@ const FindPage = () => {
   }, [configs])
 
   useEffect(() => {
+    resultFixedColumnWidthsRef.current = resultFixedColumnWidths
+  }, [resultFixedColumnWidths])
+
+  useEffect(() => {
+    const el = resultHeaderRef.current
+    if (!el) return
+
+    const update = () => {
+      setResultAvailableTrackWidth(getResultAvailableTrackWidth(el))
+    }
+
+    update()
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', update)
+      return () => window.removeEventListener('resize', update)
+    }
+
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const storedWidths = sanitizeFindResultColumnWidths(configs?.find_result_column_widths)
+
+    if (!resultColumnsHydratedRef.current) {
+      if (storedWidths) {
+        const fixedWidths: ResultFixedColumnWidths = [storedWidths[0], storedWidths[1]]
+        resultColumnsHydratedRef.current = true
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror persisted widths into local drag state after config hydration
+        setResultFixedColumnWidths(fixedWidths)
+        resultFixedColumnWidthsRef.current = fixedWidths
+        return
+      }
+
+      if (resultAvailableTrackWidth > 0) {
+        const fixedWidths = getDefaultFindResultFixedColumnWidths(resultAvailableTrackWidth)
+        resultColumnsHydratedRef.current = true
+        setResultFixedColumnWidths(fixedWidths)
+        resultFixedColumnWidthsRef.current = fixedWidths
+      }
+      return
+    }
+
+    if (storedWidths) {
+      const fixedWidths: ResultFixedColumnWidths = [storedWidths[0], storedWidths[1]]
+      setResultFixedColumnWidths((prev) =>
+        prev[0] === fixedWidths[0] && prev[1] === fixedWidths[1] ? prev : fixedWidths,
+      )
+      resultFixedColumnWidthsRef.current = fixedWidths
+    }
+  }, [configs?.find_result_column_widths, resultAvailableTrackWidth])
+
+  useEffect(
+    () => () => {
+      resultResizeCleanupRef.current?.()
+    },
+    [],
+  )
+
+  useEffect(() => {
     if (!configs) return
 
     applyThemeToBody(resolvedTheme, [`platform-${agent.platform}`])
@@ -322,8 +623,9 @@ const FindPage = () => {
     // the fixed-row virtualizer instead of reading layout during render.
     const update = () => {
       setResultListMetrics({
-        scrollTop: el.scrollTop,
         height: el.clientHeight,
+        scrollLeft: el.scrollLeft,
+        scrollTop: el.scrollTop,
       })
     }
 
@@ -551,6 +853,7 @@ const FindPage = () => {
           setCurrentResultIdx(index)
         }}
         onDoubleClick={() => toShowSource(data)}
+        style={resultColumnGridStyle}
         title={lang.to_show_source}
       >
         <div className={styles.result_content}>
@@ -648,6 +951,25 @@ const FindPage = () => {
   const visiblePositions = findPositions.slice(visibleStart, visibleEnd)
   const virtualListHeight = findPositions.length * RESULT_ROW_HEIGHT + RESULT_LIST_PADDING_Y * 2
   const virtualListOffset = visibleStart * RESULT_ROW_HEIGHT
+  const resultColumnWidths = getFindResultColumnWidths(
+    resultFixedColumnWidths,
+    resultAvailableTrackWidth,
+  )
+  const resultGridContentWidth =
+    resultColumnWidths.reduce((sum, width) => sum + width, 0) +
+    RESULT_COLUMN_GAP * RESULT_COLUMN_GAP_COUNT
+  const resultRowOuterWidth = RESULT_ROW_PADDING_LEFT + resultGridContentWidth
+  const resultListInnerWidth = RESULT_ROW_HORIZONTAL_INSET * 2 + resultRowOuterWidth
+  const resultColumnGridStyle = {
+    '--find-result-line-column-width': `${resultColumnWidths[2]}px`,
+    '--find-result-match-column-width': `${resultColumnWidths[0]}px`,
+    '--find-result-title-column-width': `${resultColumnWidths[1]}px`,
+    width: resultRowOuterWidth,
+  } as React.CSSProperties
+  const resultHeaderRowStyle = {
+    ...resultColumnGridStyle,
+    transform: `translateX(-${resultListMetrics.scrollLeft}px)`,
+  } as React.CSSProperties
 
   return (
     <div className={styles.root}>
@@ -694,27 +1016,55 @@ const FindPage = () => {
             />
           </Group>
 
-          <Box w="100%" className={styles.result_header}>
-            <div className={clsx(styles.result_row, styles.result_header_row)}>
+          <div className={styles.result_header} ref={resultHeaderRef}>
+            <div
+              className={clsx(
+                styles.result_row,
+                styles.result_header_row,
+                resizingColumnIdx !== null && styles.resizing,
+              )}
+              style={resultHeaderRowStyle}
+            >
               <div className={styles.result_header_match}>{lang.match}</div>
               <div className={styles.result_header_title}>{lang.title}</div>
               <div className={styles.result_header_line}>{lang.line}</div>
+              <div
+                aria-label="Resize match and title columns"
+                className={clsx(
+                  styles.result_column_resize_handle,
+                  styles.result_resize_handle_match_title,
+                  resizingColumnIdx === 0 && styles.resizing,
+                )}
+                onPointerDown={(e) => startResultColumnResize(0, e)}
+                role="separator"
+              />
+              <div
+                aria-label="Resize title and line columns"
+                className={clsx(
+                  styles.result_column_resize_handle,
+                  styles.result_resize_handle_title_line,
+                  resizingColumnIdx === 1 && styles.resizing,
+                )}
+                onPointerDown={(e) => startResultColumnResize(1, e)}
+                role="separator"
+              />
             </div>
-          </Box>
+          </div>
 
           <ScrollArea
             className={styles.result_list}
-            scrollbars="y"
+            scrollbars="xy"
             type="hover"
             scrollbarSize={12}
-            offsetScrollbars="y"
+            offsetScrollbars={true}
             viewportRef={resultListRef}
             viewportProps={{
               'data-testid': 'find-result-list',
               onScroll: (e) => {
-                const { clientHeight, scrollTop } = e.currentTarget
+                const { clientHeight, scrollLeft, scrollTop } = e.currentTarget
                 setResultListMetrics((prev) => ({
                   ...prev,
+                  scrollLeft,
                   scrollTop,
                   height: clientHeight,
                 }))
@@ -725,10 +1075,16 @@ const FindPage = () => {
               thumb: styles.result_scroll_thumb,
             }}
           >
-            <div className={styles.result_list_inner} style={{ height: virtualListHeight }}>
+            <div
+              className={styles.result_list_inner}
+              style={{ height: virtualListHeight, width: resultListInnerWidth }}
+            >
               <div
                 className={styles.virtual_result_rows}
-                style={{ transform: `translateY(${virtualListOffset}px)` }}
+                style={{
+                  transform: `translateY(${virtualListOffset}px)`,
+                  width: resultRowOuterWidth,
+                }}
               >
                 {visiblePositions.map((item, idx) => {
                   const resultIndex = visibleStart + idx

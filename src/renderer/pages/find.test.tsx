@@ -15,6 +15,13 @@ const mocks = vi.hoisted(() => ({
     cmdFocusMainWindow: vi.fn(),
   },
   broadcast: vi.fn(),
+  configs: {
+    find_is_ignore_case: false,
+    find_is_regexp: false,
+    find_result_column_widths: [] as number[],
+    locale: 'en',
+    theme: 'light',
+  },
   updateConfigs: vi.fn(),
   showErrorNotification: vi.fn(),
 }))
@@ -155,12 +162,7 @@ vi.mock('@renderer/utils/theme', () => ({
 
 vi.mock('../models/useConfigs', () => ({
   default: () => ({
-    configs: {
-      find_is_ignore_case: false,
-      find_is_regexp: false,
-      locale: 'en',
-      theme: 'light',
-    },
+    configs: mocks.configs,
     loadConfigs: vi.fn(),
     updateConfigs: mocks.updateConfigs,
   }),
@@ -189,7 +191,12 @@ vi.mock('../models/useI18n', () => ({
   }),
 }))
 
-import FindPage, { getAdjustedReplaceRange, type IFindPositionShow } from './find'
+import FindPage, {
+  getAdjustedReplaceRange,
+  getFindResultColumnWidths,
+  resizeFindResultFixedColumnWidths,
+  type IFindPositionShow,
+} from './find'
 
 function deferred<T>() {
   let resolve!: (value: T) => void
@@ -249,6 +256,11 @@ describe('FindPage search state', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
+    mocks.configs.find_is_ignore_case = false
+    mocks.configs.find_is_regexp = false
+    mocks.configs.find_result_column_widths = []
+    mocks.configs.locale = 'en'
+    mocks.configs.theme = 'light'
     mocks.actions.findAddHistory.mockResolvedValue([])
     mocks.actions.findGetHistory.mockResolvedValue([])
     mocks.actions.findGetReplaceHistory.mockResolvedValue([])
@@ -730,6 +742,24 @@ describe('FindPage search state', () => {
     expect(screen.queryByText('match-0')).toBeNull()
     expect(screen.getByText('match-80')).toBeTruthy()
   })
+
+  it('persists result column widths after dragging a header handle', async () => {
+    mocks.configs.find_result_column_widths = [240, 180, 90]
+    render(<FindPage />)
+
+    await act(async () => {
+      fireEvent.pointerDown(screen.getByLabelText('Resize match and title columns'), {
+        clientX: 300,
+      })
+      fireEvent.pointerMove(window, { clientX: 50 })
+      fireEvent.pointerUp(window, { clientX: 50 })
+      await Promise.resolve()
+    })
+
+    expect(mocks.updateConfigs).toHaveBeenCalledWith({
+      find_result_column_widths: [60, 360, 60],
+    })
+  })
 })
 
 describe('find replace helpers', () => {
@@ -770,5 +800,30 @@ describe('find replace helpers', () => {
     ]
 
     expect(getAdjustedReplaceRange(positions, 1)).toEqual({ start: 3, end: 8 })
+  })
+
+  it('keeps resized result columns above the minimum width', () => {
+    expect(resizeFindResultFixedColumnWidths([240, 180], 0, 300)).toEqual([360, 60])
+    expect(resizeFindResultFixedColumnWidths([240, 180], 0, -300)).toEqual([60, 360])
+    expect(resizeFindResultFixedColumnWidths([240, 180], 1, -300)).toEqual([240, 60])
+  })
+
+  it('keeps resized result columns below the drag-start maximum width', () => {
+    expect(resizeFindResultFixedColumnWidths([240, 180], 0, 900, 300)).toEqual([300, 120])
+    expect(resizeFindResultFixedColumnWidths([240, 180], 0, -900, 300)).toEqual([120, 300])
+    expect(resizeFindResultFixedColumnWidths([240, 180], 1, 900, 300)).toEqual([240, 300])
+  })
+
+  it('does not shrink columns that already exceed the drag-start maximum until dragged smaller', () => {
+    expect(resizeFindResultFixedColumnWidths([500, 100], 0, 0, 300)).toEqual([500, 100])
+    expect(resizeFindResultFixedColumnWidths([500, 100], 0, 100, 300)).toEqual([500, 100])
+    expect(resizeFindResultFixedColumnWidths([500, 100], 0, -100, 300)).toEqual([400, 200])
+    expect(resizeFindResultFixedColumnWidths([100, 500], 1, 100, 300)).toEqual([100, 500])
+    expect(resizeFindResultFixedColumnWidths([100, 500], 1, -100, 300)).toEqual([100, 400])
+  })
+
+  it('lets the line column absorb available result width down to its minimum', () => {
+    expect(getFindResultColumnWidths([240, 180], 800)).toEqual([240, 180, 380])
+    expect(getFindResultColumnWidths([240, 180], 450)).toEqual([240, 180, 60])
   })
 })
