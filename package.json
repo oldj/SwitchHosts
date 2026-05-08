@@ -8,11 +8,12 @@
   "scripts": {
     "pretest": "rimraf ./test/tmp",
     "test": "vitest --config ./vitest.config.mts --watch=false",
+    "test:e2e": "playwright test",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
-    "test:all": "npm run typecheck && npm test && npm run test:rust",
+    "test:all": "npm run typecheck && npm test && npm run test:rust && npm run test:e2e",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"e2e/**/*.{ts,js}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" \"e2e/**/*.{ts,js}\" --fix",
     "clean:dist": "rimraf ./dist/*",
     "clean:build": "rimraf ./build/*",
     "dev:renderer": "vite --config ./vite.render.config.mts",
@@ -39,6 +40,7 @@
     "@mantine/core": "^9.1.1",
     "@mantine/hooks": "^9.1.1",
     "@mantine/notifications": "^9.1.1",
+    "@playwright/test": "^1.59.1",
     "@tabler/icons-react": "3.42.0",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/cli": "^2.11.0",
@@ -70,7 +72,6 @@
     "typescript-eslint": "^8.59.2",
     "vite": "8.0.10",
     "vite-plugin-static-copy": "4.1.0",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.5"
   }
 }

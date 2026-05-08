@@ -16,20 +16,10 @@ import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import { IconArrowBackUp, IconEdit, IconRefresh, IconTrash } from '@tabler/icons-react'
 import { useEffect, useRef, useState } from 'react'
+import { formatInterval } from '@renderer/utils/formatInterval'
 import styles from './index.module.scss'
 import { InfoRow, countRules } from './shared'
 import SystemHostsPanel from './SystemHostsPanel'
-
-const formatInterval = (seconds: number, lang: ReturnType<typeof useI18n>['lang']): string => {
-  if (!seconds) return lang.never
-  if (seconds < 60) return `${seconds} s`
-  const m = Math.round(seconds / 60)
-  if (m < 60) return `${m} ${m === 1 ? lang.minute : lang.minutes}`
-  const h = Math.round(m / 60)
-  if (h < 24) return `${h} ${h === 1 ? lang.hour : lang.hours}`
-  const d = Math.round(h / 24)
-  return `${d} ${d === 1 ? lang.day : lang.days}`
-}
 
 const RightPanel = () => {
   const { lang } = useI18n()
