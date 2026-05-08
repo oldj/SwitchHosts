@@ -5,6 +5,7 @@
 
 import { ConfigsType } from '@common/default_configs'
 import { Box, Button, Stack, Textarea } from '@mantine/core'
+import DescriptionText from '@renderer/components/DescriptionText'
 import CommandsHistory from '@renderer/components/Pref/CommandsHistory'
 import useI18n from '@renderer/models/useI18n'
 import { useState } from 'react'
@@ -27,7 +28,7 @@ const Commands = (props: IProps) => {
     <Stack gap="16px">
       <Box w="100%">
         <Box>{lang.commands_title}</Box>
-        <Box style={{ marginBottom: 12, opacity: 0.7, fontSize: 12 }}>{lang.commands_help}</Box>
+        <DescriptionText mb="12px">{lang.commands_help}</DescriptionText>
         <Textarea
           rows={6}
           placeholder={'# echo "ok!"'}

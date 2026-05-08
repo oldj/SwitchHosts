@@ -5,6 +5,7 @@
 
 import { ConfigsType } from '@common/default_configs'
 import { Checkbox, Stack, Tooltip } from '@mantine/core'
+import DescriptionText from '@renderer/components/DescriptionText'
 import { actions } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
 import { IconFile, IconFolder } from '@tabler/icons-react'
@@ -61,7 +62,7 @@ const Advanced = (props: IProps) => {
     <Stack gap="40px" pb={60}>
       <div style={{ width: '100%' }}>
         <div>{lang.usage_data_title}</div>
-        <div style={{ marginBottom: 8, opacity: 0.7, fontSize: 12 }}>{lang.usage_data_help}</div>
+        <DescriptionText mb="8px">{lang.usage_data_help}</DescriptionText>
         <Checkbox
           checked={data.send_usage_data}
           label={lang.usage_data_agree}
@@ -71,13 +72,13 @@ const Advanced = (props: IProps) => {
 
       <div style={{ width: '100%' }}>
         <div>{lang.where_is_my_hosts}</div>
-        <div style={{ marginBottom: 8, opacity: 0.7, fontSize: 12 }}>{lang.your_hosts_file_is}</div>
+        <DescriptionText mb="8px">{lang.your_hosts_file_is}</DescriptionText>
         <PathLink link={hostsPath} icon={<IconFile size={16} />} />
       </div>
 
       <div style={{ width: '100%' }}>
         <div>{lang.where_is_my_data}</div>
-        <div style={{ marginBottom: 8, opacity: 0.7, fontSize: 12 }}>{lang.your_data_is}</div>
+        <DescriptionText mb="8px">{lang.your_data_is}</DescriptionText>
         <PathLink link={dataDir} icon={<IconFolder size={16} />} />
       </div>
     </Stack>

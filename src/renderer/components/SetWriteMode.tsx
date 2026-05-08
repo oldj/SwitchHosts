@@ -5,7 +5,8 @@
 
 import { WriteModeType } from '@common/default_configs'
 import events from '@common/events'
-import { Button, Group, Modal, Radio, Text } from '@mantine/core'
+import { Button, Group, Modal, Radio } from '@mantine/core'
+import DescriptionText from '@renderer/components/DescriptionText'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useI18n from '@renderer/models/useI18n'
@@ -64,10 +65,10 @@ const SetWriteMode = () => {
             </Group>
           </Radio.Group>
 
-          <Text size="sm" mt="16px" mih="32px" c="dimmed">
+          <DescriptionText mt="16px" mih="32px">
             {writeMode === 'append' && lang.write_mode_append_help}
             {writeMode === 'overwrite' && lang.write_mode_overwrite_help}
-          </Text>
+          </DescriptionText>
         </div>
         <Group
           justify="flex-end"
