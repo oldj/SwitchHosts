@@ -1,11 +1,11 @@
 import events from '@common/events'
 import { ActionIcon, Indicator, Stack, Tooltip } from '@mantine/core'
 import ConfigMenu from '@renderer/components/TopBar/ConfigMenu'
-import { agent } from '@renderer/core/agent'
+import { actions, agent } from '@renderer/core/agent'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import { leftPanelViewAtom } from '@renderer/stores/ui'
-import { IconHistory, IconList, IconTrash } from '@tabler/icons-react'
+import { IconHistory, IconList, IconSearch, IconTrash } from '@tabler/icons-react'
 import { useAtom } from 'jotai'
 import styles from './index.module.scss'
 
@@ -33,7 +33,7 @@ const LeftSidebar = (props: IProps) => {
   }
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} data-tauri-drag-region>
       <Stack gap={20} align="center" pt={8}>
         <Tooltip label={'Hosts'} position="right">
           <ActionIcon
@@ -70,6 +70,17 @@ const LeftSidebar = (props: IProps) => {
       <div className={styles.spacer} />
 
       <Stack gap={20} align="center">
+        <Tooltip label={lang.search} position="right">
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size={28}
+            onClick={() => actions.findShow().catch((e) => console.error(e))}
+            aria-label={lang.search}
+          >
+            <IconSearch size={18} stroke={1.5} />
+          </ActionIcon>
+        </Tooltip>
         <Tooltip label={lang.show_history} position="right">
           <ActionIcon
             variant="subtle"
