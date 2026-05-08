@@ -11,10 +11,18 @@ import DescriptionText, { checkboxDescriptionStyles } from '@renderer/components
 import { agent } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
 import { normalizeTheme } from '@renderer/utils/theme'
+import type { CSSProperties } from 'react'
 
 interface IProps {
   data: ConfigsType
   onChange: (kv: Partial<ConfigsType>) => void
+}
+
+const segmentedControlLabelStyle: CSSProperties = {
+  alignSelf: 'start',
+  display: 'flex',
+  alignItems: 'center',
+  minHeight: 'calc(2.25rem * var(--mantine-scale))',
 }
 
 const General = (props: IProps) => {
@@ -63,7 +71,7 @@ const General = (props: IProps) => {
           style={{ justifySelf: 'start' }}
         />
 
-        <Box style={{ alignSelf: 'start' }}>{lang.write_mode}</Box>
+        <Box style={segmentedControlLabelStyle}>{lang.write_mode}</Box>
         <Stack gap="8px" align="flex-start">
           <SegmentedControl
             value={data.write_mode || 'append'}
@@ -79,7 +87,7 @@ const General = (props: IProps) => {
           </DescriptionText>
         </Stack>
 
-        <Box style={{ alignSelf: 'start' }}>{lang.choice_mode}</Box>
+        <Box style={segmentedControlLabelStyle}>{lang.choice_mode}</Box>
         <Stack gap="8px" align="flex-start">
           <SegmentedControl
             value={data.choice_mode.toString()}

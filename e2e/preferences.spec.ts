@@ -7,8 +7,73 @@ import {
   getMockState,
   test,
 } from './support/test'
+import type { Locator } from '@playwright/test'
+
+async function expectVerticalCentersAligned(label: Locator, control: Locator) {
+  await expect(label).toBeVisible()
+  await expect(control).toBeVisible()
+
+  const [labelBox, controlBox] = await Promise.all([label.boundingBox(), control.boundingBox()])
+  expect(labelBox).not.toBeNull()
+  expect(controlBox).not.toBeNull()
+
+  const labelCenter = labelBox!.y + labelBox!.height / 2
+  const controlCenter = controlBox!.y + controlBox!.height / 2
+  expect(Math.abs(labelCenter - controlCenter)).toBeLessThanOrEqual(2)
+}
+
+async function expectFontSize(locator: Locator, expectedPx = 14) {
+  await expect(locator).toBeVisible()
+
+  const fontSize = await locator.evaluate((element) =>
+    Number.parseFloat(window.getComputedStyle(element).fontSize),
+  )
+  expect(Math.abs(fontSize - expectedPx)).toBeLessThanOrEqual(0.2)
+}
 
 test.describe('preferences', () => {
+  test('aligns segmented setting labels with their controls', async ({ page }) => {
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
+
+    const writeModeControl = preferences
+      .getByRole('radiogroup')
+      .filter({ hasText: 'Append' })
+      .filter({ hasText: 'Overwrite' })
+    const choiceModeControl = preferences
+      .getByRole('radiogroup')
+      .filter({ hasText: 'Single' })
+      .filter({ hasText: 'Multiple' })
+
+    await expectVerticalCentersAligned(
+      preferences.getByText('Write Mode', { exact: true }),
+      writeModeControl,
+    )
+    await expectVerticalCentersAligned(
+      preferences.getByText('Choice Mode', { exact: true }),
+      choiceModeControl,
+    )
+  })
+
+  test('uses 14px for regular preference text', async ({ page }) => {
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
+
+    const writeModeControl = preferences
+      .getByRole('radiogroup')
+      .filter({ hasText: 'Append' })
+      .filter({ hasText: 'Overwrite' })
+
+    await expectFontSize(preferences.getByRole('tab', { name: 'General' }))
+    await expectFontSize(preferences.getByText('Write Mode', { exact: true }))
+    await expectFontSize(writeModeControl.getByText('Append', { exact: true }))
+    await expectFontSize(preferences.getByText('Hide at Launch', { exact: true }))
+  })
+
   test('saves basic preferences immediately', async ({ page }) => {
     await clearMockCalls(page)
 
