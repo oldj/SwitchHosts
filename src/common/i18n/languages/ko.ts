@@ -22,10 +22,10 @@ export default {
   choice_mode_default_effect: '환경설정의 전역 선택 모드를 상속합니다.',
   choice_mode_desc:
     '최상위 항목에만 유효하며, 각 폴더는 고유의 선택 모드를 설정할 수 있습니다.',
-  choice_mode_multiple: '다중모드',
+  choice_mode_multiple: '다중 모드',
   choice_mode_multiple_effect:
     '이 폴더의 바로 아래 항목 여러 개를 동시에 켤 수 있습니다.',
-  choice_mode_single: '단일모드',
+  choice_mode_single: '단일 모드',
   choice_mode_single_effect: '이 폴더의 바로 아래 항목은 한 번에 하나만 켤 수 있습니다.',
   choices: '선택',
   chosen: '선택됨',
@@ -79,7 +79,7 @@ export default {
   http_api_on: 'HTTP API 사용',
   http_api_on_desc:
     '포트 {0}에서 실행되며, Alfred와 같은 서드파티 소프트웨어를 통해 호스트를 전환하는데 사용할 수 있습니다.',
-  http_api_only_local: 'HTTP API 127.0.0.1만 수신',
+  http_api_only_local: 'HTTP API를 127.0.0.1에서만 수신',
   ignore_case: '대소문자 무시',
   import: '가져오기',
   import_done: '가져오기가 완료되었습니다.',
@@ -94,7 +94,7 @@ export default {
   latest_version_desc: '최신버전: {0}',
   line: '줄',
   lines: '줄들',
-  loading: '로딩중...',
+  loading: '로딩 중...',
   local: '로컬',
   match: '일치',
   migrate_confirm:
@@ -150,7 +150,7 @@ export default {
   show_history: '이력 보기',
   show_main_window: '메인 창 보기',
   show_title_on_tray: '트레이에 제목 표시',
-  source_code: '소스코드',
+  source_code: '소스 코드',
   success: '성공!',
   sudo_prompt_title: 'sudo password 입력',
   system: '시스템',
@@ -168,7 +168,7 @@ export default {
   title: '제목',
   to_show_source: '더블 클릭하여 소스코드를 표시합니다.',
   toggle_developer_tools: '개발자 도구 전환',
-  toggle_dock_icon: '독(DocK) 아이콘 전환',
+  toggle_dock_icon: 'Dock 아이콘 전환',
   toggle_full_screen: '전체화면 전환',
   trashcan: '휴지통',
   trashcan_clear: '휴지통 비우기',
@@ -184,11 +184,11 @@ export default {
   update_downloading_desc: '버전 {0} 다운로드 중: {1}',
   update_install_now: '설치 후 다시 시작',
   update_ready_desc: '버전 {0} 다운로드가 완료되었으며 설치할 수 있습니다.',
-  url_placeholder: 'http:// or https:// or file://',
+  url_placeholder: 'http:// 또는 https:// 또는 file://',
   usage_data_agree: '익명화된 사용 데이터 제출에 동의합니다',
   usage_data_help:
     '주기적으로 익명의 사용 데이터를 제출하여 SwitchHost를 개선하는 데 도움을 주시겠습니까?',
-  usage_data_title: 'SwitchHosts개선!',
+  usage_data_title: 'SwitchHosts 개선!',
   use_proxy: '프록시 사용',
   use_system_window_frame:
     '시스템 창을 사용하려면, 프로그램 재시작이 필요합니다',

@@ -81,7 +81,7 @@ const lang: LanguageDict = {
   http_api_on: 'HTTP APIを有効化',
   http_api_on_desc:
     '{0}番ポートで実行され、Alfredなどのサードパーティソフトウェアでhostsを切り替えるために使用できます。',
-  http_api_only_local: 'HTTP APIを 127.0.0.1 のみでリッスンする',
+  http_api_only_local: 'HTTP API を 127.0.0.1 のみでリッスンする',
   ignore_case: '大文字と小文字を区別しない',
   import: 'インポート',
   import_done: 'インポートが完了しました。',
@@ -167,7 +167,7 @@ const lang: LanguageDict = {
   to_show_source: 'ダブルクリックでソースコードを表示する。',
   toggle_developer_tools: '開発者ツールの表示/非表示',
   toggle_dock_icon: 'Dockアイコンの表示/非表示',
-  toggle_full_screen: 'フルスクリーン',
+  toggle_full_screen: 'フルスクリーンを切り替え',
   trashcan: 'ゴミ箱',
   trashcan_clear: 'ゴミ箱を空にする',
   trashcan_clear_confirm: 'ゴミ箱を空にしてもよろしいですか？',
