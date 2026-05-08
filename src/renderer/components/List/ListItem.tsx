@@ -101,6 +101,7 @@ const ListItem = (props: Props) => {
 
   const isFolder = data.type === 'folder'
   const isSelected = data.id === currentHosts?.id
+  const title = data.title || lang.untitled
 
   return (
     <div
@@ -192,7 +193,9 @@ const ListItem = (props: Props) => {
         <span className={clsx(styles.icon, isFolder && styles.folder)} onClick={toggleIsCollapsed}>
           <ItemIcon type={data.is_sys ? 'system' : data.type} isCollapsed={data.isCollapsed} />
         </span>
-        {data.title || lang.untitled}
+        <span className={styles.label} title={title}>
+          {title}
+        </span>
       </div>
       <div className={styles.status}>
         {data.is_sys ? null : (

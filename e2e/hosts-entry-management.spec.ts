@@ -26,6 +26,40 @@ test.describe('hosts entry management', () => {
       .toBe(true)
   })
 
+  test('truncates long hosts titles in the left sidebar', async ({ page }) => {
+    const longTitle = 'QA Sandbox Very Long Hosts Entry Title 1234567890'
+
+    await page.getByLabel('Add').click()
+    const drawer = page.getByRole('dialog')
+    await expect(drawer.getByText('Add Hosts Entry')).toBeVisible()
+
+    await drawer.getByLabel('Hosts Title', { exact: true }).fill(longTitle)
+    await drawer.getByRole('button', { name: 'OK' }).click()
+
+    const title = page.locator(`[data-role="tree-node-body"] span[title="${longTitle}"]`)
+    await expect(title).toBeVisible()
+
+    await expect
+      .poll(async () =>
+        title.evaluate((el) => {
+          const style = getComputedStyle(el)
+
+          return {
+            overflow: style.overflow,
+            textOverflow: style.textOverflow,
+            whiteSpace: style.whiteSpace,
+            isClipped: el.scrollWidth > el.clientWidth,
+          }
+        }),
+      )
+      .toEqual({
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        isClipped: true,
+      })
+  })
+
   test('edits a hosts entry title and refreshes list, header, and details', async ({ page }) => {
     await page.locator('[data-id="local-dev"]').click()
     await showRightPanel(page)
