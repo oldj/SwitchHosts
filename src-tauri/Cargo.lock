@@ -4433,6 +4433,7 @@ name = "switchhosts"
 version = "4.3.0"
 dependencies = [
  "axum",
+ "block2",
  "chrono",
  "dirs 5.0.1",
  "libc",

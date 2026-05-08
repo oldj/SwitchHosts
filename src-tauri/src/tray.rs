@@ -106,6 +106,10 @@ pub fn install_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), tauri::Error> 
         });
 
     builder.build(app)?;
+
+    #[cfg(target_os = "macos")]
+    install_dismiss_monitors(app);
+
     Ok(())
 }
 
@@ -344,8 +348,31 @@ fn show_tray_window<R: Runtime>(
             .set_position(physical_pos)
             .map_err(|e| e.to_string())?;
     }
-    window.show().map_err(|e| e.to_string())?;
-    window.set_focus().map_err(|e| e.to_string())?;
+
+    // On macOS, both `window.show()` and `window.set_focus()` call
+    // `makeKeyAndOrderFront:`, which activates the app via
+    // `activateIgnoringOtherApps:`. When the main window is visible
+    // but unfocused (e.g. another app was active), that activation
+    // surfaces the main window into key — visible as a brief focus
+    // flicker on the main window. Bypass Tauri here and call
+    // `orderFrontRegardless` directly: it puts the tray on top across
+    // app boundaries without activating our app, so main keeps its
+    // state. The first click inside the tray webview will activate
+    // our app naturally and make the tray the key window.
+    #[cfg(target_os = "macos")]
+    {
+        use objc2::{msg_send, runtime::AnyObject};
+        let ns_window = window.ns_window().map_err(|e| e.to_string())? as *mut AnyObject;
+        unsafe {
+            let _: () = msg_send![ns_window, orderFrontRegardless];
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        window.show().map_err(|e| e.to_string())?;
+        window.set_focus().map_err(|e| e.to_string())?;
+    }
+
     Ok(())
 }
 
@@ -518,4 +545,97 @@ fn pick_monitor_for_cursor<R: Runtime>(
     }
 
     app.primary_monitor().ok().flatten()
+}
+
+// ---- macOS click-outside dismiss ------------------------------------------
+//
+// Tauri's `Focused(false)` event is unreliable as a click-outside signal
+// for the tray window when the main window is also visible: the tray
+// often never actually becomes the key window in that case (Cocoa keeps
+// key on the previously-key window of the same app, or set_focus races
+// with status-item activation), so resignKey notifications never fire
+// and the existing focus-loss handler stays inert.
+//
+// Instead, register `NSEvent` global + local mouse-down monitors and
+// dismiss the tray ourselves whenever a click lands outside its bounds.
+// This bypasses the focus path entirely and works regardless of which
+// window currently holds key status.
+//
+// Both monitors are installed once at app boot and live for the app's
+// lifetime; their handlers no-op when the tray window isn't visible.
+
+#[cfg(target_os = "macos")]
+fn install_dismiss_monitors<R: Runtime>(app: &AppHandle<R>) {
+    use std::sync::OnceLock;
+
+    use block2::RcBlock;
+    use objc2::{class, msg_send, runtime::AnyObject};
+
+    static INSTALLED: OnceLock<()> = OnceLock::new();
+    if INSTALLED.set(()).is_err() {
+        return;
+    }
+
+    // NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown |
+    // NSEventMaskOtherMouseDown — covers all mouse buttons.
+    const MASK: u64 = (1 << 1) | (1 << 3) | (1 << 5);
+
+    // Global monitor: clicks anywhere outside our app — other apps,
+    // the desktop, the menu bar (incl. the tray icon itself).
+    let app_for_global = app.clone();
+    let global_block = RcBlock::new(move |_event: *mut AnyObject| {
+        hide_tray_if_visible(&app_for_global);
+    });
+
+    // Local monitor: clicks inside our app — fires for the tray window
+    // too, so check the click's NSWindow against the tray's and only
+    // dismiss when the click landed on a different window (e.g. the
+    // main window).
+    let app_for_local = app.clone();
+    let local_block = RcBlock::new(move |event: *mut AnyObject| -> *mut AnyObject {
+        unsafe {
+            let click_window: *mut AnyObject = msg_send![event, window];
+            let tray_ns = app_for_local
+                .get_webview_window(TRAY_WINDOW_LABEL)
+                .and_then(|w| w.ns_window().ok())
+                .unwrap_or(std::ptr::null_mut());
+            let click_ptr = click_window as *mut std::ffi::c_void;
+            if !click_ptr.is_null() && click_ptr != tray_ns {
+                hide_tray_if_visible(&app_for_local);
+            }
+        }
+        // Returning the event passes it through to its target unchanged;
+        // returning nil here would swallow the click.
+        event
+    });
+
+    unsafe {
+        let cls = class!(NSEvent);
+        let _: *mut AnyObject = msg_send![
+            cls,
+            addGlobalMonitorForEventsMatchingMask: MASK,
+            handler: &*global_block,
+        ];
+        let _: *mut AnyObject = msg_send![
+            cls,
+            addLocalMonitorForEventsMatchingMask: MASK,
+            handler: &*local_block,
+        ];
+    }
+
+    // Cocoa keeps the monitors alive but only borrows the blocks; if we
+    // drop them the next click crashes the app. Leak them — install
+    // runs once per process, so this is bounded.
+    std::mem::forget(global_block);
+    std::mem::forget(local_block);
+}
+
+#[cfg(target_os = "macos")]
+fn hide_tray_if_visible<R: Runtime>(app: &AppHandle<R>) {
+    if let Some(tray) = app.get_webview_window(TRAY_WINDOW_LABEL) {
+        if tray.is_visible().unwrap_or(false) {
+            LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
+            let _ = tray.hide();
+        }
+    }
 }
