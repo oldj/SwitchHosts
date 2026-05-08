@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.13",
-    "axios": "1.15.0",
+    "axios": "1.15.2",
     "compare-versions": "6.1.1",
     "dayjs": "1.11.19",
     "electron-updater": "6.8.3",
