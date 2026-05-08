@@ -113,6 +113,10 @@
     nextApplyResult: null,
   }
 
+  if (new URLSearchParams(window.location.search).get('e2eWriteMode') === 'null') {
+    state.configs.write_mode = null
+  }
+
   const callbacks = new Map()
   const listeners = new Map()
   let nextCallbackId = 1

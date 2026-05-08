@@ -11,6 +11,8 @@ interface MockHostEntry {
   type?: string
   on?: boolean
   last_refresh?: string
+  include?: string[]
+  folder_mode?: number
 }
 
 interface MockState {
@@ -18,11 +20,14 @@ interface MockState {
   trashcan: Array<{ data: MockHostEntry }>
   configs: {
     theme: string
-    write_mode: string
+    write_mode: string | null
     choice_mode: number
+    left_panel_show: boolean
+    right_panel_show: boolean
   }
   contents: Record<string, string>
   systemHosts: string
+  history: Array<{ id: string; content: string }>
 }
 
 interface MockCall {
@@ -46,7 +51,11 @@ declare global {
 
 async function openApp(page: Page) {
   await page.addInitScript({ path: tauriMockPath })
-  await page.goto('/')
+  await gotoApp(page)
+}
+
+async function gotoApp(page: Page, path = '/') {
+  await page.goto(path)
   await expect(page.getByText('System Hosts').first()).toBeVisible()
   await expect(page.locator('.cm-content')).toBeVisible()
 }
@@ -65,6 +74,17 @@ async function clearMockCalls(page: Page): Promise<void> {
 
 function firstInvokeArg(call: MockCall): unknown {
   return call.args?.args?.[0]
+}
+
+function configPatches(calls: MockCall[]): unknown[] {
+  return calls.filter((call) => call.cmd === 'config_update').map(firstInvokeArg)
+}
+
+function setListPayloads(calls: MockCall[]): MockHostEntry[][] {
+  return calls
+    .filter((call) => call.cmd === 'set_list')
+    .map((call) => firstInvokeArg(call))
+    .filter((list): list is MockHostEntry[] => Array.isArray(list))
 }
 
 test.describe('SwitchHosts renderer e2e', () => {
@@ -282,13 +302,163 @@ test.describe('SwitchHosts renderer e2e', () => {
       })
 
     const calls = await getMockCalls(page)
-    const configPatches = calls.filter((call) => call.cmd === 'config_update').map(firstInvokeArg)
-    expect(configPatches).toEqual(
+    expect(configPatches(calls)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ theme: 'dark' }),
         expect.objectContaining({ write_mode: 'overwrite' }),
         expect.objectContaining({ choice_mode: 1 }),
       ]),
     )
+  })
+
+  test('deletes a system hosts history entry', async ({ page }) => {
+    await page.locator('button').filter({ hasText: 'Show History' }).click()
+    await expect(page.getByText('System Hosts Version History')).toBeVisible()
+    await expect(page.locator('.cm-content').last()).toContainText('api.local')
+
+    page.once('dialog', (dialog) => dialog.accept())
+    await page.getByRole('button', { name: 'Delete' }).click()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.history.map((item) => item.id)
+      })
+      .toEqual(['history-1'])
+    await expect(page.locator('.cm-content').last()).not.toContainText('api.local')
+
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'delete_apply_history_item')).toBe(true)
+  })
+
+  test('creates a group hosts entry and shows included items', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Add').click()
+    const drawer = page.getByRole('dialog')
+    await expect(drawer.getByText('Add Hosts Entry')).toBeVisible()
+
+    await drawer.getByText('Group', { exact: true }).click()
+    await drawer.locator('input:not([type="radio"])').first().fill('QA Group')
+    await drawer.getByText('API Override').click()
+    await drawer.getByRole('button', { name: 'Move to right' }).click()
+    await drawer.getByRole('button', { name: 'OK' }).click()
+
+    await expect(page.locator('[data-id]').filter({ hasText: 'QA Group' })).toBeVisible()
+    await expect(page.getByText('Content (1)')).toBeVisible()
+    await expect(page.getByText('API Override').last()).toBeVisible()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        const group = state.list.find((item) => item.title === 'QA Group')
+        return { type: group?.type, include: group?.include }
+      })
+      .toEqual({ type: 'group', include: ['local-api'] })
+
+    const latestSetList = setListPayloads(await getMockCalls(page)).at(-1)
+    expect(latestSetList?.some((item) => item.title === 'QA Group' && item.type === 'group')).toBe(
+      true,
+    )
+  })
+
+  test('creates a folder hosts entry with single choice mode', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Add').click()
+    const drawer = page.getByRole('dialog')
+    await expect(drawer.getByText('Add Hosts Entry')).toBeVisible()
+
+    await drawer.getByText('Folder', { exact: true }).click()
+    await drawer.locator('input:not([type="radio"])').first().fill('QA Folder')
+    await drawer.getByText('Single', { exact: true }).click()
+    await drawer.getByRole('button', { name: 'OK' }).click()
+
+    await expect(page.locator('[data-id]').filter({ hasText: 'QA Folder' })).toBeVisible()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        const folder = state.list.find((item) => item.title === 'QA Folder')
+        return {
+          type: folder?.type,
+          folderMode: folder?.folder_mode,
+        }
+      })
+      .toMatchObject({ type: 'folder', folderMode: 1 })
+    await expect(page.locator('#root').getByText('Choice Mode')).toBeVisible()
+    await expect(page.locator('#root').getByText('Single').last()).toBeVisible()
+
+    const latestSetList = setListPayloads(await getMockCalls(page)).at(-1)
+    expect(
+      latestSetList?.some(
+        (item) => item.title === 'QA Folder' && item.type === 'folder' && item.folder_mode === 1,
+      ),
+    ).toBe(true)
+  })
+
+  test('toggles side panels and persists layout preferences', async ({ page }) => {
+    await clearMockCalls(page)
+    await page.locator('[data-id="local-dev"]').click()
+
+    await page.getByLabel('Toggle sidebar').click()
+    await expect(page.locator('[data-id="local-dev"]')).not.toBeInViewport()
+
+    await page.getByLabel('Toggle right panel').click()
+    await expect(page.getByText('Rules')).not.toBeInViewport()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          leftPanelShow: state.configs.left_panel_show,
+          rightPanelShow: state.configs.right_panel_show,
+        }
+      })
+      .toEqual({ leftPanelShow: false, rightPanelShow: false })
+
+    expect(configPatches(await getMockCalls(page))).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ left_panel_show: false }),
+        expect.objectContaining({ right_panel_show: false }),
+      ]),
+    )
+  })
+
+  test('prompts for write mode before first apply and then continues toggling', async ({ page }) => {
+    await gotoApp(page, '/?e2eWriteMode=null')
+    await clearMockCalls(page)
+
+    const row = page.locator('[data-id="local-dev"]')
+    await row.click()
+
+    const toggle = row.getByRole('switch')
+    await expect(toggle).toHaveAttribute('aria-checked', 'false')
+    await toggle.click()
+
+    await expect(page.getByText('Set Write Mode')).toBeVisible()
+    await page.getByLabel('Append').click()
+    await page.getByRole('button', { name: 'OK' }).click()
+
+    await expect(toggle).toHaveAttribute('aria-checked', 'true')
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          writeMode: state.configs.write_mode,
+          localDevOn: state.list.find((item) => item.id === 'local-dev')?.on,
+          systemHosts: state.systemHosts,
+        }
+      })
+      .toEqual({
+        writeMode: 'append',
+        localDevOn: true,
+        systemHosts:
+          '127.0.0.1 localhost\n255.255.255.255 broadcasthost\n\n\n# --- SWITCHHOSTS_CONTENT_START ---\n\n127.0.0.1 dev.local\n::1 dev.local\n\n\n10.0.0.8 api.local\n# 10.0.0.9 api-shadow.local\n',
+      })
+
+    const calls = await getMockCalls(page)
+    expect(configPatches(calls)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ write_mode: 'append' })]),
+    )
+    expect(calls.some((call) => call.cmd === 'apply_hosts_selection')).toBe(true)
   })
 })
