@@ -57,3 +57,47 @@ fn setup_waits_for_renderer_ready_before_showing_main_window() {
         "setup must have a fallback show timer so a renderer failure cannot leave the app hidden"
     );
 }
+
+#[test]
+fn find_window_waits_for_renderer_ready_before_showing() {
+    const RUST_SOURCE: &str = include_str!("../src/find.rs");
+    const FIND_PAGE_SOURCE: &str = include_str!("../../src/renderer/pages/find.tsx");
+
+    assert!(
+        RUST_SOURCE.contains("FIND_WINDOW_READY_EVENT"),
+        "find window should have a renderer-ready event gate before first show"
+    );
+    assert!(
+        RUST_SOURCE.contains("FIND_GATE"),
+        "find window should track its pending-ready state in a per-window gate so close-then-reopen can abandon a stale listener"
+    );
+    assert!(
+        RUST_SOURCE.contains("fn abandon"),
+        "FindGate should expose abandon() so a superseded gate cannot show a newer window"
+    );
+    assert!(
+        RUST_SOURCE.contains("app.listen(FIND_WINDOW_READY_EVENT"),
+        "find window should wait for the renderer-ready event before first show"
+    );
+    assert!(
+        RUST_SOURCE.contains("app.unlisten(id)"),
+        "find window ready listener should be removed after the window is shown or abandoned"
+    );
+    assert!(
+        RUST_SOURCE.contains("FIND_WINDOW_READY_FALLBACK_MS"),
+        "find window ready gate should keep a fallback so the window cannot stay hidden forever"
+    );
+    assert!(
+        FIND_PAGE_SOURCE.contains("events.find_window_ready"),
+        "find page should emit a ready event after applying its theme"
+    );
+}
+
+#[test]
+fn find_window_uses_transparent_macos_titlebar() {
+    const SOURCE: &str = include_str!("../src/find.rs");
+    assert!(
+        SOURCE.contains("TitleBarStyle::Transparent"),
+        "find window should use a transparent macOS titlebar so the themed window background shows through"
+    );
+}

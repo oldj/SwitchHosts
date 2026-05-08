@@ -44,6 +44,10 @@ pub struct AppConfig {
     pub multi_chose_folder_switch_all: bool,
     pub tray_mini_window: bool,
 
+    // find window
+    pub find_is_regexp: bool,
+    pub find_is_ignore_case: bool,
+
     // proxy
     pub use_proxy: bool,
     pub proxy_protocol: String, // "http" | "https"
@@ -80,6 +84,9 @@ impl Default for AppConfig {
             hide_dock_icon: false,
             multi_chose_folder_switch_all: false,
             tray_mini_window: true,
+
+            find_is_regexp: false,
+            find_is_ignore_case: false,
 
             use_proxy: false,
             proxy_protocol: "http".to_string(),

@@ -757,7 +757,10 @@ pub async fn cmd_clear_history(
 // ---- find window -----------------------------------------------------------
 
 #[tauri::command]
-pub async fn find_show<R: Runtime>(app: AppHandle<R>, _args: Args) -> Result<Value, String> {
+pub async fn find_show<R: Runtime + 'static>(
+    app: AppHandle<R>,
+    _args: Args,
+) -> Result<Value, String> {
     find::show_find_window(&app).map_err(|e| e.to_string())?;
     Ok(Value::Null)
 }

@@ -3,9 +3,8 @@
 //! Phase 2.D scope:
 //!
 //! - Lazy-create the `find` webview (route `#/find`) on first
-//!   `find_show` invocation. Close button hides instead of destroying,
-//!   matching Electron's `e.preventDefault(); win.hide()` behaviour
-//!   so the search state and history persist for the next reopen.
+//!   `find_show` invocation. Closing the window destroys it; the next
+//!   `find_show` invocation creates a fresh webview.
 //! - Search content of every local/remote node in the manifest. Group
 //!   and folder nodes are skipped (Electron does the same — they have
 //!   no own content, only references).
@@ -17,24 +16,59 @@
 //! `string[]` types one-for-one so the existing `pages/find.tsx`
 //! consumers work without changes.
 
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
+    },
+    time::Duration,
+};
 
 use regex::{Regex, RegexBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tauri::webview::WebviewWindowBuilder;
-use tauri::{AppHandle, Emitter, Manager, Runtime, WebviewUrl, WindowEvent};
+use tauri::webview::{Color, WebviewWindowBuilder};
+use tauri::{AppHandle, EventId, Listener, Manager, Runtime, Theme, WebviewUrl};
 
 use crate::storage::{
     atomic::atomic_write, entries, error::StorageError, manifest::Manifest, AppState,
 };
 
 pub const FIND_WINDOW_LABEL: &str = "find";
+const FIND_WINDOW_READY_EVENT: &str = "find_window_ready";
 
 const FIND_WINDOW_WIDTH: f64 = 480.0;
 const FIND_WINDOW_HEIGHT: f64 = 400.0;
 const FIND_WINDOW_MIN_WIDTH: f64 = 400.0;
 const FIND_WINDOW_MIN_HEIGHT: f64 = 400.0;
+const FIND_WINDOW_READY_FALLBACK_MS: u64 = 1500;
+
+/// Per-window state for the renderer-ready gate. A new instance is
+/// installed every time we create a fresh find webview; on re-create we
+/// `abandon()` the previous one so its listener and fallback timer
+/// become no-ops and can't accidentally show an unrelated window.
+struct FindGate {
+    did_show: Arc<AtomicBool>,
+    listener_id: Arc<Mutex<Option<EventId>>>,
+}
+
+impl FindGate {
+    /// Mark this gate as superseded so any in-flight handler (listener
+    /// or fallback timer) takes its early-return branch on next fire.
+    fn abandon<R: Runtime>(&self, app: &AppHandle<R>) {
+        self.did_show.store(true, Ordering::SeqCst);
+        if let Some(id) = self.listener_id.lock().expect("find listener mutex poisoned").take() {
+            app.unlisten(id);
+        }
+    }
+
+    fn is_pending(&self) -> bool {
+        !self.did_show.load(Ordering::SeqCst)
+    }
+}
+
+static FIND_GATE: Mutex<Option<FindGate>> = Mutex::new(None);
 
 const FIND_HISTORY_FILE: &str = "find.json";
 const REPLACE_HISTORY_FILE: &str = "replace.json";
@@ -351,25 +385,157 @@ fn save_json_array<T: Serialize>(path: &Path, items: &[T]) -> Result<(), Storage
 
 // ---- window create + show -------------------------------------------------
 
-/// Bring the find webview to the front, lazy-creating it the first
-/// time. Subsequent calls reuse the existing webview so the in-window
-/// search state survives close-and-reopen cycles.
-pub fn show_find_window<R: Runtime>(app: &AppHandle<R>) -> Result<(), tauri::Error> {
-    let window = match app.get_webview_window(FIND_WINDOW_LABEL) {
-        Some(w) => w,
-        None => create_find_window(app)?,
-    };
+/// Bring the find webview to the front, lazy-creating it the first time.
+/// A newly-created webview stays hidden until the renderer applies its
+/// theme and emits `find_window_ready`; after a user closes it, the next
+/// call creates a fresh one.
+pub fn show_find_window<R: Runtime + 'static>(app: &AppHandle<R>) -> Result<(), tauri::Error> {
+    if let Some(window) = app.get_webview_window(FIND_WINDOW_LABEL) {
+        // Existing window. If its ready gate is still pending the
+        // listener/fallback will show it; don't preempt them or we'd
+        // re-introduce the dark-theme flash this gate exists to avoid.
+        let pending = FIND_GATE
+            .lock()
+            .expect("find gate mutex poisoned")
+            .as_ref()
+            .map(|g| g.is_pending())
+            .unwrap_or(false);
+        if pending {
+            return Ok(());
+        }
+        show_find_window_now(&window)?;
+        return Ok(());
+    }
+
+    // Window was destroyed (or never existed). Abandon any leftover
+    // gate from a previous lifecycle so a stale listener/fallback can't
+    // race against the new window we're about to create.
+    {
+        let mut slot = FIND_GATE.lock().expect("find gate mutex poisoned");
+        if let Some(old) = slot.take() {
+            old.abandon(app);
+        }
+    }
+
+    let window = create_find_window(app)?;
+    let gate = install_find_window_ready_handlers(app, &window);
+    *FIND_GATE.lock().expect("find gate mutex poisoned") = Some(gate);
+    Ok(())
+}
+
+fn show_find_window_now<R: Runtime>(window: &tauri::WebviewWindow<R>) -> Result<(), tauri::Error> {
     window.unminimize().ok();
     window.show()?;
     window.set_focus()?;
     Ok(())
 }
 
-fn create_find_window<R: Runtime>(
+fn show_find_window_once<R: Runtime>(
+    app: &AppHandle<R>,
+    window: &tauri::WebviewWindow<R>,
+    did_show: &AtomicBool,
+    listener_id: &Arc<Mutex<Option<EventId>>>,
+) {
+    // `compare_exchange` here doubles as the "abandoned" check: when a
+    // newer window supersedes us, the old gate's `did_show` is forced
+    // to true by `FindGate::abandon`, so this exchange returns Err and
+    // we exit without touching anything.
+    if did_show
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {
+        return;
+    }
+    if let Err(e) = show_find_window_now(window) {
+        // Reset so the fallback (or a future caller) can try again.
+        did_show.store(false, Ordering::SeqCst);
+        log::warn!("failed to show find window: {e}");
+        return;
+    }
+
+    unlisten_find_window_ready(app, listener_id);
+}
+
+fn unlisten_find_window_ready<R: Runtime>(
+    app: &AppHandle<R>,
+    listener_id: &Arc<Mutex<Option<EventId>>>,
+) {
+    if let Some(id) = listener_id.lock().expect("find listener mutex poisoned").take() {
+        app.unlisten(id);
+    }
+}
+
+fn install_find_window_ready_handlers<R: Runtime + 'static>(
+    app: &AppHandle<R>,
+    window: &tauri::WebviewWindow<R>,
+) -> FindGate {
+    let did_show = Arc::new(AtomicBool::new(false));
+    let listener_id = Arc::new(Mutex::new(None));
+
+    let ready_app = app.clone();
+    let ready_window = window.clone();
+    let ready_flag = did_show.clone();
+    let ready_listener_id = listener_id.clone();
+    let id = app.listen(FIND_WINDOW_READY_EVENT, move |event| {
+        show_find_window_once(&ready_app, &ready_window, &ready_flag, &ready_listener_id);
+        ready_app.unlisten(event.id());
+    });
+    *listener_id.lock().expect("find listener mutex poisoned") = Some(id);
+
+    let fallback_app = app.clone();
+    let fallback_window = window.clone();
+    let fallback_flag = did_show.clone();
+    let fallback_listener_id = listener_id.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(FIND_WINDOW_READY_FALLBACK_MS));
+        if fallback_flag.load(Ordering::SeqCst) {
+            return;
+        }
+
+        let app = fallback_app.clone();
+        let window = fallback_window.clone();
+        let flag = fallback_flag.clone();
+        let listener_id = fallback_listener_id.clone();
+        // Show the exact window this gate was created for, never
+        // `app.get_webview_window(LABEL)` — after close-then-reopen the
+        // label resolves to a brand-new window whose renderer hasn't
+        // emitted ready yet, and showing it would re-introduce the
+        // flash. If the captured window has been destroyed, the show
+        // call simply fails and we log + bail.
+        let _ = fallback_app.run_on_main_thread(move || {
+            show_find_window_once(&app, &window, &flag, &listener_id);
+        });
+    });
+
+    FindGate {
+        did_show,
+        listener_id,
+    }
+}
+
+fn configured_theme(state: &AppState) -> Option<Theme> {
+    let cfg = state.config.lock().expect("config mutex poisoned");
+    match cfg.theme.as_str() {
+        "light" => Some(Theme::Light),
+        "dark" => Some(Theme::Dark),
+        _ => None,
+    }
+}
+
+fn background_color_for_theme(theme: Theme) -> Color {
+    match theme {
+        Theme::Dark => Color(26, 27, 30, 255),
+        _ => Color(248, 249, 250, 255),
+    }
+}
+
+fn create_find_window<R: Runtime + 'static>(
     app: &AppHandle<R>,
 ) -> Result<tauri::WebviewWindow<R>, tauri::Error> {
     let url = WebviewUrl::App("#/find".into());
-    let window = WebviewWindowBuilder::new(app, FIND_WINDOW_LABEL, url)
+    let configured_theme = configured_theme(app.state::<AppState>().inner());
+    let initial_theme = configured_theme.unwrap_or(Theme::Light);
+    let builder = WebviewWindowBuilder::new(app, FIND_WINDOW_LABEL, url)
         .title("Find")
         .inner_size(FIND_WINDOW_WIDTH, FIND_WINDOW_HEIGHT)
         .min_inner_size(FIND_WINDOW_MIN_WIDTH, FIND_WINDOW_MIN_HEIGHT)
@@ -377,30 +543,18 @@ fn create_find_window<R: Runtime>(
         .maximizable(false)
         .minimizable(false)
         .skip_taskbar(true)
-        .visible(false)
-        .build()?;
+        .theme(configured_theme)
+        .background_color(background_color_for_theme(initial_theme))
+        .visible(false);
 
-    let window_for_handler = window.clone();
-    let app_handle = app.clone();
-    window.on_window_event(move |event| {
-        // The Electron find window intercepted Close to hide instead
-        // of destroy: search history is in-process, recreating the
-        // window means losing any in-progress query and result list.
-        // We mirror that here by preventing default and hiding,
-        // unless `is_will_quit` is set (real quit path).
-        if let WindowEvent::CloseRequested { api, .. } = event {
-            let app_state = app_handle.state::<AppState>();
-            if app_state
-                .is_will_quit
-                .load(std::sync::atomic::Ordering::SeqCst)
-            {
-                return;
-            }
-            api.prevent_close();
-            let _ = window_for_handler.hide();
-            let _ = app_handle.emit("close_find", serde_json::json!({ "_args": [] }));
-        }
-    });
+    #[cfg(target_os = "macos")]
+    let builder = builder.title_bar_style(tauri::TitleBarStyle::Transparent);
+
+    let window = builder.build()?;
+
+    if let Ok(theme) = window.theme() {
+        let _ = window.set_background_color(Some(background_color_for_theme(theme)));
+    }
 
     Ok(window)
 }

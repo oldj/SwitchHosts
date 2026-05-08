@@ -55,6 +55,7 @@ const flushedInputStyles = {
     borderRadius: 0,
     borderBottom: '1px solid var(--swh-border-color-0)',
     backgroundColor: 'transparent',
+    transition: 'none',
     paddingLeft: 52,
     paddingRight: 12,
     '&:focus': {
@@ -69,11 +70,12 @@ const flushedInputStyles = {
 
 const FindPage = () => {
   const { lang, i18n, setLocale } = useI18n()
-  const { configs, loadConfigs } = useConfigs()
+  const { configs, loadConfigs, updateConfigs } = useConfigs()
   const [keyword, setKeyword] = useState('')
   const [replaceTo, setReplaceTo] = useState('')
   const [isRegExp, setIsRegExp] = useState(false)
   const [isIgnoreCase, setIsIgnoreCase] = useState(false)
+  const findOptionsHydratedRef = useRef(false)
   const [findResult, setFindResult] = useState<IFindItem[]>([])
   const [findPositions, setFindPositions] = useState<IFindPositionShow[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -81,6 +83,7 @@ const FindPage = () => {
   const [lastScrollResultIdx, setlastScrollResultIdx] = useState(-1)
   const debouncedKeyword = useDebounce(keyword, { wait: 500 })
   const iptKw = useRef<HTMLInputElement>(null)
+  const findWindowReadySentRef = useRef(false)
   const resolvedTheme = useResolvedTheme(configs?.theme)
 
   const init = async () => {
@@ -144,9 +147,23 @@ const FindPage = () => {
   }, [configs])
 
   useEffect(() => {
+    if (!configs || findOptionsHydratedRef.current) return
+    findOptionsHydratedRef.current = true
+    setIsRegExp(!!configs.find_is_regexp)
+    setIsIgnoreCase(!!configs.find_is_ignore_case)
+  }, [configs])
+
+  useEffect(() => {
     if (!configs) return
 
     applyThemeToBody(resolvedTheme, [`platform-${agent.platform}`])
+
+    if (!findWindowReadySentRef.current) {
+      findWindowReadySentRef.current = true
+      window.setTimeout(() => {
+        Promise.resolve(agent.broadcast(events.find_window_ready)).catch((e) => console.error(e))
+      }, 0)
+    }
   }, [configs, resolvedTheme])
 
   useEffect(() => {
@@ -171,16 +188,15 @@ const FindPage = () => {
 
   useOnBroadcast(events.config_updated, loadConfigs)
 
-  useOnBroadcast(events.close_find, () => {
-    setFindResult([])
-    setFindPositions([])
-    setKeyword('')
-    setReplaceTo('')
-    setIsRegExp(false)
-    setIsIgnoreCase(false)
-    setCurrentResultIdx(-1)
-    setlastScrollResultIdx(-1)
-  })
+  const updateIsRegExp = (v: boolean) => {
+    setIsRegExp(v)
+    updateConfigs({ find_is_regexp: v }).catch((e) => console.error(e))
+  }
+
+  const updateIsIgnoreCase = (v: boolean) => {
+    setIsIgnoreCase(v)
+    updateConfigs({ find_is_ignore_case: v }).catch((e) => console.error(e))
+  }
 
   const toShowSource = async (resultItem: IFindPositionShow) => {
     await actions.cmdFocusMainWindow()
@@ -311,8 +327,8 @@ const FindPage = () => {
         label: i.value,
         click() {
           setKeyword(i.value)
-          setIsRegExp(i.is_regexp)
-          setIsIgnoreCase(i.is_ignore_case)
+          updateIsRegExp(i.is_regexp)
+          updateIsIgnoreCase(i.is_ignore_case)
         },
       })),
     )
@@ -382,12 +398,12 @@ const FindPage = () => {
           <Group w="100%" py="8px" px="16px" gap="16px">
             <Checkbox
               checked={isRegExp}
-              onChange={(e) => setIsRegExp(e.target.checked)}
+              onChange={(e) => updateIsRegExp(e.target.checked)}
               label={lang.regexp}
             />
             <Checkbox
               checked={isIgnoreCase}
-              onChange={(e) => setIsIgnoreCase(e.target.checked)}
+              onChange={(e) => updateIsIgnoreCase(e.target.checked)}
               label={lang.ignore_case}
             />
           </Group>
