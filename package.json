@@ -72,7 +72,6 @@
     "typescript-eslint": "^8.59.2",
     "vite": "8.0.10",
     "vite-plugin-static-copy": "4.1.0",
-    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.5"
   }
 }
