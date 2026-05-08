@@ -3,22 +3,34 @@ import { expect, test, type Page } from '@playwright/test'
 const tauriMockPath = `${process.cwd()}/e2e/support/tauri-mock.js`
 
 const selectAllModifier = process.platform === 'darwin' ? 'Meta' : 'Control'
+const initialSystemHosts = '127.0.0.1 localhost\n255.255.255.255 broadcasthost\n'
 
 interface MockHostEntry {
   id: string
   title?: string
   type?: string
   on?: boolean
+  last_refresh?: string
 }
 
 interface MockState {
   list: MockHostEntry[]
+  trashcan: Array<{ data: MockHostEntry }>
+  configs: {
+    theme: string
+    write_mode: string
+    choice_mode: number
+  }
   contents: Record<string, string>
   systemHosts: string
 }
 
 interface MockCall {
   cmd: string
+  args?: {
+    args?: unknown[]
+    [key: string]: unknown
+  }
 }
 
 declare global {
@@ -26,6 +38,8 @@ declare global {
     __SWITCHHOSTS_E2E__: {
       getState: () => MockState
       getCalls: () => MockCall[]
+      clearCalls: () => void
+      failNextApply: (result?: { code?: string; message?: string }) => void
     }
   }
 }
@@ -43,6 +57,14 @@ async function getMockState(page: Page): Promise<MockState> {
 
 async function getMockCalls(page: Page): Promise<MockCall[]> {
   return await page.evaluate<MockCall[]>(() => window.__SWITCHHOSTS_E2E__.getCalls())
+}
+
+async function clearMockCalls(page: Page): Promise<void> {
+  await page.evaluate(() => window.__SWITCHHOSTS_E2E__.clearCalls())
+}
+
+function firstInvokeArg(call: MockCall): unknown {
+  return call.args?.args?.[0]
 }
 
 test.describe('SwitchHosts renderer e2e', () => {
@@ -129,5 +151,144 @@ test.describe('SwitchHosts renderer e2e', () => {
     await expect(page.getByText('System Hosts Version History')).toBeVisible()
     await expect(page.locator('.cm-content').last()).toContainText('api.local')
     await expect(page.getByRole('button', { name: 'Close', exact: true })).toBeVisible()
+  })
+
+  test('edits a hosts entry title and refreshes list, header, and details', async ({ page }) => {
+    await page.locator('[data-id="local-dev"]').click()
+    await page.getByRole('button', { name: 'Edit' }).click()
+
+    await expect(page.getByText('Edit Hosts')).toBeVisible()
+    await page.locator('input:not([type="radio"])').first().fill('Development Edited')
+    await page.getByRole('button', { name: 'OK' }).click()
+
+    await expect(page.locator('[data-id="local-dev"]')).toContainText('Development Edited')
+    await expect
+      .poll(async () => await page.getByText('Development Edited').count())
+      .toBeGreaterThanOrEqual(3)
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.list.find((item) => item.id === 'local-dev')?.title
+      })
+      .toBe('Development Edited')
+  })
+
+  test('moves an entry to trashcan and restores it', async ({ page }) => {
+    await page.locator('[data-id="local-dev"]').click()
+    await page.getByRole('button', { name: 'Edit' }).click()
+    await page.getByRole('button', { name: 'Move to Trashcan' }).click()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          inList: state.list.some((item) => item.id === 'local-dev'),
+          inTrashcan: state.trashcan.some((item) => item.data.id === 'local-dev'),
+        }
+      })
+      .toEqual({ inList: false, inTrashcan: true })
+
+    await page.getByLabel('Trashcan').click()
+    await page.locator('[data-id="local-dev"]').click()
+    await page.getByRole('button', { name: 'Restore' }).click()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          inList: state.list.some((item) => item.id === 'local-dev'),
+          inTrashcan: state.trashcan.some((item) => item.data.id === 'local-dev'),
+        }
+      })
+      .toEqual({ inList: true, inTrashcan: false })
+
+    await page.getByLabel('Hosts').click()
+    await expect(page.locator('[data-id="local-dev"]')).toContainText('Development')
+  })
+
+  test('refreshes a remote hosts entry and updates its details', async ({ page }) => {
+    await page.locator('[data-id="remote-blocklist"]').click()
+    await expect(page.getByText('2026-05-08 10:00:00')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Refresh' }).click()
+
+    await expect(page.getByText('2026-05-08 12:00:00')).toBeVisible()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.list.find((item) => item.id === 'remote-blocklist')?.last_refresh
+      })
+      .toBe('2026-05-08 12:00:00')
+
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'refresh_remote_hosts')).toBe(true)
+  })
+
+  test('rolls back the switch when applying hosts fails', async ({ page }) => {
+    await clearMockCalls(page)
+    await page.evaluate(() => {
+      window.__SWITCHHOSTS_E2E__.failNextApply({
+        code: 'cancelled',
+        message: 'User cancelled',
+      })
+    })
+
+    const row = page.locator('[data-id="local-dev"]')
+    await row.click()
+
+    const toggle = row.getByRole('switch')
+    await expect(toggle).toHaveAttribute('aria-checked', 'false')
+    await toggle.click()
+
+    await expect(toggle).toHaveAttribute('aria-checked', 'false')
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          localDevOn: state.list.find((item) => item.id === 'local-dev')?.on,
+          systemHosts: state.systemHosts,
+        }
+      })
+      .toEqual({
+        localDevOn: false,
+        systemHosts: initialSystemHosts,
+      })
+
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'get_content_of_list')).toBe(true)
+    expect(calls.some((call) => call.cmd === 'apply_hosts_selection')).toBe(true)
+  })
+
+  test('saves basic preferences immediately', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    await expect(page.getByText('General')).toBeVisible()
+
+    await page.getByText('Dark').click()
+    await page.getByText('Overwrite').click()
+    await page.getByText('Single').click()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.configs
+      })
+      .toMatchObject({
+        theme: 'dark',
+        write_mode: 'overwrite',
+        choice_mode: 1,
+      })
+
+    const calls = await getMockCalls(page)
+    const configPatches = calls.filter((call) => call.cmd === 'config_update').map(firstInvokeArg)
+    expect(configPatches).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ theme: 'dark' }),
+        expect.objectContaining({ write_mode: 'overwrite' }),
+        expect.objectContaining({ choice_mode: 1 }),
+      ]),
+    )
   })
 })

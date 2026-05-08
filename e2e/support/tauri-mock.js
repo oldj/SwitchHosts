@@ -96,6 +96,7 @@
     },
     systemHosts: '127.0.0.1 localhost\n255.255.255.255 broadcasthost\n',
     systemPath: '/etc/hosts',
+    dataDir: '/Users/e2e/.SwitchHosts',
     history: [
       {
         id: 'history-1',
@@ -109,6 +110,7 @@
       },
     ],
     calls: [],
+    nextApplyResult: null,
   }
 
   const callbacks = new Map()
@@ -175,6 +177,14 @@
     clearCalls: () => {
       state.calls.length = 0
     },
+    failNextApply: (result = {}) => {
+      state.nextApplyResult = {
+        success: false,
+        code: 'fail',
+        message: 'Apply failed in e2e mock',
+        ...result,
+      }
+    },
   }
 
   window.__TAURI_EVENT_PLUGIN_INTERNALS__ = {
@@ -232,7 +242,7 @@
           return clone(state.configs)
         case 'config_update':
           Object.assign(state.configs, params[0] || {})
-          return clone(state.configs)
+          return null
         case 'get_basic_data':
           return {
             list: clone(state.list),
@@ -267,6 +277,8 @@
           return state.systemHosts
         case 'get_path_of_system_hosts':
           return state.systemPath
+        case 'get_data_dir':
+          return state.dataDir
         case 'get_hosts_content':
           return state.contents[params[0]] || ''
         case 'set_hosts_content':
@@ -275,6 +287,11 @@
         case 'get_content_of_list':
           return aggregateContent(params[0] || state.list)
         case 'apply_hosts_selection':
+          if (state.nextApplyResult) {
+            const result = state.nextApplyResult
+            state.nextApplyResult = null
+            return clone(result)
+          }
           state.systemHosts =
             state.configs.write_mode === 'append'
               ? makeAppendContent(state.systemHosts, params[0] || '')
