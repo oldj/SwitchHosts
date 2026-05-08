@@ -87,12 +87,58 @@
         include: ['local-api', 'remote-blocklist'],
         on: false,
       },
+      {
+        id: 'folder-single',
+        title: 'Single Choice Folder',
+        type: 'folder',
+        folder_mode: 1,
+        on: false,
+        children: [
+          {
+            id: 'folder-single-alpha',
+            title: 'Single Alpha',
+            type: 'local',
+            on: false,
+          },
+          {
+            id: 'folder-single-beta',
+            title: 'Single Beta',
+            type: 'local',
+            on: false,
+          },
+        ],
+      },
+      {
+        id: 'folder-multiple',
+        title: 'Multiple Choice Folder',
+        type: 'folder',
+        folder_mode: 2,
+        on: false,
+        children: [
+          {
+            id: 'folder-multiple-alpha',
+            title: 'Multiple Alpha',
+            type: 'local',
+            on: false,
+          },
+          {
+            id: 'folder-multiple-beta',
+            title: 'Multiple Beta',
+            type: 'local',
+            on: false,
+          },
+        ],
+      },
     ],
     trashcan: [],
     contents: {
       'local-dev': '127.0.0.1 dev.local\n::1 dev.local\n',
       'local-api': '10.0.0.8 api.local\n# 10.0.0.9 api-shadow.local\n',
       'remote-blocklist': '0.0.0.0 ads.example.test\n',
+      'folder-single-alpha': '192.168.10.10 single-alpha.local\n',
+      'folder-single-beta': '192.168.10.11 single-beta.local\n',
+      'folder-multiple-alpha': '192.168.20.10 multiple-alpha.local\n',
+      'folder-multiple-beta': '192.168.20.11 multiple-beta.local\n',
     },
     systemHosts: '127.0.0.1 localhost\n255.255.255.255 broadcasthost\n',
     systemPath: '/etc/hosts',
@@ -111,10 +157,17 @@
     ],
     calls: [],
     nextApplyResult: null,
+    nextRefreshResult: null,
   }
 
   if (new URLSearchParams(window.location.search).get('e2eWriteMode') === 'null') {
     state.configs.write_mode = null
+  }
+
+  const deleteContentsForItem = (item) => {
+    for (const entry of flatten([item])) {
+      delete state.contents[entry.id]
+    }
   }
 
   const callbacks = new Map()
@@ -186,6 +239,14 @@
         success: false,
         code: 'fail',
         message: 'Apply failed in e2e mock',
+        ...result,
+      }
+    },
+    failNextRefresh: (result = {}) => {
+      state.nextRefreshResult = {
+        success: false,
+        code: 'refresh_fail',
+        message: 'Refresh failed in e2e mock',
         ...result,
       }
     },
@@ -267,9 +328,19 @@
           state.trashcan.push(...removed)
           return true
         }
-        case 'delete_item_from_trashcan':
-          state.trashcan = state.trashcan.filter((item) => item.data.id !== params[0])
+        case 'delete_item_from_trashcan': {
+          const idx = state.trashcan.findIndex((item) => item.data.id === params[0])
+          if (idx < 0) return false
+          const [item] = state.trashcan.splice(idx, 1)
+          deleteContentsForItem(item.data)
           return true
+        }
+        case 'clear_trashcan':
+          for (const item of state.trashcan) {
+            deleteContentsForItem(item.data)
+          }
+          state.trashcan = []
+          return null
         case 'restore_item_from_trashcan': {
           const idx = state.trashcan.findIndex((item) => item.data.id === params[0])
           if (idx < 0) return false
@@ -312,7 +383,72 @@
           state.history = state.history.filter((item) => item.id !== params[0])
           return true
         case 'refresh_remote_hosts':
+          if (state.nextRefreshResult) {
+            const result = state.nextRefreshResult
+            state.nextRefreshResult = null
+            return clone(result)
+          }
           return refreshRemote(params[0])
+        case 'export_data':
+          return '/Users/e2e/exports/swh_data.json'
+        case 'import_data':
+          state.list = [
+            {
+              id: 'imported-local',
+              title: 'Imported Backup',
+              type: 'local',
+              on: false,
+            },
+            {
+              id: 'imported-folder',
+              title: 'Imported Folder',
+              type: 'folder',
+              folder_mode: 0,
+              on: false,
+              children: [
+                {
+                  id: 'imported-folder-child',
+                  title: 'Imported Folder Child',
+                  type: 'local',
+                  on: false,
+                },
+              ],
+            },
+            {
+              id: 'imported-group',
+              title: 'Imported Group',
+              type: 'group',
+              include: ['imported-local'],
+              on: false,
+            },
+          ]
+          state.contents['imported-local'] = '172.16.0.10 imported-backup.local\n'
+          state.contents['imported-folder-child'] = '172.16.0.11 imported-child.local\n'
+          state.trashcan = []
+          return true
+        case 'import_data_from_url':
+          state.list = [
+            {
+              id: 'imported-url',
+              title: 'Imported From URL',
+              type: 'remote',
+              url: params[0],
+              refresh_interval: 0,
+              last_refresh: '2026-05-08 13:00:00',
+              last_refresh_ms: 1778206800000,
+              on: false,
+            },
+            {
+              id: 'imported-url-local',
+              title: 'Imported URL Local',
+              type: 'local',
+              on: false,
+            },
+          ]
+          state.contents['imported-url'] = '172.16.0.20 imported-url.local\n'
+          state.contents['imported-url-local'] = '172.16.0.21 imported-url-local.local\n'
+          state.trashcan = []
+          return true
         case 'update_tray_title':
         case 'dark_mode_toggle':
         case 'hide_main_window':

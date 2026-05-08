@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 const tauriMockPath = `${process.cwd()}/e2e/support/tauri-mock.js`
 
@@ -10,9 +10,13 @@ interface MockHostEntry {
   title?: string
   type?: string
   on?: boolean
+  url?: string
+  refresh_interval?: number
   last_refresh?: string
+  last_refresh_ms?: number
   include?: string[]
   folder_mode?: number
+  children?: MockHostEntry[]
 }
 
 interface MockState {
@@ -45,6 +49,7 @@ declare global {
       getCalls: () => MockCall[]
       clearCalls: () => void
       failNextApply: (result?: { code?: string; message?: string }) => void
+      failNextRefresh: (result?: { code?: string; message?: string }) => void
     }
   }
 }
@@ -85,6 +90,40 @@ function setListPayloads(calls: MockCall[]): MockHostEntry[][] {
     .filter((call) => call.cmd === 'set_list')
     .map((call) => firstInvokeArg(call))
     .filter((list): list is MockHostEntry[] => Array.isArray(list))
+}
+
+function flattenEntries(items: MockHostEntry[]): MockHostEntry[] {
+  return items.flatMap((item) => [item, ...flattenEntries(item.children ?? [])])
+}
+
+function findEntry(state: MockState, id: string): MockHostEntry | undefined {
+  return flattenEntries(state.list).find((item) => item.id === id)
+}
+
+async function chooseSelectOption(
+  page: Page,
+  container: Locator,
+  selectLabel: string,
+  optionName: string,
+) {
+  await container.getByLabel(selectLabel, { exact: true }).click()
+  await page.getByRole('option', { name: optionName, exact: true }).click()
+}
+
+async function moveLocalDevToTrashcan(page: Page) {
+  await page.locator('[data-id="local-dev"]').click()
+  await page.getByRole('button', { name: 'Edit' }).click()
+  await page.getByRole('button', { name: 'Move to Trashcan' }).click()
+
+  await expect
+    .poll(async () => {
+      const state = await getMockState(page)
+      return {
+        inList: state.list.some((item) => item.id === 'local-dev'),
+        inTrashcan: state.trashcan.some((item) => item.data.id === 'local-dev'),
+      }
+    })
+    .toEqual({ inList: false, inTrashcan: true })
 }
 
 test.describe('SwitchHosts renderer e2e', () => {
@@ -151,10 +190,11 @@ test.describe('SwitchHosts renderer e2e', () => {
 
   test('adds a local hosts entry from the top bar', async ({ page }) => {
     await page.getByLabel('Add').click()
-    await expect(page.getByText('Add Hosts Entry')).toBeVisible()
+    const drawer = page.getByRole('dialog')
+    await expect(drawer.getByText('Add Hosts Entry')).toBeVisible()
 
-    await page.locator('input:not([type="radio"])').first().fill('QA Sandbox')
-    await page.getByRole('button', { name: 'OK' }).click()
+    await drawer.getByLabel('Hosts Title', { exact: true }).fill('QA Sandbox')
+    await drawer.getByRole('button', { name: 'OK' }).click()
 
     await expect(page.getByText('QA Sandbox').first()).toBeVisible()
     await expect
@@ -177,9 +217,10 @@ test.describe('SwitchHosts renderer e2e', () => {
     await page.locator('[data-id="local-dev"]').click()
     await page.getByRole('button', { name: 'Edit' }).click()
 
-    await expect(page.getByText('Edit Hosts')).toBeVisible()
-    await page.locator('input:not([type="radio"])').first().fill('Development Edited')
-    await page.getByRole('button', { name: 'OK' }).click()
+    const drawer = page.getByRole('dialog')
+    await expect(drawer.getByText('Edit Hosts')).toBeVisible()
+    await drawer.getByLabel('Hosts Title', { exact: true }).fill('Development Edited')
+    await drawer.getByRole('button', { name: 'OK' }).click()
 
     await expect(page.locator('[data-id="local-dev"]')).toContainText('Development Edited')
     await expect
@@ -194,19 +235,7 @@ test.describe('SwitchHosts renderer e2e', () => {
   })
 
   test('moves an entry to trashcan and restores it', async ({ page }) => {
-    await page.locator('[data-id="local-dev"]').click()
-    await page.getByRole('button', { name: 'Edit' }).click()
-    await page.getByRole('button', { name: 'Move to Trashcan' }).click()
-
-    await expect
-      .poll(async () => {
-        const state = await getMockState(page)
-        return {
-          inList: state.list.some((item) => item.id === 'local-dev'),
-          inTrashcan: state.trashcan.some((item) => item.data.id === 'local-dev'),
-        }
-      })
-      .toEqual({ inList: false, inTrashcan: true })
+    await moveLocalDevToTrashcan(page)
 
     await page.getByLabel('Trashcan').click()
     await page.locator('[data-id="local-dev"]').click()
@@ -226,6 +255,70 @@ test.describe('SwitchHosts renderer e2e', () => {
     await expect(page.locator('[data-id="local-dev"]')).toContainText('Development')
   })
 
+  test('permanently deletes a trashcan item from the details panel', async ({ page }) => {
+    await moveLocalDevToTrashcan(page)
+    await clearMockCalls(page)
+
+    await page.getByLabel('Trashcan').click()
+    await page.locator('[data-id="local-dev"]').click()
+    await page.getByRole('button', { name: 'Delete' }).click()
+
+    const confirm = page.getByRole('dialog')
+    await expect(confirm.getByText('Do you want to delete this item completely?')).toBeVisible()
+    await confirm.getByRole('button', { name: 'Delete' }).click()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          inList: state.list.some((item) => item.id === 'local-dev'),
+          inTrashcan: state.trashcan.some((item) => item.data.id === 'local-dev'),
+        }
+      })
+      .toEqual({ inList: false, inTrashcan: false })
+    await expect(page.getByText('Trashcan is empty')).toBeVisible()
+
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'delete_item_from_trashcan')).toBe(true)
+  })
+
+  test('cancels and then confirms emptying the trashcan', async ({ page }) => {
+    await moveLocalDevToTrashcan(page)
+    await clearMockCalls(page)
+
+    await page.getByLabel('Trashcan').click()
+    await page.getByLabel('Empty Trashcan').click()
+    await page
+      .getByRole('dialog', { name: 'Empty Trashcan' })
+      .getByRole('button', { name: 'Cancel' })
+      .click()
+    await expect(page.getByRole('dialog', { name: 'Empty Trashcan' })).toBeHidden()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.trashcan.map((item) => item.data.id)
+      })
+      .toEqual(['local-dev'])
+
+    await page.getByRole('button', { name: 'Empty Trashcan' }).click()
+    await page
+      .getByRole('dialog', { name: 'Empty Trashcan' })
+      .getByRole('button', { name: 'Delete' })
+      .click()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.trashcan
+      })
+      .toEqual([])
+    await expect(page.getByText('Trashcan is empty')).toBeVisible()
+
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'clear_trashcan')).toBe(true)
+  })
+
   test('refreshes a remote hosts entry and updates its details', async ({ page }) => {
     await page.locator('[data-id="remote-blocklist"]').click()
     await expect(page.getByText('2026-05-08 10:00:00')).toBeVisible()
@@ -239,6 +332,112 @@ test.describe('SwitchHosts renderer e2e', () => {
         return state.list.find((item) => item.id === 'remote-blocklist')?.last_refresh
       })
       .toBe('2026-05-08 12:00:00')
+
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'refresh_remote_hosts')).toBe(true)
+  })
+
+  test('creates and edits a remote hosts entry', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Add').click()
+    let drawer = page.getByRole('dialog')
+    await expect(drawer.getByText('Add Hosts Entry')).toBeVisible()
+
+    await drawer.getByText('Remote', { exact: true }).click()
+    await drawer.getByLabel('Hosts Title', { exact: true }).fill('QA Remote')
+    await drawer.getByLabel('URL', { exact: true }).fill('https://example.test/qa.hosts')
+    await chooseSelectOption(page, drawer, 'Auto Refresh', '1 hour')
+    await drawer.getByRole('button', { name: 'OK' }).click()
+
+    const row = page.locator('[data-id]').filter({ hasText: 'QA Remote' })
+    await expect(row).toBeVisible()
+    await row.click()
+    await expect(page.getByText('https://example.test/qa.hosts')).toBeVisible()
+    await expect(page.locator('#root').getByText('1 hour', { exact: true })).toBeVisible()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        const remote = state.list.find((item) => item.title === 'QA Remote')
+        return {
+          type: remote?.type,
+          url: remote?.url,
+          refreshInterval: remote?.refresh_interval,
+        }
+      })
+      .toEqual({
+        type: 'remote',
+        url: 'https://example.test/qa.hosts',
+        refreshInterval: 3600,
+      })
+
+    await page.getByRole('button', { name: 'Edit' }).click()
+    drawer = page.getByRole('dialog')
+    await expect(drawer.getByText('Edit Hosts')).toBeVisible()
+    await drawer.getByLabel('Hosts Title', { exact: true }).fill('QA Remote Edited')
+    await drawer.getByLabel('URL', { exact: true }).fill('https://example.test/qa-edited.hosts')
+    await chooseSelectOption(page, drawer, 'Auto Refresh', '1 day')
+    await drawer.getByRole('button', { name: 'OK' }).click()
+
+    await expect(row).toContainText('QA Remote Edited')
+    await expect(page.getByText('https://example.test/qa-edited.hosts')).toBeVisible()
+    await expect(page.locator('#root').getByText('1 day', { exact: true })).toBeVisible()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        const remote = state.list.find((item) => item.title === 'QA Remote Edited')
+        return {
+          type: remote?.type,
+          url: remote?.url,
+          refreshInterval: remote?.refresh_interval,
+        }
+      })
+      .toEqual({
+        type: 'remote',
+        url: 'https://example.test/qa-edited.hosts',
+        refreshInterval: 86400,
+      })
+
+    const latestSetList = setListPayloads(await getMockCalls(page)).at(-1)
+    expect(
+      latestSetList?.some(
+        (item) =>
+          item.title === 'QA Remote Edited' &&
+          item.type === 'remote' &&
+          item.url === 'https://example.test/qa-edited.hosts' &&
+          item.refresh_interval === 86400,
+      ),
+    ).toBe(true)
+  })
+
+  test('keeps remote refresh metadata unchanged when refresh fails', async ({ page }) => {
+    await clearMockCalls(page)
+    await page.evaluate(() => {
+      window.__SWITCHHOSTS_E2E__.failNextRefresh({
+        code: 'network',
+        message: 'Network unavailable',
+      })
+    })
+
+    await page.locator('[data-id="remote-blocklist"]').click()
+    await expect(page.getByText('2026-05-08 10:00:00')).toBeVisible()
+    await page.getByRole('button', { name: 'Refresh' }).click()
+
+    await expect(page.getByText('2026-05-08 10:00:00')).toBeVisible()
+    await expect(page.getByText('2026-05-08 12:00:00')).toHaveCount(0)
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        const remote = state.list.find((item) => item.id === 'remote-blocklist')
+        return {
+          lastRefresh: remote?.last_refresh,
+          lastRefreshMs: remote?.last_refresh_ms,
+        }
+      })
+      .toEqual({
+        lastRefresh: '2026-05-08 10:00:00',
+        lastRefreshMs: 1778196000000,
+      })
 
     const calls = await getMockCalls(page)
     expect(calls.some((call) => call.cmd === 'refresh_remote_hosts')).toBe(true)
@@ -284,11 +483,12 @@ test.describe('SwitchHosts renderer e2e', () => {
 
     await page.getByLabel('Settings').click()
     await page.getByText('Preferences').click()
-    await expect(page.getByText('General')).toBeVisible()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
 
-    await page.getByText('Dark').click()
-    await page.getByText('Overwrite').click()
-    await page.getByText('Single').click()
+    await preferences.getByText('Dark', { exact: true }).click()
+    await preferences.getByText('Overwrite', { exact: true }).click()
+    await preferences.getByText('Single', { exact: true }).click()
 
     await expect
       .poll(async () => {
@@ -309,6 +509,45 @@ test.describe('SwitchHosts renderer e2e', () => {
         expect.objectContaining({ choice_mode: 1 }),
       ]),
     )
+  })
+
+  test('applies global single-choice mode to top-level hosts', async ({ page }) => {
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
+    await preferences.getByText('Single', { exact: true }).click()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.configs.choice_mode
+      })
+      .toBe(1)
+    await page.keyboard.press('Escape')
+    await expect(preferences).toBeHidden()
+    await clearMockCalls(page)
+
+    const localDev = page.locator('[data-id="local-dev"]')
+    const localApi = page.locator('[data-id="local-api"]')
+    await expect(localApi.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
+    await localDev.getByRole('switch').click()
+
+    await expect(localDev.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
+    await expect(localApi.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          localDevOn: findEntry(state, 'local-dev')?.on,
+          localApiOn: findEntry(state, 'local-api')?.on,
+          hasDev: state.systemHosts.includes('dev.local'),
+          hasApi: state.systemHosts.includes('api.local'),
+        }
+      })
+      .toEqual({ localDevOn: true, localApiOn: false, hasDev: true, hasApi: false })
+
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'apply_hosts_selection')).toBe(true)
   })
 
   test('deletes a system hosts history entry', async ({ page }) => {
@@ -339,7 +578,7 @@ test.describe('SwitchHosts renderer e2e', () => {
     await expect(drawer.getByText('Add Hosts Entry')).toBeVisible()
 
     await drawer.getByText('Group', { exact: true }).click()
-    await drawer.locator('input:not([type="radio"])').first().fill('QA Group')
+    await drawer.getByLabel('Hosts Title', { exact: true }).fill('QA Group')
     await drawer.getByText('API Override').click()
     await drawer.getByRole('button', { name: 'Move to right' }).click()
     await drawer.getByRole('button', { name: 'OK' }).click()
@@ -369,7 +608,7 @@ test.describe('SwitchHosts renderer e2e', () => {
     await expect(drawer.getByText('Add Hosts Entry')).toBeVisible()
 
     await drawer.getByText('Folder', { exact: true }).click()
-    await drawer.locator('input:not([type="radio"])').first().fill('QA Folder')
+    await drawer.getByLabel('Hosts Title', { exact: true }).fill('QA Folder')
     await drawer.getByText('Single', { exact: true }).click()
     await drawer.getByRole('button', { name: 'OK' }).click()
 
@@ -460,5 +699,169 @@ test.describe('SwitchHosts renderer e2e', () => {
       expect.arrayContaining([expect.objectContaining({ write_mode: 'append' })]),
     )
     expect(calls.some((call) => call.cmd === 'apply_hosts_selection')).toBe(true)
+  })
+
+  test('exports backup data through the settings menu', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Settings').click()
+    await page.getByRole('menuitem', { name: 'Export' }).click()
+
+    await expect
+      .poll(async () => (await getMockCalls(page)).some((call) => call.cmd === 'export_data'))
+      .toBe(true)
+  })
+
+  test('imports backup data from a file', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Settings').click()
+    await page.getByRole('menuitem', { name: /^Import$/ }).click()
+
+    await expect(page.locator('[data-id="imported-local"]')).toContainText('Imported Backup')
+    await expect(page.locator('[data-id="imported-folder"]')).toContainText('Imported Folder')
+    await expect(page.locator('[data-id="imported-group"]')).toContainText('Imported Group')
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.list.map((item) => ({
+          id: item.id,
+          type: item.type,
+          children: item.children?.map((child) => child.id),
+        }))
+      })
+      .toEqual([
+        { id: 'imported-local', type: 'local', children: undefined },
+        { id: 'imported-folder', type: 'folder', children: ['imported-folder-child'] },
+        { id: 'imported-group', type: 'group', children: undefined },
+      ])
+
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'import_data')).toBe(true)
+  })
+
+  test('imports backup data from a URL', async ({ page }) => {
+    await clearMockCalls(page)
+
+    const importUrl = 'https://example.test/swh_data.json'
+    await page.getByLabel('Settings').click()
+    await page.getByRole('menuitem', { name: 'Import from URL' }).click()
+
+    const dialog = page.getByRole('dialog')
+    await expect(dialog.getByText('Import from URL')).toBeVisible()
+    await dialog.locator('input').fill(importUrl)
+    await dialog.getByRole('button', { name: 'OK' }).click()
+
+    await expect(page.locator('[data-id="imported-url"]')).toContainText('Imported From URL')
+    await page.locator('[data-id="imported-url"]').click()
+    await expect(page.getByText(importUrl)).toBeVisible()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.list.map((item) => ({ id: item.id, type: item.type, url: item.url }))
+      })
+      .toEqual([
+        { id: 'imported-url', type: 'remote', url: importUrl },
+        { id: 'imported-url-local', type: 'local', url: undefined },
+      ])
+
+    const calls = await getMockCalls(page)
+    const importCall = calls.find((call) => call.cmd === 'import_data_from_url')
+    expect(importCall).toBeDefined()
+    expect(firstInvokeArg(importCall!)).toBe(importUrl)
+  })
+
+  test('enforces single-choice mode for folder children while applying hosts', async ({ page }) => {
+    await clearMockCalls(page)
+
+    const alpha = page.locator('[data-id="folder-single-alpha"]')
+    const beta = page.locator('[data-id="folder-single-beta"]')
+    await expect(alpha).toContainText('Single Alpha')
+    await expect(beta).toContainText('Single Beta')
+
+    const alphaToggle = alpha.getByRole('switch')
+    const betaToggle = beta.getByRole('switch')
+    await expect(alphaToggle).toHaveAttribute('aria-checked', 'false')
+    await expect(betaToggle).toHaveAttribute('aria-checked', 'false')
+
+    await alphaToggle.click()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          alphaOn: findEntry(state, 'folder-single-alpha')?.on,
+          betaOn: findEntry(state, 'folder-single-beta')?.on,
+          hasAlpha: state.systemHosts.includes('single-alpha.local'),
+          hasBeta: state.systemHosts.includes('single-beta.local'),
+        }
+      })
+      .toEqual({ alphaOn: true, betaOn: false, hasAlpha: true, hasBeta: false })
+
+    await betaToggle.click()
+    await expect(alphaToggle).toHaveAttribute('aria-checked', 'false')
+    await expect(betaToggle).toHaveAttribute('aria-checked', 'true')
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          alphaOn: findEntry(state, 'folder-single-alpha')?.on,
+          betaOn: findEntry(state, 'folder-single-beta')?.on,
+          hasAlpha: state.systemHosts.includes('single-alpha.local'),
+          hasBeta: state.systemHosts.includes('single-beta.local'),
+        }
+      })
+      .toEqual({ alphaOn: false, betaOn: true, hasAlpha: false, hasBeta: true })
+
+    const applyCalls = (await getMockCalls(page)).filter(
+      (call) => call.cmd === 'apply_hosts_selection',
+    )
+    expect(applyCalls).toHaveLength(2)
+  })
+
+  test('allows multiple folder children to stay enabled while applying hosts', async ({ page }) => {
+    await clearMockCalls(page)
+
+    const alpha = page.locator('[data-id="folder-multiple-alpha"]')
+    const beta = page.locator('[data-id="folder-multiple-beta"]')
+    await expect(alpha).toContainText('Multiple Alpha')
+    await expect(beta).toContainText('Multiple Beta')
+
+    const alphaToggle = alpha.getByRole('switch')
+    const betaToggle = beta.getByRole('switch')
+    await expect(alphaToggle).toHaveAttribute('aria-checked', 'false')
+    await expect(betaToggle).toHaveAttribute('aria-checked', 'false')
+
+    await alphaToggle.click()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          alphaOn: findEntry(state, 'folder-multiple-alpha')?.on,
+          betaOn: findEntry(state, 'folder-multiple-beta')?.on,
+          hasAlpha: state.systemHosts.includes('multiple-alpha.local'),
+          hasBeta: state.systemHosts.includes('multiple-beta.local'),
+        }
+      })
+      .toEqual({ alphaOn: true, betaOn: false, hasAlpha: true, hasBeta: false })
+
+    await betaToggle.click()
+    await expect(alphaToggle).toHaveAttribute('aria-checked', 'true')
+    await expect(betaToggle).toHaveAttribute('aria-checked', 'true')
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          alphaOn: findEntry(state, 'folder-multiple-alpha')?.on,
+          betaOn: findEntry(state, 'folder-multiple-beta')?.on,
+          hasAlpha: state.systemHosts.includes('multiple-alpha.local'),
+          hasBeta: state.systemHosts.includes('multiple-beta.local'),
+        }
+      })
+      .toEqual({ alphaOn: true, betaOn: true, hasAlpha: true, hasBeta: true })
+
+    const applyCalls = (await getMockCalls(page)).filter(
+      (call) => call.cmd === 'apply_hosts_selection',
+    )
+    expect(applyCalls).toHaveLength(2)
   })
 })

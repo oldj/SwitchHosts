@@ -10,8 +10,8 @@ import {
   Box,
   Button,
   Group,
-  Select,
   SegmentedControl,
+  Select,
   SimpleGrid,
   Text,
   TextInput,
@@ -21,6 +21,7 @@ import SideDrawer from '@renderer/components/SideDrawer'
 import Transfer from '@renderer/components/Transfer'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import { formatInterval } from '@renderer/utils/formatInterval'
 import lodash from 'lodash'
 import React, { useState } from 'react'
 import { BiEdit, BiTrash } from 'react-icons/bi'
@@ -114,6 +115,7 @@ const EditHostsInfo = () => {
         <Box className={styles.ln}>
           <Text mb="8px">URL</Text>
           <TextInput
+            aria-label="URL"
             value={hosts?.url || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdate({ url: e.target.value })}
             placeholder={lang.url_placeholder}
@@ -124,17 +126,13 @@ const EditHostsInfo = () => {
         <Box className={styles.ln}>
           <Text mb="8px">{lang.auto_refresh}</Text>
           <Select
+            aria-label={lang.auto_refresh}
             value={(hosts?.refresh_interval || 0).toString()}
             onChange={(v) => onUpdate({ refresh_interval: parseInt(v || '0') || 0 })}
-            data={[
-              { value: '0', label: lang.never },
-              { value: '60', label: `1 ${lang.minute}` },
-              { value: `${60 * 5}`, label: `5 ${lang.minutes}` },
-              { value: `${60 * 15}`, label: `15 ${lang.minutes}` },
-              { value: `${60 * 60}`, label: `1 ${lang.hour}` },
-              { value: `${60 * 60 * 24}`, label: `24 ${lang.hours}` },
-              { value: `${60 * 60 * 24 * 7}`, label: `7 ${lang.days}` },
-            ]}
+            data={[0, 60, 60 * 5, 60 * 15, 60 * 60, 60 * 60 * 24, 60 * 60 * 24 * 7].map((s) => ({
+              value: s.toString(),
+              label: formatInterval(s, lang),
+            }))}
             maw={160}
             allowDeselect={false}
           />
@@ -286,9 +284,7 @@ const EditHostsInfo = () => {
             <Button onClick={onCancel} variant="outline">
               {lang.btn_cancel}
             </Button>
-            <Button onClick={onSave}>
-              {lang.btn_ok}
-            </Button>
+            <Button onClick={onSave}>{lang.btn_ok}</Button>
           </Group>
         </SimpleGrid>
       }
@@ -315,11 +311,14 @@ const EditHostsInfo = () => {
         <Box className={styles.ln}>
           <Text mb="8px">{lang.hosts_title}</Text>
           <TextInput
+            aria-label={lang.hosts_title}
             data-autofocus
             value={hosts?.title || ''}
             maxLength={50}
             placeholder=""
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdate({ title: e.target.value })}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              onUpdate({ title: e.target.value })
+            }
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onSave()}
           />
         </Box>
