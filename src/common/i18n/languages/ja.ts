@@ -163,6 +163,7 @@ const lang: LanguageDict = {
   theme: 'テーマ',
   theme_dark: 'ダーク',
   theme_light: 'ライト',
+  theme_system: 'システムに合わせる',
   title: 'タイトル',
   to_show_source: 'ダブルクリックでソースコードを表示する。',
   toggle_developer_tools: '開発者ツールの表示/非表示',

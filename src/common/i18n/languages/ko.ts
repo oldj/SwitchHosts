@@ -165,6 +165,7 @@ export default {
   theme: '테마',
   theme_dark: '다크',
   theme_light: '라이트',
+  theme_system: '시스템 설정 따름',
   title: '제목',
   to_show_source: '더블 클릭하여 소스코드를 표시합니다.',
   toggle_developer_tools: '개발자 도구 전환',

@@ -11,6 +11,8 @@ import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import useResolvedTheme from '@renderer/models/useResolvedTheme'
+import { applyThemeToBody } from '@renderer/utils/theme'
 import { useDebounce, useDebounceFn } from 'ahooks'
 import clsx from 'clsx'
 import lodash from 'lodash'
@@ -69,16 +71,12 @@ const FindPage = () => {
   const [lastScrollResultIdx, setlastScrollResultIdx] = useState(-1)
   const debouncedKeyword = useDebounce(keyword, { wait: 500 })
   const iptKw = useRef<HTMLInputElement>(null)
+  const resolvedTheme = useResolvedTheme(configs?.theme)
 
   const init = async () => {
     if (!configs) return
 
     setLocale(configs.locale)
-
-    const theme = configs.theme
-    const cls = document.body.className
-    document.body.className = cls.replace(/\btheme-\w+/gi, '')
-    document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
   }
 
   const parsePositionShow = (findItems: IFindItem[]) => {
@@ -134,6 +132,12 @@ const FindPage = () => {
     init().catch((e) => console.error(e))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configs])
+
+  useEffect(() => {
+    if (!configs) return
+
+    applyThemeToBody(resolvedTheme, [`platform-${agent.platform}`])
+  }, [configs, resolvedTheme])
 
   useEffect(() => {
     document.title = lang.find_and_replace

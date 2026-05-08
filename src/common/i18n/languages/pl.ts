@@ -157,6 +157,7 @@ export default {
   theme: 'Motyw',
   theme_dark: 'Ciemny',
   theme_light: 'Jasny',
+  theme_system: 'Zgodnie z systemem',
   title: 'Tytuł',
   to_show_source: 'Kliknij dwukrotnie, aby wyświetlić kod źródłowy.',
   toggle_developer_tools: 'Przełącz narzędzia deweloperskie',

@@ -166,6 +166,7 @@ const lang: LanguageDict = {
   theme: 'Thema',
   theme_dark: 'Dunkel',
   theme_light: 'Hell',
+  theme_system: 'System folgen',
   title: 'Titel',
   to_show_source: 'Durch Doppelklick wird der Quellcode angezeigt.',
   toggle_developer_tools: 'Entwicklerwerkzeuge umschalten',

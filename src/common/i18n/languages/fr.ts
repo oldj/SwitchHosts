@@ -168,6 +168,7 @@ const lang: LanguageDict = {
   theme: 'Thème',
   theme_dark: 'Sombre',
   theme_light: 'Clair',
+  theme_system: 'Suivre le système',
   title: 'Titre',
   to_show_source: 'Double-cliquez pour afficher le code source',
   toggle_developer_tools: 'Afficher/Masquer les outils de développement',

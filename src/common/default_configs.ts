@@ -18,7 +18,7 @@ const configs = {
   write_mode: 'append' as WriteModeType,
   history_limit: 50,
   locale: undefined as DefaultLocaleType,
-  theme: 'light' as ThemeType,
+  theme: 'system' as ThemeType,
   choice_mode: 2 as FolderModeType,
   show_title_on_tray: false,
   hide_at_launch: false,

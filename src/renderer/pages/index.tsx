@@ -14,6 +14,8 @@ import UpdateDialog from '@renderer/components/UpdateDialog'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
+import useResolvedTheme from '@renderer/models/useResolvedTheme'
+import { applyThemeToBody, normalizeTheme } from '@renderer/utils/theme'
 import clsx from 'clsx'
 import { useEffect, useRef, useState } from 'react'
 import TopBar from '../components/TopBar'
@@ -40,6 +42,7 @@ const MainPage = () => {
   const [rightShow, setRightShow] = useState(true)
   const [dragging, setDragging] = useState(false)
   const [useSystemWindowFrame, setSystemFrame] = useState(false)
+  const resolvedTheme = useResolvedTheme(configs?.theme)
   const init = async () => {
     // v5: migration is handled automatically by the Rust backend on startup.
     // The renderer only needs to load data.
@@ -60,11 +63,7 @@ const MainPage = () => {
     setRightShow(configs.right_panel_show)
     setSystemFrame(configs.use_system_window_frame)
 
-    const theme = configs.theme
-    const cls = document.body.className
-    document.body.className = cls.replace(/\btheme-\w+/gi, '')
-    document.body.classList.add(`platform-${agent.platform}`, `theme-${theme}`)
-    await agent.darkModeToggle(theme)
+    await agent.darkModeToggle(normalizeTheme(configs.theme))
   }
 
   useEffect(() => {
@@ -77,6 +76,12 @@ const MainPage = () => {
     onConfigsUpdate().catch((e) => console.error(e))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configs])
+
+  useEffect(() => {
+    if (!configs) return
+
+    applyThemeToBody(resolvedTheme, [`platform-${agent.platform}`])
+  }, [configs, resolvedTheme])
 
   useEffect(() => {
     if (loading || !configs || mainWindowReadySentRef.current) return

@@ -16,6 +16,7 @@ import { Notifications } from '@mantine/notifications'
 import '@mantine/notifications/styles.css'
 import PageWrapper from '@renderer/common/PageWrapper'
 import useConfigs from '@renderer/models/useConfigs'
+import useResolvedTheme from '@renderer/models/useResolvedTheme'
 import IndexPage from '@renderer/pages'
 import FindPage from '@renderer/pages/find'
 import TrayPage from '@renderer/pages/tray'
@@ -89,9 +90,10 @@ if (container == null) throw new Error('container is null')
 
 const AppRoot = () => {
   const { configs } = useConfigs()
+  const resolvedTheme = useResolvedTheme(configs?.theme)
 
   return (
-    <MantineProvider theme={theme} forceColorScheme={configs?.theme === 'dark' ? 'dark' : 'light'}>
+    <MantineProvider theme={theme} forceColorScheme={resolvedTheme}>
       <Notifications position="top-center" />
       <PageWrapper>
         <RouterProvider router={router} />

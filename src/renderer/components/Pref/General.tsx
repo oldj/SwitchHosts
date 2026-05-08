@@ -9,6 +9,7 @@ import { LocaleName } from '@common/i18n'
 import { Box, Checkbox, Group, SegmentedControl, Select, Stack, Text } from '@mantine/core'
 import { agent } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
+import { normalizeTheme } from '@renderer/utils/theme'
 
 interface IProps {
   data: ConfigsType
@@ -51,11 +52,12 @@ const General = (props: IProps) => {
 
         <Box>{lang.theme}</Box>
         <SegmentedControl
-          value={data.theme}
+          value={normalizeTheme(data.theme)}
           onChange={(v) => onChange({ theme: v as ThemeType })}
           data={[
             { value: 'light', label: lang.theme_light },
             { value: 'dark', label: lang.theme_dark },
+            { value: 'system', label: lang.theme_system },
           ]}
           style={{ justifySelf: 'start' }}
         />

@@ -70,7 +70,7 @@ impl Default for AppConfig {
             write_mode: "append".to_string(),
             history_limit: 50,
             locale: None,
-            theme: "light".to_string(),
+            theme: "system".to_string(),
             choice_mode: 2,
             show_title_on_tray: false,
             hide_at_launch: false,
@@ -95,6 +95,12 @@ impl Default for AppConfig {
 }
 
 impl AppConfig {
+    fn normalize(&mut self) {
+        if !matches!(self.theme.as_str(), "light" | "dark" | "system") {
+            self.theme = "system".to_string();
+        }
+    }
+
     /// Load `internal/config.json`.
     ///
     /// - Missing file → default config in memory, no write.
@@ -107,7 +113,10 @@ impl AppConfig {
         }
         match std::fs::read(path) {
             Ok(bytes) => match serde_json::from_slice::<AppConfig>(&bytes) {
-                Ok(cfg) => cfg,
+                Ok(mut cfg) => {
+                    cfg.normalize();
+                    cfg
+                }
                 Err(e) => {
                     log::warn!(
                         "config.json at {} failed to parse: {e}. Falling back to defaults in memory; the file will not be overwritten until the next explicit write.",
@@ -180,12 +189,13 @@ impl AppConfig {
             merged_obj.insert(k.clone(), v.clone());
         }
 
-        let next: AppConfig = serde_json::from_value(merged).map_err(|e| {
+        let mut next: AppConfig = serde_json::from_value(merged).map_err(|e| {
             StorageError::InvalidConfigValue {
                 key: "<patch>".into(),
                 reason: e.to_string(),
             }
         })?;
+        next.normalize();
         *self = next;
         Ok(())
     }
@@ -198,3 +208,34 @@ impl AppConfig {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn load_normalizes_invalid_theme_to_system() {
+        let path = std::env::temp_dir().join(format!(
+            "switchhosts-config-test-{}-{}.json",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::write(&path, r#"{ "theme": "sepia" }"#).unwrap();
+
+        let cfg = AppConfig::load(&path);
+        let _ = std::fs::remove_file(path);
+
+        assert_eq!(cfg.theme, "system");
+    }
+
+    #[test]
+    fn apply_partial_normalizes_invalid_theme_to_system() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "theme": "sepia" })).unwrap();
+
+        assert_eq!(cfg.theme, "system");
+    }
+}
