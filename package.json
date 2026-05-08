@@ -32,7 +32,7 @@
     "dayjs": "1.11.19",
     "electron-updater": "6.8.3",
     "electron-window-state": "5.0.3",
-    "hono": "^4.12.14",
+    "hono": "^4.12.18",
     "lodash": "4.18.1",
     "md5": "2.3.0",
     "md5-file": "5.0.0",
