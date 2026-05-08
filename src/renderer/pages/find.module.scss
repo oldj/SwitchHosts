@@ -1,6 +1,9 @@
 @use '../styles/common';
 
 .root {
+  --find-result-row-inset: 8px;
+  --find-result-scrollbar-offset: 12px;
+
   width: 100vw;
   height: 100vh;
   box-sizing: border-box;
@@ -22,6 +25,9 @@
 
 .result_header {
   border-top: 1px solid var(--swh-border-color-0);
+  box-sizing: border-box;
+  padding: 0 calc(var(--find-result-row-inset) + var(--find-result-scrollbar-offset)) 0
+    var(--find-result-row-inset);
 }
 
 .result_list {
@@ -39,8 +45,8 @@
 .virtual_result_rows {
   position: absolute;
   top: 5px;
-  left: 8px;
-  right: 8px;
+  left: var(--find-result-row-inset);
+  right: var(--find-result-row-inset);
 }
 
 .result_scrollbar {
@@ -73,16 +79,23 @@
 .result_row {
   border-bottom: 1px solid var(--swh-border-color-0);
   display: grid;
-  grid-template-columns: 1fr 20% 60px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 20%) 60px;
   grid-column-gap: 4px;
+  justify-items: stretch;
   box-sizing: border-box;
   height: 29px;
   line-height: 28px;
   padding-left: 8px;
   border-radius: var(--swh-border-radius);
   cursor: pointer;
+  text-align: left;
   user-select: none;
   overflow: hidden;
+
+  > * {
+    min-width: 0;
+    text-align: left;
+  }
 
   &.disabled {
     color: var(--swh-font-color-weak);
@@ -105,11 +118,23 @@
   }
 }
 
+.result_header_row {
+  border-radius: 0;
+  cursor: default;
+}
+
+.result_header_match,
+.result_header_title,
+.result_header_line {
+  @include common.ell;
+}
+
 .result_content {
   //display: flex;
 
   @include common.code;
   @include common.ell;
+  text-align: left;
 
   span {
     //display: inline-block;
@@ -124,7 +149,9 @@
 .result_title {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   overflow: hidden;
+  text-align: left;
 
   span {
     display: inline-block;
@@ -135,6 +162,7 @@
 
 .result_line {
   color: var(--swh-font-color-weak);
+  text-align: left;
 }
 
 .highlight {

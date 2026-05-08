@@ -695,10 +695,10 @@ const FindPage = () => {
           </Group>
 
           <Box w="100%" className={styles.result_header}>
-            <div className={styles.result_row}>
-              <div>{lang.match}</div>
-              <div>{lang.title}</div>
-              <div>{lang.line}</div>
+            <div className={clsx(styles.result_row, styles.result_header_row)}>
+              <div className={styles.result_header_match}>{lang.match}</div>
+              <div className={styles.result_header_title}>{lang.title}</div>
+              <div className={styles.result_header_line}>{lang.line}</div>
             </div>
           </Box>
 
