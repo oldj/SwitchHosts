@@ -76,19 +76,43 @@ jobs:
           fi
 
   test:
+    needs: prep
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     steps:
+      # Check out the tag commit (not the dispatching branch) so the
+      # rest of the workflow — package.json reads, tests, builds —
+      # all see the same source the release was tagged from. A
+      # workflow_dispatch with a stale or wrong tag input fails the
+      # checkout instead of silently building from develop's HEAD
+      # and uploading to the wrong release.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.tag || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+
+      # Cross-check the tag against package.json's version. This
+      # catches the common slip of bumping `npm version` without
+      # re-tagging (or vice versa) — the resulting bundle filenames
+      # would mismatch our manifest scoping later in the run.
+      - name: Validate tag matches package.json
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          EXPECTED="v$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$EXPECTED" ]; then
+            echo "::error::Tag $TAG does not match package.json version (expected $EXPECTED)"
+            exit 1
+          fi
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -157,6 +181,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.tag || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -208,7 +234,14 @@ jobs:
           releaseName: "SwitchHosts ${{ needs.prep.outputs.tag }}"
           releaseBody: "See the assets below to download and install this version."
           releaseDraft: true
-          prerelease: false
+          # Mark anything with a SemVer pre-release suffix (e.g.
+          # v5.0.0-beta.23) as prerelease. Drafts hide assets until
+          # we manually publish, but once we do, GitHub treats
+          # prerelease=false as the project's "latest release" and
+          # surfaces it through /releases/latest/download/latest.json
+          # — beta builds must opt out of that path so stable users
+          # don't auto-update into them.
+          prerelease: ${{ contains(needs.prep.outputs.tag, '-') }}
           includeUpdaterJson: true
           args: ${{ matrix.args }}
 
@@ -224,7 +257,7 @@ jobs:
           TAG="${{ needs.prep.outputs.tag }}"
           REPO="${{ github.repository }}"
           # Find all NSIS setup executables
-          find src-tauri/target -name "*-setup.exe" -path "*/bundle/nsis/*" | while read EXE; do
+          find src-tauri/target -name "*-setup.exe" -path "*/bundle/nsis/*" | while IFS= read -r EXE; do
             BASE=$(basename "$EXE" .exe)
             ZIP_NAME="${BASE}.nsis.zip"
             echo "Creating: $ZIP_NAME from $EXE"
@@ -241,7 +274,7 @@ jobs:
           TAG="${{ needs.prep.outputs.tag }}"
           REPO="${{ github.repository }}"
           # Find all AppImage files
-          find src-tauri/target -name "*.AppImage" -path "*/bundle/appimage/*" | while read AI; do
+          find src-tauri/target -name "*.AppImage" -path "*/bundle/appimage/*" | while IFS= read -r AI; do
             TAR_NAME="$(basename "$AI").tar.gz"
             echo "Creating: $TAR_NAME from $AI"
             tar czf "/tmp/$TAR_NAME" -C "$(dirname "$AI")" "$(basename "$AI")"
@@ -258,6 +291,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.tag || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -500,14 +535,32 @@ jobs:
 
             NEW="$NAME"
 
+            # Pre-compute prefix / replacement strings into plain
+            # variables. Bash's parameter-expansion replacement side
+            # treats inline inner quotes (`${var/.../"text"}`) as
+            # literal characters in some shells, so a one-liner with
+            # nested quoting can leak `"` into the renamed asset.
+            # The pattern side still gets inner quotes via "$PREFIX"
+            # to keep dots in ${VERSION} from being interpreted as
+            # glob metachars (SC2295).
+            PREFIX="SwitchHosts_${VERSION}_"
+            REPLACEMENT="SwitchHosts-${VERSION}-${PLATFORM}-"
+            RPM_PREFIX="SwitchHosts-${VERSION}-1."
+
             # 1. Main pattern: SwitchHosts_{ver}_{arch}… → SwitchHosts-{ver}-{platform}-{arch}…
-            NEW=$(echo "$NEW" | sed "s|^SwitchHosts_${VERSION}_|SwitchHosts-${VERSION}-${PLATFORM}-|")
+            NEW="${NEW/#"$PREFIX"/$REPLACEMENT}"
 
             # 2. RPM uses its own format: SwitchHosts-{ver}-1.{arch}.rpm → normalise
-            NEW=$(echo "$NEW" | sed "s|^SwitchHosts-${VERSION}-1\.\([a-zA-Z0-9_]*\)\.rpm|SwitchHosts-${VERSION}-${PLATFORM}-\1.rpm|")
+            case "$NEW" in
+              "$RPM_PREFIX"*.rpm)
+                ARCH="${NEW#"$RPM_PREFIX"}"
+                ARCH="${ARCH%.rpm}"
+                NEW="SwitchHosts-${VERSION}-${PLATFORM}-${ARCH}.rpm"
+                ;;
+            esac
 
             # 3. Drop _en-US from MSI name
-            NEW=$(echo "$NEW" | sed "s|_en-US\\.msi|.msi|")
+            NEW="${NEW/_en-US.msi/.msi}"
 
             if [ "$NEW" != "$NAME" ]; then
               echo "  $NAME → $NEW"
@@ -526,6 +579,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.tag || github.ref }}
 
       - name: Generate latest.json
         if: needs.prep.outputs.tag != ''
