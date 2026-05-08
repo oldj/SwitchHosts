@@ -29,7 +29,7 @@
   const configs = {
     left_panel_show: true,
     left_panel_width: 270,
-    right_panel_show: true,
+    right_panel_show: false,
     right_panel_width: 240,
     use_system_window_frame: false,
     write_mode: 'append',
@@ -51,6 +51,9 @@
     http_api_only_local: true,
     tray_mini_window: true,
     multi_chose_folder_switch_all: false,
+    find_is_regexp: false,
+    find_is_ignore_case: false,
+    find_result_column_widths: [],
     auto_download_update: true,
     env: 'DEV',
   }

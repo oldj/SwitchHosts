@@ -39,7 +39,7 @@ const MainPage = () => {
   const [leftWidth, setLeftWidth] = useState(0)
   const [rightWidth, setRightWidth] = useState(240)
   const [leftShow, setLeftShow] = useState(true)
-  const [rightShow, setRightShow] = useState(true)
+  const [rightShow, setRightShow] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [useSystemWindowFrame, setSystemFrame] = useState(false)
   const resolvedTheme = useResolvedTheme(configs?.theme)
@@ -184,6 +184,8 @@ const MainPage = () => {
         </div>
         <div
           className={styles.right_panel}
+          data-testid="right-panel"
+          data-open={rightShow}
           style={{
             width: rightWidth,
             right: rightShow ? BODY_PADDING_RIGHT : -rightWidth,

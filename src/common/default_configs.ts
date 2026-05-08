@@ -10,7 +10,7 @@ const configs = {
   // UI
   left_panel_show: true,
   left_panel_width: 270,
-  right_panel_show: true,
+  right_panel_show: false,
   right_panel_width: 240,
   use_system_window_frame: false,
 
@@ -34,6 +34,11 @@ const configs = {
   http_api_only_local: true,
   tray_mini_window: true,
   multi_chose_folder_switch_all: false,
+
+  // find window — sticky search options across reopens and restarts
+  find_is_regexp: false,
+  find_is_ignore_case: false,
+  find_result_column_widths: [] as number[],
 
   // Legacy key: it now controls background update checks, while the actual
   // download remains a manual action in the UI.

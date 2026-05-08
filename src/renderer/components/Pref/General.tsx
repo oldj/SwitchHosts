@@ -6,14 +6,23 @@
 import { httpApiPort } from '@common/constants'
 import { ConfigsType, ThemeType } from '@common/default_configs'
 import { LocaleName } from '@common/i18n'
-import { Box, Checkbox, Group, SegmentedControl, Select, Stack, Text } from '@mantine/core'
+import { Box, Checkbox, Group, SegmentedControl, Select, Stack } from '@mantine/core'
+import DescriptionText, { checkboxDescriptionStyles } from '@renderer/components/DescriptionText'
 import { agent } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
 import { normalizeTheme } from '@renderer/utils/theme'
+import type { CSSProperties } from 'react'
 
 interface IProps {
   data: ConfigsType
   onChange: (kv: Partial<ConfigsType>) => void
+}
+
+const segmentedControlLabelStyle: CSSProperties = {
+  alignSelf: 'start',
+  display: 'flex',
+  alignItems: 'center',
+  minHeight: 'calc(2.25rem * var(--mantine-scale))',
 }
 
 const General = (props: IProps) => {
@@ -62,7 +71,7 @@ const General = (props: IProps) => {
           style={{ justifySelf: 'start' }}
         />
 
-        <Box style={{ alignSelf: 'start' }}>{lang.write_mode}</Box>
+        <Box style={segmentedControlLabelStyle}>{lang.write_mode}</Box>
         <Stack gap="8px" align="flex-start">
           <SegmentedControl
             value={data.write_mode || 'append'}
@@ -72,13 +81,13 @@ const General = (props: IProps) => {
               { value: 'overwrite', label: lang.overwrite },
             ]}
           />
-          <Text c="dimmed" size="sm" style={{ alignSelf: 'stretch' }}>
+          <DescriptionText style={{ alignSelf: 'stretch' }}>
             {data.write_mode === 'append' && lang.write_mode_append_help}
             {data.write_mode === 'overwrite' && lang.write_mode_overwrite_help}
-          </Text>
+          </DescriptionText>
         </Stack>
 
-        <Box style={{ alignSelf: 'start' }}>{lang.choice_mode}</Box>
+        <Box style={segmentedControlLabelStyle}>{lang.choice_mode}</Box>
         <Stack gap="8px" align="flex-start">
           <SegmentedControl
             value={data.choice_mode.toString()}
@@ -88,9 +97,9 @@ const General = (props: IProps) => {
               { value: '2', label: lang.choice_mode_multiple },
             ]}
           />
-          <Text c="dimmed" size="sm" style={{ alignSelf: 'stretch' }}>
+          <DescriptionText style={{ alignSelf: 'stretch' }}>
             {lang.choice_mode_desc}
-          </Text>
+          </DescriptionText>
         </Stack>
       </Box>
 
@@ -146,6 +155,7 @@ const General = (props: IProps) => {
           onChange={(e) => onChange({ remove_duplicate_records: e.target.checked })}
           label={lang.remove_duplicate_records}
           description={lang.remove_duplicate_records_desc}
+          styles={checkboxDescriptionStyles}
         />
       </Box>
 
@@ -176,6 +186,7 @@ const General = (props: IProps) => {
             onChange={(e) => onChange({ http_api_on: e.target.checked })}
             label={lang.http_api_on}
             description={i18n.trans('http_api_on_desc', [httpApiPort.toString()])}
+            styles={checkboxDescriptionStyles}
           />
           <Box pl="28px">
             <Checkbox

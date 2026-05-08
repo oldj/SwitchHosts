@@ -4,6 +4,7 @@ import {
   getMockCalls,
   getMockState,
   moveLocalDevToTrashcan,
+  showRightPanel,
   test,
 } from './support/test'
 
@@ -13,6 +14,7 @@ test.describe('trashcan', () => {
 
     await page.getByLabel('Trashcan').click()
     await page.locator('[data-id="local-dev"]').click()
+    await showRightPanel(page)
     await page.getByRole('button', { name: 'Restore' }).click()
 
     await expect
@@ -35,6 +37,7 @@ test.describe('trashcan', () => {
 
     await page.getByLabel('Trashcan').click()
     await page.locator('[data-id="local-dev"]').click()
+    await showRightPanel(page)
     await page.getByRole('button', { name: 'Delete' }).click()
 
     const confirm = page.getByRole('dialog')

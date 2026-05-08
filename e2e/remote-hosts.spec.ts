@@ -5,12 +5,14 @@ import {
   getMockCalls,
   getMockState,
   setListPayloads,
+  showRightPanel,
   test,
 } from './support/test'
 
 test.describe('remote hosts', () => {
   test('refreshes a remote hosts entry and updates its details', async ({ page }) => {
     await page.locator('[data-id="remote-blocklist"]').click()
+    await showRightPanel(page)
     await expect(page.getByText('2026-05-08 10:00:00')).toBeVisible()
 
     await page.getByRole('button', { name: 'Refresh' }).click()
@@ -43,6 +45,7 @@ test.describe('remote hosts', () => {
     const row = page.locator('[data-id]').filter({ hasText: 'QA Remote' })
     await expect(row).toBeVisible()
     await row.click()
+    await showRightPanel(page)
     await expect(page.getByText('https://example.test/qa.hosts')).toBeVisible()
     await expect(page.locator('#root').getByText('1 hour', { exact: true })).toBeVisible()
     await expect
@@ -110,6 +113,7 @@ test.describe('remote hosts', () => {
     })
 
     await page.locator('[data-id="remote-blocklist"]').click()
+    await showRightPanel(page)
     await expect(page.getByText('2026-05-08 10:00:00')).toBeVisible()
     await page.getByRole('button', { name: 'Refresh' }).click()
 

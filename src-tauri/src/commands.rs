@@ -757,7 +757,10 @@ pub async fn cmd_clear_history(
 // ---- find window -----------------------------------------------------------
 
 #[tauri::command]
-pub async fn find_show<R: Runtime>(app: AppHandle<R>, _args: Args) -> Result<Value, String> {
+pub async fn find_show<R: Runtime + 'static>(
+    app: AppHandle<R>,
+    _args: Args,
+) -> Result<Value, String> {
     find::show_find_window(&app).map_err(|e| e.to_string())?;
     Ok(Value::Null)
 }
@@ -779,6 +782,48 @@ pub async fn find_by(
     };
     let items = find::find_in_manifest(state.inner(), &keyword, &options)?;
     serde_json::to_value(items).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn find_replace_one(
+    state: State<'_, AppState>,
+    args: Args,
+) -> Result<Value, String> {
+    let request = args
+        .into_iter()
+        .next()
+        .ok_or_else(|| "find_replace_one: args[0] must be a request object".to_string())
+        .and_then(|v| {
+            serde_json::from_value(v)
+                .map_err(|e| format!("find_replace_one: invalid request: {e}"))
+        })?;
+    let replaced = find::replace_one_in_manifest(state.inner(), request)?;
+    Ok(json!(replaced))
+}
+
+#[tauri::command]
+pub async fn find_replace_all(
+    state: State<'_, AppState>,
+    args: Args,
+) -> Result<Value, String> {
+    let keyword = args
+        .first()
+        .and_then(Value::as_str)
+        .ok_or_else(|| "find_replace_all: args[0] must be a string keyword".to_string())?
+        .to_string();
+    let options: FindOptions = match args.get(1) {
+        Some(v) if !v.is_null() => serde_json::from_value(v.clone())
+            .map_err(|e| format!("find_replace_all: invalid options: {e}"))?,
+        _ => FindOptions::default(),
+    };
+    let replace_to = args
+        .get(2)
+        .and_then(Value::as_str)
+        .ok_or_else(|| "find_replace_all: args[2] must be a string replacement".to_string())?
+        .to_string();
+
+    let outcome = find::replace_all_in_manifest(state.inner(), &keyword, &options, &replace_to)?;
+    serde_json::to_value(outcome).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

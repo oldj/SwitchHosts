@@ -44,6 +44,11 @@ pub struct AppConfig {
     pub multi_chose_folder_switch_all: bool,
     pub tray_mini_window: bool,
 
+    // find window
+    pub find_is_regexp: bool,
+    pub find_is_ignore_case: bool,
+    pub find_result_column_widths: Vec<u32>,
+
     // proxy
     pub use_proxy: bool,
     pub proxy_protocol: String, // "http" | "https"
@@ -63,7 +68,7 @@ impl Default for AppConfig {
         Self {
             left_panel_show: true,
             left_panel_width: 270,
-            right_panel_show: true,
+            right_panel_show: false,
             right_panel_width: 240,
             use_system_window_frame: false,
 
@@ -80,6 +85,10 @@ impl Default for AppConfig {
             hide_dock_icon: false,
             multi_chose_folder_switch_all: false,
             tray_mini_window: true,
+
+            find_is_regexp: false,
+            find_is_ignore_case: false,
+            find_result_column_widths: Vec::new(),
 
             use_proxy: false,
             proxy_protocol: "http".to_string(),
@@ -98,6 +107,15 @@ impl AppConfig {
     fn normalize(&mut self) {
         if !matches!(self.theme.as_str(), "light" | "dark" | "system") {
             self.theme = "system".to_string();
+        }
+        if !self.find_result_column_widths.is_empty() {
+            if self.find_result_column_widths.len() != 3 {
+                self.find_result_column_widths.clear();
+            } else {
+                for width in &mut self.find_result_column_widths {
+                    *width = (*width).max(60);
+                }
+            }
         }
     }
 
@@ -237,5 +255,25 @@ mod tests {
         cfg.apply_partial(&json!({ "theme": "sepia" })).unwrap();
 
         assert_eq!(cfg.theme, "system");
+    }
+
+    #[test]
+    fn apply_partial_normalizes_find_result_column_widths() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "find_result_column_widths": [20, 80, 40] }))
+            .unwrap();
+
+        assert_eq!(cfg.find_result_column_widths, vec![60, 80, 60]);
+    }
+
+    #[test]
+    fn apply_partial_clears_malformed_find_result_column_widths() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "find_result_column_widths": [120, 80] }))
+            .unwrap();
+
+        assert!(cfg.find_result_column_widths.is_empty());
     }
 }

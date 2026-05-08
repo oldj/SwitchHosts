@@ -16,6 +16,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core'
+import DescriptionText from '@renderer/components/DescriptionText'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SideDrawer from '@renderer/components/SideDrawer'
 import Transfer from '@renderer/components/Transfer'
@@ -238,9 +239,9 @@ const EditHostsInfo = () => {
             { value: '2', label: lang.choice_mode_multiple },
           ]}
         />
-        <Text mt="8px" size="sm" c="dimmed">
+        <DescriptionText mt="8px">
           {choiceModeEffect[folderMode]}
-        </Text>
+        </DescriptionText>
       </Box>
     )
   }

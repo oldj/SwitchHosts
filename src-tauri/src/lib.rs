@@ -290,6 +290,8 @@ pub fn run() {
             // find window
             commands::find_show,
             commands::find_by,
+            commands::find_replace_one,
+            commands::find_replace_all,
             commands::find_add_history,
             commands::find_get_history,
             commands::find_set_history,

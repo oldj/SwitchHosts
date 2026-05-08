@@ -86,6 +86,22 @@ export async function clearMockCalls(page: Page): Promise<void> {
   await page.evaluate(() => window.__SWITCHHOSTS_E2E__.clearCalls())
 }
 
+export async function showRightPanel(page: Page): Promise<void> {
+  const state = await getMockState(page)
+  if (!state.configs.right_panel_show) {
+    await page.getByLabel('Toggle right panel').click()
+  }
+  const rightPanel = page.getByTestId('right-panel')
+  await expect(rightPanel).toHaveAttribute('data-open', 'true')
+  await expect
+    .poll(async () => {
+      const box = await rightPanel.boundingBox()
+      const viewport = page.viewportSize()
+      return !!box && !!viewport && box.x >= 0 && box.x + box.width <= viewport.width
+    })
+    .toBe(true)
+}
+
 export function firstInvokeArg(call: MockCall): unknown {
   return call.args?.args?.[0]
 }
@@ -121,6 +137,7 @@ export async function chooseSelectOption(
 
 export async function moveLocalDevToTrashcan(page: Page) {
   await page.locator('[data-id="local-dev"]').click()
+  await showRightPanel(page)
   await page.getByRole('button', { name: 'Edit' }).click()
   await page.getByRole('button', { name: 'Move to Trashcan' }).click()
 
