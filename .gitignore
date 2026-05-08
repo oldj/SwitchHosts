@@ -27,6 +27,8 @@ src/renderer/dist
 
 tmp
 test/tmp
+playwright-report
+test-results
 plan.md
 
 .env

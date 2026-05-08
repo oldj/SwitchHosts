@@ -28,6 +28,13 @@ const SwitchButton = (props: Props) => {
     }
   }
 
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+
+    e.preventDefault()
+    onClick()
+  }
+
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- mirror props into local state; on is also mutated by onClick for optimistic UI */
     setIsOn(on)
@@ -38,7 +45,12 @@ const SwitchButton = (props: Props) => {
   return (
     <div
       className={clsx(styles.root, isOn && styles.on, isDisabled && styles.disabled)}
+      role="switch"
+      aria-checked={isOn}
+      aria-disabled={isDisabled || undefined}
+      tabIndex={isDisabled ? -1 : 0}
       onClick={onClick}
+      onKeyDown={onKeyDown}
     >
       <div className={styles.handler} />
     </div>

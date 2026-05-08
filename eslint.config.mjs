@@ -95,4 +95,12 @@ export default tseslint.config(
       '@typescript-eslint/naming-convention': 'off',
     },
   },
+  {
+    files: ['e2e/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+    },
+  },
 )
