@@ -8,6 +8,8 @@
   "scripts": {
     "pretest": "rimraf ./test/tmp",
     "test": "vitest --config ./vitest.config.mts --watch=false",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "test:all": "npm run typecheck && npm test && npm run test:rust",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",

@@ -17,6 +17,7 @@ use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::{AppHandle, Emitter, Manager, Runtime, State, WebviewWindow, Wry};
 use tauri_plugin_dialog::DialogExt;
 
+use crate::app_menu;
 use crate::find::{self, FindHistoryEntry, FindOptions};
 use crate::hosts_apply::{self, ApplyHistoryItem, HostsApplyError};
 use crate::http;
@@ -200,15 +201,16 @@ pub async fn config_update(
 ///
 /// - `http_api_on` / `http_api_only_local` → start, stop or rebind
 ///   the local HTTP API server.
+/// - `locale` → rebuild native application and tray menus.
+/// - `hide_dock_icon` → apply the macOS Dock policy and update the tray
+///   toggle label.
 ///
-/// More keys will land here as Phase 2 progresses (theme switch,
-/// hide_dock_icon, etc.). Always reads the *fresh* config snapshot
-/// rather than trusting the patch, so a rebind picks up both keys
-/// even if only one of them was in the patch.
+/// Always reads the *fresh* config snapshot rather than trusting the
+/// patch, so a rebind picks up both keys even if only one of them was
+/// in the patch.
 ///
-/// Pinned to `Wry` because the only side effect today is the HTTP
-/// API server, which is itself pinned to `Wry` (see the comment in
-/// `http_api.rs`).
+/// Pinned to `Wry` because the HTTP API server is itself pinned to
+/// `Wry` (see the comment in `http_api.rs`).
 fn apply_side_effects(
     app: &AppHandle<Wry>,
     state: &AppState,
@@ -217,6 +219,28 @@ fn apply_side_effects(
     let touches_http_api = touched_keys
         .iter()
         .any(|k| *k == "http_api_on" || *k == "http_api_only_local");
+    let touches_locale = touched_keys.iter().any(|k| *k == "locale");
+
+    if touches_locale {
+        if let Err(e) = app_menu::refresh(app) {
+            log::warn!("failed to refresh app menu: {e}");
+        }
+        tray::refresh_menu(app);
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        let touches_hide_dock_icon = touched_keys.iter().any(|k| *k == "hide_dock_icon");
+        if touches_hide_dock_icon {
+            let hide = {
+                let cfg = state.config.lock().expect("config mutex poisoned");
+                cfg.hide_dock_icon
+            };
+            lifecycle::apply_dock_icon_policy(app, hide);
+            tray::refresh_menu(app);
+        }
+    }
+
     if touches_http_api {
         let (on, only_local) = {
             let cfg = state.config.lock().expect("config mutex poisoned");

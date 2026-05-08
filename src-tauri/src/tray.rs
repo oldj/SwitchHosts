@@ -4,9 +4,9 @@
 //!
 //! - Tray icon present on every platform. macOS uses the template
 //!   variant so the OS recolours it for light/dark menu bars.
-//! - Right-click (or any-click on Linux) opens a context menu with
-//!   "Show Main Window", a disabled version label, an optional
-//!   macOS-only "Hide/Show Dock Icon" toggle, and "Quit".
+//! - Right-click (or any-click on Linux) opens a context menu with a
+//!   main-window item, a disabled version label, an optional macOS-only
+//!   Dock toggle, and a quit item.
 //! - Left-click on macOS/Windows shows the main window directly. The
 //!   tray mini-window (`/tray` route) is deferred to P2.B.2.
 //! - `update_tray_title` command (in commands.rs) walks the manifest
@@ -29,6 +29,7 @@ use tauri::{
     WindowEvent,
 };
 
+use crate::i18n::menu_labels;
 use crate::lifecycle::{self, MAIN_WINDOW_LABEL};
 use crate::storage::AppState;
 
@@ -166,12 +167,13 @@ fn load_icon() -> Image<'static> {
 }
 
 fn build_menu<R: Runtime>(app: &AppHandle<R>) -> Result<Menu<R>, tauri::Error> {
-    let show_main = MenuItemBuilder::with_id(MENU_ID_SHOW_MAIN, "Show Main Window")
-        .build(app)?;
+    let labels = menu_labels(app);
+    let show_main =
+        MenuItemBuilder::with_id(MENU_ID_SHOW_MAIN, labels.show_main_window).build(app)?;
     let version = MenuItemBuilder::with_id(MENU_ID_VERSION, VERSION_LABEL)
         .enabled(false)
         .build(app)?;
-    let quit = MenuItemBuilder::with_id(MENU_ID_QUIT, "Quit").build(app)?;
+    let quit = MenuItemBuilder::with_id(MENU_ID_QUIT, labels.quit).build(app)?;
 
     let menu_builder = MenuBuilder::new(app)
         .item(&show_main)
@@ -182,9 +184,9 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> Result<Menu<R>, tauri::Error> {
     let menu_builder = {
         let hide_dock = read_hide_dock_icon(app);
         let label = if hide_dock {
-            "Show Dock Icon"
+            labels.show_dock_icon
         } else {
-            "Hide Dock Icon"
+            labels.hide_dock_icon
         };
         let toggle = MenuItemBuilder::with_id(MENU_ID_TOGGLE_DOCK, label).build(app)?;
         menu_builder.item(&toggle).separator()
@@ -265,9 +267,7 @@ fn toggle_dock_icon<R: Runtime>(app: &AppHandle<R>) {
 }
 
 /// Rebuild and reattach the tray menu. Cheap — only a few items.
-/// Called whenever an item label depends on config that just changed
-/// (currently just `hide_dock_icon` on macOS).
-#[cfg(target_os = "macos")]
+/// Called whenever an item label depends on config that just changed.
 pub fn refresh_menu<R: Runtime>(app: &AppHandle<R>) {
     let Some(tray) = app.tray_by_id(TRAY_ID) else {
         return;

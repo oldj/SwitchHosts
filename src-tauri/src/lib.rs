@@ -4,6 +4,7 @@ mod find;
 mod hosts_apply;
 mod http;
 mod http_api;
+mod i18n;
 mod import_export;
 mod lifecycle;
 mod migration;
