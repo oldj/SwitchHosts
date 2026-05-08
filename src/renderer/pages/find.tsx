@@ -6,7 +6,17 @@
 import { HostsType } from '@common/data'
 import events from '@common/events'
 import { IFindItem, IFindPosition, IFindShowSourceParam } from '@common/types'
-import { ActionIcon, Box, Button, Checkbox, Group, Loader, Stack, TextInput } from '@mantine/core'
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Checkbox,
+  Group,
+  Loader,
+  ScrollArea,
+  Stack,
+  TextInput,
+} from '@mantine/core'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
@@ -343,66 +353,63 @@ const FindPage = () => {
 
   return (
     <div className={styles.root}>
-      <Stack gap={0} h="100%">
-        <TextInput
-          autoFocus={true}
-          placeholder="keywords"
-          value={keyword}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setKeyword(e.target.value)
-          }}
-          ref={iptKw}
-          leftSection={leftSection(showKeywordHistory)}
-          leftSectionPointerEvents="all"
-          styles={flushedInputStyles}
-        />
-
-        <TextInput
-          placeholder="replace to"
-          value={replaceTo}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setReplaceTo(e.target.value)
-          }}
-          leftSection={leftSection(showReplaceHistory)}
-          leftSectionPointerEvents="all"
-          styles={flushedInputStyles}
-        />
-
-        <Group w="100%" py="8px" px="16px" gap="16px">
-          <Checkbox
-            checked={isRegExp}
-            onChange={(e) => setIsRegExp(e.target.checked)}
-            label={lang.regexp}
+      <Stack gap={0} h="100%" className={styles.layout}>
+        <Stack gap={0} className={styles.content}>
+          <TextInput
+            autoFocus={true}
+            placeholder="keywords"
+            value={keyword}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setKeyword(e.target.value)
+            }}
+            ref={iptKw}
+            leftSection={leftSection(showKeywordHistory)}
+            leftSectionPointerEvents="all"
+            styles={flushedInputStyles}
           />
-          <Checkbox
-            checked={isIgnoreCase}
-            onChange={(e) => setIsIgnoreCase(e.target.checked)}
-            label={lang.ignore_case}
+
+          <TextInput
+            placeholder="replace to"
+            value={replaceTo}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setReplaceTo(e.target.value)
+            }}
+            leftSection={leftSection(showReplaceHistory)}
+            leftSectionPointerEvents="all"
+            styles={flushedInputStyles}
           />
-        </Group>
 
-        <Box w="100%" style={{ borderTop: '1px solid var(--swh-border-color-0)' }}>
-          <div className={styles.result_row}>
-            <div>{lang.match}</div>
-            <div>{lang.title}</div>
-            <div>{lang.line}</div>
-          </div>
-        </Box>
+          <Group w="100%" py="8px" px="16px" gap="16px">
+            <Checkbox
+              checked={isRegExp}
+              onChange={(e) => setIsRegExp(e.target.checked)}
+              label={lang.regexp}
+            />
+            <Checkbox
+              checked={isIgnoreCase}
+              onChange={(e) => setIsIgnoreCase(e.target.checked)}
+              label={lang.ignore_case}
+            />
+          </Group>
 
-        <Box
-          w="100%"
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            backgroundColor: 'var(--swh-editor-read-only-bg)',
-          }}
-        >
-          {findPositions.map((item, idx) => (
-            <ResultRow key={`${item.item_id}-${idx}`} data={item} index={idx} />
-          ))}
-        </Box>
+          <Box w="100%" className={styles.result_header}>
+            <div className={styles.result_row}>
+              <div>{lang.match}</div>
+              <div>{lang.title}</div>
+              <div>{lang.line}</div>
+            </div>
+          </Box>
 
-        <Group w="100%" py="8px" px="16px" gap="16px">
+          <ScrollArea className={styles.result_list} scrollbars="y" type="hover">
+            <div className={styles.result_list_inner}>
+              {findPositions.map((item, idx) => (
+                <ResultRow key={`${item.item_id}-${idx}`} data={item} index={idx} />
+              ))}
+            </div>
+          </ScrollArea>
+        </Stack>
+
+        <Group className={styles.status_bar} w="100%" py="8px" px="16px" gap="16px">
           {isSearching ? (
             <Loader size="sm" />
           ) : (
@@ -430,7 +437,7 @@ const FindPage = () => {
             {lang.replace}
           </Button>
 
-          <Group gap={0}>
+          <ActionIcon.Group>
             <ActionIcon
               aria-label="previous"
               variant="outline"
@@ -457,7 +464,7 @@ const FindPage = () => {
             >
               <IoArrowForwardOutline />
             </ActionIcon>
-          </Group>
+          </ActionIcon.Group>
         </Group>
       </Stack>
     </div>
