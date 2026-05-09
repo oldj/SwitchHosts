@@ -50,6 +50,10 @@ declare global {
       clearCalls: () => void
       failNextApply: (result?: { code?: string; message?: string }) => void
       failNextRefresh: (result?: { code?: string; message?: string }) => void
+      delayNextImport: (ms?: number) => void
+      failNextImport: (result?: string | false | null) => void
+      delayNextImportFromUrl: (ms?: number) => void
+      failNextImportFromUrl: (result?: string | false | null) => void
     }
   }
 }

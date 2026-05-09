@@ -4,6 +4,8 @@
 
   const normalizeLineEndings = (value) => value.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
 
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
   const flatten = (items) =>
     items.flatMap((item) => [item, ...flatten(Array.isArray(item.children) ? item.children : [])])
 
@@ -253,6 +255,18 @@
         ...result,
       }
     },
+    delayNextImport: (ms = 300) => {
+      state.nextImportDelayMs = ms
+    },
+    failNextImport: (result = 'mock_import_error') => {
+      state.nextImportResult = result
+    },
+    delayNextImportFromUrl: (ms = 300) => {
+      state.nextImportFromUrlDelayMs = ms
+    },
+    failNextImportFromUrl: (result = 'mock_import_url_error') => {
+      state.nextImportFromUrlResult = result
+    },
   }
 
   window.__TAURI_EVENT_PLUGIN_INTERNALS__ = {
@@ -393,8 +407,18 @@
           }
           return refreshRemote(params[0])
         case 'export_data':
-          return '/Users/e2e/exports/swh_data.json'
+          return '/Users/e2e/exports/switchhosts_20260509_121436.789.json'
         case 'import_data':
+          if (state.nextImportDelayMs) {
+            const ms = state.nextImportDelayMs
+            state.nextImportDelayMs = 0
+            await delay(ms)
+          }
+          if (Object.prototype.hasOwnProperty.call(state, 'nextImportResult')) {
+            const result = state.nextImportResult
+            delete state.nextImportResult
+            return result
+          }
           state.list = [
             {
               id: 'imported-local',
@@ -430,6 +454,16 @@
           state.trashcan = []
           return true
         case 'import_data_from_url':
+          if (state.nextImportFromUrlDelayMs) {
+            const ms = state.nextImportFromUrlDelayMs
+            state.nextImportFromUrlDelayMs = 0
+            await delay(ms)
+          }
+          if (Object.prototype.hasOwnProperty.call(state, 'nextImportFromUrlResult')) {
+            const result = state.nextImportFromUrlResult
+            delete state.nextImportFromUrlResult
+            return result
+          }
           state.list = [
             {
               id: 'imported-url',
@@ -457,6 +491,7 @@
         case 'hide_main_window':
         case 'quit_app':
         case 'open_url':
+        case 'show_item_in_folder':
         case 'popup_menu':
           return true
         case 'check_update':

@@ -8,7 +8,15 @@ import events from '@common/events'
 import { ActionIcon, Menu, type MenuProps, ScrollArea, Tooltip } from '@mantine/core'
 import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
 import { actions, agent } from '@renderer/core/agent'
-import { getErrorMessage, showErrorNotification, showSuccessNotification } from '@renderer/core/notify'
+import {
+  getErrorMessage,
+  hideAppNotification,
+  showErrorNotification,
+  showLoadingNotification,
+  showSuccessNotification,
+  updateErrorNotification,
+  updateSuccessNotification,
+} from '@renderer/core/notify'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import {
@@ -118,13 +126,32 @@ const ConfigMenu = (props: IProps) => {
             <Menu.Item
               leftSection={<IconUpload size={iconSize} stroke={strokeWidth} />}
               onClick={async () => {
-                const r = await actions.exportData()
-                if (r === null) {
-                  return
-                } else if (r === false) {
-                  console.error(lang.import_fail)
-                } else {
-                  console.log(lang.export_done)
+                try {
+                  const r = await actions.exportData()
+                  if (r === null) {
+                    return
+                  } else if (r === false) {
+                    showErrorNotification({
+                      title: lang.export,
+                      message: lang.fail,
+                    })
+                  } else if (typeof r === 'string') {
+                    showSuccessNotification({
+                      title: lang.export,
+                      message: lang.export_done,
+                    })
+
+                    try {
+                      await actions.showItemInFolder(r)
+                    } catch (error) {
+                      console.error(error)
+                    }
+                  }
+                } catch (error) {
+                  showErrorNotification({
+                    title: lang.export,
+                    message: getErrorMessage(error, lang.fail),
+                  })
                 }
               }}
             >
@@ -133,20 +160,39 @@ const ConfigMenu = (props: IProps) => {
             <Menu.Item
               leftSection={<IconDownload size={iconSize} stroke={strokeWidth} />}
               onClick={async () => {
-                const r = await actions.importData()
-                if (r === null) {
-                  return
-                } else if (r === true) {
-                  console.log(lang.import_done)
-                  await loadHostsData()
-                  setCurrentHosts(null)
-                } else {
-                  let description = lang.import_fail
-                  if (typeof r === 'string') {
-                    description += ` [${r}]`
-                  }
+                const notificationId = showLoadingNotification({
+                  title: lang.import,
+                  message: lang.loading,
+                })
 
-                  console.error(description)
+                try {
+                  const r = await actions.importData()
+                  if (r === null) {
+                    hideAppNotification(notificationId)
+                    return
+                  } else if (r === true) {
+                    await loadHostsData()
+                    setCurrentHosts(null)
+                    updateSuccessNotification(notificationId, {
+                      title: lang.import,
+                      message: lang.import_done,
+                    })
+                  } else {
+                    let description = lang.import_fail
+                    if (typeof r === 'string') {
+                      description += ` [${r}]`
+                    }
+
+                    updateErrorNotification(notificationId, {
+                      title: lang.import,
+                      message: description,
+                    })
+                  }
+                } catch (error) {
+                  updateErrorNotification(notificationId, {
+                    title: lang.import,
+                    message: getErrorMessage(error, lang.import_fail),
+                  })
                 }
               }}
             >

@@ -38,3 +38,43 @@ export function showErrorNotification({ title, message }: AppNotificationOptions
     autoClose: 6000,
   })
 }
+
+export function showLoadingNotification({ title, message }: AppNotificationOptions): string {
+  return notifications.show({
+    title,
+    message,
+    loading: true,
+    autoClose: false,
+    withCloseButton: false,
+  })
+}
+
+export function updateSuccessNotification(id: string, { title, message }: AppNotificationOptions) {
+  notifications.update({
+    id,
+    title,
+    message,
+    color: 'green',
+    icon: createElement(IconCheck, { size: 18, stroke: 1.8 }),
+    loading: false,
+    autoClose: 3500,
+    withCloseButton: true,
+  })
+}
+
+export function updateErrorNotification(id: string, { title, message }: AppNotificationOptions) {
+  notifications.update({
+    id,
+    title,
+    message,
+    color: 'red',
+    icon: createElement(IconX, { size: 18, stroke: 1.8 }),
+    loading: false,
+    autoClose: 6000,
+    withCloseButton: true,
+  })
+}
+
+export function hideAppNotification(id: string) {
+  notifications.hide(id)
+}
