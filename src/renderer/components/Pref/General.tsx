@@ -170,6 +170,16 @@ const General = (props: IProps) => {
       </Box>
 
       <Box w="100%">
+        <Checkbox
+          checked={data.refresh_remote_hosts_on_startup}
+          onChange={(e) => onChange({ refresh_remote_hosts_on_startup: e.target.checked })}
+          label={lang.refresh_remote_hosts_on_startup}
+          description={lang.refresh_remote_hosts_on_startup_desc}
+          styles={checkboxDescriptionStyles}
+        />
+      </Box>
+
+      <Box w="100%">
         <Stack gap="16px">
           <Checkbox
             checked={data.tray_mini_window}

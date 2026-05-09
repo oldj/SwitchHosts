@@ -80,6 +80,15 @@ pub async fn refresh_one<R: Runtime>(
     state: &AppState,
     id: &str,
 ) -> Result<RefreshOutcome, RefreshError> {
+    refresh_one_inner(app, state, id, true).await
+}
+
+async fn refresh_one_inner<R: Runtime>(
+    app: &AppHandle<R>,
+    state: &AppState,
+    id: &str,
+    emit_content_changed: bool,
+) -> Result<RefreshOutcome, RefreshError> {
     // Step 1: snapshot the node from the current manifest. No lock —
     // we only need to read.
     let manifest = Manifest::load(&state.paths)
@@ -140,7 +149,7 @@ pub async fn refresh_one<R: Runtime>(
         "hosts_refreshed",
         json!({ "_args": [updated_snapshot.clone()] }),
     );
-    if content_changed {
+    if content_changed && emit_content_changed {
         let _ = app.emit(
             "hosts_content_changed",
             json!({ "_args": [id] }),
@@ -169,12 +178,40 @@ pub async fn refresh_all<R: Runtime>(
         }
     };
     let ids = collect_remote_ids(&manifest.root);
+    refresh_many(app, state, ids).await
+}
+
+async fn refresh_many<R: Runtime>(
+    app: &AppHandle<R>,
+    state: &AppState,
+    ids: Vec<String>,
+) -> Vec<(String, Result<RefreshOutcome, RefreshError>)> {
     let mut results = Vec::with_capacity(ids.len());
+    let mut changed_ids = Vec::new();
     for id in ids {
-        let outcome = refresh_one(app, state, &id).await;
+        let outcome = refresh_one_inner(app, state, &id, false).await;
+        if matches!(&outcome, Ok(RefreshOutcome::Updated { .. })) {
+            changed_ids.push(id.clone());
+        }
         results.push((id, outcome));
     }
+    emit_content_changed_batch(app, &changed_ids);
     results
+}
+
+fn emit_content_changed_batch<R: Runtime>(app: &AppHandle<R>, ids: &[String]) {
+    if ids.is_empty() {
+        return;
+    }
+    let _ = app.emit("hosts_content_changed_batch", json!({ "_args": [ids] }));
+}
+
+fn log_refresh_errors(results: &[(String, Result<RefreshOutcome, RefreshError>)]) {
+    for (id, outcome) in results {
+        if let Err(e) = outcome {
+            log::warn!("{id}: {e:?}");
+        }
+    }
 }
 
 // ---- background scanner ----------------------------------------------------
@@ -192,6 +229,16 @@ pub fn start_background_scanner<R: Runtime>(app: AppHandle<R>) -> Arc<AtomicBool
         // burst (manifest reload, config push) doesn't compete with a
         // potentially-blocking HTTP fan-out.
         tokio::time::sleep(Duration::from_secs(5)).await;
+        if should_refresh_all_on_startup(&app) {
+            let state_guard = app.state::<AppState>();
+            let results = refresh_all(&app, state_guard.inner()).await;
+            log_refresh_errors(&results);
+            let _ = app.emit("reload_list", json!({ "_args": [] }));
+            tokio::time::sleep(SCAN_INTERVAL).await;
+            if stop_for_task.load(Ordering::Relaxed) {
+                return;
+            }
+        }
         loop {
             if stop_for_task.load(Ordering::Relaxed) {
                 break;
@@ -218,14 +265,20 @@ async fn scan_once<R: Runtime>(app: &AppHandle<R>) {
     if due_ids.is_empty() {
         return;
     }
-    for id in due_ids {
-        if let Err(e) = refresh_one(app, state, &id).await {
-            log::warn!("{id}: {e:?}");
-        }
-    }
+    let results = refresh_many(app, state, due_ids).await;
+    log_refresh_errors(&results);
     // Mirror the Electron `broadcast(events.reload_list)` at the end
     // of every scan so List components rerun loadHostsData.
     let _ = app.emit("reload_list", json!({ "_args": [] }));
+}
+
+fn should_refresh_all_on_startup<R: Runtime>(app: &AppHandle<R>) -> bool {
+    let state_guard = app.state::<AppState>();
+    state_guard
+        .config
+        .lock()
+        .map(|cfg| cfg.refresh_remote_hosts_on_startup)
+        .unwrap_or(false)
 }
 
 // ---- fetch -----------------------------------------------------------------

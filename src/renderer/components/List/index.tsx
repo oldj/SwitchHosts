@@ -16,7 +16,7 @@ import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import clsx from 'clsx'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
 import styles from './index.module.scss'
 import ListItem from './ListItem'
@@ -34,6 +34,10 @@ const List = (props: Props) => {
     isTray ? [] : [currentHosts?.id || '0'],
   )
   const [showList, setShowList] = useState<IHostsListObject[]>([])
+  const remoteContentApplyRef = useRef({
+    isApplying: false,
+    pendingIds: new Set<string>(),
+  })
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- showList also mutated by drag onChange; keep as state synced from hostsData */
@@ -120,6 +124,46 @@ const List = (props: Props) => {
     return result.success
   }
 
+  const applyChangedRemoteHostsToSystem = async (ids: string[]) => {
+    if (isTray) return
+
+    const applyState = remoteContentApplyRef.current
+    for (const id of ids) {
+      if (id) applyState.pendingIds.add(id)
+    }
+    if (applyState.pendingIds.size === 0 || applyState.isApplying) {
+      return
+    }
+
+    applyState.isApplying = true
+    try {
+      while (applyState.pendingIds.size > 0) {
+        const changedIds = Array.from(applyState.pendingIds)
+        applyState.pendingIds.clear()
+
+        const list: IHostsListObject[] = await actions.getList()
+        const hasEnabledChangedHosts = changedIds.some((id) => {
+          const hosts = findItemById(list, id)
+          return !!hosts?.on
+        })
+        if (!hasEnabledChangedHosts) continue
+
+        await writeHostsToSystem(list)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      applyState.isApplying = false
+    }
+
+    // Race guard: an event arriving after `while` exits but before we
+    // clear `isApplying` would have early-returned (saw isApplying=true)
+    // and left ids stranded in pendingIds. Re-trigger if so.
+    if (applyState.pendingIds.size > 0) {
+      applyChangedRemoteHostsToSystem([]).catch((e) => console.error(e))
+    }
+  }
+
   useOnBroadcast(
     events.toggle_item,
     (id: string, on: boolean) => {
@@ -175,14 +219,23 @@ const List = (props: Props) => {
 
   useOnBroadcast(events.reload_list, loadHostsData)
 
-  useOnBroadcast(events.hosts_content_changed, async (hostsId: string) => {
-    const list: IHostsListObject[] = await actions.getList()
-    const hosts = findItemById(list, hostsId)
-    if (!hosts || !hosts.on) return
+  useOnBroadcast(
+    events.hosts_content_changed,
+    (hostsId: string) => {
+      applyChangedRemoteHostsToSystem([hostsId]).catch((e) => console.error(e))
+    },
+    [currentHosts, hostsData, isTray, lang],
+  )
 
-    // 当前 hosts 是开启状态，且内容发生了变化
-    await writeHostsToSystem(list)
-  })
+  useOnBroadcast(
+    events.hosts_content_changed_batch,
+    (hostsIds: string[]) => {
+      applyChangedRemoteHostsToSystem(Array.isArray(hostsIds) ? hostsIds : []).catch((e) =>
+        console.error(e),
+      )
+    },
+    [currentHosts, hostsData, isTray, lang],
+  )
 
   useOnBroadcast(events.show_source, async (params: IFindShowSourceParam) => {
     agent.broadcast(events.select_hosts, params.item_id)

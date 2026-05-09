@@ -22,7 +22,8 @@ export default {
   choice_mode: 'Tryb wyboru',
   choice_mode_default: 'Domyślny',
   choice_mode_default_effect: 'Dziedziczy globalny tryb wyboru z preferencji.',
-  choice_mode_desc: 'Obowiązuje tylko dla elementu na górze, każdy folder może mieć własny tryb wyboru.',
+  choice_mode_desc:
+    'Obowiązuje tylko dla elementu na górze, każdy folder może mieć własny tryb wyboru.',
   choice_mode_multiple: 'Wiele',
   choice_mode_multiple_effect:
     'Wiele bezpośrednich elementów w tym folderze może być włączonych jednocześnie.',
@@ -78,7 +79,8 @@ export default {
   hour: 'godzina',
   hours: 'godziny',
   http_api_on: 'HTTP API włączone',
-  http_api_on_desc: 'Działa na porcie {0}, może być używane przez oprogramowanie stron trzecich, takie jak Alfred do przełączania hostów.',
+  http_api_on_desc:
+    'Działa na porcie {0}, może być używane przez oprogramowanie stron trzecich, takie jak Alfred do przełączania hostów.',
   http_api_only_local: 'HTTP API nasłuchuje tylko na 127.0.0.1',
   http_api_start_failed: 'Uruchomienie lokalnego HTTP API nie powiodło się: {0}',
   ignore_case: 'Ignoruj wielkość liter',
@@ -99,7 +101,8 @@ export default {
   loading: 'Ładowanie...',
   local: 'Lokalny',
   match: 'Dopasuj',
-  migrate_confirm: 'SwitchHosts v4.0 używa nowego formatu przechowywania danych, czy chcesz migrować stare dane do nowego formatu?',
+  migrate_confirm:
+    'SwitchHosts v4.0 używa nowego formatu przechowywania danych, czy chcesz migrować stare dane do nowego formatu?',
   migrate_data: 'Migruj dane',
   minimize: 'Minimalizuj',
   minute: 'minuta',
@@ -110,7 +113,8 @@ export default {
   multi_chose_folder_switch_all_desc:
     'Po włączeniu przełączenie folderu przełącza też jego elementy podrzędne; elementy w folderach w trybie pojedynczego wyboru nie są przełączane zbiorczo.',
   need_to_relaunch: 'Wymagane ponowne uruchomienie',
-  need_to_relaunch_after_setting_changed: 'Ustawienie zostało zmienione i wejdzie w życie po ponownym uruchomieniu aplikacji.',
+  need_to_relaunch_after_setting_changed:
+    'Ustawienie zostało zmienione i wejdzie w życie po ponownym uruchomieniu aplikacji.',
   never: 'Nigdy',
   new: 'Nowy',
   new_version_found: 'Znaleziono nową wersję',
@@ -129,16 +133,21 @@ export default {
   read_only: 'Tylko do odczytu',
   redo: 'Powtórz',
   refresh: 'Odśwież',
+  refresh_remote_hosts_on_startup: 'Odśwież zdalne hosts przy starcie',
+  refresh_remote_hosts_on_startup_desc:
+    'Po włączeniu każdy start automatycznie odświeża wszystkie zdalne hosts.',
   regexp: 'Wyrażenie regularne',
   reload: 'Załaduj ponownie',
   remote: 'Zdalny',
   remove_duplicate_records: 'Usuń zduplikowane rekordy',
-  remove_duplicate_records_desc: 'Jeśli domena wskazuje na wiele adresów IP, tylko pierwszy będzie obowiązywać, a podczas stosowania hosts pozostałe zostaną skonwertowane na komentarze.',
+  remove_duplicate_records_desc:
+    'Jeśli domena wskazuje na wiele adresów IP, tylko pierwszy będzie obowiązywać, a podczas stosowania hosts pozostałe zostaną skonwertowane na komentarze.',
   replace: 'Zamień',
   replace_all: 'Zamień wszystko',
   replace_history: 'Historia zamiany',
   reset: 'Resetuj',
-  reset_data_dir_confirm: 'Czy na pewno chcesz przywrócić folder danych do adresu domyślnego ({0})?',
+  reset_data_dir_confirm:
+    'Czy na pewno chcesz przywrócić folder danych do adresu domyślnego ({0})?',
   reset_zoom: 'Resetuj powiększenie',
   rules: 'Reguły',
   search: 'Szukaj',
@@ -157,7 +166,8 @@ export default {
   system_hosts: 'Hosty systemowe',
   system_hosts_history: 'Historia wersji hostów systemowych',
   system_hosts_history_delete_confirm: 'Czy na pewno chcesz usunąć ten element?',
-  system_hosts_history_help: 'Jeśli całkowita liczba rekordów historycznych przekroczy ten limit, najstarszy rekord zostanie usunięty.',
+  system_hosts_history_help:
+    'Jeśli całkowita liczba rekordów historycznych przekroczy ten limit, najstarszy rekord zostanie usunięty.',
   system_hosts_history_limit: 'Maksymalna liczba rekordów: ',
   test: 'Test',
   theme: 'Motyw',
@@ -186,7 +196,8 @@ export default {
   update_ready_desc: 'Wersja {0} została pobrana i jest gotowa do instalacji.',
   url_placeholder: 'http:// lub https:// lub file://',
   usage_data_agree: 'Tak, prześlij anonimowe dane użytkowania',
-  usage_data_help: 'Czy chcesz nam pomóc ulepszyć SwitchHosts, okresowo przesyłając anonimowe dane użytkowania?',
+  usage_data_help:
+    'Czy chcesz nam pomóc ulepszyć SwitchHosts, okresowo przesyłając anonimowe dane użytkowania?',
   usage_data_title: 'Pomóż ulepszać SwitchHosts!',
   use_proxy: 'Użyj proxy',
   use_proxy_desc:

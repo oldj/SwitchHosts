@@ -22,14 +22,12 @@ export default {
   choice_mode: 'Choice Mode',
   choice_mode_default: 'Default',
   choice_mode_default_effect: 'Inherits the global choice mode from Preferences.',
-  choice_mode_desc:
-    'Only applies to top-level items; each folder can set its own choice mode.',
+  choice_mode_desc: 'Only applies to top-level items; each folder can set its own choice mode.',
   choice_mode_multiple: 'Multiple',
   choice_mode_multiple_effect:
     'Multiple items directly inside this folder can be enabled at the same time.',
   choice_mode_single: 'Single',
-  choice_mode_single_effect:
-    'Only one item directly inside this folder can be enabled at a time.',
+  choice_mode_single_effect: 'Only one item directly inside this folder can be enabled at a time.',
   choices: 'Choices',
   chosen: 'Chosen',
   clear_history: 'Clear History',
@@ -37,8 +35,7 @@ export default {
   close: 'Close',
   colon: ': ',
   commands: 'Commands',
-  commands_help:
-    'The following system commands will run after hosts are applied:',
+  commands_help: 'The following system commands will run after hosts are applied:',
   commands_title: 'Commands After Hosts Are Applied',
   comment_current_line: 'Comment Current Line',
   content: 'Content',
@@ -134,6 +131,9 @@ export default {
   read_only: 'Read Only',
   redo: 'Redo',
   refresh: 'Refresh',
+  refresh_remote_hosts_on_startup: 'Refresh Remote Hosts at Launch',
+  refresh_remote_hosts_on_startup_desc:
+    'When enabled, every launch automatically refreshes all remote Hosts entries.',
   regexp: 'Regular Expression',
   reload: 'Reload',
   remote: 'Remote',
@@ -163,8 +163,7 @@ export default {
   system: 'System',
   system_hosts: 'System Hosts',
   system_hosts_history: 'System Hosts Version History',
-  system_hosts_history_delete_confirm:
-    'Are you sure you want to delete this item?',
+  system_hosts_history_delete_confirm: 'Are you sure you want to delete this item?',
   system_hosts_history_help:
     'If the total number of historical records exceeds this limit, the oldest record will be deleted.',
   system_hosts_history_limit: 'Maximum Number of Records: ',
@@ -201,17 +200,14 @@ export default {
   use_proxy: 'Use Proxy',
   use_proxy_desc:
     'If enabled, remote Hosts downloads and app update checks/downloads will connect through the proxy.',
-  use_system_window_frame:
-    'Use system window frame; application restart is required.',
+  use_system_window_frame: 'Use system window frame; application restart is required.',
   view: 'View',
   where_is_my_data: 'Where Is My Data Stored?',
   where_is_my_hosts: 'Where Is My Hosts File?',
   window: 'Window',
   write_mode: 'Write Mode',
-  write_mode_append_help:
-    'Append the new records to the end of the system hosts file.',
-  write_mode_overwrite_help:
-    'Overwrite the system hosts file with the new records.',
+  write_mode_append_help: 'Append the new records to the end of the system hosts file.',
+  write_mode_overwrite_help: 'Overwrite the system hosts file with the new records.',
   write_mode_set: 'Set Write Mode',
   your_data_is: 'Your data files are stored in:',
   your_hosts_file_is: 'Your hosts file is located at:',

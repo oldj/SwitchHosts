@@ -12,6 +12,7 @@ export default {
   edit_hosts_info: 'edit_hosts_info',
   find_window_ready: 'find_window_ready',
   hosts_content_changed: 'hosts_content_changed',
+  hosts_content_changed_batch: 'hosts_content_changed_batch',
   hosts_refreshed: 'hosts_refreshed',
   hosts_refreshed_by_id: 'hosts_refreshed_by_id',
   http_api_start_failed: 'http_api_start_failed',

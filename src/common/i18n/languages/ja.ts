@@ -27,8 +27,7 @@ const lang: LanguageDict = {
   choice_mode_desc:
     '最上位階層のhostsにのみ有効で、各フォルダーでは独自に選択モードを設定できます。',
   choice_mode_multiple: '複数',
-  choice_mode_multiple_effect:
-    'このフォルダー直下の複数の項目を同時に有効にできます。',
+  choice_mode_multiple_effect: 'このフォルダー直下の複数の項目を同時に有効にできます。',
   choice_mode_single: '単一',
   choice_mode_single_effect: 'このフォルダー直下の項目は一度に1つだけ有効にできます。',
   choices: '選択',
@@ -134,6 +133,9 @@ const lang: LanguageDict = {
   read_only: '読み取り専用',
   redo: 'やり直し',
   refresh: '更新',
+  refresh_remote_hosts_on_startup: '起動時にリモートhostsを更新',
+  refresh_remote_hosts_on_startup_desc:
+    '有効にすると、起動するたびにすべてのリモートhostsを自動的に更新します。',
   regexp: '正規表現',
   reload: '再読み込み',
   remote: 'リモート',

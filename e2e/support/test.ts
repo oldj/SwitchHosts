@@ -33,6 +33,7 @@ interface MockState {
     proxy_protocol: string
     proxy_host: string
     proxy_port: number
+    refresh_remote_hosts_on_startup: boolean
   }
   contents: Record<string, string>
   systemHosts: string

@@ -140,8 +140,8 @@ test.describe('preferences', () => {
     await preferences.getByRole('checkbox', { name: 'Use Proxy' }).check()
     await preferences.getByRole('combobox').click()
     await page.getByRole('option', { name: 'SOCKS5' }).click()
-    const hostInput = preferences.getByLabel('Host')
-    const portInput = preferences.getByLabel('Port')
+    const hostInput = preferences.getByLabel('Host', { exact: true })
+    const portInput = preferences.getByLabel('Port', { exact: true })
     await hostInput.fill('a'.repeat(260))
     await expect(hostInput).toHaveValue('a'.repeat(253))
     await hostInput.fill('proxy.local')
@@ -204,6 +204,39 @@ test.describe('preferences', () => {
     expect(configPatches(calls)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ launch_at_login: true }),
+      ]),
+    )
+  })
+
+  test('refresh remote hosts at launch defaults off and saves immediately', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
+    await expect(
+      preferences.getByText(
+        'When enabled, every launch automatically refreshes all remote Hosts entries.',
+      ),
+    ).toBeVisible()
+
+    const refreshAtLaunch = preferences.getByLabel('Refresh Remote Hosts at Launch')
+    await expect(refreshAtLaunch).not.toBeChecked()
+
+    await refreshAtLaunch.check()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.configs.refresh_remote_hosts_on_startup
+      })
+      .toBe(true)
+
+    const calls = await getMockCalls(page)
+    expect(configPatches(calls)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ refresh_remote_hosts_on_startup: true }),
       ]),
     )
   })

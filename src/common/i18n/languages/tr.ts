@@ -22,10 +22,10 @@ export default {
   choice_mode: 'Seçim modu',
   choice_mode_default: 'Varsayılan',
   choice_mode_default_effect: 'Tercihlerdeki genel seçim modunu devralır.',
-  choice_mode_desc: 'Sadece en üstteki öğe için geçerlidir, her klasör kendi seçim modunu ayarlayabilir.',
+  choice_mode_desc:
+    'Sadece en üstteki öğe için geçerlidir, her klasör kendi seçim modunu ayarlayabilir.',
   choice_mode_multiple: 'Çoklu',
-  choice_mode_multiple_effect:
-    'Bu klasördeki birden çok doğrudan öğe aynı anda etkin olabilir.',
+  choice_mode_multiple_effect: 'Bu klasördeki birden çok doğrudan öğe aynı anda etkin olabilir.',
   choice_mode_single: 'Tekli',
   choice_mode_single_effect:
     'Bu klasördeki doğrudan öğelerden aynı anda yalnızca biri etkin olabilir.',
@@ -78,7 +78,8 @@ export default {
   hour: 'saat',
   hours: 'saatler',
   http_api_on: 'HTTP API açık',
-  http_api_on_desc: '{0} portunda çalışır, Alfred gibi üçüncü parti yazılımlar tarafından hostları değiştirmek için kullanılabilir.',
+  http_api_on_desc:
+    '{0} portunda çalışır, Alfred gibi üçüncü parti yazılımlar tarafından hostları değiştirmek için kullanılabilir.',
   http_api_only_local: 'HTTP API yalnızca 127.0.0.1’i dinlesin',
   http_api_start_failed: 'Yerel HTTP API başlatılamadı: {0}',
   ignore_case: 'Büyük/küçük harf duyarsız',
@@ -111,7 +112,8 @@ export default {
   multi_chose_folder_switch_all_desc:
     'Etkinleştirildiğinde, bir klasörü değiştirmek alt öğelerini de açar veya kapatır; tek seçim modundaki klasörlerin alt öğeleri toplu olarak değiştirilmez.',
   need_to_relaunch: 'Yeniden başlatılması gerekiyor',
-  need_to_relaunch_after_setting_changed: 'Ayar değiştirildi ve uygulama yeniden başlatıldıktan sonra etkili olacak.',
+  need_to_relaunch_after_setting_changed:
+    'Ayar değiştirildi ve uygulama yeniden başlatıldıktan sonra etkili olacak.',
   never: 'Asla',
   new: 'Yeni',
   new_version_found: 'Yeni sürüm bulundu',
@@ -130,17 +132,21 @@ export default {
   read_only: 'Salt okunur',
   redo: 'Yinele',
   refresh: 'Yenile',
+  refresh_remote_hosts_on_startup: 'Başlangıçta uzak hosts yenile',
+  refresh_remote_hosts_on_startup_desc:
+    'Etkinleştirildiğinde her başlangıçta tüm uzak hosts girdileri otomatik olarak yenilenir.',
   regexp: 'Düzenli ifade',
   reload: 'Yeniden yükle',
   remote: 'Uzak',
   remove_duplicate_records: 'Yinelenen kayıtları kaldır',
   remove_duplicate_records_desc:
-    'Bir alan birden fazla IP\'ye işaret ediyorsa, yalnızca ilki etkili olur; hosts uygulanırken sonrakiler yorumlara dönüştürülür.',
+    "Bir alan birden fazla IP'ye işaret ediyorsa, yalnızca ilki etkili olur; hosts uygulanırken sonrakiler yorumlara dönüştürülür.",
   replace: 'Değiştir',
   replace_all: 'Hepsini değiştir',
   replace_history: 'Değiştirme geçmişi',
   reset: 'Sıfırla',
-  reset_data_dir_confirm: 'Veri klasörünü varsayılan adrese ({0}) geri yüklemek istediğinizden emin misiniz?',
+  reset_data_dir_confirm:
+    'Veri klasörünü varsayılan adrese ({0}) geri yüklemek istediğinizden emin misiniz?',
   reset_zoom: 'Yakınlaştırmayı sıfırla',
   rules: 'Kurallar',
   search: 'Ara',
@@ -189,12 +195,13 @@ export default {
   url_placeholder: 'http:// veya https:// veya file://',
   usage_data_agree: 'Evet, anonimleştirilmiş kullanım verilerini gönder',
   usage_data_help:
-    'Anonim kullanım verilerini periyodik olarak göndererek SwitchHosts\'u iyileştirmemize yardımcı olmak ister misiniz?',
-  usage_data_title: 'SwitchHosts\'u daha iyi hale getirin!',
+    "Anonim kullanım verilerini periyodik olarak göndererek SwitchHosts'u iyileştirmemize yardımcı olmak ister misiniz?",
+  usage_data_title: "SwitchHosts'u daha iyi hale getirin!",
   use_proxy: 'Proxy kullan',
   use_proxy_desc:
     'Etkinleştirilirse uzak Hosts indirmeleri ile uygulama güncellemelerini denetleme ve indirme proxy üzerinden yapılır.',
-  use_system_window_frame: 'Sistem pencere çerçevesini kullanın, uygulamanın yeniden başlatılması gereklidir',
+  use_system_window_frame:
+    'Sistem pencere çerçevesini kullanın, uygulamanın yeniden başlatılması gereklidir',
   view: 'Görüntüle',
   where_is_my_data: 'Verilerim nerede saklanıyor?',
   where_is_my_hosts: 'Hosts dosyam nerede?',

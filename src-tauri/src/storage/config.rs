@@ -57,6 +57,9 @@ pub struct AppConfig {
     pub proxy_host: String,
     pub proxy_port: u32,
 
+    // remote hosts refresh
+    pub refresh_remote_hosts_on_startup: bool,
+
     // http api
     pub http_api_on: bool,
     pub http_api_only_local: bool,
@@ -97,6 +100,8 @@ impl Default for AppConfig {
             proxy_protocol: "http".to_string(),
             proxy_host: String::new(),
             proxy_port: 0,
+
+            refresh_remote_hosts_on_startup: false,
 
             http_api_on: false,
             http_api_only_local: true,
@@ -276,6 +281,23 @@ mod tests {
             .unwrap();
 
         assert!(cfg.launch_at_login);
+    }
+
+    #[test]
+    fn defaults_refresh_remote_hosts_on_startup_to_false() {
+        let cfg = AppConfig::default();
+
+        assert!(!cfg.refresh_remote_hosts_on_startup);
+    }
+
+    #[test]
+    fn apply_partial_accepts_refresh_remote_hosts_on_startup() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "refresh_remote_hosts_on_startup": true }))
+            .unwrap();
+
+        assert!(cfg.refresh_remote_hosts_on_startup);
     }
 
     #[test]
