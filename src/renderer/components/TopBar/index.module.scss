@@ -18,9 +18,8 @@
 
   .title {
     max-width: calc(100vw - ($w + $p) * 2);
+    min-width: 0;
     overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
     margin: 0 auto;
   }
 }
@@ -86,6 +85,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+
+  svg {
+    flex: 0 0 auto;
+  }
+}
+
+.hosts_title {
+  @include common.ell;
+
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 :global(.platform-darwin) {
@@ -97,4 +111,5 @@
 .read_only {
   --badge-bg: var(--swh-top-bar-read-only-bg);
   background-color: var(--swh-top-bar-read-only-bg);
+  flex: 0 0 auto;
 }

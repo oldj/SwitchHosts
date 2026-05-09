@@ -6,7 +6,6 @@ $swh-btn-height: 0.9em;
 .root {
   position: relative;
   display: inline-block;
-  top: -1px;
   width: $swh-btn-width;
   height: $swh-btn-height;
   border-radius: math.div($swh-btn-height, 2);

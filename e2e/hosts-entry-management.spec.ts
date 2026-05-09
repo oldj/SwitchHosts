@@ -60,6 +60,87 @@ test.describe('hosts entry management', () => {
       })
   })
 
+  test('keeps titlebar and detail title icons intact for long hosts titles', async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 720 })
+    const longTitle = `345${'long'.repeat(11)}abc`
+
+    await page.getByLabel('Add').click()
+    const drawer = page.getByRole('dialog')
+    await expect(drawer.getByText('Add Hosts Entry')).toBeVisible()
+
+    await drawer.getByLabel('Hosts Title', { exact: true }).fill(longTitle)
+    await drawer.getByRole('button', { name: 'OK' }).click()
+
+    const titlebarTitle = page.getByTestId('titlebar-current-title-text')
+    await expect(titlebarTitle).toHaveText(longTitle)
+
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const wrapper = document.querySelector<HTMLElement>(
+            '[data-testid="titlebar-current-title"]',
+          )
+          const icon = document.querySelector<HTMLElement>('[data-testid="titlebar-current-icon"]')
+          const title = document.querySelector<HTMLElement>(
+            '[data-testid="titlebar-current-title-text"]',
+          )
+          if (!wrapper || !icon || !title) return null
+
+          const wrapperRect = wrapper.getBoundingClientRect()
+          const iconRect = icon.getBoundingClientRect()
+          const titleRect = title.getBoundingClientRect()
+          const titleStyle = getComputedStyle(title)
+
+          return {
+            iconWidth: Math.round(iconRect.width),
+            iconInsideWrapper:
+              iconRect.left >= wrapperRect.left && iconRect.right <= wrapperRect.right,
+            titleStartsAfterIcon: titleRect.left >= iconRect.right,
+            titleIsClipped: title.scrollWidth > title.clientWidth,
+            titleOverflow: titleStyle.overflow,
+            titleTextOverflow: titleStyle.textOverflow,
+            titleWhiteSpace: titleStyle.whiteSpace,
+          }
+        }),
+      )
+      .toEqual({
+        iconWidth: 16,
+        iconInsideWrapper: true,
+        titleStartsAfterIcon: true,
+        titleIsClipped: true,
+        titleOverflow: 'hidden',
+        titleTextOverflow: 'ellipsis',
+        titleWhiteSpace: 'nowrap',
+      })
+
+    await showRightPanel(page)
+    await expect(page.getByTestId('right-panel-title')).toHaveText(longTitle)
+
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const icon = document.querySelector<HTMLElement>('[data-testid="right-panel-title-icon"]')
+          const svg = icon?.querySelector<SVGElement>('svg')
+          const title = document.querySelector<HTMLElement>('[data-testid="right-panel-title"]')
+          if (!icon || !svg || !title) return null
+
+          const iconRect = icon.getBoundingClientRect()
+          const svgRect = svg.getBoundingClientRect()
+
+          return {
+            iconWidth: Math.round(iconRect.width),
+            svgWidth: Math.round(svgRect.width),
+            titleIsClipped: title.scrollWidth > title.clientWidth,
+          }
+        }),
+      )
+      .toEqual({
+        iconWidth: 16,
+        svgWidth: 16,
+        titleIsClipped: true,
+      })
+  })
+
   test('edits a hosts entry title and refreshes list, header, and details', async ({ page }) => {
     await page.locator('[data-id="local-dev"]').click()
     await showRightPanel(page)

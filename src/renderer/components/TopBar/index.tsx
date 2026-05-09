@@ -45,6 +45,7 @@ const TopBar = (props: IProps) => {
     !showLeftPanel && currentHosts && !isHostsInTrashcan(currentHosts.id)
   const showAppBrand = agent.platform !== 'darwin'
   const showWindowControls = agent.platform !== 'darwin'
+  const currentTitle = currentHosts ? currentHosts.title || lang.untitled : lang.system_hosts
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror prop into local optimistic state; also set by useOnBroadcast
@@ -112,21 +113,37 @@ const TopBar = (props: IProps) => {
         </Flex>
       </div>
 
-      <Box className={styles.title_wrapper} data-tauri-drag-region>
+      <Box
+        className={styles.title_wrapper}
+        data-testid="titlebar-current-title"
+        data-tauri-drag-region
+      >
         <Flex className={styles.title} gap={8} align="center" justify="center">
           {currentHosts ? (
             <>
-              <span className={styles.hosts_icon}>
+              <span className={styles.hosts_icon} data-testid="titlebar-current-icon">
                 <ItemIcon type={currentHosts.type} isCollapsed={!currentHosts.folder_open} />
               </span>
-              <span className={styles.hosts_title}>{currentHosts.title || lang.untitled}</span>
+              <span
+                className={styles.hosts_title}
+                title={currentTitle}
+                data-testid="titlebar-current-title-text"
+              >
+                {currentTitle}
+              </span>
             </>
           ) : (
             <>
-              <span className={styles.hosts_icon}>
+              <span className={styles.hosts_icon} data-testid="titlebar-current-icon">
                 <ItemIcon type="system" />
               </span>
-              <span className={styles.hosts_title}>{lang.system_hosts}</span>
+              <span
+                className={styles.hosts_title}
+                title={currentTitle}
+                data-testid="titlebar-current-title-text"
+              >
+                {currentTitle}
+              </span>
             </>
           )}
 
@@ -149,8 +166,10 @@ const TopBar = (props: IProps) => {
         {showToggleSwitch ? (
           <Flex align="center" mr="12px">
             <SwitchButton
+              ariaLabel="Toggle current hosts"
               on={isOn}
               onChange={(on) => {
+                setIsOn(on)
                 if (currentHosts) agent.broadcast(events.toggle_item, currentHosts.id, on)
               }}
             />

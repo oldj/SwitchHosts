@@ -101,3 +101,16 @@ fn find_window_uses_transparent_macos_titlebar() {
         "find window should use a transparent macOS titlebar so the themed window background shows through"
     );
 }
+
+#[test]
+fn find_window_hides_native_menu_on_windows_and_linux() {
+    const SOURCE: &str = include_str!("../src/find.rs");
+    assert!(
+        SOURCE.contains("fn hide_find_window_menu"),
+        "find window should keep menu hiding in a dedicated helper"
+    );
+    assert!(
+        SOURCE.contains("not(target_os = \"macos\")") && SOURCE.contains("window.hide_menu()"),
+        "find window should hide its native menu bar on Windows/Linux"
+    );
+}

@@ -196,8 +196,14 @@ const RightPanel = () => {
       <ScrollArea className={styles.body} scrollbars="y" type="hover">
         <div className={styles.header}>
           <Group gap="8px" wrap="nowrap" className={styles.title_wrap}>
-            <ItemIcon type={type} />
-            <Text className={styles.title} title={hosts.title || lang.untitled}>
+            <span className={styles.title_icon} data-testid="right-panel-title-icon">
+              <ItemIcon type={type} />
+            </span>
+            <Text
+              className={styles.title}
+              title={hosts.title || lang.untitled}
+              data-testid="right-panel-title"
+            >
               {hosts.title || lang.untitled}
             </Text>
           </Group>

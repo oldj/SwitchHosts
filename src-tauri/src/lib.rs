@@ -289,6 +289,7 @@ pub fn run() {
             commands::cmd_clear_history,
             // find window
             commands::find_show,
+            commands::find_set_window_title,
             commands::find_by,
             commands::find_replace_one,
             commands::find_replace_all,

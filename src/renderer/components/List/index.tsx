@@ -94,7 +94,11 @@ const List = (props: Props) => {
     const content: string = await actions.getContentOfList(list)
     const result = await actions.setSystemHosts(content)
     if (result.success) {
-      setList(list).catch((e) => console.error(e))
+      try {
+        await setList(list)
+      } catch (e) {
+        console.error(e)
+      }
 
       if (currentHosts) {
         const hosts = findItemById(list, currentHosts.id)
@@ -104,10 +108,10 @@ const List = (props: Props) => {
       }
     } else {
       console.log(result)
-      loadHostsData().catch((e) => console.log(e))
       // `cancelled` means the user dismissed the OS auth prompt — that's
       // intentional, not an error worth a toast. Other failures surface
       // through the standard error notification.
+      await loadHostsData().catch((e) => console.log(e))
       if (result.code !== 'cancelled') {
         const errDesc =
           result.code === 'no_access' ? lang.no_access_to_hosts : result.message || lang.fail
@@ -116,7 +120,7 @@ const List = (props: Props) => {
       }
     }
 
-    agent.broadcast(events.tray_list_updated)
+    await agent.broadcast(events.tray_list_updated)
 
     return result.success
   }
