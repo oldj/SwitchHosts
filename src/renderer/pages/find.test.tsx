@@ -252,6 +252,14 @@ function resultWithMatches(title: string, matches: string[]): IFindItem[] {
   ]
 }
 
+let expectedConsoleError: ReturnType<typeof vi.spyOn> | undefined
+
+function muteExpectedConsoleError() {
+  expectedConsoleError?.mockRestore()
+  expectedConsoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+  return expectedConsoleError
+}
+
 describe('FindPage search state', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -276,11 +284,14 @@ describe('FindPage search state', () => {
   })
 
   afterEach(() => {
+    expectedConsoleError?.mockRestore()
+    expectedConsoleError = undefined
     cleanup()
     vi.useRealTimers()
   })
 
   it('stops loading and shows an error when findBy rejects', async () => {
+    const consoleError = muteExpectedConsoleError()
     mocks.actions.findBy.mockRejectedValueOnce(new Error('boom'))
     render(<FindPage />)
 
@@ -294,6 +305,7 @@ describe('FindPage search state', () => {
 
     expect(screen.getByText('boom')).toBeTruthy()
     expect(screen.queryByTestId('loader')).toBeNull()
+    expect(consoleError).toHaveBeenCalledWith('findBy failed', expect.any(Error))
   })
 
   it('does not show the loader while a new search is only waiting for debounce', async () => {
@@ -592,6 +604,7 @@ describe('FindPage search state', () => {
   })
 
   it('refreshes displayed results when replace all fails', async () => {
+    const consoleError = muteExpectedConsoleError()
     mocks.actions.findBy.mockResolvedValueOnce(result('first-title', 'abc')).mockResolvedValueOnce([])
     mocks.actions.findReplaceAll.mockRejectedValueOnce(new Error('write failed'))
     render(<FindPage />)
@@ -615,6 +628,7 @@ describe('FindPage search state', () => {
       expect.objectContaining({ message: 'write failed' }),
     )
     expect(mocks.actions.findBy).toHaveBeenCalledTimes(2)
+    expect(consoleError).toHaveBeenCalledWith('findReplaceAll failed', expect.any(Error))
   })
 
   it('refreshes displayed results when replace all finds nothing in current content', async () => {
