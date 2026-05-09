@@ -8,7 +8,8 @@
 
 import { invoke } from '@tauri-apps/api/core'
 import { emit, listen, once as tauriOnce, type UnlistenFn } from '@tauri-apps/api/event'
-import { Actions } from '@common/types'
+import { ThemeType } from '@common/default_configs'
+import { Actions, IPopupMenuOption } from '@common/types'
 
 type AgentHandler = (...args: any[]) => void
 type AgentOff = () => void
@@ -19,8 +20,8 @@ export interface IAgent {
   on: (channel: string, handler: AgentHandler) => AgentOff
   once: (channel: string, handler: AgentHandler) => AgentOff
   off: (channel: string, handler: AgentHandler) => void
-  popupMenu: (options: any) => Promise<void> | void
-  darkModeToggle: (theme: any) => Promise<void>
+  popupMenu: (options: IPopupMenuOption) => Promise<void> | void
+  darkModeToggle: (theme: ThemeType) => Promise<void>
   platform: string
 }
 

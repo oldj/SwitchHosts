@@ -240,3 +240,104 @@ fn find_node(nodes: &[Value], id: &str) -> Option<Value> {
     }
     None
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tree_fixture() -> Vec<Value> {
+        // root
+        // ├── local-1
+        // ├── folder-a
+        // │   ├── local-2
+        // │   └── folder-b
+        // │       └── local-3
+        // └── local-4
+        json!([
+            { "id": "local-1", "type": "local", "on": true },
+            {
+                "id": "folder-a",
+                "type": "folder",
+                "children": [
+                    { "id": "local-2", "type": "local", "on": false },
+                    {
+                        "id": "folder-b",
+                        "type": "folder",
+                        "children": [
+                            { "id": "local-3", "type": "local", "on": true },
+                        ]
+                    }
+                ]
+            },
+            { "id": "local-4", "type": "local", "on": false },
+        ])
+        .as_array()
+        .cloned()
+        .unwrap()
+    }
+
+    #[test]
+    fn flatten_root_emits_parents_before_descendants_in_dfs_order() {
+        let flat = flatten_root(&tree_fixture());
+        let ids: Vec<&str> = flat.iter().filter_map(|n| n.get("id")?.as_str()).collect();
+        assert_eq!(
+            ids,
+            vec!["local-1", "folder-a", "local-2", "folder-b", "local-3", "local-4"]
+        );
+    }
+
+    #[test]
+    fn flatten_root_handles_empty_tree() {
+        assert!(flatten_root(&[]).is_empty());
+    }
+
+    #[test]
+    fn find_node_locates_top_level_id() {
+        let n = find_node(&tree_fixture(), "local-4").unwrap();
+        assert_eq!(n.get("type").and_then(Value::as_str), Some("local"));
+    }
+
+    #[test]
+    fn find_node_recurses_into_nested_folders() {
+        // Two levels deep — exercises the recursive arm.
+        let n = find_node(&tree_fixture(), "local-3").unwrap();
+        assert_eq!(n.get("on").and_then(Value::as_bool), Some(true));
+    }
+
+    #[test]
+    fn find_node_returns_none_for_missing_id() {
+        assert!(find_node(&tree_fixture(), "does-not-exist").is_none());
+    }
+
+    #[test]
+    fn find_node_skips_folder_with_non_array_children_field() {
+        // A malformed node whose `children` is not an array should not
+        // panic and should not be treated as a parent.
+        let nodes = json!([
+            { "id": "weird", "children": "not-an-array" },
+            { "id": "real", "type": "local" },
+        ])
+        .as_array()
+        .cloned()
+        .unwrap();
+        assert!(find_node(&nodes, "real").is_some());
+        assert!(find_node(&nodes, "missing").is_none());
+    }
+
+    #[tokio::test]
+    async fn home_route_returns_static_greeting() {
+        assert_eq!(home().await, "Hello SwitchHosts!");
+    }
+
+    #[tokio::test]
+    async fn remote_test_route_starts_with_marker_and_carries_timestamp() {
+        let body = remote_test().await;
+        assert!(
+            body.starts_with("# remote-test\n# "),
+            "unexpected body prefix: {body:?}"
+        );
+        // Timestamp must be non-empty (the chrono format string is dynamic).
+        let ts = &body["# remote-test\n# ".len()..];
+        assert!(!ts.is_empty());
+    }
+}

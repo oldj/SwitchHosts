@@ -84,6 +84,7 @@ const lang: LanguageDict = {
   http_api_on_desc:
     "Actif sur le port {0}, peut être utilisé par un logiciel tier comme Alfred pour changer d'hosts",
   http_api_only_local: "L'API HTTP n'écoute que sur 127.0.0.1",
+  http_api_start_failed: "Échec du démarrage de l'API HTTP locale : {0}",
   ignore_case: 'Ignorer la casse',
   import: 'Importer',
   import_done: "L'importation est terminée",
@@ -183,6 +184,7 @@ const lang: LanguageDict = {
   tray_mini_window: "Raccourci de l'icône de la barre des tâches",
   undo: 'Annuler',
   unhide: 'Démasquer',
+  unknown_error: 'Erreur inconnue',
   untitled: 'Sans titre',
   update_download_now: 'Télécharger la mise à jour',
   update_downloading_desc: 'Téléchargement de la version {0} : {1}',

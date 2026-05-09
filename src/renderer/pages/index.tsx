@@ -12,6 +12,7 @@ import RightPanel from '@renderer/components/RightPanel'
 import SetWriteMode from '@renderer/components/SetWriteMode'
 import UpdateDialog from '@renderer/components/UpdateDialog'
 import { agent } from '@renderer/core/agent'
+import { showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import useResolvedTheme from '@renderer/models/useResolvedTheme'
@@ -33,9 +34,9 @@ const clampPanel = (value: number) =>
 const MainPage = () => {
   const [loading, setLoading] = useState(true)
   const mainWindowReadySentRef = useRef(false)
-  const { setLocale } = useI18n()
+  const { setLocale, i18n, lang } = useI18n()
   const { loadHostsData } = useHostsData()
-  const { configs, updateConfigs } = useConfigs()
+  const { configs, loadConfigs, updateConfigs } = useConfigs()
   const [leftWidth, setLeftWidth] = useState(0)
   const [rightWidth, setRightWidth] = useState(240)
   const [leftShow, setLeftShow] = useState(true)
@@ -100,6 +101,21 @@ const MainPage = () => {
     setRightShow(show)
     updateConfigs({ right_panel_show: show }).catch((e) => console.error(e))
   })
+
+  // Backend rolls back http_api_on when bind() fails (e.g. port is in
+  // use). Surface a toast and reload configs so the preferences pane's
+  // toggle snaps back from "on" to "off" instead of lying about state.
+  useOnBroadcast(
+    events.http_api_start_failed,
+    (errorMsg: string) => {
+      showErrorNotification({
+        title: lang.fail,
+        message: i18n.trans('http_api_start_failed', [errorMsg ?? '']),
+      })
+      loadConfigs().catch((e) => console.error(e))
+    },
+    [lang, i18n],
+  )
 
   const widthsRef = useRef({ left: leftWidth, right: rightWidth })
   const updateConfigsRef = useRef(updateConfigs)

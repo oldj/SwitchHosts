@@ -83,6 +83,7 @@ const lang: LanguageDict = {
   http_api_on_desc:
     'Läuft auf Port {0}, kann von Software von Drittanbietern wie Alfred verwendet werden, um den Host zu wechseln.',
   http_api_only_local: 'HTTP-API nur auf 127.0.0.1 überwachen',
+  http_api_start_failed: 'Lokale HTTP-API konnte nicht gestartet werden: {0}',
   ignore_case: 'Groß- und Kleinschreibung ignorieren',
   import: 'Importieren',
   import_done: 'Der Import ist abgeschlossen.',
@@ -181,6 +182,7 @@ const lang: LanguageDict = {
   tray_mini_window: 'Verknüpfung über Taskleistensymbol',
   undo: 'Rückgängig machen',
   unhide: 'Einblenden',
+  unknown_error: 'Unbekannter Fehler',
   untitled: 'Ohne Titel',
   update_download_now: 'Update herunterladen',
   update_downloading_desc: 'Version {0} wird heruntergeladen: {1}',

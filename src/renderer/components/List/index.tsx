@@ -62,9 +62,6 @@ const List = (props: Props) => {
   }, [currentHosts, hostsData.trashcan, isTray])
 
   const onToggleItem = async (id: string, on: boolean) => {
-    console.log(`writeMode: ${configs?.write_mode}`)
-    console.log(`toggle hosts #${id} as ${on ? 'on' : 'off'}`)
-
     if (!configs?.write_mode) {
       agent.broadcast(events.show_set_write_mode, { id, on })
       return
@@ -79,7 +76,6 @@ const List = (props: Props) => {
     )
     const success = await writeHostsToSystem(newList)
     if (success) {
-      console.log(lang.success)
       agent.broadcast(events.set_hosts_on_status, id, on)
     } else {
       agent.broadcast(events.set_hosts_on_status, id, !on)
@@ -107,11 +103,10 @@ const List = (props: Props) => {
         }
       }
     } else {
-      console.log(result)
       // `cancelled` means the user dismissed the OS auth prompt — that's
       // intentional, not an error worth a toast. Other failures surface
       // through the standard error notification.
-      await loadHostsData().catch((e) => console.log(e))
+      await loadHostsData().catch((e) => console.error(e))
       if (result.code !== 'cancelled') {
         const errDesc =
           result.code === 'no_access' ? lang.no_access_to_hosts : result.message || lang.fail
@@ -145,7 +140,6 @@ const List = (props: Props) => {
   useOnBroadcast(
     events.move_to_trashcan,
     async (ids: string[]) => {
-      console.log(`move_to_trashcan: #${ids}`)
       await actions.moveManyToTrashcan(ids)
       await loadHostsData()
 

@@ -249,7 +249,19 @@ fn apply_side_effects(
         };
         if on {
             if let Err(e) = http_api::start(app.clone(), only_local) {
-                log::warn!("http_api reconfigure failed: {e}");
+                log::warn!("http_api start failed: {e}");
+                // Roll back the in-memory config + persist, otherwise
+                // the preferences pane keeps reporting "API on" against
+                // a dead listener. Lock scope ends before persist_config
+                // because that helper takes the same mutex.
+                {
+                    let mut cfg = state.config.lock().expect("config mutex poisoned");
+                    cfg.http_api_on = false;
+                }
+                if let Err(save_err) = state.persist_config() {
+                    log::warn!("failed to persist http_api_on rollback: {save_err}");
+                }
+                let _ = app.emit("http_api_start_failed", json!({ "_args": [e] }));
             }
         } else {
             http_api::stop();
@@ -645,11 +657,6 @@ pub async fn apply_hosts_selection<R: Runtime>(
         "old_content": outcome.previous_content,
         "new_content": outcome.new_content,
     }))
-}
-
-#[tauri::command]
-pub async fn toggle_hosts_item(_args: Args) -> Value {
-    Value::Null
 }
 
 #[tauri::command]

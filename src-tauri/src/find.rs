@@ -1110,4 +1110,39 @@ mod tests {
             "foo local"
         );
     }
+
+    #[test]
+    fn find_offsets_match_lf_view_when_disk_has_crlf() {
+        // Regression for plan.md §1: a v4-migrated or hand-written
+        // entry file may still hold CRLF on disk. The renderer feeds
+        // CodeMirror an LF-normalized view, so find_in_manifest must
+        // report UTF-16 offsets against that same view — otherwise
+        // selections drift by one column per preceding CRLF.
+        let state = temp_state("find-crlf");
+        let manifest = Manifest {
+            root: vec![json!({
+                "id": "local-one",
+                "title": "Local",
+                "type": "local",
+            })],
+            ..Manifest::default()
+        };
+        manifest.save(&state.paths).unwrap();
+        // Bypass write_entry so the on-disk bytes really are CRLF; we
+        // want to exercise read_entry's normalization on the read path.
+        let path = entries::entry_path(&state.paths.entries_dir, "local-one").unwrap();
+        std::fs::write(&path, b"foo\r\nbar\r\nbaz").unwrap();
+
+        let result = find_in_manifest(&state, "bar", &FindOptions::default()).unwrap();
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].positions.len(), 1);
+        let p = &result[0].positions[0];
+        // LF view: "foo\n" is 4 UTF-16 units. With raw CRLF the offset
+        // would be 5 and the renderer's selection would be off by one.
+        assert_eq!(p.start, 4);
+        assert_eq!(p.end, 7);
+        assert_eq!(p.line, 2);
+        assert_eq!(p.line_pos, 0);
+    }
 }

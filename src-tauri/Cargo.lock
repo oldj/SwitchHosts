@@ -4430,7 +4430,7 @@ dependencies = [
 
 [[package]]
 name = "switchhosts"
-version = "4.3.0"
+version = "5.0.0-beta.25"
 dependencies = [
  "axum",
  "block2",

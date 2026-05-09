@@ -21,6 +21,7 @@ import ItemIcon from '@renderer/components/ItemIcon'
 import SideDrawer from '@renderer/components/SideDrawer'
 import Transfer from '@renderer/components/Transfer'
 import { actions, agent } from '@renderer/core/agent'
+import { showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { formatInterval } from '@renderer/utils/formatInterval'
 import lodash from 'lodash'
@@ -77,7 +78,7 @@ const EditHostsInfo = () => {
         return
       }
     } else {
-      alert('unknown error!')
+      showErrorNotification({ title: lang.fail, message: lang.unknown_error })
     }
 
     setIsShow(false)
@@ -154,20 +155,17 @@ const EditHostsInfo = () => {
                   actions
                     .refreshHosts(hosts.id)
                     .then((r) => {
-                      console.log(r)
                       if (!r.success) {
                         console.error(r.message || r.code || 'Error!')
                         return
                       }
 
-                      console.log('OK!')
                       onUpdate({
                         last_refresh: r.data.last_refresh,
                         last_refresh_ms: r.data.last_refresh_ms,
                       })
                     })
                     .catch((e) => {
-                      console.log(e)
                       console.error(e.message)
                     })
                     .finally(() => setIsRefreshing(false))

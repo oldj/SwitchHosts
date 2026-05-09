@@ -80,6 +80,7 @@ export default {
   http_api_on_desc:
     '포트 {0}에서 실행되며, Alfred와 같은 서드파티 소프트웨어를 통해 호스트를 전환하는데 사용할 수 있습니다.',
   http_api_only_local: 'HTTP API를 127.0.0.1에서만 수신',
+  http_api_start_failed: '로컬 HTTP API 시작 실패: {0}',
   ignore_case: '대소문자 무시',
   import: '가져오기',
   import_done: '가져오기가 완료되었습니다.',
@@ -180,6 +181,7 @@ export default {
   tray_mini_window: '작업 표시줄 아이콘 바로가기',
   undo: '실행취소',
   unhide: '숨김해제',
+  unknown_error: '알 수 없는 오류',
   untitled: '제목없음',
   update_download_now: '업데이트 다운로드',
   update_downloading_desc: '버전 {0} 다운로드 중: {1}',
