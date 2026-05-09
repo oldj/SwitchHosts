@@ -12,8 +12,8 @@ import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import useI18n from '@renderer/models/useI18n'
-import { IconAdjustments } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
+import { IconAdjustments, IconCheck, IconDeviceFloppy } from '@tabler/icons-react'
+import { useEffect, useRef, useState } from 'react'
 import Advanced from './Advanced'
 import Commands from './Commands'
 import General from './General'
@@ -24,15 +24,36 @@ const PreferencePanel = () => {
   const { configs, loadConfigs, updateConfigs } = useConfigs()
   const [data, setData] = useState<ConfigsType | null>(configs)
   const [activeTab, setActiveTab] = useState<string | null>('general')
+  const [draftSaveStatus, setDraftSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { lang } = useI18n()
+
+  const clearDraftSaveTimer = () => {
+    if (draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current)
+      draftSaveTimerRef.current = null
+    }
+  }
+
+  const resetDraftSaveStatus = () => {
+    clearDraftSaveTimer()
+    setDraftSaveStatus('idle')
+  }
+
   const onClose = () => {
     setIsOpen(false)
     setData(configs)
+    resetDraftSaveStatus()
   }
 
   const onUpdate = (kv: Partial<ConfigsType>) => {
-    if (!data) return
-    setData({ ...data, ...kv })
+    setData((prev) => (prev ? { ...prev, ...kv } : prev))
+    resetDraftSaveStatus()
+  }
+
+  const onTabChange = (value: string | null) => {
+    setActiveTab(value)
+    resetDraftSaveStatus()
   }
 
   const onSaveImmediate = async (kv: Partial<ConfigsType>) => {
@@ -51,10 +72,26 @@ const PreferencePanel = () => {
     agent.broadcast(events.config_updated, kv)
   }
 
-  const onSave = async () => {
+  const onSaveDraft = async () => {
     if (!data) return
+    const patch: Partial<ConfigsType> =
+      activeTab === 'commands'
+        ? { cmd_after_hosts_apply: data.cmd_after_hosts_apply }
+        : activeTab === 'proxy'
+          ? {
+              use_proxy: data.use_proxy,
+              proxy_protocol: data.proxy_protocol,
+              proxy_host: data.proxy_host,
+              proxy_port: data.proxy_port,
+            }
+          : {}
+
+    if (Object.keys(patch).length === 0) return
+
+    clearDraftSaveTimer()
+    setDraftSaveStatus('saving')
     try {
-      await updateConfigs(data)
+      await updateConfigs(patch)
     } catch {
       // Keep the drawer open so the user can correct or retry; sync the
       // local Commands/Proxy draft back to whatever the backend really
@@ -65,11 +102,16 @@ const PreferencePanel = () => {
         console.error('loadConfigs failed after onSave failure', e)
         if (configs) setData(configs)
       }
+      setDraftSaveStatus('idle')
       return
     }
-    setIsOpen(false)
 
-    agent.broadcast(events.config_updated, data)
+    agent.broadcast(events.config_updated, patch)
+    setDraftSaveStatus('saved')
+    draftSaveTimerRef.current = setTimeout(() => {
+      setDraftSaveStatus('idle')
+      draftSaveTimerRef.current = null
+    }, 1800)
   }
 
   useEffect(() => {
@@ -78,6 +120,8 @@ const PreferencePanel = () => {
       setData(configs)
     }
   }, [configs, data])
+
+  useEffect(() => () => clearDraftSaveTimer(), [])
 
   useOnBroadcast(
     events.show_preferences,
@@ -111,18 +155,26 @@ const PreferencePanel = () => {
       footer={
         showFooter ? (
           <Group justify="flex-end" gap="12px">
-            <Button variant="outline" onClick={onClose}>
-              {lang.btn_cancel}
-            </Button>
-            <Button onClick={onSave}>
-              {lang.btn_ok}
+            <Button
+              onClick={onSaveDraft}
+              loading={draftSaveStatus === 'saving'}
+              color={draftSaveStatus === 'saved' ? 'green' : undefined}
+              leftSection={
+                draftSaveStatus === 'saved' ? (
+                  <IconCheck size={16} stroke={1.8} />
+                ) : (
+                  <IconDeviceFloppy size={16} stroke={1.8} />
+                )
+              }
+            >
+              {draftSaveStatus === 'saved' ? lang.save_success : lang.btn_save}
             </Button>
           </Group>
         ) : null
       }
     >
       <div style={{ display: 'flex', height: '100%', minHeight: 0, flexDirection: 'column' }}>
-        <Tabs value={activeTab} onChange={setActiveTab} className={styles.tabs}>
+        <Tabs value={activeTab} onChange={onTabChange} className={styles.tabs}>
           <Tabs.List>
             <Tabs.Tab value="general">{lang.general}</Tabs.Tab>
             <Tabs.Tab value="commands">{lang.commands}</Tabs.Tab>
