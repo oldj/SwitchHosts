@@ -26,7 +26,7 @@ use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager, Runtime};
 
 use crate::http;
-use crate::storage::{atomic::atomic_write, entries, manifest::Manifest, AppState};
+use crate::storage::{entries, manifest::Manifest, AppState};
 
 const SCAN_INTERVAL: Duration = Duration::from_secs(60);
 
@@ -99,14 +99,17 @@ pub async fn refresh_one<R: Runtime>(
     // Step 2: fetch the new content. May take seconds; lockless.
     let new_content = fetch_remote(&url, state).await?;
 
-    // Step 3: compare with the entries file. Empty when missing.
+    // Step 3: compare with the entries file (always LF on disk). The
+    // remote payload may use CRLF, so normalize before comparing —
+    // otherwise a CRLF response would defeat the equality check on
+    // every poll and we'd emit a spurious "content changed" event each
+    // tick.
     let old_content = entries::read_entry(&state.paths.entries_dir, id)
         .map_err(|e| RefreshError::Storage { message: e.to_string() })?;
-    let content_changed = old_content != new_content;
+    let new_content_lf = entries::normalize_to_lf(&new_content);
+    let content_changed = old_content != new_content_lf;
     if content_changed {
-        let entry_path = entries::entry_path(&state.paths.entries_dir, id)
-            .map_err(|e| RefreshError::Storage { message: e.to_string() })?;
-        atomic_write(&entry_path, new_content.as_bytes())
+        entries::write_entry(&state.paths.entries_dir, id, &new_content_lf)
             .map_err(|e| RefreshError::Storage { message: e.to_string() })?;
     }
 
