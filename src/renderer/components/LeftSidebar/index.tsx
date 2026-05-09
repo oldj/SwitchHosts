@@ -35,6 +35,7 @@ const LeftSidebar = (props: IProps) => {
   return (
     <div className={styles.root} data-tauri-drag-region>
       <Stack gap={20} align="center" pt={8}>
+        {/* "Hosts" is a product proper noun — kept in English across all locales. */}
         <Tooltip label={'Hosts'} position="right">
           <ActionIcon
             variant={view === 'list' ? 'light' : 'subtle'}
