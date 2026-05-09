@@ -68,7 +68,6 @@ const PreferencePanel = () => {
   const showFooter = activeTab === 'commands' || activeTab === 'proxy'
 
   if (!data) {
-    console.log('invalid config data!')
     return null
   }
 

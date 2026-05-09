@@ -129,16 +129,12 @@ const ListItem = (props: Props) => {
               actions
                 .refreshHosts(data.id)
                 .then((r) => {
-                  console.log(r)
                   if (!r.success) {
                     console.error(r.message || r.code || 'Error!')
                     return
                   }
-
-                  console.log('OK!')
                 })
                 .catch((e) => {
-                  console.log(e)
                   console.error(e.message)
                 })
                 .finally(() => {

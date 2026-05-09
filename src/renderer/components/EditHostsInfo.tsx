@@ -154,20 +154,17 @@ const EditHostsInfo = () => {
                   actions
                     .refreshHosts(hosts.id)
                     .then((r) => {
-                      console.log(r)
                       if (!r.success) {
                         console.error(r.message || r.code || 'Error!')
                         return
                       }
 
-                      console.log('OK!')
                       onUpdate({
                         last_refresh: r.data.last_refresh,
                         last_refresh_ms: r.data.last_refresh_ms,
                       })
                     })
                     .catch((e) => {
-                      console.log(e)
                       console.error(e.message)
                     })
                     .finally(() => setIsRefreshing(false))
