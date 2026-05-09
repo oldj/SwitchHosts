@@ -1,6 +1,23 @@
 import { expect, test } from './support/test'
 
 test.describe('title bar', () => {
+  test('keeps the left resize handle above the editor', async ({ page }) => {
+    const handle = page.getByRole('separator').first()
+    await expect(handle).toBeVisible()
+
+    const box = await handle.boundingBox()
+    expect(box).not.toBeNull()
+
+    const hitsHandle = await page.evaluate(
+      ({ x, y }) => !!document.elementFromPoint(x, y)?.closest('[role="separator"]'),
+      {
+        x: box!.x + box!.width - 1,
+        y: box!.y + box!.height / 2,
+      },
+    )
+    expect(hitsHandle).toBe(true)
+  })
+
   test('shows the app brand on Windows/Linux and aligns its logo to the sidebar', async ({
     page,
   }) => {
