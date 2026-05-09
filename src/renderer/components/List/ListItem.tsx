@@ -5,7 +5,6 @@
 
 import { IHostsListObject } from '@common/data'
 import events from '@common/events'
-import { updateOneItem } from '@common/hostsFn'
 import { IMenuItemOption } from '@common/types'
 import { ActionIcon } from '@mantine/core'
 import ItemIcon from '@renderer/components/ItemIcon'
@@ -30,8 +29,7 @@ interface Props {
 const ListItem = (props: Props) => {
   const { data, isTray, selectedIds } = props
   const { lang, i18n } = useI18n()
-  const { hostsData, setList, currentHosts, setCurrentHosts } = useHostsData()
-  const [isCollapsed, setIsCollapsed] = useState(!!data.isCollapsed)
+  const { currentHosts, setCurrentHosts } = useHostsData()
   const [isOn, setIsOn] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
@@ -75,19 +73,6 @@ const ListItem = (props: Props) => {
   const onSelect = () => {
     if (isTray) return
     setCurrentHosts(data.is_sys ? null : data)
-  }
-
-  const toggleIsCollapsed = () => {
-    if (!isFolder) return
-
-    const _isCollapsed = !isCollapsed
-    setIsCollapsed(_isCollapsed)
-    setList(
-      updateOneItem(hostsData.list, {
-        id: data.id,
-        isCollapsed: _isCollapsed,
-      }),
-    ).catch((e) => console.error(e))
   }
 
   const toggleOn = (on?: boolean) => {
@@ -186,8 +171,8 @@ const ListItem = (props: Props) => {
           agent.broadcast(events.active_main_window)
         }}
       >
-        <span className={clsx(styles.icon, isFolder && styles.folder)} onClick={toggleIsCollapsed}>
-          <ItemIcon type={data.is_sys ? 'system' : data.type} isCollapsed={data.isCollapsed} />
+        <span className={clsx(styles.icon, isFolder && styles.folder)}>
+          <ItemIcon type={data.is_sys ? 'system' : data.type} isCollapsed={data.is_collapsed} />
         </span>
         <span className={styles.label} title={title}>
           {title}
