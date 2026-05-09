@@ -278,7 +278,6 @@ pub fn run() {
             commands::get_path_of_system_hosts,
             // apply / refresh
             commands::apply_hosts_selection,
-            commands::toggle_hosts_item,
             commands::refresh_remote_hosts,
             commands::refresh_all_remote_hosts,
             commands::get_apply_history,

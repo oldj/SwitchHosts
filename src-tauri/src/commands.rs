@@ -648,11 +648,6 @@ pub async fn apply_hosts_selection<R: Runtime>(
 }
 
 #[tauri::command]
-pub async fn toggle_hosts_item(_args: Args) -> Value {
-    Value::Null
-}
-
-#[tauri::command]
 pub async fn refresh_remote_hosts<R: Runtime>(
     app: AppHandle<R>,
     state: State<'_, AppState>,
