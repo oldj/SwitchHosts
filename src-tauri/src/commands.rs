@@ -1259,11 +1259,12 @@ async fn fetch_url(client: &reqwest::Client, url: &str) -> Result<String, String
 #[tauri::command]
 pub async fn check_update<R: Runtime>(
     app: AppHandle<R>,
+    state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, String> {
-    use tauri_plugin_updater::UpdaterExt;
-
-    let updater = app.updater_builder().build().map_err(|e| e.to_string())?;
+    let updater = updater_builder_with_proxy(&app, state.inner())?
+        .build()
+        .map_err(|e| e.to_string())?;
     let update = updater.check().await.map_err(|e| e.to_string())?;
 
     match update {
@@ -1286,14 +1287,16 @@ pub async fn download_update<R: Runtime>(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, String> {
-    use tauri_plugin_updater::UpdaterExt;
-
-    let updater = app.updater_builder().build().map_err(|e| e.to_string())?;
+    let updater = updater_builder_with_proxy(&app, state.inner())?
+        .build()
+        .map_err(|e| e.to_string())?;
     let update = updater
         .check()
         .await
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "no update available".to_string())?;
+    let downloaded_version = update.version.clone();
+    let downloaded_release_notes = update.body.clone();
 
     let app_for_progress = app.clone();
     update
@@ -1326,7 +1329,10 @@ pub async fn download_update<R: Runtime>(
 
     let _ = app.emit(
         "update_downloaded",
-        json!({ "_args": [{ "version": "" }] }),
+        json!({ "_args": [{
+            "version": downloaded_version,
+            "releaseNotes": downloaded_release_notes,
+        }] }),
     );
     Ok(Value::Null)
 }
@@ -1346,6 +1352,22 @@ pub async fn install_update<R: Runtime>(
     app.restart();
     #[allow(unreachable_code)]
     Ok(Value::Null)
+}
+
+fn updater_builder_with_proxy<R: Runtime>(
+    app: &AppHandle<R>,
+    state: &AppState,
+) -> Result<tauri_plugin_updater::UpdaterBuilder, String> {
+    use tauri_plugin_updater::UpdaterExt;
+
+    let mut builder = app.updater_builder();
+    if let Some(proxy_url) = http::configured_proxy_url_from_state(state) {
+        let proxy = proxy_url
+            .parse()
+            .map_err(|e| format!("invalid proxy {proxy_url}: {e}"))?;
+        builder = builder.proxy(proxy);
+    }
+    Ok(builder)
 }
 
 // ---- popup menu ------------------------------------------------------------

@@ -188,7 +188,7 @@ export default {
   usage_data_title: 'Pomóż ulepszać SwitchHosts!',
   use_proxy: 'Użyj proxy',
   use_proxy_desc:
-    'Po włączeniu pobieranie zdalnych hostów będzie łączyć się przez proxy.',
+    'Po włączeniu pobieranie zdalnych Hosts oraz sprawdzanie i pobieranie aktualizacji aplikacji będzie łączyć się przez proxy.',
   use_system_window_frame: 'Używaj systemowych ramek okna, wymagane ponowne uruchomienie aplikacji',
   view: 'Widok',
   where_is_my_data: 'Gdzie są przechowywane moje dane?',

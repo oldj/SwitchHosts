@@ -198,7 +198,7 @@ const lang: LanguageDict = {
   usage_data_title: 'Machen Sie SwitchHosts besser!',
   use_proxy: 'Proxy verwenden',
   use_proxy_desc:
-    'Wenn aktiviert, werden Remote-Hosts-Downloads über den Proxy verbunden.',
+    'Wenn aktiviert, werden Remote-Hosts-Downloads sowie das Suchen und Herunterladen von App-Updates über den Proxy durchgeführt.',
   use_system_window_frame:
     'Verwenden Sie den Systemfensterrahmen, ein Neustart der Anwendung ist erforderlich',
   view: 'Ansicht',

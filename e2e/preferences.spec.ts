@@ -133,12 +133,23 @@ test.describe('preferences', () => {
 
     await preferences.getByRole('tab', { name: 'Proxy' }).click()
     await expect(
-      preferences.getByText('If enabled, remote Hosts downloads will connect through the proxy.'),
+      preferences.getByText(
+        'If enabled, remote Hosts downloads and app update checks/downloads will connect through the proxy.',
+      ),
     ).toBeVisible()
     await preferences.getByRole('checkbox', { name: 'Use Proxy' }).check()
-    await preferences.getByRole('combobox').selectOption('https')
-    await preferences.getByRole('textbox').fill('proxy.local')
-    await preferences.getByRole('spinbutton').fill('8080')
+    await preferences.getByRole('combobox').click()
+    await page.getByRole('option', { name: 'SOCKS5' }).click()
+    const hostInput = preferences.getByLabel('Host')
+    const portInput = preferences.getByLabel('Port')
+    await hostInput.fill('a'.repeat(260))
+    await expect(hostInput).toHaveValue('a'.repeat(253))
+    await hostInput.fill('proxy.local')
+    await portInput.fill('123456')
+    await expect(portInput).toHaveValue('12345')
+    await portInput.fill('99999')
+    await expect(portInput).toHaveValue('65535')
+    await portInput.fill('8080')
     await preferences.getByRole('button', { name: 'Save' }).click()
     await expect(preferences.getByRole('button', { name: 'Saved' })).toBeVisible()
     await expect(preferences).toBeVisible()
@@ -153,7 +164,7 @@ test.describe('preferences', () => {
           port: state.configs.proxy_port,
         }
       })
-      .toEqual({ useProxy: true, protocol: 'https', host: 'proxy.local', port: 8080 })
+      .toEqual({ useProxy: true, protocol: 'socks5', host: 'proxy.local', port: 8080 })
 
     const calls = await getMockCalls(page)
     expect(configPatches(calls)).toEqual(
@@ -161,7 +172,7 @@ test.describe('preferences', () => {
         expect.objectContaining({ cmd_after_hosts_apply: 'echo saved' }),
         expect.objectContaining({
           use_proxy: true,
-          proxy_protocol: 'https',
+          proxy_protocol: 'socks5',
           proxy_host: 'proxy.local',
           proxy_port: 8080,
         }),

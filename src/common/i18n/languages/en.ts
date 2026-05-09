@@ -198,7 +198,8 @@ export default {
     'Would you like to help us improve SwitchHosts by periodically submitting anonymous usage data?',
   usage_data_title: 'Make SwitchHosts Better!',
   use_proxy: 'Use Proxy',
-  use_proxy_desc: 'If enabled, remote Hosts downloads will connect through the proxy.',
+  use_proxy_desc:
+    'If enabled, remote Hosts downloads and app update checks/downloads will connect through the proxy.',
   use_system_window_frame:
     'Use system window frame; application restart is required.',
   view: 'View',

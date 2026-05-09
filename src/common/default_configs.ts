@@ -3,7 +3,7 @@ import { FolderModeType } from './data.d'
 
 export type WriteModeType = null | 'overwrite' | 'append'
 export type ThemeType = 'light' | 'dark' | 'system'
-export type ProtocolType = 'http' | 'https'
+export type ProtocolType = 'http' | 'https' | 'socks5'
 export type DefaultLocaleType = LocaleName | undefined
 
 const configs = {

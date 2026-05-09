@@ -200,7 +200,7 @@ const lang: LanguageDict = {
   usage_data_title: 'Rendez SwitchHosts meilleur !',
   use_proxy: 'Utiliser un proxy',
   use_proxy_desc:
-    'Si cette option est activée, les téléchargements de Hosts distants utiliseront le proxy.',
+    'Si cette option est activée, les téléchargements de Hosts distants ainsi que la recherche et le téléchargement des mises à jour utiliseront le proxy.',
   use_system_window_frame:
     "Utiliser le cadre de la fenêtre système, le redémarrage de l'application est requis",
   view: 'Vue',

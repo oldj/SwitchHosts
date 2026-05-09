@@ -16,6 +16,7 @@ use super::error::StorageError;
 
 pub const CONFIG_FORMAT: &str = "switchhosts-config";
 pub const CONFIG_SCHEMA_VERSION: u32 = 1;
+const MAX_PROXY_PORT: u32 = 65535;
 
 /// User-facing config. Field names match ConfigsType in TypeScript, so a
 /// round-trip through `serde_json::Value` preserves renderer contract.
@@ -52,7 +53,7 @@ pub struct AppConfig {
 
     // proxy
     pub use_proxy: bool,
-    pub proxy_protocol: String, // "http" | "https"
+    pub proxy_protocol: String, // "http" | "https" | "socks5"
     pub proxy_host: String,
     pub proxy_port: u32,
 
@@ -109,6 +110,12 @@ impl AppConfig {
     fn normalize(&mut self) {
         if !matches!(self.theme.as_str(), "light" | "dark" | "system") {
             self.theme = "system".to_string();
+        }
+        if !matches!(self.proxy_protocol.as_str(), "http" | "https" | "socks5") {
+            self.proxy_protocol = "http".to_string();
+        }
+        if self.proxy_port > MAX_PROXY_PORT {
+            self.proxy_port = MAX_PROXY_PORT;
         }
         if !self.find_result_column_widths.is_empty() {
             if self.find_result_column_widths.len() != 3 {
@@ -278,6 +285,35 @@ mod tests {
         cfg.apply_partial(&json!({ "theme": "sepia" })).unwrap();
 
         assert_eq!(cfg.theme, "system");
+    }
+
+    #[test]
+    fn apply_partial_accepts_socks5_proxy_protocol() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "proxy_protocol": "socks5" }))
+            .unwrap();
+
+        assert_eq!(cfg.proxy_protocol, "socks5");
+    }
+
+    #[test]
+    fn apply_partial_normalizes_invalid_proxy_protocol_to_http() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "proxy_protocol": "ftp" }))
+            .unwrap();
+
+        assert_eq!(cfg.proxy_protocol, "http");
+    }
+
+    #[test]
+    fn apply_partial_clamps_proxy_port_to_valid_range() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "proxy_port": 99999 })).unwrap();
+
+        assert_eq!(cfg.proxy_port, MAX_PROXY_PORT);
     }
 
     #[test]
