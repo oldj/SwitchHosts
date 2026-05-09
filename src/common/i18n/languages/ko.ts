@@ -108,8 +108,9 @@ export default {
   minutes: '분',
   move_items_to_trashcan: '{0}개의 항목이 휴지통으로 이동',
   move_to_trashcan: '휴지통으로 이동',
-  multi_chose_folder_switch_all:
-    '하위 항목을 제어할 다중 선택 폴더 스위치',
+  multi_chose_folder_switch_all: '폴더 전환 시 하위 항목 동기화',
+  multi_chose_folder_switch_all_desc:
+    '활성화하면 폴더를 전환할 때 하위 항목도 함께 켜거나 끕니다. 단일 선택 모드 폴더 안의 하위 항목은 일괄 전환되지 않습니다.',
   need_to_relaunch: '다시 시작해야 함',
   need_to_relaunch_after_setting_changed:
     '설정이 변경되었으며 앱을 다시 시작한 후에 적용됩니다.',
@@ -136,7 +137,7 @@ export default {
   remote: '리모트',
   remove_duplicate_records: '중복 레코드 삭제',
   remove_duplicate_records_desc:
-    '만약 도메인이 여러 IP를 가리키는 경우, 첫 번째 IP만 적용되며, 나머지는 주석처리됩니다.',
+    '도메인이 여러 IP를 가리키는 경우 첫 번째 IP만 적용되며, hosts를 적용할 때 나머지는 주석으로 변환됩니다.',
   replace: '대체하기',
   replace_all: '전체 대체하기',
   replace_history: '이력 교체',
