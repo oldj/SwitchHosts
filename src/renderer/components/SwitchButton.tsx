@@ -16,7 +16,9 @@ interface Props {
 const SwitchButton = (props: Props) => {
   const { on, onChange, disabled, ariaLabel } = props
 
-  const onClick = () => {
+  const onClick = (e?: React.MouseEvent<HTMLDivElement>) => {
+    e?.stopPropagation()
+
     if (disabled) return
 
     if (typeof onChange === 'function') {
@@ -28,6 +30,7 @@ const SwitchButton = (props: Props) => {
     if (e.key !== 'Enter' && e.key !== ' ') return
 
     e.preventDefault()
+    e.stopPropagation()
     onClick()
   }
 
