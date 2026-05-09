@@ -136,7 +136,10 @@ const MainPage = () => {
   }
 
   return (
-    <div className={styles.root}>
+    <div
+      className={styles.root}
+      style={{ '--swh-left-sidebar-width': `${LEFT_SIDEBAR_WIDTH}px` } as React.CSSProperties}
+    >
       <TopBar
         showLeftPanel={leftShow}
         showRightPanel={rightShow}

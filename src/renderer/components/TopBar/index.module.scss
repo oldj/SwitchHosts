@@ -1,7 +1,7 @@
 @use '../../styles/common';
 
 .root {
-  $w: 230px;
+  $w: 240px;
   $p: 10px;
 
   background: transparent;
@@ -14,6 +14,7 @@
   justify-content: space-between;
   user-select: none;
   position: relative;
+  box-sizing: border-box;
 
   .title {
     max-width: calc(100vw - ($w + $p) * 2);
@@ -22,6 +23,53 @@
     text-overflow: ellipsis;
     margin: 0 auto;
   }
+}
+
+.with_app_brand {
+  padding-left: 0;
+}
+
+.left_cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.app_brand {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  // max-width: 148px;
+  padding-right: 8px;
+  flex: 0 1 auto;
+  pointer-events: none;
+  color: var(--swh-font-color);
+}
+
+.app_logo_slot {
+  width: var(--swh-left-sidebar-width, 40px);
+  height: var(--swh-top-bar-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--swh-left-sidebar-width, 40px);
+}
+
+.app_logo {
+  width: 20px;
+  height: 20px;
+  display: block;
+  border-radius: 4px;
+}
+
+.app_title {
+  @include common.ell;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .title_wrapper {
