@@ -830,6 +830,7 @@ mod tests {
             paths,
             config: Mutex::new(AppConfig::default()),
             store_lock: Mutex::new(()),
+            config_write_lock: Mutex::new(()),
             is_will_quit: AtomicBool::new(false),
             last_geometry_persist_ms: AtomicU64::new(0),
         }

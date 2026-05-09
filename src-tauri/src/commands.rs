@@ -15,6 +15,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use serde_json::{json, Value};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::{AppHandle, Emitter, Manager, Runtime, State, WebviewWindow, Wry};
+use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_dialog::DialogExt;
 
 use crate::app_menu;
@@ -26,8 +27,9 @@ use crate::import_export;
 use crate::lifecycle::{self, MAIN_WINDOW_LABEL};
 use crate::refresh::{self, RefreshOutcome};
 use crate::storage::{
-    entries, manifest::{self, Manifest},
-    AppState, StorageError, Trashcan,
+    entries,
+    manifest::{self, Manifest},
+    AppConfig, AppState, StorageError, Trashcan,
 };
 use crate::tray;
 
@@ -160,12 +162,10 @@ pub async fn config_set(
         .to_string();
     let value = args.get(1).cloned().unwrap_or(Value::Null);
 
-    {
-        let mut cfg = state.config.lock().expect("config mutex poisoned");
-        cfg.set_key(&key, value)?;
-    }
-    state.persist_config()?;
-    apply_side_effects(&app, state.inner(), &[key.as_str()]);
+    let patch = json!({ key: value });
+    let touched = commit_config_patch(&app, state.inner(), &patch)?;
+    let touched_refs: Vec<&str> = touched.iter().map(String::as_str).collect();
+    apply_side_effects(&app, state.inner(), &touched_refs);
     Ok(Value::Null)
 }
 
@@ -182,18 +182,85 @@ pub async fn config_update(
             reason: "config_update requires a partial object as the first argument".into(),
         });
     }
-    let touched: Vec<String> = patch
-        .as_object()
-        .map(|obj| obj.keys().cloned().collect())
-        .unwrap_or_default();
-    {
-        let mut cfg = state.config.lock().expect("config mutex poisoned");
-        cfg.apply_partial(&patch)?;
-    }
-    state.persist_config()?;
+    let touched = commit_config_patch(&app, state.inner(), &patch)?;
     let touched_refs: Vec<&str> = touched.iter().map(String::as_str).collect();
     apply_side_effects(&app, state.inner(), &touched_refs);
     Ok(Value::Null)
+}
+
+fn commit_config_patch(
+    app: &AppHandle<Wry>,
+    state: &AppState,
+    patch: &Value,
+) -> Result<Vec<String>, StorageError> {
+    let patch_obj = patch
+        .as_object()
+        .ok_or_else(|| StorageError::InvalidConfigValue {
+            key: "<patch>".into(),
+            reason: "expected a JSON object".into(),
+        })?;
+    let touched: Vec<String> = patch_obj.keys().cloned().collect();
+
+    // Tauri runs async commands concurrently on tokio, so two
+    // `config_update` invocations can otherwise interleave and lose
+    // each other's writes. Hold this guard across the entire commit
+    // pipeline — it serializes writers without blocking readers that
+    // only touch `state.config`.
+    let _commit_guard = state
+        .config_write_lock
+        .lock()
+        .expect("config write lock poisoned");
+
+    // Step 1: under a short cfg lock, derive the proposed `next` value
+    // and remember whether launch_at_login is changing. We deliberately
+    // do not hold the cfg mutex across OS calls or disk writes; the
+    // outer `_commit_guard` provides ordering, the inner cfg mutex only
+    // needs to cover the read-modify view and the final publish.
+    let (next, previous_launch_at_login, launch_at_login_changed) = {
+        let cfg = state.config.lock().expect("config mutex poisoned");
+        let mut next: AppConfig = cfg.clone();
+        next.apply_partial(patch)?;
+        // `apply_partial` only mutates fields named in the patch, so a
+        // value-level diff is sufficient — no need to also scan `touched`.
+        let changed = cfg.launch_at_login != next.launch_at_login;
+        (next, cfg.launch_at_login, changed)
+    };
+
+    // Step 2: apply the OS-side change first, then persist to disk. If
+    // disk persistence fails, roll the OS change back so the user-visible
+    // state matches what got stored.
+    if launch_at_login_changed {
+        apply_launch_at_login(app, next.launch_at_login)?;
+    }
+    if let Err(e) = next.save(&state.paths.config_file) {
+        if launch_at_login_changed {
+            if let Err(rollback_err) = apply_launch_at_login(app, previous_launch_at_login) {
+                log::warn!(
+                    "failed to roll back launch_at_login after config save failed: {rollback_err}"
+                );
+            }
+        }
+        return Err(e);
+    }
+
+    // Step 3: re-acquire the lock briefly to publish the new value.
+    *state.config.lock().expect("config mutex poisoned") = next;
+
+    Ok(touched)
+}
+
+fn apply_launch_at_login(app: &AppHandle<Wry>, enabled: bool) -> Result<(), StorageError> {
+    let manager = app.autolaunch();
+    let result = if enabled {
+        manager.enable()
+    } else {
+        manager.disable()
+    };
+
+    result.map_err(|e| StorageError::SideEffect {
+        key: "launch_at_login".into(),
+        reason: e.to_string(),
+    })
 }
 
 /// Run any out-of-process side effects that depend on a config key
@@ -252,8 +319,16 @@ fn apply_side_effects(
                 log::warn!("http_api start failed: {e}");
                 // Roll back the in-memory config + persist, otherwise
                 // the preferences pane keeps reporting "API on" against
-                // a dead listener. Lock scope ends before persist_config
-                // because that helper takes the same mutex.
+                // a dead listener. Acquire the writer guard so this
+                // rollback doesn't race a concurrent `commit_config_patch`
+                // — `apply_side_effects` runs after the commit guard has
+                // already been released, so without this we could lose
+                // each other's writes. Lock scope ends before
+                // persist_config because that helper takes config mutex.
+                let _commit_guard = state
+                    .config_write_lock
+                    .lock()
+                    .expect("config write lock poisoned");
                 {
                     let mut cfg = state.config.lock().expect("config mutex poisoned");
                     cfg.http_api_on = false;

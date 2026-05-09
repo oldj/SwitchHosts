@@ -24,6 +24,9 @@ pub enum StorageError {
 
     #[error("config value for {key} failed validation: {reason}")]
     InvalidConfigValue { key: String, reason: String },
+
+    #[error("failed to apply {key} to the OS: {reason}")]
+    SideEffect { key: String, reason: String },
 }
 
 #[allow(dead_code)] // `parse` helper lands in Phase 1B step 2

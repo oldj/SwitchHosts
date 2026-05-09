@@ -90,6 +90,7 @@ const lang: LanguageDict = {
   items: '项',
   items_found: '{0} 项匹配',
   language: '语言',
+  launch_at_login: '开机自动启动',
   last_refresh: '最后刷新：',
   latest_version_desc: '最新的版本为：{0}',
   line: '行',

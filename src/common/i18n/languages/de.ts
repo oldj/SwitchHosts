@@ -94,6 +94,7 @@ const lang: LanguageDict = {
   items: 'Elemente',
   items_found: '{0} Einträge gefunden.',
   language: 'Sprache',
+  launch_at_login: 'Beim Anmelden starten',
   last_refresh: 'Letzte Aktualisierung: ',
   latest_version_desc: 'Die neueste Version ist: {0}',
   line: 'Zeile',

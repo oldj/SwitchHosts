@@ -37,6 +37,13 @@ pub struct AppState {
     pub paths: V5Paths,
     pub config: Mutex<AppConfig>,
     pub store_lock: Mutex<()>,
+    /// Serializes the entire `config_set` / `config_update` commit
+    /// pipeline. Tauri runs `#[tauri::command] async fn`s concurrently
+    /// on tokio, so without this guard two concurrent commits can each
+    /// snapshot the same `cfg`, apply disjoint patches, then race on
+    /// `save()` — losing one of the writes. Held only by `commit_config_patch`;
+    /// callers that just *read* config still go through `config` directly.
+    pub config_write_lock: Mutex<()>,
     pub is_will_quit: AtomicBool,
     /// Epoch milliseconds of the last window-geometry persist. Used by
     /// the Moved/Resized handlers in `lifecycle` to coalesce writes
@@ -66,6 +73,7 @@ impl AppState {
             paths,
             config: Mutex::new(config),
             store_lock: Mutex::new(()),
+            config_write_lock: Mutex::new(()),
             is_will_quit: AtomicBool::new(false),
             last_geometry_persist_ms: AtomicU64::new(0),
         })

@@ -93,6 +93,7 @@ export default {
   items: 'items',
   items_found: '{0} items found.',
   language: 'Language',
+  launch_at_login: 'Launch at Login',
   last_refresh: 'Last Refresh: ',
   latest_version_desc: 'The latest version is: {0}',
   line: 'line',

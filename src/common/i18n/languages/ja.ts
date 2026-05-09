@@ -93,6 +93,7 @@ const lang: LanguageDict = {
   items: '件',
   items_found: '{0}件見つかりました。',
   language: '言語',
+  launch_at_login: 'ログイン時に起動',
   last_refresh: '最終更新: ',
   latest_version_desc: '最新バージョン: {0}',
   line: '行',

@@ -95,6 +95,7 @@ const lang: LanguageDict = {
   items: 'éléments',
   items_found: '{0} éléments trouvés.',
   language: 'Langue',
+  launch_at_login: 'Lancer à l’ouverture de session',
   last_refresh: 'Dernier rafraîchissement : ',
   latest_version_desc: 'La dernière version est : {0}',
   line: 'ligne',

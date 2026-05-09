@@ -107,6 +107,34 @@ test.describe('preferences', () => {
     )
   })
 
+  test('launch at login defaults off and saves immediately', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
+
+    const launchAtLogin = preferences.getByLabel('Launch at Login')
+    await expect(launchAtLogin).not.toBeChecked()
+
+    await launchAtLogin.check()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.configs.launch_at_login
+      })
+      .toBe(true)
+
+    const calls = await getMockCalls(page)
+    expect(configPatches(calls)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ launch_at_login: true }),
+      ]),
+    )
+  })
+
   test('applies global single-choice mode to top-level hosts', async ({ page }) => {
     await page.getByLabel('Settings').click()
     await page.getByText('Preferences').click()

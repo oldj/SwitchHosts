@@ -90,6 +90,7 @@ export default {
   items: 'öğeler',
   items_found: '{0} öğe bulundu.',
   language: 'Dil',
+  launch_at_login: 'Oturum açıldığında başlat',
   last_refresh: 'Son yenileme: ',
   latest_version_desc: 'En son sürüm: {0}',
   line: 'satır',

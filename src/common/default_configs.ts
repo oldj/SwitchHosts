@@ -21,6 +21,7 @@ const configs = {
   theme: 'system' as ThemeType,
   choice_mode: 2 as FolderModeType,
   show_title_on_tray: false,
+  launch_at_login: false,
   hide_at_launch: false,
   send_usage_data: false,
   cmd_after_hosts_apply: '',

@@ -36,6 +36,7 @@ pub struct AppConfig {
     pub theme: String, // "light" | "dark" | "system"
     pub choice_mode: u8,
     pub show_title_on_tray: bool,
+    pub launch_at_login: bool,
     pub hide_at_launch: bool,
     pub send_usage_data: bool,
     pub cmd_after_hosts_apply: String,
@@ -78,6 +79,7 @@ impl Default for AppConfig {
             theme: "system".to_string(),
             choice_mode: 2,
             show_title_on_tray: false,
+            launch_at_login: false,
             hide_at_launch: false,
             send_usage_data: false,
             cmd_after_hosts_apply: String::new(),
@@ -217,13 +219,6 @@ impl AppConfig {
         *self = next;
         Ok(())
     }
-
-    /// Set a single key. Thin wrapper around `apply_partial` for the
-    /// `config_set(key, value)` command shape.
-    pub fn set_key(&mut self, key: &str, value: Value) -> Result<(), StorageError> {
-        let patch = json!({ key: value });
-        self.apply_partial(&patch)
-    }
 }
 
 #[cfg(test)]
@@ -246,6 +241,34 @@ mod tests {
         let _ = std::fs::remove_file(path);
 
         assert_eq!(cfg.theme, "system");
+    }
+
+    #[test]
+    fn load_defaults_missing_launch_at_login_to_false() {
+        let path = std::env::temp_dir().join(format!(
+            "switchhosts-config-test-{}-{}.json",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::write(&path, r#"{ "theme": "dark" }"#).unwrap();
+
+        let cfg = AppConfig::load(&path);
+        let _ = std::fs::remove_file(path);
+
+        assert!(!cfg.launch_at_login);
+    }
+
+    #[test]
+    fn apply_partial_accepts_launch_at_login() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "launch_at_login": true }))
+            .unwrap();
+
+        assert!(cfg.launch_at_login);
     }
 
     #[test]

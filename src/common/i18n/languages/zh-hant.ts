@@ -90,6 +90,7 @@ const lang: LanguageDict = {
   items: '項',
   items_found: '{0} 項符合',
   language: '語言',
+  launch_at_login: '開機自動啟動',
   last_refresh: '最後更新：',
   latest_version_desc: '最新的版本為：{0}',
   line: '行',

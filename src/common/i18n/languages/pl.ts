@@ -90,6 +90,7 @@ export default {
   items: 'elementy',
   items_found: 'Znaleziono {0} elementów.',
   language: 'Język',
+  launch_at_login: 'Uruchamiaj przy logowaniu',
   last_refresh: 'Ostatnie odświeżenie: ',
   latest_version_desc: 'Najnowsza wersja to: {0}',
   line: 'linia',

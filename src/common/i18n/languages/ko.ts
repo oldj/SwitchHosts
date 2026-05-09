@@ -91,6 +91,7 @@ export default {
   items: '항목',
   items_found: '{0}개의 항목들을 찾았습니다.',
   language: '언어',
+  launch_at_login: '로그인 시 실행',
   last_refresh: '마지막 새로고침: ',
   latest_version_desc: '최신버전: {0}',
   line: '줄',
