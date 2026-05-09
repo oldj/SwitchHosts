@@ -27,7 +27,22 @@
   min-width: 0;
 }
 
+.title_icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+
+  svg {
+    flex: 0 0 auto;
+  }
+}
+
 .title {
+  flex: 1 1 auto;
+  min-width: 0;
   font-weight: 600;
   font-size: 14px;
   white-space: nowrap;

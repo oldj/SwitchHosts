@@ -54,8 +54,14 @@ const SystemHostsPanel = () => {
       <div className={styles.body}>
         <div className={styles.header}>
           <Group gap="8px" wrap="nowrap" className={styles.title_wrap}>
-            <ItemIcon type="system" />
-            <Text className={styles.title} title={lang.system_hosts}>
+            <span className={styles.title_icon} data-testid="right-panel-title-icon">
+              <ItemIcon type="system" />
+            </span>
+            <Text
+              className={styles.title}
+              title={lang.system_hosts}
+              data-testid="right-panel-title"
+            >
               {lang.system_hosts}
             </Text>
           </Group>
