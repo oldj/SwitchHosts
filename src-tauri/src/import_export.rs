@@ -366,3 +366,331 @@ fn write_history(path: &Path, items: &[Value]) -> Result<(), StorageError> {
         .map_err(|e| StorageError::serialize(path.display().to_string(), e))?;
     atomic_write(path, &payload)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn temp_paths(name: &str) -> V5Paths {
+        let root = std::env::temp_dir().join(format!(
+            "switchhosts-import-test-{name}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let paths = V5Paths::under(root);
+        paths.ensure_dirs().unwrap();
+        paths
+    }
+
+    fn cleanup(paths: &V5Paths) {
+        std::fs::remove_dir_all(&paths.root).ok();
+    }
+
+    fn read_entry_file(paths: &V5Paths, id: &str) -> String {
+        entries::read_entry(&paths.entries_dir, id).unwrap()
+    }
+
+    fn manifest_root(paths: &V5Paths) -> Vec<Value> {
+        Manifest::load(paths).unwrap().root
+    }
+
+    fn entry_path_exists(paths: &V5Paths, id: &str) -> bool {
+        let p: PathBuf = entries::entry_path(&paths.entries_dir, id).unwrap();
+        p.exists()
+    }
+
+    // ---- dispatcher: import_backup_bytes -----------------------------------
+
+    #[test]
+    fn dispatcher_returns_parse_error_for_invalid_json() {
+        let paths = temp_paths("dispatch-parse");
+        let result = import_backup_bytes(b"this is not json", &paths).unwrap();
+        assert_eq!(result, json!(ERR_PARSE));
+        cleanup(&paths);
+    }
+
+    #[test]
+    fn dispatcher_returns_invalid_data_for_top_level_array() {
+        let paths = temp_paths("dispatch-array");
+        let bytes = serde_json::to_vec(&json!([1, 2, 3])).unwrap();
+        let result = import_backup_bytes(&bytes, &paths).unwrap();
+        assert_eq!(result, json!(ERR_INVALID_DATA));
+        cleanup(&paths);
+    }
+
+    #[test]
+    fn dispatcher_returns_invalid_data_when_version_array_missing() {
+        let paths = temp_paths("dispatch-no-version");
+        let bytes = serde_json::to_vec(&json!({ "data": {} })).unwrap();
+        let result = import_backup_bytes(&bytes, &paths).unwrap();
+        assert_eq!(result, json!(ERR_INVALID_DATA));
+        cleanup(&paths);
+    }
+
+    #[test]
+    fn dispatcher_returns_new_version_for_future_major() {
+        let paths = temp_paths("dispatch-future");
+        let bytes = serde_json::to_vec(&json!({ "version": [99, 0, 0] })).unwrap();
+        let result = import_backup_bytes(&bytes, &paths).unwrap();
+        assert_eq!(result, json!(ERR_NEW_VERSION));
+        cleanup(&paths);
+    }
+
+    // ---- v3 import ---------------------------------------------------------
+
+    #[test]
+    fn import_v3_promotes_where_to_type_and_converts_interval_hours_to_seconds() {
+        let paths = temp_paths("v3-basic");
+        let backup = json!({
+            "version": [3, 0],
+            "list": [
+                { "id": "0", "where": "system", "title": "System Hosts" },
+                {
+                    "id": "abc",
+                    "where": "local",
+                    "title": "Local",
+                    "content": "127.0.0.1 example.test\n",
+                    "on": true,
+                },
+                {
+                    "id": "rem",
+                    "where": "remote",
+                    "title": "Remote",
+                    "url": "https://example.com/hosts",
+                    "refresh_interval": 2,
+                },
+            ],
+        });
+        let bytes = serde_json::to_vec(&backup).unwrap();
+
+        let result = import_backup_bytes(&bytes, &paths).unwrap();
+        assert_eq!(result, json!(true));
+
+        let root = manifest_root(&paths);
+        assert_eq!(root.len(), 3);
+
+        let local = root.iter().find(|n| n["id"] == "abc").unwrap();
+        assert_eq!(local.get("type").and_then(Value::as_str), Some("local"));
+        // `where` and `content` must not survive into the v5 tree.
+        assert!(local.get("where").is_none());
+        assert!(local.get("content").is_none());
+        assert_eq!(read_entry_file(&paths, "abc"), "127.0.0.1 example.test\n");
+
+        let remote = root.iter().find(|n| n["id"] == "rem").unwrap();
+        // 2 hours → 7200 seconds.
+        assert_eq!(
+            remote.get("refresh_interval").and_then(Value::as_u64),
+            Some(7200)
+        );
+
+        // System node ("id": "0") must not write an entries file even
+        // if it (legacy v3 shape) had one.
+        assert!(!entry_path_exists(&paths, "0"));
+
+        cleanup(&paths);
+    }
+
+    #[test]
+    fn import_v3_recurses_into_folder_children() {
+        let paths = temp_paths("v3-folder");
+        let backup = json!({
+            "version": [3, 0],
+            "list": [
+                {
+                    "id": "f",
+                    "where": "folder",
+                    "title": "Folder",
+                    "children": [
+                        {
+                            "id": "child",
+                            "where": "local",
+                            "content": "child-content",
+                        }
+                    ]
+                }
+            ]
+        });
+        let bytes = serde_json::to_vec(&backup).unwrap();
+
+        import_backup_bytes(&bytes, &paths).unwrap();
+
+        let root = manifest_root(&paths);
+        let folder = &root[0];
+        assert_eq!(folder.get("type").and_then(Value::as_str), Some("folder"));
+        let child = folder["children"][0].clone();
+        assert_eq!(child.get("type").and_then(Value::as_str), Some("local"));
+        assert!(child.get("content").is_none());
+        assert_eq!(read_entry_file(&paths, "child"), "child-content");
+        cleanup(&paths);
+    }
+
+    #[test]
+    fn import_v3_returns_invalid_v3_data_when_list_missing() {
+        let paths = temp_paths("v3-missing-list");
+        let bytes = serde_json::to_vec(&json!({ "version": [3, 0] })).unwrap();
+        let result = import_backup_bytes(&bytes, &paths).unwrap();
+        assert_eq!(result, json!(ERR_INVALID_V3_DATA));
+        cleanup(&paths);
+    }
+
+    // ---- v4 import ---------------------------------------------------------
+
+    #[test]
+    fn import_v4_extracts_inline_content_into_entries_and_writes_tree() {
+        let paths = temp_paths("v4-basic");
+        let backup = json!({
+            "version": [4, 0, 0],
+            "data": {
+                "list": {
+                    "tree": [
+                        { "id": "abc", "type": "local", "title": "Local", "on": true },
+                    ],
+                    "trashcan": [
+                        { "id": "trashed", "data": { "id": "trashed", "type": "local" }, "add_time_ms": 0 }
+                    ],
+                },
+                "collection": {
+                    "hosts": {
+                        "data": [
+                            { "id": "0", "content": "system-content-skipped" },
+                            { "id": "abc", "content": "abc-content" },
+                        ]
+                    },
+                    "history": {
+                        "data": [
+                            { "id": "h1", "content": "old", "add_time_ms": 0 }
+                        ]
+                    }
+                }
+            }
+        });
+        let bytes = serde_json::to_vec(&backup).unwrap();
+
+        let result = import_backup_bytes(&bytes, &paths).unwrap();
+        assert_eq!(result, json!(true));
+
+        let root = manifest_root(&paths);
+        assert_eq!(root[0]["id"], "abc");
+        assert_eq!(read_entry_file(&paths, "abc"), "abc-content");
+        // System "0" content must never be written as an entries file.
+        assert!(!entry_path_exists(&paths, "0"));
+
+        let trashcan = Trashcan::load(&paths.trashcan_file).unwrap();
+        assert_eq!(trashcan.items.len(), 1);
+        assert_eq!(trashcan.items[0]["id"], "trashed");
+
+        let history_path = paths.histories_dir.join("system-hosts.json");
+        assert!(history_path.exists());
+
+        cleanup(&paths);
+    }
+
+    #[test]
+    fn import_v4_returns_invalid_data_key_when_data_field_missing() {
+        let paths = temp_paths("v4-missing-data");
+        let bytes = serde_json::to_vec(&json!({ "version": [4, 0] })).unwrap();
+        let result = import_backup_bytes(&bytes, &paths).unwrap();
+        assert_eq!(result, json!(ERR_INVALID_DATA_KEY));
+        cleanup(&paths);
+    }
+
+    // ---- v5 import ---------------------------------------------------------
+
+    #[test]
+    fn import_v5_round_trips_through_export_to_file() {
+        // Stage a v5 layout: manifest with one local, one entry file,
+        // one trashcan item. Export it, blow away the dir, import the
+        // bytes back, and assert byte-for-byte equality on the visible
+        // fields. This is the most useful single test in this file —
+        // it exercises both export_to_file and import_v5 end-to-end.
+        let paths = temp_paths("v5-roundtrip");
+        let manifest = Manifest {
+            root: vec![json!({
+                "id": "abc",
+                "type": "local",
+                "title": "Local",
+                "on": true,
+            })],
+            ..Default::default()
+        };
+        manifest.save(&paths).unwrap();
+        entries::write_entry(&paths.entries_dir, "abc", "127.0.0.1 example.test\n").unwrap();
+        Trashcan {
+            items: vec![json!({
+                "id": "trashed",
+                "data": { "id": "trashed", "type": "local" },
+                "add_time_ms": 1234567,
+            })],
+            ..Default::default()
+        }
+        .save(&paths.trashcan_file)
+        .unwrap();
+
+        let backup_path = paths.root.join("backup.json");
+        export_to_file(&backup_path, &paths).unwrap();
+        let bytes = std::fs::read(&backup_path).unwrap();
+
+        // Wipe state; only the entries dir / dirs survive.
+        std::fs::remove_file(&paths.manifest_file).ok();
+        std::fs::remove_file(&paths.trashcan_file).ok();
+        let _ = std::fs::remove_file(entries::entry_path(&paths.entries_dir, "abc").unwrap());
+
+        let result = import_backup_bytes(&bytes, &paths).unwrap();
+        assert_eq!(result, json!(true));
+
+        let root = manifest_root(&paths);
+        assert_eq!(root[0]["id"], "abc");
+        assert_eq!(read_entry_file(&paths, "abc"), "127.0.0.1 example.test\n");
+        let trashcan = Trashcan::load(&paths.trashcan_file).unwrap();
+        assert_eq!(trashcan.items.len(), 1);
+        assert_eq!(trashcan.items[0]["id"], "trashed");
+
+        cleanup(&paths);
+    }
+
+    #[test]
+    fn import_v5_skips_system_id_zero_in_entries() {
+        let paths = temp_paths("v5-skip-system");
+        let backup = json!({
+            "format": "switchhosts-backup",
+            "schemaVersion": 1,
+            "version": [5, 0, 0, 0],
+            "manifest": {
+                "format": "switchhosts-data",
+                "schemaVersion": 1,
+                "root": [
+                    { "id": "abc", "type": "local" }
+                ]
+            },
+            "entries": {
+                "0": "system-content-must-not-be-written",
+                "abc": "abc-content",
+            },
+            "trashcan": { "items": [] },
+        });
+        let bytes = serde_json::to_vec(&backup).unwrap();
+
+        import_backup_bytes(&bytes, &paths).unwrap();
+
+        assert!(!entry_path_exists(&paths, "0"));
+        assert_eq!(read_entry_file(&paths, "abc"), "abc-content");
+        cleanup(&paths);
+    }
+
+    #[test]
+    fn import_v5_returns_invalid_data_when_manifest_missing() {
+        let paths = temp_paths("v5-no-manifest");
+        let bytes = serde_json::to_vec(&json!({
+            "format": "switchhosts-backup",
+            "schemaVersion": 1,
+            "version": [5, 0, 0, 0],
+        })).unwrap();
+        let result = import_backup_bytes(&bytes, &paths).unwrap();
+        assert_eq!(result, json!(ERR_INVALID_DATA));
+        cleanup(&paths);
+    }
+}
