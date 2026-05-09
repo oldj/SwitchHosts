@@ -193,6 +193,7 @@ const lang: LanguageDict = {
   usage_data_help: '匿名の利用データを定期的に送信し、SwitchHostsの改善にご協力いただけませんか？',
   usage_data_title: 'SwitchHostsの改善に協力する',
   use_proxy: 'プロキシを使用',
+  use_proxy_desc: '有効にすると、リモート Hosts のダウンロード時にプロキシを使用します。',
   use_system_window_frame:
     'システムのウィンドウフレームを使用。アプリケーションの再起動が必要です。',
   view: '表示',

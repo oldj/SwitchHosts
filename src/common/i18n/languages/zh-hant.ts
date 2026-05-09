@@ -188,6 +188,7 @@ const lang: LanguageDict = {
     '您願意寄送匿名的使用資料來幫助我們改善 SwitchHosts 嗎？資料中不會包含任何隱私資訊。',
   usage_data_title: '幫助改善 SwitchHosts',
   use_proxy: '使用代理',
+  use_proxy_desc: '如果開啟，下載遠端 Hosts 方案時將使用代理進行連線。',
   use_system_window_frame: '使用系統視窗外框，需要重啟程式',
   view: '視窗',
   where_is_my_data: '我的資料儲存在哪裡？',

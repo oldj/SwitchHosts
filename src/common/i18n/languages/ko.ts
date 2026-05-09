@@ -196,6 +196,7 @@ export default {
     '주기적으로 익명의 사용 데이터를 제출하여 SwitchHost를 개선하는 데 도움을 주시겠습니까?',
   usage_data_title: 'SwitchHosts 개선!',
   use_proxy: '프록시 사용',
+  use_proxy_desc: '활성화하면 원격 Hosts 다운로드 시 프록시를 사용해 연결합니다.',
   use_system_window_frame:
     '시스템 창을 사용하려면, 프로그램 재시작이 필요합니다',
   view: '뷰',

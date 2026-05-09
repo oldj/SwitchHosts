@@ -199,6 +199,8 @@ const lang: LanguageDict = {
     "Voulez-vous nous aider à améliorer SwitchHosts en soumettant périodiquement vos données d'utilisation de manière anonyme ?",
   usage_data_title: 'Rendez SwitchHosts meilleur !',
   use_proxy: 'Utiliser un proxy',
+  use_proxy_desc:
+    'Si cette option est activée, les téléchargements de Hosts distants utiliseront le proxy.',
   use_system_window_frame:
     "Utiliser le cadre de la fenêtre système, le redémarrage de l'application est requis",
   view: 'Vue',

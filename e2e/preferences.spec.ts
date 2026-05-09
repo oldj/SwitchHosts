@@ -132,6 +132,9 @@ test.describe('preferences', () => {
       .toBe('echo saved')
 
     await preferences.getByRole('tab', { name: 'Proxy' }).click()
+    await expect(
+      preferences.getByText('If enabled, remote Hosts downloads will connect through the proxy.'),
+    ).toBeVisible()
     await preferences.getByRole('checkbox', { name: 'Use Proxy' }).check()
     await preferences.getByRole('combobox').selectOption('https')
     await preferences.getByRole('textbox').fill('proxy.local')

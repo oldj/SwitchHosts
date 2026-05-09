@@ -190,6 +190,8 @@ export default {
     'Anonim kullanım verilerini periyodik olarak göndererek SwitchHosts\'u iyileştirmemize yardımcı olmak ister misiniz?',
   usage_data_title: 'SwitchHosts\'u daha iyi hale getirin!',
   use_proxy: 'Proxy kullan',
+  use_proxy_desc:
+    'Etkinleştirilirse uzak Hosts indirmeleri proxy üzerinden bağlanır.',
   use_system_window_frame: 'Sistem pencere çerçevesini kullanın, uygulamanın yeniden başlatılması gereklidir',
   view: 'Görüntüle',
   where_is_my_data: 'Verilerim nerede saklanıyor?',

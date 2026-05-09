@@ -5,6 +5,7 @@
 
 import { ConfigsType, ProtocolType } from '@common/default_configs'
 import { Box, Checkbox, Group, NativeSelect, Stack, TextInput } from '@mantine/core'
+import DescriptionText from '@renderer/components/DescriptionText'
 import useI18n from '@renderer/models/useI18n'
 import { useState } from 'react'
 
@@ -34,6 +35,7 @@ const General = (props: IProps) => {
             label={lang.use_proxy}
           />
         </Group>
+        <DescriptionText mt="8px">{lang.use_proxy_desc}</DescriptionText>
       </Box>
 
       <Box w="100%">
