@@ -1,6 +1,6 @@
 [package]
 name = "switchhosts"
-version = "5.0.0-beta.25"
+version = "5.0.0-beta.26"
 description = "A GUI tool for managing your hosts file."
 authors = ["oldj"]
 edition = "2021"

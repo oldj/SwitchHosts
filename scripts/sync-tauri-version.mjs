@@ -3,6 +3,7 @@
  * Sync the version from `package.json` to:
  *   - `src/version.json`     (consumed by renderer + Rust build.rs)
  *   - `src-tauri/tauri.conf.json`  (consumed by Tauri bundler)
+ *   - `src-tauri/Cargo.toml` and `src-tauri/Cargo.lock`
  *
  * Called in two contexts:
  *   1. `npm version X.Y.Z` via the `version` lifecycle script — after
@@ -48,8 +49,7 @@ if (conf.version !== version) {
 
 // 3. src-tauri/Cargo.toml
 //    Replace the first `version = "..."` line, which by Cargo convention
-//    is the [package] section's version. Cargo.lock is refreshed by any
-//    subsequent cargo invocation (build / metadata / check).
+//    is the [package] section's version.
 const cargoPath = join(root, 'src-tauri/Cargo.toml')
 const cargoSrc = readFileSync(cargoPath, 'utf-8')
 const cargoVersionRe = /^version\s*=\s*"[^"]*"/m
@@ -64,4 +64,24 @@ if (currentCargoVersion !== version) {
   console.log(`[sync-version] Cargo.toml → ${version}`)
 } else {
   console.log(`[sync-version] Cargo.toml already ${version}`)
+}
+
+// 4. src-tauri/Cargo.lock
+//    Keep the root package entry in sync without invoking Cargo during npm's
+//    release lifecycle.
+const cargoLockPath = join(root, 'src-tauri/Cargo.lock')
+const cargoLockSrc = readFileSync(cargoLockPath, 'utf-8')
+const cargoLockPackageRe =
+  /(^\[\[package\]\]\n(?:(?!^\[\[package\]\]).)*?^name\s*=\s*"switchhosts"\s*$\n(?:(?!^\[\[package\]\]).)*?^version\s*=\s*")([^"]*)(")/ms
+const cargoLockMatch = cargoLockSrc.match(cargoLockPackageRe)
+if (!cargoLockMatch) {
+  throw new Error(`[sync-version] cannot find the switchhosts package entry in ${cargoLockPath}`)
+}
+const currentCargoLockVersion = cargoLockMatch[2]
+if (currentCargoLockVersion !== version) {
+  const next = cargoLockSrc.replace(cargoLockPackageRe, (_, before, _oldVersion, after) => `${before}${version}${after}`)
+  writeFileSync(cargoLockPath, next, 'utf-8')
+  console.log(`[sync-version] Cargo.lock → ${version}`)
+} else {
+  console.log(`[sync-version] Cargo.lock already ${version}`)
 }

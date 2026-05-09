@@ -25,7 +25,7 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:info": "tauri info",
-    "version": "node scripts/sync-tauri-version.mjs && git add src/version.json src-tauri/tauri.conf.json"
+    "version": "node scripts/sync-tauri-version.mjs && git add src/version.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.3",
