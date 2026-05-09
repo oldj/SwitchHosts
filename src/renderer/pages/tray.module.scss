@@ -20,6 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   background: var(--swh-tray-header-bg);
   color: var(--swh-tray-font-color);
   font-size: 16px;
@@ -29,6 +30,14 @@
   -webkit-app-region: drag;
 }
 
+.logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
 .body {
   padding: 8px;
   position: absolute;
@@ -36,6 +45,9 @@
   bottom: 30px;
   left: 0;
   right: 0;
+  background: var(--swh-left-panel-bg);
+  color: var(--swh-font-color);
+  box-sizing: border-box;
 }
 
 .footer {

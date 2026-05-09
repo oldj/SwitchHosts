@@ -1,3 +1,4 @@
+import logo from '@/assets/logo@4x.png'
 import events from '@common/events'
 import { ScrollArea } from '@mantine/core'
 import List from '@renderer/components/List'
@@ -47,7 +48,10 @@ const TrayPage = () => {
 
   return (
     <div className={styles.root}>
-      <h1 className={styles.header}>SwitchHosts</h1>
+      <h1 className={styles.header}>
+        <img className={styles.logo} src={logo} alt="" />
+        <span>SwitchHosts</span>
+      </h1>
       <ScrollArea className={styles.body} scrollbars="y" type="hover">
         <List isTray={true} />
       </ScrollArea>
