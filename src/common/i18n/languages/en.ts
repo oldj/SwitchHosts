@@ -182,6 +182,7 @@ export default {
   tray_mini_window: 'Tray Icon Shortcut',
   undo: 'Undo',
   unhide: 'Unhide',
+  unknown_error: 'Unknown error',
   untitled: 'Untitled',
   update_download_now: 'Download Update',
   update_downloading_desc: 'Downloading version {0}: {1}',

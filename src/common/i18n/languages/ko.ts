@@ -180,6 +180,7 @@ export default {
   tray_mini_window: '작업 표시줄 아이콘 바로가기',
   undo: '실행취소',
   unhide: '숨김해제',
+  unknown_error: '알 수 없는 오류',
   untitled: '제목없음',
   update_download_now: '업데이트 다운로드',
   update_downloading_desc: '버전 {0} 다운로드 중: {1}',

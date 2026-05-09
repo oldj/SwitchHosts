@@ -172,6 +172,7 @@ const lang: LanguageDict = {
   tray_mini_window: '任务栏快捷小窗',
   undo: '撤销',
   unhide: '取消隐藏',
+  unknown_error: '未知错误',
   untitled: '未命名',
   update_download_now: '下载更新',
   update_downloading_desc: '正在下载版本 {0}：{1}',

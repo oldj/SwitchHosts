@@ -172,6 +172,7 @@ export default {
   tray_mini_window: 'Skrót ikony paska zadań',
   undo: 'Cofnij',
   unhide: 'Pokaż',
+  unknown_error: 'Nieznany błąd',
   untitled: 'Bez tytułu',
   update_download_now: 'Pobierz aktualizację',
   update_downloading_desc: 'Pobieranie wersji {0}: {1}',

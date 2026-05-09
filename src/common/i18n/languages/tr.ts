@@ -174,6 +174,7 @@ export default {
   tray_mini_window: 'Görev çubuğu simgesi kısayolu',
   undo: 'Geri al',
   unhide: 'Gizlemeyi kaldır',
+  unknown_error: 'Bilinmeyen hata',
   untitled: 'Başlıksız',
   update_download_now: 'Güncellemeyi indir',
   update_downloading_desc: '{0} sürümü indiriliyor: {1}',

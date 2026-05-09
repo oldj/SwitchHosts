@@ -178,6 +178,7 @@ const lang: LanguageDict = {
   tray_mini_window: 'タスクバーアイコンショートカット',
   undo: '元に戻す',
   unhide: 'すべて表示',
+  unknown_error: '不明なエラー',
   untitled: '無題',
   update_download_now: '更新をダウンロード',
   update_downloading_desc: 'バージョン {0} をダウンロード中: {1}',

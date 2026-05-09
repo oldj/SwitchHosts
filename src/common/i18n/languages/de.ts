@@ -181,6 +181,7 @@ const lang: LanguageDict = {
   tray_mini_window: 'Verknüpfung über Taskleistensymbol',
   undo: 'Rückgängig machen',
   unhide: 'Einblenden',
+  unknown_error: 'Unbekannter Fehler',
   untitled: 'Ohne Titel',
   update_download_now: 'Update herunterladen',
   update_downloading_desc: 'Version {0} wird heruntergeladen: {1}',

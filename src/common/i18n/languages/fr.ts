@@ -183,6 +183,7 @@ const lang: LanguageDict = {
   tray_mini_window: "Raccourci de l'icône de la barre des tâches",
   undo: 'Annuler',
   unhide: 'Démasquer',
+  unknown_error: 'Erreur inconnue',
   untitled: 'Sans titre',
   update_download_now: 'Télécharger la mise à jour',
   update_downloading_desc: 'Téléchargement de la version {0} : {1}',
