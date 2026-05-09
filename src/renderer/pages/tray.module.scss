@@ -20,6 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   background: var(--swh-tray-header-bg);
   color: var(--swh-tray-font-color);
   font-size: 16px;
@@ -29,31 +30,48 @@
   -webkit-app-region: drag;
 }
 
+.logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
 .body {
   padding: 8px;
   position: absolute;
   top: 40px;
-  bottom: 30px;
+  bottom: 0;
   left: 0;
   right: 0;
+  background: var(--swh-left-panel-bg);
+  color: var(--swh-font-color);
+  box-sizing: border-box;
 }
 
-.footer {
+.show_main {
   position: absolute;
-  height: 30px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--swh-status-bar-bg);
-  border-top: 1px solid var(--swh-border-color-0);
-  padding: 0 16px;
+  right: 16px;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
   font-size: 16px;
+  line-height: 1;
+  transform: translateY(-50%);
+  -webkit-app-region: no-drag;
 
   svg {
-    cursor: pointer;
+    pointer-events: none;
   }
 }
 
@@ -80,9 +98,4 @@
     @include common.swh-scroll-y();
   }
 
-  .footer {
-    //left: 1px;
-    //right: 1px;
-    //bottom: 1px;
-  }
 }

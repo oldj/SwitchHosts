@@ -1,3 +1,4 @@
+import logo from '@/assets/logo@4x.png'
 import events from '@common/events'
 import { ScrollArea } from '@mantine/core'
 import List from '@renderer/components/List'
@@ -8,13 +9,13 @@ import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import useResolvedTheme from '@renderer/models/useResolvedTheme'
 import { applyThemeToBody } from '@renderer/utils/theme'
+import { IconQueuePopOut } from '@tabler/icons-react'
 import { useEffect } from 'react'
-import { BiArea } from 'react-icons/bi'
 import styles from './tray.module.scss'
 
 const TrayPage = () => {
   const { loadHostsData } = useHostsData()
-  const { setLocale } = useI18n()
+  const { setLocale, lang } = useI18n()
   const { configs, loadConfigs } = useConfigs()
   const resolvedTheme = useResolvedTheme(configs?.theme)
 
@@ -47,15 +48,22 @@ const TrayPage = () => {
 
   return (
     <div className={styles.root}>
-      <h1 className={styles.header}>SwitchHosts</h1>
+      <h1 className={styles.header}>
+        <img className={styles.logo} src={logo} alt="" />
+        <span>SwitchHosts</span>
+        <button
+          className={styles.show_main}
+          type="button"
+          aria-label={lang.show_main_window}
+          title={lang.show_main_window}
+          onClick={showMain}
+        >
+          <IconQueuePopOut size={16} stroke={1.5} />
+        </button>
+      </h1>
       <ScrollArea className={styles.body} scrollbars="y" type="hover">
         <List isTray={true} />
       </ScrollArea>
-      <div className={styles.footer}>
-        <span onClick={showMain}>
-          <BiArea />
-        </span>
-      </div>
     </div>
   )
 }

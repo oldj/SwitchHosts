@@ -3,6 +3,7 @@
  * @homepage: https://oldj.net
  */
 
+import logo from '@/assets/logo@4x.png'
 import events from '@common/events'
 import { ActionIcon, Badge, Box, Divider, Flex } from '@mantine/core'
 import ItemIcon from '@renderer/components/ItemIcon'
@@ -22,6 +23,7 @@ import {
   IconX,
 } from '@tabler/icons-react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import clsx from 'clsx'
 import { useEffect, useState } from 'react'
 import styles from './index.module.scss'
 
@@ -41,6 +43,7 @@ const TopBar = (props: IProps) => {
 
   const showToggleSwitch =
     !showLeftPanel && currentHosts && !isHostsInTrashcan(currentHosts.id)
+  const showAppBrand = agent.platform !== 'darwin'
   const showWindowControls = agent.platform !== 'darwin'
 
   useEffect(() => {
@@ -59,31 +62,55 @@ const TopBar = (props: IProps) => {
   )
 
   return (
-    <div className={styles.root} data-tauri-drag-region>
-      <Flex align="center" justify="center" gap={8}>
-        <ActionIcon
-          aria-label="Toggle sidebar"
-          onClick={() => {
-            agent.broadcast(events.toggle_left_panel, !showLeftPanel)
-          }}
-          variant="subtle"
-          color="gray"
-        >
-          {showLeftPanel ? (
-            <IconLayoutSidebarLeftCollapse size={iconSize} stroke={iconStroke} />
-          ) : (
-            <IconLayoutSidebarLeftExpand size={iconSize} stroke={iconStroke} />
-          )}
-        </ActionIcon>
-        <ActionIcon
-          aria-label="Add"
-          onClick={() => agent.broadcast(events.add_new)}
-          variant="subtle"
-          color="gray"
-        >
-          <IconPlus size={iconSize} stroke={iconStroke} />
-        </ActionIcon>
-      </Flex>
+    <div
+      className={clsx(styles.root, showAppBrand && styles.with_app_brand)}
+      data-tauri-drag-region
+    >
+      <div className={styles.left_cluster} data-tauri-drag-region>
+        {showAppBrand ? (
+          <div
+            className={styles.app_brand}
+            data-testid="titlebar-brand"
+            data-tauri-drag-region
+          >
+            <span
+              className={styles.app_logo_slot}
+              data-testid="titlebar-logo-slot"
+              data-tauri-drag-region
+            >
+              <img className={styles.app_logo} src={logo} alt="" data-testid="titlebar-logo" />
+            </span>
+            <span className={styles.app_title} data-tauri-drag-region>
+              {lang._app_name}
+            </span>
+          </div>
+        ) : null}
+
+        <Flex align="center" justify="center" gap={8}>
+          <ActionIcon
+            aria-label="Toggle sidebar"
+            onClick={() => {
+              agent.broadcast(events.toggle_left_panel, !showLeftPanel)
+            }}
+            variant="subtle"
+            color="gray"
+          >
+            {showLeftPanel ? (
+              <IconLayoutSidebarLeftCollapse size={iconSize} stroke={iconStroke} />
+            ) : (
+              <IconLayoutSidebarLeftExpand size={iconSize} stroke={iconStroke} />
+            )}
+          </ActionIcon>
+          <ActionIcon
+            aria-label="Add"
+            onClick={() => agent.broadcast(events.add_new)}
+            variant="subtle"
+            color="gray"
+          >
+            <IconPlus size={iconSize} stroke={iconStroke} />
+          </ActionIcon>
+        </Flex>
+      </div>
 
       <Box className={styles.title_wrapper} data-tauri-drag-region>
         <Flex className={styles.title} gap={8} align="center" justify="center">

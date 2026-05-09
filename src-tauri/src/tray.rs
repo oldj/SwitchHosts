@@ -26,7 +26,6 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use tauri::webview::WebviewWindowBuilder;
 use tauri::{
     AppHandle, Manager, Monitor, PhysicalPosition, Rect as TauriRect, Runtime, WebviewUrl,
-    WindowEvent,
 };
 
 use crate::i18n::menu_labels;
@@ -41,19 +40,34 @@ const TRAY_WINDOW_HEIGHT: f64 = 600.0;
 
 /// Click-toggle dedupe window, in milliseconds.
 ///
-/// macOS dispatches the tray window's focus-loss event before the
-/// status item's click handler when the user clicks the tray icon
-/// while the mini window is open. Without this dedupe, the focus-loss
-/// handler hides the window and the click handler immediately shows
-/// it again — turning a "click to dismiss" into a no-op flicker.
-/// Recording the auto-hide timestamp and skipping `show` when the click
-/// arrives within this window gives us toggle semantics.
+/// Some platforms can deliver a tray-window auto-hide before the tray
+/// icon's click handler when the user clicks the icon while the mini
+/// window is open. Without this dedupe, the auto-hide path hides the
+/// window and the click handler immediately shows it again — turning a
+/// "click to dismiss" into a no-op flicker. Recording the auto-hide
+/// timestamp and skipping `show` when the click arrives within this
+/// window gives us toggle semantics.
 const TRAY_TOGGLE_DEDUPE_MS: u64 = 300;
 
-/// Wall-clock millis of the last focus-loss-driven auto-hide of the
-/// tray window. 0 means "never". `AtomicU64` keeps it lock-free and
-/// safe to read/write from any thread.
+/// macOS can deliver the status-item mouse-down to our global
+/// click-outside monitor after the tray click handler has already
+/// scheduled or shown the mini window. Suppress global auto-hide for a
+/// very short window after an icon-triggered show so the opening click
+/// can't immediately dismiss the window it just requested, while still
+/// allowing an intentional outside click right after opening to close it.
+#[cfg(target_os = "macos")]
+const TRAY_GLOBAL_HIDE_SUPPRESS_AFTER_ICON_CLICK_MS: u64 = 150;
+
+/// Wall-clock millis of the last auto-hide of the tray window. 0 means
+/// "never". `AtomicU64` keeps it lock-free and safe to read/write from
+/// any thread.
 static LAST_TRAY_AUTO_HIDE_MS: AtomicU64 = AtomicU64::new(0);
+
+/// Wall-clock millis of the last tray-icon click that requested a
+/// mini-window show. Used only to dedupe macOS global-monitor events
+/// from the same physical click.
+#[cfg(target_os = "macos")]
+static LAST_TRAY_ICON_SHOW_CLICK_MS: AtomicU64 = AtomicU64::new(0);
 
 fn now_ms() -> u64 {
     SystemTime::now()
@@ -114,7 +128,7 @@ pub fn install_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), tauri::Error> 
     Ok(())
 }
 
-fn handle_left_click<R: Runtime>(
+fn handle_left_click<R: Runtime + 'static>(
     app: &AppHandle<R>,
     cursor: PhysicalPosition<f64>,
     icon_rect: TauriRect,
@@ -129,16 +143,15 @@ fn handle_left_click<R: Runtime>(
     };
     if mini_enabled {
         // Toggle semantics: a click on the icon while the mini window
-        // is open should dismiss it. macOS status-item clicks do not
-        // always steal key-window status from the tray window, so we
-        // can't rely on the focus-loss path alone — handle both:
+        // is open should dismiss it. Tray icon clicks and auto-hide
+        // paths can interleave differently across platforms, so handle
+        // both:
         //
-        //   (a) status-item click did NOT blur the tray window —
-        //       the window is still visible here; hide it explicitly.
-        //   (b) status-item click DID blur the tray window — the
-        //       focus-loss handler already hid it and stamped
-        //       LAST_TRAY_AUTO_HIDE_MS; skip the show so the dismissal
-        //       sticks instead of immediately re-showing.
+        //   (a) the tray window is still visible here; hide it
+        //       explicitly.
+        //   (b) an auto-hide path already hid it and stamped
+        //       LAST_TRAY_AUTO_HIDE_MS; skip re-showing so the
+        //       dismissal sticks.
         if let Some(window) = app.get_webview_window(TRAY_WINDOW_LABEL) {
             if window.is_visible().unwrap_or(false) {
                 let _ = window.hide();
@@ -149,11 +162,34 @@ fn handle_left_click<R: Runtime>(
         if last_hide != 0 && now_ms().saturating_sub(last_hide) < TRAY_TOGGLE_DEDUPE_MS {
             return;
         }
+        show_tray_window_from_tray_click(app, cursor, icon_rect);
+    } else {
+        show_main_window(app);
+    }
+}
+
+fn show_tray_window_from_tray_click<R: Runtime + 'static>(
+    app: &AppHandle<R>,
+    cursor: PhysicalPosition<f64>,
+    icon_rect: TauriRect,
+) {
+    #[cfg(target_os = "macos")]
+    {
+        LAST_TRAY_ICON_SHOW_CLICK_MS.store(now_ms(), Ordering::Relaxed);
+        let app_for_show = app.clone();
+        if let Err(e) = app.run_on_main_thread(move || {
+            if let Err(e) = show_tray_window(&app_for_show, cursor, icon_rect) {
+                log::warn!("failed to show mini window: {e}");
+            }
+        }) {
+            log::warn!("failed to schedule mini window show: {e}");
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
         if let Err(e) = show_tray_window(app, cursor, icon_rect) {
             log::warn!("failed to show mini window: {e}");
         }
-    } else {
-        show_main_window(app);
     }
 }
 
@@ -349,22 +385,23 @@ fn show_tray_window<R: Runtime>(
             .map_err(|e| e.to_string())?;
     }
 
-    // On macOS, both `window.show()` and `window.set_focus()` call
-    // `makeKeyAndOrderFront:`, which activates the app via
-    // `activateIgnoringOtherApps:`. When the main window is visible
-    // but unfocused (e.g. another app was active), that activation
-    // surfaces the main window into key — visible as a brief focus
-    // flicker on the main window. Bypass Tauri here and call
-    // `orderFrontRegardless` directly: it puts the tray on top across
-    // app boundaries without activating our app, so main keeps its
-    // state. The first click inside the tray webview will activate
-    // our app naturally and make the tray the key window.
+    // On macOS, avoid Tauri's `set_focus()` because it unconditionally
+    // activates the whole app and can surface the main window. If the
+    // app is inactive, though, the tray window must activate the app or
+    // it remains a painted-but-not-interactive window that disappears
+    // as soon as the pointer leaves the status item. Activate only in
+    // that inactive case, then make the tray window key.
     #[cfg(target_os = "macos")]
     {
-        use objc2::{msg_send, runtime::AnyObject};
+        use objc2::{class, msg_send, runtime::AnyObject};
         let ns_window = window.ns_window().map_err(|e| e.to_string())? as *mut AnyObject;
         unsafe {
-            let _: () = msg_send![ns_window, orderFrontRegardless];
+            let ns_app: *mut AnyObject = msg_send![class!(NSApplication), sharedApplication];
+            let app_is_active: bool = msg_send![ns_app, isActive];
+            if !app_is_active {
+                let _: () = msg_send![ns_app, activateIgnoringOtherApps: true];
+            }
+            let _: () = msg_send![ns_window, makeKeyAndOrderFront: std::ptr::null::<AnyObject>()];
         }
     }
     #[cfg(not(target_os = "macos"))]
@@ -399,22 +436,25 @@ fn create_tray_window<R: Runtime>(
         .shadow(true)
         .build()?;
 
-    let window_for_handler = window.clone();
-    window.on_window_event(move |event| {
-        // Hide on focus loss so the popover behaves like a real
-        // menubar mini-window: click outside → it disappears.
-        // Only stamp the auto-hide timestamp + call hide when the
-        // window is still visible — otherwise this is the trailing
-        // blur from a hide we already performed in handle_left_click,
-        // and re-stamping would freeze the next click out of show via
-        // the dedupe window.
-        if let WindowEvent::Focused(false) = event {
-            if window_for_handler.is_visible().unwrap_or(false) {
-                LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
-                let _ = window_for_handler.hide();
+    #[cfg(not(target_os = "macos"))]
+    {
+        let window_for_handler = window.clone();
+        window.on_window_event(move |event| {
+            // Hide on focus loss so the popover behaves like a real
+            // tray mini-window: click outside -> it disappears.
+            // Only stamp the auto-hide timestamp + call hide when the
+            // window is still visible -- otherwise this is the trailing
+            // blur from a hide we already performed in handle_left_click,
+            // and re-stamping would freeze the next click out of show via
+            // the dedupe window.
+            if let tauri::WindowEvent::Focused(false) = event {
+                if window_for_handler.is_visible().unwrap_or(false) {
+                    LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
+                    let _ = window_for_handler.hide();
+                }
             }
-        }
-    });
+        });
+    }
 
     Ok(window)
 }
@@ -584,7 +624,7 @@ fn install_dismiss_monitors<R: Runtime>(app: &AppHandle<R>) {
     // the desktop, the menu bar (incl. the tray icon itself).
     let app_for_global = app.clone();
     let global_block = RcBlock::new(move |_event: *mut AnyObject| {
-        hide_tray_if_visible(&app_for_global);
+        hide_tray_if_visible_unless_recent_icon_show(&app_for_global);
     });
 
     // Local monitor: clicks inside our app — fires for the tray window
@@ -628,6 +668,17 @@ fn install_dismiss_monitors<R: Runtime>(app: &AppHandle<R>) {
     // runs once per process, so this is bounded.
     std::mem::forget(global_block);
     std::mem::forget(local_block);
+}
+
+#[cfg(target_os = "macos")]
+fn hide_tray_if_visible_unless_recent_icon_show<R: Runtime>(app: &AppHandle<R>) {
+    let last_icon_show = LAST_TRAY_ICON_SHOW_CLICK_MS.load(Ordering::Relaxed);
+    if last_icon_show != 0
+        && now_ms().saturating_sub(last_icon_show) < TRAY_GLOBAL_HIDE_SUPPRESS_AFTER_ICON_CLICK_MS
+    {
+        return;
+    }
+    hide_tray_if_visible(app);
 }
 
 #[cfg(target_os = "macos")]
