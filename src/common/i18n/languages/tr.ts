@@ -79,6 +79,7 @@ export default {
   http_api_on: 'HTTP API açık',
   http_api_on_desc: '{0} portunda çalışır, Alfred gibi üçüncü parti yazılımlar tarafından hostları değiştirmek için kullanılabilir.',
   http_api_only_local: 'HTTP API yalnızca 127.0.0.1’i dinlesin',
+  http_api_start_failed: 'Yerel HTTP API başlatılamadı: {0}',
   ignore_case: 'Büyük/küçük harf duyarsız',
   import: 'İçe aktar',
   import_done: 'İçe aktarma tamamlandı.',

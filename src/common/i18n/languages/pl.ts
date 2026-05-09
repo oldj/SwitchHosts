@@ -79,6 +79,7 @@ export default {
   http_api_on: 'HTTP API włączone',
   http_api_on_desc: 'Działa na porcie {0}, może być używane przez oprogramowanie stron trzecich, takie jak Alfred do przełączania hostów.',
   http_api_only_local: 'HTTP API nasłuchuje tylko na 127.0.0.1',
+  http_api_start_failed: 'Uruchomienie lokalnego HTTP API nie powiodło się: {0}',
   ignore_case: 'Ignoruj wielkość liter',
   import: 'Importuj',
   import_done: 'Import został ukończony.',

@@ -82,6 +82,7 @@ const lang: LanguageDict = {
   http_api_on_desc:
     '{0}番ポートで実行され、Alfredなどのサードパーティソフトウェアでhostsを切り替えるために使用できます。',
   http_api_only_local: 'HTTP API を 127.0.0.1 のみでリッスンする',
+  http_api_start_failed: 'ローカル HTTP API の起動に失敗しました: {0}',
   ignore_case: '大文字と小文字を区別しない',
   import: 'インポート',
   import_done: 'インポートが完了しました。',

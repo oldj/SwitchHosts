@@ -82,6 +82,7 @@ export default {
   http_api_on_desc:
     'Runs on port {0}; third-party software such as Alfred can use it to switch hosts.',
   http_api_only_local: 'Listen Only on 127.0.0.1',
+  http_api_start_failed: 'Failed to start the local HTTP API: {0}',
   ignore_case: 'Ignore Case',
   import: 'Import',
   import_done: 'The import is complete.',
