@@ -50,6 +50,7 @@
     proxy_protocol: 'http',
     proxy_host: '',
     proxy_port: 0,
+    refresh_remote_hosts_on_startup: false,
     http_api_on: false,
     http_api_only_local: true,
     tray_mini_window: true,

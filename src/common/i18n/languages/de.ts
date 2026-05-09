@@ -111,8 +111,7 @@ const lang: LanguageDict = {
   minutes: 'Minuten',
   move_items_to_trashcan: 'Verschiebe {0} Objekte in den Mülleimer',
   move_to_trashcan: 'In die Mülltonne verschieben',
-  multi_chose_folder_switch_all:
-    'Unterelemente beim Umschalten von Ordnern synchronisieren',
+  multi_chose_folder_switch_all: 'Unterelemente beim Umschalten von Ordnern synchronisieren',
   multi_chose_folder_switch_all_desc:
     'Wenn aktiviert, schaltet das Umschalten eines Ordners auch seine Unterelemente um; Unterelemente in Ordnern mit Einzelauswahl werden nicht gesammelt umgeschaltet.',
   need_to_relaunch: 'Muss neu gestartet werden',
@@ -136,6 +135,9 @@ const lang: LanguageDict = {
   read_only: 'Schreibgeschützt',
   redo: 'Wiederherstellen',
   refresh: 'Auffrischen',
+  refresh_remote_hosts_on_startup: 'Remote-Hosts beim Start aktualisieren',
+  refresh_remote_hosts_on_startup_desc:
+    'Wenn aktiviert, werden bei jedem Start alle Remote-Hosts automatisch aktualisiert.',
   regexp: 'Regulärer Ausdruck',
   reload: 'Neu laden',
   remote: 'Entfernt',
@@ -209,10 +211,8 @@ const lang: LanguageDict = {
   where_is_my_hosts: 'Wo ist meine Hosts-Datei?',
   window: 'Fenster',
   write_mode: 'Schreibmodus',
-  write_mode_append_help:
-    'Neue Datensätze an das Ende der System-Hosts-Datei anhängen.',
-  write_mode_overwrite_help:
-    'System-Hosts-Datei mit den neuen Datensätzen überschreiben.',
+  write_mode_append_help: 'Neue Datensätze an das Ende der System-Hosts-Datei anhängen.',
+  write_mode_overwrite_help: 'System-Hosts-Datei mit den neuen Datensätzen überschreiben.',
   write_mode_set: 'Schreibmodus einstellen',
   your_data_is: 'Ihre Datendateien sind gespeichert in:',
   your_hosts_file_is: 'Ihre Hosts-Datei befindet sich in:',

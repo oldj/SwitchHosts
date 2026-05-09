@@ -39,8 +39,7 @@ const lang: LanguageDict = {
   close: 'Fermer',
   colon: ' : ',
   commands: 'Commandes',
-  commands_help:
-    'Les commandes système suivantes seront exécutées après application des hosts :',
+  commands_help: 'Les commandes système suivantes seront exécutées après application des hosts :',
   commands_title: 'Commandes après application des hosts',
   comment_current_line: 'Commenter cette ligne',
   content: 'Contenu',
@@ -112,8 +111,7 @@ const lang: LanguageDict = {
   minutes: 'minutes',
   move_items_to_trashcan: 'Déplacer {0} éléments dans la corbeille',
   move_to_trashcan: 'Déplacer dans la corbeille',
-  multi_chose_folder_switch_all:
-    'Synchroniser les sous-éléments lors du basculement des dossiers',
+  multi_chose_folder_switch_all: 'Synchroniser les sous-éléments lors du basculement des dossiers',
   multi_chose_folder_switch_all_desc:
     'Lorsque cette option est activée, basculer un dossier bascule aussi ses sous-éléments ; les sous-éléments des dossiers en mode de choix unique ne sont pas basculés en lot.',
   need_to_relaunch: 'Besoin de redémarrer',
@@ -137,6 +135,9 @@ const lang: LanguageDict = {
   read_only: 'Lecture seule',
   redo: 'Rétablir',
   refresh: 'Rafraîchir',
+  refresh_remote_hosts_on_startup: 'Actualiser les hosts distants au lancement',
+  refresh_remote_hosts_on_startup_desc:
+    'Si activé, chaque lancement actualise automatiquement tous les hosts distants.',
   regexp: 'Expression régulière',
   reload: 'Recharger',
   remote: 'Distant',
@@ -210,10 +211,8 @@ const lang: LanguageDict = {
   where_is_my_hosts: 'Où est mon fichier hosts ?',
   window: 'Fenêtre',
   write_mode: "Mode d'écriture",
-  write_mode_append_help:
-    "Ajoute les nouveaux enregistrements à la fin du fichier hosts système.",
-  write_mode_overwrite_help:
-    'Écrase le fichier hosts système avec les nouveaux enregistrements.',
+  write_mode_append_help: 'Ajoute les nouveaux enregistrements à la fin du fichier hosts système.',
+  write_mode_overwrite_help: 'Écrase le fichier hosts système avec les nouveaux enregistrements.',
   write_mode_set: "Définir le mode d'écriture",
   your_data_is: 'Les fichiers contenant vos données sont stockés ici :',
   your_hosts_file_is: 'Votre fichier hosts est situé ici :',
