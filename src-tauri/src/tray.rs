@@ -287,6 +287,13 @@ fn quit_app<R: Runtime>(app: &AppHandle<R>) {
 #[cfg(target_os = "macos")]
 fn toggle_dock_icon<R: Runtime>(app: &AppHandle<R>) {
     let state = app.state::<AppState>();
+    // Serialize with `commit_config_patch` writers — without this guard
+    // a concurrent Preferences toggle racing this tray click can both
+    // observe the same `cfg`, flip it, and clobber each other's save.
+    let _commit_guard = match state.config_write_lock.lock() {
+        Ok(g) => g,
+        Err(_) => return,
+    };
     let new_value = {
         let mut cfg = match state.config.lock() {
             Ok(g) => g,
