@@ -25,7 +25,7 @@ test.describe('data transfer', () => {
         const revealCall = calls.find((call) => call.cmd === 'show_item_in_folder')
         return revealCall ? firstInvokeArg(revealCall) : null
       })
-      .toBe('/Users/e2e/exports/swh_data.json')
+      .toBe('/Users/e2e/exports/switchhosts_20260509_121436.789.json')
   })
 
   test('imports backup data from a file', async ({ page }) => {

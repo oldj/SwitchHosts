@@ -1040,6 +1040,14 @@ pub async fn show_item_in_folder(args: Args) -> Value {
 // come back as Ok(Value::String("error_code")) the renderer can
 // display.
 
+fn export_file_name_for(now: chrono::DateTime<chrono::Local>) -> String {
+    format!("switchhosts_{}.json", now.format("%Y%m%d_%H%M%S%.3f"))
+}
+
+fn default_export_file_name() -> String {
+    export_file_name_for(chrono::Local::now())
+}
+
 #[tauri::command]
 pub async fn export_data<R: Runtime>(
     app: AppHandle<R>,
@@ -1050,7 +1058,7 @@ pub async fn export_data<R: Runtime>(
         .dialog()
         .file()
         .add_filter("JSON", &["json"])
-        .set_file_name("swh_data.json")
+        .set_file_name(&default_export_file_name())
         .blocking_save_file();
 
     let Some(dest) = picked else {
@@ -1068,6 +1076,28 @@ pub async fn export_data<R: Runtime>(
         return Ok(Value::Bool(false));
     }
     Ok(Value::String(dest_path.display().to_string()))
+}
+
+#[cfg(test)]
+mod export_file_name_tests {
+    use chrono::{TimeZone, Timelike};
+
+    use super::export_file_name_for;
+
+    #[test]
+    fn includes_millisecond_timestamp() {
+        let now = chrono::Local
+            .with_ymd_and_hms(2026, 5, 9, 12, 14, 36)
+            .single()
+            .expect("test timestamp should be representable")
+            .with_nanosecond(789_000_000)
+            .expect("test nanosecond should be valid");
+
+        assert_eq!(
+            export_file_name_for(now),
+            "switchhosts_20260509_121436.789.json"
+        );
+    }
 }
 
 #[tauri::command]
