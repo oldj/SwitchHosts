@@ -13,7 +13,9 @@ export default function useConfigs() {
   const [configs, setConfigs] = useAtom(configsAtom)
 
   const loadConfigs = async () => {
-    setConfigs(await actions.configAll())
+    const next = await actions.configAll()
+    setConfigs(next)
+    return next
   }
 
   const updateConfigs = async (kv: Partial<ConfigsType>) => {
@@ -22,6 +24,15 @@ export default function useConfigs() {
       await actions.configUpdate(kv)
     } catch (e) {
       console.error('configUpdate failed', kv, e)
+      // Optimistic merge above means atom is now showing values the
+      // backend rejected. Pull the disk snapshot back so every
+      // subscriber (including callers that don't catch this rejection)
+      // sees the truth, not a phantom save.
+      try {
+        await loadConfigs()
+      } catch (reloadError) {
+        console.error('failed to reload configs after configUpdate failed', reloadError)
+      }
       showErrorNotification({
         title: 'Failed to save configuration',
         message: getErrorMessage(e, 'Unknown error'),

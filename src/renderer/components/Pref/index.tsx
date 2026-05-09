@@ -21,7 +21,7 @@ import styles from './styles.module.scss'
 
 const PreferencePanel = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const { configs, updateConfigs } = useConfigs()
+  const { configs, loadConfigs, updateConfigs } = useConfigs()
   const [data, setData] = useState<ConfigsType | null>(configs)
   const [activeTab, setActiveTab] = useState<string | null>('general')
   const { lang } = useI18n()
@@ -37,13 +37,36 @@ const PreferencePanel = () => {
 
   const onSaveImmediate = async (kv: Partial<ConfigsType>) => {
     setData((prev) => (prev ? { ...prev, ...kv } : prev))
-    await updateConfigs(kv)
+    try {
+      await updateConfigs(kv)
+    } catch {
+      try {
+        setData(await loadConfigs())
+      } catch (e) {
+        console.error('loadConfigs failed after immediate save failure', e)
+        if (configs) setData(configs)
+      }
+      return
+    }
     agent.broadcast(events.config_updated, kv)
   }
 
   const onSave = async () => {
     if (!data) return
-    await updateConfigs(data)
+    try {
+      await updateConfigs(data)
+    } catch {
+      // Keep the drawer open so the user can correct or retry; sync the
+      // local Commands/Proxy draft back to whatever the backend really
+      // accepted (useConfigs already reset the atom).
+      try {
+        setData(await loadConfigs())
+      } catch (e) {
+        console.error('loadConfigs failed after onSave failure', e)
+        if (configs) setData(configs)
+      }
+      return
+    }
     setIsOpen(false)
 
     agent.broadcast(events.config_updated, data)

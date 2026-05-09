@@ -103,6 +103,7 @@ describe('useConfigs', () => {
 
   it('updateConfigs surfaces backend failures via showErrorNotification and rethrows', async () => {
     mocks.actions.configUpdate.mockRejectedValue(new Error('disk full'))
+    mocks.actions.configAll.mockResolvedValue({ theme: 'system', http_api_on: false })
     const { result } = renderHook(() => useConfigs())
 
     await expect(
@@ -111,6 +112,10 @@ describe('useConfigs', () => {
       }),
     ).rejects.toThrow('disk full')
 
+    // After failure the optimistic merge must be replaced with the
+    // disk snapshot so other atom subscribers don't see a phantom save.
+    expect(mocks.actions.configAll).toHaveBeenCalledTimes(1)
+    expect(mocks.setConfigs).toHaveBeenLastCalledWith({ theme: 'system', http_api_on: false })
     expect(mocks.notify.showErrorNotification).toHaveBeenCalledTimes(1)
     const args = mocks.notify.showErrorNotification.mock.calls[0]?.[0]
     expect(args?.title).toBe('Failed to save configuration')
