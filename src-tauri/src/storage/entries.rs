@@ -82,3 +82,82 @@ pub fn delete_entry(entries_dir: &Path, id: &str) -> Result<(), StorageError> {
         Err(e) => Err(StorageError::io(path.display().to_string(), e)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn temp_entries_dir(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "switchhosts-entries-test-{name}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn read_collapses_crlf_to_lf() {
+        // Write raw CRLF bytes directly (bypassing write_entry) so this
+        // test exercises the read normalization, not the write side.
+        let dir = temp_entries_dir("read-crlf");
+        let path = entry_path(&dir, "node-1").unwrap();
+        std::fs::write(&path, b"line1\r\nline2\r\nline3").unwrap();
+
+        let content = read_entry(&dir, "node-1").unwrap();
+
+        assert_eq!(content, "line1\nline2\nline3");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn read_collapses_lone_cr_to_lf() {
+        let dir = temp_entries_dir("read-cr");
+        let path = entry_path(&dir, "node-1").unwrap();
+        std::fs::write(&path, b"old-mac\rstyle\rline").unwrap();
+
+        let content = read_entry(&dir, "node-1").unwrap();
+
+        assert_eq!(content, "old-mac\nstyle\nline");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn write_persists_crlf_input_as_lf_bytes() {
+        let dir = temp_entries_dir("write-crlf");
+        write_entry(&dir, "node-1", "line1\r\nline2\r\nline3").unwrap();
+
+        let on_disk = std::fs::read(entry_path(&dir, "node-1").unwrap()).unwrap();
+
+        assert_eq!(on_disk, b"line1\nline2\nline3");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn lf_content_round_trips_unchanged() {
+        let dir = temp_entries_dir("round-trip-lf");
+        let original = "line1\nline2\nline3\n";
+        write_entry(&dir, "node-1", original).unwrap();
+
+        let read_back = read_entry(&dir, "node-1").unwrap();
+        let on_disk = std::fs::read(entry_path(&dir, "node-1").unwrap()).unwrap();
+
+        assert_eq!(read_back, original);
+        assert_eq!(on_disk, original.as_bytes());
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn missing_entry_reads_as_empty_string() {
+        let dir = temp_entries_dir("missing");
+
+        let content = read_entry(&dir, "does-not-exist").unwrap();
+
+        assert_eq!(content, "");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+}
