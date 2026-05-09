@@ -584,14 +584,19 @@ const FindPage = () => {
     if (!configs) return
 
     applyThemeToBody(resolvedTheme, [`platform-${agent.platform}`])
+    const titleSync = Promise.resolve(actions.findSetWindowTitle(lang.find)).catch((e) =>
+      console.error(e),
+    )
 
     if (!findWindowReadySentRef.current) {
       findWindowReadySentRef.current = true
-      window.setTimeout(() => {
-        Promise.resolve(agent.broadcast(events.find_window_ready)).catch((e) => console.error(e))
-      }, 0)
+      titleSync.finally(() => {
+        window.setTimeout(() => {
+          Promise.resolve(agent.broadcast(events.find_window_ready)).catch((e) => console.error(e))
+        }, 0)
+      })
     }
-  }, [configs, resolvedTheme])
+  }, [configs, lang.find, resolvedTheme])
 
   useEffect(() => {
     document.title = lang.find_and_replace

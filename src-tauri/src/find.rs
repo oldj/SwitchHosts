@@ -31,12 +31,15 @@ use serde_json::Value;
 use tauri::webview::{Color, WebviewWindowBuilder};
 use tauri::{AppHandle, EventId, Listener, Manager, Runtime, Theme, WebviewUrl};
 
-use crate::storage::{
-    atomic::atomic_write,
-    entries,
-    error::StorageError,
-    manifest::{self, Manifest},
-    AppState,
+use crate::{
+    i18n,
+    storage::{
+        atomic::atomic_write,
+        entries,
+        error::StorageError,
+        manifest::{self, Manifest},
+        AppState,
+    },
 };
 
 pub const FIND_WINDOW_LABEL: &str = "find";
@@ -631,6 +634,24 @@ pub fn show_find_window<R: Runtime + 'static>(app: &AppHandle<R>) -> Result<(), 
     Ok(())
 }
 
+pub fn refresh_find_window_title<R: Runtime>(app: &AppHandle<R>) {
+    let Some(window) = app.get_webview_window(FIND_WINDOW_LABEL) else {
+        return;
+    };
+    let _ = window.set_title(i18n::find_window_title(app));
+    hide_find_window_menu(&window);
+}
+
+pub fn set_find_window_title<R: Runtime>(
+    app: &AppHandle<R>,
+    title: &str,
+) -> Result<(), tauri::Error> {
+    let Some(window) = app.get_webview_window(FIND_WINDOW_LABEL) else {
+        return Ok(());
+    };
+    window.set_title(title)
+}
+
 fn show_find_window_now<R: Runtime>(window: &tauri::WebviewWindow<R>) -> Result<(), tauri::Error> {
     window.unminimize().ok();
     window.show()?;
@@ -741,6 +762,14 @@ fn background_color_for_theme(theme: Theme) -> Color {
     }
 }
 
+#[cfg_attr(target_os = "macos", allow(unused_variables))]
+fn hide_find_window_menu<R: Runtime>(window: &tauri::WebviewWindow<R>) {
+    #[cfg(not(target_os = "macos"))]
+    if let Err(e) = window.hide_menu() {
+        log::warn!("failed to hide find window menu: {e}");
+    }
+}
+
 fn create_find_window<R: Runtime + 'static>(
     app: &AppHandle<R>,
 ) -> Result<tauri::WebviewWindow<R>, tauri::Error> {
@@ -748,7 +777,7 @@ fn create_find_window<R: Runtime + 'static>(
     let configured_theme = configured_theme(app.state::<AppState>().inner());
     let initial_theme = configured_theme.unwrap_or(Theme::Light);
     let builder = WebviewWindowBuilder::new(app, FIND_WINDOW_LABEL, url)
-        .title("Find")
+        .title(i18n::find_window_title(app))
         .inner_size(FIND_WINDOW_WIDTH, FIND_WINDOW_HEIGHT)
         .min_inner_size(FIND_WINDOW_MIN_WIDTH, FIND_WINDOW_MIN_HEIGHT)
         .resizable(true)
@@ -767,6 +796,7 @@ fn create_find_window<R: Runtime + 'static>(
     if let Ok(theme) = window.theme() {
         let _ = window.set_background_color(Some(background_color_for_theme(theme)));
     }
+    hide_find_window_menu(&window);
 
     Ok(window)
 }

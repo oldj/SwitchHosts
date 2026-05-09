@@ -62,6 +62,31 @@ pub fn menu_labels<R: Runtime>(app: &AppHandle<R>) -> MenuLabels {
     MenuLabels::for_locale(locale.as_deref())
 }
 
+pub fn find_window_title<R: Runtime>(app: &AppHandle<R>) -> &'static str {
+    let locale = app
+        .state::<AppState>()
+        .config
+        .lock()
+        .ok()
+        .and_then(|cfg| cfg.locale.clone());
+
+    find_window_title_for_locale(locale.as_deref())
+}
+
+fn find_window_title_for_locale(locale: Option<&str>) -> &'static str {
+    match normalize_locale(locale) {
+        MenuLocale::Zh => "查找",
+        MenuLocale::ZhHant => "尋找",
+        MenuLocale::Fr => "Rechercher",
+        MenuLocale::De => "Suchen",
+        MenuLocale::Ja => "検索",
+        MenuLocale::Tr => "Bul",
+        MenuLocale::Ko => "찾기",
+        MenuLocale::Pl => "Znajdź",
+        MenuLocale::En => "Find",
+    }
+}
+
 impl MenuLabels {
     pub fn for_locale(locale: Option<&str>) -> Self {
         match normalize_locale(locale) {
@@ -402,7 +427,7 @@ fn normalize_locale(locale: Option<&str>) -> MenuLocale {
 
 #[cfg(test)]
 mod tests {
-    use super::MenuLabels;
+    use super::{find_window_title_for_locale, MenuLabels};
 
     #[test]
     fn normalizes_locale_aliases() {
@@ -410,6 +435,9 @@ mod tests {
         assert_eq!(MenuLabels::for_locale(Some("zh-TW")).file, "檔案");
         assert_eq!(MenuLabels::for_locale(Some("fr-FR")).file, "Fichier");
         assert_eq!(MenuLabels::for_locale(None).file, "File");
+        assert_eq!(find_window_title_for_locale(Some("zh-CN")), "查找");
+        assert_eq!(find_window_title_for_locale(Some("zh-TW")), "尋找");
+        assert_eq!(find_window_title_for_locale(None), "Find");
     }
 
     #[test]

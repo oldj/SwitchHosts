@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
     findReplaceAll: vi.fn(),
     findGetHistory: vi.fn(),
     findGetReplaceHistory: vi.fn(),
+    findSetWindowTitle: vi.fn(),
     cmdFocusMainWindow: vi.fn(),
   },
   broadcast: vi.fn(),
@@ -175,6 +176,7 @@ vi.mock('../models/useI18n', () => ({
     },
     lang: {
       find_and_replace: 'Find and Replace',
+      find: 'Find',
       ignore_case: 'Ignore case',
       item_found: 'item found',
       items_found: 'items found',
@@ -272,6 +274,7 @@ describe('FindPage search state', () => {
     mocks.actions.findAddHistory.mockResolvedValue([])
     mocks.actions.findGetHistory.mockResolvedValue([])
     mocks.actions.findGetReplaceHistory.mockResolvedValue([])
+    mocks.actions.findSetWindowTitle.mockResolvedValue(null)
     mocks.updateConfigs.mockResolvedValue(undefined)
     Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
       configurable: true,
@@ -288,6 +291,12 @@ describe('FindPage search state', () => {
     expectedConsoleError = undefined
     cleanup()
     vi.useRealTimers()
+  })
+
+  it('syncs the native find window title from i18n', () => {
+    render(<FindPage />)
+
+    expect(mocks.actions.findSetWindowTitle).toHaveBeenCalledWith('Find')
   })
 
   it('stops loading and shows an error when findBy rejects', async () => {

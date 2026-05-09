@@ -487,6 +487,7 @@
           state.trashcan = []
           return true
         case 'update_tray_title':
+        case 'find_set_window_title':
         case 'dark_mode_toggle':
         case 'hide_main_window':
         case 'quit_app':

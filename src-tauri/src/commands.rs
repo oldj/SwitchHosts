@@ -226,6 +226,7 @@ fn apply_side_effects(
             log::warn!("failed to refresh app menu: {e}");
         }
         tray::refresh_menu(app);
+        find::refresh_find_window_title(app);
     }
 
     #[cfg(target_os = "macos")]
@@ -762,6 +763,16 @@ pub async fn find_show<R: Runtime + 'static>(
     _args: Args,
 ) -> Result<Value, String> {
     find::show_find_window(&app).map_err(|e| e.to_string())?;
+    Ok(Value::Null)
+}
+
+#[tauri::command]
+pub async fn find_set_window_title<R: Runtime + 'static>(
+    app: AppHandle<R>,
+    args: Args,
+) -> Result<Value, String> {
+    let title = arg_str(&args, 0, "title").map_err(|e| format!("{e:?}"))?;
+    find::set_find_window_title(&app, title).map_err(|e| e.to_string())?;
     Ok(Value::Null)
 }
 
