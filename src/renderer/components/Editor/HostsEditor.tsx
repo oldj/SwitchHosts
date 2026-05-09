@@ -33,6 +33,7 @@ const HostsEditor = () => {
   const refMount = useRef<HTMLDivElement>(null)
   const refView = useRef<EditorView | null>(null)
   const refBuilt = useRef<BuiltExtensions | null>(null)
+  const refMeasureFrame = useRef<number | null>(null)
   // Refs mirror React state so that callbacks captured by EditorView extensions
   // (which are created once on mount) can always read the latest values.
   const refHostsId = useRef(hostsId)
@@ -52,7 +53,16 @@ const HostsEditor = () => {
     refPendingFind.current = null
   }
 
-  useEffect(() => clearPendingFind, [])
+  useEffect(
+    () => () => {
+      clearPendingFind()
+      if (refMeasureFrame.current !== null) {
+        window.cancelAnimationFrame(refMeasureFrame.current)
+        refMeasureFrame.current = null
+      }
+    },
+    [],
+  )
 
   useEffect(() => {
     refHostsId.current = hostsId
@@ -145,11 +155,39 @@ const HostsEditor = () => {
       onGutterClick,
     })
 
+  const refreshEditorLayout = (view: EditorView) => {
+    view.requestMeasure()
+    if (refMeasureFrame.current !== null) {
+      window.cancelAnimationFrame(refMeasureFrame.current)
+    }
+    refMeasureFrame.current = window.requestAnimationFrame(() => {
+      refMeasureFrame.current = null
+      if (refView.current === view) {
+        view.requestMeasure()
+      }
+    })
+  }
+
+  const createEditorView = (doc: string) => {
+    const mount = refMount.current
+    if (!mount) return null
+
+    refView.current?.destroy()
+    mount.replaceChildren()
+
+    const built = rebuildExtensions()
+    const view = new EditorView({
+      state: EditorState.create({ doc, extensions: built.extensions }),
+      parent: mount,
+    })
+
+    refBuilt.current = built
+    refView.current = view
+    return view
+  }
+
   /** Fetch hosts content and replace the editor state (clears undo history). */
   const loadContent = async (targetHostsId = hostsId) => {
-    const view = refView.current
-    if (!view) return
-
     const nextContent = normalizeLineEndings(
       targetHostsId === '0'
         ? await actions.getSystemHosts()
@@ -159,33 +197,26 @@ const HostsEditor = () => {
     if (refHostsId.current !== targetHostsId) return
 
     setContent(nextContent)
-    const built = rebuildExtensions()
-    refBuilt.current = built
-    view.setState(EditorState.create({ doc: nextContent, extensions: built.extensions }))
+    const view = createEditorView(nextContent)
+    if (!view) return
 
     const pendingFind = refPendingFind.current
     if (pendingFind && pendingFind.item_id === targetHostsId) {
       setSelection(pendingFind)
       clearPendingFind()
+    } else {
+      view.contentDOM.blur()
     }
+    refreshEditorLayout(view)
   }
 
-  // Mount EditorView once; survive across hosts switches via setState.
+  // Mount an empty EditorView first; hosts switches replace the view entirely to
+  // avoid stale native caret artifacts in WebKit after document swaps.
   useEffect(() => {
-    const mount = refMount.current
-    if (!mount) return
-
-    const built = rebuildExtensions()
-    const view = new EditorView({
-      state: EditorState.create({ doc: '', extensions: built.extensions }),
-      parent: mount,
-    })
-
-    refBuilt.current = built
-    refView.current = view
+    createEditorView('')
 
     return () => {
-      view.destroy()
+      refView.current?.destroy()
       refView.current = null
       refBuilt.current = null
     }

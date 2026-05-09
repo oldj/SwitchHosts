@@ -28,6 +28,11 @@ interface MockState {
     choice_mode: number
     left_panel_show: boolean
     right_panel_show: boolean
+    cmd_after_hosts_apply: string
+    use_proxy: boolean
+    proxy_protocol: string
+    proxy_host: string
+    proxy_port: number
   }
   contents: Record<string, string>
   systemHosts: string

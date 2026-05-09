@@ -86,7 +86,7 @@
 
 :global(.theme-dark) {
   .editor {
-    :global(.cm-content) {
+    :global(.cm-focused .cm-content) {
       caret-color: #39c;
     }
 

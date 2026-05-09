@@ -14,6 +14,7 @@ export default {
   auto_refresh: '자동 새로고침',
   btn_cancel: '취소',
   btn_ok: '확인',
+  btn_save: '저장',
   change: '수정',
   check_update: '업데이트 확인',
   check_update_failed: '업데이트 확인에 실패했습니다!',
@@ -91,6 +92,7 @@ export default {
   items: '항목',
   items_found: '{0}개의 항목들을 찾았습니다.',
   language: '언어',
+  launch_at_login: '로그인 시 실행',
   last_refresh: '마지막 새로고침: ',
   latest_version_desc: '최신버전: {0}',
   line: '줄',
@@ -144,6 +146,7 @@ export default {
   reset_zoom: '확대 재설정',
   rules: '규칙 수',
   search: '찾기',
+  save_success: '저장됨',
   select_all: '전체 선택',
   selected: '선택',
   settings: '설정',
@@ -193,6 +196,8 @@ export default {
     '주기적으로 익명의 사용 데이터를 제출하여 SwitchHost를 개선하는 데 도움을 주시겠습니까?',
   usage_data_title: 'SwitchHosts 개선!',
   use_proxy: '프록시 사용',
+  use_proxy_desc:
+    '활성화하면 원격 Hosts 다운로드와 앱 업데이트 확인 및 다운로드 시 프록시를 사용해 연결합니다.',
   use_system_window_frame:
     '시스템 창을 사용하려면, 프로그램 재시작이 필요합니다',
   view: '뷰',

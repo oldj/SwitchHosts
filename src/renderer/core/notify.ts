@@ -16,6 +16,20 @@ export function getErrorMessage(error: unknown, fallbackMessage: string): string
     return error
   }
 
+  // Tauri command Err values come through as plain objects shaped by the
+  // backend's Serialize impl, e.g. for StorageError:
+  //   { kind: 'side_effect', key: 'launch_at_login', reason: '...' }
+  // Look for the most informative human-readable field we know about.
+  if (error && typeof error === 'object') {
+    const obj = error as Record<string, unknown>
+    for (const key of ['reason', 'message', 'error']) {
+      const v = obj[key]
+      if (typeof v === 'string' && v.trim()) {
+        return v
+      }
+    }
+  }
+
   return fallbackMessage
 }
 

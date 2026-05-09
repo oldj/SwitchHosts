@@ -10,7 +10,7 @@
 
 use std::time::Duration;
 
-use crate::storage::AppState;
+use crate::storage::{AppConfig, AppState};
 
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 const USER_AGENT: &str = concat!(
@@ -35,28 +35,96 @@ pub fn build_client(state: &AppState) -> Result<reqwest::Client, String> {
         .timeout(DEFAULT_TIMEOUT)
         .user_agent(USER_AGENT);
 
-    let proxy_settings = {
-        let cfg = state.config.lock().expect("config mutex poisoned");
-        if cfg.use_proxy
-            && !cfg.proxy_host.trim().is_empty()
-            && cfg.proxy_port > 0
-        {
-            Some((
-                cfg.proxy_protocol.clone(),
-                cfg.proxy_host.clone(),
-                cfg.proxy_port,
-            ))
-        } else {
-            None
-        }
-    };
+    let proxy_url = configured_proxy_url_from_state(state);
 
-    if let Some((protocol, host, port)) = proxy_settings {
-        let proxy_url = format!("{protocol}://{host}:{port}");
+    if let Some(proxy_url) = proxy_url {
         let proxy = reqwest::Proxy::all(&proxy_url)
             .map_err(|e| format!("invalid proxy {proxy_url}: {e}"))?;
         builder = builder.proxy(proxy);
     }
 
     builder.build().map_err(|e| e.to_string())
+}
+
+pub(crate) fn configured_proxy_url_from_state(state: &AppState) -> Option<String> {
+    let cfg = state.config.lock().expect("config mutex poisoned");
+    configured_proxy_url(&cfg)
+}
+
+pub(crate) fn configured_proxy_url(cfg: &AppConfig) -> Option<String> {
+    let host = cfg.proxy_host.trim();
+    if !cfg.use_proxy || host.is_empty() || cfg.proxy_port == 0 {
+        return None;
+    }
+
+    Some(format!(
+        "{}://{}:{}",
+        cfg.proxy_protocol, host, cfg.proxy_port
+    ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn configured_proxy_url_supports_known_protocols() {
+        for (protocol, expected) in [
+            ("http", "http://127.0.0.1:1080"),
+            ("https", "https://127.0.0.1:1080"),
+            ("socks5", "socks5://127.0.0.1:1080"),
+        ] {
+            let cfg = AppConfig {
+                use_proxy: true,
+                proxy_protocol: protocol.into(),
+                proxy_host: " 127.0.0.1 ".into(),
+                proxy_port: 1080,
+                ..AppConfig::default()
+            };
+
+            assert_eq!(configured_proxy_url(&cfg).as_deref(), Some(expected));
+        }
+    }
+
+    #[test]
+    fn configured_proxy_url_skips_incomplete_settings() {
+        let cases = [
+            AppConfig {
+                use_proxy: false,
+                proxy_protocol: "http".into(),
+                proxy_host: "127.0.0.1".into(),
+                proxy_port: 1080,
+                ..AppConfig::default()
+            },
+            AppConfig {
+                use_proxy: true,
+                proxy_protocol: "http".into(),
+                proxy_host: String::new(),
+                proxy_port: 1080,
+                ..AppConfig::default()
+            },
+            AppConfig {
+                use_proxy: true,
+                proxy_protocol: "http".into(),
+                proxy_host: "127.0.0.1".into(),
+                proxy_port: 0,
+                ..AppConfig::default()
+            },
+        ];
+
+        for cfg in cases {
+            assert_eq!(configured_proxy_url(&cfg), None);
+        }
+    }
+
+    /// Guards the feature-unification trick declared in Cargo.toml: if the
+    /// `reqwest_013` dep is removed or stripped of its `socks` feature, this
+    /// assertion fails — and so would SOCKS5 support inside
+    /// `tauri-plugin-updater`, which uses the same transitive reqwest 0.13.
+    #[test]
+    fn socks_feature_unified_into_updater_reqwest() {
+        let proxy = reqwest_013::Proxy::all("socks5://127.0.0.1:1080");
+
+        assert!(proxy.is_ok());
+    }
 }

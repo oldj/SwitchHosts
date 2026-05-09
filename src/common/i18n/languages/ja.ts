@@ -17,6 +17,7 @@ const lang: LanguageDict = {
   auto_refresh: '自動更新',
   btn_cancel: 'キャンセル',
   btn_ok: 'OK',
+  btn_save: '保存',
   change: '変更',
   check_update: 'アップデートを確認',
   check_update_failed: 'アップデートの確認に失敗しました！',
@@ -93,6 +94,7 @@ const lang: LanguageDict = {
   items: '件',
   items_found: '{0}件見つかりました。',
   language: '言語',
+  launch_at_login: 'ログイン時に起動',
   last_refresh: '最終更新: ',
   latest_version_desc: '最新バージョン: {0}',
   line: '行',
@@ -144,6 +146,7 @@ const lang: LanguageDict = {
   reset_zoom: 'ズームをリセット',
   rules: 'ルール数',
   search: '検索',
+  save_success: '保存しました',
   select_all: 'すべて選択',
   selected: '選択済み',
   settings: '設定',
@@ -190,6 +193,8 @@ const lang: LanguageDict = {
   usage_data_help: '匿名の利用データを定期的に送信し、SwitchHostsの改善にご協力いただけませんか？',
   usage_data_title: 'SwitchHostsの改善に協力する',
   use_proxy: 'プロキシを使用',
+  use_proxy_desc:
+    '有効にすると、リモート Hosts のダウンロードとアプリ更新の確認・ダウンロードにプロキシを使用します。',
   use_system_window_frame:
     'システムのウィンドウフレームを使用。アプリケーションの再起動が必要です。',
   view: '表示',

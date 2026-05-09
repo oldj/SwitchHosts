@@ -107,6 +107,107 @@ test.describe('preferences', () => {
     )
   })
 
+  test('saves command and proxy preferences without closing the drawer', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
+
+    await preferences.getByRole('tab', { name: 'Commands' }).click()
+    await expect(preferences.getByRole('button', { name: 'Cancel' })).toBeHidden()
+    await expect(preferences.getByRole('button', { name: 'OK' })).toBeHidden()
+
+    await preferences.getByPlaceholder('# echo "ok!"').fill('echo saved')
+    await preferences.getByRole('button', { name: 'Save' }).click()
+    await expect(preferences.getByRole('button', { name: 'Saved' })).toBeVisible()
+    await expect(preferences).toBeVisible()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.configs.cmd_after_hosts_apply
+      })
+      .toBe('echo saved')
+
+    await preferences.getByRole('tab', { name: 'Proxy' }).click()
+    await expect(
+      preferences.getByText(
+        'If enabled, remote Hosts downloads and app update checks/downloads will connect through the proxy.',
+      ),
+    ).toBeVisible()
+    await preferences.getByRole('checkbox', { name: 'Use Proxy' }).check()
+    await preferences.getByRole('combobox').click()
+    await page.getByRole('option', { name: 'SOCKS5' }).click()
+    const hostInput = preferences.getByLabel('Host')
+    const portInput = preferences.getByLabel('Port')
+    await hostInput.fill('a'.repeat(260))
+    await expect(hostInput).toHaveValue('a'.repeat(253))
+    await hostInput.fill('proxy.local')
+    await portInput.fill('123456')
+    await expect(portInput).toHaveValue('12345')
+    await portInput.fill('99999')
+    await expect(portInput).toHaveValue('65535')
+    await portInput.fill('8080')
+    await preferences.getByRole('button', { name: 'Save' }).click()
+    await expect(preferences.getByRole('button', { name: 'Saved' })).toBeVisible()
+    await expect(preferences).toBeVisible()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          useProxy: state.configs.use_proxy,
+          protocol: state.configs.proxy_protocol,
+          host: state.configs.proxy_host,
+          port: state.configs.proxy_port,
+        }
+      })
+      .toEqual({ useProxy: true, protocol: 'socks5', host: 'proxy.local', port: 8080 })
+
+    const calls = await getMockCalls(page)
+    expect(configPatches(calls)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ cmd_after_hosts_apply: 'echo saved' }),
+        expect.objectContaining({
+          use_proxy: true,
+          proxy_protocol: 'socks5',
+          proxy_host: 'proxy.local',
+          proxy_port: 8080,
+        }),
+      ]),
+    )
+  })
+
+  test('launch at login defaults off and saves immediately', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
+
+    const launchAtLogin = preferences.getByLabel('Launch at Login')
+    await expect(launchAtLogin).not.toBeChecked()
+
+    await launchAtLogin.check()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.configs.launch_at_login
+      })
+      .toBe(true)
+
+    const calls = await getMockCalls(page)
+    expect(configPatches(calls)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ launch_at_login: true }),
+      ]),
+    )
+  })
+
   test('applies global single-choice mode to top-level hosts', async ({ page }) => {
     await page.getByLabel('Settings').click()
     await page.getByText('Preferences').click()

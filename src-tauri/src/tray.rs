@@ -30,7 +30,7 @@ use tauri::{
 
 use crate::i18n::menu_labels;
 use crate::lifecycle::{self, MAIN_WINDOW_LABEL};
-use crate::storage::AppState;
+use crate::storage::{manifest::Manifest, AppState, StorageError};
 
 pub const TRAY_ID: &str = "main-tray";
 pub const TRAY_WINDOW_LABEL: &str = "tray";
@@ -287,6 +287,13 @@ fn quit_app<R: Runtime>(app: &AppHandle<R>) {
 #[cfg(target_os = "macos")]
 fn toggle_dock_icon<R: Runtime>(app: &AppHandle<R>) {
     let state = app.state::<AppState>();
+    // Serialize with `commit_config_patch` writers — without this guard
+    // a concurrent Preferences toggle racing this tray click can both
+    // observe the same `cfg`, flip it, and clobber each other's save.
+    let _commit_guard = match state.config_write_lock.lock() {
+        Ok(g) => g,
+        Err(_) => return,
+    };
     let new_value = {
         let mut cfg = match state.config.lock() {
             Ok(g) => g,
@@ -322,6 +329,18 @@ pub fn refresh_menu<R: Runtime>(app: &AppHandle<R>) {
 
 // ---- title --------------------------------------------------------------
 
+/// Compute and apply the tray title from the current manifest + config.
+pub fn refresh_title<R: Runtime>(app: &AppHandle<R>, state: &AppState) -> Result<(), StorageError> {
+    let show = {
+        let cfg = state.config.lock().expect("config mutex poisoned");
+        cfg.show_title_on_tray
+    };
+    let manifest = Manifest::load(&state.paths)?;
+    let title = compute_tray_title(&manifest.root, show);
+    set_tray_title(app, title.as_deref());
+    Ok(())
+}
+
 /// Compute the tray title text from the manifest list, mirroring
 /// `src/main/actions/updateTrayTitle.ts`. Returns `None` when
 /// `show_title_on_tray` is false (caller should clear the title).
@@ -356,11 +375,18 @@ fn collect_on_titles(nodes: &[serde_json::Value], out: &mut Vec<String>) {
     }
 }
 
+fn title_for_tray_api(title: Option<&str>) -> &str {
+    title.unwrap_or("")
+}
+
 /// Apply a freshly-computed title to the tray icon. Safe to call from
 /// anywhere — does nothing if the tray hasn't been installed yet.
 pub fn set_tray_title<R: Runtime>(app: &AppHandle<R>, title: Option<&str>) {
     if let Some(tray) = app.tray_by_id(TRAY_ID) {
-        let _ = tray.set_title(title);
+        let title = title_for_tray_api(title);
+        if let Err(e) = tray.set_title(Some(title)) {
+            log::warn!("failed to set tray title: {e}");
+        }
     }
 }
 
@@ -688,5 +714,73 @@ fn hide_tray_if_visible<R: Runtime>(app: &AppHandle<R>) {
             LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
             let _ = tray.hide();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn compute_tray_title_returns_none_when_hidden() {
+        let list = vec![json!({
+            "title": "Development",
+            "on": true,
+        })];
+
+        assert_eq!(compute_tray_title(&list, false), None);
+    }
+
+    #[test]
+    fn compute_tray_title_collects_enabled_titles_including_nested_nodes() {
+        let list = vec![
+            json!({
+                "title": "Dev",
+                "on": true,
+            }),
+            json!({
+                "title": "Folder",
+                "on": false,
+                "children": [
+                    {
+                        "title": "Alpha",
+                        "on": true,
+                    },
+                    {
+                        "title": "Beta",
+                        "on": false,
+                    }
+                ],
+            }),
+            json!({
+                "title": "API",
+                "on": true,
+            }),
+        ];
+
+        assert_eq!(
+            compute_tray_title(&list, true).as_deref(),
+            Some("Dev,Alpha,API")
+        );
+    }
+
+    #[test]
+    fn compute_tray_title_truncates_long_titles_to_twenty_chars() {
+        let list = vec![json!({
+            "title": "123456789012345678901",
+            "on": true,
+        })];
+
+        assert_eq!(
+            compute_tray_title(&list, true).as_deref(),
+            Some("12345678901234567...")
+        );
+    }
+
+    #[test]
+    fn title_for_tray_api_clears_missing_title_with_empty_string() {
+        assert_eq!(title_for_tray_api(None), "");
+        assert_eq!(title_for_tray_api(Some("Development")), "Development");
     }
 }

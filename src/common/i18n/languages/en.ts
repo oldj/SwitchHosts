@@ -15,6 +15,7 @@ export default {
   auto_refresh: 'Auto Refresh',
   btn_cancel: 'Cancel',
   btn_ok: 'OK',
+  btn_save: 'Save',
   change: 'Change',
   check_update: 'Check for Updates',
   check_update_failed: 'Check for updates failed!',
@@ -93,6 +94,7 @@ export default {
   items: 'items',
   items_found: '{0} items found.',
   language: 'Language',
+  launch_at_login: 'Launch at Login',
   last_refresh: 'Last Refresh: ',
   latest_version_desc: 'The latest version is: {0}',
   line: 'line',
@@ -146,6 +148,7 @@ export default {
   reset_zoom: 'Reset Zoom',
   rules: 'Rules',
   search: 'Search',
+  save_success: 'Saved',
   select_all: 'Select All',
   selected: 'Selected',
   settings: 'Settings',
@@ -195,6 +198,8 @@ export default {
     'Would you like to help us improve SwitchHosts by periodically submitting anonymous usage data?',
   usage_data_title: 'Make SwitchHosts Better!',
   use_proxy: 'Use Proxy',
+  use_proxy_desc:
+    'If enabled, remote Hosts downloads and app update checks/downloads will connect through the proxy.',
   use_system_window_frame:
     'Use system window frame; application restart is required.',
   view: 'View',

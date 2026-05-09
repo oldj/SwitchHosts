@@ -21,6 +21,7 @@ use std::{
     time::Duration,
 };
 use tauri::{Emitter, Listener, Manager, RunEvent};
+use tauri_plugin_autostart::{ManagerExt, MacosLauncher};
 
 use storage::AppState;
 
@@ -72,6 +73,10 @@ pub fn run() {
         // launch is intercepted before any other plugin starts up.
         .plugin(tauri_plugin_single_instance::init(
             |app, args, cwd| lifecycle::focus_main_on_second_instance(app, args, cwd),
+        ))
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            None,
         ))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -201,6 +206,9 @@ pub fn run() {
             // strand the user (no Dock icon, no tray to summon the
             // window back).
             tray::install_tray(&app_handle)?;
+            if let Err(e) = tray::refresh_title(&app_handle, app_state.inner()) {
+                log::warn!("failed to initialize tray title: {e}");
+            }
 
             #[cfg(target_os = "macos")]
             {
@@ -244,6 +252,36 @@ pub fn run() {
             if http_on {
                 if let Err(e) = http_api::start(app_handle.clone(), only_local) {
                     log::warn!("http_api startup failed: {e}");
+                }
+            }
+
+            // Reconcile launch_at_login with what the OS actually reports.
+            // Users may toggle login items from System Settings while the app
+            // is closed; treat the OS as the source of truth so the
+            // Preferences checkbox does not drift out of sync.
+            let want_launch_at_login = app_state
+                .config
+                .lock()
+                .expect("config mutex poisoned")
+                .launch_at_login;
+            match app_handle.autolaunch().is_enabled() {
+                Ok(actual) if actual != want_launch_at_login => {
+                    {
+                        let mut cfg = app_state
+                            .config
+                            .lock()
+                            .expect("config mutex poisoned");
+                        cfg.launch_at_login = actual;
+                    }
+                    if let Err(e) = app_state.persist_config() {
+                        log::warn!(
+                            "failed to persist launch_at_login sync from OS: {e}"
+                        );
+                    }
+                }
+                Ok(_) => {}
+                Err(e) => {
+                    log::warn!("failed to query OS launch_at_login state: {e}");
                 }
             }
 

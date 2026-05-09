@@ -16,6 +16,7 @@ use super::error::StorageError;
 
 pub const CONFIG_FORMAT: &str = "switchhosts-config";
 pub const CONFIG_SCHEMA_VERSION: u32 = 1;
+const MAX_PROXY_PORT: u32 = 65535;
 
 /// User-facing config. Field names match ConfigsType in TypeScript, so a
 /// round-trip through `serde_json::Value` preserves renderer contract.
@@ -36,6 +37,7 @@ pub struct AppConfig {
     pub theme: String, // "light" | "dark" | "system"
     pub choice_mode: u8,
     pub show_title_on_tray: bool,
+    pub launch_at_login: bool,
     pub hide_at_launch: bool,
     pub send_usage_data: bool,
     pub cmd_after_hosts_apply: String,
@@ -51,7 +53,7 @@ pub struct AppConfig {
 
     // proxy
     pub use_proxy: bool,
-    pub proxy_protocol: String, // "http" | "https"
+    pub proxy_protocol: String, // "http" | "https" | "socks5"
     pub proxy_host: String,
     pub proxy_port: u32,
 
@@ -78,6 +80,7 @@ impl Default for AppConfig {
             theme: "system".to_string(),
             choice_mode: 2,
             show_title_on_tray: false,
+            launch_at_login: false,
             hide_at_launch: false,
             send_usage_data: false,
             cmd_after_hosts_apply: String::new(),
@@ -107,6 +110,12 @@ impl AppConfig {
     fn normalize(&mut self) {
         if !matches!(self.theme.as_str(), "light" | "dark" | "system") {
             self.theme = "system".to_string();
+        }
+        if !matches!(self.proxy_protocol.as_str(), "http" | "https" | "socks5") {
+            self.proxy_protocol = "http".to_string();
+        }
+        if self.proxy_port > MAX_PROXY_PORT {
+            self.proxy_port = MAX_PROXY_PORT;
         }
         if !self.find_result_column_widths.is_empty() {
             if self.find_result_column_widths.len() != 3 {
@@ -217,13 +226,6 @@ impl AppConfig {
         *self = next;
         Ok(())
     }
-
-    /// Set a single key. Thin wrapper around `apply_partial` for the
-    /// `config_set(key, value)` command shape.
-    pub fn set_key(&mut self, key: &str, value: Value) -> Result<(), StorageError> {
-        let patch = json!({ key: value });
-        self.apply_partial(&patch)
-    }
 }
 
 #[cfg(test)]
@@ -249,12 +251,69 @@ mod tests {
     }
 
     #[test]
+    fn load_defaults_missing_launch_at_login_to_false() {
+        let path = std::env::temp_dir().join(format!(
+            "switchhosts-config-test-{}-{}.json",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::write(&path, r#"{ "theme": "dark" }"#).unwrap();
+
+        let cfg = AppConfig::load(&path);
+        let _ = std::fs::remove_file(path);
+
+        assert!(!cfg.launch_at_login);
+    }
+
+    #[test]
+    fn apply_partial_accepts_launch_at_login() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "launch_at_login": true }))
+            .unwrap();
+
+        assert!(cfg.launch_at_login);
+    }
+
+    #[test]
     fn apply_partial_normalizes_invalid_theme_to_system() {
         let mut cfg = AppConfig::default();
 
         cfg.apply_partial(&json!({ "theme": "sepia" })).unwrap();
 
         assert_eq!(cfg.theme, "system");
+    }
+
+    #[test]
+    fn apply_partial_accepts_socks5_proxy_protocol() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "proxy_protocol": "socks5" }))
+            .unwrap();
+
+        assert_eq!(cfg.proxy_protocol, "socks5");
+    }
+
+    #[test]
+    fn apply_partial_normalizes_invalid_proxy_protocol_to_http() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "proxy_protocol": "ftp" }))
+            .unwrap();
+
+        assert_eq!(cfg.proxy_protocol, "http");
+    }
+
+    #[test]
+    fn apply_partial_clamps_proxy_port_to_valid_range() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "proxy_port": 99999 })).unwrap();
+
+        assert_eq!(cfg.proxy_port, MAX_PROXY_PORT);
     }
 
     #[test]

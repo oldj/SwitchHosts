@@ -103,6 +103,38 @@ const General = (props: IProps) => {
         </Stack>
       </Box>
 
+      <Box w="100%">
+        <Group>
+          <Checkbox
+            checked={data.launch_at_login}
+            onChange={(e) => onChange({ launch_at_login: e.target.checked })}
+            label={lang.launch_at_login}
+          />
+        </Group>
+      </Box>
+
+      <Box w="100%">
+        <Group>
+          <Checkbox
+            checked={data.hide_at_launch}
+            onChange={(e) => onChange({ hide_at_launch: e.target.checked })}
+            label={lang.hide_at_launch}
+          />
+        </Group>
+      </Box>
+
+      {platform === 'darwin' ? (
+        <Box w="100%">
+          <Group>
+            <Checkbox
+              checked={data.hide_dock_icon}
+              onChange={(e) => onChange({ hide_dock_icon: e.target.checked })}
+              label={lang.hide_dock_icon}
+            />
+          </Group>
+        </Box>
+      ) : null}
+
       {platform === 'darwin' ? (
         <Box w="100%">
           <Group>
@@ -115,35 +147,13 @@ const General = (props: IProps) => {
         </Box>
       ) : null}
 
-      <Box w="100%">
-        <Group>
-          <Checkbox
-            checked={data.hide_at_launch}
-            onChange={(e) => onChange({ hide_at_launch: e.target.checked })}
-            label={lang.hide_at_launch}
-          />
-        </Group>
-      </Box>
-
-      {agent.platform === 'linux' ? (
+      {platform === 'linux' ? (
         <Box w="100%">
           <Group>
             <Checkbox
               checked={data.use_system_window_frame}
               onChange={(e) => onChange({ use_system_window_frame: e.target.checked })}
               label={lang.use_system_window_frame}
-            />
-          </Group>
-        </Box>
-      ) : null}
-
-      {agent.platform === 'darwin' ? (
-        <Box w="100%">
-          <Group>
-            <Checkbox
-              checked={data.hide_dock_icon}
-              onChange={(e) => onChange({ hide_dock_icon: e.target.checked })}
-              label={lang.hide_dock_icon}
             />
           </Group>
         </Box>

@@ -101,6 +101,8 @@
 
 .footer {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 8px;
   padding: 12px;
   border-top: 1px dashed var(--swh-border-color-0);

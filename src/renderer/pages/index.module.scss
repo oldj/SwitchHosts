@@ -21,6 +21,7 @@
   top: var(--swh-top-bar-height);
   left: 0;
   bottom: 0;
+  z-index: 2;
   transition: 0.3s;
 }
 
@@ -28,6 +29,7 @@
   position: fixed;
   top: var(--swh-top-bar-height);
   bottom: 0;
+  z-index: 1;
   transition: 0.3s;
 }
 
@@ -45,6 +47,7 @@
   top: var(--swh-top-bar-height);
   right: 0;
   bottom: 0;
+  z-index: 2;
   transition: 0.3s;
 }
 

@@ -10,11 +10,13 @@
 
   &::after {
     content: '';
+    display: block;
     position: absolute;
     top: 0;
     bottom: 0;
     left: 50%;
-    width: 1px;
+    width: 3px;
+    border-radius: 2px;
     transform: translateX(-50%);
     background: transparent;
     transition: background 0.15s;

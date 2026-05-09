@@ -17,6 +17,7 @@ const lang: LanguageDict = {
   auto_refresh: 'Automatisch aktualisieren',
   btn_cancel: 'Abbrechen',
   btn_ok: 'OK',
+  btn_save: 'Speichern',
   change: 'Ändern',
   check_update: 'Nach Updates suchen',
   check_update_failed: 'Suche nach Updates fehlgeschlagen!',
@@ -94,6 +95,7 @@ const lang: LanguageDict = {
   items: 'Elemente',
   items_found: '{0} Einträge gefunden.',
   language: 'Sprache',
+  launch_at_login: 'Beim Anmelden starten',
   last_refresh: 'Letzte Aktualisierung: ',
   latest_version_desc: 'Die neueste Version ist: {0}',
   line: 'Zeile',
@@ -146,6 +148,7 @@ const lang: LanguageDict = {
   reset_zoom: 'Zoom zurücksetzen',
   rules: 'Regeln',
   search: 'Suchen',
+  save_success: 'Gespeichert',
   select_all: 'Alles auswählen',
   selected: 'Ausgewählt',
   settings: 'Einstellungen',
@@ -194,6 +197,8 @@ const lang: LanguageDict = {
     'Möchten Sie uns helfen, SwitchHosts zu verbessern, indem Sie regelmäßig anonyme Nutzungsdaten übermitteln?',
   usage_data_title: 'Machen Sie SwitchHosts besser!',
   use_proxy: 'Proxy verwenden',
+  use_proxy_desc:
+    'Wenn aktiviert, werden Remote-Hosts-Downloads sowie das Suchen und Herunterladen von App-Updates über den Proxy durchgeführt.',
   use_system_window_frame:
     'Verwenden Sie den Systemfensterrahmen, ein Neustart der Anwendung ist erforderlich',
   view: 'Ansicht',

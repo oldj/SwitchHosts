@@ -15,6 +15,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use serde_json::{json, Value};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::{AppHandle, Emitter, Manager, Runtime, State, WebviewWindow, Wry};
+use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_dialog::DialogExt;
 
 use crate::app_menu;
@@ -26,8 +27,9 @@ use crate::import_export;
 use crate::lifecycle::{self, MAIN_WINDOW_LABEL};
 use crate::refresh::{self, RefreshOutcome};
 use crate::storage::{
-    entries, manifest::{self, Manifest},
-    AppState, StorageError, Trashcan,
+    entries,
+    manifest::{self, Manifest},
+    AppConfig, AppState, StorageError, Trashcan,
 };
 use crate::tray;
 
@@ -160,12 +162,10 @@ pub async fn config_set(
         .to_string();
     let value = args.get(1).cloned().unwrap_or(Value::Null);
 
-    {
-        let mut cfg = state.config.lock().expect("config mutex poisoned");
-        cfg.set_key(&key, value)?;
-    }
-    state.persist_config()?;
-    apply_side_effects(&app, state.inner(), &[key.as_str()]);
+    let patch = json!({ key: value });
+    let touched = commit_config_patch(&app, state.inner(), &patch)?;
+    let touched_refs: Vec<&str> = touched.iter().map(String::as_str).collect();
+    apply_side_effects(&app, state.inner(), &touched_refs);
     Ok(Value::Null)
 }
 
@@ -182,18 +182,85 @@ pub async fn config_update(
             reason: "config_update requires a partial object as the first argument".into(),
         });
     }
-    let touched: Vec<String> = patch
-        .as_object()
-        .map(|obj| obj.keys().cloned().collect())
-        .unwrap_or_default();
-    {
-        let mut cfg = state.config.lock().expect("config mutex poisoned");
-        cfg.apply_partial(&patch)?;
-    }
-    state.persist_config()?;
+    let touched = commit_config_patch(&app, state.inner(), &patch)?;
     let touched_refs: Vec<&str> = touched.iter().map(String::as_str).collect();
     apply_side_effects(&app, state.inner(), &touched_refs);
     Ok(Value::Null)
+}
+
+fn commit_config_patch(
+    app: &AppHandle<Wry>,
+    state: &AppState,
+    patch: &Value,
+) -> Result<Vec<String>, StorageError> {
+    let patch_obj = patch
+        .as_object()
+        .ok_or_else(|| StorageError::InvalidConfigValue {
+            key: "<patch>".into(),
+            reason: "expected a JSON object".into(),
+        })?;
+    let touched: Vec<String> = patch_obj.keys().cloned().collect();
+
+    // Tauri runs async commands concurrently on tokio, so two
+    // `config_update` invocations can otherwise interleave and lose
+    // each other's writes. Hold this guard across the entire commit
+    // pipeline — it serializes writers without blocking readers that
+    // only touch `state.config`.
+    let _commit_guard = state
+        .config_write_lock
+        .lock()
+        .expect("config write lock poisoned");
+
+    // Step 1: under a short cfg lock, derive the proposed `next` value
+    // and remember whether launch_at_login is changing. We deliberately
+    // do not hold the cfg mutex across OS calls or disk writes; the
+    // outer `_commit_guard` provides ordering, the inner cfg mutex only
+    // needs to cover the read-modify view and the final publish.
+    let (next, previous_launch_at_login, launch_at_login_changed) = {
+        let cfg = state.config.lock().expect("config mutex poisoned");
+        let mut next: AppConfig = cfg.clone();
+        next.apply_partial(patch)?;
+        // `apply_partial` only mutates fields named in the patch, so a
+        // value-level diff is sufficient — no need to also scan `touched`.
+        let changed = cfg.launch_at_login != next.launch_at_login;
+        (next, cfg.launch_at_login, changed)
+    };
+
+    // Step 2: apply the OS-side change first, then persist to disk. If
+    // disk persistence fails, roll the OS change back so the user-visible
+    // state matches what got stored.
+    if launch_at_login_changed {
+        apply_launch_at_login(app, next.launch_at_login)?;
+    }
+    if let Err(e) = next.save(&state.paths.config_file) {
+        if launch_at_login_changed {
+            if let Err(rollback_err) = apply_launch_at_login(app, previous_launch_at_login) {
+                log::warn!(
+                    "failed to roll back launch_at_login after config save failed: {rollback_err}"
+                );
+            }
+        }
+        return Err(e);
+    }
+
+    // Step 3: re-acquire the lock briefly to publish the new value.
+    *state.config.lock().expect("config mutex poisoned") = next;
+
+    Ok(touched)
+}
+
+fn apply_launch_at_login(app: &AppHandle<Wry>, enabled: bool) -> Result<(), StorageError> {
+    let manager = app.autolaunch();
+    let result = if enabled {
+        manager.enable()
+    } else {
+        manager.disable()
+    };
+
+    result.map_err(|e| StorageError::SideEffect {
+        key: "launch_at_login".into(),
+        reason: e.to_string(),
+    })
 }
 
 /// Run any out-of-process side effects that depend on a config key
@@ -202,6 +269,7 @@ pub async fn config_update(
 /// - `http_api_on` / `http_api_only_local` → start, stop or rebind
 ///   the local HTTP API server.
 /// - `locale` → rebuild native application and tray menus.
+/// - `show_title_on_tray` → refresh or clear the tray title text.
 /// - `hide_dock_icon` → apply the macOS Dock policy and update the tray
 ///   toggle label.
 ///
@@ -220,6 +288,7 @@ fn apply_side_effects(
         .iter()
         .any(|k| *k == "http_api_on" || *k == "http_api_only_local");
     let touches_locale = touched_keys.iter().any(|k| *k == "locale");
+    let touches_tray_title = touched_keys.iter().any(|k| *k == "show_title_on_tray");
 
     if touches_locale {
         if let Err(e) = app_menu::refresh(app) {
@@ -227,6 +296,12 @@ fn apply_side_effects(
         }
         tray::refresh_menu(app);
         find::refresh_find_window_title(app);
+    }
+
+    if touches_tray_title {
+        if let Err(e) = tray::refresh_title(app, state) {
+            log::warn!("failed to refresh tray title after config update: {e}");
+        }
     }
 
     #[cfg(target_os = "macos")]
@@ -252,8 +327,16 @@ fn apply_side_effects(
                 log::warn!("http_api start failed: {e}");
                 // Roll back the in-memory config + persist, otherwise
                 // the preferences pane keeps reporting "API on" against
-                // a dead listener. Lock scope ends before persist_config
-                // because that helper takes the same mutex.
+                // a dead listener. Acquire the writer guard so this
+                // rollback doesn't race a concurrent `commit_config_patch`
+                // — `apply_side_effects` runs after the commit guard has
+                // already been released, so without this we could lose
+                // each other's writes. Lock scope ends before
+                // persist_config because that helper takes config mutex.
+                let _commit_guard = state
+                    .config_write_lock
+                    .lock()
+                    .expect("config write lock poisoned");
                 {
                     let mut cfg = state.config.lock().expect("config mutex poisoned");
                     cfg.http_api_on = false;
@@ -627,7 +710,7 @@ pub async fn apply_hosts_selection<R: Runtime>(
     // Push the freshest tray title to the menubar without waiting on
     // the renderer to call `update_tray_title` — the user expects to
     // see the title flip immediately after an apply.
-    if let Err(e) = refresh_tray_title(&app, state.inner()) {
+    if let Err(e) = tray::refresh_title(&app, state.inner()) {
         log::warn!("failed to refresh tray title: {e}");
     }
 
@@ -971,27 +1054,8 @@ pub async fn update_tray_title<R: Runtime>(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
-    refresh_tray_title(&app, &state)?;
+    tray::refresh_title(&app, &state)?;
     Ok(Value::Null)
-}
-
-/// Compute the tray title from the current manifest + config and push
-/// it to the tray icon. Used both by the `update_tray_title` command
-/// (renderer-driven) and by `apply_hosts_selection` after a successful
-/// write so the menubar text stays in sync without a renderer round
-/// trip.
-fn refresh_tray_title<R: Runtime>(
-    app: &AppHandle<R>,
-    state: &AppState,
-) -> Result<(), StorageError> {
-    let show = {
-        let cfg = state.config.lock().expect("config mutex poisoned");
-        cfg.show_title_on_tray
-    };
-    let manifest = load_manifest(state)?;
-    let title = tray::compute_tray_title(&manifest.root, show);
-    tray::set_tray_title(app, title.as_deref());
-    Ok(())
 }
 
 #[tauri::command]
@@ -1195,11 +1259,12 @@ async fn fetch_url(client: &reqwest::Client, url: &str) -> Result<String, String
 #[tauri::command]
 pub async fn check_update<R: Runtime>(
     app: AppHandle<R>,
+    state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, String> {
-    use tauri_plugin_updater::UpdaterExt;
-
-    let updater = app.updater_builder().build().map_err(|e| e.to_string())?;
+    let updater = updater_builder_with_proxy(&app, state.inner())?
+        .build()
+        .map_err(|e| e.to_string())?;
     let update = updater.check().await.map_err(|e| e.to_string())?;
 
     match update {
@@ -1222,14 +1287,16 @@ pub async fn download_update<R: Runtime>(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, String> {
-    use tauri_plugin_updater::UpdaterExt;
-
-    let updater = app.updater_builder().build().map_err(|e| e.to_string())?;
+    let updater = updater_builder_with_proxy(&app, state.inner())?
+        .build()
+        .map_err(|e| e.to_string())?;
     let update = updater
         .check()
         .await
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "no update available".to_string())?;
+    let downloaded_version = update.version.clone();
+    let downloaded_release_notes = update.body.clone();
 
     let app_for_progress = app.clone();
     update
@@ -1262,7 +1329,10 @@ pub async fn download_update<R: Runtime>(
 
     let _ = app.emit(
         "update_downloaded",
-        json!({ "_args": [{ "version": "" }] }),
+        json!({ "_args": [{
+            "version": downloaded_version,
+            "releaseNotes": downloaded_release_notes,
+        }] }),
     );
     Ok(Value::Null)
 }
@@ -1282,6 +1352,22 @@ pub async fn install_update<R: Runtime>(
     app.restart();
     #[allow(unreachable_code)]
     Ok(Value::Null)
+}
+
+fn updater_builder_with_proxy<R: Runtime>(
+    app: &AppHandle<R>,
+    state: &AppState,
+) -> Result<tauri_plugin_updater::UpdaterBuilder, String> {
+    use tauri_plugin_updater::UpdaterExt;
+
+    let mut builder = app.updater_builder();
+    if let Some(proxy_url) = http::configured_proxy_url_from_state(state) {
+        let proxy = proxy_url
+            .parse()
+            .map_err(|e| format!("invalid proxy {proxy_url}: {e}"))?;
+        builder = builder.proxy(proxy);
+    }
+    Ok(builder)
 }
 
 // ---- popup menu ------------------------------------------------------------
