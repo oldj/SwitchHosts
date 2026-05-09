@@ -1,4 +1,4 @@
-import { FolderModeType, IHostsListObject } from '@common/data'
+import { FolderModeType, IHostsListObject, IOperationResult } from '@common/data'
 import events from '@common/events'
 import * as hostsFn from '@common/hostsFn'
 import { Button, Group, ScrollArea, Stack, Text } from '@mantine/core'
@@ -140,7 +140,7 @@ const RightPanel = () => {
     setIsRefreshing(true)
     actions
       .refreshHosts(hosts.id)
-      .then((r: any) => {
+      .then((r: IOperationResult) => {
         if (r?.success) {
           if (r.data) {
             setCurrentHosts({

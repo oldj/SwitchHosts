@@ -13,7 +13,7 @@ type OffFunction = () => void
 export class PopupMenu {
   private _id: string
   private _items: IMenuItemOption[]
-  private _offs: any[] = []
+  private _offs: OffFunction[] = []
 
   constructor(menuItems: IMenuItemOption[]) {
     this._id = `popup_menu_${Math.floor(Math.random() * 1e8)}`
