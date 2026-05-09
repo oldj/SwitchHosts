@@ -45,3 +45,23 @@ if (conf.version !== version) {
 } else {
   console.log(`[sync-version] tauri.conf.json already ${version}`)
 }
+
+// 3. src-tauri/Cargo.toml
+//    Replace the first `version = "..."` line, which by Cargo convention
+//    is the [package] section's version. Cargo.lock is refreshed by any
+//    subsequent cargo invocation (build / metadata / check).
+const cargoPath = join(root, 'src-tauri/Cargo.toml')
+const cargoSrc = readFileSync(cargoPath, 'utf-8')
+const cargoVersionRe = /^version\s*=\s*"[^"]*"/m
+const cargoMatch = cargoSrc.match(cargoVersionRe)
+if (!cargoMatch) {
+  throw new Error(`[sync-version] cannot find a 'version = "..."' line in ${cargoPath}`)
+}
+const currentCargoVersion = cargoMatch[0].match(/"([^"]*)"/)[1]
+if (currentCargoVersion !== version) {
+  const next = cargoSrc.replace(cargoVersionRe, `version = "${version}"`)
+  writeFileSync(cargoPath, next, 'utf-8')
+  console.log(`[sync-version] Cargo.toml → ${version}`)
+} else {
+  console.log(`[sync-version] Cargo.toml already ${version}`)
+}
