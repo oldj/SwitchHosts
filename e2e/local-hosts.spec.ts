@@ -96,6 +96,65 @@ test.describe('local hosts', () => {
     expect(calls.some((call) => call.cmd === 'apply_hosts_selection')).toBe(true)
   })
 
+  test('rolls back the collapsed titlebar switch when applying hosts fails', async ({ page }) => {
+    await clearMockCalls(page)
+    await page.locator('[data-id="local-dev"]').click()
+    await page.getByLabel('Toggle sidebar').click()
+
+    await page.evaluate(() => {
+      window.__SWITCHHOSTS_E2E__.failNextApply({
+        code: 'no_access',
+        message: 'No access',
+      })
+    })
+
+    const titlebarToggle = page.getByRole('switch', { name: 'Toggle current hosts' })
+    await expect(titlebarToggle).toHaveAttribute('aria-checked', 'false')
+    await titlebarToggle.click()
+
+    await expect(titlebarToggle).toHaveAttribute('aria-checked', 'false')
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return {
+          localDevOn: state.list.find((item) => item.id === 'local-dev')?.on,
+          systemHosts: state.systemHosts,
+        }
+      })
+      .toEqual({
+        localDevOn: false,
+        systemHosts: initialSystemHosts,
+      })
+
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'get_content_of_list')).toBe(true)
+    expect(calls.some((call) => call.cmd === 'apply_hosts_selection')).toBe(true)
+  })
+
+  test('centers the collapsed titlebar switch with adjacent titlebar controls', async ({
+    page,
+  }) => {
+    await page.locator('[data-id="local-dev"]').click()
+    await page.getByLabel('Toggle sidebar').click()
+
+    const titlebarToggle = page.getByRole('switch', { name: 'Toggle current hosts' })
+    const rightPanelButton = page.getByLabel('Toggle right panel')
+
+    await expect(titlebarToggle).toBeVisible()
+    await expect(rightPanelButton).toBeVisible()
+
+    const [toggleBox, buttonBox] = await Promise.all([
+      titlebarToggle.boundingBox(),
+      rightPanelButton.boundingBox(),
+    ])
+    expect(toggleBox).not.toBeNull()
+    expect(buttonBox).not.toBeNull()
+
+    const toggleCenter = toggleBox!.y + toggleBox!.height / 2
+    const buttonCenter = buttonBox!.y + buttonBox!.height / 2
+    expect(Math.abs(toggleCenter - buttonCenter)).toBeLessThanOrEqual(0.5)
+  })
+
   test('prompts for write mode before first apply and then continues toggling', async ({ page }) => {
     await gotoApp(page, '/?e2eWriteMode=null')
     await clearMockCalls(page)

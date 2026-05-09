@@ -149,8 +149,10 @@ const TopBar = (props: IProps) => {
         {showToggleSwitch ? (
           <Flex align="center" mr="12px">
             <SwitchButton
+              ariaLabel="Toggle current hosts"
               on={isOn}
               onChange={(on) => {
+                setIsOn(on)
                 if (currentHosts) agent.broadcast(events.toggle_item, currentHosts.id, on)
               }}
             />
