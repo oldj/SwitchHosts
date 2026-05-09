@@ -155,6 +155,13 @@ const List = (props: Props) => {
     } finally {
       applyState.isApplying = false
     }
+
+    // Race guard: an event arriving after `while` exits but before we
+    // clear `isApplying` would have early-returned (saw isApplying=true)
+    // and left ids stranded in pendingIds. Re-trigger if so.
+    if (applyState.pendingIds.size > 0) {
+      applyChangedRemoteHostsToSystem([]).catch((e) => console.error(e))
+    }
   }
 
   useOnBroadcast(

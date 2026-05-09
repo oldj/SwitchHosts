@@ -235,6 +235,9 @@ pub fn start_background_scanner<R: Runtime>(app: AppHandle<R>) -> Arc<AtomicBool
             log_refresh_errors(&results);
             let _ = app.emit("reload_list", json!({ "_args": [] }));
             tokio::time::sleep(SCAN_INTERVAL).await;
+            if stop_for_task.load(Ordering::Relaxed) {
+                return;
+            }
         }
         loop {
             if stop_for_task.load(Ordering::Relaxed) {
