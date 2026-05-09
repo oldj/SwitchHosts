@@ -206,6 +206,9 @@ pub fn run() {
             // strand the user (no Dock icon, no tray to summon the
             // window back).
             tray::install_tray(&app_handle)?;
+            if let Err(e) = tray::refresh_title(&app_handle, app_state.inner()) {
+                log::warn!("failed to initialize tray title: {e}");
+            }
 
             #[cfg(target_os = "macos")]
             {

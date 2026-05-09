@@ -269,6 +269,7 @@ fn apply_launch_at_login(app: &AppHandle<Wry>, enabled: bool) -> Result<(), Stor
 /// - `http_api_on` / `http_api_only_local` → start, stop or rebind
 ///   the local HTTP API server.
 /// - `locale` → rebuild native application and tray menus.
+/// - `show_title_on_tray` → refresh or clear the tray title text.
 /// - `hide_dock_icon` → apply the macOS Dock policy and update the tray
 ///   toggle label.
 ///
@@ -287,6 +288,7 @@ fn apply_side_effects(
         .iter()
         .any(|k| *k == "http_api_on" || *k == "http_api_only_local");
     let touches_locale = touched_keys.iter().any(|k| *k == "locale");
+    let touches_tray_title = touched_keys.iter().any(|k| *k == "show_title_on_tray");
 
     if touches_locale {
         if let Err(e) = app_menu::refresh(app) {
@@ -294,6 +296,12 @@ fn apply_side_effects(
         }
         tray::refresh_menu(app);
         find::refresh_find_window_title(app);
+    }
+
+    if touches_tray_title {
+        if let Err(e) = tray::refresh_title(app, state) {
+            log::warn!("failed to refresh tray title after config update: {e}");
+        }
     }
 
     #[cfg(target_os = "macos")]
@@ -702,7 +710,7 @@ pub async fn apply_hosts_selection<R: Runtime>(
     // Push the freshest tray title to the menubar without waiting on
     // the renderer to call `update_tray_title` — the user expects to
     // see the title flip immediately after an apply.
-    if let Err(e) = refresh_tray_title(&app, state.inner()) {
+    if let Err(e) = tray::refresh_title(&app, state.inner()) {
         log::warn!("failed to refresh tray title: {e}");
     }
 
@@ -1046,27 +1054,8 @@ pub async fn update_tray_title<R: Runtime>(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
-    refresh_tray_title(&app, &state)?;
+    tray::refresh_title(&app, &state)?;
     Ok(Value::Null)
-}
-
-/// Compute the tray title from the current manifest + config and push
-/// it to the tray icon. Used both by the `update_tray_title` command
-/// (renderer-driven) and by `apply_hosts_selection` after a successful
-/// write so the menubar text stays in sync without a renderer round
-/// trip.
-fn refresh_tray_title<R: Runtime>(
-    app: &AppHandle<R>,
-    state: &AppState,
-) -> Result<(), StorageError> {
-    let show = {
-        let cfg = state.config.lock().expect("config mutex poisoned");
-        cfg.show_title_on_tray
-    };
-    let manifest = load_manifest(state)?;
-    let title = tray::compute_tray_title(&manifest.root, show);
-    tray::set_tray_title(app, title.as_deref());
-    Ok(())
 }
 
 #[tauri::command]
