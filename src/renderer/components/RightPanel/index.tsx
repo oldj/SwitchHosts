@@ -295,15 +295,16 @@ const RightPanel = () => {
         {inTrashcan ? (
           <div className={styles.footer}>
             <Button
-              variant="outline"
+              size="compact-sm"
+              variant="light"
               leftSection={<IconArrowBackUp size={14} stroke={1.5} />}
               onClick={onRestore}
             >
               {lang.trashcan_restore}
             </Button>
             <Button
-              variant="outline"
-              color="red"
+              size="compact-sm"
+              variant="light"
               leftSection={<IconTrash size={14} stroke={1.5} />}
               onClick={() => setIsDeleteConfirmOpen(true)}
             >

@@ -64,7 +64,21 @@ test.describe('trashcan', () => {
     await clearMockCalls(page)
 
     await page.getByLabel('Trashcan').click()
-    await page.getByLabel('Empty Trashcan').click()
+    const clearButton = page.getByLabel('Empty Trashcan')
+    const leftResizeHandle = page.getByRole('separator').first()
+    await expect(clearButton).toBeVisible()
+
+    const [clearButtonBox, resizeHandleBox] = await Promise.all([
+      clearButton.boundingBox(),
+      leftResizeHandle.boundingBox(),
+    ])
+    expect(clearButtonBox).not.toBeNull()
+    expect(resizeHandleBox).not.toBeNull()
+    expect(clearButtonBox!.x + clearButtonBox!.width).toBeLessThanOrEqual(
+      resizeHandleBox!.x - 6,
+    )
+
+    await clearButton.click()
     await page
       .getByRole('dialog', { name: 'Empty Trashcan' })
       .getByRole('button', { name: 'Cancel' })

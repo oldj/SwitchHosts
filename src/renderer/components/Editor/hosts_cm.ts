@@ -90,6 +90,9 @@ const hostsTheme = EditorView.theme({
   },
   '.cm-content': {
     padding: '8px 0',
+    caretColor: 'transparent',
+  },
+  '&.cm-focused .cm-content': {
     caretColor: 'var(--swh-editor-text-color)',
   },
   '.cm-gutters': {

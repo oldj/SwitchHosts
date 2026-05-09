@@ -33,6 +33,34 @@ test.describe('local hosts', () => {
     expect(calls.some((call) => call.cmd === 'set_hosts_content')).toBe(true)
   })
 
+  test('clears the editor cursor when switching hosts entries', async ({ page }) => {
+    await page.locator('[data-id="local-dev"]').click()
+    const editor = page.locator('.cm-content')
+    await expect(editor).toContainText('dev.local')
+
+    await editor.click()
+    await expect(page.locator('.cm-editor.cm-focused')).toHaveCount(1)
+
+    await page.locator('[data-id="local-api"]').click()
+    await expect(editor).toContainText('api.local')
+    await expect(page.locator('.cm-editor.cm-focused')).toHaveCount(0)
+    await expect(editor).toHaveCSS('caret-color', 'rgba(0, 0, 0, 0)')
+
+    const visibleCursorCount = await page.locator('.cm-cursor-primary').evaluateAll((cursors) =>
+      cursors.filter((cursor) => {
+        const style = window.getComputedStyle(cursor)
+        const rect = cursor.getBoundingClientRect()
+        return (
+          style.display !== 'none' &&
+          style.visibility !== 'hidden' &&
+          style.opacity !== '0' &&
+          rect.height > 0
+        )
+      }).length,
+    )
+    expect(visibleCursorCount).toBe(0)
+  })
+
   test('toggles a local hosts entry and applies the generated system hosts', async ({ page }) => {
     const row = page.locator('[data-id="local-dev"]')
     await row.click()
