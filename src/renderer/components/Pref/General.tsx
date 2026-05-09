@@ -185,6 +185,8 @@ const General = (props: IProps) => {
             checked={data.multi_chose_folder_switch_all}
             onChange={(e) => onChange({ multi_chose_folder_switch_all: e.target.checked })}
             label={lang.multi_chose_folder_switch_all}
+            description={lang.multi_chose_folder_switch_all_desc}
+            styles={checkboxDescriptionStyles}
           />
         </Stack>
       </Box>

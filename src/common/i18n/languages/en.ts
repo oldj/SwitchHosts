@@ -110,8 +110,9 @@ export default {
   minutes: 'minutes',
   move_items_to_trashcan: 'Move {0} Items to Trashcan',
   move_to_trashcan: 'Move to Trashcan',
-  multi_chose_folder_switch_all:
-    'Toggle Child Items with Folder Switch',
+  multi_chose_folder_switch_all: 'Sync Child Items When Toggling Folders',
+  multi_chose_folder_switch_all_desc:
+    'When enabled, toggling a folder also toggles its child items; child items inside single-choice folders are not toggled in bulk.',
   need_to_relaunch: 'Restart Required',
   need_to_relaunch_after_setting_changed:
     'The setting has been changed and will take effect after the app is restarted.',
@@ -138,7 +139,7 @@ export default {
   remote: 'Remote',
   remove_duplicate_records: 'Remove Duplicate Records',
   remove_duplicate_records_desc:
-    'If a domain points to multiple IPs, only the first one will take effect, and the following ones will be converted into comments.',
+    'If a domain points to multiple IPs, only the first one will take effect, and the following ones will be converted into comments when hosts are applied.',
   replace: 'Replace',
   replace_all: 'Replace All',
   replace_history: 'Replace History',

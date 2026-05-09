@@ -111,7 +111,10 @@ const lang: LanguageDict = {
   minutes: 'Minuten',
   move_items_to_trashcan: 'Verschiebe {0} Objekte in den Mülleimer',
   move_to_trashcan: 'In die Mülltonne verschieben',
-  multi_chose_folder_switch_all: 'Unterelemente mit Ordnerschalter steuern',
+  multi_chose_folder_switch_all:
+    'Unterelemente beim Umschalten von Ordnern synchronisieren',
+  multi_chose_folder_switch_all_desc:
+    'Wenn aktiviert, schaltet das Umschalten eines Ordners auch seine Unterelemente um; Unterelemente in Ordnern mit Einzelauswahl werden nicht gesammelt umgeschaltet.',
   need_to_relaunch: 'Muss neu gestartet werden',
   need_to_relaunch_after_setting_changed:
     'Die Einstellungen wurden geändert und werden erst nach einem Neustart der App wirksam.',
@@ -138,7 +141,7 @@ const lang: LanguageDict = {
   remote: 'Entfernt',
   remove_duplicate_records: 'Doppelte Datensätze entfernen',
   remove_duplicate_records_desc:
-    'Wenn eine Domain auf mehrere IPs verweist, wird nur die erste wirksam, die folgenden werden in Kommentare umgewandelt.',
+    'Wenn eine Domain auf mehrere IPs verweist, wird nur die erste wirksam; beim Anwenden der Hosts werden die folgenden in Kommentare umgewandelt.',
   replace: 'Ersetzen',
   replace_all: 'Ersetze alle',
   replace_history: 'Historie ersetzen',

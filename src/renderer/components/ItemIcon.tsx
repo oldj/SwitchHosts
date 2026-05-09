@@ -7,6 +7,7 @@ import {
   IconDeviceDesktop,
   IconFileText,
   IconFolder,
+  IconFolderOpen,
   IconStack2,
   IconTrash,
   IconWorld,
@@ -27,7 +28,7 @@ const ItemIcon = (props: Props) => {
 
   switch (type) {
     case 'folder':
-      return isCollapsed ? <IconFolder {...iconAttrs} /> : <IconFolder {...iconAttrs} />
+      return isCollapsed ? <IconFolder {...iconAttrs} /> : <IconFolderOpen {...iconAttrs} />
     case 'remote':
       return <IconWorld {...iconAttrs} />
     case 'group':

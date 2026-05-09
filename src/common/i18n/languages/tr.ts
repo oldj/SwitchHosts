@@ -107,7 +107,9 @@ export default {
   minutes: 'dakikalar',
   move_items_to_trashcan: 'Çöp kutusuna {0} öğe taşı',
   move_to_trashcan: 'Çöp kutusuna taşı',
-  multi_chose_folder_switch_all: 'Klasör anahtarı alt öğeleri kontrol etsin',
+  multi_chose_folder_switch_all: 'Klasörler değiştirilirken alt öğeleri eşitle',
+  multi_chose_folder_switch_all_desc:
+    'Etkinleştirildiğinde, bir klasörü değiştirmek alt öğelerini de açar veya kapatır; tek seçim modundaki klasörlerin alt öğeleri toplu olarak değiştirilmez.',
   need_to_relaunch: 'Yeniden başlatılması gerekiyor',
   need_to_relaunch_after_setting_changed: 'Ayar değiştirildi ve uygulama yeniden başlatıldıktan sonra etkili olacak.',
   never: 'Asla',
@@ -133,7 +135,7 @@ export default {
   remote: 'Uzak',
   remove_duplicate_records: 'Yinelenen kayıtları kaldır',
   remove_duplicate_records_desc:
-    'Bir alan birden fazla IP\'ye işaret ediyorsa, sadece ilk olanı etkili olacak ve sonrakiler yorum olarak dönüştürülecek.',
+    'Bir alan birden fazla IP\'ye işaret ediyorsa, yalnızca ilki etkili olur; hosts uygulanırken sonrakiler yorumlara dönüştürülür.',
   replace: 'Değiştir',
   replace_all: 'Hepsini değiştir',
   replace_history: 'Değiştirme geçmişi',

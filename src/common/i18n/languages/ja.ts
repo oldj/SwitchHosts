@@ -110,7 +110,9 @@ const lang: LanguageDict = {
   minutes: '分',
   move_items_to_trashcan: '{0}件をごみ箱に入れる',
   move_to_trashcan: 'ゴミ箱に入れる',
-  multi_chose_folder_switch_all: 'フォルダーの切り替えで配下のアイテムを一括操作',
+  multi_chose_folder_switch_all: 'フォルダー切り替え時に子アイテムを同期',
+  multi_chose_folder_switch_all_desc:
+    '有効にすると、フォルダーを切り替えたときに子アイテムも同時にオン/オフします。単一選択モードのフォルダー内の子アイテムは一括切り替えされません。',
   need_to_relaunch: '再起動が必要です',
   need_to_relaunch_after_setting_changed:
     '変更された設定はアプリケーションの再起動後に有効になります。',
@@ -137,7 +139,7 @@ const lang: LanguageDict = {
   remote: 'リモート',
   remove_duplicate_records: '重複レコードを削除',
   remove_duplicate_records_desc:
-    '1つのドメインに複数のIPアドレスを指定している場合、先頭のIPアドレスのみが有効になり、以降のIPアドレスはコメントに変換されます。',
+    '1つのドメインに複数のIPアドレスを指定している場合、先頭のIPアドレスのみが有効になり、hostsの適用時に以降のIPアドレスはコメントに変換されます。',
   replace: '置換',
   replace_all: 'すべて置換',
   replace_history: '置換履歴',

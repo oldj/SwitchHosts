@@ -257,7 +257,9 @@ const Node = (props: INodeProps) => {
                   data.is_collapsed && styles.collapsed,
                 )}
                 data-collapsed={!!data.is_collapsed}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
                   props.onChange(data.id, { is_collapsed: !data.is_collapsed })
                 }}
               >

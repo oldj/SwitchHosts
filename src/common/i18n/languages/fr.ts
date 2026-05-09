@@ -113,7 +113,9 @@ const lang: LanguageDict = {
   move_items_to_trashcan: 'Déplacer {0} éléments dans la corbeille',
   move_to_trashcan: 'Déplacer dans la corbeille',
   multi_chose_folder_switch_all:
-    'Contrôler les sous-éléments avec le commutateur du dossier',
+    'Synchroniser les sous-éléments lors du basculement des dossiers',
+  multi_chose_folder_switch_all_desc:
+    'Lorsque cette option est activée, basculer un dossier bascule aussi ses sous-éléments ; les sous-éléments des dossiers en mode de choix unique ne sont pas basculés en lot.',
   need_to_relaunch: 'Besoin de redémarrer',
   need_to_relaunch_after_setting_changed:
     "Le paramètre a été modifié et prendra effet après le redémarrage de l'application.",
@@ -140,7 +142,7 @@ const lang: LanguageDict = {
   remote: 'Distant',
   remove_duplicate_records: 'Supprimer les enregistrements doublons',
   remove_duplicate_records_desc:
-    'Si un domaine pointe sur plusieurs IPs, seulement la première sera prise en compte, et les autres seront converties en commentaires.',
+    'Si un domaine pointe vers plusieurs IPs, seule la première sera prise en compte ; lors de l’application des hosts, les suivantes seront converties en commentaires.',
   replace: 'Remplacer',
   replace_all: 'Tout remplacer',
   replace_history: "Remplacer l'historique",
