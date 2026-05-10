@@ -16,7 +16,7 @@ const lang: LanguageDict = {
   append: '追記',
   auto_check_update: 'アップデートを自動確認',
   auto_check_update_desc:
-    '有効にすると、SwitchHosts は起動時に公式リリースの更新を確認し、通知のみ表示します。更新は自動的にダウンロードされません。',
+    '有効にすると、SwitchHosts は新しいバージョンがあるときに通知します。アップデートは自動的にダウンロードまたはインストールされません。',
   auto_refresh: '自動更新',
   btn_cancel: 'キャンセル',
   btn_ok: 'OK',

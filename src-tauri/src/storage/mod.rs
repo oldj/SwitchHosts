@@ -44,6 +44,9 @@ pub struct AppState {
     /// `save()` — losing one of the writes. Held only by `commit_config_patch`;
     /// callers that just *read* config still go through `config` directly.
     pub config_write_lock: Mutex<()>,
+    /// Serializes update checks so the background scheduler and manual
+    /// "Check for Updates" action do not run two updater requests at once.
+    pub update_check_lock: tokio::sync::Mutex<()>,
     pub is_will_quit: AtomicBool,
     /// Epoch milliseconds of the last window-geometry persist. Used by
     /// the Moved/Resized handlers in `lifecycle` to coalesce writes
@@ -74,6 +77,7 @@ impl AppState {
             config: Mutex::new(config),
             store_lock: Mutex::new(()),
             config_write_lock: Mutex::new(()),
+            update_check_lock: tokio::sync::Mutex::new(()),
             is_will_quit: AtomicBool::new(false),
             last_geometry_persist_ms: AtomicU64::new(0),
         })

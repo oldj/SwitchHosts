@@ -61,7 +61,9 @@ declare global {
       failNextImport: (result?: string | false | null) => void
       delayNextImportFromUrl: (ms?: number) => void
       failNextImportFromUrl: (result?: string | false | null) => void
+      delayNextCheckUpdate: (ms?: number) => void
       setNextCheckUpdateResult: (result?: unknown) => void
+      emitNextUpdateAvailable: () => void
     }
   }
 }

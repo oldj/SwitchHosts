@@ -166,6 +166,7 @@
     nextApplyResult: null,
     nextRefreshResult: null,
     nextCheckUpdateResult: { has_update: false },
+    nextCheckUpdateDelayMs: 0,
   }
 
   const searchParams = new URLSearchParams(window.location.search)
@@ -284,8 +285,16 @@
     failNextImportFromUrl: (result = 'mock_import_url_error') => {
       state.nextImportFromUrlResult = result
     },
+    delayNextCheckUpdate: (ms = 300) => {
+      state.nextCheckUpdateDelayMs = ms
+    },
     setNextCheckUpdateResult: (result = { has_update: false }) => {
       state.nextCheckUpdateResult = result
+    },
+    emitNextUpdateAvailable: () => {
+      if (state.nextCheckUpdateResult?.has_update) {
+        dispatchEvent('new_version', { _args: [clone(state.nextCheckUpdateResult)] })
+      }
     },
   }
 
@@ -516,6 +525,11 @@
         case 'popup_menu':
           return true
         case 'check_update':
+          if (state.nextCheckUpdateDelayMs) {
+            const ms = state.nextCheckUpdateDelayMs
+            state.nextCheckUpdateDelayMs = 0
+            await delay(ms)
+          }
           if (state.nextCheckUpdateResult instanceof Error) {
             const error = state.nextCheckUpdateResult
             state.nextCheckUpdateResult = { has_update: false }

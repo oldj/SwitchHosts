@@ -15,8 +15,7 @@ const lang: LanguageDict = {
   all: '全部',
   append: '追加',
   auto_check_update: '自动检查更新',
-  auto_check_update_desc:
-    '开启后，SwitchHosts 会在启动时检查正式版更新，并且只提醒你；不会自动下载或安装更新。',
+  auto_check_update_desc: '开启后，SwitchHosts 会在有新版本时提醒你，不会自动下载或安装更新。',
   auto_refresh: '自动刷新',
   btn_cancel: '取消',
   btn_ok: '确定',

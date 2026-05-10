@@ -14,7 +14,7 @@ export default {
   append: 'Append',
   auto_check_update: 'Automatically Check for Updates',
   auto_check_update_desc:
-    'When enabled, SwitchHosts checks for official release updates at launch and only shows a reminder. Updates are never downloaded automatically.',
+    'When enabled, SwitchHosts will remind you when a new version is available and will not download or install updates automatically.',
   auto_refresh: 'Auto Refresh',
   btn_cancel: 'Cancel',
   btn_ok: 'OK',

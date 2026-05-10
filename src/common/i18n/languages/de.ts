@@ -16,7 +16,7 @@ const lang: LanguageDict = {
   append: 'Anhängen',
   auto_check_update: 'Automatisch nach Updates suchen',
   auto_check_update_desc:
-    'Wenn aktiviert, sucht SwitchHosts beim Start nach offiziellen Release-Updates und zeigt nur einen Hinweis an. Updates werden nie automatisch heruntergeladen.',
+    'Wenn aktiviert, zeigt SwitchHosts einen Hinweis an, sobald eine neue Version verfügbar ist. Updates werden nicht automatisch heruntergeladen oder installiert.',
   auto_refresh: 'Automatisch aktualisieren',
   btn_cancel: 'Abbrechen',
   btn_ok: 'OK',
