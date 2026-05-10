@@ -14,6 +14,9 @@ const lang: LanguageDict = {
   advanced: 'Erweitert',
   all: 'Alle',
   append: 'Anhängen',
+  auto_check_update: 'Automatisch nach Updates suchen',
+  auto_check_update_desc:
+    'Wenn aktiviert, sucht SwitchHosts beim Start nach offiziellen Release-Updates und zeigt nur einen Hinweis an. Updates werden nie automatisch heruntergeladen.',
   auto_refresh: 'Automatisch aktualisieren',
   btn_cancel: 'Abbrechen',
   btn_ok: 'OK',
@@ -192,10 +195,23 @@ const lang: LanguageDict = {
   unhide: 'Einblenden',
   unknown_error: 'Unbekannter Fehler',
   untitled: 'Ohne Titel',
+  update_download_and_install_now: 'Update herunterladen und installieren',
   update_download_now: 'Update herunterladen',
   update_downloading_desc: 'Version {0} wird heruntergeladen: {1}',
-  update_install_now: 'Installieren und neu starten',
-  update_ready_desc: 'Version {0} wurde heruntergeladen und kann jetzt installiert werden.',
+  update_error_install:
+    'Das Update konnte nicht installiert werden. Bitte laden Sie die neueste Version von GitHub Release herunter und installieren Sie sie manuell.',
+  update_error_network:
+    'Updates können nicht gesucht werden. Bitte prüfen Sie Ihre Netzwerkverbindung und Proxy-Einstellungen.',
+  update_error_platform:
+    'Für diese Installation ist kein automatisches Update-Paket verfügbar. Bitte laden Sie die neueste Version von GitHub Release herunter.',
+  update_error_proxy:
+    'Der konfigurierte Proxy konnte nicht für die Update-Suche verwendet werden. Bitte prüfen Sie die Proxy-Einstellungen.',
+  update_error_signature:
+    'Das Update-Paket konnte nicht verifiziert werden. Bitte laden Sie die neueste Version von GitHub Release herunter.',
+  update_error_unavailable:
+    'Update-Informationen sind derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.',
+  update_install_now: 'Neu starten, um das Update abzuschließen',
+  update_ready_desc: 'Version {0} wurde installiert und wird nach einem Neustart wirksam.',
   url_placeholder: 'http:// oder https:// oder file://',
   usage_data_agree: 'Ja, übermitteln Sie anonymisierte Nutzungsdaten',
   usage_data_help:

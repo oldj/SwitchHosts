@@ -65,7 +65,7 @@ pub struct AppConfig {
     pub http_api_only_local: bool,
 
     // update
-    pub auto_download_update: bool,
+    pub auto_check_update: bool,
 }
 
 impl Default for AppConfig {
@@ -106,7 +106,7 @@ impl Default for AppConfig {
             http_api_on: false,
             http_api_only_local: true,
 
-            auto_download_update: true,
+            auto_check_update: true,
         }
     }
 }
@@ -298,6 +298,46 @@ mod tests {
             .unwrap();
 
         assert!(cfg.refresh_remote_hosts_on_startup);
+    }
+
+    #[test]
+    fn defaults_auto_check_update_to_true() {
+        let cfg = AppConfig::default();
+
+        assert!(cfg.auto_check_update);
+    }
+
+    #[test]
+    fn load_ignores_legacy_auto_download_update() {
+        let path = std::env::temp_dir().join(format!(
+            "switchhosts-config-test-{}-{}.json",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::write(
+            &path,
+            r#"{ "theme": "dark", "auto_download_update": false }"#,
+        )
+        .unwrap();
+
+        let cfg = AppConfig::load(&path);
+        let _ = std::fs::remove_file(path);
+
+        assert_eq!(cfg.theme, "dark");
+        assert!(cfg.auto_check_update);
+    }
+
+    #[test]
+    fn apply_partial_accepts_auto_check_update() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "auto_check_update": false }))
+            .unwrap();
+
+        assert!(!cfg.auto_check_update);
     }
 
     #[test]

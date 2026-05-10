@@ -12,6 +12,9 @@ export default {
   advanced: 'Gelişmiş',
   all: 'Tümü',
   append: 'Ekle',
+  auto_check_update: 'Güncellemeleri otomatik kontrol et',
+  auto_check_update_desc:
+    'Etkinleştirildiğinde SwitchHosts başlangıçta resmi sürüm güncellemelerini kontrol eder ve yalnızca hatırlatma gösterir. Güncellemeler otomatik indirilmez.',
   auto_refresh: 'Otomatik yenile',
   btn_cancel: 'İptal',
   btn_ok: 'Tamam',
@@ -188,10 +191,22 @@ export default {
   unhide: 'Gizlemeyi kaldır',
   unknown_error: 'Bilinmeyen hata',
   untitled: 'Başlıksız',
+  update_download_and_install_now: 'Güncellemeyi indir ve yükle',
   update_download_now: 'Güncellemeyi indir',
   update_downloading_desc: '{0} sürümü indiriliyor: {1}',
-  update_install_now: 'Yükle ve yeniden başlat',
-  update_ready_desc: '{0} sürümü indirildi ve kuruluma hazır.',
+  update_error_install:
+    'Güncelleme yüklenemedi. Lütfen en son sürümü GitHub Release sayfasından indirip elle kurun.',
+  update_error_network:
+    'Güncellemeler kontrol edilemiyor. Lütfen ağ bağlantınızı ve proxy ayarlarınızı kontrol edin.',
+  update_error_platform:
+    'Bu kurulum için otomatik güncelleme paketi yok. Lütfen en son sürümü GitHub Release sayfasından indirin.',
+  update_error_proxy:
+    'Mevcut proxy ayarlarıyla güncelleme kontrolü yapılamıyor. Lütfen proxy ayarlarını doğrulayın.',
+  update_error_signature:
+    'Güncelleme paketi doğrulanamadı. Lütfen en son sürümü GitHub Release sayfasından indirin.',
+  update_error_unavailable: 'Güncelleme bilgisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.',
+  update_install_now: 'Güncellemeyi tamamlamak için yeniden başlat',
+  update_ready_desc: '{0} sürümü yüklendi ve yeniden başlatma sonrasında etkili olacak.',
   url_placeholder: 'http:// veya https:// veya file://',
   usage_data_agree: 'Evet, anonimleştirilmiş kullanım verilerini gönder',
   usage_data_help:

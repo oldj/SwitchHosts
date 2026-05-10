@@ -11,6 +11,9 @@ export default {
   advanced: '고급',
   all: '전체',
   append: '추가',
+  auto_check_update: '업데이트 자동 확인',
+  auto_check_update_desc:
+    '활성화하면 SwitchHosts가 시작 시 공식 릴리스 업데이트를 확인하고 알림만 표시합니다. 업데이트는 자동으로 다운로드되지 않습니다.',
   auto_refresh: '자동 새로고침',
   btn_cancel: '취소',
   btn_ok: '확인',
@@ -183,10 +186,20 @@ export default {
   unhide: '숨김해제',
   unknown_error: '알 수 없는 오류',
   untitled: '제목없음',
+  update_download_and_install_now: '업데이트 다운로드 및 설치',
   update_download_now: '업데이트 다운로드',
   update_downloading_desc: '버전 {0} 다운로드 중: {1}',
-  update_install_now: '설치 후 다시 시작',
-  update_ready_desc: '버전 {0} 다운로드가 완료되었으며 설치할 수 있습니다.',
+  update_error_install:
+    '업데이트를 설치할 수 없습니다. GitHub Release에서 최신 버전을 다운로드해 수동으로 설치하세요.',
+  update_error_network: '업데이트를 확인할 수 없습니다. 네트워크 연결과 프록시 설정을 확인하세요.',
+  update_error_platform:
+    '현재 설치 방식에 사용할 수 있는 자동 업데이트 패키지가 없습니다. GitHub Release에서 최신 버전을 다운로드하세요.',
+  update_error_proxy: '현재 프록시 설정으로 업데이트를 확인할 수 없습니다. 프록시 설정을 확인하세요.',
+  update_error_signature:
+    '업데이트 패키지를 확인할 수 없습니다. GitHub Release에서 최신 버전을 다운로드하세요.',
+  update_error_unavailable: '현재 업데이트 정보를 가져올 수 없습니다. 나중에 다시 시도하세요.',
+  update_install_now: '다시 시작해 업데이트 완료',
+  update_ready_desc: '버전 {0}이 설치되었으며 다시 시작한 후 적용됩니다.',
   url_placeholder: 'http:// 또는 https:// 또는 file://',
   usage_data_agree: '익명화된 사용 데이터 제출에 동의합니다',
   usage_data_help:

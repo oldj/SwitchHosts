@@ -4,6 +4,10 @@ export interface AppUpdateInfo {
   releaseNotes?: string | null
 }
 
+export type AppCheckUpdateResult =
+  | ({ has_update: true } & AppUpdateInfo)
+  | { has_update: false }
+
 export interface AppUpdateProgress {
   percent: number
   transferred: number

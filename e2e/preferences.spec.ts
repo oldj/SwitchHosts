@@ -5,6 +5,7 @@ import {
   findEntry,
   getMockCalls,
   getMockState,
+  openApp,
   test,
 } from './support/test'
 import type { Locator } from '@playwright/test'
@@ -239,6 +240,98 @@ test.describe('preferences', () => {
         expect.objectContaining({ refresh_remote_hosts_on_startup: true }),
       ]),
     )
+  })
+
+  test('automatic update checks default on and save immediately', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
+    await expect(
+      preferences.getByText(
+        'When enabled, SwitchHosts checks for official release updates at launch and only shows a reminder. Updates are never downloaded automatically.',
+      ),
+    ).toBeVisible()
+
+    const autoCheckUpdate = preferences.getByLabel('Automatically Check for Updates')
+    await expect(autoCheckUpdate).toBeChecked()
+
+    await autoCheckUpdate.uncheck()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.configs.auto_check_update
+      })
+      .toBe(false)
+
+    const calls = await getMockCalls(page)
+    expect(configPatches(calls)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ auto_check_update: false }),
+      ]),
+    )
+  })
+
+  test('manual no-update check reports latest version without downloading', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Settings').click()
+    await page.getByText('Check for Updates').click()
+
+    await expect(page.getByText('Current version is up to date.')).toBeVisible()
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'check_update')).toBe(true)
+    expect(calls.some((call) => call.cmd === 'download_update')).toBe(false)
+  })
+
+  test('startup update check only prompts until the user downloads', async ({ browser }) => {
+    const page = await browser.newPage()
+
+    try {
+      await openApp(page, '/?e2eUpdateAvailable=true')
+
+      const updateDialog = page.getByRole('dialog').filter({ hasText: 'New Version Found' })
+      await expect(updateDialog).toBeVisible()
+      await expect(updateDialog.getByText('Mock release notes')).toBeVisible()
+
+      let calls = await getMockCalls(page)
+      expect(calls.some((call) => call.cmd === 'check_update')).toBe(true)
+      expect(calls.some((call) => call.cmd === 'download_update')).toBe(false)
+
+      await updateDialog.getByRole('button', { name: /Download/ }).click()
+      await expect(
+        updateDialog.getByRole('button', { name: 'Restart to Complete Update' }),
+      ).toBeVisible()
+
+      calls = await getMockCalls(page)
+      expect(calls.some((call) => call.cmd === 'download_update')).toBe(true)
+    } finally {
+      if (!page.isClosed()) {
+        await page.close().catch(() => {})
+      }
+    }
+  })
+
+  test('startup skips update check when automatic checks are disabled', async ({ browser }) => {
+    const page = await browser.newPage()
+
+    try {
+      await openApp(page, '/?e2eAutoCheckUpdate=false&e2eUpdateAvailable=true')
+      await page.waitForTimeout(300)
+
+      const calls = await getMockCalls(page)
+      expect(calls.some((call) => call.cmd === 'check_update')).toBe(false)
+      await expect(page.getByRole('dialog').filter({ hasText: 'New Version Found' })).toHaveCount(
+        0,
+      )
+    } finally {
+      if (!page.isClosed()) {
+        await page.close().catch(() => {})
+      }
+    }
   })
 
   test('applies global single-choice mode to top-level hosts', async ({ page }) => {

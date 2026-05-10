@@ -36,15 +36,12 @@ const configs = {
   http_api_only_local: true,
   tray_mini_window: true,
   multi_chose_folder_switch_all: false,
+  auto_check_update: true,
 
   // find window — sticky search options across reopens and restarts
   find_is_regexp: false,
   find_is_ignore_case: false,
   find_result_column_widths: [] as number[],
-
-  // Legacy key: it now controls background update checks, while the actual
-  // download remains a manual action in the UI.
-  auto_download_update: true,
 
   // other
   env: 'PROD' as 'PROD' | 'DEV',

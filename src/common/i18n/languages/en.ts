@@ -12,6 +12,9 @@ export default {
   advanced: 'Advanced',
   all: 'All',
   append: 'Append',
+  auto_check_update: 'Automatically Check for Updates',
+  auto_check_update_desc:
+    'When enabled, SwitchHosts checks for official release updates at launch and only shows a reminder. Updates are never downloaded automatically.',
   auto_refresh: 'Auto Refresh',
   btn_cancel: 'Cancel',
   btn_ok: 'OK',
@@ -188,10 +191,23 @@ export default {
   unhide: 'Unhide',
   unknown_error: 'Unknown error',
   untitled: 'Untitled',
+  update_download_and_install_now: 'Download and Install Update',
   update_download_now: 'Download Update',
   update_downloading_desc: 'Downloading version {0}: {1}',
-  update_install_now: 'Install and Restart',
-  update_ready_desc: 'Version {0} has been downloaded and is ready to install.',
+  update_error_install:
+    'The update could not be installed. Please download the latest release from GitHub and install it manually.',
+  update_error_network:
+    'Unable to check for updates. Please check your network connection and proxy settings.',
+  update_error_platform:
+    'No automatic update package is available for this installation. Please download the latest release from GitHub.',
+  update_error_proxy:
+    'The configured proxy could not be used for update checks. Please verify the proxy settings.',
+  update_error_signature:
+    'The update package could not be verified. Please download the latest release from GitHub.',
+  update_error_unavailable:
+    'Update information is not available right now. Please try again later.',
+  update_install_now: 'Restart to Complete Update',
+  update_ready_desc: 'Version {0} has been installed and will take effect after restart.',
   url_placeholder: 'http:// or https:// or file://',
   usage_data_agree: 'Yes, Submit Anonymized Usage Data',
   usage_data_help:

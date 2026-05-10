@@ -1,4 +1,5 @@
 import { notifications } from '@mantine/notifications'
+import type { LanguageDict } from '@common/types'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import { createElement } from 'react'
 
@@ -31,6 +32,76 @@ export function getErrorMessage(error: unknown, fallbackMessage: string): string
   }
 
   return fallbackMessage
+}
+
+export function getFriendlyUpdateErrorMessage(
+  error: unknown,
+  lang: LanguageDict,
+  fallbackMessage = lang.check_update_failed,
+): string {
+  const message = getErrorMessage(error, fallbackMessage)
+  const lower = message.toLowerCase()
+
+  if (lower.includes('invalid proxy') || lower.includes('proxy')) {
+    return lang.update_error_proxy
+  }
+
+  if (
+    lower.includes('signature') ||
+    lower.includes('minisign') ||
+    lower.includes('public key')
+  ) {
+    return lang.update_error_signature
+  }
+
+  if (
+    (lower.includes('platform') && lower.includes('not found')) ||
+    lower.includes('fallback platforms') ||
+    lower.includes('platforms object') ||
+    lower.includes('target') ||
+    lower.includes('unsupported') ||
+    lower.includes('not found in release data') ||
+    lower.includes('invalid updater format') ||
+    lower.includes('binary not found')
+  ) {
+    return lang.update_error_platform
+  }
+
+  if (
+    lower.includes('404') ||
+    lower.includes('release not found') ||
+    lower.includes('no update available') ||
+    lower.includes('could not fetch update') ||
+    lower.includes('failed to deserialize') ||
+    lower.includes('json') ||
+    lower.includes('the `url` field was not set')
+  ) {
+    return lang.update_error_unavailable
+  }
+
+  if (
+    lower.includes('network') ||
+    lower.includes('request') ||
+    lower.includes('connect') ||
+    lower.includes('timeout') ||
+    lower.includes('timed out') ||
+    lower.includes('dns') ||
+    lower.includes('tls')
+  ) {
+    return lang.update_error_network
+  }
+
+  if (
+    lower.includes('install') ||
+    lower.includes('permission') ||
+    lower.includes('denied') ||
+    lower.includes('dpkg') ||
+    lower.includes('rpm')
+  ) {
+    return lang.update_error_install
+  }
+
+  return message
 }
 
 export function showSuccessNotification({ title, message }: AppNotificationOptions) {

@@ -1,8 +1,8 @@
 import events from '@common/events'
 import { AppDownloadedUpdateInfo, AppUpdateInfo, AppUpdateProgress } from '@common/update'
 import { Button, Group, Modal, Progress, Stack, Text } from '@mantine/core'
-import { actions } from '@renderer/core/agent'
-import { getErrorMessage, showErrorNotification } from '@renderer/core/notify'
+import { actions, agent } from '@renderer/core/agent'
+import { getFriendlyUpdateErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useI18n from '@renderer/models/useI18n'
 import { useState } from 'react'
@@ -49,6 +49,9 @@ const UpdateDialog = () => {
     setOpened(true)
   })
 
+  const downloadButtonLabel =
+    agent.platform === 'win32' ? lang.update_download_and_install_now : lang.update_download_now
+
   const onClose = () => {
     if (stage === 'downloading' || isInstalling) {
       return
@@ -71,8 +74,8 @@ const UpdateDialog = () => {
       console.error(error)
       setStage('available')
       showErrorNotification({
-        title: lang.update_download_now,
-        message: getErrorMessage(error, lang.fail),
+        title: downloadButtonLabel,
+        message: getFriendlyUpdateErrorMessage(error, lang, lang.fail),
       })
     }
   }
@@ -87,7 +90,7 @@ const UpdateDialog = () => {
       setIsInstalling(false)
       showErrorNotification({
         title: lang.update_install_now,
-        message: getErrorMessage(error, lang.fail),
+        message: getFriendlyUpdateErrorMessage(error, lang, lang.update_error_install),
       })
     }
   }
@@ -142,7 +145,7 @@ const UpdateDialog = () => {
           ) : null}
 
           {stage === 'available' ? (
-            <Button onClick={onDownload}>{lang.update_download_now}</Button>
+            <Button onClick={onDownload}>{downloadButtonLabel}</Button>
           ) : null}
 
           {stage === 'downloaded' ? (

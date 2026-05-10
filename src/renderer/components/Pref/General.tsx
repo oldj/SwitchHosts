@@ -180,6 +180,16 @@ const General = (props: IProps) => {
       </Box>
 
       <Box w="100%">
+        <Checkbox
+          checked={data.auto_check_update}
+          onChange={(e) => onChange({ auto_check_update: e.target.checked })}
+          label={lang.auto_check_update}
+          description={lang.auto_check_update_desc}
+          styles={checkboxDescriptionStyles}
+        />
+      </Box>
+
+      <Box w="100%">
         <Stack gap="16px">
           <Checkbox
             checked={data.tray_mini_window}

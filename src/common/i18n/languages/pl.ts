@@ -12,6 +12,9 @@ export default {
   advanced: 'Zaawansowane',
   all: 'Wszystko',
   append: 'Dołącz',
+  auto_check_update: 'Automatycznie sprawdzaj aktualizacje',
+  auto_check_update_desc:
+    'Po włączeniu SwitchHosts sprawdza oficjalne aktualizacje przy starcie i tylko pokazuje przypomnienie. Aktualizacje nigdy nie są pobierane automatycznie.',
   auto_refresh: 'Automatyczne odświeżanie',
   btn_cancel: 'Anuluj',
   btn_ok: 'OK',
@@ -190,10 +193,23 @@ export default {
   unhide: 'Pokaż',
   unknown_error: 'Nieznany błąd',
   untitled: 'Bez tytułu',
+  update_download_and_install_now: 'Pobierz i zainstaluj aktualizację',
   update_download_now: 'Pobierz aktualizację',
   update_downloading_desc: 'Pobieranie wersji {0}: {1}',
-  update_install_now: 'Zainstaluj i uruchom ponownie',
-  update_ready_desc: 'Wersja {0} została pobrana i jest gotowa do instalacji.',
+  update_error_install:
+    'Nie udało się zainstalować aktualizacji. Pobierz najnowsze wydanie z GitHub Release i zainstaluj je ręcznie.',
+  update_error_network:
+    'Nie można sprawdzić aktualizacji. Sprawdź połączenie sieciowe i ustawienia proxy.',
+  update_error_platform:
+    'Dla tej instalacji nie ma dostępnego pakietu automatycznej aktualizacji. Pobierz najnowsze wydanie z GitHub Release.',
+  update_error_proxy:
+    'Nie można użyć obecnych ustawień proxy do sprawdzenia aktualizacji. Sprawdź ustawienia proxy.',
+  update_error_signature:
+    'Nie można zweryfikować pakietu aktualizacji. Pobierz najnowsze wydanie z GitHub Release.',
+  update_error_unavailable:
+    'Informacje o aktualizacji są teraz niedostępne. Spróbuj ponownie później.',
+  update_install_now: 'Uruchom ponownie, aby ukończyć aktualizację',
+  update_ready_desc: 'Wersja {0} została zainstalowana i zacznie działać po ponownym uruchomieniu.',
   url_placeholder: 'http:// lub https:// lub file://',
   usage_data_agree: 'Tak, prześlij anonimowe dane użytkowania',
   usage_data_help:

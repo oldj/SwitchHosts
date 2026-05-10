@@ -1320,13 +1320,6 @@ pub async fn download_update<R: Runtime>(
         .await
         .map_err(|e| e.to_string())?;
 
-    if let Some(window) = app.get_webview_window(lifecycle::MAIN_WINDOW_LABEL) {
-        lifecycle::persist_window_geometry(&window, state.inner());
-    }
-    state
-        .is_will_quit
-        .store(true, std::sync::atomic::Ordering::SeqCst);
-
     let _ = app.emit(
         "update_downloaded",
         json!({ "_args": [{
@@ -1361,6 +1354,15 @@ fn updater_builder_with_proxy<R: Runtime>(
     use tauri_plugin_updater::UpdaterExt;
 
     let mut builder = app.updater_builder();
+    let app_for_before_exit = app.clone();
+    builder = builder.on_before_exit(move || {
+        let state = app_for_before_exit.state::<AppState>();
+        if let Some(window) = app_for_before_exit.get_webview_window(lifecycle::MAIN_WINDOW_LABEL) {
+            lifecycle::persist_window_geometry(&window, state.inner());
+        }
+        state.is_will_quit.store(true, Ordering::SeqCst);
+    });
+
     if let Some(proxy_url) = http::configured_proxy_url_from_state(state) {
         let proxy = proxy_url
             .parse()

@@ -5,10 +5,12 @@
 
 import { feedbackUrl, homepageUrl } from '@common/constants'
 import events from '@common/events'
+import type { AppCheckUpdateResult } from '@common/update'
 import { ActionIcon, Menu, type MenuProps, ScrollArea, Tooltip } from '@mantine/core'
 import ImportFromUrl from '@renderer/components/TopBar/ImportFromUrl'
 import { actions, agent } from '@renderer/core/agent'
 import {
+  getFriendlyUpdateErrorMessage,
   getErrorMessage,
   hideAppNotification,
   showErrorNotification,
@@ -89,8 +91,8 @@ const ConfigMenu = (props: IProps) => {
 
                 setIsCheckingUpdate(true)
                 try {
-                  const hasUpdate = await actions.checkUpdate()
-                  if (!hasUpdate) {
+                  const result = (await actions.checkUpdate()) as AppCheckUpdateResult
+                  if (!result.has_update) {
                     showSuccessNotification({
                       title: lang.check_update,
                       message: lang.is_latest_version_inform,
@@ -99,7 +101,7 @@ const ConfigMenu = (props: IProps) => {
                 } catch (error) {
                   showErrorNotification({
                     title: lang.check_update,
-                    message: getErrorMessage(error, lang.check_update_failed),
+                    message: getFriendlyUpdateErrorMessage(error, lang),
                   })
                 } finally {
                   setIsCheckingUpdate(false)

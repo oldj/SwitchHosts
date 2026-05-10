@@ -130,7 +130,8 @@ jobs:
             libwebkit2gtk-4.1-dev \
             libappindicator3-dev \
             librsvg2-dev \
-            patchelf
+            patchelf \
+            rpm
 
       - name: Install npm dependencies
         run: npm ci
@@ -209,10 +210,39 @@ jobs:
             libwebkit2gtk-4.1-dev \
             libappindicator3-dev \
             librsvg2-dev \
-            patchelf
+            patchelf \
+            rpm
 
       - name: Install npm dependencies
         run: npm ci
+
+      - name: Generate release notes
+        id: release_notes
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          REPO="${{ github.repository }}"
+
+          if ! NOTES=$(gh api -X POST "repos/$REPO/releases/generate-notes" \
+            -f tag_name="$TAG" \
+            --jq '.body // ""'); then
+            echo "::error::Failed to generate release notes for $TAG"
+            exit 1
+          fi
+
+          if [ -z "$NOTES" ]; then
+            echo "::error::Generated release notes for $TAG are empty"
+            exit 1
+          fi
+
+          {
+            echo "body<<__SWITCHHOSTS_RELEASE_NOTES__"
+            printf '%s\n' "$NOTES"
+            echo "__SWITCHHOSTS_RELEASE_NOTES__"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build and release (Tauri)
         id: tauri
@@ -232,7 +262,7 @@ jobs:
         with:
           tagName: ${{ needs.prep.outputs.tag }}
           releaseName: "SwitchHosts ${{ needs.prep.outputs.tag }}"
-          releaseBody: "See the assets below to download and install this version."
+          releaseBody: ${{ steps.release_notes.outputs.body || 'See the assets below to download and install this version.' }}
           releaseDraft: true
           # Mark anything with a SemVer pre-release suffix (e.g.
           # v5.0.0-beta.23) as prerelease. Drafts hide assets until
@@ -571,6 +601,116 @@ jobs:
             fi
           done <<< "$ASSET_LIST"
 
+      # tauri-plugin-updater 2.10.1 looks for the installer-specific
+      # platform key first (`linux-x86_64-deb`, `linux-x86_64-rpm`,
+      # etc.), then falls back to the generic `linux-x86_64` key.
+      # We intentionally do not publish generic Linux keys in
+      # latest.json, so every installer variant must appear here and
+      # deb/rpm installs update to their matching package instead of
+      # being offered an AppImage archive.
+      - name: Sign Linux package updater assets
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          VERSION=$(node -p "require('./package.json').version")
+          RELEASE_ID="${{ steps.release.outputs.id }}"
+          REPO="${{ github.repository }}"
+          PACKAGE_PREFIX="SwitchHosts-${VERSION}-linux-"
+
+          if [ -z "$RELEASE_ID" ]; then
+            echo "::error::No release ID resolved for tag $TAG"
+            exit 1
+          fi
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY is not set; cannot sign Linux package updater assets for $TAG"
+            exit 1
+          fi
+
+          mkdir -p /tmp/updater-sign-packages
+
+          download_asset() {
+            local aid="$1"
+            local name="$2"
+            local dest="$3"
+
+            for attempt in 1 2 3 4 5; do
+              rm -f "$dest"
+              if gh api -H "Accept: application/octet-stream" \
+                "repos/$REPO/releases/assets/$aid" > "$dest"; then
+                return 0
+              fi
+
+              echo "::warning::Download failed for $name (attempt $attempt); retrying..."
+              sleep $((attempt * 5))
+            done
+
+            return 1
+          }
+
+          if ! ASSET_LIST=$(gh api "repos/$REPO/releases/$RELEASE_ID/assets" --paginate \
+            --jq '.[] | "\(.id)\t\(.name)"'); then
+            echo "::error::Failed to list release assets for Linux package signing"
+            exit 1
+          fi
+
+          if [ -n "$ASSET_LIST" ]; then
+            while IFS=$'\t' read -r AID NAME; do
+              case "$NAME" in
+                "${PACKAGE_PREFIX}"*.deb.sig|"${PACKAGE_PREFIX}"*.rpm.sig) ;;
+                *) continue ;;
+              esac
+
+              echo "Deleting old: $NAME"
+              if ! gh api -X DELETE "repos/$REPO/releases/assets/$AID" --silent; then
+                echo "::error::Failed to delete old $NAME"
+                exit 1
+              fi
+            done <<< "$ASSET_LIST"
+          fi
+
+          SIGNED_COUNT=0
+          while IFS=$'\t' read -r AID NAME; do
+            case "$NAME" in
+              "${PACKAGE_PREFIX}"*.deb|"${PACKAGE_PREFIX}"*.rpm) ;;
+              *) continue ;;
+            esac
+
+            echo "Downloading: $NAME"
+            if ! download_asset "$AID" "$NAME" "/tmp/updater-sign-packages/$NAME"; then
+              echo "::error::Could not download $NAME after retries"
+              exit 1
+            fi
+
+            echo "Signing: $NAME"
+            if ! npx tauri signer sign "/tmp/updater-sign-packages/$NAME"; then
+              echo "::error::Signing failed for $NAME"
+              exit 1
+            fi
+
+            SIG="/tmp/updater-sign-packages/${NAME}.sig"
+            if [ ! -f "$SIG" ]; then
+              echo "::error::Signature file not created for $NAME"
+              exit 1
+            fi
+
+            echo "Uploading: ${NAME}.sig"
+            if ! gh release upload "$TAG" "$SIG" --repo "$REPO" --clobber; then
+              echo "::error::Failed to upload ${NAME}.sig"
+              exit 1
+            fi
+            SIGNED_COUNT=$((SIGNED_COUNT + 1))
+          done <<< "$ASSET_LIST"
+
+          if [ "$SIGNED_COUNT" -eq 0 ]; then
+            echo "::error::No Linux deb/rpm packages matched VERSION=$VERSION"
+            exit 1
+          fi
+
   # ── Generate latest.json after release assets are finalized ───────
   updater-manifest:
     needs: [finalize_release, prep]
@@ -600,6 +740,8 @@ jobs:
 
           DOWNLOAD_BASE="https://github.com/$REPO/releases/download/$TAG"
           ARCHIVE_PREFIX="SwitchHosts_${VERSION}_"
+          PACKAGE_PREFIX="SwitchHosts-${VERSION}-linux-"
+          RELEASE_BODY=$(gh api "repos/$REPO/releases/$RELEASE_ID" --jq '.body // ""')
 
           download_sig_content() {
             local aid="$1"
@@ -649,6 +791,7 @@ jobs:
             case "$SIG_NAME" in
               "${ARCHIVE_PREFIX}"*) ;;
               SwitchHosts_*.app.tar.gz.sig) ;;
+              "${PACKAGE_PREFIX}"*.deb.sig|"${PACKAGE_PREFIX}"*.rpm.sig) ;;
               *)
                 echo "Skipping out-of-version sig: $SIG_NAME"
                 continue
@@ -670,8 +813,12 @@ jobs:
               *_x64-setup.nsis.zip)      PLATFORM_KEY="windows-x86_64" ;;
               *_x86-setup.nsis.zip)      PLATFORM_KEY="windows-i686" ;;
               *_arm64-setup.nsis.zip)    PLATFORM_KEY="windows-aarch64" ;;
-              *_amd64.AppImage.tar.gz)   PLATFORM_KEY="linux-x86_64" ;;
-              *_aarch64.AppImage.tar.gz) PLATFORM_KEY="linux-aarch64" ;;
+              *_amd64.AppImage.tar.gz)   PLATFORM_KEY="linux-x86_64-appimage" ;;
+              *_aarch64.AppImage.tar.gz) PLATFORM_KEY="linux-aarch64-appimage" ;;
+              SwitchHosts-${VERSION}-linux-amd64.deb)    PLATFORM_KEY="linux-x86_64-deb" ;;
+              SwitchHosts-${VERSION}-linux-arm64.deb)    PLATFORM_KEY="linux-aarch64-deb" ;;
+              SwitchHosts-${VERSION}-linux-x86_64.rpm)   PLATFORM_KEY="linux-x86_64-rpm" ;;
+              SwitchHosts-${VERSION}-linux-aarch64.rpm)  PLATFORM_KEY="linux-aarch64-rpm" ;;
             esac
             [ -z "$PLATFORM_KEY" ] && continue
 
@@ -695,8 +842,9 @@ jobs:
           LATEST=$(jq -n \
             --arg version "$VERSION" \
             --arg pub_date "$NOW" \
+            --arg notes "$RELEASE_BODY" \
             --argjson platforms "$PLATFORMS" \
-            '{version: $version, pub_date: $pub_date, platforms: $platforms}')
+            '{version: $version, pub_date: $pub_date, notes: $notes, platforms: $platforms}')
 
           echo "$LATEST" | jq .
 
@@ -709,7 +857,9 @@ jobs:
           EXPECTED_KEYS=$(jq -nc '[
             "darwin-universal","darwin-aarch64","darwin-x86_64",
             "windows-x86_64","windows-i686","windows-aarch64",
-            "linux-x86_64","linux-aarch64"
+            "linux-x86_64-appimage","linux-aarch64-appimage",
+            "linux-x86_64-deb","linux-aarch64-deb",
+            "linux-x86_64-rpm","linux-aarch64-rpm"
           ] | sort')
           ACTUAL_KEYS=$(echo "$PLATFORMS" | jq -c 'keys | sort')
           if [ "$ACTUAL_KEYS" != "$EXPECTED_KEYS" ]; then

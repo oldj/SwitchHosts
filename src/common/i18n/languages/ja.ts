@@ -14,6 +14,9 @@ const lang: LanguageDict = {
   advanced: '詳細設定',
   all: 'すべて',
   append: '追記',
+  auto_check_update: 'アップデートを自動確認',
+  auto_check_update_desc:
+    '有効にすると、SwitchHosts は起動時に公式リリースの更新を確認し、通知のみ表示します。更新は自動的にダウンロードされません。',
   auto_refresh: '自動更新',
   btn_cancel: 'キャンセル',
   btn_ok: 'OK',
@@ -188,10 +191,23 @@ const lang: LanguageDict = {
   unhide: 'すべて表示',
   unknown_error: '不明なエラー',
   untitled: '無題',
+  update_download_and_install_now: 'アップデートをダウンロードしてインストール',
   update_download_now: '更新をダウンロード',
   update_downloading_desc: 'バージョン {0} をダウンロード中: {1}',
-  update_install_now: 'インストールして再起動',
-  update_ready_desc: 'バージョン {0} のダウンロードが完了し、インストールできます。',
+  update_error_install:
+    'アップデートをインストールできませんでした。GitHub Release から最新バージョンをダウンロードして手動でインストールしてください。',
+  update_error_network:
+    'アップデートを確認できません。ネットワーク接続とプロキシ設定を確認してください。',
+  update_error_platform:
+    'このインストール方法では利用可能な自動更新パッケージがありません。GitHub Release から最新バージョンをダウンロードしてください。',
+  update_error_proxy:
+    '現在のプロキシ設定ではアップデートを確認できません。プロキシ設定を確認してください。',
+  update_error_signature:
+    'アップデートパッケージを検証できませんでした。GitHub Release から最新バージョンをダウンロードしてください。',
+  update_error_unavailable:
+    '現在アップデート情報を取得できません。しばらくしてからもう一度お試しください。',
+  update_install_now: '再起動して更新を完了',
+  update_ready_desc: 'バージョン {0} はインストール済みです。再起動後に有効になります。',
   url_placeholder: 'http:// または https:// または file://',
   usage_data_agree: 'はい、匿名の利用データを送信します。',
   usage_data_help: '匿名の利用データを定期的に送信し、SwitchHostsの改善にご協力いただけませんか？',

@@ -34,6 +34,7 @@ interface MockState {
     proxy_host: string
     proxy_port: number
     refresh_remote_hosts_on_startup: boolean
+    auto_check_update: boolean
   }
   contents: Record<string, string>
   systemHosts: string
@@ -60,6 +61,7 @@ declare global {
       failNextImport: (result?: string | false | null) => void
       delayNextImportFromUrl: (ms?: number) => void
       failNextImportFromUrl: (result?: string | false | null) => void
+      setNextCheckUpdateResult: (result?: unknown) => void
     }
   }
 }
@@ -73,9 +75,9 @@ export const test = base.extend({
 
 export { expect }
 
-export async function openApp(page: Page) {
+export async function openApp(page: Page, path = '/') {
   await page.addInitScript({ path: tauriMockPath })
-  await gotoApp(page)
+  await gotoApp(page, path)
 }
 
 export async function gotoApp(page: Page, path = '/') {

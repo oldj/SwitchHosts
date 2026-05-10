@@ -55,10 +55,10 @@
     http_api_only_local: true,
     tray_mini_window: true,
     multi_chose_folder_switch_all: false,
+    auto_check_update: true,
     find_is_regexp: false,
     find_is_ignore_case: false,
     find_result_column_widths: [],
-    auto_download_update: true,
     env: 'DEV',
   }
 
@@ -165,10 +165,25 @@
     calls: [],
     nextApplyResult: null,
     nextRefreshResult: null,
+    nextCheckUpdateResult: { has_update: false },
   }
 
-  if (new URLSearchParams(window.location.search).get('e2eWriteMode') === 'null') {
+  const searchParams = new URLSearchParams(window.location.search)
+
+  if (searchParams.get('e2eWriteMode') === 'null') {
     state.configs.write_mode = null
+  }
+
+  if (searchParams.get('e2eAutoCheckUpdate') === 'false') {
+    state.configs.auto_check_update = false
+  }
+
+  if (searchParams.get('e2eUpdateAvailable') === 'true') {
+    state.nextCheckUpdateResult = {
+      has_update: true,
+      version: '5.0.1',
+      releaseNotes: 'Mock release notes',
+    }
   }
 
   const deleteContentsForItem = (item) => {
@@ -268,6 +283,9 @@
     },
     failNextImportFromUrl: (result = 'mock_import_url_error') => {
       state.nextImportFromUrlResult = result
+    },
+    setNextCheckUpdateResult: (result = { has_update: false }) => {
+      state.nextCheckUpdateResult = result
     },
   }
 
@@ -498,7 +516,34 @@
         case 'popup_menu':
           return true
         case 'check_update':
-          return false
+          if (state.nextCheckUpdateResult instanceof Error) {
+            const error = state.nextCheckUpdateResult
+            state.nextCheckUpdateResult = { has_update: false }
+            throw error
+          }
+          if (state.nextCheckUpdateResult?.has_update) {
+            dispatchEvent('new_version', { _args: [clone(state.nextCheckUpdateResult)] })
+          }
+          return clone(state.nextCheckUpdateResult)
+        case 'download_update':
+          dispatchEvent('update_download_progress', {
+            _args: [{ percent: 100, transferred: 1, total: 1, bytesPerSecond: 0 }],
+          })
+          dispatchEvent('update_downloaded', {
+            _args: [
+              clone(
+                state.nextCheckUpdateResult?.has_update
+                  ? state.nextCheckUpdateResult
+                  : {
+                      version: '5.0.1',
+                      releaseNotes: 'Mock release notes',
+                    },
+              ),
+            ],
+          })
+          return null
+        case 'install_update':
+          return null
         default:
           throw new Error(`Unhandled Tauri mock command: ${cmd}`)
       }

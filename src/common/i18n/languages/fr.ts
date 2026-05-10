@@ -14,6 +14,9 @@ const lang: LanguageDict = {
   advanced: 'Avancé',
   all: 'Tout',
   append: 'Ajouter',
+  auto_check_update: 'Vérifier automatiquement les mises à jour',
+  auto_check_update_desc:
+    'Si activé, SwitchHosts vérifie au lancement les mises à jour des versions officielles et affiche seulement un rappel. Les mises à jour ne sont jamais téléchargées automatiquement.',
   auto_refresh: 'Rafraîchissement automatique',
   btn_cancel: 'Annuler',
   btn_ok: 'OK',
@@ -192,10 +195,23 @@ const lang: LanguageDict = {
   unhide: 'Démasquer',
   unknown_error: 'Erreur inconnue',
   untitled: 'Sans titre',
+  update_download_and_install_now: 'Télécharger et installer la mise à jour',
   update_download_now: 'Télécharger la mise à jour',
   update_downloading_desc: 'Téléchargement de la version {0} : {1}',
-  update_install_now: 'Installer et redémarrer',
-  update_ready_desc: 'La version {0} a été téléchargée et est prête à être installée.',
+  update_error_install:
+    "La mise à jour n'a pas pu être installée. Téléchargez la dernière version depuis GitHub Release et installez-la manuellement.",
+  update_error_network:
+    'Impossible de vérifier les mises à jour. Vérifiez votre connexion réseau et vos paramètres proxy.',
+  update_error_platform:
+    "Aucun paquet de mise à jour automatique n'est disponible pour cette installation. Téléchargez la dernière version depuis GitHub Release.",
+  update_error_proxy:
+    "Le proxy configuré n'a pas pu être utilisé pour vérifier les mises à jour. Vérifiez les paramètres proxy.",
+  update_error_signature:
+    "Le paquet de mise à jour n'a pas pu être vérifié. Téléchargez la dernière version depuis GitHub Release.",
+  update_error_unavailable:
+    'Les informations de mise à jour ne sont pas disponibles pour le moment. Réessayez plus tard.',
+  update_install_now: 'Redémarrer pour terminer la mise à jour',
+  update_ready_desc: 'La version {0} a été installée et prendra effet après redémarrage.',
   url_placeholder: 'http:// ou https:// ou file://',
   usage_data_agree: "Oui, soumettre de manière anonyme mes données d'utilisation",
   usage_data_help:
