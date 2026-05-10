@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "SwitchHosts",
-  "version": "5.0.0-beta.27",
+  "version": "5.0.0-beta.28",
   "identifier": "net.oldj.switchhosts",
   "build": {
     "beforeDevCommand": "npm run dev:renderer",
