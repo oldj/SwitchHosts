@@ -174,7 +174,7 @@ export default {
   theme: 'Theme',
   theme_dark: 'Dark',
   theme_light: 'Light',
-  theme_system: 'Follow system',
+  theme_system: 'Follow System',
   title: 'Title',
   to_show_source: 'Double-click to show the source code.',
   toggle_developer_tools: 'Toggle Developer Tools',

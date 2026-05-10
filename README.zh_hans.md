@@ -24,7 +24,7 @@ SwitchHosts 是一个管理 hosts 文件的应用，基于 [Tauri](https://tauri
 
 ## 截图
 
-<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/screenshots/sh_light.png" alt="Capture" width="960">
+<img src="./screenshots/sh_light.png" alt="SwitchHosts 截图" width="978">
 
 ## 功能特性
 

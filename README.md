@@ -25,7 +25,7 @@ SwitchHosts is an App for managing hosts file, it is based on [Tauri](https://ta
 
 ## Screenshot
 
-<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/screenshots/sh_light.png" alt="Capture" width="960">
+<img src="./screenshots/sh_light.png" alt="SwitchHosts screenshot" width="978">
 
 ## Features
 

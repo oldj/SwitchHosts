@@ -25,7 +25,7 @@ SwitchHosts 是一個管理 hosts 檔案的應用程式，基於 [Tauri](https:/
 
 ## 螢幕截圖
 
-<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/screenshots/sh_light.png" alt="Capture" width="960">
+<img src="./screenshots/sh_light.png" alt="SwitchHosts 螢幕截圖" width="978">
 
 ## 功能特性
 

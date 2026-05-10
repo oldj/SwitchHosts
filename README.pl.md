@@ -24,7 +24,7 @@ SwitchHosts to aplikacja do zarządzania plikiem hosts, zbudowana na bazie [Taur
 
 ## Zrzut ekranu
 
-<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/screenshots/sh_light.png" alt="Zrzut aplikacji" width="960">
+<img src="./screenshots/sh_light.png" alt="Zrzut ekranu SwitchHosts" width="978">
 
 ## Funkcje
 
