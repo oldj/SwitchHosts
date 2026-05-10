@@ -72,7 +72,7 @@ if (currentCargoVersion !== version) {
 const cargoLockPath = join(root, 'src-tauri/Cargo.lock')
 const cargoLockSrc = readFileSync(cargoLockPath, 'utf-8')
 const cargoLockPackageRe =
-  /(^\[\[package\]\]\n(?:(?!^\[\[package\]\]).)*?^name\s*=\s*"switchhosts"\s*$\n(?:(?!^\[\[package\]\]).)*?^version\s*=\s*")([^"]*)(")/ms
+  /(^\[\[package\]\]\r?\n(?:(?!^\[\[package\]\]).)*?^name[ \t]*=[ \t]*"switchhosts"[ \t]*\r?\n(?:(?!^\[\[package\]\]).)*?^version[ \t]*=[ \t]*")([^"]*)(")/ms
 const cargoLockMatch = cargoLockSrc.match(cargoLockPackageRe)
 if (!cargoLockMatch) {
   throw new Error(`[sync-version] cannot find the switchhosts package entry in ${cargoLockPath}`)
