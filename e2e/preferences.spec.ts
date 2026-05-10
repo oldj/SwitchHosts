@@ -75,6 +75,56 @@ test.describe('preferences', () => {
     await expectFontSize(preferences.getByText('Hide at Launch', { exact: true }))
   })
 
+  test('places app behavior toggles at the top of advanced preferences', async ({ page }) => {
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
+
+    await preferences.getByRole('tab', { name: 'Advanced' }).click()
+    await expect(preferences.getByText('Make SwitchHosts Better!', { exact: true })).toBeVisible()
+
+    const orderedLabels = [
+      'Show Title in Tray',
+      'Remove Duplicate Records',
+      'Refresh Remote Hosts at Launch',
+      'Sync Child Items When Toggling Folders',
+      'Tray Icon Shortcut',
+      'Enable HTTP API',
+    ]
+
+    const visibleLabels: string[] = []
+    for (const label of orderedLabels) {
+      const text = preferences.getByText(label, { exact: true })
+      if ((await text.count()) === 0) continue
+      await expect(text).toBeVisible()
+      visibleLabels.push(label)
+    }
+    expect(visibleLabels).toEqual(
+      expect.arrayContaining([
+        'Remove Duplicate Records',
+        'Refresh Remote Hosts at Launch',
+        'Sync Child Items When Toggling Folders',
+        'Tray Icon Shortcut',
+        'Enable HTTP API',
+      ]),
+    )
+
+    const usageDataBox = await preferences
+      .getByText('Make SwitchHosts Better!', { exact: true })
+      .boundingBox()
+    expect(usageDataBox).not.toBeNull()
+
+    let previousY = 0
+    for (const label of visibleLabels) {
+      const labelBox = await preferences.getByText(label, { exact: true }).boundingBox()
+      expect(labelBox).not.toBeNull()
+      expect(labelBox!.y).toBeGreaterThanOrEqual(previousY)
+      expect(labelBox!.y).toBeLessThan(usageDataBox!.y)
+      previousY = labelBox!.y
+    }
+  })
+
   test('saves basic preferences immediately', async ({ page }) => {
     await clearMockCalls(page)
 
@@ -216,6 +266,7 @@ test.describe('preferences', () => {
     await page.getByText('Preferences').click()
     const preferences = page.getByRole('dialog')
     await expect(preferences.getByText('General')).toBeVisible()
+    await preferences.getByRole('tab', { name: 'Advanced' }).click()
     await expect(
       preferences.getByText(
         'When enabled, every launch automatically refreshes all remote Hosts entries.',

@@ -3,7 +3,6 @@
  * @homepage: https://oldj.net
  */
 
-import { httpApiPort } from '@common/constants'
 import { ConfigsType, ThemeType } from '@common/default_configs'
 import { LocaleName } from '@common/i18n'
 import { Box, Checkbox, Group, SegmentedControl, Select, Stack } from '@mantine/core'
@@ -27,7 +26,7 @@ const segmentedControlLabelStyle: CSSProperties = {
 
 const General = (props: IProps) => {
   const { data, onChange } = props
-  const { i18n, lang } = useI18n()
+  const { lang } = useI18n()
   const { platform } = agent
 
   return (
@@ -135,18 +134,6 @@ const General = (props: IProps) => {
         </Box>
       ) : null}
 
-      {platform === 'darwin' ? (
-        <Box w="100%">
-          <Group>
-            <Checkbox
-              checked={data.show_title_on_tray}
-              onChange={(e) => onChange({ show_title_on_tray: e.target.checked })}
-              label={lang.show_title_on_tray}
-            />
-          </Group>
-        </Box>
-      ) : null}
-
       {platform === 'linux' ? (
         <Box w="100%">
           <Group>
@@ -161,74 +148,12 @@ const General = (props: IProps) => {
 
       <Box w="100%">
         <Checkbox
-          checked={data.remove_duplicate_records}
-          onChange={(e) => onChange({ remove_duplicate_records: e.target.checked })}
-          label={lang.remove_duplicate_records}
-          description={lang.remove_duplicate_records_desc}
-          styles={checkboxDescriptionStyles}
-        />
-      </Box>
-
-      <Box w="100%">
-        <Checkbox
-          checked={data.refresh_remote_hosts_on_startup}
-          onChange={(e) => onChange({ refresh_remote_hosts_on_startup: e.target.checked })}
-          label={lang.refresh_remote_hosts_on_startup}
-          description={lang.refresh_remote_hosts_on_startup_desc}
-          styles={checkboxDescriptionStyles}
-        />
-      </Box>
-
-      <Box w="100%">
-        <Checkbox
           checked={data.auto_check_update}
           onChange={(e) => onChange({ auto_check_update: e.target.checked })}
           label={lang.auto_check_update}
           description={lang.auto_check_update_desc}
           styles={checkboxDescriptionStyles}
         />
-      </Box>
-
-      <Box w="100%">
-        <Stack gap="16px">
-          <Checkbox
-            checked={data.tray_mini_window}
-            onChange={(e) => onChange({ tray_mini_window: e.target.checked })}
-            label={lang.tray_mini_window}
-          />
-        </Stack>
-      </Box>
-
-      <Box w="100%">
-        <Stack gap="16px">
-          <Checkbox
-            checked={data.multi_chose_folder_switch_all}
-            onChange={(e) => onChange({ multi_chose_folder_switch_all: e.target.checked })}
-            label={lang.multi_chose_folder_switch_all}
-            description={lang.multi_chose_folder_switch_all_desc}
-            styles={checkboxDescriptionStyles}
-          />
-        </Stack>
-      </Box>
-
-      <Box w="100%">
-        <Stack gap="8px">
-          <Checkbox
-            checked={data.http_api_on}
-            onChange={(e) => onChange({ http_api_on: e.target.checked })}
-            label={lang.http_api_on}
-            description={i18n.trans('http_api_on_desc', [httpApiPort.toString()])}
-            styles={checkboxDescriptionStyles}
-          />
-          <Box pl="28px">
-            <Checkbox
-              disabled={!data.http_api_on}
-              checked={data.http_api_only_local}
-              onChange={(e) => onChange({ http_api_only_local: e.target.checked })}
-              label={lang.http_api_only_local}
-            />
-          </Box>
-        </Stack>
       </Box>
     </Stack>
   )
