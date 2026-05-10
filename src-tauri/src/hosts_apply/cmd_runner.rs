@@ -145,8 +145,7 @@ pub fn load(path: &Path) -> Result<Vec<CommandRunResult>, StorageError> {
     if !path.exists() {
         return Ok(Vec::new());
     }
-    let bytes = std::fs::read(path)
-        .map_err(|e| StorageError::io(path.display().to_string(), e))?;
+    let bytes = std::fs::read(path).map_err(|e| StorageError::io(path.display().to_string(), e))?;
     match serde_json::from_slice::<Vec<CommandRunResult>>(&bytes) {
         Ok(v) => Ok(v),
         Err(_) => match serde_json::from_slice::<Value>(&bytes) {
@@ -155,10 +154,7 @@ pub fn load(path: &Path) -> Result<Vec<CommandRunResult>, StorageError> {
                 .filter_map(|v| serde_json::from_value::<CommandRunResult>(v).ok())
                 .collect()),
             _ => {
-                log::warn!(
-                    "{} could not be parsed; treating as empty.",
-                    path.display()
-                );
+                log::warn!("{} could not be parsed; treating as empty.", path.display());
                 Ok(Vec::new())
             }
         },

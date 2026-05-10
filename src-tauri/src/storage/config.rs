@@ -173,17 +173,15 @@ impl AppConfig {
     /// destination. Consistent with the "last successful rename wins"
     /// recovery strategy in the storage plan.
     pub fn save(&self, path: &Path) -> Result<(), StorageError> {
-        let mut value = serde_json::to_value(self).map_err(|e| {
-            StorageError::serialize(path.display().to_string(), e)
-        })?;
+        let mut value = serde_json::to_value(self)
+            .map_err(|e| StorageError::serialize(path.display().to_string(), e))?;
         if let Some(obj) = value.as_object_mut() {
             obj.insert("format".into(), json!(CONFIG_FORMAT));
             obj.insert("schemaVersion".into(), json!(CONFIG_SCHEMA_VERSION));
         }
 
-        let json = serde_json::to_vec_pretty(&value).map_err(|e| {
-            StorageError::serialize(path.display().to_string(), e)
-        })?;
+        let json = serde_json::to_vec_pretty(&value)
+            .map_err(|e| StorageError::serialize(path.display().to_string(), e))?;
 
         atomic_write(path, &json)
     }
@@ -204,10 +202,12 @@ impl AppConfig {
     /// Apply a partial update. Unknown keys return an error so stray
     /// call sites don't silently no-op during migration.
     pub fn apply_partial(&mut self, patch: &Value) -> Result<(), StorageError> {
-        let patch_obj = patch.as_object().ok_or_else(|| StorageError::InvalidConfigValue {
-            key: "<patch>".into(),
-            reason: "expected a JSON object".into(),
-        })?;
+        let patch_obj = patch
+            .as_object()
+            .ok_or_else(|| StorageError::InvalidConfigValue {
+                key: "<patch>".into(),
+                reason: "expected a JSON object".into(),
+            })?;
 
         let mut merged = self.to_flat_value();
         let merged_obj = merged
@@ -221,12 +221,11 @@ impl AppConfig {
             merged_obj.insert(k.clone(), v.clone());
         }
 
-        let mut next: AppConfig = serde_json::from_value(merged).map_err(|e| {
-            StorageError::InvalidConfigValue {
+        let mut next: AppConfig =
+            serde_json::from_value(merged).map_err(|e| StorageError::InvalidConfigValue {
                 key: "<patch>".into(),
                 reason: e.to_string(),
-            }
-        })?;
+            })?;
         next.normalize();
         *self = next;
         Ok(())

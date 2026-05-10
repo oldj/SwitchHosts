@@ -105,10 +105,7 @@ mod security_ffi {
             authorization: *mut AuthorizationRef,
         ) -> OSStatus;
 
-        pub fn AuthorizationFree(
-            authorization: AuthorizationRef,
-            flags: u32,
-        ) -> OSStatus;
+        pub fn AuthorizationFree(authorization: AuthorizationRef, flags: u32) -> OSStatus;
 
         pub fn AuthorizationExecuteWithPrivileges(
             authorization: AuthorizationRef,
@@ -176,12 +173,7 @@ fn get_or_create_auth() -> Result<security_ffi::AuthorizationRef, HostsApplyErro
 
     let mut auth_ref: security_ffi::AuthorizationRef = std::ptr::null_mut();
     let status = unsafe {
-        security_ffi::AuthorizationCreate(
-            &mut rights,
-            std::ptr::null(),
-            flags,
-            &mut auth_ref,
-        )
+        security_ffi::AuthorizationCreate(&mut rights, std::ptr::null(), flags, &mut auth_ref)
     };
 
     match status {
@@ -251,13 +243,12 @@ fn execute_privileged_copy(
         std::ptr::null(),
     ];
 
-    let exit = unsafe {
-        run_privileged(auth_ref, b"/bin/cp\0".as_ptr(), cp_args.as_ptr())
-    }?;
+    let exit = unsafe { run_privileged(auth_ref, b"/bin/cp\0".as_ptr(), cp_args.as_ptr()) }?;
     if exit != 0 {
         return Err(HostsApplyError::Io {
             message: format!("/bin/cp exited with status {exit}"),
-        }.into());
+        }
+        .into());
     }
 
     // --- /bin/chmod 644 dst ---
@@ -267,13 +258,12 @@ fn execute_privileged_copy(
         std::ptr::null(),
     ];
 
-    let exit = unsafe {
-        run_privileged(auth_ref, b"/bin/chmod\0".as_ptr(), chmod_args.as_ptr())
-    }?;
+    let exit = unsafe { run_privileged(auth_ref, b"/bin/chmod\0".as_ptr(), chmod_args.as_ptr()) }?;
     if exit != 0 {
         return Err(HostsApplyError::Io {
             message: format!("/bin/chmod exited with status {exit}"),
-        }.into());
+        }
+        .into());
     }
 
     Ok(())
@@ -301,8 +291,7 @@ unsafe fn run_privileged(
         &mut pipe as *mut *mut libc::FILE as *mut *mut std::ffi::c_void,
     );
     if status != security_ffi::ERR_AUTHORIZATION_SUCCESS {
-        let tool_name = std::ffi::CStr::from_ptr(tool as *const i8)
-            .to_string_lossy();
+        let tool_name = std::ffi::CStr::from_ptr(tool as *const i8).to_string_lossy();
         return Err(MacElevateError::AuthExec(
             status,
             format!("AEWP({tool_name}): OSStatus {status}"),
@@ -345,16 +334,13 @@ fn elevate_copy(src: &Path, dst: &Path) -> Result<(), HostsApplyError> {
 
     match execute_privileged_copy(auth_ref, src, dst) {
         Ok(()) => Ok(()),
-        Err(MacElevateError::AuthExec(status, msg))
-            if is_auth_stale(status) =>
-        {
+        Err(MacElevateError::AuthExec(status, msg)) if is_auth_stale(status) => {
             // Cached authorization was invalidated (timeout, revocation).
             // Clear it and retry once — the retry will re-prompt the user.
             log::info!("{msg} — re-prompting");
             invalidate_cached_auth();
             let auth_ref = get_or_create_auth()?;
-            execute_privileged_copy(auth_ref, src, dst)
-                .map_err(mac_elevate_to_hosts_error)
+            execute_privileged_copy(auth_ref, src, dst).map_err(mac_elevate_to_hosts_error)
         }
         Err(e) => Err(mac_elevate_to_hosts_error(e)),
     }
@@ -485,8 +471,8 @@ fn elevate_copy(src: &Path, dst: &Path) -> Result<(), HostsApplyError> {
         GetExitCodeProcess, WaitForSingleObject, INFINITE,
     };
     use windows_sys::Win32::UI::Shell::{
-        ShellExecuteExW, SEE_MASK_FLAG_NO_UI, SEE_MASK_NOASYNC,
-        SEE_MASK_NOCLOSEPROCESS, SHELLEXECUTEINFOW,
+        ShellExecuteExW, SEE_MASK_FLAG_NO_UI, SEE_MASK_NOASYNC, SEE_MASK_NOCLOSEPROCESS,
+        SHELLEXECUTEINFOW,
     };
     use windows_sys::Win32::UI::WindowsAndMessaging::SW_HIDE;
 

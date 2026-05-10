@@ -136,13 +136,13 @@ pub async fn config_all(state: State<'_, AppState>, _args: Args) -> Result<Value
 
 #[tauri::command]
 pub async fn config_get(state: State<'_, AppState>, args: Args) -> Result<Value, StorageError> {
-    let key = args
-        .first()
-        .and_then(Value::as_str)
-        .ok_or_else(|| StorageError::InvalidConfigValue {
-            key: "<arg0>".into(),
-            reason: "config_get requires a string key as the first argument".into(),
-        })?;
+    let key =
+        args.first()
+            .and_then(Value::as_str)
+            .ok_or_else(|| StorageError::InvalidConfigValue {
+                key: "<arg0>".into(),
+                reason: "config_get requires a string key as the first argument".into(),
+            })?;
     let cfg = state.config.lock().expect("config mutex poisoned");
     Ok(cfg.get_key(key).unwrap_or(Value::Null))
 }
@@ -280,11 +280,7 @@ fn apply_launch_at_login(app: &AppHandle<Wry>, enabled: bool) -> Result<(), Stor
 ///
 /// Pinned to `Wry` because the HTTP API server is itself pinned to
 /// `Wry` (see the comment in `http_api.rs`).
-fn apply_side_effects(
-    app: &AppHandle<Wry>,
-    state: &AppState,
-    touched_keys: &[&str],
-) {
+fn apply_side_effects(app: &AppHandle<Wry>, state: &AppState, touched_keys: &[&str]) {
     let touches_http_api = touched_keys
         .iter()
         .any(|k| *k == "http_api_on" || *k == "http_api_only_local");
@@ -411,11 +407,7 @@ pub async fn get_content_of_list(
         cfg.remove_duplicate_records
     };
 
-    let content = hosts_apply::aggregate_selected_content(
-        &list,
-        &state.paths,
-        remove_duplicate,
-    )?;
+    let content = hosts_apply::aggregate_selected_content(&list, &state.paths, remove_duplicate)?;
     Ok(json!(content))
 }
 
@@ -807,9 +799,8 @@ pub async fn get_apply_history(
 ) -> Result<Value, StorageError> {
     let path = state.paths.histories_dir.join("system-hosts.json");
     let items = hosts_apply::history::load(&path)?;
-    let value = serde_json::to_value(items).map_err(|e| {
-        StorageError::serialize(path.display().to_string(), e)
-    })?;
+    let value = serde_json::to_value(items)
+        .map_err(|e| StorageError::serialize(path.display().to_string(), e))?;
     Ok(value)
 }
 
@@ -833,9 +824,8 @@ pub async fn cmd_get_history_list(
 ) -> Result<Value, StorageError> {
     let path = state.paths.histories_dir.join("cmd-after-apply.json");
     let items = hosts_apply::cmd_runner::load(&path)?;
-    let value = serde_json::to_value(items).map_err(|e| {
-        StorageError::serialize(path.display().to_string(), e)
-    })?;
+    let value = serde_json::to_value(items)
+        .map_err(|e| StorageError::serialize(path.display().to_string(), e))?;
     Ok(value)
 }
 
@@ -882,10 +872,7 @@ pub async fn find_set_window_title<R: Runtime + 'static>(
 }
 
 #[tauri::command]
-pub async fn find_by(
-    state: State<'_, AppState>,
-    args: Args,
-) -> Result<Value, String> {
+pub async fn find_by(state: State<'_, AppState>, args: Args) -> Result<Value, String> {
     let keyword = args
         .first()
         .and_then(Value::as_str)
@@ -901,27 +888,20 @@ pub async fn find_by(
 }
 
 #[tauri::command]
-pub async fn find_replace_one(
-    state: State<'_, AppState>,
-    args: Args,
-) -> Result<Value, String> {
+pub async fn find_replace_one(state: State<'_, AppState>, args: Args) -> Result<Value, String> {
     let request = args
         .into_iter()
         .next()
         .ok_or_else(|| "find_replace_one: args[0] must be a request object".to_string())
         .and_then(|v| {
-            serde_json::from_value(v)
-                .map_err(|e| format!("find_replace_one: invalid request: {e}"))
+            serde_json::from_value(v).map_err(|e| format!("find_replace_one: invalid request: {e}"))
         })?;
     let replaced = find::replace_one_in_manifest(state.inner(), request)?;
     Ok(json!(replaced))
 }
 
 #[tauri::command]
-pub async fn find_replace_all(
-    state: State<'_, AppState>,
-    args: Args,
-) -> Result<Value, String> {
+pub async fn find_replace_all(state: State<'_, AppState>, args: Args) -> Result<Value, String> {
     let keyword = args
         .first()
         .and_then(Value::as_str)
@@ -1079,9 +1059,7 @@ pub async fn open_url(args: Args) -> Value {
         return Value::Null;
     };
     let lower = url.to_ascii_lowercase();
-    if lower.starts_with("http://")
-        || lower.starts_with("https://")
-        || lower.starts_with("mailto:")
+    if lower.starts_with("http://") || lower.starts_with("https://") || lower.starts_with("mailto:")
     {
         let _ = open::that(url);
     } else {
@@ -1234,10 +1212,7 @@ pub async fn import_data<R: Runtime>(
 }
 
 #[tauri::command]
-pub async fn import_data_from_url(
-    state: State<'_, AppState>,
-    args: Args,
-) -> Result<Value, String> {
+pub async fn import_data_from_url(state: State<'_, AppState>, args: Args) -> Result<Value, String> {
     let url = arg_str(&args, 0, "url").map_err(|e| format!("{e:?}"))?;
 
     // Build the HTTP client outside of any lock so the proxy snapshot
@@ -1357,7 +1332,13 @@ pub async fn download_update<R: Runtime>(
         .download_and_install(
             move |downloaded, total| {
                 let percent = total
-                    .map(|t| if t > 0 { (downloaded as f64 / t as f64) * 100.0 } else { 0.0 })
+                    .map(|t| {
+                        if t > 0 {
+                            (downloaded as f64 / t as f64) * 100.0
+                        } else {
+                            0.0
+                        }
+                    })
                     .unwrap_or(0.0);
                 let _ = app_for_progress.emit(
                     "update_download_progress",

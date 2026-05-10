@@ -94,8 +94,7 @@ fn read_json_value(path: &Path) -> Result<Option<Value>, StorageError> {
     if !path.exists() {
         return Ok(None);
     }
-    let bytes = std::fs::read(path)
-        .map_err(|e| StorageError::io(path.display().to_string(), e))?;
+    let bytes = std::fs::read(path).map_err(|e| StorageError::io(path.display().to_string(), e))?;
     let v: Value = serde_json::from_slice(&bytes)
         .map_err(|e| StorageError::parse(path.display().to_string(), e))?;
     Ok(Some(v))

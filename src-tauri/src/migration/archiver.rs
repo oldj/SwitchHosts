@@ -74,9 +74,8 @@ pub fn execute(plan: &ArchivePlan) -> Result<String, StorageError> {
         "mode": "rename_or_copy",
         "sources": metadata_sources,
     });
-    let bytes = serde_json::to_vec_pretty(&metadata).map_err(|e| {
-        StorageError::serialize(plan.archive_dir.display().to_string(), e)
-    })?;
+    let bytes = serde_json::to_vec_pretty(&metadata)
+        .map_err(|e| StorageError::serialize(plan.archive_dir.display().to_string(), e))?;
     atomic_write(&plan.archive_dir.join("archive-metadata.json"), &bytes)?;
 
     Ok(plan
@@ -104,35 +103,32 @@ fn move_or_copy(src: &Path, dst: &Path) -> Result<(), StorageError> {
 }
 
 fn copy_recursive(src: &Path, dst: &Path) -> Result<(), StorageError> {
-    let metadata = std::fs::metadata(src)
-        .map_err(|e| StorageError::io(src.display().to_string(), e))?;
+    let metadata =
+        std::fs::metadata(src).map_err(|e| StorageError::io(src.display().to_string(), e))?;
     if metadata.is_dir() {
-        std::fs::create_dir_all(dst)
-            .map_err(|e| StorageError::io(dst.display().to_string(), e))?;
-        let read_dir = std::fs::read_dir(src)
-            .map_err(|e| StorageError::io(src.display().to_string(), e))?;
+        std::fs::create_dir_all(dst).map_err(|e| StorageError::io(dst.display().to_string(), e))?;
+        let read_dir =
+            std::fs::read_dir(src).map_err(|e| StorageError::io(src.display().to_string(), e))?;
         for entry in read_dir {
             let entry = entry.map_err(|e| StorageError::io(src.display().to_string(), e))?;
             let name = entry.file_name();
             copy_recursive(&entry.path(), &dst.join(&name))?;
         }
     } else {
-        std::fs::copy(src, dst).map_err(|e| {
-            StorageError::io(format!("{} -> {}", src.display(), dst.display()), e)
-        })?;
+        std::fs::copy(src, dst)
+            .map_err(|e| StorageError::io(format!("{} -> {}", src.display(), dst.display()), e))?;
     }
     Ok(())
 }
 
 fn remove_recursive(path: &Path) -> Result<(), StorageError> {
-    let metadata = std::fs::metadata(path)
-        .map_err(|e| StorageError::io(path.display().to_string(), e))?;
+    let metadata =
+        std::fs::metadata(path).map_err(|e| StorageError::io(path.display().to_string(), e))?;
     if metadata.is_dir() {
         std::fs::remove_dir_all(path)
             .map_err(|e| StorageError::io(path.display().to_string(), e))?;
     } else {
-        std::fs::remove_file(path)
-            .map_err(|e| StorageError::io(path.display().to_string(), e))?;
+        std::fs::remove_file(path).map_err(|e| StorageError::io(path.display().to_string(), e))?;
     }
     Ok(())
 }

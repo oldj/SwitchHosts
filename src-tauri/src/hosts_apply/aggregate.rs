@@ -96,15 +96,15 @@ fn parse_line(line: &str) -> ParsedLine {
         Some((before, after)) => (before, after.trim().to_string()),
         None => (line, String::new()),
     };
-    let normalized: String = cnt
-        .trim()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ");
+    let normalized: String = cnt.trim().split_whitespace().collect::<Vec<_>>().join(" ");
     let mut parts = normalized.split(' ').filter(|s| !s.is_empty());
     let ip = parts.next().unwrap_or("").to_string();
     let domains: Vec<String> = parts.map(|s| s.to_string()).collect();
-    ParsedLine { ip, domains, comment }
+    ParsedLine {
+        ip,
+        domains,
+        comment,
+    }
 }
 
 fn format_line(ip: &str, domains: &[String], comment: &str) -> String {

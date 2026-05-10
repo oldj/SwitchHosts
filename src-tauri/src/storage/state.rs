@@ -96,16 +96,14 @@ impl StateFile {
     }
 
     pub fn save(&self, path: &Path) -> Result<(), StorageError> {
-        let mut value = serde_json::to_value(self).map_err(|e| {
-            StorageError::serialize(path.display().to_string(), e)
-        })?;
+        let mut value = serde_json::to_value(self)
+            .map_err(|e| StorageError::serialize(path.display().to_string(), e))?;
         if let Some(obj) = value.as_object_mut() {
             obj.insert("format".into(), json!(STATE_FORMAT));
             obj.insert("schemaVersion".into(), json!(STATE_SCHEMA_VERSION));
         }
-        let bytes = serde_json::to_vec_pretty(&value).map_err(|e| {
-            StorageError::serialize(path.display().to_string(), e)
-        })?;
+        let bytes = serde_json::to_vec_pretty(&value)
+            .map_err(|e| StorageError::serialize(path.display().to_string(), e))?;
         atomic_write(path, &bytes)
     }
 }

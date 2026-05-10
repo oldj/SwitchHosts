@@ -38,8 +38,7 @@ pub fn load(path: &Path) -> Result<Vec<ApplyHistoryItem>, StorageError> {
     if !path.exists() {
         return Ok(Vec::new());
     }
-    let bytes = std::fs::read(path)
-        .map_err(|e| StorageError::io(path.display().to_string(), e))?;
+    let bytes = std::fs::read(path).map_err(|e| StorageError::io(path.display().to_string(), e))?;
     // Tolerate either the bare array we write or a wrapped envelope a
     // future schema change might add. Unknown wrapping → empty list +
     // warning, the journal isn't critical.
@@ -51,10 +50,7 @@ pub fn load(path: &Path) -> Result<Vec<ApplyHistoryItem>, StorageError> {
                 .filter_map(|v| serde_json::from_value::<ApplyHistoryItem>(v).ok())
                 .collect()),
             _ => {
-                log::warn!(
-                    "{} could not be parsed; treating as empty.",
-                    path.display()
-                );
+                log::warn!("{} could not be parsed; treating as empty.", path.display());
                 Ok(Vec::new())
             }
         },
@@ -70,11 +66,7 @@ pub fn save(path: &Path, items: &[ApplyHistoryItem]) -> Result<(), StorageError>
 /// Insert a new entry at the end of the journal and trim to
 /// `history_limit`. A non-positive limit means "no cap" (matches the
 /// Electron behaviour where `history_limit <= 0` skips the trim block).
-pub fn insert(
-    path: &Path,
-    item: ApplyHistoryItem,
-    history_limit: i32,
-) -> Result<(), StorageError> {
+pub fn insert(path: &Path, item: ApplyHistoryItem, history_limit: i32) -> Result<(), StorageError> {
     let mut items = load(path)?;
     items.push(item);
     if history_limit > 0 && items.len() as i32 > history_limit {

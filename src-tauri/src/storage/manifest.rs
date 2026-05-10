@@ -76,12 +76,10 @@ impl Manifest {
         if !path.exists() {
             return Ok(Self::default());
         }
-        let bytes = std::fs::read(path).map_err(|e| {
-            StorageError::io(path.display().to_string(), e)
-        })?;
-        let raw: Manifest = serde_json::from_slice(&bytes).map_err(|e| {
-            StorageError::parse(path.display().to_string(), e)
-        })?;
+        let bytes =
+            std::fs::read(path).map_err(|e| StorageError::io(path.display().to_string(), e))?;
+        let raw: Manifest = serde_json::from_slice(&bytes)
+            .map_err(|e| StorageError::parse(path.display().to_string(), e))?;
 
         let state = StateFile::load(&paths.state_file);
         let root = v5_root_to_legacy(&raw.root, &state.tree.collapsed_node_ids);
@@ -113,9 +111,8 @@ impl Manifest {
             "schemaVersion": MANIFEST_SCHEMA_VERSION,
             "root": v5_root,
         });
-        let bytes = serde_json::to_vec_pretty(&envelope).map_err(|e| {
-            StorageError::serialize(paths.manifest_file.display().to_string(), e)
-        })?;
+        let bytes = serde_json::to_vec_pretty(&envelope)
+            .map_err(|e| StorageError::serialize(paths.manifest_file.display().to_string(), e))?;
         atomic_write(&paths.manifest_file, &bytes)
     }
 }

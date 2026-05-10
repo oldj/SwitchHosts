@@ -70,7 +70,12 @@ impl V5Paths {
     /// to `<target>` — a leftover `.tmp` is always a partial write
     /// that never became the real file.
     pub fn cleanup_tmp_files(&self) {
-        let dirs = [&self.root, &self.entries_dir, &self.internal, &self.histories_dir];
+        let dirs = [
+            &self.root,
+            &self.entries_dir,
+            &self.internal,
+            &self.histories_dir,
+        ];
         for dir in dirs {
             if let Ok(entries) = std::fs::read_dir(dir) {
                 for entry in entries.flatten() {

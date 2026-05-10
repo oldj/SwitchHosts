@@ -21,7 +21,7 @@ use std::{
     time::Duration,
 };
 use tauri::{Emitter, Listener, Manager, RunEvent};
-use tauri_plugin_autostart::{ManagerExt, MacosLauncher};
+use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 
 use storage::AppState;
 
@@ -65,15 +65,14 @@ pub fn run() {
         return;
     }
 
-    let state = AppState::bootstrap()
-        .expect("failed to bootstrap SwitchHosts v5 storage layer");
+    let state = AppState::bootstrap().expect("failed to bootstrap SwitchHosts v5 storage layer");
 
     let app = tauri::Builder::default()
         // Single-instance MUST be the first plugin so a second
         // launch is intercepted before any other plugin starts up.
-        .plugin(tauri_plugin_single_instance::init(
-            |app, args, cwd| lifecycle::focus_main_on_second_instance(app, args, cwd),
-        ))
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            lifecycle::focus_main_on_second_instance(app, args, cwd)
+        }))
         .plugin(tauri_plugin_autostart::init(
             MacosLauncher::LaunchAgent,
             None,
@@ -280,16 +279,11 @@ pub fn run() {
             match app_handle.autolaunch().is_enabled() {
                 Ok(actual) if actual != want_launch_at_login => {
                     {
-                        let mut cfg = app_state
-                            .config
-                            .lock()
-                            .expect("config mutex poisoned");
+                        let mut cfg = app_state.config.lock().expect("config mutex poisoned");
                         cfg.launch_at_login = actual;
                     }
                     if let Err(e) = app_state.persist_config() {
-                        log::warn!(
-                            "failed to persist launch_at_login sync from OS: {e}"
-                        );
+                        log::warn!("failed to persist launch_at_login sync from OS: {e}");
                     }
                 }
                 Ok(_) => {}

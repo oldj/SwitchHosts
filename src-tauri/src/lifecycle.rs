@@ -173,19 +173,15 @@ pub fn create_main_window<R: Runtime>(
         .map(|g| geometry_is_visible_on_monitors(&monitors, g))
         .unwrap_or(false);
 
-    let builder = WebviewWindowBuilder::new(
-        app,
-        MAIN_WINDOW_LABEL,
-        WebviewUrl::App("/".into()),
-    )
-    .title("SwitchHosts")
-    .min_inner_size(300.0, 200.0)
-    .resizable(true)
-    .visible(false)
-    // Without this Tauri's OS-level drag-drop handler swallows
-    // dragstart inside the webview, breaking the hosts tree's
-    // HTML5 DnD reordering on the frontend.
-    .disable_drag_drop_handler();
+    let builder = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, WebviewUrl::App("/".into()))
+        .title("SwitchHosts")
+        .min_inner_size(300.0, 200.0)
+        .resizable(true)
+        .visible(false)
+        // Without this Tauri's OS-level drag-drop handler swallows
+        // dragstart inside the webview, breaking the hosts tree's
+        // HTML5 DnD reordering on the frontend.
+        .disable_drag_drop_handler();
 
     #[cfg(target_os = "macos")]
     let mut builder = builder
@@ -209,12 +205,10 @@ pub fn create_main_window<R: Runtime>(
         builder = builder.inner_size(800.0, 480.0).center();
     }
 
-    let window = builder
-        .build()
-        .map_err(|e| StorageError::Io {
-            path: MAIN_WINDOW_LABEL.to_string(),
-            reason: e.to_string(),
-        })?;
+    let window = builder.build().map_err(|e| StorageError::Io {
+        path: MAIN_WINDOW_LABEL.to_string(),
+        reason: e.to_string(),
+    })?;
 
     if let Some(geom) = saved {
         if saved_on_screen {
@@ -409,8 +403,8 @@ mod tests {
         // to PhysicalSize with the monitor scale factor. After Tauri
         // callers convert it back with that same scale factor, the
         // value matches tao's top-left position height.
-        let primary = tauri_monitor_bounds_from_physical(0, 0, 5760, 3600, 2.0)
-            .expect("valid monitor scale");
+        let primary =
+            tauri_monitor_bounds_from_physical(0, 0, 5760, 3600, 2.0).expect("valid monitor scale");
 
         assert_eq!(primary, bounds(0.0, 0.0, 2880.0, 1800.0));
         assert_eq!(
@@ -489,7 +483,11 @@ pub fn apply_dock_icon_policy<R: Runtime>(app: &AppHandle<R>, hide: bool) {
 /// Callback registered with `tauri-plugin-single-instance`. A second
 /// invocation of SwitchHosts focuses the existing main window instead
 /// of creating a duplicate.
-pub fn focus_main_on_second_instance<R: Runtime>(app: &AppHandle<R>, _args: Vec<String>, _cwd: String) {
+pub fn focus_main_on_second_instance<R: Runtime>(
+    app: &AppHandle<R>,
+    _args: Vec<String>,
+    _cwd: String,
+) {
     if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
         let _ = window.unminimize();
         let _ = window.show();

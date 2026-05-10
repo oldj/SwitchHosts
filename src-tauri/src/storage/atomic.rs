@@ -19,10 +19,8 @@ pub fn atomic_write(dest: &Path, contents: &[u8]) -> Result<(), StorageError> {
     }
 
     let tmp = tmp_sibling(dest);
-    std::fs::write(&tmp, contents)
-        .map_err(|e| StorageError::io(tmp.display().to_string(), e))?;
-    std::fs::rename(&tmp, dest)
-        .map_err(|e| StorageError::io(dest.display().to_string(), e))?;
+    std::fs::write(&tmp, contents).map_err(|e| StorageError::io(tmp.display().to_string(), e))?;
+    std::fs::rename(&tmp, dest).map_err(|e| StorageError::io(dest.display().to_string(), e))?;
     Ok(())
 }
 

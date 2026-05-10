@@ -91,8 +91,9 @@ async fn refresh_one_inner<R: Runtime>(
 ) -> Result<RefreshOutcome, RefreshError> {
     // Step 1: snapshot the node from the current manifest. No lock —
     // we only need to read.
-    let manifest = Manifest::load(&state.paths)
-        .map_err(|e| RefreshError::Storage { message: e.to_string() })?;
+    let manifest = Manifest::load(&state.paths).map_err(|e| RefreshError::Storage {
+        message: e.to_string(),
+    })?;
     let snapshot = match find_node(&manifest.root, id) {
         Some(n) => n,
         None => return Err(RefreshError::InvalidId),
@@ -113,21 +114,27 @@ async fn refresh_one_inner<R: Runtime>(
     // otherwise a CRLF response would defeat the equality check on
     // every poll and we'd emit a spurious "content changed" event each
     // tick.
-    let old_content = entries::read_entry(&state.paths.entries_dir, id)
-        .map_err(|e| RefreshError::Storage { message: e.to_string() })?;
+    let old_content =
+        entries::read_entry(&state.paths.entries_dir, id).map_err(|e| RefreshError::Storage {
+            message: e.to_string(),
+        })?;
     let new_content_lf = entries::normalize_to_lf(&new_content);
     let content_changed = old_content != new_content_lf;
     if content_changed {
-        entries::write_entry(&state.paths.entries_dir, id, &new_content_lf)
-            .map_err(|e| RefreshError::Storage { message: e.to_string() })?;
+        entries::write_entry(&state.paths.entries_dir, id, &new_content_lf).map_err(|e| {
+            RefreshError::Storage {
+                message: e.to_string(),
+            }
+        })?;
     }
 
     // Step 4: re-acquire the manifest under the store lock and stamp
     // last_refresh / last_refresh_ms on the (possibly relocated) node.
     let updated_snapshot = {
         let _guard = state.store_lock.lock().expect("store lock poisoned");
-        let mut manifest = Manifest::load(&state.paths)
-            .map_err(|e| RefreshError::Storage { message: e.to_string() })?;
+        let mut manifest = Manifest::load(&state.paths).map_err(|e| RefreshError::Storage {
+            message: e.to_string(),
+        })?;
         let now_ms = chrono::Utc::now().timestamp_millis();
         let stamp = format_timestamp(now_ms);
         let touched = stamp_node(&mut manifest.root, id, &stamp, now_ms);
@@ -139,7 +146,9 @@ async fn refresh_one_inner<R: Runtime>(
         }
         manifest
             .save(&state.paths)
-            .map_err(|e| RefreshError::Storage { message: e.to_string() })?;
+            .map_err(|e| RefreshError::Storage {
+                message: e.to_string(),
+            })?;
         find_node(&manifest.root, id).unwrap_or(snapshot.clone())
     };
 
@@ -150,16 +159,17 @@ async fn refresh_one_inner<R: Runtime>(
         json!({ "_args": [updated_snapshot.clone()] }),
     );
     if content_changed && emit_content_changed {
-        let _ = app.emit(
-            "hosts_content_changed",
-            json!({ "_args": [id] }),
-        );
+        let _ = app.emit("hosts_content_changed", json!({ "_args": [id] }));
     }
 
     if content_changed {
-        Ok(RefreshOutcome::Updated { node: updated_snapshot })
+        Ok(RefreshOutcome::Updated {
+            node: updated_snapshot,
+        })
     } else {
-        Ok(RefreshOutcome::Unchanged { node: updated_snapshot })
+        Ok(RefreshOutcome::Unchanged {
+            node: updated_snapshot,
+        })
     }
 }
 
@@ -288,23 +298,23 @@ async fn fetch_remote(url: &str, state: &AppState) -> Result<String, RefreshErro
         return read_file_url(stripped, url);
     }
 
-    let client = http::build_client(state)
-        .map_err(|message| RefreshError::Fetch { message })?;
+    let client = http::build_client(state).map_err(|message| RefreshError::Fetch { message })?;
     let response = client
         .get(url)
         .send()
         .await
-        .map_err(|e| RefreshError::Fetch { message: e.to_string() })?;
+        .map_err(|e| RefreshError::Fetch {
+            message: e.to_string(),
+        })?;
     let status = response.status();
     if !status.is_success() {
         return Err(RefreshError::Fetch {
             message: format!("HTTP {}", status.as_u16()),
         });
     }
-    response
-        .text()
-        .await
-        .map_err(|e| RefreshError::Fetch { message: e.to_string() })
+    response.text().await.map_err(|e| RefreshError::Fetch {
+        message: e.to_string(),
+    })
 }
 
 fn read_file_url(stripped: &str, original: &str) -> Result<String, RefreshError> {
@@ -381,9 +391,7 @@ fn collect_due_remote_ids(nodes: &[Value], now_ms: i64) -> Vec<String> {
             .get("url")
             .and_then(Value::as_str)
             .map(|u| {
-                u.starts_with("http://")
-                    || u.starts_with("https://")
-                    || u.starts_with("file://")
+                u.starts_with("http://") || u.starts_with("https://") || u.starts_with("file://")
             })
             .unwrap_or(false);
         if !url_ok {
@@ -527,7 +535,13 @@ mod tests {
         let ids = collect_remote_ids(&tree());
         assert_eq!(
             ids,
-            vec!["remote-1", "remote-2", "remote-no-interval", "remote-bad-scheme", "remote-file"]
+            vec![
+                "remote-1",
+                "remote-2",
+                "remote-no-interval",
+                "remote-bad-scheme",
+                "remote-file"
+            ]
         );
     }
 
@@ -569,7 +583,10 @@ mod tests {
         assert_eq!(bytes[13], b':');
         assert_eq!(bytes[16], b':');
         for i in [0, 1, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18] {
-            assert!(bytes[i].is_ascii_digit(), "char at {i} should be a digit: {s}");
+            assert!(
+                bytes[i].is_ascii_digit(),
+                "char at {i} should be a digit: {s}"
+            );
         }
     }
 }

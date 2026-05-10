@@ -203,10 +203,7 @@ async fn api_toggle(
     // including choice_mode / folder cascading semantics from
     // `setOnStateOfItem`. The envelope is the same `_args` shape every
     // other Tauri broadcast in this codebase uses.
-    let _ = state.app.emit(
-        "toggle_item",
-        json!({ "_args": [id, !on] }),
-    );
+    let _ = state.app.emit("toggle_item", json!({ "_args": [id, !on] }));
     "ok"
 }
 

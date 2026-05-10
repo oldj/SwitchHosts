@@ -243,7 +243,10 @@ fn import_v4(data: &Value, paths: &V5Paths) -> Result<Value, StorageError> {
     .save(paths)?;
 
     if !history_data.is_empty() {
-        write_history(&paths.histories_dir.join("system-hosts.json"), &history_data)?;
+        write_history(
+            &paths.histories_dir.join("system-hosts.json"),
+            &history_data,
+        )?;
     }
 
     Ok(json!(true))
@@ -353,9 +356,8 @@ pub fn export_to_file(dest: &Path, paths: &V5Paths) -> Result<(), StorageError> 
         },
     });
 
-    let bytes = serde_json::to_vec_pretty(&backup).map_err(|e| {
-        StorageError::serialize(dest.display().to_string(), e)
-    })?;
+    let bytes = serde_json::to_vec_pretty(&backup)
+        .map_err(|e| StorageError::serialize(dest.display().to_string(), e))?;
     atomic_write(dest, &bytes)
 }
 
@@ -688,7 +690,8 @@ mod tests {
             "format": "switchhosts-backup",
             "schemaVersion": 1,
             "version": [5, 0, 0, 0],
-        })).unwrap();
+        }))
+        .unwrap();
         let result = import_backup_bytes(&bytes, &paths).unwrap();
         assert_eq!(result, json!(ERR_INVALID_DATA));
         cleanup(&paths);

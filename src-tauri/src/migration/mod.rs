@@ -25,13 +25,8 @@ pub mod potdb;
 use serde_json::Value;
 
 use crate::storage::{
-    atomic::atomic_write,
-    config::AppConfig,
-    entries,
-    manifest::Manifest,
-    paths::V5Paths,
-    trashcan::Trashcan,
-    StorageError,
+    atomic::atomic_write, config::AppConfig, entries, manifest::Manifest, paths::V5Paths,
+    trashcan::Trashcan, StorageError,
 };
 
 /// What happened on this startup's migration check. Returned up to
@@ -65,7 +60,10 @@ pub fn run_if_needed(paths: &V5Paths) -> Result<MigrationOutcome, StorageError> 
 
     let layout = potdb::PotDbLayout::at(paths.root.clone());
     if !layout.has_legacy_data() {
-        log::info!("no legacy PotDb data found under {} — fresh v5 install", paths.root.display());
+        log::info!(
+            "no legacy PotDb data found under {} — fresh v5 install",
+            paths.root.display()
+        );
         return Ok(MigrationOutcome::FreshInstall);
     }
 
@@ -115,9 +113,8 @@ pub fn run_if_needed(paths: &V5Paths) -> Result<MigrationOutcome, StorageError> 
     let history_items = snapshot.history.len();
     if history_items > 0 {
         let history_file = paths.histories_dir.join("system-hosts.json");
-        let payload = serde_json::to_vec_pretty(&snapshot.history).map_err(|e| {
-            StorageError::serialize(history_file.display().to_string(), e)
-        })?;
+        let payload = serde_json::to_vec_pretty(&snapshot.history)
+            .map_err(|e| StorageError::serialize(history_file.display().to_string(), e))?;
         atomic_write(&history_file, &payload)?;
     }
 
@@ -151,8 +148,5 @@ pub fn run_if_needed(paths: &V5Paths) -> Result<MigrationOutcome, StorageError> 
 /// through verbatim, matching Phase 1B step 2's decision to store the
 /// renderer-facing shape directly in manifest.json.
 fn coerce_root(raw: &[Value]) -> Vec<Value> {
-    raw.iter()
-        .filter(|v| v.is_object())
-        .cloned()
-        .collect()
+    raw.iter().filter(|v| v.is_object()).cloned().collect()
 }

@@ -52,12 +52,10 @@ impl Trashcan {
         if !path.exists() {
             return Ok(Self::default());
         }
-        let bytes = std::fs::read(path).map_err(|e| {
-            StorageError::io(path.display().to_string(), e)
-        })?;
-        serde_json::from_slice::<Trashcan>(&bytes).map_err(|e| {
-            StorageError::parse(path.display().to_string(), e)
-        })
+        let bytes =
+            std::fs::read(path).map_err(|e| StorageError::io(path.display().to_string(), e))?;
+        serde_json::from_slice::<Trashcan>(&bytes)
+            .map_err(|e| StorageError::parse(path.display().to_string(), e))
     }
 
     pub fn save(&self, path: &Path) -> Result<(), StorageError> {
@@ -66,9 +64,8 @@ impl Trashcan {
             "schemaVersion": TRASHCAN_SCHEMA_VERSION,
             "items": self.items.clone(),
         });
-        let json = serde_json::to_vec_pretty(&value).map_err(|e| {
-            StorageError::serialize(path.display().to_string(), e)
-        })?;
+        let json = serde_json::to_vec_pretty(&value)
+            .map_err(|e| StorageError::serialize(path.display().to_string(), e))?;
         atomic_write(path, &json)
     }
 
