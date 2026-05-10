@@ -302,7 +302,7 @@ test.describe('preferences', () => {
     await expect(preferences.getByText('General')).toBeVisible()
     await expect(
       preferences.getByText(
-        'When enabled, SwitchHosts checks for official release updates at launch and only shows a reminder. Updates are never downloaded automatically.',
+        'When enabled, SwitchHosts will remind you when a new version is available and will not download or install updates automatically.',
       ),
     ).toBeVisible()
 
@@ -328,28 +328,34 @@ test.describe('preferences', () => {
 
   test('manual no-update check reports latest version without downloading', async ({ page }) => {
     await clearMockCalls(page)
+    await page.evaluate(() => {
+      window.__SWITCHHOSTS_E2E__.delayNextCheckUpdate(300)
+    })
 
     await page.getByLabel('Settings').click()
     await page.getByText('Check for Updates').click()
 
+    await expect(page.getByText('Loading...')).toBeVisible()
     await expect(page.getByText('Current version is up to date.')).toBeVisible()
     const calls = await getMockCalls(page)
     expect(calls.some((call) => call.cmd === 'check_update')).toBe(true)
     expect(calls.some((call) => call.cmd === 'download_update')).toBe(false)
   })
 
-  test('startup update check only prompts until the user downloads', async ({ browser }) => {
+  test('background update event only prompts until the user downloads', async ({ browser }) => {
     const page = await browser.newPage()
 
     try {
       await openApp(page, '/?e2eUpdateAvailable=true')
+      await page.evaluate(() => {
+        window.__SWITCHHOSTS_E2E__.emitNextUpdateAvailable()
+      })
 
       const updateDialog = page.getByRole('dialog').filter({ hasText: 'New Version Found' })
       await expect(updateDialog).toBeVisible()
       await expect(updateDialog.getByText('Mock release notes')).toBeVisible()
 
       let calls = await getMockCalls(page)
-      expect(calls.some((call) => call.cmd === 'check_update')).toBe(true)
       expect(calls.some((call) => call.cmd === 'download_update')).toBe(false)
 
       await updateDialog.getByRole('button', { name: /Download/ }).click()

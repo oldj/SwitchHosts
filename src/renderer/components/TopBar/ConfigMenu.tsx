@@ -90,16 +90,23 @@ const ConfigMenu = (props: IProps) => {
                 }
 
                 setIsCheckingUpdate(true)
+                const notificationId = showLoadingNotification({
+                  title: lang.check_update,
+                  message: lang.loading,
+                })
+
                 try {
                   const result = (await actions.checkUpdate()) as AppCheckUpdateResult
                   if (!result.has_update) {
-                    showSuccessNotification({
+                    updateSuccessNotification(notificationId, {
                       title: lang.check_update,
                       message: lang.is_latest_version_inform,
                     })
+                  } else {
+                    hideAppNotification(notificationId)
                   }
                 } catch (error) {
-                  showErrorNotification({
+                  updateErrorNotification(notificationId, {
                     title: lang.check_update,
                     message: getFriendlyUpdateErrorMessage(error, lang),
                   })

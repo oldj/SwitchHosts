@@ -11,6 +11,7 @@
 //! storage access.
 
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::Duration;
 
 use serde_json::{json, Value};
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
@@ -289,6 +290,7 @@ fn apply_side_effects(
         .any(|k| *k == "http_api_on" || *k == "http_api_only_local");
     let touches_locale = touched_keys.iter().any(|k| *k == "locale");
     let touches_tray_title = touched_keys.iter().any(|k| *k == "show_title_on_tray");
+    let touches_auto_update = touched_keys.iter().any(|k| *k == "auto_check_update");
 
     if touches_locale {
         if let Err(e) = app_menu::refresh(app) {
@@ -348,6 +350,19 @@ fn apply_side_effects(
             }
         } else {
             http_api::stop();
+        }
+    }
+
+    if touches_auto_update {
+        let enabled = {
+            let cfg = state.config.lock().expect("config mutex poisoned");
+            cfg.auto_check_update
+        };
+        if enabled {
+            let app = app.clone();
+            tauri::async_runtime::spawn(async move {
+                run_auto_update_check(&app).await;
+            });
         }
     }
 }
@@ -1256,13 +1271,42 @@ async fn fetch_url(client: &reqwest::Client, url: &str) -> Result<String, String
 
 // ---- updater ---------------------------------------------------------------
 
-#[tauri::command]
-pub async fn check_update<R: Runtime>(
-    app: AppHandle<R>,
-    state: State<'_, AppState>,
-    _args: Args,
+const AUTO_UPDATE_CHECK_INTERVAL: Duration = Duration::from_secs(12 * 60 * 60);
+
+pub fn start_auto_update_checker<R: Runtime + 'static>(app: AppHandle<R>) {
+    tauri::async_runtime::spawn(async move {
+        run_auto_update_check(&app).await;
+
+        loop {
+            tokio::time::sleep(AUTO_UPDATE_CHECK_INTERVAL).await;
+            run_auto_update_check(&app).await;
+        }
+    });
+}
+
+async fn run_auto_update_check<R: Runtime>(app: &AppHandle<R>) {
+    let state = app.state::<AppState>();
+    let auto_check_update = state
+        .config
+        .lock()
+        .map(|cfg| cfg.auto_check_update)
+        .unwrap_or(false);
+
+    if !auto_check_update {
+        return;
+    }
+
+    if let Err(e) = check_update_inner(app, state.inner()).await {
+        log::info!("automatic update check failed: {e}");
+    }
+}
+
+async fn check_update_inner<R: Runtime>(
+    app: &AppHandle<R>,
+    state: &AppState,
 ) -> Result<Value, String> {
-    let updater = updater_builder_with_proxy(&app, state.inner())?
+    let _guard = state.update_check_lock.lock().await;
+    let updater = updater_builder_with_proxy(app, state)?
         .build()
         .map_err(|e| e.to_string())?;
     let update = updater.check().await.map_err(|e| e.to_string())?;
@@ -1282,11 +1326,21 @@ pub async fn check_update<R: Runtime>(
 }
 
 #[tauri::command]
+pub async fn check_update<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<Value, String> {
+    check_update_inner(&app, state.inner()).await
+}
+
+#[tauri::command]
 pub async fn download_update<R: Runtime>(
     app: AppHandle<R>,
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, String> {
+    let _guard = state.update_check_lock.lock().await;
     let updater = updater_builder_with_proxy(&app, state.inner())?
         .build()
         .map_err(|e| e.to_string())?;

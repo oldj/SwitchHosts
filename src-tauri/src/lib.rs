@@ -154,6 +154,19 @@ pub fn run() {
             // user interaction, so no Moved/Resized events are lost.
             lifecycle::install_main_window_handlers(&main);
 
+            // Run automatic update checks from the backend so they keep
+            // working while the main window is hidden to the tray. The
+            // renderer's ready event gives UpdateDialog a chance to attach
+            // its listeners before the first check can emit `new_version`.
+            let update_checker_started = Arc::new(AtomicBool::new(false));
+            let update_checker_ready_app = app_handle.clone();
+            let update_checker_ready_flag = update_checker_started.clone();
+            app.listen("main_window_ready", move |_event| {
+                if !update_checker_ready_flag.swap(true, Ordering::SeqCst) {
+                    commands::start_auto_update_checker(update_checker_ready_app.clone());
+                }
+            });
+
             let hide_at_launch = app_state
                 .config
                 .lock()

@@ -11,7 +11,7 @@ import ResizeHandle from '@renderer/components/ResizeHandle'
 import RightPanel from '@renderer/components/RightPanel'
 import SetWriteMode from '@renderer/components/SetWriteMode'
 import UpdateDialog from '@renderer/components/UpdateDialog'
-import { actions, agent } from '@renderer/core/agent'
+import { agent } from '@renderer/core/agent'
 import { showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
@@ -34,7 +34,6 @@ const clampPanel = (value: number) =>
 const MainPage = () => {
   const [loading, setLoading] = useState(true)
   const mainWindowReadySentRef = useRef(false)
-  const startupUpdateCheckSentRef = useRef(false)
   const { setLocale, i18n, lang } = useI18n()
   const { loadHostsData } = useHostsData()
   const { configs, loadConfigs, updateConfigs } = useConfigs()
@@ -92,17 +91,6 @@ const MainPage = () => {
     window.setTimeout(() => {
       Promise.resolve(agent.broadcast(events.main_window_ready)).catch((e) => console.error(e))
     }, 0)
-  }, [configs, loading])
-
-  useEffect(() => {
-    if (loading || !configs || startupUpdateCheckSentRef.current) return
-
-    startupUpdateCheckSentRef.current = true
-    if (!configs.auto_check_update) return
-
-    actions.checkUpdate().catch((e) => {
-      console.info('automatic update check failed', e)
-    })
   }, [configs, loading])
 
   useOnBroadcast(events.toggle_left_panel, (show: boolean) => {
