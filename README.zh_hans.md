@@ -28,10 +28,14 @@ SwitchHosts 是一个管理 hosts 文件的应用，基于 [Tauri](https://tauri
 
 ## 功能特性
 
-- 快速切换 hosts 方案
-- hosts 语法高亮
-- 支持从网络加载远程 hosts 配置
-- 可从系统菜单栏图标快速切换 hosts
+- 管理系统、本地、远程、组合和文件夹 hosts 条目
+- 可在主窗口或系统托盘快速切换 hosts 方案
+- hosts 文件语法高亮
+- 跨 hosts 条目查找和替换
+- 支持手动、定时或启动时刷新远程 hosts
+- 导入/导出 hosts 数据，并支持从 URL 导入备份
+- 将条目移入回收站，并可稍后恢复或彻底删除
+- 偏好设置支持写入模式、代理、更新检查、开机启动、应用后命令和本地 HTTP API
 
 ## 安装
 
@@ -49,7 +53,15 @@ choco install switchhosts
 ## 数据备份
 
 SwitchHosts 的数据文件存储于 `~/.SwitchHosts` (Windows 下存储于用户个人文件夹下的 `.SwitchHosts` 文件夹），
-其中 `~/.SwitchHosts/data` 文件夹包含数据，`~/.SwitchHosts/config` 文件夹包含各项配置信息。
+v5 数据结构如下：
+
+- `~/.SwitchHosts/manifest.json` 存储 hosts 树
+- `~/.SwitchHosts/entries/` 存储本地和远程 hosts 内容
+- `~/.SwitchHosts/trashcan.json` 存储回收站条目
+- `~/.SwitchHosts/internal/config.json` 存储偏好设置
+- `~/.SwitchHosts/internal/histories/` 存储系统 hosts 和命令运行历史
+
+如需完整手动备份，请复制整个 `~/.SwitchHosts` 文件夹。应用内导出会生成 hosts 数据备份 JSON，不包含偏好设置或历史记录。
 
 ## 开发以及构建
 

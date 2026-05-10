@@ -29,10 +29,14 @@ SwitchHosts is an App for managing hosts file, it is based on [Tauri](https://ta
 
 ## Features
 
-- Switch hosts quickly
-- Syntax highlight
-- Remote hosts
-- Switch from system tray
+- Manage system, local, remote, group, and folder hosts entries
+- Switch hosts quickly from the main window or system tray
+- Syntax highlighting for hosts files
+- Find and replace across hosts entries
+- Refresh remote hosts manually, on a schedule, or at startup
+- Import/export hosts data, including importing backups from a URL
+- Move entries to the trashcan and restore or delete them later
+- Preferences for write mode, proxy, update checks, launch at login, post-apply commands, and the local HTTP API
 
 ## Install
 
@@ -52,8 +56,15 @@ choco install switchhosts
 ## Backup
 
 SwitchHosts stores data at `~/.SwitchHosts` (Or folder `.SwitchHosts` under the current user's home
-path on Windows), the `~/.SwitchHosts/data` folder contains data, while the `~/.SwitchHosts/config`
-folder contains various configuration information.
+path on Windows). In the v5 data layout:
+
+- `~/.SwitchHosts/manifest.json` stores the hosts tree
+- `~/.SwitchHosts/entries/` stores local and remote hosts content
+- `~/.SwitchHosts/trashcan.json` stores trashcan entries
+- `~/.SwitchHosts/internal/config.json` stores preferences
+- `~/.SwitchHosts/internal/histories/` stores system hosts and command run history
+
+For a complete manual backup, copy the whole `~/.SwitchHosts` folder. The in-app export creates a hosts data backup JSON; it does not include preferences or histories.
 
 ## Develop and build
 

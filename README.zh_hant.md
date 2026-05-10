@@ -29,10 +29,14 @@ SwitchHosts 是一個管理 hosts 檔案的應用程式，基於 [Tauri](https:/
 
 ## 功能特性
 
-- 快速切換 hosts 方案
-- hosts 語法高亮顯示
-- 支援從網路載入遠程 hosts 設定
-- 可從系統菜單欄圖是快速切換 hosts
+- 管理系統、本機、遠端、組合和資料夾 hosts 項目
+- 可在主視窗或系統選單列圖示快速切換 hosts 方案
+- hosts 檔案語法高亮顯示
+- 跨 hosts 項目尋找和取代
+- 支援手動、定時或啟動時重新整理遠端 hosts
+- 匯入/匯出 hosts 資料，並支援從 URL 匯入備份
+- 將項目移入回收站，並可稍後還原或永久刪除
+- 偏好設定支援寫入模式、代理、更新檢查、開機啟動、套用後命令和本機 HTTP API
 
 ## 安裝
 
@@ -51,7 +55,15 @@ choco install switchhosts
 ## 數據備份
 
 SwitchHosts 的數據文件儲存於 `~/.SwitchHosts` (Windows 下儲存使用者個人文件裡的 `.SwitchHosts` 資料夾），
-其中 `~/.SwitchHosts/data` 資料夾包含數據，`~/.SwitchHosts/config` 資料夾包含各種設定。
+v5 數據結構如下：
+
+- `~/.SwitchHosts/manifest.json` 儲存 hosts 樹
+- `~/.SwitchHosts/entries/` 儲存本機和遠端 hosts 內容
+- `~/.SwitchHosts/trashcan.json` 儲存回收站項目
+- `~/.SwitchHosts/internal/config.json` 儲存偏好設定
+- `~/.SwitchHosts/internal/histories/` 儲存系統 hosts 和命令執行歷史
+
+如需完整手動備份，請複製整個 `~/.SwitchHosts` 資料夾。應用程式內匯出會產生 hosts 資料備份 JSON，不包含偏好設定或歷史記錄。
 
 ## 開發及建置
 

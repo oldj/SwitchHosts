@@ -28,10 +28,14 @@ SwitchHosts to aplikacja do zarządzania plikiem hosts, zbudowana na bazie [Taur
 
 ## Funkcje
 
-- Szybkie przełączanie hostów
-- Podświetlanie składni
-- Hosty zdalne
-- Przełączanie z paska systemowego
+- Zarządzanie wpisami hosts: systemowymi, lokalnymi, zdalnymi, grupami i folderami
+- Szybkie przełączanie hosts z głównego okna lub zasobnika systemowego
+- Podświetlanie składni plików hosts
+- Wyszukiwanie i zamiana w wielu wpisach hosts
+- Ręczne, zaplanowane lub startowe odświeżanie zdalnych hosts
+- Import i eksport danych hosts, w tym import kopii zapasowej z URL
+- Przenoszenie wpisów do kosza oraz późniejsze przywracanie lub trwałe usuwanie
+- Preferencje dla trybu zapisu, proxy, sprawdzania aktualizacji, uruchamiania przy logowaniu, polecenia po zastosowaniu i lokalnego HTTP API
 
 ## Instalacja
 
@@ -48,7 +52,15 @@ choco install switchhosts
 
 ## Kopia zapasowa
 
-SwitchHosts przechowuje dane w `~/.SwitchHosts` (lub folder `.SwitchHosts` w ścieżce domowej bieżącego użytkownika na Windows), folder `~/.SwitchHosts/data` zawiera dane, podczas gdy folder `~/.SwitchHosts/config` zawiera różne informacje konfiguracyjne.
+SwitchHosts przechowuje dane w `~/.SwitchHosts` (lub folder `.SwitchHosts` w ścieżce domowej bieżącego użytkownika na Windows). Układ danych v5:
+
+- `~/.SwitchHosts/manifest.json` przechowuje drzewo hosts
+- `~/.SwitchHosts/entries/` przechowuje zawartość lokalnych i zdalnych hosts
+- `~/.SwitchHosts/trashcan.json` przechowuje wpisy kosza
+- `~/.SwitchHosts/internal/config.json` przechowuje preferencje
+- `~/.SwitchHosts/internal/histories/` przechowuje historię systemowego pliku hosts i uruchomień poleceń
+
+Aby wykonać pełną ręczną kopię zapasową, skopiuj cały folder `~/.SwitchHosts`. Eksport w aplikacji tworzy JSON z kopią zapasową danych hosts; nie zawiera preferencji ani historii.
 
 ## Tworzenie i budowanie
 
