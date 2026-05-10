@@ -16,7 +16,7 @@ const lang: LanguageDict = {
   append: 'Ajouter',
   auto_check_update: 'Vérifier automatiquement les mises à jour',
   auto_check_update_desc:
-    'Si activé, SwitchHosts vérifie au lancement les mises à jour des versions officielles et affiche seulement un rappel. Les mises à jour ne sont jamais téléchargées automatiquement.',
+    'Si activé, SwitchHosts vous avertit lorsqu’une nouvelle version est disponible, sans télécharger ni installer les mises à jour automatiquement.',
   auto_refresh: 'Rafraîchissement automatique',
   btn_cancel: 'Annuler',
   btn_ok: 'OK',

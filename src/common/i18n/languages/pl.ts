@@ -14,7 +14,7 @@ export default {
   append: 'Dołącz',
   auto_check_update: 'Automatycznie sprawdzaj aktualizacje',
   auto_check_update_desc:
-    'Po włączeniu SwitchHosts sprawdza oficjalne aktualizacje przy starcie i tylko pokazuje przypomnienie. Aktualizacje nigdy nie są pobierane automatycznie.',
+    'Po włączeniu SwitchHosts powiadomi Cię, gdy będzie dostępna nowa wersja, ale nie pobierze ani nie zainstaluje aktualizacji automatycznie.',
   auto_refresh: 'Automatyczne odświeżanie',
   btn_cancel: 'Anuluj',
   btn_ok: 'OK',

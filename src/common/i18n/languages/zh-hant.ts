@@ -15,8 +15,7 @@ const lang: LanguageDict = {
   all: '全部',
   append: '附加',
   auto_check_update: '自動檢查更新',
-  auto_check_update_desc:
-    '開啟後，SwitchHosts 會在啟動時檢查正式版更新，並且只提醒你；不會自動下載或安裝更新。',
+  auto_check_update_desc: '開啟後，SwitchHosts 會在有新版本時提醒你，不會自動下載或安裝更新。',
   auto_refresh: '自動更新',
   btn_cancel: '取消',
   btn_ok: '確定',
@@ -191,8 +190,7 @@ const lang: LanguageDict = {
   update_downloading_desc: '正在下載版本 {0}：{1}',
   update_error_install: '更新安裝失敗。請前往 GitHub Release 下載最新版本並手動安裝。',
   update_error_network: '無法檢查更新，請檢查網路連線和代理設定。',
-  update_error_platform:
-    '目前安裝方式沒有可用的自動更新套件，請前往 GitHub Release 下載最新版本。',
+  update_error_platform: '目前安裝方式沒有可用的自動更新套件，請前往 GitHub Release 下載最新版本。',
   update_error_proxy: '無法使用目前代理檢查更新，請檢查代理設定。',
   update_error_signature: '更新套件驗證失敗。請前往 GitHub Release 下載最新版本。',
   update_error_unavailable: '目前無法取得更新資訊，請稍後再試。',
