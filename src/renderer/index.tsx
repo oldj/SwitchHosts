@@ -8,6 +8,7 @@ import {
   Drawer,
   MantineColorsTuple,
   MantineProvider,
+  SegmentedControl,
   Select,
   Tooltip,
 } from '@mantine/core'
@@ -80,6 +81,13 @@ const theme = createTheme({
       defaultProps: {
         checkIconPosition: 'right',
         comboboxProps: { shadow: 'md' },
+      },
+    }),
+    SegmentedControl: SegmentedControl.extend({
+      styles: {
+        label: {
+          fontWeight: 400,
+        },
       },
     }),
   },
