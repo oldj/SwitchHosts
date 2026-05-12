@@ -268,11 +268,7 @@ pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, id: &str) -> bool {
 }
 
 fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
+    lifecycle::show_main_window(app);
 }
 
 fn quit_app<R: Runtime>(app: &AppHandle<R>) {

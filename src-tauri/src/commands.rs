@@ -1008,6 +1008,7 @@ pub async fn find_set_replace_history(
 #[tauri::command]
 pub async fn hide_main_window<R: Runtime>(app: AppHandle<R>, _args: Args) -> Value {
     if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        lifecycle::mark_main_window_user_hide();
         let _ = window.hide();
     }
     Value::Null
@@ -1015,11 +1016,7 @@ pub async fn hide_main_window<R: Runtime>(app: AppHandle<R>, _args: Args) -> Val
 
 #[tauri::command]
 pub async fn focus_main_window<R: Runtime>(app: AppHandle<R>, _args: Args) -> Value {
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
+    lifecycle::show_main_window(&app);
     Value::Null
 }
 
