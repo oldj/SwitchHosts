@@ -16,6 +16,7 @@ import { IconAdjustments, IconCheck, IconDeviceFloppy } from '@tabler/icons-reac
 import { useEffect, useRef, useState } from 'react'
 import Advanced from './Advanced'
 import Commands from './Commands'
+import { isConfigPatch, mergeConfigUpdateIntoDraft } from './configSync'
 import General from './General'
 import styles from './styles.module.scss'
 
@@ -127,10 +128,27 @@ const PreferencePanel = () => {
     events.show_preferences,
     async () => {
       setIsOpen(true)
-      setData(configs)
+      try {
+        setData(await loadConfigs())
+      } catch (e) {
+        console.error('loadConfigs failed before opening preferences', e)
+        setData(configs)
+      }
     },
     [configs],
   )
+
+  useOnBroadcast(events.config_updated, async (patch?: unknown) => {
+    try {
+      const snapshot = await loadConfigs()
+      setData((prev) => mergeConfigUpdateIntoDraft(prev, snapshot, patch))
+    } catch (e) {
+      console.error('loadConfigs failed after config_updated', e)
+      if (isConfigPatch(patch)) {
+        setData((prev) => (prev ? { ...prev, ...patch } : prev))
+      }
+    }
+  })
 
   const showFooter = activeTab === 'commands' || activeTab === 'proxy'
 

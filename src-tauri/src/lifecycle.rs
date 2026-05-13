@@ -6,13 +6,15 @@
 //!   restore it on the next launch.
 //! - Treat the close button as "hide", the menu Quit / Cmd+Q as
 //!   "exit", coordinated through `AppState::is_will_quit`.
-//! - Honour `hide_dock_icon` once at startup on macOS.
+//! - Honour `hide_dock_icon` on macOS without changing main-window visibility.
 //!
 //! Tray and find window plumbing land in P2.B / P2.D and will reuse
 //! the same persistence helpers.
 
 use std::sync::atomic::Ordering;
 use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(target_os = "macos")]
+use std::{sync::atomic::AtomicU64, time::Duration};
 
 use tauri::{
     webview::WebviewWindowBuilder, AppHandle, LogicalPosition, LogicalSize, Manager, Monitor,
@@ -25,7 +27,7 @@ use crate::storage::{
 };
 
 #[cfg(target_os = "macos")]
-use objc2::{msg_send, runtime::AnyObject, MainThreadMarker};
+use objc2::{class, msg_send, runtime::AnyObject, MainThreadMarker};
 #[cfg(target_os = "macos")]
 use objc2_foundation::{NSPoint, NSSize};
 
@@ -37,6 +39,9 @@ use objc2_foundation::{NSPoint, NSSize};
 const GEOMETRY_PERSIST_THROTTLE_MS: u64 = 200;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
+
+#[cfg(target_os = "macos")]
+static MAIN_WINDOW_USER_HIDE_GENERATION: AtomicU64 = AtomicU64::new(0);
 
 // ---- main-window event handlers --------------------------------------------
 
@@ -69,10 +74,37 @@ pub fn install_main_window_handlers<R: Runtime>(window: &WebviewWindow<R>) {
 
             // Default close-button behaviour: hide instead of close.
             api.prevent_close();
+            mark_main_window_user_hide();
             let _ = window_clone.hide();
         }
         _ => {}
     });
+}
+
+#[cfg(target_os = "macos")]
+pub fn mark_main_window_user_hide() {
+    MAIN_WINDOW_USER_HIDE_GENERATION.fetch_add(1, Ordering::Relaxed);
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn mark_main_window_user_hide() {}
+
+#[cfg(target_os = "macos")]
+pub fn hide_app_from_menu<R: Runtime>(app: &AppHandle<R>) {
+    mark_main_window_user_hide();
+    hide_app_after_restoring_window_hide_policy(app);
+}
+
+pub fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = app.show();
+    }
+    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
 }
 
 // ---- geometry persistence --------------------------------------------------
@@ -461,21 +493,208 @@ mod tests {
 
 // ---- macOS dock icon -------------------------------------------------------
 
-/// Honour `hide_dock_icon`. Only meaningful on macOS — switches the
-/// app between `Regular` (Dock icon visible, full menu bar) and
-/// `Accessory` (no Dock icon, tray-only). Safe to call at runtime
-/// because P2.B installed a tray icon as a permanent way to summon
-/// the window back.
+/// Honour `hide_dock_icon`. Only meaningful on macOS — toggles the
+/// Dock icon without changing the main window's visibility. Safe to
+/// call at runtime because P2.B installed a tray icon as a permanent
+/// way to summon the window back.
 #[cfg(target_os = "macos")]
 pub fn apply_dock_icon_policy<R: Runtime>(app: &AppHandle<R>, hide: bool) {
-    let policy = if hide {
-        tauri::ActivationPolicy::Accessory
-    } else {
-        tauri::ActivationPolicy::Regular
-    };
-    if let Err(e) = app.set_activation_policy(policy) {
-        log::warn!("failed to set activation policy: {e}");
+    let main_window_state = capture_main_window_dock_policy_state(app);
+    if let Err(e) = app.set_dock_visibility(!hide) {
+        log::warn!("failed to set dock visibility: {e}");
+        return;
     }
+    if !hide {
+        set_webview_windows_can_hide(app, true);
+    }
+    restore_main_window_after_dock_policy(app, main_window_state);
+    schedule_main_window_restore_after_dock_policy(app, main_window_state);
+}
+
+#[cfg(target_os = "macos")]
+#[derive(Clone, Copy)]
+struct MainWindowDockPolicyState {
+    user_hide_generation: u64,
+    app_was_hidden: bool,
+    was_visible: bool,
+    was_minimized: bool,
+    was_focused: bool,
+}
+
+#[cfg(target_os = "macos")]
+impl MainWindowDockPolicyState {
+    fn should_restore(self) -> bool {
+        !self.app_was_hidden && self.was_visible && !self.was_minimized
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn capture_main_window_dock_policy_state<R: Runtime>(
+    app: &AppHandle<R>,
+) -> MainWindowDockPolicyState {
+    let user_hide_generation = MAIN_WINDOW_USER_HIDE_GENERATION.load(Ordering::Relaxed);
+    let app_was_hidden = is_application_hidden(app);
+    let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
+        return MainWindowDockPolicyState {
+            user_hide_generation,
+            app_was_hidden,
+            was_visible: false,
+            was_minimized: false,
+            was_focused: false,
+        };
+    };
+
+    MainWindowDockPolicyState {
+        user_hide_generation,
+        app_was_hidden,
+        was_visible: window.is_visible().unwrap_or(false),
+        was_minimized: window.is_minimized().unwrap_or(false),
+        was_focused: window.is_focused().unwrap_or(false),
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn is_application_hidden<R: Runtime>(app: &AppHandle<R>) -> bool {
+    if MainThreadMarker::new().is_some() {
+        return is_application_hidden_on_main_thread();
+    }
+
+    let (tx, rx) = std::sync::mpsc::channel();
+    if let Err(e) = app.run_on_main_thread(move || {
+        let _ = tx.send(is_application_hidden_on_main_thread());
+    }) {
+        log::warn!("failed to schedule application hidden-state read: {e}");
+        return false;
+    }
+
+    match rx.recv_timeout(Duration::from_millis(500)) {
+        Ok(hidden) => hidden,
+        Err(e) => {
+            log::warn!("failed to read application hidden state from main thread: {e}");
+            false
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn is_application_hidden_on_main_thread() -> bool {
+    unsafe {
+        let app: *mut AnyObject = msg_send![class!(NSRunningApplication), currentApplication];
+        let hidden: bool = msg_send![app, isHidden];
+        hidden
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn restore_main_window_after_dock_policy<R: Runtime>(
+    app: &AppHandle<R>,
+    state: MainWindowDockPolicyState,
+) {
+    if !state.should_restore() {
+        return;
+    }
+    let _ = app.show();
+    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        if state.was_focused {
+            let _ = window.unminimize();
+            let _ = window.show();
+            let _ = window.set_focus();
+        } else {
+            order_main_window_front_without_focus(&window);
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn order_main_window_front_without_focus<R: Runtime>(window: &WebviewWindow<R>) {
+    let window_for_task = window.clone();
+    let _ = window.run_on_main_thread(move || {
+        let ns_window = match window_for_task.ns_window() {
+            Ok(ptr) => ptr as *mut AnyObject,
+            Err(e) => {
+                log::warn!("failed to get native main window handle for dock policy restore: {e}");
+                return;
+            }
+        };
+        unsafe {
+            let _: () = msg_send![ns_window, orderFront: std::ptr::null::<AnyObject>()];
+        }
+    });
+}
+
+#[cfg(target_os = "macos")]
+fn set_webview_windows_can_hide<R: Runtime>(app: &AppHandle<R>, can_hide: bool) {
+    for (label, window) in app.webview_windows() {
+        let window_for_task = window.clone();
+        let label_for_task = label.clone();
+        if let Err(e) = window.run_on_main_thread(move || {
+            let ns_window = match window_for_task.ns_window() {
+                Ok(ptr) => ptr as *mut AnyObject,
+                Err(e) => {
+                    log::warn!(
+                        "failed to get native window handle for canHide restore ({label_for_task}): {e}"
+                    );
+                    return;
+                }
+            };
+            unsafe {
+                let _: () = msg_send![ns_window, setCanHide: can_hide];
+            }
+        }) {
+            log::warn!("failed to schedule canHide restore for {label}: {e}");
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn hide_app_after_restoring_window_hide_policy<R: Runtime>(app: &AppHandle<R>) {
+    let app_for_task = app.clone();
+    if let Err(e) = app.run_on_main_thread(move || {
+        for (label, window) in app_for_task.webview_windows() {
+            let ns_window = match window.ns_window() {
+                Ok(ptr) => ptr as *mut AnyObject,
+                Err(e) => {
+                    log::warn!(
+                        "failed to get native window handle for app menu hide ({label}): {e}"
+                    );
+                    continue;
+                }
+            };
+            unsafe {
+                let _: () = msg_send![ns_window, setCanHide: true];
+            }
+        }
+        unsafe {
+            let ns_app: *mut AnyObject = msg_send![class!(NSApplication), sharedApplication];
+            let _: () = msg_send![ns_app, hide: std::ptr::null::<AnyObject>()];
+        }
+    }) {
+        log::warn!("failed to schedule app menu hide: {e}");
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn schedule_main_window_restore_after_dock_policy<R: Runtime>(
+    app: &AppHandle<R>,
+    state: MainWindowDockPolicyState,
+) {
+    if !state.should_restore() {
+        return;
+    }
+    let app = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(150));
+        let user_hide_generation = MAIN_WINDOW_USER_HIDE_GENERATION.load(Ordering::Relaxed);
+        if user_hide_generation != state.user_hide_generation {
+            return;
+        }
+        if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+            if window.is_minimized().unwrap_or(false) {
+                return;
+            }
+        }
+        restore_main_window_after_dock_policy(&app, state);
+    });
 }
 
 // ---- single instance handler -----------------------------------------------
@@ -488,11 +707,7 @@ pub fn focus_main_on_second_instance<R: Runtime>(
     _args: Vec<String>,
     _cwd: String,
 ) {
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
+    show_main_window(app);
 }
 
 // ---- run-event hook for Cmd+Q / system shutdown ---------------------------

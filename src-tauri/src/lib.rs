@@ -102,6 +102,11 @@ pub fn run() {
             // convention; items that need Rust action (Find, URL open)
             // are dispatched inline.
             match id {
+                #[cfg(target_os = "macos")]
+                app_menu::MENU_ID_HIDE_APP => {
+                    lifecycle::hide_app_from_menu(app);
+                    return;
+                }
                 app_menu::MENU_ID_FIND => {
                     if let Err(e) = find::show_find_window(app) {
                         log::warn!("failed to show find window: {e}");
@@ -214,9 +219,8 @@ pub fn run() {
             }
 
             // Tray icon must exist before we honour `hide_dock_icon`,
-            // otherwise an `Accessory` activation policy on macOS would
-            // strand the user (no Dock icon, no tray to summon the
-            // window back).
+            // otherwise hiding the Dock icon on macOS would strand the
+            // user (no Dock icon, no tray to summon the window back).
             tray::install_tray(&app_handle)?;
             if let Err(e) = tray::refresh_title(&app_handle, app_state.inner()) {
                 log::warn!("failed to initialize tray title: {e}");
@@ -229,7 +233,9 @@ pub fn run() {
                     .lock()
                     .map(|cfg| cfg.hide_dock_icon)
                     .unwrap_or(false);
-                lifecycle::apply_dock_icon_policy(&app.handle(), hide);
+                if hide {
+                    lifecycle::apply_dock_icon_policy(&app.handle(), true);
+                }
             }
 
             // The tray window (P2.B.2) and a few existing dialogs

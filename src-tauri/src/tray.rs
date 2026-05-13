@@ -20,12 +20,13 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use serde_json::json;
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::webview::WebviewWindowBuilder;
 use tauri::{
-    AppHandle, Manager, Monitor, PhysicalPosition, Rect as TauriRect, Runtime, WebviewUrl,
+    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, Rect as TauriRect, Runtime, WebviewUrl,
 };
 
 use crate::i18n::menu_labels;
@@ -268,11 +269,7 @@ pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, id: &str) -> bool {
 }
 
 fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
+    lifecycle::show_main_window(app);
 }
 
 fn quit_app<R: Runtime>(app: &AppHandle<R>) {
@@ -307,6 +304,12 @@ fn toggle_dock_icon<R: Runtime>(app: &AppHandle<R>) {
     }
     lifecycle::apply_dock_icon_policy(app, new_value);
     refresh_menu(app);
+    if let Err(e) = app.emit(
+        "config_updated",
+        json!({ "_args": [{ "hide_dock_icon": new_value }] }),
+    ) {
+        log::warn!("failed to emit hide_dock_icon config update: {e}");
+    }
 }
 
 /// Rebuild and reattach the tray menu. Cheap — only a few items.

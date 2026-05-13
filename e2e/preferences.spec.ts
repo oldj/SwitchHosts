@@ -32,6 +32,15 @@ async function expectFontSize(locator: Locator, expectedPx = 14) {
   expect(Math.abs(fontSize - expectedPx)).toBeLessThanOrEqual(0.2)
 }
 
+async function expectFontWeight(locator: Locator, expected = 400) {
+  await expect(locator).toBeVisible()
+
+  const fontWeight = await locator.evaluate((element) =>
+    Number.parseInt(window.getComputedStyle(element).fontWeight, 10),
+  )
+  expect(fontWeight).toBe(expected)
+}
+
 test.describe('preferences', () => {
   test('aligns segmented setting labels with their controls', async ({ page }) => {
     await page.getByLabel('Settings').click()
@@ -73,6 +82,8 @@ test.describe('preferences', () => {
     await expectFontSize(preferences.getByText('Write Mode', { exact: true }))
     await expectFontSize(writeModeControl.getByText('Append', { exact: true }))
     await expectFontSize(preferences.getByText('Hide at Launch', { exact: true }))
+    await expectFontWeight(writeModeControl.getByText('Append', { exact: true }))
+    await expectFontWeight(writeModeControl.getByText('Overwrite', { exact: true }))
   })
 
   test('places app behavior toggles at the top of advanced preferences', async ({ page }) => {

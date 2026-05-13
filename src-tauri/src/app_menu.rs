@@ -23,6 +23,8 @@ pub const MENU_ID_FIND: &str = "app-find";
 pub const MENU_ID_COMMENT: &str = "app-comment";
 pub const MENU_ID_FEEDBACK: &str = "app-feedback";
 pub const MENU_ID_HOMEPAGE: &str = "app-homepage";
+#[cfg(target_os = "macos")]
+pub const MENU_ID_HIDE_APP: &str = "app-hide";
 
 pub const FEEDBACK_URL: &str = "https://github.com/oldj/SwitchHosts/issues";
 pub const HOMEPAGE_URL: &str = "https://switchhosts.vercel.app/home/";
@@ -81,7 +83,9 @@ fn build_macos_app_menu<R: Runtime>(
 ) -> Result<Submenu<R>, tauri::Error> {
     let about = MenuItemBuilder::with_id(MENU_ID_ABOUT, labels.about_app).build(app)?;
     let services = PredefinedMenuItem::services(app, Some(labels.services))?;
-    let hide = PredefinedMenuItem::hide(app, Some(labels.hide_app))?;
+    let hide = MenuItemBuilder::with_id(MENU_ID_HIDE_APP, labels.hide_app)
+        .accelerator("CmdOrCtrl+H")
+        .build(app)?;
     let hide_others = PredefinedMenuItem::hide_others(app, Some(labels.hide_others))?;
     let show_all = PredefinedMenuItem::show_all(app, Some(labels.show_all))?;
     let quit = PredefinedMenuItem::quit(app, Some(labels.quit_app))?;
