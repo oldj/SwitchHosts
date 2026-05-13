@@ -15,6 +15,9 @@
 #   APPLE_PASSWORD               app-specific password
 #   APPLE_TEAM_ID                J5J6USUX2F
 #
+# macOS GitHub Secrets:
+#   APPLE_SIGNING_IDENTITY       Developer ID Application signing identity
+#
 # Tauri updater signing:
 #   TAURI_SIGNING_PRIVATE_KEY          content of the .key file
 #   TAURI_SIGNING_PRIVATE_KEY_PASSWORD password (if set during keygen)
@@ -216,6 +219,17 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Validate macOS signing identity
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          if [ -z "$APPLE_SIGNING_IDENTITY" ]; then
+            echo "::error::Repository secret APPLE_SIGNING_IDENTITY is not set"
+            exit 1
+          fi
+
       - name: Generate release notes
         id: release_notes
         if: needs.prep.outputs.tag != ''
@@ -252,7 +266,7 @@ jobs:
           # macOS signing
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: "Developer ID Application: Hangzhou Tongming Technology Company Limited (J5J6USUX2F)"
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: J5J6USUX2F

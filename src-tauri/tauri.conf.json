@@ -31,7 +31,6 @@
     "shortDescription": "A GUI tool for managing your hosts file",
     "longDescription": "SwitchHosts is an open-source app for managing and switching between multiple hosts configurations.",
     "macOS": {
-      "signingIdentity": "Developer ID Application: Hangzhou Tongming Technology Company Limited (J5J6USUX2F)",
       "entitlements": "../scripts/entitlements.mac.plist",
       "minimumSystemVersion": "10.15",
       "dmg": {
