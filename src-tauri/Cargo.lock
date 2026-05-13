@@ -4461,7 +4461,7 @@ dependencies = [
 
 [[package]]
 name = "switchhosts"
-version = "5.0.0-beta.29"
+version = "5.0.0-beta.30"
 dependencies = [
  "axum",
  "block2",
