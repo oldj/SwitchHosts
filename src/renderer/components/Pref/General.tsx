@@ -11,6 +11,7 @@ import { agent } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
 import { normalizeTheme } from '@renderer/utils/theme'
 import type { CSSProperties } from 'react'
+import { languageOptions, resolveLanguageSelectValue } from './languageOptions'
 
 interface IProps {
   data: ConfigsType
@@ -26,7 +27,7 @@ const segmentedControlLabelStyle: CSSProperties = {
 
 const General = (props: IProps) => {
   const { data, onChange } = props
-  const { lang } = useI18n()
+  const { lang, locale } = useI18n()
   const { platform } = agent
 
   return (
@@ -42,18 +43,9 @@ const General = (props: IProps) => {
       >
         <Box>{lang.language}</Box>
         <Select
-          value={data.locale}
+          value={resolveLanguageSelectValue(data.locale, locale)}
           onChange={(v) => v && onChange({ locale: v as LocaleName })}
-          data={[
-            { value: 'zh', label: '简体中文' },
-            { value: 'zh_hant', label: '繁體中文' },
-            { value: 'en', label: 'English' },
-            { value: 'fr', label: 'Français' },
-            { value: 'de', label: 'Deutsch' },
-            { value: 'ja', label: '日本語' },
-            { value: 'tr', label: 'Türkçe' },
-            { value: 'ko', label: '한국어' },
-          ]}
+          data={languageOptions}
           w={200}
           allowDeselect={false}
         />
