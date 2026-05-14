@@ -312,9 +312,9 @@ async fn fetch_remote(url: &str, state: &AppState) -> Result<String, RefreshErro
             message: format!("HTTP {}", status.as_u16()),
         });
     }
-    response.text().await.map_err(|e| RefreshError::Fetch {
-        message: e.to_string(),
-    })
+    http::response_text_with_limit(response, http::MAX_REMOTE_HOSTS_BYTES)
+        .await
+        .map_err(|message| RefreshError::Fetch { message })
 }
 
 fn read_file_url(stripped: &str, original: &str) -> Result<String, RefreshError> {
@@ -324,9 +324,11 @@ fn read_file_url(stripped: &str, original: &str) -> Result<String, RefreshError>
     // We tolerate the optional `localhost` host segment so both forms
     // work the same way. Anything else is treated as an opaque path.
     let path = stripped.strip_prefix("localhost").unwrap_or(stripped);
-    std::fs::read_to_string(Path::new(path)).map_err(|e| RefreshError::Fetch {
-        message: format!("read {original}: {e}"),
-    })
+    http::read_text_file_with_limit(Path::new(path), http::MAX_REMOTE_HOSTS_BYTES).map_err(
+        |message| RefreshError::Fetch {
+            message: format!("{original}: {message}"),
+        },
+    )
 }
 
 // ---- tree helpers ----------------------------------------------------------

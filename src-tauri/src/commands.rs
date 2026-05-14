@@ -10,6 +10,7 @@
 //! Commands also take a `State<'_, AppState>` when they need shared
 //! storage access.
 
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
@@ -602,28 +603,24 @@ pub async fn set_hosts_content(
 
 #[tauri::command]
 pub async fn get_system_hosts(_args: Args) -> Result<Value, StorageError> {
-    let path = system_hosts_path();
-    match std::fs::read_to_string(path) {
+    let path = system_hosts_path()?;
+    match std::fs::read_to_string(&path) {
         Ok(s) => Ok(json!(s)),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(json!("")),
-        Err(e) => Err(StorageError::io(path.to_string(), e)),
+        Err(e) => Err(StorageError::io(path.display().to_string(), e)),
     }
 }
 
 #[tauri::command]
-pub async fn get_path_of_system_hosts(_args: Args) -> Value {
-    json!(system_hosts_path())
+pub async fn get_path_of_system_hosts(_args: Args) -> Result<Value, StorageError> {
+    Ok(json!(system_hosts_path()?.display().to_string()))
 }
 
-fn system_hosts_path() -> &'static str {
-    #[cfg(target_os = "windows")]
-    {
-        r"C:\Windows\System32\drivers\etc\hosts"
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-        "/etc/hosts"
-    }
+fn system_hosts_path() -> Result<PathBuf, StorageError> {
+    hosts_apply::write::system_hosts_path().map_err(|e| StorageError::Io {
+        path: "system hosts path".to_string(),
+        reason: e.to_string(),
+    })
 }
 
 // ---- apply / refresh -------------------------------------------------------
@@ -1193,7 +1190,7 @@ pub async fn import_data<R: Runtime>(
         Err(e) => return Err(format!("invalid pick path: {e}")),
     };
 
-    let bytes = match std::fs::read(&src_path) {
+    let bytes = match http::read_file_with_limit(&src_path, http::MAX_IMPORT_BACKUP_BYTES) {
         Ok(b) => b,
         Err(e) => {
             log::warn!("import read failed: {e}");
@@ -1217,7 +1214,7 @@ pub async fn import_data_from_url(state: State<'_, AppState>, args: Args) -> Res
     // shared `http::build_client` honours `use_proxy` config — this
     // clears implementation-notes D8.
     let client = http::build_client(state.inner())?;
-    let body = match fetch_url(&client, url).await {
+    let bytes = match fetch_url(&client, url).await {
         Ok(b) => b,
         Err(e) => {
             log::warn!("import-from-url fetch failed: {e}");
@@ -1226,19 +1223,19 @@ pub async fn import_data_from_url(state: State<'_, AppState>, args: Args) -> Res
     };
 
     let _guard = state.store_lock.lock().expect("store lock poisoned");
-    match import_export::import_backup_bytes(body.as_bytes(), &state.paths) {
+    match import_export::import_backup_bytes(&bytes, &state.paths) {
         Ok(result) => Ok(result),
         Err(e) => Err(format!("import failed: {e}")),
     }
 }
 
-async fn fetch_url(client: &reqwest::Client, url: &str) -> Result<String, String> {
+async fn fetch_url(client: &reqwest::Client, url: &str) -> Result<Vec<u8>, String> {
     let response = client.get(url).send().await.map_err(|e| e.to_string())?;
     let status = response.status();
     if !status.is_success() {
         return Err(format!("error_{}", status.as_u16()));
     }
-    response.text().await.map_err(|e| e.to_string())
+    http::response_bytes_with_limit(response, http::MAX_IMPORT_BACKUP_BYTES).await
 }
 
 // ---- updater ---------------------------------------------------------------

@@ -13,6 +13,8 @@ mod storage;
 mod tray;
 
 use serde_json::json;
+#[cfg(any(target_os = "windows", test))]
+use std::path::{Path, PathBuf};
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -25,40 +27,95 @@ use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 
 use storage::AppState;
 
+#[cfg(any(target_os = "windows", test))]
+#[derive(Debug, PartialEq, Eq)]
+enum ElevationHelperInvocation {
+    NotHelper,
+    InvalidArgs,
+    Copy { src: PathBuf },
+}
+
+#[cfg(any(target_os = "windows", test))]
+fn parse_elevation_helper_args<I, S>(args: I) -> ElevationHelperInvocation
+where
+    I: IntoIterator<Item = S>,
+    S: Into<String>,
+{
+    let args: Vec<String> = args.into_iter().map(Into::into).collect();
+    if args.get(1).map(String::as_str) != Some(hosts_apply::elevation::ELEVATION_HELPER_ARG) {
+        return ElevationHelperInvocation::NotHelper;
+    }
+    if args.len() != 3 {
+        return ElevationHelperInvocation::InvalidArgs;
+    }
+    ElevationHelperInvocation::Copy {
+        src: PathBuf::from(&args[2]),
+    }
+}
+
+#[cfg(any(target_os = "windows", test))]
+fn overwrite_file_contents(src: &Path, dst: &Path) -> std::io::Result<u64> {
+    let mut input = std::fs::File::open(src)?;
+    let mut output = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(dst)?;
+
+    std::io::copy(&mut input, &mut output)
+}
+
 /// Early argv check for the Windows elevation helper. On macOS / Linux
 /// this always returns false. On Windows, if the binary was spawned by
 /// [`hosts_apply::elevation::elevate_copy`] with
-/// `--swh-elevated-apply-hosts <src> <dst>`, we perform a plain
-/// `std::fs::copy` (CopyFileW under the hood — preserves the
-/// destination's NTFS ACL) and exit before any Tauri / storage code
-/// runs. The parent waits for our exit code.
+/// `--swh-elevated-apply-hosts <src>`, we overwrite the resolved
+/// Windows hosts file contents from that staged file and exit before
+/// any Tauri / storage code runs. The parent waits for our exit code.
 fn maybe_run_as_elevation_helper() -> bool {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() != 4 || args[1] != "--swh-elevated-apply-hosts" {
-        return false;
+    #[cfg(not(target_os = "windows"))]
+    {
+        false
     }
-    let src = std::path::Path::new(&args[2]);
-    let dst = std::path::Path::new(&args[3]);
-    let exit_code = match std::fs::copy(src, dst) {
-        Ok(_) => 0,
-        Err(e) => {
-            eprintln!(
-                "[v5 elevation-helper] copy {} -> {} failed: {e}",
-                src.display(),
-                dst.display()
-            );
-            1
+
+    #[cfg(target_os = "windows")]
+    {
+        match parse_elevation_helper_args(std::env::args()) {
+            ElevationHelperInvocation::NotHelper => false,
+            ElevationHelperInvocation::InvalidArgs => {
+                eprintln!("[v5 elevation-helper] invalid arguments");
+                std::process::exit(1);
+            }
+            ElevationHelperInvocation::Copy { src } => {
+                let dst = match hosts_apply::write::system_hosts_path() {
+                    Ok(path) => path,
+                    Err(e) => {
+                        eprintln!("[v5 elevation-helper] failed to resolve hosts path: {e}");
+                        std::process::exit(1);
+                    }
+                };
+                let exit_code = match overwrite_file_contents(&src, &dst) {
+                    Ok(_) => 0,
+                    Err(e) => {
+                        eprintln!(
+                            "[v5 elevation-helper] write {} -> {} failed: {e}",
+                            src.display(),
+                            dst.display()
+                        );
+                        1
+                    }
+                };
+                std::process::exit(exit_code);
+            }
         }
-    };
-    std::process::exit(exit_code);
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Windows elevation helper: when SwitchHosts is relaunched via
     // ShellExecuteExW with `runas` to perform a privileged hosts file
-    // copy (see `hosts_apply::elevation`), the elevated child re-enters
-    // this function with a special argv shape. Detect it, do the copy,
+    // write (see `hosts_apply::elevation`), the elevated child re-enters
+    // this function with a special argv shape. Detect it, do the write,
     // and exit before the v5 storage layer or the Tauri runtime starts.
     // This block is a no-op on macOS / Linux (they don't self-relaunch).
     if maybe_run_as_elevation_helper() {
@@ -394,4 +451,85 @@ pub fn run() {
         }
         _ => {}
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn elevation_helper_parser_ignores_normal_startup_args() {
+        let parsed = parse_elevation_helper_args(["SwitchHosts.exe", "--some-normal-arg"]);
+
+        assert_eq!(parsed, ElevationHelperInvocation::NotHelper);
+    }
+
+    #[test]
+    fn elevation_helper_parser_rejects_legacy_src_dst_shape() {
+        let parsed = parse_elevation_helper_args([
+            "SwitchHosts.exe",
+            hosts_apply::elevation::ELEVATION_HELPER_ARG,
+            r"C:\Temp\swh_apply_1.hosts",
+            r"C:\Windows\System32\drivers\etc\services",
+        ]);
+
+        assert_eq!(parsed, ElevationHelperInvocation::InvalidArgs);
+    }
+
+    #[test]
+    fn elevation_helper_parser_accepts_staged_source_only() {
+        let src = r"C:\Temp\swh_apply_1.hosts";
+        let parsed = parse_elevation_helper_args([
+            "SwitchHosts.exe",
+            hosts_apply::elevation::ELEVATION_HELPER_ARG,
+            src,
+        ]);
+
+        assert_eq!(
+            parsed,
+            ElevationHelperInvocation::Copy {
+                src: PathBuf::from(src),
+            }
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn elevation_helper_content_write_preserves_existing_destination_mode() {
+        use std::os::unix::fs::PermissionsExt;
+        use std::time::{SystemTime, UNIX_EPOCH};
+
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system clock before Unix epoch")
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!("swh_content_write_test_{stamp}"));
+        std::fs::create_dir(&dir).expect("create temp test dir");
+
+        let src = dir.join("src.hosts");
+        let dst = dir.join("hosts");
+        std::fs::write(&src, "replacement").expect("write source");
+        std::fs::write(&dst, "original").expect("write destination");
+        std::fs::set_permissions(&src, std::fs::Permissions::from_mode(0o644))
+            .expect("set source mode");
+        std::fs::set_permissions(&dst, std::fs::Permissions::from_mode(0o600))
+            .expect("set destination mode");
+
+        overwrite_file_contents(&src, &dst).expect("overwrite contents");
+
+        assert_eq!(
+            std::fs::read_to_string(&dst).expect("read destination"),
+            "replacement"
+        );
+        assert_eq!(
+            std::fs::metadata(&dst)
+                .expect("stat destination")
+                .permissions()
+                .mode()
+                & 0o777,
+            0o600
+        );
+
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }

@@ -3,12 +3,12 @@
 //! Strategy:
 //!
 //! 1. Write the new content to a temp file (no privilege required).
-//! 2. Run the platform-specific elevation helper to copy the temp
-//!    file over `/etc/hosts` (or the Windows equivalent).
+//! 2. Run the platform-specific elevation helper to write the temp
+//!    file contents over `/etc/hosts` (or the Windows equivalent).
 //! 3. The destination's existing mode and ownership are preserved
-//!    automatically by the underlying copy primitive (POSIX `cp`
-//!    truncates and writes the existing inode; Windows `copy`
-//!    writes through the existing handle).
+//!    automatically by the underlying write primitive (POSIX `cp`
+//!    truncates and writes the existing inode; Windows opens the
+//!    destination for truncate/write rather than copying source metadata).
 //!
 //! The OS-native elevation prompt collects credentials, so the v5
 //! Tauri build never asks the user to type a password into our own
@@ -25,6 +25,13 @@
 use std::path::{Path, PathBuf};
 
 use super::error::HostsApplyError;
+
+/// Argv flag that marks the current process as the Windows UAC
+/// elevation helper. Shared between [`elevate_copy`] (parent, builds
+/// the argv) and [`crate::maybe_run_as_elevation_helper`] (child,
+/// parses argv).
+#[cfg(any(target_os = "windows", test))]
+pub(crate) const ELEVATION_HELPER_ARG: &str = "--swh-elevated-apply-hosts";
 
 /// Write `content` to `target` using OS-native elevation. The caller
 /// is responsible for falling back here only after a direct write
@@ -46,6 +53,19 @@ fn stage_temp_file(content: &str) -> Result<PathBuf, HostsApplyError> {
         message: format!("staging temp file failed: {e}"),
     })?;
     Ok(path)
+}
+
+#[cfg(any(target_os = "windows", test))]
+fn is_allowed_windows_elevation_target_for(dst: &Path, expected: &Path) -> bool {
+    dst == expected
+}
+
+#[cfg(target_os = "windows")]
+fn is_allowed_windows_elevation_target(dst: &Path) -> Result<bool, HostsApplyError> {
+    Ok(is_allowed_windows_elevation_target_for(
+        dst,
+        &super::write::windows_system_hosts_path()?,
+    ))
 }
 
 // ---- macOS: Security.framework with cached authorization --------------------
@@ -428,11 +448,10 @@ fn elevate_copy(src: &Path, dst: &Path) -> Result<(), HostsApplyError> {
 // ---- Windows: ShellExecuteExW with runas verb (self-relaunch) -------------
 //
 // We trigger UAC by relaunching *our own binary* with a magic
-// `--swh-elevated-apply-hosts <src> <dst>` argv shape. The early arg
+// `--swh-elevated-apply-hosts <src>` argv shape. The early arg
 // check at the top of `crate::run` catches that shape in the elevated
-// child and performs a plain `std::fs::copy(src, dst)` (which under
-// the hood is `CopyFileW`, preserving the destination's NTFS ACL), then
-// exits.
+// child and writes the staged source content to the Windows hosts file
+// resolved from the system Windows directory, then exits.
 //
 // Why self-relaunch instead of `cmd /c copy /Y "src" "dst"`:
 //
@@ -443,15 +462,14 @@ fn elevate_copy(src: &Path, dst: &Path) -> Result<(), HostsApplyError> {
 //     would corrupt such a path with a phantom variable expansion.
 //   - Spawning our own binary makes Windows parse the args via
 //     `CommandLineToArgvW`, which does NOT expand `%VAR%`. The
-//     elevated child sees the literal paths as `argv[2]` / `argv[3]`.
+//     elevated child sees the literal staged source as `argv[2]`.
 //   - Avoids a brief flash of an elevated cmd.exe console window.
 //
 // Path quoting in `lpParameters`: NTFS forbids `"` in file names, so
-// wrapping each path in double quotes is enough for the destination
-// and the temp file. The temp file name is hex digits + underscores
-// only, and the system hosts path never ends in `\`, so the trailing
-// `"` is never preceded by a backslash (which would otherwise be
-// escaped to a literal `"` by CommandLineToArgvW).
+// wrapping the staged source in double quotes is enough. The temp file
+// name is decimal digits + underscores only, so the trailing `"` is
+// never preceded by a backslash (which would otherwise be escaped to a
+// literal `"` by CommandLineToArgvW).
 
 #[cfg(target_os = "windows")]
 fn elevate_copy(src: &Path, dst: &Path) -> Result<(), HostsApplyError> {
@@ -480,6 +498,15 @@ fn elevate_copy(src: &Path, dst: &Path) -> Result<(), HostsApplyError> {
         os.encode_wide().chain(iter::once(0)).collect()
     }
 
+    if !is_allowed_windows_elevation_target(dst)? {
+        return Err(HostsApplyError::Io {
+            message: format!(
+                "refusing to elevate write to non-hosts target: {}",
+                dst.display()
+            ),
+        });
+    }
+
     // Resolve our own binary path. `current_exe` returns the
     // SwitchHosts.exe location both in dev (`target\debug\...`) and
     // in the bundled installer.
@@ -492,10 +519,9 @@ fn elevate_copy(src: &Path, dst: &Path) -> Result<(), HostsApplyError> {
     // so non-ASCII path components round-trip cleanly through the
     // subsequent UTF-16 conversion.
     let mut params = OsString::new();
-    params.push("--swh-elevated-apply-hosts \"");
+    params.push(ELEVATION_HELPER_ARG);
+    params.push(" \"");
     params.push(src.as_os_str());
-    params.push("\" \"");
-    params.push(dst.as_os_str());
     params.push("\"");
 
     let verb = to_wide(OsStr::new("runas"));
@@ -512,7 +538,7 @@ fn elevate_copy(src: &Path, dst: &Path) -> Result<(), HostsApplyError> {
     // initialised as a single-threaded apartment (STA). The Tokio
     // worker threads our async commands run on do not carry COM
     // state, so we hop onto a fresh OS thread that we initialise
-    // ourselves. The thread is short-lived (one elevated copy +
+    // ourselves. The thread is short-lived (one elevated write +
     // wait + cleanup) and the join blocks the calling task,
     // matching the synchronous semantics elsewhere in the apply
     // pipeline.
@@ -594,16 +620,16 @@ fn elevate_copy(src: &Path, dst: &Path) -> Result<(), HostsApplyError> {
                     message: "GetExitCodeProcess failed".to_string(),
                 });
             }
-            // `cmd /c copy` returns 0 on success, 1 on failure.
-            // Non-zero is treated as a generic Io failure; the user
-            // sees a "fail" code in the renderer rather than a
+            // The elevated helper exits 0 on success and non-zero on
+            // write failure. Non-zero is treated as a generic Io failure;
+            // the user sees a "fail" code in the renderer rather than a
             // misleading "no_access" branch.
             if exit_code == 0 {
                 Ok(())
             } else {
                 Err(HostsApplyError::Io {
                     message: format!(
-                        "elevated copy failed: cmd /c copy exit code {exit_code}; src={src_display}, dst={dst_display}"
+                        "elevated write failed: helper exit code {exit_code}; src={src_display}, dst={dst_display}"
                     ),
                 })
             }
@@ -616,5 +642,37 @@ fn elevate_copy(src: &Path, dst: &Path) -> Result<(), HostsApplyError> {
         Err(_panic) => Err(HostsApplyError::Io {
             message: "elevation worker thread panicked".to_string(),
         }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use super::is_allowed_windows_elevation_target_for;
+    use crate::hosts_apply::write::windows_hosts_path_from_windows_dir;
+
+    #[test]
+    fn windows_elevation_target_accepts_exact_resolved_hosts_path() {
+        let expected = windows_hosts_path_from_windows_dir(Path::new(r"D:\Windows"));
+
+        assert!(is_allowed_windows_elevation_target_for(
+            &expected, &expected
+        ));
+    }
+
+    #[test]
+    fn windows_elevation_target_rejects_other_paths() {
+        let expected = windows_hosts_path_from_windows_dir(Path::new(r"D:\Windows"));
+        let services = expected.with_file_name("services");
+        let c_drive_hosts = windows_hosts_path_from_windows_dir(Path::new(r"C:\Windows"));
+
+        assert!(!is_allowed_windows_elevation_target_for(
+            &services, &expected,
+        ));
+        assert!(!is_allowed_windows_elevation_target_for(
+            &c_drive_hosts,
+            &expected
+        ));
     }
 }

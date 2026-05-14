@@ -19,12 +19,15 @@
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::elevation::write_with_elevation;
 use super::error::HostsApplyError;
 
 const CONTENT_START_MARKER: &str = "# --- SWITCHHOSTS_CONTENT_START ---";
+
+#[cfg(not(target_os = "windows"))]
+const UNIX_SYSTEM_HOSTS_PATH: &str = "/etc/hosts";
 
 pub struct ApplyOutcome {
     pub previous_content: String,
@@ -42,10 +45,10 @@ pub fn apply_to_system_hosts(
     aggregated_content: &str,
     write_mode: &str,
 ) -> Result<ApplyOutcome, HostsApplyError> {
-    let target = system_hosts_path();
+    let target = system_hosts_path()?;
     let content_lf = normalize_line_endings(aggregated_content);
 
-    let previous_raw = read_system_hosts(target).unwrap_or_default();
+    let previous_raw = read_system_hosts(&target).unwrap_or_default();
     let previous_lf = normalize_line_endings(&previous_raw);
 
     let final_content_lf = if write_mode == "append" {
@@ -64,14 +67,14 @@ pub fn apply_to_system_hosts(
         });
     }
 
-    match std::fs::write(target, disk_content.as_bytes()) {
+    match std::fs::write(&target, disk_content.as_bytes()) {
         Ok(()) => Ok(ApplyOutcome {
             previous_content: previous_lf,
             new_content: final_content_lf,
             unchanged: false,
         }),
         Err(e) if is_permission_denied(&e) => {
-            write_with_elevation(Path::new(target), &disk_content)?;
+            write_with_elevation(&target, &disk_content)?;
             Ok(ApplyOutcome {
                 previous_content: previous_lf,
                 new_content: final_content_lf,
@@ -79,17 +82,17 @@ pub fn apply_to_system_hosts(
             })
         }
         Err(e) => Err(HostsApplyError::Io {
-            message: format!("write {target}: {e}"),
+            message: format!("write {}: {e}", target.display()),
         }),
     }
 }
 
-fn read_system_hosts(target: &str) -> Result<String, HostsApplyError> {
+fn read_system_hosts(target: &Path) -> Result<String, HostsApplyError> {
     match std::fs::read_to_string(target) {
         Ok(s) => Ok(s),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
         Err(e) => Err(HostsApplyError::Io {
-            message: format!("read {target}: {e}"),
+            message: format!("read {}: {e}", target.display()),
         }),
     }
 }
@@ -98,14 +101,65 @@ fn is_permission_denied(e: &std::io::Error) -> bool {
     e.kind() == std::io::ErrorKind::PermissionDenied
 }
 
-pub fn system_hosts_path() -> &'static str {
+pub fn system_hosts_path() -> Result<PathBuf, HostsApplyError> {
     #[cfg(target_os = "windows")]
     {
-        r"C:\Windows\System32\drivers\etc\hosts"
+        windows_system_hosts_path()
     }
     #[cfg(not(target_os = "windows"))]
     {
-        "/etc/hosts"
+        Ok(PathBuf::from(UNIX_SYSTEM_HOSTS_PATH))
+    }
+}
+
+#[cfg(target_os = "windows")]
+pub(crate) fn windows_system_hosts_path() -> Result<PathBuf, HostsApplyError> {
+    Ok(windows_hosts_path_from_windows_dir(&system_windows_dir()?))
+}
+
+#[cfg(any(target_os = "windows", test))]
+pub(crate) fn windows_hosts_path_from_windows_dir(windows_dir: &Path) -> PathBuf {
+    normalized_windows_dir_for_join(windows_dir)
+        .join("System32")
+        .join("drivers")
+        .join("etc")
+        .join("hosts")
+}
+
+#[cfg(any(target_os = "windows", test))]
+fn normalized_windows_dir_for_join(windows_dir: &Path) -> PathBuf {
+    let rendered = windows_dir.as_os_str().to_string_lossy();
+    let bytes = rendered.as_bytes();
+
+    if bytes.len() == 2 && bytes[0].is_ascii_alphabetic() && bytes[1] == b':' {
+        PathBuf::from(format!("{rendered}\\"))
+    } else {
+        windows_dir.to_path_buf()
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn system_windows_dir() -> Result<PathBuf, HostsApplyError> {
+    use std::ffi::OsString;
+    use std::os::windows::ffi::OsStringExt;
+    use windows_sys::Win32::System::SystemInformation::GetSystemWindowsDirectoryW;
+
+    let mut buf = vec![0u16; 260];
+    loop {
+        let len = unsafe { GetSystemWindowsDirectoryW(buf.as_mut_ptr(), buf.len() as u32) };
+        if len == 0 {
+            return Err(HostsApplyError::Io {
+                message: "GetSystemWindowsDirectoryW failed".to_string(),
+            });
+        }
+
+        let len = len as usize;
+        if len < buf.len() {
+            buf.truncate(len);
+            return Ok(PathBuf::from(OsString::from_wide(&buf)));
+        }
+
+        buf.resize(len + 1, 0);
     }
 }
 
@@ -149,4 +203,40 @@ fn hash_str(s: &str) -> u64 {
     let mut hasher = DefaultHasher::new();
     s.hash(&mut hasher);
     hasher.finish()
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use super::windows_hosts_path_from_windows_dir;
+
+    #[test]
+    fn windows_hosts_path_uses_resolved_windows_directory() {
+        let windows_dir = Path::new(r"D:\Windows");
+        let path = windows_hosts_path_from_windows_dir(windows_dir);
+
+        assert!(path.starts_with(windows_dir));
+        assert!(path.ends_with(
+            Path::new("System32")
+                .join("drivers")
+                .join("etc")
+                .join("hosts")
+        ));
+    }
+
+    #[test]
+    fn windows_hosts_path_normalizes_drive_root_windows_directory() {
+        let path = windows_hosts_path_from_windows_dir(Path::new(r"D:"));
+        let rendered = path.to_string_lossy();
+
+        assert!(rendered.starts_with(r"D:\"));
+        assert!(!rendered.starts_with(r"D:System32"));
+        assert!(path.ends_with(
+            Path::new("System32")
+                .join("drivers")
+                .join("etc")
+                .join("hosts")
+        ));
+    }
 }
