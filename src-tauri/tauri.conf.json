@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SwitchHosts",
+  "version": "5.0.0",
+  "identifier": "net.oldj.switchhosts",
+  "build": {
+    "beforeDevCommand": "npm run dev:renderer",
+    "devUrl": "http://127.0.0.1:8220",
+    "beforeBuildCommand": "npm run build:renderer:tauri",
+    "frontendDist": "../build-tauri"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "windows": [],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' asset: data:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'none'",
+      "devCsp": "default-src 'self' http://127.0.0.1:8220; script-src 'self' 'wasm-unsafe-eval' http://127.0.0.1:8220; style-src 'self' 'unsafe-inline' http://127.0.0.1:8220; img-src 'self' asset: data: http://127.0.0.1:8220; font-src 'self' data: http://127.0.0.1:8220; connect-src 'self' ipc: http://ipc.localhost ws://127.0.0.1:8220 http://127.0.0.1:8220; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'none'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "DeveloperTool",
+    "shortDescription": "A GUI tool for managing your hosts file",
+    "longDescription": "SwitchHosts is an open-source app for managing and switching between multiple hosts configurations.",
+    "macOS": {
+      "entitlements": "../scripts/entitlements.mac.plist",
+      "minimumSystemVersion": "10.15",
+      "dmg": {
+        "background": "../assets/dmg-bg.png",
+        "windowSize": {
+          "width": 600,
+          "height": 420
+        },
+        "appPosition": {
+          "x": 150,
+          "y": 200
+        },
+        "applicationFolderPosition": {
+          "x": 450,
+          "y": 200
+        }
+      }
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "timestampUrl": "http://timestamp.digicert.com",
+      "nsis": {
+        "installerIcon": "../assets/installer-icon.ico"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/oldj/SwitchHosts/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMzQ0EwQzI1MTZDRjM3NTIKUldSU044OFdKUXpLdyttYlBHNnk5YVAxSCtkQWxXWkRpc0FYTU12NStleWRyWG9pUFBHN2NJTk8K"
+    }
+  }
+}

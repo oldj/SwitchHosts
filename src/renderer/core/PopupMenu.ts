@@ -13,24 +13,24 @@ type OffFunction = () => void
 export class PopupMenu {
   private _id: string
   private _items: IMenuItemOption[]
-  private _offs: any[] = []
+  private _offs: OffFunction[] = []
 
-  constructor(menu_items: IMenuItemOption[]) {
+  constructor(menuItems: IMenuItemOption[]) {
     this._id = `popup_menu_${Math.floor(Math.random() * 1e8)}`
-    this._items = menu_items
+    this._items = menuItems
   }
 
   show() {
     // console.log('show')
     this.onHide()
 
-    let items = this._items.map((i) => {
-      let d = { ...i }
+    const items = this._items.map((i) => {
+      const d = { ...i }
 
       if (typeof d.click === 'function') {
         const r = Math.floor(Math.random() * 1e8)
         const evt = `popup_menu_item_${_idx++}_${r}`
-        let off = agent.once(evt, d.click)
+        const off = agent.once(evt, d.click)
         this._offs.push(off)
         d._click_evt = evt
         delete d.click

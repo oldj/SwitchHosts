@@ -1,0 +1,19 @@
+@use '../../styles/common';
+
+.root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 24px;
+  @include common.win-drag;
+
+  button {
+    @include common.win-no-drag;
+  }
+}
+
+.spacer {
+  flex: 1;
+}

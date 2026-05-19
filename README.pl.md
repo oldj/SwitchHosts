@@ -20,18 +20,22 @@
 
 Strona główna: [https://switchhosts.vercel.app](https://switchhosts.vercel.app)
 
-SwitchHosts to aplikacja do zarządzania plikiem hosts, zbudowana na bazie [Electron](http://electron.atom.io/), [React](https://facebook.github.io/react/), [Jotai](https://jotai.org/), [Mantine](https://mantine.dev/) i innych.
+SwitchHosts to aplikacja do zarządzania plikiem hosts, zbudowana na bazie [Tauri](https://tauri.app/), [React](https://facebook.github.io/react/), [Jotai](https://jotai.org/), [Mantine](https://mantine.dev/) i innych.
 
 ## Zrzut ekranu
 
-<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/screenshots/sh_light.png" alt="Zrzut aplikacji" width="960">
+<img src="./screenshots/sh_light.png" alt="Zrzut ekranu SwitchHosts" width="978">
 
 ## Funkcje
 
-- Szybkie przełączanie hostów
-- Podświetlanie składni
-- Hosty zdalne
-- Przełączanie z paska systemowego
+- Zarządzanie wpisami hosts: systemowymi, lokalnymi, zdalnymi, grupami i folderami
+- Szybkie przełączanie hosts z głównego okna lub zasobnika systemowego
+- Podświetlanie składni plików hosts
+- Wyszukiwanie i zamiana w wielu wpisach hosts
+- Ręczne, zaplanowane lub startowe odświeżanie zdalnych hosts
+- Import i eksport danych hosts, w tym import kopii zapasowej z URL
+- Przenoszenie wpisów do kosza oraz późniejsze przywracanie lub trwałe usuwanie
+- Preferencje dla trybu zapisu, proxy, sprawdzania aktualizacji, uruchamiania przy logowaniu, polecenia po zastosowaniu i lokalnego HTTP API
 
 ## Instalacja
 
@@ -48,31 +52,40 @@ choco install switchhosts
 
 ## Kopia zapasowa
 
-SwitchHosts przechowuje dane w `~/.SwitchHosts` (lub folder `.SwitchHosts` w ścieżce domowej bieżącego użytkownika na Windows), folder `~/.SwitchHosts/data` zawiera dane, podczas gdy folder `~/.SwitchHosts/config` zawiera różne informacje konfiguracyjne.
+SwitchHosts przechowuje dane w `~/.SwitchHosts` (lub folder `.SwitchHosts` w ścieżce domowej bieżącego użytkownika na Windows). Układ danych v5:
+
+- `~/.SwitchHosts/manifest.json` przechowuje drzewo hosts
+- `~/.SwitchHosts/entries/` przechowuje zawartość lokalnych i zdalnych hosts
+- `~/.SwitchHosts/trashcan.json` przechowuje wpisy kosza
+- `~/.SwitchHosts/internal/config.json` przechowuje preferencje
+- `~/.SwitchHosts/internal/histories/` przechowuje historię systemowego pliku hosts i uruchomień poleceń
+
+Aby wykonać pełną ręczną kopię zapasową, skopiuj cały folder `~/.SwitchHosts`. Eksport w aplikacji tworzy JSON z kopią zapasową danych hosts; nie zawiera preferencji ani historii.
 
 ## Tworzenie i budowanie
 
+### Wymagania wstępne
+
+- [Node.js](https://nodejs.org/)
+- [Rust](https://www.rust-lang.org/tools/install)
+- Zależności systemowe Tauri, zobacz [Wymagania Tauri](https://v2.tauri.app/start/prerequisites/)
+
 ### Tworzenie
 
-- Zainstaluj [Node.js](https://nodejs.org/)
-- Przejdź do folderu `./`, uruchom `npm install` aby zainstalować biblioteki zależności
-- Uruchom `npm run dev` aby uruchomić serwer deweloperski
-- Następnie uruchom `npm run start` aby uruchomić aplikację do tworzenia lub debugowania
+- Uruchom `npm install` aby zainstalować zależności
+- Uruchom `npm run tauri:dev` aby uruchomić aplikację w trybie deweloperskim
 
 ### Budowanie i pakowanie
 
-- Zaleca się użycie [electron-builder](https://github.com/electron-userland/electron-builder) do budowania
-- Przejdź do folderu `./`
-- Uruchom `npm run build`
-- Uruchom `npm run make`, jeśli wszystko pójdzie dobrze, spakowane pliki będą w folderze `./dist`.
-- Ta komenda może zająć kilka minut gdy uruchamiasz ją po raz pierwszy, ponieważ potrzebuje czasu na pobranie plików zależności. Możesz pobrać zależności ręcznie [tutaj](https://github.com/electron/electron/releases), lub [lustro Taobao](https://npmmirror.com/mirrors/electron/), a następnie zapisz pliki do `~/.electron`. Możesz sprawdzić [Dokumentację Electron](http://electron.atom.io/docs/) aby uzyskać więcej informacji.
+- Uruchom `npm run tauri:build` aby utworzyć wersję produkcyjną
+- Spakowane pliki będą w `./src-tauri/target/release/bundle/`
 
 ```bash
-# budowanie
-npm run build
+# tworzenie
+npm run tauri:dev
 
-# pakowanie
-npm run make # spakowane pliki będą w ./dist
+# budowanie produkcyjne
+npm run tauri:build
 ```
 
 ## Prawa autorskie

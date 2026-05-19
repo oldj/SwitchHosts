@@ -57,7 +57,7 @@ export interface IHostsHistoryObject {
   label?: string
 }
 
-export type VersionType = [number, number, number, number]
+export type VersionType = string
 
 export interface IHostsBasicData {
   list: IHostsListObject[]

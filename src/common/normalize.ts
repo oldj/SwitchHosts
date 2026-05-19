@@ -6,11 +6,9 @@
 
 import * as os from 'os'
 
-const default_options = {
-  remove_duplicate_records: false,
+export interface INormalizeOptions {
+  remove_duplicate_records?: boolean
 }
-
-export type INormalizeOptions = Partial<typeof default_options>
 
 interface IHostsLineObj {
   ip: string
@@ -23,10 +21,10 @@ interface IDomainsIPMap {
 }
 
 export const parseLine = (line: string): IHostsLineObj => {
-  let [cnt, ...cmt] = line.split('#')
-  let comment = cmt.join('#').trim()
+  const [cnt, ...cmt] = line.split('#')
+  const comment = cmt.join('#').trim()
 
-  let [ip, ...domains] = cnt.trim().replace(/\s+/g, ' ').split(' ')
+  const [ip, ...domains] = cnt.trim().replace(/\s+/g, ' ').split(' ')
 
   return { ip, domains, comment }
 }
@@ -40,57 +38,57 @@ export const formatLine = (o: Partial<IHostsLineObj>): string => {
 }
 
 const removeDuplicateRecords = (content: string): string => {
-  let domain_ip_map: IDomainsIPMap = {}
-  let lines = content.split('\n')
-  let new_lines: string[] = []
+  const domainIpMap: IDomainsIPMap = {}
+  const lines = content.split('\n')
+  const newLines: string[] = []
 
   lines.map((line) => {
-    let { ip, domains, comment } = parseLine(line)
+    const { ip, domains, comment } = parseLine(line)
 
     if (!ip || domains.length === 0) {
-      new_lines.push(line)
+      newLines.push(line)
       return
     }
 
     const ipv = /:/.test(ip) ? 6 : 4
 
-    let new_domains: string[] = []
-    let duplicate_domains: string[] = []
+    const newDomains: string[] = []
+    const duplicateDomains: string[] = []
     domains.map((domain) => {
-      const domain_v = `${domain}_${ipv}`
-      if (domain_v in domain_ip_map) {
-        duplicate_domains.push(domain)
+      const domainV = `${domain}_${ipv}`
+      if (domainV in domainIpMap) {
+        duplicateDomains.push(domain)
       } else {
-        new_domains.push(domain)
-        domain_ip_map[domain_v] = ip
+        newDomains.push(domain)
+        domainIpMap[domainV] = ip
       }
     })
 
-    if (new_domains.length > 0) {
-      new_lines.push(formatLine({ ip, domains: new_domains, comment }))
+    if (newDomains.length > 0) {
+      newLines.push(formatLine({ ip, domains: newDomains, comment }))
     }
-    if (duplicate_domains.length > 0) {
-      new_lines.push(
+    if (duplicateDomains.length > 0) {
+      newLines.push(
         formatLine({
           comment:
             'invalid hosts (repeated): ' +
-            formatLine({ ip, domains: duplicate_domains }),
+            formatLine({ ip, domains: duplicateDomains }),
         }),
       )
     }
   })
 
-  return new_lines.join(os.EOL)
+  return newLines.join(os.EOL)
 }
 
 export default (
-  hosts_content: string,
+  hostsContent: string,
   options: INormalizeOptions = {},
 ): string => {
   // 在这儿执行去重等等操作
   if (options.remove_duplicate_records) {
-    hosts_content = removeDuplicateRecords(hosts_content)
+    hostsContent = removeDuplicateRecords(hostsContent)
   }
 
-  return hosts_content
+  return hostsContent
 }

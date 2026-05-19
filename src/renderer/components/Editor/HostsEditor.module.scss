@@ -8,44 +8,47 @@
 
 .editor {
   height: calc(100% - var(--swh-status-bar-height));
-  background: inherit;
-
-  &.read_only {
-    .surface {
-      background: var(--swh-editor-read-only-bg);
-      caret-color: transparent;
-      opacity: 0.8;
-      // box-shadow: inset 0 0 0 1px var(--swh-border-color-0);
-    }
-
-    :global {
-      .codejar-linenumbers,
-      .codejar-linenumbers-inner-wrap {
-        background: var(--swh-editor-read-only-bg) !important;
-      }
-    }
-  }
+  box-sizing: border-box;
+  background: var(--swh-main-bg);
+  overflow: hidden;
+  border: 1px solid var(--swh-border-color-0);
+  border-radius:
+    var(--editor-radius-left, 0)
+    var(--editor-radius-right, 0)
+    var(--editor-radius-right, 0)
+    var(--editor-radius-left, 0);
 
   :global {
-    .codejar-wrap {
+    .cm-editor {
       height: 100%;
-    }
 
-    .codejar-linenumbers-inner-wrap {
-      background: var(--swh-editor-gutter-bg) !important;
-    }
+      &.cm-focused {
+        outline: none;
+      }
 
-    .codejar-linenumbers {
-      border-right: none;
-      padding-right: 6px;
-      background: var(--swh-editor-gutter-bg);
-      user-select: none;
-      cursor: pointer;
-    }
+      // Specificity 0,3,0 (with module hash) — beats baseTheme's `.cm-scroller`
+      // monospace rule which is injected after this stylesheet at runtime.
+      .cm-scroller {
+        font-family: common.$font-editor;
 
-    .codejar-linenumber {
-      color: var(--swh-editor-line-number-color);
-      font-size: 12px;
+        &::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        &::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        &::-webkit-scrollbar-thumb {
+          background: var(--swh-scrollbar-thumb);
+          border-radius: 4px;
+        }
+        &::-webkit-scrollbar-thumb:hover {
+          background: var(--swh-scrollbar-thumb-hover, var(--swh-scrollbar-thumb));
+        }
+        &::-webkit-scrollbar-corner {
+          background: transparent;
+        }
+      }
     }
 
     .hl-comment {
@@ -61,40 +64,34 @@
       color: var(--swh-editor-error);
     }
   }
+
+  &.read_only {
+    :global {
+      .cm-editor,
+      .cm-gutters {
+        background: var(--swh-editor-read-only-bg);
+      }
+
+      .cm-content {
+        caret-color: transparent;
+        opacity: 0.8;
+      }
+    }
+  }
 }
 
 .mount {
   height: 100%;
 }
 
-.surface {
-  box-sizing: border-box;
-  width: 100%;
-  height: 100%;
-  padding: 8px 10px;
-  overflow: auto;
-  background: var(--swh-editor-bg-color);
-  color: var(--swh-editor-text-color);
-  font-family: common.$font-editor;
-  font-size: var(--swh-editor-font-size);
-  line-height: var(--swh-editor-line-height);
-  white-space: pre;
-  caret-color: var(--swh-editor-text-color);
-}
-
-.surface:focus {
-  outline: none;
-}
-
 :global(.theme-dark) {
   .editor {
-    .surface {
+    :global(.cm-focused .cm-content) {
       caret-color: #39c;
     }
 
     &.read_only {
-      .surface {
-        // box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      :global(.cm-content) {
         caret-color: transparent;
       }
     }

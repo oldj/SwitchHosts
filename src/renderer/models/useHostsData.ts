@@ -4,14 +4,14 @@
  */
 
 import version from '@/version.json'
-import { IHostsBasicData, IHostsListObject, VersionType } from '@common/data'
+import { IHostsBasicData, IHostsListObject } from '@common/data'
 import { actions } from '@renderer/core/agent'
-import { current_hosts_atom, hosts_data_atom } from '@renderer/stores/hosts_data'
+import { currentHostsAtom, hostsDataAtom } from '@renderer/stores/hosts_data'
 import { useAtom } from 'jotai'
 
 export default function useHostsData() {
-  const [hosts_data, setHostsData] = useAtom(hosts_data_atom)
-  const [current_hosts, setCurrentHosts] = useAtom(current_hosts_atom)
+  const [hostsData, setHostsData] = useAtom(hostsDataAtom)
+  const [currentHosts, setCurrentHosts] = useAtom(currentHostsAtom)
 
   const loadHostsData = async () => {
     setHostsData(await actions.getBasicData())
@@ -20,10 +20,10 @@ export default function useHostsData() {
   const setList = async (list: IHostsListObject[]) => {
     list = list.filter((i) => !i.is_sys)
 
-    let data: IHostsBasicData = {
+    const data: IHostsBasicData = {
       list,
-      trashcan: hosts_data.trashcan,
-      version: version as VersionType,
+      trashcan: hostsData.trashcan,
+      version,
     }
 
     setHostsData(data)
@@ -32,11 +32,11 @@ export default function useHostsData() {
   }
 
   const isHostsInTrashcan = (id: string): boolean => {
-    return hosts_data.trashcan.findIndex((i) => i.data.id === id) > -1
+    return hostsData.trashcan.findIndex((i) => i.data.id === id) > -1
   }
 
   const isReadOnly = (hosts?: IHostsListObject | null): boolean => {
-    hosts = hosts || current_hosts
+    hosts = hosts || currentHosts
 
     if (!hosts) {
       return true
@@ -59,13 +59,13 @@ export default function useHostsData() {
   }
 
   return {
-    hosts_data,
+    hostsData,
     setHostsData,
     loadHostsData,
 
     setList,
 
-    current_hosts,
+    currentHosts,
     setCurrentHosts,
 
     isHostsInTrashcan,

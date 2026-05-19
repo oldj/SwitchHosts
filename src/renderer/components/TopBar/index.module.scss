@@ -1,40 +1,105 @@
 @use '../../styles/common';
 
 .root {
-  $w: 150px;
+  $w: 240px;
   $p: 10px;
 
-  background: var(--swh-top-bar-bg);
-  border-bottom: 1px solid var(--swh-border-color-0);
+  background: transparent;
+  // border-bottom: 1px solid var(--swh-border-color-0);
   display: flex;
   width: 100%;
   padding: 0 $p;
   align-items: center;
   align-content: center;
+  justify-content: space-between;
   user-select: none;
+  position: relative;
+  box-sizing: border-box;
 
   .title {
     max-width: calc(100vw - ($w + $p) * 2);
+    min-width: 0;
     overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
     margin: 0 auto;
   }
 }
 
-.title_wrapper {
+.with_app_brand {
+  padding-left: 0;
+}
+
+.left_cluster {
   display: flex;
-  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.app_brand {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  // max-width: 148px;
+  padding-right: 8px;
+  flex: 0 1 auto;
+  pointer-events: none;
+  color: var(--swh-font-color);
+}
+
+.app_logo_slot {
+  width: var(--swh-left-sidebar-width, 40px);
+  height: var(--swh-top-bar-height);
+  display: flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 var(--swh-left-sidebar-width, 40px);
+}
 
-  @include common.win-drag;
+.app_logo {
+  width: 20px;
+  height: 20px;
+  display: block;
+  border-radius: 4px;
+}
+
+.app_title {
+  @include common.ell;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.title_wrapper {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
 }
 
 .hosts_icon {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+
+  svg {
+    flex: 0 0 auto;
+  }
+}
+
+.hosts_title {
+  @include common.ell;
+
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 :global(.platform-darwin) {
@@ -44,9 +109,7 @@
 }
 
 .read_only {
-  // color: var(--swh-font-color-weak);
+  --badge-bg: var(--swh-top-bar-read-only-bg);
   background-color: var(--swh-top-bar-read-only-bg);
-  border-radius: var(--swh-border-radius);
-  font-size: 10px;
-  padding: 2px 6px;
+  flex: 0 0 auto;
 }

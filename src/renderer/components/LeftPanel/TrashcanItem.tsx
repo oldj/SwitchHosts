@@ -4,13 +4,19 @@
  */
 
 import { ITrashcanListObject } from '@common/data'
+import ConfirmModal from '@renderer/components/ConfirmModal'
 import ItemIcon from '@renderer/components/ItemIcon'
 import list_item_styles from '@renderer/components/List/ListItem.module.scss'
 import { actions } from '@renderer/core/agent'
+import {
+  getErrorMessage,
+  showErrorNotification,
+  showSuccessNotification,
+} from '@renderer/core/notify'
 import { PopupMenu } from '@renderer/core/PopupMenu'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
-import clsx from 'clsx'
+import { useState } from 'react'
 import styles from './TrashcanItem.module.scss'
 
 interface Props {
@@ -20,34 +26,52 @@ interface Props {
 const TrashcanItem = (props: Props) => {
   const { data } = props
   const { lang } = useI18n()
-  const { hosts_data, loadHostsData } = useHostsData()
+  const { loadHostsData } = useHostsData()
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
 
-  const onSelect = (i: any) => {
-    console.log(i)
+  const doPermanentDelete = () => {
+    actions
+      .deleteItemFromTrashcan(data.id)
+      .then(async (success: boolean) => {
+        if (!success) {
+          showErrorNotification({ title: lang.hosts_delete, message: lang.fail })
+          return
+        }
+        await loadHostsData()
+        showSuccessNotification({ title: lang.hosts_delete, message: lang.success })
+      })
+      .catch((e: unknown) => {
+        showErrorNotification({
+          title: lang.hosts_delete,
+          message: getErrorMessage(e, lang.fail),
+        })
+      })
   }
 
-  const menu_for_all = new PopupMenu([
-    {
-      label: lang.trashcan_clear,
-      enabled: hosts_data.trashcan.length > 0,
-      click() {
-        if (confirm(lang.trashcan_clear_confirm)) {
-          actions
-            .clearTrashcan()
-            .then(loadHostsData)
-            .catch((e) => console.error(e))
+  const doRestore = () => {
+    actions
+      .restoreItemFromTrashcan(data.id)
+      .then(async (success: boolean) => {
+        if (!success) {
+          showErrorNotification({ title: lang.trashcan_restore, message: lang.fail })
+          return
         }
-      },
-    },
-  ])
+        await loadHostsData()
+        showSuccessNotification({ title: lang.trashcan_restore, message: lang.success })
+      })
+      .catch((e: unknown) => {
+        showErrorNotification({
+          title: lang.trashcan_restore,
+          message: getErrorMessage(e, lang.fail),
+        })
+      })
+  }
 
-  const menu_for_item = new PopupMenu([
+  const menuForItem = new PopupMenu([
     {
       label: lang.trashcan_restore,
       click() {
-        actions.restoreItemFromTrashcan(data.id).then((success) => {
-          success && loadHostsData()
-        })
+        doRestore()
       },
     },
     {
@@ -56,38 +80,37 @@ const TrashcanItem = (props: Props) => {
     {
       label: lang.hosts_delete,
       click() {
-        if (confirm(lang.trashcan_delete_confirm)) {
-          actions.deleteItemFromTrashcan(data.id).then((success) => {
-            success && loadHostsData()
-          })
-        }
+        setIsDeleteConfirmOpen(true)
       },
     },
   ])
 
   return (
     <div
-      className={clsx(styles.root, data.is_root && styles.trashcan_title)}
+      className={styles.root}
       onContextMenu={(e) => {
-        if (data.is_root) {
-          menu_for_all.show()
-        } else {
-          menu_for_item.show()
-        }
-
+        menuForItem.show()
         e.preventDefault()
         e.stopPropagation()
       }}
     >
-      <div className={styles.title} onClick={onSelect}>
+      <div className={styles.title}>
         <span className={list_item_styles.icon}>
-          <ItemIcon type={data.type} is_collapsed={true} />
+          <ItemIcon type={data.type} isCollapsed={true} />
         </span>
 
         {data.data.title || lang.untitled}
-
-        {data.is_root ? <span className={styles.count}>{data.children?.length || 0}</span> : null}
       </div>
+
+      <ConfirmModal
+        opened={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={doPermanentDelete}
+        title={lang.hosts_delete}
+        message={lang.trashcan_delete_confirm}
+        confirmLabel={lang.delete}
+        danger
+      />
     </div>
   )
 }

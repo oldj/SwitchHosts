@@ -39,20 +39,16 @@ export class I18N {
   constructor(locale: LocaleName = 'en') {
     this.locale = locale
 
-    const _this = this
-
     this.lang = new Proxy(
       {},
       {
-        get(obj, key: LanguageKey) {
-          return _this.trans(key)
-        },
+        get: (_obj, key: LanguageKey) => this.trans(key),
       },
     ) as LanguageDict
   }
 
   trans(key: LanguageKey, words?: string[]) {
-    let lang = languages[this.locale]
+    const lang = languages[this.locale]
 
     let s: string = ''
 
@@ -62,7 +58,7 @@ export class I18N {
 
     if (words) {
       words.map((w, idx) => {
-        let reg = new RegExp(`\{\s*${idx}\s*}`)
+        const reg = new RegExp(`\\{\\s*${idx}\\s*\\}`)
         s = s.replace(reg, w)
       })
     }

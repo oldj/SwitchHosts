@@ -1,14 +1,16 @@
 /**
- * Hosts file syntax highlighting and comment toggling for CodeJar.
+ * Hosts file syntax classification and comment toggling.
  *
- * Highlighting: converts plain-text hosts content into HTML with
- * `hl-comment`, `hl-ip`, and `hl-error` spans for styling.
+ * Classification: pure predicates (`isHostsCommentLine`, `isValidHostsLine`)
+ * consumed by the CodeMirror ViewPlugin in `hosts_cm.ts` to apply
+ * `hl-comment` / `hl-error` line decorations and `hl-ip` mark decorations.
  *
- * Comment toggling: adds/removes `# ` prefixes while preserving
- * cursor/selection positions via offset-based transforms.
+ * Comment toggling: adds/removes `# ` prefixes while returning both the
+ * fully transformed text (for tests / fallbacks) and a list of fine-grained
+ * change ranges that can be dispatched directly as a CodeMirror ChangeSpec[],
+ * so undo/redo restores edits at row granularity.
  */
 
-import type { Position } from 'codejar'
 import { normalizeLineEndings } from '@common/newlines'
 
 /** Matches a valid hosts entry: optional whitespace, an IPv4/IPv6 address, then a hostname. */
@@ -23,11 +25,6 @@ interface LineInfo {
   text: string
 }
 
-/**
- * Transform records describe how a single toggle operation shifted characters.
- * They are collected per-line and then applied to map the original cursor/selection
- * offsets to their new positions in the modified text.
- */
 interface InsertTransform {
   type: 'insert'
   at: number
@@ -42,11 +39,15 @@ interface RemoveTransform {
 
 type Transform = InsertTransform | RemoveTransform
 
+/** Fine-grained change spec compatible with CodeMirror's ChangeSpec union. */
+export type CommentChange = { from: number; insert: string } | { from: number; to: number }
+
 export interface CommentToggleResult {
   content: string
   selectionStart: number
   selectionEnd: number
   changed: boolean
+  changes: CommentChange[]
 }
 
 interface ToggleLineResult {
@@ -55,54 +56,12 @@ interface ToggleLineResult {
   transform?: Transform
 }
 
-export function escapeHtml(text: string): string {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;')
-}
-
 export function isHostsCommentLine(line: string): boolean {
   return /^\s*#/.test(line)
 }
 
 export function isValidHostsLine(line: string): boolean {
   return HOSTS_LINE_RE.test(line)
-}
-
-export function highlightHostsLine(line: string): string {
-  if (!line) return ''
-
-  if (isHostsCommentLine(line)) {
-    return `<span class="hl-comment">${escapeHtml(line)}</span>`
-  }
-
-  if (!isValidHostsLine(line)) {
-    return `<span class="hl-error">${escapeHtml(line)}</span>`
-  }
-
-  const match = line.match(/^(\s*)([\w.:%]+)/)
-  if (!match) {
-    return escapeHtml(line)
-  }
-
-  const [, indent, ip] = match
-  const rest = line.slice(indent.length + ip.length)
-  return `${escapeHtml(indent)}<span class="hl-ip">${escapeHtml(ip)}</span>${escapeHtml(rest)}`
-}
-
-export function highlightHostsText(code: string): string {
-  return normalizeLineEndings(code)
-    .split('\n')
-    .map((line) => highlightHostsLine(line))
-    .join('\n')
-}
-
-/** CodeJar highlight callback — replaces the editor's innerHTML with syntax-highlighted HTML. */
-export function highlightHosts(editor: HTMLElement, _pos?: Position): void {
-  editor.innerHTML = highlightHostsText(editor.textContent || '')
 }
 
 function getLines(code: string): LineInfo[] {
@@ -165,7 +124,6 @@ function toggleLine(line: string, lineStart: number): ToggleLineResult {
   }
 }
 
-/** Map an original document offset through a series of insert/remove transforms. */
 function mapOffset(offset: number, transforms: Transform[]): number {
   let mapped = offset
 
@@ -209,11 +167,17 @@ function getSelectionRange(selectionStart: number, selectionEnd: number) {
   }
 }
 
+function transformsToChanges(transforms: Transform[]): CommentChange[] {
+  return transforms.map((t) =>
+    t.type === 'insert' ? { from: t.at, insert: '# ' } : { from: t.start, to: t.end },
+  )
+}
+
 /**
  * Core toggle implementation: comment/uncomment lines in [startLineIndex, endLineIndex],
- * returning the updated text and adjusted selection offsets.
- * When `moveToNextLine` is true and the selection is collapsed (cursor), the cursor
- * is moved to the start of the next line after toggling (mimics IDE behavior).
+ * returning the updated text, adjusted selection offsets, and a list of CodeMirror-compatible
+ * change ranges. When `moveToNextLine` is true and the selection is collapsed (cursor),
+ * the cursor is moved to the start of the next line after toggling (mimics IDE behavior).
  */
 function toggleCommentLines(
   code: string,
@@ -244,10 +208,13 @@ function toggleCommentLines(
       selectionStart,
       selectionEnd,
       changed: false,
+      changes: [],
     }
   }
 
   const nextContent = nextLines.join('\n')
+  const changes = transformsToChanges(transforms)
+
   if (moveToNextLine && selectionStart === selectionEnd) {
     const nextStarts = getLineStartOffsets(nextLines)
     const nextLineIndex = startLineIndex + 1
@@ -257,6 +224,7 @@ function toggleCommentLines(
       selectionStart: nextOffset,
       selectionEnd: nextOffset,
       changed: true,
+      changes,
     }
   }
 
@@ -265,6 +233,7 @@ function toggleCommentLines(
     selectionStart: mapOffset(selectionStart, transforms),
     selectionEnd: mapOffset(selectionEnd, transforms),
     changed: true,
+    changes,
   }
 }
 
@@ -307,6 +276,7 @@ export function toggleCommentByLine(
       selectionStart,
       selectionEnd,
       changed: false,
+      changes: [],
     }
   }
 

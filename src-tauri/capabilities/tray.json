@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "tray-window",
+  "description": "Capabilities for the tray popup window: core defaults only.",
+  "windows": ["tray"],
+  "permissions": ["core:default"]
+}

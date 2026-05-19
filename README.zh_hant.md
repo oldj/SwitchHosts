@@ -21,18 +21,22 @@
 
 項目主頁：[https://switchhosts.vercel.app](https://switchhosts.vercel.app)
 
-SwitchHosts 是一個管理 hosts 檔案的應用程式，基於 [Electron](http://electron.atom.io/)、[React](https://facebook.github.io/react/)、[Jotai](https://jotai.org/)、[Mantine](https://mantine.dev/) 等技術開發。
+SwitchHosts 是一個管理 hosts 檔案的應用程式，基於 [Tauri](https://tauri.app/)、[React](https://facebook.github.io/react/)、[Jotai](https://jotai.org/)、[Mantine](https://mantine.dev/) 等技術開發。
 
 ## 螢幕截圖
 
-<img src="https://raw.githubusercontent.com/oldj/SwitchHosts/master/screenshots/sh_light.png" alt="Capture" width="960">
+<img src="./screenshots/sh_light.png" alt="SwitchHosts 螢幕截圖" width="978">
 
 ## 功能特性
 
-- 快速切換 hosts 方案
-- hosts 語法高亮顯示
-- 支援從網路載入遠程 hosts 設定
-- 可從系統菜單欄圖是快速切換 hosts
+- 管理系統、本機、遠端、組合和資料夾 hosts 項目
+- 可在主視窗或系統選單列圖示快速切換 hosts 方案
+- hosts 檔案語法高亮顯示
+- 跨 hosts 項目尋找和取代
+- 支援手動、定時或啟動時重新整理遠端 hosts
+- 匯入/匯出 hosts 資料，並支援從 URL 匯入備份
+- 將項目移入回收站，並可稍後還原或永久刪除
+- 偏好設定支援寫入模式、代理、更新檢查、開機啟動、套用後命令和本機 HTTP API
 
 ## 安裝
 
@@ -51,31 +55,40 @@ choco install switchhosts
 ## 數據備份
 
 SwitchHosts 的數據文件儲存於 `~/.SwitchHosts` (Windows 下儲存使用者個人文件裡的 `.SwitchHosts` 資料夾），
-其中 `~/.SwitchHosts/data` 資料夾包含數據，`~/.SwitchHosts/config` 資料夾包含各種設定。
+v5 數據結構如下：
+
+- `~/.SwitchHosts/manifest.json` 儲存 hosts 樹
+- `~/.SwitchHosts/entries/` 儲存本機和遠端 hosts 內容
+- `~/.SwitchHosts/trashcan.json` 儲存回收站項目
+- `~/.SwitchHosts/internal/config.json` 儲存偏好設定
+- `~/.SwitchHosts/internal/histories/` 儲存系統 hosts 和命令執行歷史
+
+如需完整手動備份，請複製整個 `~/.SwitchHosts` 資料夾。應用程式內匯出會產生 hosts 資料備份 JSON，不包含偏好設定或歷史記錄。
 
 ## 開發及建置
 
+### 前置要求
+
+- [Node.js](https://nodejs.org/)
+- [Rust](https://www.rust-lang.org/tools/install)
+- Tauri 系統依賴，參見 [Tauri 前置要求](https://v2.tauri.app/start/prerequisites/)
+
 ### 開發
 
-- 安裝 [Node.js](https://nodejs.org/)
-- 在項目根目錄 `./` 下，執行 `npm install` 指令安裝前置
-- 執行 `npm run dev` 指令啟動開發服務
-- 執行 `npm run start` 啟動應用程式，即可開始開發及測試
+- 執行 `npm install` 安裝依賴
+- 執行 `npm run tauri:dev` 啟動開發模式
 
-### 打包
+### 建置及打包
 
-- 推薦使用 [electron-builder](https://github.com/electron-userland/electron-builder) 進行打包
-- 轉到項目根目錄 './'
-- 執行 `npm run build`
-- 執行 `npm run make`，如果一切順利，可在 `./dist` 目錄下找到打包後的檔案
-- 首次執行可能需要花費一點時間，因為需要下載相關的前置檔案。你也可以從 [這裡](https://github.com/electron/electron/releases)
-  手動下載，並儲存到 `~/.electron`目錄下。更多資訊可以參考 [Electron 文檔](http://electron.atom.io/docs/)。
+- 執行 `npm run tauri:build` 進行生產建置
+- 打包後的檔案位於 `./src-tauri/target/release/bundle/`
 
 ```bash
-# build
-npm run build
-# make
-npm run make # the packed files will be in ./dist
+# 開發
+npm run tauri:dev
+
+# 生產建置
+npm run tauri:build
 ```
 
 ## 版權聲明

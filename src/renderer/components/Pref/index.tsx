@@ -12,52 +12,153 @@ import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import useI18n from '@renderer/models/useI18n'
-import { IconAdjustments } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
+import { IconAdjustments, IconCheck, IconDeviceFloppy } from '@tabler/icons-react'
+import { useEffect, useRef, useState } from 'react'
 import Advanced from './Advanced'
 import Commands from './Commands'
+import { isConfigPatch, mergeConfigUpdateIntoDraft } from './configSync'
 import General from './General'
 import styles from './styles.module.scss'
 
 const PreferencePanel = () => {
-  const [is_open, setIsOpen] = useState(false)
-  const { configs, updateConfigs } = useConfigs()
+  const [isOpen, setIsOpen] = useState(false)
+  const { configs, loadConfigs, updateConfigs } = useConfigs()
   const [data, setData] = useState<ConfigsType | null>(configs)
+  const [activeTab, setActiveTab] = useState<string | null>('general')
+  const [draftSaveStatus, setDraftSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const draftSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { lang } = useI18n()
+
+  const clearDraftSaveTimer = () => {
+    if (draftSaveTimerRef.current) {
+      clearTimeout(draftSaveTimerRef.current)
+      draftSaveTimerRef.current = null
+    }
+  }
+
+  const resetDraftSaveStatus = () => {
+    clearDraftSaveTimer()
+    setDraftSaveStatus('idle')
+  }
+
   const onClose = () => {
     setIsOpen(false)
     setData(configs)
+    resetDraftSaveStatus()
   }
 
   const onUpdate = (kv: Partial<ConfigsType>) => {
-    if (!data) return
-    setData({ ...data, ...kv })
+    setData((prev) => (prev ? { ...prev, ...kv } : prev))
+    resetDraftSaveStatus()
   }
 
-  const onSave = async () => {
-    if (!data) return
-    await updateConfigs(data)
-    setIsOpen(false)
+  const onTabChange = (value: string | null) => {
+    setActiveTab(value)
+    resetDraftSaveStatus()
+  }
 
-    agent.broadcast(events.config_updated, data)
+  const onSaveImmediate = async (kv: Partial<ConfigsType>) => {
+    setData((prev) => (prev ? { ...prev, ...kv } : prev))
+    try {
+      await updateConfigs(kv)
+    } catch {
+      try {
+        setData(await loadConfigs())
+      } catch (e) {
+        console.error('loadConfigs failed after immediate save failure', e)
+        if (configs) setData(configs)
+      }
+      return
+    }
+    agent.broadcast(events.config_updated, kv)
+  }
+
+  const onSaveDraft = async () => {
+    if (!data) return
+    const patch: Partial<ConfigsType> =
+      activeTab === 'commands'
+        ? { cmd_after_hosts_apply: data.cmd_after_hosts_apply }
+        : activeTab === 'proxy'
+          ? {
+              use_proxy: data.use_proxy,
+              proxy_protocol: data.proxy_protocol,
+              proxy_host: data.proxy_host,
+              proxy_port: data.proxy_port,
+            }
+          : {}
+
+    if (Object.keys(patch).length === 0) return
+
+    clearDraftSaveTimer()
+    setDraftSaveStatus('saving')
+    try {
+      await updateConfigs(patch)
+    } catch {
+      // Keep the drawer open so the user can correct or retry; sync the
+      // local Commands/Proxy draft back to whatever the backend really
+      // accepted (useConfigs already reset the atom).
+      try {
+        setData(await loadConfigs())
+      } catch (e) {
+        console.error('loadConfigs failed after onSave failure', e)
+        if (configs) setData(configs)
+      }
+      setDraftSaveStatus('idle')
+      return
+    }
+
+    agent.broadcast(events.config_updated, patch)
+    setDraftSaveStatus('saved')
+    draftSaveTimerRef.current = setTimeout(() => {
+      setDraftSaveStatus('idle')
+      draftSaveTimerRef.current = null
+    }, 1800)
   }
 
   useEffect(() => {
-    setData(configs)
-  }, [configs])
+    if (data === null && configs !== null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time draft init when configs first loads; subsequent configs changes from immediate-save must not clobber unsaved Commands/Proxy drafts
+      setData(configs)
+    }
+  }, [configs, data])
 
-  useOnBroadcast(events.show_preferences, async () => {
-    setIsOpen(true)
+  useEffect(() => () => clearDraftSaveTimer(), [])
+
+  useOnBroadcast(
+    events.show_preferences,
+    async () => {
+      setIsOpen(true)
+      try {
+        setData(await loadConfigs())
+      } catch (e) {
+        console.error('loadConfigs failed before opening preferences', e)
+        setData(configs)
+      }
+    },
+    [configs],
+  )
+
+  useOnBroadcast(events.config_updated, async (patch?: unknown) => {
+    try {
+      const snapshot = await loadConfigs()
+      setData((prev) => mergeConfigUpdateIntoDraft(prev, snapshot, patch))
+    } catch (e) {
+      console.error('loadConfigs failed after config_updated', e)
+      if (isConfigPatch(patch)) {
+        setData((prev) => (prev ? { ...prev, ...patch } : prev))
+      }
+    }
   })
 
+  const showFooter = activeTab === 'commands' || activeTab === 'proxy'
+
   if (!data) {
-    console.log('invalid config data!')
     return null
   }
 
   return (
     <SideDrawer
-      opened={is_open}
+      opened={isOpen}
       onClose={onClose}
       size="lg"
       title={
@@ -70,18 +171,28 @@ const PreferencePanel = () => {
         overflow: 'hidden',
       }}
       footer={
-        <Group justify="flex-end" gap="12px">
-          <Button variant="outline" onClick={onClose}>
-            {lang.btn_cancel}
-          </Button>
-          <Button onClick={onSave} color="blue">
-            {lang.btn_ok}
-          </Button>
-        </Group>
+        showFooter ? (
+          <Group justify="flex-end" gap="12px">
+            <Button
+              onClick={onSaveDraft}
+              loading={draftSaveStatus === 'saving'}
+              color={draftSaveStatus === 'saved' ? 'green' : undefined}
+              leftSection={
+                draftSaveStatus === 'saved' ? (
+                  <IconCheck size={16} stroke={1.8} />
+                ) : (
+                  <IconDeviceFloppy size={16} stroke={1.8} />
+                )
+              }
+            >
+              {draftSaveStatus === 'saved' ? lang.save_success : lang.btn_save}
+            </Button>
+          </Group>
+        ) : null
       }
     >
       <div style={{ display: 'flex', height: '100%', minHeight: 0, flexDirection: 'column' }}>
-        <Tabs defaultValue="general" className={styles.tabs}>
+        <Tabs value={activeTab} onChange={onTabChange} className={styles.tabs}>
           <Tabs.List>
             <Tabs.Tab value="general">{lang.general}</Tabs.Tab>
             <Tabs.Tab value="commands">{lang.commands}</Tabs.Tab>
@@ -92,7 +203,7 @@ const PreferencePanel = () => {
             <Tabs.Panel value="general" className={styles.tab_panel}>
               <ScrollArea className={styles.scroll_area} offsetScrollbars="y" scrollbars="y">
                 <div className={styles.tab_panel_content}>
-                  <General data={data} onChange={onUpdate} />
+                  <General data={data} onChange={onSaveImmediate} />
                 </div>
               </ScrollArea>
             </Tabs.Panel>
@@ -113,7 +224,7 @@ const PreferencePanel = () => {
             <Tabs.Panel value="advanced" className={styles.tab_panel}>
               <ScrollArea className={styles.scroll_area} offsetScrollbars="y" scrollbars="y">
                 <div className={styles.tab_panel_content}>
-                  <Advanced data={data} onChange={onUpdate} />
+                  <Advanced data={data} onChange={onSaveImmediate} />
                 </div>
               </ScrollArea>
             </Tabs.Panel>

@@ -1,14 +1,24 @@
-@use "../../styles/common";
-
-.list {
-  position: relative;
+.root {
+  display: flex;
+  flex-direction: column;
   height: calc(100vh - var(--swh-top-bar-height));
-  overflow: auto;
-  padding: 5px 10px;
 }
 
-:global(.platform-win32) {
-  .list {
-    @include common.swh-scroll-y();
-  }
+.content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 5px 10px;
+  background: var(--swh-left-panel-bg);
+  border: 1px solid var(--swh-border-color-0);
+  border-right: none;
+  border-radius: var(--swh-border-radius) 0 0 var(--swh-border-radius);
+}
+
+.status_bar {
+  height: var(--swh-status-bar-height);
+  line-height: var(--swh-status-bar-height);
+  background: var(--swh-status-bar-bg);
+  color: var(--swh-status-bar-font-color);
+  font-size: var(--swh-status-bar-font-size);
 }

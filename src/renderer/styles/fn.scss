@@ -11,3 +11,7 @@
 @mixin win-drag {
   -webkit-app-region: drag;
 }
+
+@mixin win-no-drag {
+  -webkit-app-region: no-drag;
+}

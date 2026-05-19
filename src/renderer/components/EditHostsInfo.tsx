@@ -10,17 +10,20 @@ import {
   Box,
   Button,
   Group,
-  NativeSelect,
-  Radio,
+  SegmentedControl,
+  Select,
   SimpleGrid,
   Text,
   TextInput,
 } from '@mantine/core'
+import DescriptionText from '@renderer/components/DescriptionText'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SideDrawer from '@renderer/components/SideDrawer'
 import Transfer from '@renderer/components/Transfer'
 import { actions, agent } from '@renderer/core/agent'
+import { showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import { formatInterval } from '@renderer/utils/formatInterval'
 import lodash from 'lodash'
 import React, { useState } from 'react'
 import { BiEdit, BiTrash } from 'react-icons/bi'
@@ -32,10 +35,10 @@ import styles from './EditHostsInfo.module.scss'
 const EditHostsInfo = () => {
   const { lang } = useI18n()
   const [hosts, setHosts] = useState<IHostsListObject | null>(null)
-  const { hosts_data, setList, current_hosts, setCurrentHosts } = useHostsData()
-  const [is_show, setIsShow] = useState(false)
-  const [is_add, setIsAdd] = useState(true)
-  const [is_refreshing, setIsRefreshing] = useState(false)
+  const { hostsData, setList, currentHosts, setCurrentHosts } = useHostsData()
+  const [isShow, setIsShow] = useState(false)
+  const [isAdd, setIsAdd] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const onCancel = () => {
     setHosts(null)
@@ -43,30 +46,30 @@ const EditHostsInfo = () => {
   }
 
   const onSave = async () => {
-    let data: Omit<IHostsListObject, 'id'> & { id?: string } = { ...hosts }
+    const data: Omit<IHostsListObject, 'id'> & { id?: string } = { ...hosts }
 
-    const keys_to_trim = ['title', 'url']
-    keys_to_trim.map((k) => {
+    const keysToTrim = ['title', 'url']
+    keysToTrim.map((k) => {
       if (data[k]) {
         data[k] = data[k].trim()
       }
     })
 
-    if (is_add) {
-      let h: IHostsListObject = {
+    if (isAdd) {
+      const h: IHostsListObject = {
         ...data,
         id: uuidv4(),
       }
-      let list: IHostsListObject[] = [...hosts_data.list, h]
+      const list: IHostsListObject[] = [...hostsData.list, h]
       await setList(list)
       agent.broadcast(events.select_hosts, h.id, 1000)
     } else if (data && data.id) {
-      let h: IHostsListObject | undefined = hostsFn.findItemById(hosts_data.list, data.id)
+      const h: IHostsListObject | undefined = hostsFn.findItemById(hostsData.list, data.id)
       if (h) {
         Object.assign(h, data)
-        await setList([...hosts_data.list])
+        await setList([...hostsData.list])
 
-        if (data.id === current_hosts?.id) {
+        if (data.id === currentHosts?.id) {
           setCurrentHosts(h)
         }
       } else {
@@ -75,14 +78,14 @@ const EditHostsInfo = () => {
         return
       }
     } else {
-      alert('unknown error!')
+      showErrorNotification({ title: lang.fail, message: lang.unknown_error })
     }
 
     setIsShow(false)
   }
 
   const onUpdate = (kv: Partial<IHostsListObject>) => {
-    let obj: IHostsListObject = Object.assign({}, hosts, kv)
+    const obj: IHostsListObject = Object.assign({}, hosts, kv)
     setHosts(obj)
   }
 
@@ -114,6 +117,7 @@ const EditHostsInfo = () => {
         <Box className={styles.ln}>
           <Text mb="8px">URL</Text>
           <TextInput
+            aria-label="URL"
             value={hosts?.url || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdate({ url: e.target.value })}
             placeholder={lang.url_placeholder}
@@ -123,21 +127,18 @@ const EditHostsInfo = () => {
 
         <Box className={styles.ln}>
           <Text mb="8px">{lang.auto_refresh}</Text>
-          <NativeSelect
+          <Select
+            aria-label={lang.auto_refresh}
             value={(hosts?.refresh_interval || 0).toString()}
-            onChange={(e) => onUpdate({ refresh_interval: parseInt(e.target.value) || 0 })}
-            data={[
-              { value: '0', label: lang.never },
-              { value: '60', label: `1 ${lang.minute}` },
-              { value: `${60 * 5}`, label: `5 ${lang.minutes}` },
-              { value: `${60 * 15}`, label: `15 ${lang.minutes}` },
-              { value: `${60 * 60}`, label: `1 ${lang.hour}` },
-              { value: `${60 * 60 * 24}`, label: `24 ${lang.hours}` },
-              { value: `${60 * 60 * 24 * 7}`, label: `7 ${lang.days}` },
-            ]}
+            onChange={(v) => onUpdate({ refresh_interval: parseInt(v || '0') || 0 })}
+            data={[0, 60, 60 * 5, 60 * 15, 60 * 60, 60 * 60 * 24, 60 * 60 * 24 * 7].map((s) => ({
+              value: s.toString(),
+              label: formatInterval(s, lang),
+            }))}
             maw={160}
+            allowDeselect={false}
           />
-          {is_add ? null : (
+          {isAdd ? null : (
             <Box className={styles.refresh_info} mt="8px">
               <span>
                 {lang.last_refresh}
@@ -146,7 +147,7 @@ const EditHostsInfo = () => {
               <Button
                 size="sm"
                 variant="subtle"
-                disabled={is_refreshing}
+                disabled={isRefreshing}
                 onClick={() => {
                   if (!hosts) return
 
@@ -154,20 +155,17 @@ const EditHostsInfo = () => {
                   actions
                     .refreshHosts(hosts.id)
                     .then((r) => {
-                      console.log(r)
                       if (!r.success) {
                         console.error(r.message || r.code || 'Error!')
                         return
                       }
 
-                      console.log('OK!')
                       onUpdate({
                         last_refresh: r.data.last_refresh,
                         last_refresh_ms: r.data.last_refresh_ms,
                       })
                     })
                     .catch((e) => {
-                      console.log(e)
                       console.error(e.message)
                     })
                     .finally(() => setIsRefreshing(false))
@@ -192,27 +190,27 @@ const EditHostsInfo = () => {
   }
 
   const forGroup = (): React.ReactElement => {
-    const list = hostsFn.flatten(hosts_data.list)
+    const list = hostsFn.flatten(hostsData.list)
 
-    let source_list: IHostsListObject[] = list
+    const sourceList: IHostsListObject[] = list
       .filter((item) => !item.type || item.type === 'local' || item.type === 'remote')
       .map((item) => {
-        let o = { ...item }
+        const o = { ...item }
         o.key = o.id
         return o
       })
 
-    let target_keys: string[] = hosts?.include || []
+    const targetKeys: string[] = hosts?.include || []
 
     return (
       <Box className={styles.ln}>
         <Text mb="8px">{lang.content}</Text>
         <Transfer
-          dataSource={source_list}
-          targetKeys={target_keys}
+          dataSource={sourceList}
+          targetKeys={targetKeys}
           render={renderTransferItem}
-          onChange={(next_target_keys) => {
-            onUpdate({ include: next_target_keys })
+          onChange={(nextTargetKeys) => {
+            onUpdate({ include: nextTargetKeys })
           }}
         />
       </Box>
@@ -220,19 +218,28 @@ const EditHostsInfo = () => {
   }
 
   const forFolder = (): React.ReactElement => {
+    const folderMode = (hosts?.folder_mode || 0) as FolderModeType
+    const choiceModeEffect: Record<FolderModeType, string> = {
+      0: lang.choice_mode_default_effect,
+      1: lang.choice_mode_single_effect,
+      2: lang.choice_mode_multiple_effect,
+    }
+
     return (
       <Box className={styles.ln}>
         <Text mb="8px">{lang.choice_mode}</Text>
-        <Radio.Group
-          value={(hosts?.folder_mode || 0).toString()}
+        <SegmentedControl
+          value={folderMode.toString()}
           onChange={(v) => onUpdate({ folder_mode: (parseInt(v) || 0) as FolderModeType })}
-        >
-          <Group gap="12px">
-            <Radio value="0" label={lang.choice_mode_default} />
-            <Radio value="1" label={lang.choice_mode_single} />
-            <Radio value="2" label={lang.choice_mode_multiple} />
-          </Group>
-        </Radio.Group>
+          data={[
+            { value: '0', label: lang.choice_mode_default },
+            { value: '1', label: lang.choice_mode_single },
+            { value: '2', label: lang.choice_mode_multiple },
+          ]}
+        />
+        <DescriptionText mt="8px">
+          {choiceModeEffect[folderMode]}
+        </DescriptionText>
       </Box>
     )
   }
@@ -241,13 +248,13 @@ const EditHostsInfo = () => {
 
   return (
     <SideDrawer
-      opened={is_show}
+      opened={isShow}
       onClose={onCancel}
       size="lg"
       title={
         <Group gap="8px">
           <BiEdit />
-          <Box>{is_add ? lang.hosts_add : lang.hosts_edit}</Box>
+          <Box>{isAdd ? lang.hosts_add : lang.hosts_edit}</Box>
         </Group>
       }
       scrollAreaStyle={{
@@ -256,10 +263,9 @@ const EditHostsInfo = () => {
       footer={
         <SimpleGrid cols={2} style={{ width: '100%', alignItems: 'center' }}>
           <Box>
-            {is_add ? null : (
+            {isAdd ? null : (
               <Button
                 variant="outline"
-                color="pink"
                 disabled={!hosts}
                 leftSection={<BiTrash />}
                 onClick={() => {
@@ -277,9 +283,7 @@ const EditHostsInfo = () => {
             <Button onClick={onCancel} variant="outline">
               {lang.btn_cancel}
             </Button>
-            <Button onClick={onSave} color="blue">
-              {lang.btn_ok}
-            </Button>
+            <Button onClick={onSave}>{lang.btn_ok}</Button>
           </Group>
         </SimpleGrid>
       }
@@ -287,36 +291,33 @@ const EditHostsInfo = () => {
       <Box>
         <Box className={styles.ln}>
           <Text mb="8px">{lang.hosts_type}</Text>
-          <Radio.Group
+          <SegmentedControl
             value={hosts?.type || 'local'}
             onChange={(v) => onUpdate({ type: v as HostsType })}
-          >
-            <Group gap="24px">
-              {types.map((type) => (
-                <Radio
-                  key={type}
-                  value={type}
-                  disabled={!is_add}
-                  label={
-                    <Group gap="4px" wrap="nowrap">
-                      <ItemIcon type={type} />
-                      <span>{lang[type]}</span>
-                    </Group>
-                  }
-                />
-              ))}
-            </Group>
-          </Radio.Group>
+            disabled={!isAdd}
+            data={types.map((type) => ({
+              value: type,
+              label: (
+                <Group gap="4px" wrap="nowrap">
+                  <ItemIcon type={type} />
+                  <span>{lang[type]}</span>
+                </Group>
+              ),
+            }))}
+          />
         </Box>
 
         <Box className={styles.ln}>
           <Text mb="8px">{lang.hosts_title}</Text>
           <TextInput
+            aria-label={lang.hosts_title}
             data-autofocus
             value={hosts?.title || ''}
             maxLength={50}
             placeholder=""
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdate({ title: e.target.value })}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              onUpdate({ title: e.target.value })
+            }
             onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onSave()}
           />
         </Box>

@@ -5,22 +5,19 @@
  */
 
 import { HostsType } from '@common/data'
-import { MenuItemConstructorOptions, WebContents } from 'electron'
 import { default as lang } from './i18n/languages/en'
-import * as actions from '@main/actions'
 
 export type LanguageDict = typeof lang
 export type LanguageKey = keyof LanguageDict
 
-export interface IActionFunc {
-  sender: WebContents
-}
+export type Actions = Record<string, (...args: any[]) => Promise<any>>
 
-export type Actions = typeof actions & IActionFunc
-
-export interface IMenuItemOption extends MenuItemConstructorOptions {
-  // 参见：https://www.electronjs.org/docs/api/menu-item
-
+export interface IMenuItemOption {
+  label?: string
+  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio'
+  enabled?: boolean
+  checked?: boolean
+  click?: (...args: any[]) => void
   _click_evt?: string
 }
 
@@ -41,19 +38,11 @@ export interface IFindPosition {
   after: string
 }
 
-export interface IFindSplitter {
-  before: string
-  match: string
-  after: string
-  replace?: string
-}
-
 export interface IFindItem {
   item_id: string
   item_title: string
   item_type: HostsType
   positions: IFindPosition[]
-  splitters: IFindSplitter[]
 }
 
 export type IFindShowSourceParam = IFindPosition & {

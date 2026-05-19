@@ -3,22 +3,25 @@ import { FolderModeType } from './data.d'
 
 export type WriteModeType = null | 'overwrite' | 'append'
 export type ThemeType = 'light' | 'dark' | 'system'
-export type ProtocolType = 'http' | 'https'
+export type ProtocolType = 'http' | 'https' | 'socks5'
 export type DefaultLocaleType = LocaleName | undefined
 
 const configs = {
   // UI
   left_panel_show: true,
   left_panel_width: 270,
+  right_panel_show: false,
+  right_panel_width: 240,
   use_system_window_frame: false,
 
   // preferences
   write_mode: 'append' as WriteModeType,
   history_limit: 50,
   locale: undefined as DefaultLocaleType,
-  theme: 'light' as ThemeType,
+  theme: 'system' as ThemeType,
   choice_mode: 2 as FolderModeType,
   show_title_on_tray: false,
+  launch_at_login: false,
   hide_at_launch: false,
   send_usage_data: false,
   cmd_after_hosts_apply: '',
@@ -28,14 +31,17 @@ const configs = {
   proxy_protocol: 'http' as ProtocolType,
   proxy_host: '',
   proxy_port: 0,
+  refresh_remote_hosts_on_startup: false,
   http_api_on: false,
   http_api_only_local: true,
   tray_mini_window: true,
   multi_chose_folder_switch_all: false,
+  auto_check_update: true,
 
-  // Legacy key: it now controls background update checks, while the actual
-  // download remains a manual action in the UI.
-  auto_download_update: true,
+  // find window — sticky search options across reopens and restarts
+  find_is_regexp: false,
+  find_is_ignore_case: false,
+  find_result_column_widths: [] as number[],
 
   // other
   env: 'PROD' as 'PROD' | 'DEV',

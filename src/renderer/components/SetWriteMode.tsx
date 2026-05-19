@@ -5,15 +5,14 @@
 
 import { WriteModeType } from '@common/default_configs'
 import events from '@common/events'
-import { Button, Group, Modal, Radio, Text } from '@mantine/core'
+import { Button, Group, Modal, Radio } from '@mantine/core'
+import DescriptionText from '@renderer/components/DescriptionText'
 import { agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useI18n from '@renderer/models/useI18n'
 import { useState } from 'react'
 import useConfigs from '../models/useConfigs'
 import styles from './SetWriteMode.module.scss'
-
-interface Props {}
 
 interface IPendingData {
   id: string
@@ -66,10 +65,10 @@ const SetWriteMode = () => {
             </Group>
           </Radio.Group>
 
-          <Text size="sm" mt="16px" mih="32px" c="dimmed">
+          <DescriptionText mt="16px" mih="32px">
             {writeMode === 'append' && lang.write_mode_append_help}
             {writeMode === 'overwrite' && lang.write_mode_overwrite_help}
-          </Text>
+          </DescriptionText>
         </div>
         <Group
           justify="flex-end"
@@ -82,7 +81,7 @@ const SetWriteMode = () => {
           <Button variant="outline" onClick={onCancel}>
             {lang.btn_cancel}
           </Button>
-          <Button color="blue" onClick={onOk}>
+          <Button onClick={onOk}>
             {lang.btn_ok}
           </Button>
         </Group>

@@ -7,7 +7,7 @@ import { ConfigsType } from '@common/default_configs'
 import { actions } from '@renderer/core/agent'
 import { atom } from 'jotai'
 
-export const configs_atom = atom<ConfigsType | null>(null)
-configs_atom.onMount = (setAtom) => {
+export const configsAtom = atom<ConfigsType | null>(null)
+configsAtom.onMount = (setAtom) => {
   actions.configAll().then(setAtom)
 }

@@ -1,0 +1,888 @@
+# SwitchHosts v5 (Tauri) release workflow.
+#
+# Triggered by pushing a tag like `v5.0.0` or manually via
+# workflow_dispatch. Builds the Tauri app for macOS (universal,
+# arm64, x64), Windows (x64, x86, arm64), and Linux (x64, arm64),
+# then uploads everything to a GitHub Release and generates an
+# updater manifest (`latest.json`).
+#
+# ── Required GitHub Secrets ──────────────────────────────────────────
+#
+# macOS signing + notarization:
+#   APPLE_CERTIFICATE            base64-encoded .p12 Developer ID cert
+#   APPLE_CERTIFICATE_PASSWORD   password for the .p12
+#   APPLE_ID                     Apple ID email (for notarization)
+#   APPLE_PASSWORD               app-specific password
+#   APPLE_TEAM_ID                J5J6USUX2F
+#
+# macOS GitHub Secrets:
+#   APPLE_SIGNING_IDENTITY       Developer ID Application signing identity
+#
+# Tauri updater signing:
+#   TAURI_SIGNING_PRIVATE_KEY          content of the .key file
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD password (if set during keygen)
+#
+# ── First-time setup ────────────────────────────────────────────────
+#
+# 1. Generate the updater key pair (run once, locally):
+#      npx tauri signer generate -w ~/.tauri/switchhosts.key
+#    Copy the PUBLIC key into tauri.conf.json > plugins > updater > pubkey.
+#    Copy the file content of ~/.tauri/switchhosts.key into the
+#    TAURI_SIGNING_PRIVATE_KEY GitHub secret.
+#
+# 2. Export your Developer ID certificate from Keychain Access as a
+#    .p12 file with a password, then:
+#      base64 -i cert.p12 | pbcopy
+#    Paste into APPLE_CERTIFICATE. Set APPLE_CERTIFICATE_PASSWORD.
+#
+# 3. Generate an app-specific password at https://appleid.apple.com
+#    and store it in APPLE_PASSWORD. Set APPLE_ID to your Apple ID.
+#    Set APPLE_TEAM_ID to J5J6USUX2F.
+# ─────────────────────────────────────────────────────────────────────
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v5.0.0). Leave empty for a dry-run build without publishing.'
+        required: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.tag.outputs.name }}
+    steps:
+      - name: Resolve tag
+        id: tag
+        shell: bash
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "name=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=" >> "$GITHUB_OUTPUT"
+          fi
+
+  test:
+    needs: prep
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # Check out the tag commit (not the dispatching branch) so the
+      # rest of the workflow — package.json reads, tests, builds —
+      # all see the same source the release was tagged from. A
+      # workflow_dispatch with a stale or wrong tag input fails the
+      # checkout instead of silently building from develop's HEAD
+      # and uploading to the wrong release.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.tag || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Cross-check the tag against package.json's version. This
+      # catches the common slip of bumping `npm version` without
+      # re-tagging (or vice versa) — the resulting bundle filenames
+      # would mismatch our manifest scoping later in the run.
+      - name: Validate tag matches package.json
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          EXPECTED="v$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$EXPECTED" ]; then
+            echo "::error::Tag $TAG does not match package.json version (expected $EXPECTED)"
+            exit 1
+          fi
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      # Linux system dependencies for Tauri 2
+      - name: Install Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            rpm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run all tests
+        run: npm run test:all
+
+  release:
+    needs: [test, prep]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ── macOS ──────────────────────────────────────────────
+          - platform: macos-latest
+            args: --target universal-apple-darwin
+            rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
+          - platform: macos-latest
+            args: --target aarch64-apple-darwin
+            rust_targets: aarch64-apple-darwin
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
+            rust_targets: x86_64-apple-darwin
+          # ── Linux ──────────────────────────────────────────────
+          - platform: ubuntu-latest
+            args: ''
+            rust_targets: ''
+          - platform: ubuntu-24.04-arm
+            args: ''
+            rust_targets: ''
+          # ── Windows (NSIS only — MSI rejects non-numeric pre-release) ──
+          - platform: windows-latest
+            args: --bundles nsis
+            rust_targets: ''
+          - platform: windows-latest
+            args: --target i686-pc-windows-msvc --bundles nsis
+            rust_targets: i686-pc-windows-msvc
+          - platform: windows-latest
+            args: --target aarch64-pc-windows-msvc --bundles nsis
+            rust_targets: aarch64-pc-windows-msvc
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.tag || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_targets }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      # Linux system dependencies for Tauri 2
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            rpm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Validate macOS signing identity
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          if [ -z "$APPLE_SIGNING_IDENTITY" ]; then
+            echo "::error::Repository secret APPLE_SIGNING_IDENTITY is not set"
+            exit 1
+          fi
+
+      - name: Generate release notes
+        id: release_notes
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          REPO="${{ github.repository }}"
+
+          if ! NOTES=$(gh api -X POST "repos/$REPO/releases/generate-notes" \
+            -f tag_name="$TAG" \
+            --jq '.body // ""'); then
+            echo "::error::Failed to generate release notes for $TAG"
+            exit 1
+          fi
+
+          if [ -z "$NOTES" ]; then
+            echo "::error::Generated release notes for $TAG are empty"
+            exit 1
+          fi
+
+          {
+            echo "body<<__SWITCHHOSTS_RELEASE_NOTES__"
+            printf '%s\n' "$NOTES"
+            echo "__SWITCHHOSTS_RELEASE_NOTES__"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and release (Tauri)
+        id: tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS signing
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: J5J6USUX2F
+          # Tauri updater signing
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ needs.prep.outputs.tag }}
+          releaseName: "SwitchHosts ${{ needs.prep.outputs.tag }}"
+          releaseBody: ${{ steps.release_notes.outputs.body || 'See the assets below to download and install this version.' }}
+          releaseDraft: true
+          # Mark anything with a SemVer pre-release suffix (e.g.
+          # v5.0.0-beta.23) as prerelease. Drafts hide assets until
+          # we manually publish, but once we do, GitHub treats
+          # prerelease=false as the project's "latest release" and
+          # surfaces it through /releases/latest/download/latest.json
+          # — beta builds must opt out of that path so stable users
+          # don't auto-update into them.
+          prerelease: ${{ contains(needs.prep.outputs.tag, '-') }}
+          includeUpdaterJson: true
+          args: ${{ matrix.args }}
+
+      # Create updater archives for Windows and Linux.
+      # tauri-action only creates .app.tar.gz for macOS. Windows and
+      # Linux updater archives must be built manually.
+      - name: Create updater archives (Windows)
+        if: runner.os == 'Windows' && needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          REPO="${{ github.repository }}"
+          # Find all NSIS setup executables
+          find src-tauri/target -name "*-setup.exe" -path "*/bundle/nsis/*" | while IFS= read -r EXE; do
+            BASE=$(basename "$EXE" .exe)
+            ZIP_NAME="${BASE}.nsis.zip"
+            echo "Creating: $ZIP_NAME from $EXE"
+            (cd "$(dirname "$EXE")" && powershell -Command "Compress-Archive -Path '$(basename "$EXE")' -DestinationPath '$ZIP_NAME' -Force")
+            gh release upload "$TAG" "$(dirname "$EXE")/$ZIP_NAME" --repo "$REPO" --clobber
+          done
+
+      - name: Create updater archives (Linux)
+        if: runner.os == 'Linux' && needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          REPO="${{ github.repository }}"
+          # Find all AppImage files
+          find src-tauri/target -name "*.AppImage" -path "*/bundle/appimage/*" | while IFS= read -r AI; do
+            TAR_NAME="$(basename "$AI").tar.gz"
+            echo "Creating: $TAR_NAME from $AI"
+            tar czf "/tmp/$TAR_NAME" -C "$(dirname "$AI")" "$(basename "$AI")"
+            gh release upload "$TAG" "/tmp/$TAR_NAME" --repo "$REPO" --clobber
+          done
+
+  # ── Finalize release after all platform builds complete ───────────
+  finalize_release:
+    needs: [release, prep]
+    if: ${{ needs.release.result == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.release.outputs.id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.tag || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Resolve release
+        id: release
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          REPO="${{ github.repository }}"
+          RELEASE_ID=$(gh api "repos/$REPO/releases" --paginate \
+            --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -1)
+          if [ -z "$RELEASE_ID" ]; then
+            echo "::error::No release found for tag $TAG"
+            exit 1
+          fi
+          echo "id=$RELEASE_ID" >> "$GITHUB_OUTPUT"
+
+      # Sign updater archives once, after every matrix build has uploaded its assets.
+      - name: Sign updater archives
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          RELEASE_ID="${{ steps.release.outputs.id }}"
+          REPO="${{ github.repository }}"
+          # Read VERSION from package.json (the same source of truth
+          # tauri-action uses) so we can scope the rest of this step
+          # to current-version archives only. Without this, re-running
+          # against a draft release whose package.json version was
+          # bumped between runs would leave both old- and new-version
+          # archives on the release; signing both makes the manifest
+          # populate the same platform_key twice.
+          VERSION=$(node -p "require('./package.json').version")
+          ARCHIVE_PREFIX="SwitchHosts_${VERSION}_"
+          # This step only runs for real tag releases (gated by
+          # needs.prep.outputs.tag != ''), so missing inputs here
+          # are a misconfiguration — fail loudly rather than ship a
+          # release whose updater channel is silently broken.
+          if [ -z "$RELEASE_ID" ]; then
+            echo "::error::No release ID resolved for tag $TAG"
+            exit 1
+          fi
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY is not set; cannot sign updater archives for $TAG"
+            exit 1
+          fi
+
+          mkdir -p /tmp/updater-sign
+
+          download_asset() {
+            local aid="$1"
+            local name="$2"
+            local dest="$3"
+
+            for attempt in 1 2 3 4 5; do
+              rm -f "$dest"
+              if gh api -H "Accept: application/octet-stream" \
+                "repos/$REPO/releases/assets/$aid" > "$dest"; then
+                return 0
+              fi
+
+              echo "::warning::Download failed for $name (attempt $attempt); retrying..."
+              sleep $((attempt * 5))
+            done
+
+            return 1
+          }
+
+          # When re-running on the same tag/draft release, old .sig
+          # assets from a prior run can outlive the archives they
+          # signed (matrix re-uploads archives with --clobber, but a
+          # mid-step failure could skip re-signing for one platform).
+          # Delete them up-front so a failure here can't leave the
+          # release with "new archive + stale signature" pairs.
+          #
+          # Capture the asset list BEFORE looping. Using
+          # `while ... done < <(gh api ...)` would swallow a
+          # transient API failure: the substitution still succeeds
+          # with an empty stream and the loop exits 0, so old .sig
+          # files would survive while we silently sign nothing.
+          if ! OLD_SIG_LIST=$(gh api "repos/$REPO/releases/$RELEASE_ID/assets" --paginate \
+            --jq '.[] | select(.name | test("\\.(app\\.tar\\.gz|nsis\\.zip|AppImage\\.tar\\.gz)\\.sig$")) | "\(.id)\t\(.name)"'); then
+            echo "::error::Failed to list existing .sig assets"
+            exit 1
+          fi
+
+          if [ -n "$OLD_SIG_LIST" ]; then
+            while IFS=$'\t' read -r OLD_AID OLD_NAME; do
+              # Scope cleanup to the names this run will replace:
+              #   - Windows / Linux: SwitchHosts_${VERSION}_*.sig (version-named)
+              #   - macOS: SwitchHosts_*.app.tar.gz.sig (tauri-action
+              #     names the .app.tar.gz with arch only, no version,
+              #     so the version filter would skip every darwin sig)
+              # Other-version sigs from a re-used draft release are
+              # left alone — the manifest filter below ignores them.
+              case "$OLD_NAME" in
+                "${ARCHIVE_PREFIX}"*) ;;
+                SwitchHosts_*.app.tar.gz.sig) ;;
+                *)
+                  echo "Keeping out-of-version sig: $OLD_NAME"
+                  continue
+                  ;;
+              esac
+              echo "Deleting old: $OLD_NAME"
+              if ! gh api -X DELETE "repos/$REPO/releases/assets/$OLD_AID" --silent; then
+                echo "::error::Failed to delete old $OLD_NAME"
+                exit 1
+              fi
+            done <<< "$OLD_SIG_LIST"
+          fi
+
+          # Sign every updater archive (.app.tar.gz / .nsis.zip /
+          # .AppImage.tar.gz) and upload a fresh .sig. Any failure
+          # aborts the step — a half-signed release is unsafe to ship.
+          if ! ARCHIVE_LIST=$(gh api "repos/$REPO/releases/$RELEASE_ID/assets" --paginate \
+            --jq '.[] | select(.name | test("\\.(app\\.tar\\.gz|nsis\\.zip|AppImage\\.tar\\.gz)$")) | "\(.id)\t\(.name)"'); then
+            echo "::error::Failed to list updater archives"
+            exit 1
+          fi
+
+          if [ -z "$ARCHIVE_LIST" ]; then
+            echo "::error::No updater archives found in release $TAG"
+            exit 1
+          fi
+
+          SIGNED_COUNT=0
+          while IFS=$'\t' read -r AID NAME; do
+            # Accept either:
+            #   - SwitchHosts_${VERSION}_*  (Windows / Linux archives,
+            #     where re-running with a bumped version could leave
+            #     old-version archives that would re-sign and collide)
+            #   - SwitchHosts_*.app.tar.gz  (macOS — names are arch-
+            #     only, no version, so versioned filter would exclude
+            #     every darwin archive and break the release)
+            case "$NAME" in
+              "${ARCHIVE_PREFIX}"*) ;;
+              SwitchHosts_*.app.tar.gz) ;;
+              *)
+                echo "Skipping out-of-version archive: $NAME"
+                continue
+                ;;
+            esac
+
+            echo "Downloading: $NAME"
+            if ! download_asset "$AID" "$NAME" "/tmp/updater-sign/$NAME"; then
+              echo "::error::Could not download $NAME after retries"
+              exit 1
+            fi
+
+            echo "Signing: $NAME"
+            if ! npx tauri signer sign "/tmp/updater-sign/$NAME"; then
+              echo "::error::Signing failed for $NAME"
+              exit 1
+            fi
+
+            SIG="/tmp/updater-sign/${NAME}.sig"
+            if [ ! -f "$SIG" ]; then
+              echo "::error::Signature file not created for $NAME"
+              exit 1
+            fi
+
+            echo "Uploading: ${NAME}.sig"
+            if ! gh release upload "$TAG" "$SIG" --repo "$REPO" --clobber; then
+              echo "::error::Failed to upload ${NAME}.sig"
+              exit 1
+            fi
+            SIGNED_COUNT=$((SIGNED_COUNT + 1))
+          done <<< "$ARCHIVE_LIST"
+
+          if [ "$SIGNED_COUNT" -eq 0 ]; then
+            echo "::error::No archives matched VERSION=$VERSION; release contains only out-of-version artifacts"
+            exit 1
+          fi
+
+      # Rename release assets to the project's convention:
+      #   SwitchHosts-{version}-{platform}-{arch}.{ext}
+      # Uses the GitHub API PATCH endpoint to rename in place (no
+      # re-download / re-upload needed).
+      - name: Rename release assets
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          RELEASE_ID="${{ steps.release.outputs.id }}"
+          REPO="${{ github.repository }}"
+
+          if [ -z "$RELEASE_ID" ]; then
+            echo "No release ID — skipping rename"
+            exit 0
+          fi
+
+          platform_for_asset() {
+            local name="$1"
+
+            case "$name" in
+              *.app.tar.gz|*.app.tar.gz.sig) echo ""; return ;;
+              *.nsis.zip|*.nsis.zip.sig) echo ""; return ;;
+              *.AppImage.tar.gz|*.AppImage.tar.gz.sig) echo ""; return ;;
+              latest.json) echo ""; return ;;
+              *.dmg) echo "mac"; return ;;
+              *.AppImage|*.deb|*.rpm) echo "linux"; return ;;
+              *.exe|*.msi) echo "windows"; return ;;
+            esac
+
+            echo ""
+          }
+
+          # Capture the asset list before iterating — `gh api ... |
+          # while ...` would silently skip every rename if the list
+          # API blipped (the pipe subshell exits 0 on an empty stream).
+          if ! ASSET_LIST=$(gh api "repos/$REPO/releases/$RELEASE_ID/assets" --paginate \
+            --jq '.[] | "\(.id)\t\(.name)"'); then
+            echo "::error::Failed to list release assets for rename"
+            exit 1
+          fi
+
+          while IFS=$'\t' read -r AID NAME; do
+            # Only touch SwitchHosts artifacts (also filters out the
+            # empty-line iteration when ASSET_LIST is empty).
+            case "$NAME" in SwitchHosts*) ;; *) continue ;; esac
+
+            PLATFORM=$(platform_for_asset "$NAME")
+            [ -z "$PLATFORM" ] && continue
+
+            NEW="$NAME"
+
+            # Pre-compute prefix / replacement strings into plain
+            # variables. Bash's parameter-expansion replacement side
+            # treats inline inner quotes (`${var/.../"text"}`) as
+            # literal characters in some shells, so a one-liner with
+            # nested quoting can leak `"` into the renamed asset.
+            # The pattern side still gets inner quotes via "$PREFIX"
+            # to keep dots in ${VERSION} from being interpreted as
+            # glob metachars (SC2295).
+            PREFIX="SwitchHosts_${VERSION}_"
+            REPLACEMENT="SwitchHosts-${VERSION}-${PLATFORM}-"
+            RPM_PREFIX="SwitchHosts-${VERSION}-1."
+
+            # 1. Main pattern: SwitchHosts_{ver}_{arch}… → SwitchHosts-{ver}-{platform}-{arch}…
+            NEW="${NEW/#"$PREFIX"/$REPLACEMENT}"
+
+            # 2. RPM uses its own format: SwitchHosts-{ver}-1.{arch}.rpm → normalise
+            case "$NEW" in
+              "$RPM_PREFIX"*.rpm)
+                ARCH="${NEW#"$RPM_PREFIX"}"
+                ARCH="${ARCH%.rpm}"
+                NEW="SwitchHosts-${VERSION}-${PLATFORM}-${ARCH}.rpm"
+                ;;
+            esac
+
+            # 3. Drop _en-US from MSI name
+            NEW="${NEW/_en-US.msi/.msi}"
+
+            if [ "$NEW" != "$NAME" ]; then
+              echo "  $NAME → $NEW"
+              if ! gh api -X PATCH "repos/$REPO/releases/assets/$AID" -f name="$NEW" --silent; then
+                echo "::error::Failed to rename $NAME → $NEW"
+                exit 1
+              fi
+            fi
+          done <<< "$ASSET_LIST"
+
+      # tauri-plugin-updater 2.10.1 looks for the installer-specific
+      # platform key first (`linux-x86_64-deb`, `linux-x86_64-rpm`,
+      # etc.), then falls back to the generic `linux-x86_64` key.
+      # We intentionally do not publish generic Linux keys in
+      # latest.json, so every installer variant must appear here and
+      # deb/rpm installs update to their matching package instead of
+      # being offered an AppImage archive.
+      - name: Sign Linux package updater assets
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          VERSION=$(node -p "require('./package.json').version")
+          RELEASE_ID="${{ steps.release.outputs.id }}"
+          REPO="${{ github.repository }}"
+          PACKAGE_PREFIX="SwitchHosts-${VERSION}-linux-"
+
+          if [ -z "$RELEASE_ID" ]; then
+            echo "::error::No release ID resolved for tag $TAG"
+            exit 1
+          fi
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY is not set; cannot sign Linux package updater assets for $TAG"
+            exit 1
+          fi
+
+          mkdir -p /tmp/updater-sign-packages
+
+          download_asset() {
+            local aid="$1"
+            local name="$2"
+            local dest="$3"
+
+            for attempt in 1 2 3 4 5; do
+              rm -f "$dest"
+              if gh api -H "Accept: application/octet-stream" \
+                "repos/$REPO/releases/assets/$aid" > "$dest"; then
+                return 0
+              fi
+
+              echo "::warning::Download failed for $name (attempt $attempt); retrying..."
+              sleep $((attempt * 5))
+            done
+
+            return 1
+          }
+
+          if ! ASSET_LIST=$(gh api "repos/$REPO/releases/$RELEASE_ID/assets" --paginate \
+            --jq '.[] | "\(.id)\t\(.name)"'); then
+            echo "::error::Failed to list release assets for Linux package signing"
+            exit 1
+          fi
+
+          if [ -n "$ASSET_LIST" ]; then
+            while IFS=$'\t' read -r AID NAME; do
+              case "$NAME" in
+                "${PACKAGE_PREFIX}"*.deb.sig|"${PACKAGE_PREFIX}"*.rpm.sig) ;;
+                *) continue ;;
+              esac
+
+              echo "Deleting old: $NAME"
+              if ! gh api -X DELETE "repos/$REPO/releases/assets/$AID" --silent; then
+                echo "::error::Failed to delete old $NAME"
+                exit 1
+              fi
+            done <<< "$ASSET_LIST"
+          fi
+
+          SIGNED_COUNT=0
+          while IFS=$'\t' read -r AID NAME; do
+            case "$NAME" in
+              "${PACKAGE_PREFIX}"*.deb|"${PACKAGE_PREFIX}"*.rpm) ;;
+              *) continue ;;
+            esac
+
+            echo "Downloading: $NAME"
+            if ! download_asset "$AID" "$NAME" "/tmp/updater-sign-packages/$NAME"; then
+              echo "::error::Could not download $NAME after retries"
+              exit 1
+            fi
+
+            echo "Signing: $NAME"
+            if ! npx tauri signer sign "/tmp/updater-sign-packages/$NAME"; then
+              echo "::error::Signing failed for $NAME"
+              exit 1
+            fi
+
+            SIG="/tmp/updater-sign-packages/${NAME}.sig"
+            if [ ! -f "$SIG" ]; then
+              echo "::error::Signature file not created for $NAME"
+              exit 1
+            fi
+
+            echo "Uploading: ${NAME}.sig"
+            if ! gh release upload "$TAG" "$SIG" --repo "$REPO" --clobber; then
+              echo "::error::Failed to upload ${NAME}.sig"
+              exit 1
+            fi
+            SIGNED_COUNT=$((SIGNED_COUNT + 1))
+          done <<< "$ASSET_LIST"
+
+          if [ "$SIGNED_COUNT" -eq 0 ]; then
+            echo "::error::No Linux deb/rpm packages matched VERSION=$VERSION"
+            exit 1
+          fi
+
+  # ── Generate latest.json after release assets are finalized ───────
+  updater-manifest:
+    needs: [finalize_release, prep]
+    if: ${{ needs.finalize_release.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.tag || github.ref }}
+
+      - name: Generate latest.json
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ needs.prep.outputs.tag }}"
+          VERSION=$(node -p "require('./package.json').version")
+          REPO="${{ github.repository }}"
+          RELEASE_ID="${{ needs.finalize_release.outputs.release_id }}"
+
+          if [ -z "$RELEASE_ID" ]; then
+            echo "::warning::No release ID from finalize_release"
+            exit 0
+          fi
+
+          DOWNLOAD_BASE="https://github.com/$REPO/releases/download/$TAG"
+          ARCHIVE_PREFIX="SwitchHosts_${VERSION}_"
+          PACKAGE_PREFIX="SwitchHosts-${VERSION}-linux-"
+          RELEASE_BODY=$(gh api "repos/$REPO/releases/$RELEASE_ID" --jq '.body // ""')
+
+          download_sig_content() {
+            local aid="$1"
+            local name="$2"
+            local content
+
+            for attempt in 1 2 3 4 5; do
+              if content=$(gh api -H "Accept: application/octet-stream" \
+                "repos/$REPO/releases/assets/$aid" 2>/dev/null); then
+                printf '%s' "$content"
+                return 0
+              fi
+
+              echo "::warning::Download failed for $name (attempt $attempt); retrying..." >&2
+              sleep $((attempt * 5))
+            done
+
+            echo "::error::Failed to download $name after 5 attempts" >&2
+            return 1
+          }
+
+          # Capture the .sig id list before the loop so a transient
+          # `gh api` failure surfaces here instead of silently producing
+          # an empty PLATFORMS (which would then trip the manifest
+          # check, but with a misleading "platforms don't match" error).
+          if ! SIG_ID_LIST=$(gh api "repos/$REPO/releases/$RELEASE_ID/assets" --paginate \
+            --jq '.[] | select(.name | endswith(".sig")) | .id'); then
+            echo "::error::Failed to list .sig assets"
+            exit 1
+          fi
+
+          # Build platform entries dynamically from actual .sig assets.
+          # For each .sig file, derive the archive name and the Tauri
+          # platform key from the filename pattern.
+          PLATFORMS="{}"
+          for entry in $SIG_ID_LIST; do
+
+            ASSET=$(gh api "repos/$REPO/releases/assets/$entry")
+            SIG_NAME=$(echo "$ASSET" | jq -r '.name')
+
+            # Same naming-aware filter as the sign step:
+            #   - Windows / Linux sigs include VERSION → match prefix
+            #   - macOS sigs are arch-only → match SwitchHosts_*.app.tar.gz.sig
+            # Old-version leftovers in a re-used draft would otherwise
+            # map to the same platform_key as the current build and
+            # silently overwrite it (jq `+` keeps the last writer).
+            case "$SIG_NAME" in
+              "${ARCHIVE_PREFIX}"*) ;;
+              SwitchHosts_*.app.tar.gz.sig) ;;
+              "${PACKAGE_PREFIX}"*.deb.sig|"${PACKAGE_PREFIX}"*.rpm.sig) ;;
+              *)
+                echo "Skipping out-of-version sig: $SIG_NAME"
+                continue
+                ;;
+            esac
+
+            if ! SIG_CONTENT=$(download_sig_content "$entry" "$SIG_NAME"); then
+              echo "::error::Skipping $SIG_NAME (download failed)"
+              continue
+            fi
+            [ -z "$SIG_CONTENT" ] && continue
+
+            ARCHIVE_NAME="${SIG_NAME%.sig}"
+            PLATFORM_KEY=""
+            case "$ARCHIVE_NAME" in
+              *_universal.app.tar.gz)    PLATFORM_KEY="darwin-universal" ;;
+              *_aarch64.app.tar.gz)      PLATFORM_KEY="darwin-aarch64" ;;
+              *_x64.app.tar.gz)          PLATFORM_KEY="darwin-x86_64" ;;
+              *_x64-setup.nsis.zip)      PLATFORM_KEY="windows-x86_64" ;;
+              *_x86-setup.nsis.zip)      PLATFORM_KEY="windows-i686" ;;
+              *_arm64-setup.nsis.zip)    PLATFORM_KEY="windows-aarch64" ;;
+              *_amd64.AppImage.tar.gz)   PLATFORM_KEY="linux-x86_64-appimage" ;;
+              *_aarch64.AppImage.tar.gz) PLATFORM_KEY="linux-aarch64-appimage" ;;
+              SwitchHosts-${VERSION}-linux-amd64.deb)    PLATFORM_KEY="linux-x86_64-deb" ;;
+              SwitchHosts-${VERSION}-linux-arm64.deb)    PLATFORM_KEY="linux-aarch64-deb" ;;
+              SwitchHosts-${VERSION}-linux-x86_64.rpm)   PLATFORM_KEY="linux-x86_64-rpm" ;;
+              SwitchHosts-${VERSION}-linux-aarch64.rpm)  PLATFORM_KEY="linux-aarch64-rpm" ;;
+            esac
+            [ -z "$PLATFORM_KEY" ] && continue
+
+            # Refuse to silently overwrite a key already populated.
+            # Even with the VERSION filter above, this catches bundle
+            # naming mistakes (two archives matching the same suffix).
+            if echo "$PLATFORMS" | jq -e --arg k "$PLATFORM_KEY" 'has($k)' > /dev/null; then
+              echo "::error::Duplicate platform_key $PLATFORM_KEY (latest entry: $ARCHIVE_NAME)"
+              exit 1
+            fi
+
+            echo "  $PLATFORM_KEY → $ARCHIVE_NAME"
+            PLATFORMS=$(echo "$PLATFORMS" | jq \
+              --arg key "$PLATFORM_KEY" \
+              --arg url "$DOWNLOAD_BASE/$ARCHIVE_NAME" \
+              --arg sig "$SIG_CONTENT" \
+              '. + {($key): {"url": $url, "signature": $sig}}')
+          done
+
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          LATEST=$(jq -n \
+            --arg version "$VERSION" \
+            --arg pub_date "$NOW" \
+            --arg notes "$RELEASE_BODY" \
+            --argjson platforms "$PLATFORMS" \
+            '{version: $version, pub_date: $pub_date, notes: $notes, platforms: $platforms}')
+
+          echo "$LATEST" | jq .
+
+          # Refuse to ship a manifest whose platform set doesn't match
+          # the release matrix exactly. A simple count check would let
+          # a stale .sig from a previous run sneak in (the count would
+          # still be right but the keys would be wrong / the signature
+          # would be against a now-replaced archive). Keep this list in
+          # sync with the matrix at the top of the file.
+          EXPECTED_KEYS=$(jq -nc '[
+            "darwin-universal","darwin-aarch64","darwin-x86_64",
+            "windows-x86_64","windows-i686","windows-aarch64",
+            "linux-x86_64-appimage","linux-aarch64-appimage",
+            "linux-x86_64-deb","linux-aarch64-deb",
+            "linux-x86_64-rpm","linux-aarch64-rpm"
+          ] | sort')
+          ACTUAL_KEYS=$(echo "$PLATFORMS" | jq -c 'keys | sort')
+          if [ "$ACTUAL_KEYS" != "$EXPECTED_KEYS" ]; then
+            echo "::error::latest.json platforms do not match the release matrix"
+            echo "  expected: $EXPECTED_KEYS"
+            echo "  actual:   $ACTUAL_KEYS"
+            exit 1
+          fi
+
+          echo "$LATEST" > latest.json
+          gh release upload "$TAG" latest.json --repo "$REPO" --clobber
+          echo "latest.json uploaded with $(echo "$PLATFORMS" | jq 'keys | length') platform(s)"

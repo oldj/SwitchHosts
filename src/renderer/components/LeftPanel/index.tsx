@@ -4,21 +4,23 @@
  */
 
 import events from '@common/events'
+import { ScrollArea } from '@mantine/core'
 import Trashcan from '@renderer/components/LeftPanel/Trashcan'
 import List from '@renderer/components/List'
 import { agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
-import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
+import { leftPanelViewAtom } from '@renderer/stores/ui'
+import { useAtomValue } from 'jotai'
 import styles from './index.module.scss'
 
 interface Props {
   width: number
 }
 
-const Index = (props: Props) => {
+const Index = (_props: Props) => {
   const { lang } = useI18n()
-  const { hosts_data } = useHostsData()
+  const view = useAtomValue(leftPanelViewAtom)
 
   const menu = new PopupMenu([
     {
@@ -30,9 +32,16 @@ const Index = (props: Props) => {
   ])
 
   return (
-    <div className={styles.list} onContextMenu={() => menu.show()}>
-      <List />
-      {hosts_data.trashcan.length > 0 ? <Trashcan /> : null}
+    <div
+      className={styles.root}
+      onContextMenu={() => {
+        if (view === 'list') menu.show()
+      }}
+    >
+      <ScrollArea className={styles.content} scrollbars="y" type="hover">
+        {view === 'list' ? <List /> : <Trashcan />}
+      </ScrollArea>
+      <div className={styles.status_bar} />
     </div>
   )
 }

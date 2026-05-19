@@ -11,16 +11,16 @@ import styles from './SystemHostsItem.module.scss'
 
 const SystemHostsItem = () => {
   const { i18n } = useI18n()
-  const { current_hosts, setCurrentHosts } = useHostsData()
+  const { currentHosts, setCurrentHosts } = useHostsData()
 
-  const is_selected = !current_hosts
+  const isSelected = !currentHosts
 
   const showSystemHosts = () => {
     setCurrentHosts(null)
   }
 
   return (
-    <div className={clsx(styles.root, is_selected && styles.selected)} onClick={showSystemHosts}>
+    <div className={clsx(styles.root, isSelected && styles.selected)} onClick={showSystemHosts}>
       <span className={styles.icon}>
         <ItemIcon type="system" />
       </span>

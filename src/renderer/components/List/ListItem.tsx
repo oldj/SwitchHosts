@@ -5,13 +5,13 @@
 
 import { IHostsListObject } from '@common/data'
 import events from '@common/events'
-import { updateOneItem } from '@common/hostsFn'
 import { IMenuItemOption } from '@common/types'
 import { ActionIcon } from '@mantine/core'
 import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { actions, agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
+import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import { IconEdit } from '@tabler/icons-react'
@@ -22,55 +22,61 @@ import styles from './ListItem.module.scss'
 
 interface Props {
   data: IHostsListObject
-  selected_ids: string[]
-  is_tray?: boolean
+  selectedIds: string[]
+  isTray?: boolean
 }
 
 const ListItem = (props: Props) => {
-  const { data, is_tray, selected_ids } = props
+  const { data, isTray, selectedIds } = props
   const { lang, i18n } = useI18n()
-  const { hosts_data, setList, current_hosts, setCurrentHosts } = useHostsData()
-  const [is_collapsed, setIsCollapsed] = useState(!!data.is_collapsed)
-  const [is_on, setIsOn] = useState(data.on)
+  const { currentHosts, setCurrentHosts } = useHostsData()
+  const [isOn, setIsOn] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
-  const ref_toast_refresh = useRef<string | null>(null)
+  const refToastRefresh = useRef<string | null>(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror prop into local optimistic state
     setIsOn(data.on)
   }, [data])
 
-  useEffect(() => {
-    const is_selected = data.id === current_hosts?.id
+  // Roll-back signal from List/index.tsx::onToggleItem. The optimistic
+  // toggle in `toggleOn` flips `isOn` locally before the apply round
+  // trip starts. When the apply fails (e.g. user dismissed the OS auth
+  // prompt), `loadHostsData` reloads manifest.json — but if the apply
+  // never persisted, the reloaded `data.on` matches the previous value
+  // and Tree/Node's deep-equal `React.memo` skips re-rendering, so the
+  // useEffect above never re-fires. Subscribing here gives us an
+  // explicit rollback path that bypasses the memo.
+  useOnBroadcast(
+    events.set_hosts_on_status,
+    (id: string, on: boolean) => {
+      if (id === data.id) {
+        setIsOn(on)
+      }
+    },
+    [data.id],
+  )
 
-    if (is_selected && el.current) {
+  useEffect(() => {
+    const isSelected = data.id === currentHosts?.id
+
+    if (isSelected && el.current) {
       // el.current.scrollIntoViewIfNeeded()
       scrollIntoView(el.current, {
         behavior: 'smooth',
         scrollMode: 'if-needed',
       })
     }
-  }, [data, current_hosts, el])
+  }, [data, currentHosts, el])
 
   const onSelect = () => {
+    if (isTray) return
     setCurrentHosts(data.is_sys ? null : data)
   }
 
-  const toggleIsCollapsed = () => {
-    if (!is_folder) return
-
-    let _is_collapsed = !is_collapsed
-    setIsCollapsed(_is_collapsed)
-    setList(
-      updateOneItem(hosts_data.list, {
-        id: data.id,
-        is_collapsed: _is_collapsed,
-      }),
-    ).catch((e) => console.error(e))
-  }
-
   const toggleOn = (on?: boolean) => {
-    on = typeof on === 'boolean' ? on : !is_on
+    on = typeof on === 'boolean' ? on : !isOn
     setIsOn(on)
 
     agent.broadcast(events.toggle_item, data.id, on)
@@ -78,21 +84,22 @@ const ListItem = (props: Props) => {
 
   if (!data) return null
 
-  const is_folder = data.type === 'folder'
-  const is_selected = data.id === current_hosts?.id
+  const isFolder = data.type === 'folder'
+  const isSelected = data.id === currentHosts?.id
+  const title = data.title || lang.untitled
 
   return (
     <div
-      className={clsx(styles.root, is_selected && styles.selected, is_tray && styles.is_tray)}
-      // className={clsx(styles.item, is_selected && styles.selected, is_collapsed && styles.is_collapsed)}
+      className={clsx(styles.root, isSelected && styles.selected, isTray && styles.isTray)}
+      // className={clsx(styles.item, isSelected && styles.selected, isCollapsed && styles.isCollapsed)}
       // style={{ paddingLeft: `${1.3 * level}em` }}
       onContextMenu={(e) => {
-        let deal_count = 1
-        if (selected_ids.includes(data.id)) {
-          deal_count = selected_ids.length
+        let dealCount = 1
+        if (selectedIds.includes(data.id)) {
+          dealCount = selectedIds.length
         }
 
-        let menu_items: IMenuItemOption[] = [
+        let menuItems: IMenuItemOption[] = [
           {
             label: lang.edit,
             click() {
@@ -102,26 +109,22 @@ const ListItem = (props: Props) => {
           {
             label: lang.refresh,
             async click() {
-              ref_toast_refresh.current = `${Date.now()}`
+              refToastRefresh.current = `${Date.now()}`
 
               actions
                 .refreshHosts(data.id)
                 .then((r) => {
-                  console.log(r)
                   if (!r.success) {
                     console.error(r.message || r.code || 'Error!')
                     return
                   }
-
-                  console.log('OK!')
                 })
                 .catch((e) => {
-                  console.log(e)
                   console.error(e.message)
                 })
                 .finally(() => {
-                  if (ref_toast_refresh.current) {
-                    ref_toast_refresh.current = null
+                  if (refToastRefresh.current) {
+                    refToastRefresh.current = null
                   }
                 })
             },
@@ -131,39 +134,49 @@ const ListItem = (props: Props) => {
           },
           {
             label:
-              deal_count === 1
+              dealCount === 1
                 ? lang.move_to_trashcan
-                : i18n.trans('move_items_to_trashcan', [deal_count.toLocaleString()]),
+                : i18n.trans('move_items_to_trashcan', [dealCount.toLocaleString()]),
             click() {
-              let ids = deal_count === 1 ? [data.id] : selected_ids
+              const ids = dealCount === 1 ? [data.id] : selectedIds
               agent.broadcast(events.move_to_trashcan, ids)
             },
           },
         ]
 
         if (data.type !== 'remote') {
-          menu_items = menu_items.filter((i) => i.label !== lang.refresh)
+          menuItems = menuItems.filter((i) => i.label !== lang.refresh)
         }
 
-        const menu = new PopupMenu(menu_items)
+        const menu = new PopupMenu(menuItems)
 
-        !data.is_sys && !is_tray && menu.show()
+        if (!data.is_sys && !isTray) menu.show()
         e.preventDefault()
         e.stopPropagation()
       }}
       ref={el}
       onClick={(e: React.MouseEvent) => {
-        if (is_tray) {
+        if (isTray) {
           e.preventDefault()
           e.stopPropagation()
         }
       }}
     >
-      <div className={styles.title} onClick={onSelect}>
-        <span className={clsx(styles.icon, is_folder && styles.folder)} onClick={toggleIsCollapsed}>
-          <ItemIcon type={data.is_sys ? 'system' : data.type} is_collapsed={data.is_collapsed} />
+      <div
+        className={styles.title}
+        onClick={onSelect}
+        onDoubleClick={() => {
+          if (!isTray) return
+          agent.broadcast(events.select_hosts, data.id, 1000)
+          agent.broadcast(events.active_main_window)
+        }}
+      >
+        <span className={clsx(styles.icon, isFolder && styles.folder)}>
+          <ItemIcon type={data.is_sys ? 'system' : data.type} isCollapsed={data.is_collapsed} />
         </span>
-        {data.title || lang.untitled}
+        <span className={styles.label} title={title}>
+          {title}
+        </span>
       </div>
       <div className={styles.status}>
         {data.is_sys ? null : (
@@ -171,7 +184,6 @@ const ListItem = (props: Props) => {
             <div className={styles.edit}>
               <ActionIcon
                 variant="subtle"
-                color="gray"
                 onClick={() => {
                   agent.broadcast(events.edit_hosts_info, data)
                 }}
@@ -180,7 +192,7 @@ const ListItem = (props: Props) => {
                 <IconEdit size={16} stroke={1.5} />
               </ActionIcon>
             </div>
-            <SwitchButton on={!!is_on} onChange={(on) => toggleOn(on)} />
+            <SwitchButton on={!!isOn} onChange={(on) => toggleOn(on)} />
           </>
         )}
       </div>

@@ -1,14 +1,21 @@
 import type { DrawerProps } from '@mantine/core'
-import { Box, Drawer } from '@mantine/core'
+import { Box, Drawer, ScrollArea } from '@mantine/core'
 import type { CSSProperties, ReactNode } from 'react'
 
 interface SideDrawerProps extends Omit<DrawerProps, 'children' | 'position' | 'styles'> {
   children: ReactNode
   footer?: ReactNode
+  scrollable?: boolean
   scrollAreaStyle?: CSSProperties
 }
 
-const SideDrawer = ({ children, footer, scrollAreaStyle, ...props }: SideDrawerProps) => {
+const SideDrawer = ({
+  children,
+  footer,
+  scrollable = true,
+  scrollAreaStyle,
+  ...props
+}: SideDrawerProps) => {
   return (
     <Drawer
       position="right"
@@ -28,17 +35,36 @@ const SideDrawer = ({ children, footer, scrollAreaStyle, ...props }: SideDrawerP
       }}
       {...props}
     >
-      <Box
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflow: 'auto',
-          padding: '0 var(--mantine-spacing-md)',
-          ...scrollAreaStyle,
-        }}
-      >
-        {children}
-      </Box>
+      {scrollable ? (
+        <ScrollArea
+          scrollbars="y"
+          type="hover"
+          style={{
+            flex: 1,
+            minHeight: 0,
+          }}
+          styles={{
+            viewport: {
+              padding: '0 var(--mantine-spacing-md)',
+              ...scrollAreaStyle,
+            },
+          }}
+        >
+          {children}
+        </ScrollArea>
+      ) : (
+        <Box
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden',
+            padding: '0 var(--mantine-spacing-md)',
+            ...scrollAreaStyle,
+          }}
+        >
+          {children}
+        </Box>
+      )}
       {footer ? (
         <Box
           style={{

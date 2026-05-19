@@ -3,23 +3,62 @@
   grid-template-rows: var(--swh-top-bar-height) 1fr;
 }
 
+// Right padding is applied via inline `right` offsets on `.main` and `.right_panel`
+// (constant BODY_PADDING_RIGHT in pages/index.tsx); fixed-positioned children
+// would ignore any padding-right declared here.
+.body {
+  display: flex;
+}
+
+.body.dragging .left,
+.body.dragging .main,
+.body.dragging .right_panel {
+  transition: none;
+}
+
 .left {
   position: fixed;
   top: var(--swh-top-bar-height);
   left: 0;
   bottom: 0;
-  background: var(--swh-left-panel-bg);
-  border-right: 1px solid var(--swh-border-color-0);
+  z-index: 2;
   transition: 0.3s;
 }
 
 .main {
   position: fixed;
   top: var(--swh-top-bar-height);
+  bottom: 0;
+  z-index: 1;
+  transition: 0.3s;
+}
+
+.left_sidebar {
+  position: fixed;
+  top: var(--swh-top-bar-height);
+  left: 0;
+  bottom: 0;
+  z-index: 1;
+  background: var(--swh-window-bg);
+}
+
+.right_panel {
+  position: fixed;
+  top: var(--swh-top-bar-height);
   right: 0;
   bottom: 0;
-  background: var(--swh-main-bg);
+  z-index: 2;
   transition: 0.3s;
+}
+
+.body_frame {
+  position: fixed;
+  top: var(--swh-top-bar-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  // border: 1px solid var(--swh-border-color-0);
+  pointer-events: none;
 }
 
 .new_version {

@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "find-window",
+  "description": "Capabilities for the find/search window: core defaults only.",
+  "windows": ["find"],
+  "permissions": ["core:default"]
+}

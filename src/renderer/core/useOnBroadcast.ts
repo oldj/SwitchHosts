@@ -1,6 +1,7 @@
-import { EventHandler } from '@main/preload'
 import { agent } from '@renderer/core/agent'
 import { useEffect } from 'react'
+
+type EventHandler = (...args: any[]) => void
 
 const useOnBroadcast = (
   event: string,
@@ -8,6 +9,7 @@ const useOnBroadcast = (
   deps: any[] = [],
 ) => {
   // agent.on will return an off function for clean up
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => agent.on(event, handler), deps)
 }
 

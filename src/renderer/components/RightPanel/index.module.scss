@@ -1,0 +1,140 @@
+.root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  background: var(--swh-right-panel-bg);
+  border: 1px solid var(--swh-border-color-0);
+  border-left: none;
+  border-radius: 0 var(--swh-border-radius) var(--swh-border-radius) 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--swh-border-color-0);
+}
+
+.title_wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.title_icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+
+  svg {
+    flex: 0 0 auto;
+  }
+}
+
+.title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.section {
+  padding: 12px;
+}
+
+.section_title {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  font-size: 13px;
+  line-height: 1.5em;
+
+  & + & {
+    margin-top: 10px;
+  }
+}
+
+.row_label {
+  opacity: 0.65;
+  font-size: 12px;
+}
+
+.row_value {
+  min-width: 0;
+  word-break: break-all;
+}
+
+.mono {
+  font-family: var(--swh-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+
+  a {
+    color: var(--swh-primary-color);
+    word-break: break-all;
+  }
+}
+
+.refresh_btn {
+  align-self: flex-start;
+  margin-top: 14px;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px dashed var(--swh-border-color-0);
+}
+
+.muted {
+  opacity: 0.5;
+  font-size: 13px;
+}
+
+.missing {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.include_list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  li {
+    font-size: 13px;
+  }
+}
+
+.status_bar {
+  height: var(--swh-status-bar-height);
+  line-height: var(--swh-status-bar-height);
+  background: var(--swh-status-bar-bg);
+  color: var(--swh-status-bar-font-color);
+  font-size: var(--swh-status-bar-font-size);
+}

@@ -21,5 +21,11 @@
     "**/build/**": true,
     "**/dist/**": true,
     "**/node_modules/**": true
-  }
+  },
+  "json.schemas": [
+    {
+      "fileMatch": ["src-tauri/tauri.conf.json"],
+      "url": "https://schema.tauri.app/config/2"
+    }
+  ]
 }

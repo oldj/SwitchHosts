@@ -1,7 +1,9 @@
 .root {
   display: flex;
+  width: 100%;
+  min-width: 0;
 
-  &.selected:not(.is_tray):hover {
+  &.selected:not(.isTray):hover {
     .edit {
       display: flex;
     }
@@ -10,6 +12,18 @@
   .edit {
     display: none;
     align-items: center;
+
+    // The edit button only appears on a selected row (filled-accent
+    // background), so default the icon to reverse color for contrast.
+    // When the button itself is hovered, Mantine's subtle variant swaps
+    // in a light-tint background — flip the icon back to the accent.
+    svg {
+      color: var(--swh-font-color-reverse);
+    }
+
+    button:hover svg {
+      color: var(--swh-primary-color);
+    }
   }
 }
 
@@ -17,6 +31,7 @@
   display: flex;
   align-items: center;
   flex: 1 1 auto;
+  min-width: 0;
   position: relative;
   //padding-left: 10px;
   height: var(--swh-tree-row-height);
@@ -44,6 +59,7 @@
 }
 
 .icon {
+  flex: 0 0 auto;
   margin-right: 0.5em;
   display: flex;
   align-items: center;
@@ -57,6 +73,14 @@
     position: relative;
     top: -1px;
   }
+}
+
+.label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .status {

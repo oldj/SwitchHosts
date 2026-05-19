@@ -5,161 +5,207 @@
 
 import { IHostsListObject } from '@common/data'
 import events from '@common/events'
-import { findItemById, getNextSelectedItem, setOnStateOfItem } from '@common/hostsFn'
+import { findItemById, flatten, getNextSelectedItem, setOnStateOfItem } from '@common/hostsFn'
 import { IFindShowSourceParam } from '@common/types'
-import { IHostsWriteOptions } from '@main/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
+import { showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import clsx from 'clsx'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
 import styles from './index.module.scss'
 import ListItem from './ListItem'
 
 interface Props {
-  is_tray?: boolean
+  isTray?: boolean
 }
 
 const List = (props: Props) => {
-  const { is_tray } = props
-  const { hosts_data, loadHostsData, setList, current_hosts, setCurrentHosts } = useHostsData()
+  const { isTray } = props
+  const { hostsData, loadHostsData, setList, currentHosts, setCurrentHosts } = useHostsData()
   const { configs } = useConfigs()
   const { lang } = useI18n()
-  const [selected_ids, setSelectedIds] = useState<string[]>([current_hosts?.id || '0'])
-  const [show_list, setShowList] = useState<IHostsListObject[]>([])
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    isTray ? [] : [currentHosts?.id || '0'],
+  )
+  const [showList, setShowList] = useState<IHostsListObject[]>([])
+  const remoteContentApplyRef = useRef({
+    isApplying: false,
+    pendingIds: new Set<string>(),
+  })
 
   useEffect(() => {
-    if (!is_tray) {
+    /* eslint-disable react-hooks/set-state-in-effect -- showList also mutated by drag onChange; keep as state synced from hostsData */
+    if (!isTray) {
       setShowList([
         {
           id: '0',
           title: lang.system_hosts,
           is_sys: true,
         },
-        ...hosts_data.list,
+        ...hostsData.list,
       ])
     } else {
-      setShowList([...hosts_data.list])
+      setShowList([...hostsData.list])
     }
-  }, [hosts_data])
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hostsData])
 
   useEffect(() => {
-    if (is_tray || !current_hosts) return
-    if (!hosts_data.trashcan.find((item) => item.data.id === current_hosts.id)) return
+    if (isTray || !currentHosts) return
+    if (!hostsData.trashcan.find((item) => item.data.id === currentHosts.id)) return
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clear selection when current item moves to trashcan
     setSelectedIds([])
-  }, [current_hosts, hosts_data.trashcan, is_tray])
+  }, [currentHosts, hostsData.trashcan, isTray])
 
   const onToggleItem = async (id: string, on: boolean) => {
-    console.log(`writeMode: ${configs?.write_mode}`)
-    console.log(`toggle hosts #${id} as ${on ? 'on' : 'off'}`)
-
     if (!configs?.write_mode) {
       agent.broadcast(events.show_set_write_mode, { id, on })
       return
     }
 
-    const new_list = setOnStateOfItem(
-      hosts_data.list,
+    const newList = setOnStateOfItem(
+      hostsData.list,
       id,
       on,
       configs?.choice_mode ?? 0,
       configs?.multi_chose_folder_switch_all ?? false,
     )
-    let success = await writeHostsToSystem(new_list)
+    const success = await writeHostsToSystem(newList)
     if (success) {
-      console.log(lang.success)
       agent.broadcast(events.set_hosts_on_status, id, on)
     } else {
       agent.broadcast(events.set_hosts_on_status, id, !on)
     }
   }
 
-  const writeHostsToSystem = async (
-    list?: IHostsListObject[],
-    options?: IHostsWriteOptions,
-  ): Promise<boolean> => {
+  const writeHostsToSystem = async (list?: IHostsListObject[]): Promise<boolean> => {
     if (!Array.isArray(list)) {
-      list = hosts_data.list
+      list = hostsData.list
     }
 
-    let content: string = await actions.getContentOfList(list)
-    const result = await actions.setSystemHosts(content, options)
+    const content: string = await actions.getContentOfList(list)
+    const result = await actions.setSystemHosts(content)
     if (result.success) {
-      setList(list).catch((e) => console.error(e))
-      // new Notification(lang.success, {
-      //   body: lang.hosts_updated,
-      // })
+      try {
+        await setList(list)
+      } catch (e) {
+        console.error(e)
+      }
 
-      if (current_hosts) {
-        let hosts = findItemById(list, current_hosts.id)
+      if (currentHosts) {
+        const hosts = findItemById(list, currentHosts.id)
         if (hosts) {
-          agent.broadcast(events.set_hosts_on_status, current_hosts.id, hosts.on)
+          agent.broadcast(events.set_hosts_on_status, currentHosts.id, hosts.on)
         }
       }
     } else {
-      console.log(result)
-      loadHostsData().catch((e) => console.log(e))
-      let err_desc = lang.fail
-
-      // let body: string = lang.no_access_to_hosts
-      if (result.code === 'no_access') {
-        if (agent.platform === 'darwin' || agent.platform === 'linux') {
-          agent.broadcast(events.show_sudo_password_input, list)
-        }
-        // } else {
-        // body = result.message || 'Unknown error!'
-        err_desc = lang.no_access_to_hosts
+      // `cancelled` means the user dismissed the OS auth prompt — that's
+      // intentional, not an error worth a toast. Other failures surface
+      // through the standard error notification.
+      await loadHostsData().catch((e) => console.error(e))
+      if (result.code !== 'cancelled') {
+        const errDesc =
+          result.code === 'no_access' ? lang.no_access_to_hosts : result.message || lang.fail
+        showErrorNotification({ title: lang.fail, message: errDesc })
+        console.error(errDesc)
       }
-
-      // new Notification(lang.fail, {
-      //   body,
-      // })
-      console.error(err_desc)
     }
 
-    agent.broadcast(events.tray_list_updated)
+    await agent.broadcast(events.tray_list_updated)
 
     return result.success
   }
 
-  if (!is_tray) {
-    useOnBroadcast(events.toggle_item, onToggleItem, [hosts_data, configs])
-    useOnBroadcast(events.write_hosts_to_system, writeHostsToSystem, [hosts_data])
-  } else {
-    useOnBroadcast(events.tray_list_updated, loadHostsData)
+  const applyChangedRemoteHostsToSystem = async (ids: string[]) => {
+    if (isTray) return
+
+    const applyState = remoteContentApplyRef.current
+    for (const id of ids) {
+      if (id) applyState.pendingIds.add(id)
+    }
+    if (applyState.pendingIds.size === 0 || applyState.isApplying) {
+      return
+    }
+
+    applyState.isApplying = true
+    try {
+      while (applyState.pendingIds.size > 0) {
+        const changedIds = Array.from(applyState.pendingIds)
+        applyState.pendingIds.clear()
+
+        const list: IHostsListObject[] = await actions.getList()
+        const hasEnabledChangedHosts = changedIds.some((id) => {
+          const hosts = findItemById(list, id)
+          return !!hosts?.on
+        })
+        if (!hasEnabledChangedHosts) continue
+
+        await writeHostsToSystem(list)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      applyState.isApplying = false
+    }
+
+    // Race guard: an event arriving after `while` exits but before we
+    // clear `isApplying` would have early-returned (saw isApplying=true)
+    // and left ids stranded in pendingIds. Re-trigger if so.
+    if (applyState.pendingIds.size > 0) {
+      applyChangedRemoteHostsToSystem([]).catch((e) => console.error(e))
+    }
   }
+
+  useOnBroadcast(
+    events.toggle_item,
+    (id: string, on: boolean) => {
+      if (isTray) return
+      onToggleItem(id, on)
+    },
+    [hostsData, configs, isTray],
+  )
+  useOnBroadcast(
+    events.tray_list_updated,
+    () => {
+      if (!isTray) return
+      loadHostsData()
+    },
+    [isTray],
+  )
 
   useOnBroadcast(
     events.move_to_trashcan,
     async (ids: string[]) => {
-      console.log(`move_to_trashcan: #${ids}`)
       await actions.moveManyToTrashcan(ids)
       await loadHostsData()
 
-      if (current_hosts && ids.includes(current_hosts.id)) {
+      if (currentHosts && ids.includes(currentHosts.id)) {
         // 选中删除指定节点后的兄弟节点
-        let next_item = getNextSelectedItem(hosts_data.list, (i) => ids.includes(i.id))
-        setCurrentHosts(next_item || null)
-        setSelectedIds(next_item ? [next_item.id] : [])
+        const nextItem = getNextSelectedItem(hostsData.list, (i) => ids.includes(i.id))
+        setCurrentHosts(nextItem || null)
+        setSelectedIds(nextItem ? [nextItem.id] : [])
       }
     },
-    [current_hosts, hosts_data],
+    [currentHosts, hostsData],
   )
 
   useOnBroadcast(
     events.select_hosts,
-    async (id: string, wait_ms: number = 0) => {
-      let hosts = findItemById(hosts_data.list, id)
+    async (id: string, waitMs: number = 0) => {
+      if (isTray) return
+      const hosts = findItemById(hostsData.list, id)
       if (!hosts) {
-        if (wait_ms > 0) {
+        if (waitMs > 0) {
           setTimeout(() => {
-            agent.broadcast(events.select_hosts, id, wait_ms - 50)
+            agent.broadcast(events.select_hosts, id, waitMs - 50)
           }, 50)
         }
         return
@@ -168,19 +214,28 @@ const List = (props: Props) => {
       setCurrentHosts(hosts)
       setSelectedIds([id])
     },
-    [hosts_data],
+    [hostsData, isTray],
   )
 
   useOnBroadcast(events.reload_list, loadHostsData)
 
-  useOnBroadcast(events.hosts_content_changed, async (hosts_id: string) => {
-    let list: IHostsListObject[] = await actions.getList()
-    let hosts = findItemById(list, hosts_id)
-    if (!hosts || !hosts.on) return
+  useOnBroadcast(
+    events.hosts_content_changed,
+    (hostsId: string) => {
+      applyChangedRemoteHostsToSystem([hostsId]).catch((e) => console.error(e))
+    },
+    [currentHosts, hostsData, isTray, lang],
+  )
 
-    // 当前 hosts 是开启状态，且内容发生了变化
-    await writeHostsToSystem(list)
-  })
+  useOnBroadcast(
+    events.hosts_content_changed_batch,
+    (hostsIds: string[]) => {
+      applyChangedRemoteHostsToSystem(Array.isArray(hostsIds) ? hostsIds : []).catch((e) =>
+        console.error(e),
+      )
+    },
+    [currentHosts, hostsData, isTray, lang],
+  )
 
   useOnBroadcast(events.show_source, async (params: IFindShowSourceParam) => {
     agent.broadcast(events.select_hosts, params.item_id)
@@ -190,18 +245,33 @@ const List = (props: Props) => {
     <div className={styles.root}>
       {/*<SystemHostsItem/>*/}
       <Tree
-        data={show_list}
-        selected_ids={selected_ids}
+        data={showList}
+        selectedIds={selectedIds}
         onChange={(list) => {
           setShowList(list)
-          setList(list).catch((e) => console.error(e))
+          const newUserList = list.filter((i) => !i.is_sys)
+
+          const enabledIdSeq = (l: IHostsListObject[]) =>
+            flatten(l)
+              .filter((i) => i.on)
+              .map((i) => i.id)
+              .join('\n')
+
+          if (
+            enabledIdSeq(hostsData.list) !== enabledIdSeq(newUserList) &&
+            configs?.write_mode
+          ) {
+            writeHostsToSystem(newUserList).catch((e) => console.error(e))
+          } else {
+            setList(newUserList).catch((e) => console.error(e))
+          }
         }}
         onSelect={(ids: string[]) => {
-          // console.log(ids)
+          if (isTray) return
           setSelectedIds(ids)
         }}
         nodeRender={(data) => (
-          <ListItem key={data.id} data={data} is_tray={is_tray} selected_ids={selected_ids} />
+          <ListItem key={data.id} data={data} isTray={isTray} selectedIds={selectedIds} />
         )}
         collapseArrow={
           <div
@@ -218,7 +288,7 @@ const List = (props: Props) => {
         }
         nodeAttr={(item) => {
           return {
-            can_drag: !item.is_sys && !is_tray,
+            can_drag: !item.is_sys && !isTray,
             can_drop_before: !item.is_sys,
             can_drop_in: item.type === 'folder',
             can_drop_after: !item.is_sys,
@@ -230,14 +300,14 @@ const List = (props: Props) => {
               <span className={clsx(styles.icon, data.type === 'folder' && styles.folder)}>
                 <ItemIcon
                   type={data.is_sys ? 'system' : data.type}
-                  is_collapsed={data.is_collapsed}
+                  isCollapsed={data.is_collapsed}
                 />
               </span>
               <span>
                 {data.title || lang.untitled}
-                {selected_ids.length > 1 ? (
+                {selectedIds.length > 1 ? (
                   <span className={styles.items_count}>
-                    {selected_ids.length} {lang.items}
+                    {selectedIds.length} {lang.items}
                   </span>
                 ) : null}
               </span>
@@ -248,7 +318,7 @@ const List = (props: Props) => {
         nodeDropInClassName={styles.node_drop_in}
         nodeSelectedClassName={styles.node_selected}
         nodeCollapseArrowClassName={styles.arrow}
-        allowed_multiple_selection={true}
+        allowedMultipleSelection={true}
       />
     </div>
   )

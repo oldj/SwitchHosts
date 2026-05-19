@@ -1,44 +1,41 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "experimentalDecorators": true,
     "importHelpers": true,
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "sourceMap": true,
-    "baseUrl": "./",
     "strict": true,
     "paths": {
       "@root/*": [
         "./*"
       ],
       "@common/*": [
-        "src/common/*"
+        "./src/common/*"
       ],
-      "@main/*": [
-        "src/main/*"
-      ],
-      "@renderer/*": [
-        "src/renderer/*"
+"@renderer/*": [
+        "./src/renderer/*"
       ],
       "@src/*": [
-        "src/*"
+        "./src/*"
       ],
       "@/*": [
-        "src/*"
+        "./src/*"
       ],
       "@styles/*": [
-        "src/renderer/styles/*"
+        "./src/renderer/styles/*"
       ],
       "@assets/*": [
-        "assets/*"
+        "./assets/*"
       ]
     },
     "allowSyntheticDefaultImports": true,
     "declaration": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["node"]
   },
   "include": [
     "mock/**/*",

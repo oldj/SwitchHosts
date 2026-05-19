@@ -4,39 +4,46 @@
  */
 
 import clsx from 'clsx'
-import { useEffect, useState } from 'react'
 import styles from './SwitchButton.module.scss'
 
 interface Props {
   on: boolean
   onChange?: (on: boolean) => void
   disabled?: boolean
+  ariaLabel?: string
 }
 
 const SwitchButton = (props: Props) => {
-  const { on, onChange, disabled } = props
-  const [is_on, setIsOn] = useState(on)
-  const [is_disabled, setIsDisabled] = useState(disabled)
+  const { on, onChange, disabled, ariaLabel } = props
 
-  const onClick = () => {
+  const onClick = (e?: React.MouseEvent<HTMLDivElement>) => {
+    e?.stopPropagation()
+
     if (disabled) return
 
-    let new_status = !is_on
-    setIsOn(new_status)
     if (typeof onChange === 'function') {
-      onChange(new_status)
+      onChange(!on)
     }
   }
 
-  useEffect(() => {
-    setIsOn(on)
-    setIsDisabled(disabled)
-  }, [on, disabled])
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+
+    e.preventDefault()
+    e.stopPropagation()
+    onClick()
+  }
 
   return (
     <div
-      className={clsx(styles.root, is_on && styles.on, is_disabled && styles.disabled)}
+      className={clsx(styles.root, on && styles.on, disabled && styles.disabled)}
+      role="switch"
+      aria-label={ariaLabel}
+      aria-checked={on}
+      aria-disabled={disabled || undefined}
+      tabIndex={disabled ? -1 : 0}
       onClick={onClick}
+      onKeyDown={onKeyDown}
     >
       <div className={styles.handler} />
     </div>

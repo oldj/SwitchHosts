@@ -9,13 +9,13 @@ import useI18n from '../models/useI18n'
 import styles from './StatusBar.module.scss'
 
 interface Props {
-  line_count: number
+  lineCount: number
   bytes: number
-  read_only?: boolean
+  readOnly?: boolean
 }
 
 const StatusBar = (props: Props) => {
-  const { line_count, bytes, read_only } = props
+  const { lineCount, bytes, readOnly } = props
   const { i18n } = useI18n()
 
   return (
@@ -25,10 +25,10 @@ const StatusBar = (props: Props) => {
     >
       <Group gap="16px">
         <Box>
-          {line_count} {line_count > 1 ? i18n.lang.lines : i18n.lang.line}
+          {lineCount} {lineCount > 1 ? i18n.lang.lines : i18n.lang.line}
         </Box>
         <Box>{prettyBytes(bytes)}</Box>
-        <Box>{read_only ? i18n.lang.read_only : ''}</Box>
+        <Box>{readOnly ? i18n.lang.read_only : ''}</Box>
       </Group>
       <Box style={{ flex: 1 }} />
       <Box>{/* right */}</Box>

@@ -12,13 +12,16 @@ import {
   Flex,
   Group,
   Loader,
-  NativeSelect,
+  ScrollArea,
+  Select,
   Text,
   Tooltip,
 } from '@mantine/core'
+import ConfirmModal from '@renderer/components/ConfirmModal'
 import HostsViewer from '@renderer/components/HostsViewer'
 import SideDrawer from '@renderer/components/SideDrawer'
 import { actions } from '@renderer/core/agent'
+import { showSuccessNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import useI18n from '@renderer/models/useI18n'
@@ -31,12 +34,12 @@ import styles from './History.module.scss'
 
 interface IHistoryProps {
   list: IHostsHistoryObject[]
-  selected_item: IHostsHistoryObject | undefined
+  selectedItem: IHostsHistoryObject | undefined
   setSelectedItem: (item: IHostsHistoryObject) => void
 }
 
 const HistoryList = (props: IHistoryProps): React.ReactElement => {
-  const { list, selected_item, setSelectedItem } = props
+  const { list, selectedItem, setSelectedItem } = props
   const { lang } = useI18n()
 
   if (list.length === 0) {
@@ -48,25 +51,30 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
   }
 
   return (
-    <Flex h="100%" mih={300}>
+    <Flex h="100%" mih={0} style={{ minHeight: 0, overflow: 'hidden' }}>
       <Box
         style={{
           flex: 1,
+          minWidth: 0,
+          minHeight: 0,
           marginRight: 12,
           border: '1px solid var(--swh-border-color-0)',
           borderRadius: 6,
           overflow: 'hidden',
         }}
       >
-        <HostsViewer content={selected_item ? selected_item.content : ''} />
+        <HostsViewer content={selectedItem ? selectedItem.content : ''} />
       </Box>
-      <Box
+      <ScrollArea
         w={200}
         h="100%"
+        scrollbars="y"
+        type="hover"
         style={{
-          overflow: 'auto',
           border: '1px solid var(--swh-border-color-0)',
           borderRadius: 6,
+          minHeight: 0,
+          padding: 4,
         }}
       >
         {list.map((item) => (
@@ -76,7 +84,7 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
             px="12px"
             py="8px"
             style={{ userSelect: 'none' }}
-            className={clsx(item.id === selected_item?.id && styles.selected)}
+            className={clsx(styles.item, item.id === selectedItem?.id && styles.selected)}
           >
             <Group gap="8px" wrap="nowrap" align="flex-start">
               <Box>
@@ -99,13 +107,13 @@ const HistoryList = (props: IHistoryProps): React.ReactElement => {
             </Group>
           </Box>
         ))}
-      </Box>
+      </ScrollArea>
     </Flex>
   )
 }
 
 const Loading = () => (
-  <Center h={300}>
+  <Center h="100%">
     <Group gap="12px">
       <Loader size="lg" />
       <Text>Loading...</Text>
@@ -115,45 +123,46 @@ const Loading = () => (
 
 const History = () => {
   const { configs, updateConfigs } = useConfigs()
-  const [is_open, setIsOpen] = useState(false)
-  const [is_loading, setIsLoading] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [list, setList] = useState<IHostsHistoryObject[]>([])
-  const [selected_item, setSelectedItem] = useState<IHostsHistoryObject>()
+  const [selectedItem, setSelectedItem] = useState<IHostsHistoryObject>()
+  const [deleteTarget, setDeleteTarget] = useState<IHostsHistoryObject>()
 
   const { lang } = useI18n()
 
   const loadData = async () => {
     setIsLoading(true)
-    let next_list = await actions.getHistoryList()
-    next_list = next_list.reverse()
-    setList(next_list)
-    if (!selected_item) {
-      setSelectedItem(next_list[0])
+    let nextList = await actions.getHistoryList()
+    nextList = nextList.reverse()
+    setList(nextList)
+    if (!selectedItem) {
+      setSelectedItem(nextList[0])
     }
     setIsLoading(false)
 
-    return next_list
+    return nextList
   }
 
   const onClose = () => {
     setIsOpen(false)
     setList([])
+    setDeleteTarget(undefined)
   }
 
   const deleteItem = async (id: string) => {
-    if (!confirm(lang.system_hosts_history_delete_confirm)) {
-      return
-    }
+    const idx = list.findIndex((i) => i.id === id)
+    const success = await actions.deleteHistory(id)
+    if (success === false) return
 
-    let idx = list.findIndex((i) => i.id === id)
-    await actions.deleteHistory(id)
     setSelectedItem(undefined)
-    let list2 = await loadData()
+    const list2 = await loadData()
 
-    let next_item = list2[idx] || list2[idx - 1]
-    if (next_item) {
-      setSelectedItem(next_item)
+    const nextItem = list2[idx] || list2[idx - 1]
+    if (nextItem) {
+      setSelectedItem(nextItem)
     }
+    showSuccessNotification({ title: lang.delete, message: lang.success })
   }
 
   const updateHistoryLimit = async (value: number) => {
@@ -168,65 +177,78 @@ const History = () => {
     })
   })
 
-  let history_limit_values: number[] = [10, 50, 100, 500]
-  if (configs && !history_limit_values.includes(configs.history_limit)) {
-    history_limit_values.push(configs.history_limit)
-    history_limit_values.sort()
+  const historyLimitValues: number[] = [10, 50, 100, 500]
+  if (configs && !historyLimitValues.includes(configs.history_limit)) {
+    historyLimitValues.push(configs.history_limit)
+    historyLimitValues.sort()
   }
 
   return (
-    <SideDrawer
-      opened={is_open}
-      onClose={onClose}
-      size="lg"
-      title={
-        <Group gap="8px">
-          <IconHistory size={16} />
-          <Box>{lang.system_hosts_history}</Box>
-        </Group>
-      }
-      footer={
-        <Flex align="center" gap="12px">
-          <Box>{lang.system_hosts_history_limit}</Box>
-          <NativeSelect
-            data={history_limit_values.map((v) => v.toString())}
-            value={String(configs?.history_limit ?? '')}
-            onChange={(e) => updateHistoryLimit(parseInt(e.target.value || '0'))}
-            w={100}
-          />
-          <Tooltip label={lang.system_hosts_history_help}>
-            <Box style={{ display: 'flex' }}>
-              <IconHelpCircle size={16} />
-            </Box>
-          </Tooltip>
-          <Box style={{ flex: 1 }} />
-          <Button
-            variant="outline"
-            color="red"
-            disabled={!selected_item}
-            onClick={() => selected_item && deleteItem(selected_item.id)}
-            leftSection={<IconX size={16} />}
-          >
-            {lang.delete}
-          </Button>
-          <Button onClick={onClose} variant="outline">
-            {lang.close}
-          </Button>
-        </Flex>
-      }
-    >
-      <Box style={{ height: '100%' }}>
-        {is_loading ? (
-          <Loading />
-        ) : (
-          <HistoryList
-            list={list}
-            selected_item={selected_item}
-            setSelectedItem={setSelectedItem}
-          />
-        )}
-      </Box>
-    </SideDrawer>
+    <>
+      <SideDrawer
+        opened={isOpen}
+        onClose={onClose}
+        size="lg"
+        scrollable={false}
+        title={
+          <Group gap="8px">
+            <IconHistory size={16} />
+            <Box>{lang.system_hosts_history}</Box>
+          </Group>
+        }
+        footer={
+          <Flex align="center" gap="12px">
+            <Box>{lang.system_hosts_history_limit}</Box>
+            <Select
+              data={historyLimitValues.map((v) => v.toString())}
+              value={String(configs?.history_limit ?? '')}
+              onChange={(v) => updateHistoryLimit(parseInt(v || '0'))}
+              w={100}
+              allowDeselect={false}
+            />
+            <Tooltip label={lang.system_hosts_history_help}>
+              <Box style={{ display: 'flex' }}>
+                <IconHelpCircle size={16} />
+              </Box>
+            </Tooltip>
+            <Box style={{ flex: 1 }} />
+            <Button
+              variant="outline"
+              disabled={!selectedItem}
+              onClick={() => selectedItem && setDeleteTarget(selectedItem)}
+              leftSection={<IconX size={16} />}
+            >
+              {lang.delete}
+            </Button>
+            <Button onClick={onClose} variant="outline">
+              {lang.close}
+            </Button>
+          </Flex>
+        }
+      >
+        <Box style={{ height: '100%', minHeight: 0, overflow: 'hidden' }}>
+          {isLoading ? (
+            <Loading />
+          ) : (
+            <HistoryList
+              list={list}
+              selectedItem={selectedItem}
+              setSelectedItem={setSelectedItem}
+            />
+          )}
+        </Box>
+      </SideDrawer>
+
+      <ConfirmModal
+        opened={!!deleteTarget}
+        onClose={() => setDeleteTarget(undefined)}
+        onConfirm={() => deleteTarget && deleteItem(deleteTarget.id)}
+        title={lang.delete}
+        message={lang.system_hosts_history_delete_confirm}
+        confirmLabel={lang.delete}
+        danger
+      />
+    </>
   )
 }
 

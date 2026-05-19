@@ -1,0 +1,70 @@
+[package]
+name = "switchhosts"
+version = "5.0.0"
+description = "A GUI tool for managing your hosts file."
+authors = ["oldj"]
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "switchhosts_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+serde_json = "1"
+
+[dependencies]
+tauri = { version = "2", features = ["macos-private-api", "tray-icon", "image-png"] }
+tauri-plugin-autostart = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-log = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "5"
+thiserror = "1"
+log = "0.4"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "gzip", "brotli", "socks"] }
+# tauri-plugin-updater 2.x pulls reqwest 0.13 transitively with only
+# ["json", "stream"] features. Declaring reqwest 0.13 here with `socks`
+# relies on cargo's feature unification to fold SOCKS support into the
+# plugin's reqwest, which is what enables `socks5://...` proxy URLs for
+# update check/download.
+# `default-features = false` must stay: enabling defaults pulls in
+# `default-tls` → `hyper-util` macOS feature → `system-configuration 0.7`,
+# which is not yet on crates.io and breaks dependency resolution.
+# DO NOT remove this line even though no business code references
+# `reqwest_013` directly — http.rs has a guard test that fails if the
+# `socks` feature is dropped.
+reqwest_013 = { package = "reqwest", version = "0.13", default-features = false, features = ["socks"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+tokio = { version = "1", features = ["process", "time", "rt", "macros", "net"] }
+regex = "1"
+open = "5"
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio", "query", "json"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+libc = "0.2"
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = ["NSGeometry", "objc2-core-foundation"] }
+block2 = "0.6"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.60", features = [
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Foundation",
+    "Win32_System_Threading",
+    "Win32_System_Registry",
+    "Win32_System_Com",
+    "Win32_System_SystemInformation",
+] }
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

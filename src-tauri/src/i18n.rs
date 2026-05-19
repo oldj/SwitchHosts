@@ -1,0 +1,457 @@
+use tauri::{AppHandle, Manager, Runtime};
+
+use crate::storage::AppState;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MenuLabels {
+    pub file: &'static str,
+    pub edit: &'static str,
+    pub view: &'static str,
+    pub window: &'static str,
+    pub help: &'static str,
+    pub about_app: &'static str,
+    pub new: &'static str,
+    pub preferences: &'static str,
+    pub comment_uncomment: &'static str,
+    pub find: &'static str,
+    pub feedback: &'static str,
+    pub homepage: &'static str,
+    pub services: &'static str,
+    pub hide_app: &'static str,
+    pub hide: &'static str,
+    pub hide_others: &'static str,
+    pub show_all: &'static str,
+    pub quit_app: &'static str,
+    pub quit: &'static str,
+    pub close_window: &'static str,
+    pub undo: &'static str,
+    pub redo: &'static str,
+    pub cut: &'static str,
+    pub copy: &'static str,
+    pub paste: &'static str,
+    pub select_all: &'static str,
+    pub fullscreen: &'static str,
+    pub minimize: &'static str,
+    pub maximize: &'static str,
+    pub show_main_window: &'static str,
+    pub show_dock_icon: &'static str,
+    pub hide_dock_icon: &'static str,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum MenuLocale {
+    En,
+    Zh,
+    ZhHant,
+    Fr,
+    De,
+    Ja,
+    Tr,
+    Ko,
+    Pl,
+}
+
+pub fn menu_labels<R: Runtime>(app: &AppHandle<R>) -> MenuLabels {
+    let locale = app
+        .state::<AppState>()
+        .config
+        .lock()
+        .ok()
+        .and_then(|cfg| cfg.locale.clone());
+
+    MenuLabels::for_locale(locale.as_deref())
+}
+
+pub fn find_window_title<R: Runtime>(app: &AppHandle<R>) -> &'static str {
+    let locale = app
+        .state::<AppState>()
+        .config
+        .lock()
+        .ok()
+        .and_then(|cfg| cfg.locale.clone());
+
+    find_window_title_for_locale(locale.as_deref())
+}
+
+fn find_window_title_for_locale(locale: Option<&str>) -> &'static str {
+    match normalize_locale(locale) {
+        MenuLocale::Zh => "查找",
+        MenuLocale::ZhHant => "尋找",
+        MenuLocale::Fr => "Rechercher",
+        MenuLocale::De => "Suchen",
+        MenuLocale::Ja => "検索",
+        MenuLocale::Tr => "Bul",
+        MenuLocale::Ko => "찾기",
+        MenuLocale::Pl => "Znajdź",
+        MenuLocale::En => "Find",
+    }
+}
+
+impl MenuLabels {
+    pub fn for_locale(locale: Option<&str>) -> Self {
+        match normalize_locale(locale) {
+            MenuLocale::Zh => Self {
+                file: "文件",
+                edit: "编辑",
+                view: "视图",
+                window: "窗口",
+                help: "帮助",
+                about_app: "关于 SwitchHosts",
+                new: "新建",
+                preferences: "偏好设置…",
+                comment_uncomment: "注释 / 取消注释",
+                find: "查找…",
+                feedback: "意见反馈",
+                homepage: "主页",
+                services: "服务",
+                hide_app: "隐藏 SwitchHosts",
+                hide: "隐藏",
+                hide_others: "隐藏其他",
+                show_all: "显示全部",
+                quit_app: "退出 SwitchHosts",
+                quit: "退出",
+                close_window: "关闭窗口",
+                undo: "撤销",
+                redo: "重做",
+                cut: "剪切",
+                copy: "复制",
+                paste: "粘贴",
+                select_all: "全选",
+                fullscreen: "切换全屏",
+                minimize: "最小化",
+                maximize: "缩放",
+                show_main_window: "显示主窗口",
+                show_dock_icon: "显示 Dock 图标",
+                hide_dock_icon: "隐藏 Dock 图标",
+            },
+            MenuLocale::ZhHant => Self {
+                file: "檔案",
+                edit: "編輯",
+                view: "視圖",
+                window: "視窗",
+                help: "幫助",
+                about_app: "關於 SwitchHosts",
+                new: "新建",
+                preferences: "偏好設定…",
+                comment_uncomment: "註解 / 取消註解",
+                find: "尋找…",
+                feedback: "意見回饋",
+                homepage: "首頁",
+                services: "服務",
+                hide_app: "隱藏 SwitchHosts",
+                hide: "隱藏",
+                hide_others: "隱藏其他",
+                show_all: "顯示全部",
+                quit_app: "結束 SwitchHosts",
+                quit: "退出",
+                close_window: "關閉視窗",
+                undo: "取消",
+                redo: "重做",
+                cut: "剪下",
+                copy: "複製",
+                paste: "貼上",
+                select_all: "全選",
+                fullscreen: "切換全螢幕",
+                minimize: "最小化",
+                maximize: "縮放",
+                show_main_window: "顯示主視窗",
+                show_dock_icon: "顯示 Dock 圖示",
+                hide_dock_icon: "隱藏 Dock 圖示",
+            },
+            MenuLocale::Fr => Self {
+                file: "Fichier",
+                edit: "Édition",
+                view: "Affichage",
+                window: "Fenêtre",
+                help: "Aide",
+                about_app: "À propos de SwitchHosts",
+                new: "Nouveau",
+                preferences: "Préférences…",
+                comment_uncomment: "Commenter / Décommenter",
+                find: "Rechercher…",
+                feedback: "Laisser un commentaire",
+                homepage: "Page d'accueil",
+                services: "Services",
+                hide_app: "Masquer SwitchHosts",
+                hide: "Masquer",
+                hide_others: "Masquer les autres",
+                show_all: "Tout afficher",
+                quit_app: "Quitter SwitchHosts",
+                quit: "Quitter",
+                close_window: "Fermer la fenêtre",
+                undo: "Annuler",
+                redo: "Rétablir",
+                cut: "Couper",
+                copy: "Copier",
+                paste: "Coller",
+                select_all: "Tout sélectionner",
+                fullscreen: "Activer/Désactiver le plein écran",
+                minimize: "Réduire",
+                maximize: "Zoom",
+                show_main_window: "Afficher la fenêtre principale",
+                show_dock_icon: "Afficher l'icône dans le Dock",
+                hide_dock_icon: "Cacher l'icône dans le Dock",
+            },
+            MenuLocale::De => Self {
+                file: "Datei",
+                edit: "Bearbeiten",
+                view: "Ansicht",
+                window: "Fenster",
+                help: "Hilfe",
+                about_app: "Über SwitchHosts",
+                new: "Neu",
+                preferences: "Einstellungen…",
+                comment_uncomment: "Kommentieren / Auskommentieren",
+                find: "Suchen…",
+                feedback: "Rückmeldung",
+                homepage: "Startseite",
+                services: "Dienste",
+                hide_app: "SwitchHosts ausblenden",
+                hide: "Ausblenden",
+                hide_others: "Andere ausblenden",
+                show_all: "Alle einblenden",
+                quit_app: "SwitchHosts beenden",
+                quit: "Beenden",
+                close_window: "Fenster schließen",
+                undo: "Rückgängig machen",
+                redo: "Wiederherstellen",
+                cut: "Ausschneiden",
+                copy: "Kopieren",
+                paste: "Einfügen",
+                select_all: "Alles auswählen",
+                fullscreen: "Vollbildmodus umschalten",
+                minimize: "Minimieren",
+                maximize: "Zoomen",
+                show_main_window: "Hauptfenster anzeigen",
+                show_dock_icon: "Dock-Symbol anzeigen",
+                hide_dock_icon: "Dock-Symbol ausblenden",
+            },
+            MenuLocale::Ja => Self {
+                file: "ファイル",
+                edit: "編集",
+                view: "表示",
+                window: "ウィンドウ",
+                help: "ヘルプ",
+                about_app: "SwitchHosts について",
+                new: "新規",
+                preferences: "設定…",
+                comment_uncomment: "コメント / コメント解除",
+                find: "検索…",
+                feedback: "フィードバック",
+                homepage: "ホームページ",
+                services: "サービス",
+                hide_app: "SwitchHostsを隠す",
+                hide: "非表示",
+                hide_others: "その他を非表示にする",
+                show_all: "すべて表示",
+                quit_app: "SwitchHostsを終了",
+                quit: "終了",
+                close_window: "ウィンドウを閉じる",
+                undo: "元に戻す",
+                redo: "やり直し",
+                cut: "切り取り",
+                copy: "コピー",
+                paste: "貼り付け",
+                select_all: "すべて選択",
+                fullscreen: "フルスクリーンを切り替え",
+                minimize: "最小化",
+                maximize: "ズーム",
+                show_main_window: "メインウィンドウを表示",
+                show_dock_icon: "Dockアイコンを表示",
+                hide_dock_icon: "Dockアイコンを非表示",
+            },
+            MenuLocale::Tr => Self {
+                file: "Dosya",
+                edit: "Düzenle",
+                view: "Görüntüle",
+                window: "Pencere",
+                help: "Yardım",
+                about_app: "SwitchHosts hakkında",
+                new: "Yeni",
+                preferences: "Tercihler…",
+                comment_uncomment: "Yorumla / Yorumu kaldır",
+                find: "Bul…",
+                feedback: "Geri bildirim",
+                homepage: "Anasayfa",
+                services: "Servisler",
+                hide_app: "SwitchHosts'u gizle",
+                hide: "Gizle",
+                hide_others: "Diğerlerini gizle",
+                show_all: "Tümünü göster",
+                quit_app: "SwitchHosts'tan çık",
+                quit: "Çıkış",
+                close_window: "Pencereyi kapat",
+                undo: "Geri al",
+                redo: "Yinele",
+                cut: "Kes",
+                copy: "Kopyala",
+                paste: "Yapıştır",
+                select_all: "Hepsini seç",
+                fullscreen: "Tam ekranı aç/kapat",
+                minimize: "Küçült",
+                maximize: "Yakınlaştır",
+                show_main_window: "Ana pencereyi göster",
+                show_dock_icon: "Dock simgesini göster",
+                hide_dock_icon: "Dock simgesini gizle",
+            },
+            MenuLocale::Ko => Self {
+                file: "파일",
+                edit: "수정",
+                view: "보기",
+                window: "창",
+                help: "도움말",
+                about_app: "SwitchHosts 정보",
+                new: "신규",
+                preferences: "설정…",
+                comment_uncomment: "주석 / 주석 해제",
+                find: "찾기…",
+                feedback: "피드백",
+                homepage: "홈페이지",
+                services: "서비스",
+                hide_app: "SwitchHosts 숨기기",
+                hide: "숨기기",
+                hide_others: "다른 것 숨기기",
+                show_all: "모두 보기",
+                quit_app: "SwitchHosts 종료",
+                quit: "종료",
+                close_window: "창 닫기",
+                undo: "실행취소",
+                redo: "재실행",
+                cut: "자르기",
+                copy: "복사",
+                paste: "붙여넣기",
+                select_all: "전체 선택",
+                fullscreen: "전체화면 전환",
+                minimize: "최소화",
+                maximize: "확대/축소",
+                show_main_window: "메인 창 보기",
+                show_dock_icon: "Dock 아이콘 보기",
+                hide_dock_icon: "Dock 아이콘 숨기기",
+            },
+            MenuLocale::Pl => Self {
+                file: "Plik",
+                edit: "Edycja",
+                view: "Widok",
+                window: "Okno",
+                help: "Pomoc",
+                about_app: "O SwitchHosts",
+                new: "Nowy",
+                preferences: "Preferencje…",
+                comment_uncomment: "Skomentuj / Odkomentuj",
+                find: "Znajdź…",
+                feedback: "Opinia",
+                homepage: "Strona główna",
+                services: "Usługi",
+                hide_app: "Ukryj SwitchHosts",
+                hide: "Ukryj",
+                hide_others: "Ukryj inne",
+                show_all: "Pokaż wszystko",
+                quit_app: "Zamknij SwitchHosts",
+                quit: "Zamknij",
+                close_window: "Zamknij okno",
+                undo: "Cofnij",
+                redo: "Powtórz",
+                cut: "Wytnij",
+                copy: "Kopiuj",
+                paste: "Wklej",
+                select_all: "Zaznacz wszystko",
+                fullscreen: "Przełącz pełny ekran",
+                minimize: "Minimalizuj",
+                maximize: "Powiększ",
+                show_main_window: "Pokaż główne okno",
+                show_dock_icon: "Pokaż ikonę Docka",
+                hide_dock_icon: "Ukryj ikonę Docka",
+            },
+            MenuLocale::En => Self {
+                file: "File",
+                edit: "Edit",
+                view: "View",
+                window: "Window",
+                help: "Help",
+                about_app: "About SwitchHosts",
+                new: "New",
+                preferences: "Preferences…",
+                comment_uncomment: "Comment / Uncomment",
+                find: "Find…",
+                feedback: "Feedback",
+                homepage: "Homepage",
+                services: "Services",
+                hide_app: "Hide SwitchHosts",
+                hide: "Hide",
+                hide_others: "Hide Others",
+                show_all: "Show All",
+                quit_app: "Quit SwitchHosts",
+                quit: "Quit",
+                close_window: "Close Window",
+                undo: "Undo",
+                redo: "Redo",
+                cut: "Cut",
+                copy: "Copy",
+                paste: "Paste",
+                select_all: "Select All",
+                fullscreen: "Toggle Full Screen",
+                minimize: "Minimize",
+                maximize: "Zoom",
+                show_main_window: "Show Main Window",
+                show_dock_icon: "Show Dock Icon",
+                hide_dock_icon: "Hide Dock Icon",
+            },
+        }
+    }
+}
+
+fn normalize_locale(locale: Option<&str>) -> MenuLocale {
+    let Some(locale) = locale else {
+        return MenuLocale::En;
+    };
+    let key = locale.trim().replace('-', "_").to_ascii_lowercase();
+
+    match key.as_str() {
+        "zh" | "cn" | "zh_cn" => MenuLocale::Zh,
+        "zh_hant" | "zh_tw" | "zh_hk" | "zh_mo" => MenuLocale::ZhHant,
+        "fr" => MenuLocale::Fr,
+        "de" => MenuLocale::De,
+        "ja" => MenuLocale::Ja,
+        "tr" => MenuLocale::Tr,
+        "ko" => MenuLocale::Ko,
+        "pl" => MenuLocale::Pl,
+        _ if key.starts_with("fr_") => MenuLocale::Fr,
+        _ if key.starts_with("de_") => MenuLocale::De,
+        _ if key.starts_with("ja_") => MenuLocale::Ja,
+        _ if key.starts_with("tr_") => MenuLocale::Tr,
+        _ if key.starts_with("ko_") => MenuLocale::Ko,
+        _ if key.starts_with("pl_") => MenuLocale::Pl,
+        _ => MenuLocale::En,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{find_window_title_for_locale, MenuLabels};
+
+    #[test]
+    fn normalizes_locale_aliases() {
+        assert_eq!(MenuLabels::for_locale(Some("zh-CN")).file, "文件");
+        assert_eq!(MenuLabels::for_locale(Some("zh-TW")).file, "檔案");
+        assert_eq!(MenuLabels::for_locale(Some("fr-FR")).file, "Fichier");
+        assert_eq!(MenuLabels::for_locale(None).file, "File");
+        assert_eq!(find_window_title_for_locale(Some("zh-CN")), "查找");
+        assert_eq!(find_window_title_for_locale(Some("zh-TW")), "尋找");
+        assert_eq!(find_window_title_for_locale(None), "Find");
+    }
+
+    #[test]
+    fn falls_back_to_english_for_unknown_locale() {
+        assert_eq!(MenuLabels::for_locale(Some("es")).file, "File");
+        assert_eq!(MenuLabels::for_locale(Some("pt-BR")).file, "File");
+    }
+
+    #[test]
+    fn separates_app_menu_labels_from_generic_actions() {
+        let labels = MenuLabels::for_locale(Some("en"));
+        assert_eq!(labels.hide_app, "Hide SwitchHosts");
+        assert_eq!(labels.hide, "Hide");
+        assert_eq!(labels.quit_app, "Quit SwitchHosts");
+        assert_eq!(labels.quit, "Quit");
+    }
+}
