@@ -1,48 +1,38 @@
 # SwitchHosts VS Code Extension
 
-这是 `SwitchHosts` 的 VS Code 扩展，通过 **Rust WASM** 复用与 Tauri 桌面版相同的业务逻辑（`src-tauri/crates/switchhosts-core`）。
+VS Code 扩展版 SwitchHosts，UI 与 Tauri 桌面版相同，业务逻辑通过 Rust WASM（`switchhosts-core`）与 Extension Host 共享。
 
-## 架构
-
-```
-src-tauri/crates/switchhosts-core   ← 纯业务逻辑（normalize、aggregate、tree_format）
-         ↑                    ↑
-         │                    │
-  src-tauri (Tauri)    switchhosts-wasm → vscode-extension/wasm/pkg
-```
-
-- **Tauri**：`switchhosts-core` + 原生文件 I/O / 系统 hosts 写入
-- **VS Code**：`switchhosts-wasm` + Node.js 读写 `~/.SwitchHosts`
-
-## 使用
+## 构建
 
 在项目根目录：
 
 ```bash
-# 编译 WASM 并构建扩展
-npm run build:vscode-extension
-
-# 生成 VSIX
 npm run package:vscode-extension
 ```
 
-仅编译 WASM：
+产出：`vscode-extension/switchhosts-vscode-5.0.0.vsix`
+
+## 安装测试
 
 ```bash
-npm run build:wasm
+code --install-extension vscode-extension/switchhosts-vscode-5.0.0.vsix
 ```
 
-依赖：`rustup`、`wasm32-unknown-unknown` target、`wasm-pack`（脚本会自动安装）。
+或在 VS Code：**扩展 → … → 从 VSIX 安装**
+
+命令面板运行 **SwitchHosts: Open** 打开完整 UI。
+
+## 架构
+
+- `media/app/` — Vite 构建的 React UI（`vite.vscode.config.mts`）
+- `src/renderer/core/agent.vscode.ts` — Webview 侧 Tauri agent 替代
+- `src/backend/` — Node 存储层 + command 路由（对应 Tauri `commands.rs`）
+- `wasm/pkg/` — `switchhosts-wasm` 产物
+
+数据目录与桌面版相同：`~/.SwitchHosts`
 
 ## 当前能力
 
-- WASM 健康检查（`ping`）
-- 从 `~/.SwitchHosts` 读取 manifest / entries
-- 使用与桌面版相同的 Rust 逻辑聚合已选 hosts 并预览
-- manifest 树格式互转（`legacy_root_to_v5` / `v5_root_to_legacy`）
-
-后续可将更多 `switchhosts-core` 模块（如 find/replace 纯计算部分）继续导出到 WASM。
-
-## 命令
-
-命令面板运行 **SwitchHosts: Open** 打开 Webview 面板。
+- 完整主界面（列表、编辑、偏好、回收站、Apply）
+- 导入/导出 v5 备份 JSON
+- Find 页基础搜索（替换/远程刷新/自动更新在扩展版中降级或暂不可用）

@@ -116,4 +116,10 @@ export function serializeListForDisk(list: HostNode[]): {
   return JSON.parse(payloadJson) as { root: unknown[]; collapsedNodeIds: string[] }
 }
 
-export { ping }
+export {
+  ping,
+  aggregate_selected_content_wasm,
+  legacy_root_to_v5_wasm,
+  v5_root_to_legacy_wasm,
+  remove_duplicate_records_wasm,
+}

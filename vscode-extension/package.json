@@ -1,10 +1,11 @@
 {
   "name": "switchhosts-vscode",
   "displayName": "SwitchHosts",
+  "description": "Switch hosts quickly in VS Code (shared Rust WASM core with desktop app).",
   "publisher": "oldj",
-  "version": "0.0.1",
+  "version": "5.0.0",
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "^1.79.0"
   },
   "categories": [
     "Other"
@@ -13,11 +14,20 @@
     "onCommand:switchhosts.open"
   ],
   "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "switchhosts.open",
+        "title": "SwitchHosts: Open",
+        "category": "SwitchHosts"
+      }
+    ]
+  },
   "scripts": {
-    "build": "node ../scripts/build-wasm.mjs && tsc -p ./tsconfig.json",
+    "build": "node ../scripts/build-wasm.mjs && node ../scripts/build-vscode-webview.mjs && tsc -p ./tsconfig.json",
     "build:wasm": "node ../scripts/build-wasm.mjs",
     "watch": "tsc -p ./tsconfig.json --watch",
-    "package": "npm run build && npx -y @vscode/vsce package",
+    "package": "npm run build && npx -y @vscode/vsce package --no-dependencies",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
