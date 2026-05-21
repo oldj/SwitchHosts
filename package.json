@@ -20,6 +20,8 @@
     "dev:renderer": "vite --config ./vite.render.config.mts",
     "build:renderer": "vite build --config ./vite.render.config.mts",
     "build:renderer:tauri": "node scripts/sync-tauri-version.mjs && vite build --config ./vite.render.config.mts --outDir ../../build-tauri --emptyOutDir",
+    "build:vscode-extension": "cd vscode-extension && npm install && npm run build",
+    "package:vscode-extension": "cd vscode-extension && npm install && npm run package",
     "sort-lang": "node ./scripts/sort-lang.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",

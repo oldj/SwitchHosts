@@ -1,0 +1,28 @@
+{
+  "name": "switchhosts-vscode",
+  "displayName": "SwitchHosts",
+  "publisher": "oldj",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:switchhosts.open"
+  ],
+  "main": "./out/extension.js",
+  "scripts": {
+    "build": "tsc -p ./tsconfig.json",
+    "watch": "tsc -p ./tsconfig.json --watch",
+    "package": "npx -y @vscode/vsce package",
+    "prepublish": "npm run build"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.79.0",
+    "@vscode/vsce": "^2.0.0",
+    "typescript": "^6.0.3",
+    "vscode": "^1.89.0"
+  }
+}
