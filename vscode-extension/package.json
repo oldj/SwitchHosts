@@ -14,15 +14,16 @@
   ],
   "main": "./out/extension.js",
   "scripts": {
-    "build": "tsc -p ./tsconfig.json",
+    "build": "node ../scripts/build-wasm.mjs && tsc -p ./tsconfig.json",
+    "build:wasm": "node ../scripts/build-wasm.mjs",
     "watch": "tsc -p ./tsconfig.json --watch",
-    "package": "npx -y @vscode/vsce package",
-    "prepublish": "npm run build"
+    "package": "npm run build && npx -y @vscode/vsce package",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/vscode": "^1.79.0",
+    "@types/node": "^25.6.0",
     "@vscode/vsce": "^2.0.0",
-    "typescript": "^6.0.3",
-    "vscode": "^1.89.0"
+    "typescript": "^6.0.3"
   }
 }

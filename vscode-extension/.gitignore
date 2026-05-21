@@ -1,3 +1,5 @@
 out/
 node_modules/
 .vscode-test/
+# wasm/pkg is committed after build in CI; ignore local rebuild artifacts optionally
+# wasm/pkg/

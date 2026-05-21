@@ -12,7 +12,8 @@ pub mod manifest;
 pub mod paths;
 pub mod state;
 pub mod trashcan;
-pub mod tree_format;
+
+pub use switchhosts_core::tree_format;
 
 pub use config::AppConfig;
 pub use error::StorageError;

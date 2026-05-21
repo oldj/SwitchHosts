@@ -21,7 +21,7 @@ use super::atomic::atomic_write;
 use super::error::StorageError;
 use super::paths::V5Paths;
 use super::state::StateFile;
-use super::tree_format::{legacy_root_to_v5, v5_root_to_legacy};
+use switchhosts_core::tree_format::{legacy_root_to_v5, v5_root_to_legacy};
 
 pub const MANIFEST_FORMAT: &str = "switchhosts-data";
 pub const MANIFEST_SCHEMA_VERSION: u32 = 1;

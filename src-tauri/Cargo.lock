@@ -4477,6 +4477,7 @@ dependencies = [
  "reqwest 0.13.2",
  "serde",
  "serde_json",
+ "switchhosts-core",
  "tauri",
  "tauri-build",
  "tauri-plugin-autostart",
@@ -4487,6 +4488,23 @@ dependencies = [
  "thiserror 1.0.69",
  "tokio",
  "windows-sys 0.60.2",
+]
+
+[[package]]
+name = "switchhosts-core"
+version = "5.0.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "switchhosts-wasm"
+version = "5.0.0"
+dependencies = [
+ "serde_json",
+ "switchhosts-core",
+ "wasm-bindgen",
 ]
 
 [[package]]

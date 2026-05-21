@@ -1,3 +1,7 @@
+[workspace]
+members = [".", "crates/switchhosts-core", "crates/switchhosts-wasm"]
+resolver = "2"
+
 [package]
 name = "switchhosts"
 version = "5.0.0"
@@ -15,6 +19,7 @@ tauri-build = { version = "2", features = [] }
 serde_json = "1"
 
 [dependencies]
+switchhosts-core = { path = "crates/switchhosts-core" }
 tauri = { version = "2", features = ["macos-private-api", "tray-icon", "image-png"] }
 tauri-plugin-autostart = "2"
 tauri-plugin-dialog = "2"

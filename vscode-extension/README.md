@@ -1,18 +1,48 @@
 # SwitchHosts VS Code Extension
 
-这是 `SwitchHosts` 的 VS Code 扩展包装目录。
+这是 `SwitchHosts` 的 VS Code 扩展，通过 **Rust WASM** 复用与 Tauri 桌面版相同的业务逻辑（`src-tauri/crates/switchhosts-core`）。
+
+## 架构
+
+```
+src-tauri/crates/switchhosts-core   ← 纯业务逻辑（normalize、aggregate、tree_format）
+         ↑                    ↑
+         │                    │
+  src-tauri (Tauri)    switchhosts-wasm → vscode-extension/wasm/pkg
+```
+
+- **Tauri**：`switchhosts-core` + 原生文件 I/O / 系统 hosts 写入
+- **VS Code**：`switchhosts-wasm` + Node.js 读写 `~/.SwitchHosts`
 
 ## 使用
 
-- 运行扩展构建：
-  ```bash
-  npm run build:vscode-extension
-  ```
-- 生成 VSIX 包：
-  ```bash
-  npm run package:vscode-extension
-  ```
+在项目根目录：
 
-## 当前状态
+```bash
+# 编译 WASM 并构建扩展
+npm run build:vscode-extension
 
-当前扩展提供基础命令和 Webview 占位页，后续可以将主应用的核心功能移植进该扩展。
+# 生成 VSIX
+npm run package:vscode-extension
+```
+
+仅编译 WASM：
+
+```bash
+npm run build:wasm
+```
+
+依赖：`rustup`、`wasm32-unknown-unknown` target、`wasm-pack`（脚本会自动安装）。
+
+## 当前能力
+
+- WASM 健康检查（`ping`）
+- 从 `~/.SwitchHosts` 读取 manifest / entries
+- 使用与桌面版相同的 Rust 逻辑聚合已选 hosts 并预览
+- manifest 树格式互转（`legacy_root_to_v5` / `v5_root_to_legacy`）
+
+后续可将更多 `switchhosts-core` 模块（如 find/replace 纯计算部分）继续导出到 WASM。
+
+## 命令
+
+命令面板运行 **SwitchHosts: Open** 打开 Webview 面板。
