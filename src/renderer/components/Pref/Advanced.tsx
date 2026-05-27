@@ -112,6 +112,16 @@ const Advanced = (props: IProps) => {
         </Box>
 
         <Box w="100%">
+          <Checkbox
+            checked={data.lightweight_mode}
+            onChange={(e) => onChange({ lightweight_mode: e.target.checked })}
+            label={lang.lightweight_mode}
+            description={lang.lightweight_mode_desc}
+            styles={checkboxDescriptionStyles}
+          />
+        </Box>
+
+        <Box w="100%">
           <Stack gap="8px">
             <Checkbox
               checked={data.http_api_on}

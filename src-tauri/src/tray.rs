@@ -30,7 +30,7 @@ use tauri::{
 };
 
 use crate::i18n::menu_labels;
-use crate::lifecycle::{self, MAIN_WINDOW_LABEL};
+use crate::lifecycle;
 use crate::storage::{manifest::Manifest, AppState, StorageError};
 
 pub const TRAY_ID: &str = "main-tray";
@@ -246,7 +246,7 @@ fn read_hide_dock_icon<R: Runtime>(app: &AppHandle<R>) -> bool {
 
 /// Called from the global `on_menu_event` handler in `lib.rs` when an
 /// id starts with `tray-`. Returns `true` if the id was handled here.
-pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, id: &str) -> bool {
+pub fn handle_menu_event<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) -> bool {
     match id {
         MENU_ID_SHOW_MAIN => {
             show_main_window(app);
@@ -268,17 +268,12 @@ pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, id: &str) -> bool {
     }
 }
 
-fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
+fn show_main_window<R: Runtime + 'static>(app: &AppHandle<R>) {
     lifecycle::show_main_window(app);
 }
 
 fn quit_app<R: Runtime>(app: &AppHandle<R>) {
-    let state = app.state::<AppState>();
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        lifecycle::persist_window_geometry(&window, state.inner());
-    }
-    state.is_will_quit.store(true, Ordering::SeqCst);
-    app.exit(0);
+    lifecycle::quit_app(app);
 }
 
 #[cfg(target_os = "macos")]

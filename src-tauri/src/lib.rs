@@ -11,6 +11,7 @@ mod migration;
 mod refresh;
 mod storage;
 mod tray;
+mod window_theme;
 
 use serde_json::json;
 #[cfg(any(target_os = "windows", test))]
@@ -190,6 +191,10 @@ pub fn run() {
                 }
                 app_menu::MENU_ID_HOMEPAGE => {
                     let _ = open::that(app_menu::HOMEPAGE_URL);
+                    return;
+                }
+                app_menu::MENU_ID_QUIT_APP => {
+                    lifecycle::quit_app(app);
                     return;
                 }
                 _ => {}
@@ -428,17 +433,40 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
-    // Run-event hook covers two concerns that Builder's `.setup` and
+    // Run-event hook covers three concerns that Builder's `.setup` and
     // window-level `on_window_event` can't reach:
-    //   * ExitRequested — persist geometry on Cmd+Q / system shutdown
-    //     paths that bypass our explicit quit_app command.
+    //   * WindowEvent::CloseRequested — globally observe every webview
+    //     close. When the main window is in the lightweight-hidden
+    //     state and the closing window is the last live webview, arm
+    //     a short-lived guard so the imminent `ExitRequested` can be
+    //     prevented. Per-window `on_window_event` runs first, so the
+    //     main window's hide-to-tray flag is already set by the time
+    //     this hook sees its CloseRequested.
+    //   * ExitRequested — persist geometry on every exit-request path,
+    //     and `prevent_exit` only when the guard above was armed by a
+    //     specific close. Dock → Quit, system shutdown, etc. arrive
+    //     with the same `is_will_quit == false` shape as the implicit
+    //     last-window exit; the guard distinguishes them.
     //   * Reopen (macOS) — clicking the Dock icon for an app whose
     //     main window is hidden should re-show it. Tauri does not do
     //     this automatically; has_visible_windows == false means the
     //     OS didn't find any windows to bring forward.
     app.run(|app_handle, event| match event {
-        RunEvent::ExitRequested { .. } => {
+        RunEvent::WindowEvent {
+            ref label,
+            event: tauri::WindowEvent::CloseRequested { .. },
+            ..
+        } => {
+            lifecycle::arm_lightweight_exit_guard_if_last_window(app_handle, label);
+        }
+        RunEvent::ExitRequested { api, .. } => {
             lifecycle::persist_on_exit_requested(app_handle);
+            let state = app_handle.state::<AppState>();
+            let will_quit = state.is_will_quit.load(Ordering::SeqCst);
+            let expecting = lifecycle::take_expecting_lightweight_exit();
+            if expecting && !will_quit {
+                api.prevent_exit();
+            }
         }
         #[cfg(target_os = "macos")]
         RunEvent::Reopen {

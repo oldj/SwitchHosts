@@ -96,6 +96,8 @@ const lang: LanguageDict = {
   last_refresh: '最後更新：',
   latest_version_desc: '最新的版本為：{0}',
   launch_at_login: '開機自動啟動',
+  lightweight_mode: '輕量模式',
+  lightweight_mode_desc: '關閉視窗時銷毀渲染處理程序以釋放記憶體，重新開啟視窗會稍慢一些。',
   line: '行',
   lines: '行',
   loading: '載入中...',

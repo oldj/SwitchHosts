@@ -101,6 +101,9 @@ const lang: LanguageDict = {
   last_refresh: 'Dernier rafraîchissement : ',
   latest_version_desc: 'La dernière version est : {0}',
   launch_at_login: 'Lancer à l’ouverture de session',
+  lightweight_mode: 'Mode léger',
+  lightweight_mode_desc:
+    'Détruire le processus de la fenêtre à la fermeture pour libérer de la mémoire. La réouverture est un peu plus lente.',
   line: 'ligne',
   lines: 'lignes',
   loading: 'Chargement...',

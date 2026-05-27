@@ -97,6 +97,9 @@ export default {
   last_refresh: 'Last Refresh: ',
   latest_version_desc: 'The latest version is: {0}',
   launch_at_login: 'Launch at Login',
+  lightweight_mode: 'Lightweight Mode',
+  lightweight_mode_desc:
+    'Destroy the window process when closed to free memory. Reopening takes slightly longer.',
   line: 'line',
   lines: 'lines',
   loading: 'Loading...',

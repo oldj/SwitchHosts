@@ -28,11 +28,12 @@ use std::{
 use regex::{Regex, RegexBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tauri::webview::{Color, WebviewWindowBuilder};
+use tauri::webview::WebviewWindowBuilder;
 use tauri::{AppHandle, EventId, Listener, Manager, Runtime, Theme, WebviewUrl};
 
 use crate::{
     i18n,
+    window_theme::{background_color_for_theme, configured_theme},
     storage::{
         atomic::atomic_write,
         entries,
@@ -743,22 +744,6 @@ fn install_find_window_ready_handlers<R: Runtime + 'static>(
     FindGate {
         did_show,
         listener_id,
-    }
-}
-
-fn configured_theme(state: &AppState) -> Option<Theme> {
-    let cfg = state.config.lock().expect("config mutex poisoned");
-    match cfg.theme.as_str() {
-        "light" => Some(Theme::Light),
-        "dark" => Some(Theme::Dark),
-        _ => None,
-    }
-}
-
-fn background_color_for_theme(theme: Theme) -> Color {
-    match theme {
-        Theme::Dark => Color(26, 27, 30, 255),
-        _ => Color(248, 249, 250, 255),
     }
 }
 

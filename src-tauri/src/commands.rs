@@ -1020,20 +1020,10 @@ pub async fn focus_main_window<R: Runtime>(app: AppHandle<R>, _args: Args) -> Va
 #[tauri::command]
 pub async fn quit_app<R: Runtime>(
     app: AppHandle<R>,
-    state: State<'_, AppState>,
+    _state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, String> {
-    // Persist window geometry while the window is still around. The
-    // ExitRequested run-event hook also covers Cmd+Q / system
-    // shutdown paths; this branch covers the renderer-driven Quit.
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        lifecycle::persist_window_geometry(&window, state.inner());
-    }
-
-    // Flip the flag so the close handler stops intercepting close
-    // events as "hide", then ask Tauri to exit cleanly.
-    state.is_will_quit.store(true, Ordering::SeqCst);
-    app.exit(0);
+    lifecycle::quit_app(&app);
     Ok(Value::Null)
 }
 
