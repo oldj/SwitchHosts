@@ -33,7 +33,6 @@ use tauri::{AppHandle, EventId, Listener, Manager, Runtime, Theme, WebviewUrl};
 
 use crate::{
     i18n,
-    window_theme::{background_color_for_theme, configured_theme},
     storage::{
         atomic::atomic_write,
         entries,
@@ -41,6 +40,7 @@ use crate::{
         manifest::{self, Manifest},
         AppState,
     },
+    window_theme::{background_color_for_theme, configured_theme},
 };
 
 pub const FIND_WINDOW_LABEL: &str = "find";

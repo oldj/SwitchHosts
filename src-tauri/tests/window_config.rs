@@ -59,6 +59,62 @@ fn setup_waits_for_renderer_ready_before_showing_main_window() {
 }
 
 #[test]
+fn setup_skips_main_window_creation_when_hide_at_launch_is_on() {
+    const SOURCE: &str = include_str!("../src/lib.rs");
+
+    // Extract the bodies of `if hide_at_launch { ... } else { ... }`
+    // by brace-counting, so a future refactor that *keeps the
+    // identifier* but moves `create_main_window` into the wrong branch
+    // is caught — the previous string-presence check would pass either
+    // way and leave the regression invisible.
+    let if_body = extract_block_after(SOURCE, "if hide_at_launch {")
+        .expect("setup must contain an `if hide_at_launch {` branch");
+    let else_body = extract_block_after(SOURCE, "} else {")
+        .expect("the hide_at_launch branch must have a matching `} else {`");
+
+    assert!(
+        if_body.contains("enter_hidden_to_tray_state"),
+        "hide_at_launch branch must mark the main window as hidden-to-tray so the exit-guard machinery treats subsequent auxiliary-window closes as stay-in-tray"
+    );
+    assert!(
+        !if_body.contains("create_main_window"),
+        "hide_at_launch branch must NOT create the main window — the whole point is that the webview process doesn't load until the user explicitly shows it from the tray"
+    );
+    assert!(
+        else_body.contains("create_main_window"),
+        "the non-hide_at_launch branch must create the main window so it appears at launch"
+    );
+}
+
+/// Return the slice of `source` between the `{` at the end of `marker`
+/// and its matching `}`, using brace counting that ignores nesting.
+/// `marker` must end with `{`; returns `None` if the marker isn't
+/// present or the braces don't balance.
+fn extract_block_after<'a>(source: &'a str, marker: &str) -> Option<&'a str> {
+    assert!(
+        marker.ends_with('{'),
+        "extract_block_after marker must end with `{{`"
+    );
+    let start = source.find(marker)? + marker.len();
+    let mut depth: i32 = 1;
+    let mut byte_pos = start;
+    for ch in source[start..].chars() {
+        match ch {
+            '{' => depth += 1,
+            '}' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(&source[start..byte_pos]);
+                }
+            }
+            _ => {}
+        }
+        byte_pos += ch.len_utf8();
+    }
+    None
+}
+
+#[test]
 fn find_window_waits_for_renderer_ready_before_showing() {
     const RUST_SOURCE: &str = include_str!("../src/find.rs");
     const FIND_PAGE_SOURCE: &str = include_str!("../../src/renderer/pages/find.tsx");

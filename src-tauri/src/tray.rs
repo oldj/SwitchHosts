@@ -155,7 +155,10 @@ fn handle_left_click<R: Runtime + 'static>(
         //       dismissal sticks.
         if let Some(window) = app.get_webview_window(TRAY_WINDOW_LABEL) {
             if window.is_visible().unwrap_or(false) {
-                let _ = window.hide();
+                // Destroy rather than hide so the webview process is
+                // released; `show_tray_window` lazy-recreates the window
+                // on the next icon click.
+                let _ = window.close();
                 return;
             }
         }
@@ -464,17 +467,18 @@ fn create_tray_window<R: Runtime>(
     {
         let window_for_handler = window.clone();
         window.on_window_event(move |event| {
-            // Hide on focus loss so the popover behaves like a real
-            // tray mini-window: click outside -> it disappears.
-            // Only stamp the auto-hide timestamp + call hide when the
+            // Close (destroy) on focus loss so the popover behaves like
+            // a real tray mini-window: click outside → it disappears
+            // and its webview process is released.
+            // Only stamp the auto-hide timestamp + call close when the
             // window is still visible -- otherwise this is the trailing
-            // blur from a hide we already performed in handle_left_click,
-            // and re-stamping would freeze the next click out of show via
-            // the dedupe window.
+            // blur from a close we already performed in
+            // handle_left_click, and re-stamping would freeze the next
+            // click out of show via the dedupe window.
             if let tauri::WindowEvent::Focused(false) = event {
                 if window_for_handler.is_visible().unwrap_or(false) {
                     LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
-                    let _ = window_for_handler.hide();
+                    let _ = window_for_handler.close();
                 }
             }
         });
@@ -710,7 +714,10 @@ fn hide_tray_if_visible<R: Runtime>(app: &AppHandle<R>) {
     if let Some(tray) = app.get_webview_window(TRAY_WINDOW_LABEL) {
         if tray.is_visible().unwrap_or(false) {
             LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
-            let _ = tray.hide();
+            // Destroy rather than hide so the webview process is
+            // released; the next tray click recreates it via
+            // `show_tray_window`.
+            let _ = tray.close();
         }
     }
 }

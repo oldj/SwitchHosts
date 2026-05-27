@@ -11,11 +11,11 @@
 //! Tray and find window plumbing land in P2.B / P2.D and will reuse
 //! the same persistence helpers.
 
+#[cfg(target_os = "macos")]
+use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-#[cfg(target_os = "macos")]
-use std::sync::atomic::AtomicU64;
 
 use tauri::{
     webview::WebviewWindowBuilder, AppHandle, EventId, Listener, LogicalPosition, LogicalSize,
@@ -81,19 +81,25 @@ impl MainGate {
 static MAIN_GATE: Mutex<Option<MainGate>> = Mutex::new(None);
 
 /// Long-lived semantic state: `true` while the main window is in the
-/// "lightweight-hidden" state — destroyed by a lightweight-mode close
-/// and not yet rebuilt. The close button on the main window has
-/// hide-to-tray semantics that must outlive the destruction of any
-/// other webview window: if the user lightweight-closes the main
-/// window while a find / tray-mini window is alive, and *then* closes
-/// that auxiliary window, the resulting "last window closed" exit
-/// signal must still be prevented — otherwise the app would silently
-/// die instead of staying in the tray.
+/// "hide-to-tray" state — its webview process does not currently
+/// exist, but the app remains alive in the tray and the next user-
+/// initiated show is expected to rebuild it.
 ///
-/// Set by `install_main_window_handlers::CloseRequested` lightweight
-/// branch; cleared by `show_main_window` only after the main window
-/// has been successfully rebuilt and rewired. Not cleared by
-/// `quit_app` because `is_will_quit` takes priority downstream.
+/// Two entry points set this flag:
+/// - `install_main_window_handlers::CloseRequested` when a
+///   lightweight-mode close lets the webview be destroyed.
+/// - `enter_hidden_to_tray_state` from `lib.rs::setup` when
+///   `hide_at_launch` is on, so the main window is skipped at
+///   startup and its webview never loads until the user asks for it.
+///
+/// Both cases share the same downstream behaviour: a subsequent
+/// last-window close (e.g. dismissing a find / tray-mini window) must
+/// still be prevented so the app stays in the tray rather than
+/// silently exiting.
+///
+/// Cleared by `show_main_window` only after the main window has been
+/// successfully rebuilt and rewired. Not cleared by `quit_app`
+/// because `is_will_quit` takes priority downstream.
 static MAIN_WINDOW_LIGHTWEIGHT_HIDDEN: AtomicBool = AtomicBool::new(false);
 
 /// Short-lived guard armed by `arm_lightweight_exit_guard_if_last_window`
@@ -970,12 +976,26 @@ pub fn quit_app<R: Runtime>(app: &AppHandle<R>) {
     app.exit(0);
 }
 
+/// Mark the main window as hidden-to-tray without going through a
+/// close event. Called from `lib.rs::setup` when `hide_at_launch` is
+/// on so the main window is skipped at startup entirely — its webview
+/// process never loads until the user explicitly brings it up from
+/// the tray. From that point on the flag behaves exactly the same as
+/// when a lightweight-mode close sets it: `show_main_window`'s
+/// rebuild path is the canonical clear point, and the exit-guard
+/// machinery in `RunEvent::WindowEvent::CloseRequested` /
+/// `RunEvent::ExitRequested` keeps the app alive in the tray across
+/// auxiliary-window closes.
+pub fn enter_hidden_to_tray_state() {
+    MAIN_WINDOW_LIGHTWEIGHT_HIDDEN.store(true, Ordering::SeqCst);
+}
+
 /// Called from `RunEvent::WindowEvent::CloseRequested` for every
 /// webview the runtime is about to close. If the main window is in
-/// the lightweight-hidden state *and* the window being closed is
-/// currently the last live webview, arm the short-lived exit guard
-/// so the imminent `ExitRequested` can be `prevent_exit`-ed without
-/// also blocking unrelated exit signals (Dock → Quit, shutdown).
+/// the hide-to-tray state *and* the window being closed is currently
+/// the last live webview, arm the short-lived exit guard so the
+/// imminent `ExitRequested` can be `prevent_exit`-ed without also
+/// blocking unrelated exit signals (Dock → Quit, shutdown).
 ///
 /// Per-window `on_window_event` listeners run before
 /// `RunEvent::WindowEvent` (see tauri-runtime-wry `on_close_requested`),
