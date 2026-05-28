@@ -1003,12 +1003,35 @@ pub async fn find_set_replace_history(
 // ---- window / misc ---------------------------------------------------------
 
 #[tauri::command]
-pub async fn hide_main_window<R: Runtime>(app: AppHandle<R>, _args: Args) -> Value {
+pub async fn hide_main_window<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<Value, String> {
     if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        lifecycle::mark_main_window_user_hide();
-        let _ = window.hide();
+        let lightweight = state
+            .config
+            .lock()
+            .map(|cfg| cfg.lightweight_mode)
+            .unwrap_or(false);
+        if lightweight {
+            // Lightweight mode: mirror the native close-button path so
+            // the lifecycle `CloseRequested` handler can destroy the
+            // webview and arm the hide-to-tray state. On Windows/Linux
+            // the main window is `decorations(false)` and the title-bar
+            // close button is implemented in the renderer (TopBar), so
+            // this command is the *only* entry point a user has to
+            // close the window — calling `hide()` directly here would
+            // silently bypass `lightweight_mode` on those platforms.
+            // macOS gets the same routing for free via NSWindow's close
+            // button.
+            let _ = window.close();
+        } else {
+            lifecycle::mark_main_window_user_hide();
+            let _ = window.hide();
+        }
     }
-    Value::Null
+    Ok(Value::Null)
 }
 
 #[tauri::command]
