@@ -59,6 +59,19 @@ const TRAY_TOGGLE_DEDUPE_MS: u64 = 300;
 #[cfg(target_os = "macos")]
 const TRAY_GLOBAL_HIDE_SUPPRESS_AFTER_ICON_CLICK_MS: u64 = 150;
 
+/// Windows/Linux dismiss the tray mini window from its `Focused(false)`
+/// event. A freshly shown window briefly loses then regains focus while
+/// the compositor settles — and because the triggering click lands on
+/// the tray icon rather than the window, that settle can deliver a
+/// spurious focus-loss the instant the window appears. When dismissal
+/// only hid the window this was self-correcting (the next click re-
+/// showed it), but now that dismissal *closes* (destroys) the window it
+/// would tear the window down the moment it opens, looping forever.
+/// Ignore focus loss for a short window after an icon-triggered show.
+/// Mirrors macOS's `TRAY_GLOBAL_HIDE_SUPPRESS_AFTER_ICON_CLICK_MS`.
+#[cfg(not(target_os = "macos"))]
+const TRAY_FOCUS_LOSS_SUPPRESS_AFTER_SHOW_MS: u64 = 250;
+
 /// Wall-clock millis of the last auto-hide of the tray window. 0 means
 /// "never". `AtomicU64` keeps it lock-free and safe to read/write from
 /// any thread.
@@ -69,6 +82,12 @@ static LAST_TRAY_AUTO_HIDE_MS: AtomicU64 = AtomicU64::new(0);
 /// from the same physical click.
 #[cfg(target_os = "macos")]
 static LAST_TRAY_ICON_SHOW_CLICK_MS: AtomicU64 = AtomicU64::new(0);
+
+/// Wall-clock millis of the last tray mini-window show on Windows/Linux.
+/// Drives the post-show focus-loss suppression described on
+/// `TRAY_FOCUS_LOSS_SUPPRESS_AFTER_SHOW_MS`.
+#[cfg(not(target_os = "macos"))]
+static LAST_TRAY_SHOW_MS: AtomicU64 = AtomicU64::new(0);
 
 fn now_ms() -> u64 {
     SystemTime::now()
@@ -433,6 +452,14 @@ fn show_tray_window<R: Runtime>(
     }
     #[cfg(not(target_os = "macos"))]
     {
+        // Stamp the show *before* show()/set_focus() so the suppression
+        // window already covers the whole display+focus phase. If the
+        // compositor delivers a transient Focused(false) synchronously
+        // during these calls (or before the post-call store lands), the
+        // handler would otherwise still read a stale timestamp — 0 on the
+        // first show — fall through the suppression check, and destroy the
+        // window the instant it appears.
+        LAST_TRAY_SHOW_MS.store(now_ms(), Ordering::Relaxed);
         window.show().map_err(|e| e.to_string())?;
         window.set_focus().map_err(|e| e.to_string())?;
     }
@@ -470,12 +497,22 @@ fn create_tray_window<R: Runtime>(
             // Close (destroy) on focus loss so the popover behaves like
             // a real tray mini-window: click outside → it disappears
             // and its webview process is released.
-            // Only stamp the auto-hide timestamp + call close when the
-            // window is still visible -- otherwise this is the trailing
-            // blur from a close we already performed in
-            // handle_left_click, and re-stamping would freeze the next
-            // click out of show via the dedupe window.
             if let tauri::WindowEvent::Focused(false) = event {
+                // Ignore the focus flicker that fires right after an
+                // icon-triggered show (see
+                // TRAY_FOCUS_LOSS_SUPPRESS_AFTER_SHOW_MS) — closing here
+                // would destroy the window the instant it opens and loop.
+                let last_show = LAST_TRAY_SHOW_MS.load(Ordering::Relaxed);
+                if last_show != 0
+                    && now_ms().saturating_sub(last_show) < TRAY_FOCUS_LOSS_SUPPRESS_AFTER_SHOW_MS
+                {
+                    return;
+                }
+                // Only stamp the auto-hide timestamp + call close when the
+                // window is still visible -- otherwise this is the trailing
+                // blur from a close we already performed in
+                // handle_left_click, and re-stamping would freeze the next
+                // click out of show via the dedupe window.
                 if window_for_handler.is_visible().unwrap_or(false) {
                     LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
                     let _ = window_for_handler.close();
