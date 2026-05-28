@@ -98,6 +98,9 @@ export default {
   last_refresh: 'Son yenileme: ',
   latest_version_desc: 'En son sürüm: {0}',
   launch_at_login: 'Oturum açıldığında başlat',
+  lightweight_mode: 'Hafif Mod',
+  lightweight_mode_desc:
+    'Bellek boşaltmak için pencere kapatıldığında işlemi sonlandır. Yeniden açmak biraz daha uzun sürer.',
   line: 'satır',
   lines: 'satırlar',
   loading: 'Yükleniyor...',

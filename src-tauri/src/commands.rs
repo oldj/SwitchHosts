@@ -1003,12 +1003,35 @@ pub async fn find_set_replace_history(
 // ---- window / misc ---------------------------------------------------------
 
 #[tauri::command]
-pub async fn hide_main_window<R: Runtime>(app: AppHandle<R>, _args: Args) -> Value {
+pub async fn hide_main_window<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<Value, String> {
     if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        lifecycle::mark_main_window_user_hide();
-        let _ = window.hide();
+        let lightweight = state
+            .config
+            .lock()
+            .map(|cfg| cfg.lightweight_mode)
+            .unwrap_or(false);
+        if lightweight {
+            // Lightweight mode: mirror the native close-button path so
+            // the lifecycle `CloseRequested` handler can destroy the
+            // webview and arm the hide-to-tray state. On Windows/Linux
+            // the main window is `decorations(false)` and the title-bar
+            // close button is implemented in the renderer (TopBar), so
+            // this command is the *only* entry point a user has to
+            // close the window — calling `hide()` directly here would
+            // silently bypass `lightweight_mode` on those platforms.
+            // macOS gets the same routing for free via NSWindow's close
+            // button.
+            let _ = window.close();
+        } else {
+            lifecycle::mark_main_window_user_hide();
+            let _ = window.hide();
+        }
     }
-    Value::Null
+    Ok(Value::Null)
 }
 
 #[tauri::command]
@@ -1020,20 +1043,10 @@ pub async fn focus_main_window<R: Runtime>(app: AppHandle<R>, _args: Args) -> Va
 #[tauri::command]
 pub async fn quit_app<R: Runtime>(
     app: AppHandle<R>,
-    state: State<'_, AppState>,
+    _state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, String> {
-    // Persist window geometry while the window is still around. The
-    // ExitRequested run-event hook also covers Cmd+Q / system
-    // shutdown paths; this branch covers the renderer-driven Quit.
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        lifecycle::persist_window_geometry(&window, state.inner());
-    }
-
-    // Flip the flag so the close handler stops intercepting close
-    // events as "hide", then ask Tauri to exit cleanly.
-    state.is_will_quit.store(true, Ordering::SeqCst);
-    app.exit(0);
+    lifecycle::quit_app(&app);
     Ok(Value::Null)
 }
 

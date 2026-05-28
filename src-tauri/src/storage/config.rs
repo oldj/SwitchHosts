@@ -45,6 +45,7 @@ pub struct AppConfig {
     pub hide_dock_icon: bool,
     pub multi_chose_folder_switch_all: bool,
     pub tray_mini_window: bool,
+    pub lightweight_mode: bool,
 
     // find window
     pub find_is_regexp: bool,
@@ -91,6 +92,7 @@ impl Default for AppConfig {
             hide_dock_icon: false,
             multi_chose_folder_switch_all: false,
             tray_mini_window: true,
+            lightweight_mode: false,
 
             find_is_regexp: false,
             find_is_ignore_case: false,
@@ -280,6 +282,23 @@ mod tests {
             .unwrap();
 
         assert!(cfg.launch_at_login);
+    }
+
+    #[test]
+    fn defaults_lightweight_mode_to_false() {
+        let cfg = AppConfig::default();
+
+        assert!(!cfg.lightweight_mode);
+    }
+
+    #[test]
+    fn apply_partial_accepts_lightweight_mode() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "lightweight_mode": true }))
+            .unwrap();
+
+        assert!(cfg.lightweight_mode);
     }
 
     #[test]

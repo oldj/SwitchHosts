@@ -99,6 +99,9 @@ export default {
   last_refresh: 'Ostatnie odświeżenie: ',
   latest_version_desc: 'Najnowsza wersja to: {0}',
   launch_at_login: 'Uruchamiaj przy logowaniu',
+  lightweight_mode: 'Tryb oszczędny',
+  lightweight_mode_desc:
+    'Zamknij proces okna przy zamknięciu, aby zwolnić pamięć. Ponowne otwarcie zajmie nieco więcej czasu.',
   line: 'linia',
   lines: 'linie',
   loading: 'Ładowanie...',

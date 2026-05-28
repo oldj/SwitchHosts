@@ -95,6 +95,8 @@ export default {
   last_refresh: '마지막 새로고침: ',
   latest_version_desc: '최신버전: {0}',
   launch_at_login: '로그인 시 실행',
+  lightweight_mode: '경량 모드',
+  lightweight_mode_desc: '창을 닫을 때 프로세스를 종료하여 메모리를 확보합니다. 다시 열 때 약간 더 오래 걸립니다.',
   line: '줄',
   lines: '줄들',
   loading: '로딩 중...',

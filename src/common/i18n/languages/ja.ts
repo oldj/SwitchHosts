@@ -99,6 +99,9 @@ const lang: LanguageDict = {
   last_refresh: '最終更新: ',
   latest_version_desc: '最新バージョン: {0}',
   launch_at_login: 'ログイン時に起動',
+  lightweight_mode: 'ライトウェイトモード',
+  lightweight_mode_desc:
+    'ウィンドウを閉じたときにプロセスを破棄してメモリを解放します。再度開く際に少し時間がかかります。',
   line: '行',
   lines: '行',
   loading: '読み込み中...',

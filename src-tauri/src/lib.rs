@@ -11,6 +11,7 @@ mod migration;
 mod refresh;
 mod storage;
 mod tray;
+mod window_theme;
 
 use serde_json::json;
 #[cfg(any(target_os = "windows", test))]
@@ -192,6 +193,10 @@ pub fn run() {
                     let _ = open::that(app_menu::HOMEPAGE_URL);
                     return;
                 }
+                app_menu::MENU_ID_QUIT_APP => {
+                    lifecycle::quit_app(app);
+                    return;
+                }
                 _ => {}
             }
             // Renderer-generated popup menu items.
@@ -200,25 +205,45 @@ pub fn run() {
             }
         })
         .setup(|app| {
-            // Build the main window programmatically with any saved
-            // geometry baked into the builder. Doing this in Rust (as
-            // opposed to tauri.conf.json) is the only way to avoid
-            // the one-frame flash between the default center position
-            // and the restored position on macOS: set_position on a
-            // window declared by conf.json doesn't always take effect
-            // before the compositor paints the first frame.
+            // We build the main window programmatically (rather than
+            // declaring it in tauri.conf.json) so saved geometry can be
+            // baked into the builder — `set_position` on a conf-declared
+            // window doesn't always take effect before the compositor
+            // paints the first frame, producing a center-then-jump flash
+            // on macOS. When `hide_at_launch` is on we skip creating the
+            // main window entirely: there's no point loading a webview
+            // process that will only be hidden, and the user's intent is
+            // exactly "stay in the tray". `show_main_window`'s rebuild
+            // path handles the first tray-triggered show identically to
+            // the lightweight-mode reopen.
             let app_handle = app.handle().clone();
             let app_state = app.state::<AppState>();
-            let main = lifecycle::create_main_window(&app_handle, app_state.inner())?;
-
-            // Handlers are installed right after build, before any
-            // user interaction, so no Moved/Resized events are lost.
-            lifecycle::install_main_window_handlers(&main);
 
             // Run automatic update checks from the backend so they keep
             // working while the main window is hidden to the tray. The
             // renderer's ready event gives UpdateDialog a chance to attach
             // its listeners before the first check can emit `new_version`.
+            //
+            // The listener is registered unconditionally and fires on the
+            // first `main_window_ready` emission. Only `pages/index.tsx`
+            // (the main window's React root) broadcasts that event —
+            // find / tray-mini windows do not — so the trigger is:
+            //
+            //   - `hide_at_launch = false`: setup creates the main window
+            //     and the renderer emits ready shortly after, so the
+            //     check starts within the first second or two of launch.
+            //   - `hide_at_launch = true`: no main window is created at
+            //     setup, the renderer never loads, and the check stays
+            //     **deferred** until the user explicitly shows the main
+            //     window from the tray. This is intentional: a hidden-
+            //     at-launch user has opted into "stay quiet in the
+            //     tray", and running an unbidden network check that
+            //     could pop an `new_version` event into a non-existent
+            //     UpdateDialog would be both wasteful and surprising.
+            //
+            // Once the check has started for a session, the AtomicBool
+            // swap guarantees subsequent tray-rebuild `main_window_ready`
+            // emissions don't re-start it.
             let update_checker_started = Arc::new(AtomicBool::new(false));
             let update_checker_ready_app = app_handle.clone();
             let update_checker_ready_flag = update_checker_started.clone();
@@ -234,8 +259,19 @@ pub fn run() {
                 .map(|cfg| cfg.hide_at_launch)
                 .unwrap_or(false);
             if hide_at_launch {
-                let _ = main.hide();
+                // Skip creating the main window — mark hide-to-tray so
+                // the exit-guard machinery recognises subsequent
+                // last-window closes (e.g. dismissing a find window) as
+                // "stay in tray" rather than exit. The flag is cleared
+                // by `show_main_window` after a successful rebuild.
+                lifecycle::enter_hidden_to_tray_state();
             } else {
+                let main = lifecycle::create_main_window(&app_handle, app_state.inner())?;
+
+                // Handlers are installed right after build, before any
+                // user interaction, so no Moved/Resized events are lost.
+                lifecycle::install_main_window_handlers(&main);
+
                 let did_show_main = Arc::new(AtomicBool::new(false));
 
                 let ready_app = app_handle.clone();
@@ -428,17 +464,40 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
-    // Run-event hook covers two concerns that Builder's `.setup` and
+    // Run-event hook covers three concerns that Builder's `.setup` and
     // window-level `on_window_event` can't reach:
-    //   * ExitRequested — persist geometry on Cmd+Q / system shutdown
-    //     paths that bypass our explicit quit_app command.
+    //   * WindowEvent::CloseRequested — globally observe every webview
+    //     close. When the main window is in the lightweight-hidden
+    //     state and the closing window is the last live webview, arm
+    //     a short-lived guard so the imminent `ExitRequested` can be
+    //     prevented. Per-window `on_window_event` runs first, so the
+    //     main window's hide-to-tray flag is already set by the time
+    //     this hook sees its CloseRequested.
+    //   * ExitRequested — persist geometry on every exit-request path,
+    //     and `prevent_exit` only when the guard above was armed by a
+    //     specific close. Dock → Quit, system shutdown, etc. arrive
+    //     with the same `is_will_quit == false` shape as the implicit
+    //     last-window exit; the guard distinguishes them.
     //   * Reopen (macOS) — clicking the Dock icon for an app whose
     //     main window is hidden should re-show it. Tauri does not do
     //     this automatically; has_visible_windows == false means the
     //     OS didn't find any windows to bring forward.
     app.run(|app_handle, event| match event {
-        RunEvent::ExitRequested { .. } => {
+        RunEvent::WindowEvent {
+            ref label,
+            event: tauri::WindowEvent::CloseRequested { .. },
+            ..
+        } => {
+            lifecycle::arm_lightweight_exit_guard_if_last_window(app_handle, label);
+        }
+        RunEvent::ExitRequested { api, .. } => {
             lifecycle::persist_on_exit_requested(app_handle);
+            let state = app_handle.state::<AppState>();
+            let will_quit = state.is_will_quit.load(Ordering::SeqCst);
+            let expecting = lifecycle::take_expecting_lightweight_exit();
+            if expecting && !will_quit {
+                api.prevent_exit();
+            }
         }
         #[cfg(target_os = "macos")]
         RunEvent::Reopen {

@@ -101,6 +101,9 @@ const lang: LanguageDict = {
   last_refresh: 'Letzte Aktualisierung: ',
   latest_version_desc: 'Die neueste Version ist: {0}',
   launch_at_login: 'Beim Anmelden starten',
+  lightweight_mode: 'Leichtgewichtiger Modus',
+  lightweight_mode_desc:
+    'Beim Schließen den Fensterprozess beenden, um Arbeitsspeicher freizugeben. Das erneute Öffnen dauert etwas länger.',
   line: 'Zeile',
   lines: 'Zeilen',
   loading: 'Wird geladen...',
