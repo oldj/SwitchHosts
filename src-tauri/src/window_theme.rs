@@ -23,3 +23,30 @@ pub fn background_color_for_theme(theme: Theme) -> Color {
         _ => Color(248, 249, 250, 255),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Lock the Mantine-matched window backgrounds. Both the main window
+    // (lifecycle.rs) and the find window (find.rs) paint the builder
+    // with these before the renderer loads — a drift here reintroduces
+    // the white flash on first paint / lightweight-mode rebuild.
+    #[test]
+    fn dark_theme_maps_to_mantine_dark_surface() {
+        assert_eq!(
+            background_color_for_theme(Theme::Dark),
+            Color(26, 27, 30, 255)
+        );
+    }
+
+    #[test]
+    fn non_dark_theme_maps_to_mantine_light_surface() {
+        // `Theme::Light` and the `system` / unknown fallback both
+        // resolve to the light surface through the `_` arm.
+        assert_eq!(
+            background_color_for_theme(Theme::Light),
+            Color(248, 249, 250, 255)
+        );
+    }
+}

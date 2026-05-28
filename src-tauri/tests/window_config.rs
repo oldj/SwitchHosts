@@ -95,7 +95,16 @@ fn extract_block_after<'a>(source: &'a str, marker: &str) -> Option<&'a str> {
         marker.ends_with('{'),
         "extract_block_after marker must end with `{{`"
     );
-    let start = source.find(marker)? + marker.len();
+    extract_block_from(source, marker)
+}
+
+/// Like `extract_block_after`, but `anchor` need not end with `{`:
+/// locate `anchor`, then return the brace-balanced block starting at
+/// the next `{`. Handy for pulling a function body out of its
+/// signature (which may span several lines of parameters).
+fn extract_block_from<'a>(source: &'a str, anchor: &str) -> Option<&'a str> {
+    let anchor_pos = source.find(anchor)?;
+    let start = anchor_pos + source[anchor_pos..].find('{')? + 1;
     let mut depth: i32 = 1;
     let mut byte_pos = start;
     for ch in source[start..].chars() {
@@ -112,6 +121,130 @@ fn extract_block_after<'a>(source: &'a str, marker: &str) -> Option<&'a str> {
         byte_pos += ch.len_utf8();
     }
     None
+}
+
+#[test]
+fn hide_main_window_command_destroys_webview_under_lightweight_mode() {
+    // On Windows/Linux the main window is `decorations(false)` and the
+    // title-bar close button lives in the renderer (TopBar), routing
+    // through the `hide_main_window` command rather than the OS close
+    // path macOS gets for free. So the command itself must honour
+    // lightweight_mode — regressing it to a plain `hide()` would
+    // silently keep the WebView2 / WebKitGTK process resident on those
+    // platforms (the macOS-only manual test wouldn't catch it).
+    const SOURCE: &str = include_str!("../src/commands.rs");
+    let body = extract_block_from(SOURCE, "pub async fn hide_main_window")
+        .expect("hide_main_window command must exist");
+    assert!(
+        body.contains("lightweight_mode"),
+        "hide_main_window must read lightweight_mode so the renderer close button respects it"
+    );
+    // Assert close() lives specifically in the `if lightweight {` branch
+    // — not just somewhere in the function body. Swapping the branches
+    // (hide under lightweight, close otherwise) would still leave a
+    // `window.close()` in the body and pass a whole-function check, yet
+    // silently break lightweight mode on Windows/Linux — and macOS never
+    // exercises this command (it closes via the NSWindow button), so the
+    // manual test wouldn't catch it.
+    let lightweight_branch = extract_block_from(SOURCE, "if lightweight {")
+        .expect("hide_main_window must branch on `if lightweight {`");
+    assert!(
+        lightweight_branch.contains("window.close()"),
+        "the lightweight branch of hide_main_window must close() (destroy) the window, not hide() it"
+    );
+}
+
+#[test]
+fn lightweight_close_enters_hidden_to_tray_state() {
+    // The CloseRequested lightweight branch must record the hide-to-tray
+    // state so later auxiliary-window closes stay in the tray, and must
+    // NOT prevent_close (the webview has to actually be destroyed).
+    //
+    // Extract just the `if lightweight { ... }` block rather than
+    // scanning the whole file: the same
+    // `MAIN_WINDOW_LIGHTWEIGHT_HIDDEN.store(true)` also lives in
+    // `enter_hidden_to_tray_state()`, so a whole-file `contains` would
+    // still pass even if the close branch's store were deleted.
+    const SOURCE: &str = include_str!("../src/lifecycle.rs");
+    let branch = extract_block_from(SOURCE, "if lightweight {")
+        .expect("CloseRequested must have an `if lightweight {` branch");
+    assert!(
+        branch.contains("MAIN_WINDOW_LIGHTWEIGHT_HIDDEN.store(true"),
+        "the lightweight close branch must set the hide-to-tray flag itself"
+    );
+    assert!(
+        !branch.contains("prevent_close"),
+        "the lightweight close branch must NOT prevent_close — the webview has to actually be destroyed"
+    );
+}
+
+#[test]
+fn exit_request_is_guarded_by_lightweight_exit_flag() {
+    // ExitRequested must prevent_exit only when a specific close armed
+    // the short-lived guard. Tying it to a long-lived flag alone (or to
+    // is_will_quit alone) would block Dock → Quit and system shutdown,
+    // which share the `code: None` / `is_will_quit == false` shape.
+    const SOURCE: &str = include_str!("../src/lib.rs");
+    assert!(
+        SOURCE.contains("arm_lightweight_exit_guard_if_last_window"),
+        "a CloseRequested run-event must arm the lightweight exit guard"
+    );
+    assert!(
+        SOURCE.contains("take_expecting_lightweight_exit") && SOURCE.contains("prevent_exit"),
+        "ExitRequested must consume the guard before deciding to prevent_exit"
+    );
+}
+
+#[test]
+fn tray_window_suppresses_focus_loss_right_after_show() {
+    // Windows/Linux dismiss the tray popover from its `Focused(false)`
+    // event. A freshly shown window flickers focus while the compositor
+    // settles; now that dismissal closes (destroys) the window, an
+    // unguarded flicker tears it down the instant it opens, looping
+    // forever. The suppression window — and stamping it *before*
+    // show()/set_focus() — is what keeps the popover openable.
+    const SOURCE: &str = include_str!("../src/tray.rs");
+    assert!(
+        SOURCE.contains("TRAY_FOCUS_LOSS_SUPPRESS_AFTER_SHOW_MS")
+            && SOURCE.contains("LAST_TRAY_SHOW_MS"),
+        "tray window must keep a post-show focus-loss suppression window"
+    );
+
+    // The show timestamp must be stamped before show()/set_focus() so a
+    // synchronously-delivered focus loss is already inside the window.
+    // Anchor on `<` to avoid matching `show_tray_window_from_tray_click`,
+    // which shares the `fn show_tray_window` prefix and appears earlier.
+    let show_body =
+        extract_block_from(SOURCE, "fn show_tray_window<").expect("show_tray_window must exist");
+    let stamp = show_body
+        .find("LAST_TRAY_SHOW_MS.store")
+        .expect("show_tray_window must stamp LAST_TRAY_SHOW_MS");
+    let show_call = show_body
+        .find("window.show()")
+        .expect("show_tray_window must call window.show()");
+    assert!(
+        stamp < show_call,
+        "LAST_TRAY_SHOW_MS must be stamped before window.show() so the suppression window covers the whole show/focus phase"
+    );
+
+    // The Focused(false) handler must actually consult the suppression
+    // window and early-return before close() — otherwise the constant
+    // and the stamp above would be dead code and a post-show flicker
+    // would still destroy the window the instant it opens.
+    let handler = extract_block_from(SOURCE, "WindowEvent::Focused(false) = event {")
+        .expect("tray window must handle Focused(false) on Windows/Linux");
+    let suppress_check = handler
+        .find("saturating_sub(last_show) < TRAY_FOCUS_LOSS_SUPPRESS_AFTER_SHOW_MS")
+        .expect(
+            "the Focused(false) handler must compare elapsed time against the suppression window",
+        );
+    let close_call = handler
+        .find(".close()")
+        .expect("the Focused(false) handler must close the window on dismissal");
+    assert!(
+        suppress_check < close_call,
+        "the suppression check must run (and early-return) before close(), or a post-show focus flicker would tear the window down the instant it opens"
+    );
 }
 
 #[test]
