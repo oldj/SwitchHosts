@@ -375,8 +375,10 @@ pub fn run() {
                 .lock()
                 .expect("config mutex poisoned")
                 .launch_at_login;
+            let mut launch_at_login = want_launch_at_login;
             match app_handle.autolaunch().is_enabled() {
                 Ok(actual) if actual != want_launch_at_login => {
+                    launch_at_login = actual;
                     {
                         let mut cfg = app_state.config.lock().expect("config mutex poisoned");
                         cfg.launch_at_login = actual;
@@ -385,11 +387,14 @@ pub fn run() {
                         log::warn!("failed to persist launch_at_login sync from OS: {e}");
                     }
                 }
-                Ok(_) => {}
+                Ok(actual) => {
+                    launch_at_login = actual;
+                }
                 Err(e) => {
                     log::warn!("failed to query OS launch_at_login state: {e}");
                 }
             }
+            lifecycle::apply_launch_at_login_relaunch_policy(&app_handle, launch_at_login);
 
             Ok(())
         })

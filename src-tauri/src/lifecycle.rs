@@ -122,6 +122,9 @@ static EXPECT_LIGHTWEIGHT_EXIT: AtomicBool = AtomicBool::new(false);
 #[cfg(target_os = "macos")]
 static MAIN_WINDOW_USER_HIDE_GENERATION: AtomicU64 = AtomicU64::new(0);
 
+#[cfg(target_os = "macos")]
+static RELAUNCH_ON_LOGIN_DISABLED: AtomicBool = AtomicBool::new(false);
+
 // ---- main-window event handlers --------------------------------------------
 
 /// Install all of the v5 main-window handlers:
@@ -476,6 +479,9 @@ pub fn create_main_window<R: Runtime>(
         reason: e.to_string(),
     })?;
 
+    #[cfg(target_os = "macos")]
+    disable_window_state_restoration(&window);
+
     // After build, ask the actual OS theme so users on `system` get the
     // real light/dark colour rather than the Light fallback above.
     if let Ok(theme) = window.theme() {
@@ -548,6 +554,25 @@ fn apply_restored_geometry_before_show<R: Runtime>(
 fn apply_restored_geometry_fallback<R: Runtime>(window: &WebviewWindow<R>, geom: &WindowGeometry) {
     let _ = window.set_size(LogicalSize::new(geom.width as f64, geom.height as f64));
     let _ = window.set_position(LogicalPosition::new(geom.x as f64, geom.y as f64));
+}
+
+#[cfg(target_os = "macos")]
+fn disable_window_state_restoration<R: Runtime>(window: &WebviewWindow<R>) {
+    let window_for_task = window.clone();
+    if let Err(e) = window.run_on_main_thread(move || {
+        let ns_window = match window_for_task.ns_window() {
+            Ok(ptr) => ptr as *mut AnyObject,
+            Err(e) => {
+                log::warn!("failed to get native main window handle for restoration policy: {e}");
+                return;
+            }
+        };
+        unsafe {
+            let _: () = msg_send![ns_window, setRestorable: false];
+        }
+    }) {
+        log::warn!("failed to schedule main window restoration policy: {e}");
+    }
 }
 
 /// Bounds in the same top-left coordinate space that Tauri/tao's
@@ -948,6 +973,60 @@ pub fn focus_main_on_second_instance<R: Runtime + 'static>(
     _cwd: String,
 ) {
     show_main_window(app);
+}
+
+/// When SwitchHosts is configured to start through a macOS LaunchAgent,
+/// prevent AppKit's logout/login restoration from launching a second copy.
+/// Dock `Reopen` remains a user action and still flows through
+/// `focus_main_on_second_instance` immediately.
+pub fn apply_launch_at_login_relaunch_policy<R: Runtime>(
+    app: &AppHandle<R>,
+    launch_at_login: bool,
+) {
+    #[cfg(target_os = "macos")]
+    {
+        let previous = RELAUNCH_ON_LOGIN_DISABLED.swap(launch_at_login, Ordering::SeqCst);
+        if previous == launch_at_login {
+            return;
+        }
+
+        if let Err(e) = set_relaunch_on_login_disabled(app, launch_at_login) {
+            RELAUNCH_ON_LOGIN_DISABLED.store(previous, Ordering::SeqCst);
+            log::warn!("failed to apply macOS relaunch-on-login policy: {e}");
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (app, launch_at_login);
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn set_relaunch_on_login_disabled<R: Runtime>(
+    app: &AppHandle<R>,
+    disabled: bool,
+) -> Result<(), tauri::Error> {
+    if MainThreadMarker::new().is_some() {
+        set_relaunch_on_login_disabled_on_main_thread(disabled);
+        return Ok(());
+    }
+
+    app.run_on_main_thread(move || {
+        set_relaunch_on_login_disabled_on_main_thread(disabled);
+    })
+}
+
+#[cfg(target_os = "macos")]
+fn set_relaunch_on_login_disabled_on_main_thread(disabled: bool) {
+    unsafe {
+        let ns_app: *mut AnyObject = msg_send![class!(NSApplication), sharedApplication];
+        if disabled {
+            let _: () = msg_send![ns_app, disableRelaunchOnLogin];
+        } else {
+            let _: () = msg_send![ns_app, enableRelaunchOnLogin];
+        }
+    }
 }
 
 // ---- run-event hook for Cmd+Q / system shutdown ---------------------------

@@ -262,7 +262,12 @@ fn apply_launch_at_login(app: &AppHandle<Wry>, enabled: bool) -> Result<(), Stor
     result.map_err(|e| StorageError::SideEffect {
         key: "launch_at_login".into(),
         reason: e.to_string(),
-    })
+    })?;
+
+    // Keep AppKit from restoring a second instance on login when the
+    // LaunchAgent is already responsible for starting the app.
+    lifecycle::apply_launch_at_login_relaunch_policy(app, enabled);
+    Ok(())
 }
 
 /// Run any out-of-process side effects that depend on a config key

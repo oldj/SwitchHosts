@@ -86,6 +86,55 @@ fn setup_skips_main_window_creation_when_hide_at_launch_is_on() {
     );
 }
 
+#[test]
+fn macos_main_window_disables_appkit_window_restoration() {
+    const SOURCE: &str = include_str!("../src/lifecycle.rs");
+
+    assert!(
+        SOURCE.contains("setRestorable: false"),
+        "main windows should opt out of AppKit window restoration because SwitchHosts owns its own geometry/state restore"
+    );
+}
+
+#[test]
+fn launch_at_login_uses_macos_relaunch_policy_instead_of_time_suppression() {
+    const LIFECYCLE: &str = include_str!("../src/lifecycle.rs");
+    const LIB: &str = include_str!("../src/lib.rs");
+    const COMMANDS: &str = include_str!("../src/commands.rs");
+
+    assert!(
+        !LIFECYCLE.contains("SUPPRESS_AUTO_SHOW_UNTIL_MS")
+            && !LIFECYCLE.contains("HIDE_AT_LAUNCH_AUTO_SHOW_SUPPRESS_MS"),
+        "hide_at_launch must not rely on a startup time window because that also suppresses real Dock clicks"
+    );
+    assert!(
+        LIFECYCLE.contains("disableRelaunchOnLogin")
+            && LIFECYCLE.contains("enableRelaunchOnLogin"),
+        "macOS login-start should prevent AppKit's login restoration from launching a second copy, and rebalance that counter if launch_at_login is disabled"
+    );
+    assert!(
+        LIB.contains("apply_launch_at_login_relaunch_policy(&app_handle, launch_at_login)")
+            && COMMANDS.contains("apply_launch_at_login_relaunch_policy(app, enabled)"),
+        "startup and runtime launch_at_login changes must both keep the macOS relaunch policy in sync"
+    );
+}
+
+#[test]
+fn dock_reopen_still_shows_main_window_immediately() {
+    const SOURCE: &str = include_str!("../src/lifecycle.rs");
+
+    let focus_body = extract_block_from(SOURCE, "pub fn focus_main_on_second_instance")
+        .expect("lifecycle must define focus_main_on_second_instance");
+    assert!(
+        focus_body.contains("show_main_window(app)"),
+        "Dock Reopen and second-instance signals should still funnel to the normal main-window show path"
+    );
+    assert!(
+        !focus_body.contains("return;") && !focus_body.contains("now_ms()"),
+        "focus_main_on_second_instance must not contain a startup suppression early-return that blocks a real Dock click"
+    );
+}
+
 /// Return the slice of `source` between the `{` at the end of `marker`
 /// and its matching `}`, using brace counting that ignores nesting.
 /// `marker` must end with `{`; returns `None` if the marker isn't
