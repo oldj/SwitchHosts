@@ -117,7 +117,56 @@ pub fn unregister() -> Result<(), HelperError> {
 pub fn repair() -> Result<HelperStatus, HelperError> {
     #[cfg(target_os = "macos")]
     {
-        imp::repair()
+        use std::sync::atomic::{AtomicBool, Ordering};
+        use std::sync::Mutex;
+        use std::time::{Duration, Instant};
+
+        // Reinstall churns unregister+register, which can wedge the
+        // Background Task Management database (launchd falls out of sync with
+        // BTM and refuses to materialize the job). Two guards stop that under
+        // rapid clicks / near-simultaneous `helper_repair` invokes:
+        //
+        // - REPAIR_RUNNING — mutual exclusion. Only one repair runs at a
+        //   time; a caller arriving while another is in flight bails with the
+        //   current status. This holds even when a single repair runs longer
+        //   than COOLDOWN (a hung-daemon probe can take up to the 8s XPC
+        //   timeout), which a time window alone cannot cover.
+        // - LAST_REPAIR — rate limit. After a repair finishes, the next is
+        //   held off for COOLDOWN so a failing reinstall can't be hammered.
+        const COOLDOWN: Duration = Duration::from_secs(5);
+        static REPAIR_RUNNING: AtomicBool = AtomicBool::new(false);
+        static LAST_REPAIR: Mutex<Option<Instant>> = Mutex::new(None);
+
+        // Claim the in-flight slot. `swap` returns the prior value: `true`
+        // means another repair already owns it — bail without disturbing it.
+        // On `false` we own it and must release it on EVERY exit path,
+        // including a panic inside `imp::repair()`, so release via RAII.
+        if REPAIR_RUNNING.swap(true, Ordering::SeqCst) {
+            return Ok(imp::status());
+        }
+        struct InFlight;
+        impl Drop for InFlight {
+            fn drop(&mut self) {
+                REPAIR_RUNNING.store(false, Ordering::SeqCst);
+            }
+        }
+        let _in_flight = InFlight;
+
+        // Rate-limit window, keyed on the previous repair's completion time.
+        if let Ok(guard) = LAST_REPAIR.lock() {
+            if let Some(t) = *guard {
+                if t.elapsed() < COOLDOWN {
+                    return Ok(imp::status());
+                }
+            }
+        }
+
+        let result = imp::repair();
+
+        if let Ok(mut guard) = LAST_REPAIR.lock() {
+            *guard = Some(Instant::now());
+        }
+        result
     }
     #[cfg(not(target_os = "macos"))]
     {
