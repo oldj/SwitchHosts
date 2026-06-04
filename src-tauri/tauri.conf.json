@@ -7,6 +7,7 @@
     "beforeDevCommand": "npm run dev:renderer",
     "devUrl": "http://127.0.0.1:8220",
     "beforeBuildCommand": "npm run build:renderer:tauri",
+    "beforeBundleCommand": "npm run build:universal-helper",
     "frontendDist": "../build-tauri"
   },
   "app": {
