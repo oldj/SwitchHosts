@@ -6,10 +6,13 @@
 //! XPC object model is reference-counted C; callers own anything from a
 //! `*_create*` / `*_with_reply_sync` and must [`xpc_release`] it.
 //!
-//! Client authentication is handled entirely by
-//! [`xpc_connection_set_codesigning_requirement`] (public since macOS
-//! 12). Because the helper is gated to macOS 13+, this single OS-
-//! enforced check is sufficient — we deliberately avoid the private
+//! Client authentication is handled entirely by the XPC peer
+//! code-signing requirement (`xpc_connection_set_peer_code_signing_requirement`,
+//! public since macOS 12; older builds also exported the alias
+//! `xpc_connection_set_codesigning_requirement`, which macOS 26 dropped —
+//! see [`set_codesigning_requirement`], which tries both). Because the
+//! helper is gated to macOS 13+, this single OS-enforced check is
+//! sufficient — we deliberately avoid the private
 //! `xpc_connection_get_audit_token` path.
 
 use std::ffi::{c_char, c_void};
@@ -88,15 +91,25 @@ extern "C" {
     pub fn dispatch_main() -> !;
 }
 
-/// `xpc_connection_set_codesigning_requirement` (macOS 12+) resolved at
-/// runtime via `dlsym` rather than link-time binding.
+/// The XPC "pin the peer to a code-signing requirement" call, resolved
+/// at runtime via `dlsym` rather than link-time binding.
 ///
-/// The crate's deployment target (11.0) predates this symbol, so a
-/// strong extern reference fails to link. The helper only ever runs on
-/// macOS 13+ (gated by `SMAppService` availability), where the symbol is
-/// always present, so a dynamic lookup is both sufficient and the only
-/// way to keep the 11.0-target build linking. Returns the call's
-/// `OSStatus` (0 = success), or `-1` if the symbol is unavailable.
+/// The crate's deployment target (11.0) predates these symbols, so a
+/// strong extern reference fails to link; the helper only ever runs on
+/// macOS 13+ (gated by `SMAppService`), so a dynamic lookup is both
+/// sufficient and the only way to keep the 11.0-target build linking.
+///
+/// Two spellings exist across OS versions and BOTH must be tried:
+/// - `xpc_connection_set_peer_code_signing_requirement` — the canonical
+///   public symbol (macOS 12+), and the only one present on macOS 26+;
+/// - `xpc_connection_set_codesigning_requirement` — an older alias that
+///   macOS 26 dropped.
+///
+/// Resolving only the old name made the daemon fail closed on macOS 26
+/// (symbol missing → returns `-1` → the listener cancels every client
+/// connection, so the helper is installed-but-unreachable). We prefer the
+/// canonical name and fall back to the alias for older systems. Returns
+/// the call's `OSStatus` (0 = success), or `-1` if neither symbol exists.
 pub fn set_codesigning_requirement(connection: XpcConnection, requirement: *const c_char) -> i32 {
     use std::sync::OnceLock;
 
@@ -105,15 +118,18 @@ pub fn set_codesigning_requirement(connection: XpcConnection, requirement: *cons
 
     static SYM: OnceLock<Option<Fp>> = OnceLock::new();
     let resolved = SYM.get_or_init(|| unsafe {
-        let p = libc::dlsym(
-            RTLD_DEFAULT,
+        // Prefer the canonical public name; fall back to the legacy alias
+        // for older systems. Whichever resolves first wins.
+        for name in [
+            c"xpc_connection_set_peer_code_signing_requirement".as_ptr(),
             c"xpc_connection_set_codesigning_requirement".as_ptr(),
-        );
-        if p.is_null() {
-            None
-        } else {
-            Some(std::mem::transmute::<*mut c_void, Fp>(p))
+        ] {
+            let p = libc::dlsym(RTLD_DEFAULT, name);
+            if !p.is_null() {
+                return Some(std::mem::transmute::<*mut c_void, Fp>(p));
+            }
         }
+        None
     });
     match resolved {
         Some(f) => unsafe { f(connection, requirement) },
