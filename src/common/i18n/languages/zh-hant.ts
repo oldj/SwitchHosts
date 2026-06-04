@@ -64,6 +64,7 @@ const lang: LanguageDict = {
   group: '群組',
   help: '幫助',
   helper_btn_install: '安裝',
+  helper_btn_open_login_items: '打開系統設定',
   helper_btn_reinstall: '重新安裝',
   helper_btn_remove: '移除',
   helper_section: '背景小幫手',

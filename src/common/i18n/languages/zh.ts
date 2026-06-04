@@ -64,6 +64,7 @@ const lang: LanguageDict = {
   group: '组合',
   help: '帮助',
   helper_btn_install: '安装',
+  helper_btn_open_login_items: '打开系统设置',
   helper_btn_reinstall: '重新安装',
   helper_btn_remove: '移除',
   helper_section: '后台助手',

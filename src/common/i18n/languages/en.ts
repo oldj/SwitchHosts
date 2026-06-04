@@ -64,6 +64,7 @@ export default {
   group: 'Group',
   help: 'Help',
   helper_btn_install: 'Install',
+  helper_btn_open_login_items: 'Open System Settings',
   helper_btn_reinstall: 'Reinstall',
   helper_btn_remove: 'Remove',
   helper_section: 'Background Helper',
