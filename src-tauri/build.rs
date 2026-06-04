@@ -17,7 +17,12 @@ fn main() {
     println!("cargo:rustc-env=SWH_VERSION_LABEL=v{version}");
 
     #[cfg(target_os = "macos")]
-    println!("cargo:rustc-link-lib=framework=Security");
+    {
+        println!("cargo:rustc-link-lib=framework=Security");
+        // ServiceManagement: SMAppService daemon registration (the
+        // privileged helper install path). See hosts_apply::helper_admin.
+        println!("cargo:rustc-link-lib=framework=ServiceManagement");
+    }
 
     tauri_build::build()
 }

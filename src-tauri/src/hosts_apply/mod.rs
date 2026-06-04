@@ -17,6 +17,8 @@ pub mod aggregate;
 pub mod cmd_runner;
 pub mod elevation;
 pub mod error;
+pub mod helper_admin;
+pub mod helper_client;
 pub mod history;
 pub mod write;
 

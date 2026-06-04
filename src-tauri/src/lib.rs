@@ -1,6 +1,10 @@
 mod app_menu;
 mod commands;
 mod find;
+// Shared contract between the app and the `swh_helper` privileged
+// daemon bin target — must be `pub` so `src/bin/swh_helper.rs` can use
+// it via `switchhosts_lib::helper_proto`.
+pub mod helper_proto;
 mod hosts_apply;
 mod http;
 mod http_api;
@@ -427,6 +431,11 @@ pub fn run() {
             commands::get_path_of_system_hosts,
             // apply / refresh
             commands::apply_hosts_selection,
+            // privileged helper (macOS SMAppService)
+            commands::helper_status,
+            commands::helper_install,
+            commands::helper_repair,
+            commands::helper_uninstall,
             commands::refresh_remote_hosts,
             commands::refresh_all_remote_hosts,
             commands::get_apply_history,

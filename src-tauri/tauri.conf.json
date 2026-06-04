@@ -33,6 +33,9 @@
     "macOS": {
       "entitlements": "../scripts/entitlements.mac.plist",
       "minimumSystemVersion": "10.15",
+      "files": {
+        "Library/LaunchDaemons/net.oldj.switchhosts.helper.plist": "helper/net.oldj.switchhosts.helper.plist"
+      },
       "dmg": {
         "background": "../assets/dmg-bg.png",
         "windowSize": {

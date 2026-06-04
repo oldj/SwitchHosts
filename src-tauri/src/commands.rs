@@ -751,6 +751,52 @@ pub async fn apply_hosts_selection<R: Runtime>(
     }))
 }
 
+// ---- privileged helper (macOS SMAppService) --------------------------------
+//
+// Install / query / remove the root daemon that performs silent
+// `/etc/hosts` writes. On non-macOS (or unsigned / pre-13 macOS) these
+// report `not_supported` and the apply path keeps using AEWP/pkexec/UAC.
+
+#[tauri::command]
+pub async fn helper_status() -> Result<Value, String> {
+    Ok(json!({ "status": hosts_apply::helper_admin::status().as_code() }))
+}
+
+#[tauri::command]
+pub async fn helper_install() -> Result<Value, String> {
+    match hosts_apply::helper_admin::register() {
+        Ok(status) => Ok(json!({ "success": true, "status": status.as_code() })),
+        Err(e) => Ok(json!({
+            "success": false,
+            "status": hosts_apply::helper_admin::status().as_code(),
+            "message": e.to_string(),
+        })),
+    }
+}
+
+#[tauri::command]
+pub async fn helper_repair() -> Result<Value, String> {
+    match hosts_apply::helper_admin::repair() {
+        Ok(status) => Ok(json!({ "success": true, "status": status.as_code() })),
+        Err(e) => Ok(json!({
+            "success": false,
+            "status": hosts_apply::helper_admin::status().as_code(),
+            "message": e.to_string(),
+        })),
+    }
+}
+
+#[tauri::command]
+pub async fn helper_uninstall() -> Result<Value, String> {
+    match hosts_apply::helper_admin::unregister() {
+        Ok(()) => Ok(json!({
+            "success": true,
+            "status": hosts_apply::helper_admin::status().as_code(),
+        })),
+        Err(e) => Ok(json!({ "success": false, "message": e.to_string() })),
+    }
+}
+
 #[tauri::command]
 pub async fn refresh_remote_hosts<R: Runtime>(
     app: AppHandle<R>,
