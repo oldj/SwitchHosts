@@ -259,6 +259,15 @@ const General = (props: IProps) => {
                   {lang.helper_btn_remove}
                 </Button>
               ) : null}
+              {helperStatus === 'requires_approval' || helperMessage ? (
+                <Button
+                  size="xs"
+                  variant="default"
+                  onClick={() => actions.helperOpenLoginItems().catch((e) => console.error(e))}
+                >
+                  {lang.helper_btn_open_login_items}
+                </Button>
+              ) : null}
             </Group>
             {helperMessage ? (
               <Text size="sm" c="red">

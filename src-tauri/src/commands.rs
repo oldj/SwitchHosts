@@ -798,6 +798,20 @@ pub async fn helper_uninstall() -> Result<Value, String> {
 }
 
 #[tauri::command]
+pub async fn helper_open_login_items() -> Value {
+    // Open System Settings → Login Items & Extensions so the user can
+    // approve / re-enable the background helper. Fixed URL, no caller
+    // input — nothing to validate or inject.
+    #[cfg(target_os = "macos")]
+    {
+        let _ = std::process::Command::new("open")
+            .arg("x-apple.systempreferences:com.apple.LoginItems-Settings.extension")
+            .spawn();
+    }
+    Value::Null
+}
+
+#[tauri::command]
 pub async fn refresh_remote_hosts<R: Runtime>(
     app: AppHandle<R>,
     state: State<'_, AppState>,

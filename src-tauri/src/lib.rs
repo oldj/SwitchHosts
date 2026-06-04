@@ -436,6 +436,7 @@ pub fn run() {
             commands::helper_install,
             commands::helper_repair,
             commands::helper_uninstall,
+            commands::helper_open_login_items,
             commands::refresh_remote_hosts,
             commands::refresh_all_remote_hosts,
             commands::get_apply_history,
