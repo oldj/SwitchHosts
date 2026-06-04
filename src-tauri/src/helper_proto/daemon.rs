@@ -32,7 +32,10 @@ pub fn run() -> ! {
             XPC_CONNECTION_MACH_SERVICE_LISTENER,
         );
         if listener.is_null() {
-            eprintln!("[swh_helper] failed to create Mach service listener for {LABEL}");
+            daemon_log(
+                libc::LOG_ERR,
+                &format!("[swh_helper] failed to create Mach service listener for {LABEL}"),
+            );
             std::process::exit(1);
         }
 
@@ -46,7 +49,10 @@ pub fn run() -> ! {
             // genuine, correctly-signed SwitchHosts app may talk to us.
             let rc = set_codesigning_requirement(peer, client_req.as_ptr());
             if rc != 0 {
-                eprintln!("[swh_helper] set_codesigning_requirement failed: {rc}");
+                daemon_log(
+                    libc::LOG_ERR,
+                    &format!("[swh_helper] set_codesigning_requirement failed: {rc}"),
+                );
                 xpc_connection_cancel(peer);
                 return;
             }
@@ -68,6 +74,10 @@ pub fn run() -> ! {
 
         xpc_connection_set_event_handler(listener, &on_new_peer);
         xpc_connection_resume(listener);
+        daemon_log(
+            libc::LOG_NOTICE,
+            &format!("[swh_helper] listener up on {LABEL}, protocol v{PROTOCOL_VERSION}"),
+        );
 
         dispatch_main()
     }
@@ -111,11 +121,14 @@ unsafe fn handle_request(event: XpcObject) {
             let bytes = std::slice::from_raw_parts(data as *const u8, len);
             match write_system_hosts(bytes) {
                 Ok(()) => {
-                    eprintln!("[swh_helper] wrote {len} bytes to /etc/hosts");
+                    daemon_log(
+                        libc::LOG_NOTICE,
+                        &format!("[swh_helper] wrote {len} bytes to /etc/hosts"),
+                    );
                     xpc_dictionary_set_int64(reply, KEY_STATUS.as_ptr(), STATUS_OK);
                 }
                 Err(e) => {
-                    eprintln!("[swh_helper] write failed: {e}");
+                    daemon_log(libc::LOG_ERR, &format!("[swh_helper] write failed: {e}"));
                     reply_error(reply, &e.to_string());
                 }
             }
@@ -138,5 +151,29 @@ unsafe fn reply_error(reply: XpcObject, message: &str) {
     xpc_dictionary_set_int64(reply, KEY_STATUS.as_ptr(), STATUS_ERR);
     if let Ok(c) = CString::new(message) {
         xpc_dictionary_set_string(reply, KEY_MESSAGE.as_ptr(), c.as_ptr());
+    }
+}
+
+// --- diagnostics -----------------------------------------------------------
+
+// A LaunchDaemon's stderr is detached — launchd discards it without a
+// `StandardErrorPath` — so `eprintln!` alone is invisible once the helper
+// runs under launchd. Route diagnostics through `syslog`, which bridges to
+// the unified logging system, so `log show --predicate 'process ==
+// "swh_helper"'` surfaces them (e.g. the `set_codesigning_requirement`
+// failure that silently rejects every client when the XPC symbol is
+// missing). stderr is kept too, so running the binary directly in a
+// terminal during development still prints output.
+extern "C" {
+    fn syslog(priority: std::os::raw::c_int, format: *const std::os::raw::c_char, ...);
+}
+
+/// Emit one diagnostic line to both stderr and the unified log.
+fn daemon_log(priority: std::os::raw::c_int, msg: &str) {
+    eprintln!("{msg}");
+    if let Ok(c) = CString::new(msg) {
+        // The literal `%s` is the format string and `msg` is its argument,
+        // so message text containing `%` can't be read as a format directive.
+        unsafe { syslog(priority, c"%s".as_ptr(), c.as_ptr()) };
     }
 }
