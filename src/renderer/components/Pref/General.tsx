@@ -203,8 +203,30 @@ const General = (props: IProps) => {
         </Box>
       ) : null}
 
-      {platform === 'darwin' && helperStatus !== 'not_supported' ? (
+      {platform === 'linux' ? (
         <Box w="100%">
+          <Group>
+            <Checkbox
+              checked={data.use_system_window_frame}
+              onChange={(e) => onChange({ use_system_window_frame: e.target.checked })}
+              label={lang.use_system_window_frame}
+            />
+          </Group>
+        </Box>
+      ) : null}
+
+      <Box w="100%">
+        <Checkbox
+          checked={data.auto_check_update}
+          onChange={(e) => onChange({ auto_check_update: e.target.checked })}
+          label={lang.auto_check_update}
+          description={lang.auto_check_update_desc}
+          styles={checkboxDescriptionStyles}
+        />
+      </Box>
+
+      {platform === 'darwin' && helperStatus !== 'not_supported' ? (
+        <Box w="100%" mt={20}>
           <Stack gap="8px" align="flex-start">
             <Group gap="8px">
               <Box>{lang.helper_section}</Box>
@@ -246,28 +268,6 @@ const General = (props: IProps) => {
           </Stack>
         </Box>
       ) : null}
-
-      {platform === 'linux' ? (
-        <Box w="100%">
-          <Group>
-            <Checkbox
-              checked={data.use_system_window_frame}
-              onChange={(e) => onChange({ use_system_window_frame: e.target.checked })}
-              label={lang.use_system_window_frame}
-            />
-          </Group>
-        </Box>
-      ) : null}
-
-      <Box w="100%">
-        <Checkbox
-          checked={data.auto_check_update}
-          onChange={(e) => onChange({ auto_check_update: e.target.checked })}
-          label={lang.auto_check_update}
-          description={lang.auto_check_update_desc}
-          styles={checkboxDescriptionStyles}
-        />
-      </Box>
     </Stack>
   )
 }
