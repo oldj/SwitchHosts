@@ -34,7 +34,13 @@ const DataDirRecoveryModal = ({ recovery }: Props) => {
   const onUseDefault = async () => {
     setBusy(true)
     try {
-      await actions.resetDataDir()
+      const res = await actions.resetDataDir()
+      // Success normally restarts the app, so this never resolves. If the
+      // backend returns without restarting (changed: false — nothing to do),
+      // clear busy so the button doesn't spin forever.
+      if (res?.changed === false) {
+        setBusy(false)
+      }
     } catch (e) {
       showErrorNotification({
         title,
@@ -55,7 +61,12 @@ const DataDirRecoveryModal = ({ recovery }: Props) => {
       // No source to copy from (the old directory is gone), so just point
       // at the new location. If the user picked the default location the
       // backend treats it as a reset.
-      await actions.applyDataDir({ target: picked.data_dir, copy: false })
+      const res = await actions.applyDataDir({ target: picked.data_dir, copy: false })
+      // Success restarts the app; a no-op return (changed: false) must clear
+      // busy so the button doesn't spin forever.
+      if (res?.changed === false) {
+        setBusy(false)
+      }
     } catch (e) {
       showErrorNotification({
         title,

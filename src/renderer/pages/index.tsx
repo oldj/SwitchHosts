@@ -48,18 +48,23 @@ const MainPage = () => {
   const resolvedTheme = useResolvedTheme(configs?.theme)
   const init = async () => {
     // v5: migration is handled automatically by the Rust backend on startup.
-    // Check whether a recorded custom data directory is unavailable (moved/
-    // deleted, or its pointer is corrupt) independently of data loading
-    // (fire-and-forget), so the recovery dialog still shows even if loading
-    // the fallback data fails — e.g. a corrupt manifest in the default dir.
-    actions
-      .getDataDirStatus()
-      .then((status) => {
-        if (status?.recovery) {
-          setDataDirRecovery(status.recovery)
-        }
-      })
-      .catch((e) => console.error(e))
+    // Resolve the data-dir recovery state BEFORE loading or rendering any
+    // data. While in recovery the active root is a fallback default, so a
+    // slow status call must not let the main view flash that fallback data
+    // (or let the user act on it) before the recovery dialog mounts. Awaited;
+    // a failure here just falls through to a normal load.
+    try {
+      const status = await actions.getDataDirStatus()
+      if (status?.recovery) {
+        setDataDirRecovery(status.recovery)
+        // In recovery we show ONLY the (non-closeable) recovery dialog — don't
+        // load or render the fallback root's data at all.
+        setLoading(false)
+        return
+      }
+    } catch (e) {
+      console.error(e)
+    }
     try {
       await loadHostsData()
     } finally {
@@ -81,6 +86,7 @@ const MainPage = () => {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async startup: recovery/loading state is set after awaiting the backend status
     init().catch((e) => console.error(e))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -246,11 +252,12 @@ const MainPage = () => {
     </div>
   )
 
-  // Render the recovery dialog at a stable top level (not gated by
-  // `loading`), so it shows even if the initial data load never settles.
+  // Render the recovery dialog at a stable top level. While in recovery, show
+  // ONLY the dialog — never the main view over the fallback default root's
+  // data. Otherwise gate the main view on the initial load.
   return (
     <>
-      {loading ? <Loading /> : mainView}
+      {dataDirRecovery ? null : loading ? <Loading /> : mainView}
       <DataDirRecoveryModal recovery={dataDirRecovery} />
     </>
   )

@@ -1740,11 +1740,16 @@ pub async fn apply_data_dir<R: Runtime>(
         }
     }
 
-    // Resetting to the default location when no pointer is recorded is a
-    // no-op (we're already on the default root) — don't persist geometry or
-    // restart. Symmetric with reset_data_dir, and keyed on the pointer FILE
-    // existing so the recovery dialog can still clear a corrupt/stale pointer.
-    if is_default && !data_dir_pointer::pointer_exists() {
+    // Resetting to the default location is a no-op (no geometry persist, no
+    // restart) only when there's nothing to clear AND we're not in recovery:
+    // already on the default root in a healthy state. In recovery the active
+    // root is a degraded fallback, so even a missing pointer must still
+    // restart to leave recovery — never short-circuit there, or the dialog's
+    // button spins forever on a no-op that never restarts.
+    if is_default
+        && !data_dir_pointer::pointer_exists()
+        && state.data_dir_recovery.is_none()
+    {
         return Ok(json!({ "changed": false }));
     }
 
@@ -1804,18 +1809,19 @@ pub async fn apply_data_dir<R: Runtime>(
 /// Reset the data directory back to the default `~/.SwitchHosts`: clear
 /// the pointer and restart. Does not copy data back. Shared by the
 /// preferences "reset" button and the missing-directory recovery dialog.
-/// No-op (returns `{ "changed": false }` without restarting) when no pointer
-/// is recorded — there is nothing to clear and a restart would just
-/// interrupt the user. Keyed on the pointer FILE existing, not on the active
-/// root, so the recovery dialog can still clear a corrupt pointer (root is
-/// default there, but the bad pointer file remains).
+/// No-op (returns `{ "changed": false }` without restarting) only when there
+/// is no pointer to clear AND we're not in recovery — i.e. already on the
+/// default root in a healthy state, where a restart would just interrupt the
+/// user. In recovery this ALWAYS restarts (even if the pointer is already
+/// gone) so the user actually leaves the recovery state instead of the
+/// dialog's "Use Default" button spinning forever on a silent no-op.
 #[tauri::command]
 pub async fn reset_data_dir<R: Runtime>(
     app: AppHandle<R>,
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
-    if !data_dir_pointer::pointer_exists() {
+    if !data_dir_pointer::pointer_exists() && state.data_dir_recovery.is_none() {
         return Ok(json!({ "changed": false }));
     }
     // Verify the default root is usable before clearing the pointer, so we
