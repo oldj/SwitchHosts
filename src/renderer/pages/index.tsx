@@ -35,6 +35,7 @@ const clampPanel = (value: number) =>
 const MainPage = () => {
   const [loading, setLoading] = useState(true)
   const [dataDirRecovery, setDataDirRecovery] = useState<DataDirRecovery | null>(null)
+  const [defaultDataDir, setDefaultDataDir] = useState('')
   const mainWindowReadySentRef = useRef(false)
   const { setLocale, i18n, lang } = useI18n()
   const { loadHostsData } = useHostsData()
@@ -57,6 +58,7 @@ const MainPage = () => {
       const status = await actions.getDataDirStatus()
       if (status?.recovery) {
         setDataDirRecovery(status.recovery)
+        setDefaultDataDir(status.default_dir || '')
         // In recovery we show ONLY the (non-closeable) recovery dialog — don't
         // load or render the fallback root's data at all.
         setLoading(false)
@@ -258,7 +260,7 @@ const MainPage = () => {
   return (
     <>
       {dataDirRecovery ? null : loading ? <Loading /> : mainView}
-      <DataDirRecoveryModal recovery={dataDirRecovery} />
+      <DataDirRecoveryModal recovery={dataDirRecovery} defaultDir={defaultDataDir} />
     </>
   )
 }

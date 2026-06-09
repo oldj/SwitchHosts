@@ -9,7 +9,7 @@
  * exits the app.
  */
 
-import { Button, Code, Modal, Stack, Text } from '@mantine/core'
+import { Button, Code, Modal, Stack, Text, Tooltip } from '@mantine/core'
 import { actions } from '@renderer/core/agent'
 import { getErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import useI18n from '@renderer/models/useI18n'
@@ -22,9 +22,11 @@ export interface DataDirRecovery {
 
 interface Props {
   recovery: DataDirRecovery | null
+  /** Resolved default data directory, shown as a tooltip on "Use Default". */
+  defaultDir?: string
 }
 
-const DataDirRecoveryModal = ({ recovery }: Props) => {
+const DataDirRecoveryModal = ({ recovery, defaultDir }: Props) => {
   const { lang } = useI18n()
   const [busy, setBusy] = useState(false)
 
@@ -86,19 +88,33 @@ const DataDirRecoveryModal = ({ recovery }: Props) => {
       closeOnClickOutside={false}
       closeOnEscape={false}
     >
-      <Stack gap="md">
+      <Stack gap="sm">
         <Text size="sm">
           {isInvalid ? lang.data_dir_invalid_message : lang.data_dir_missing_message}
         </Text>
         {recovery?.path ? <Code block>{recovery.path}</Code> : null}
-        <Stack gap="8px">
-          <Button onClick={onUseDefault} loading={busy} fullWidth>
-            {lang.data_dir_use_default}
-          </Button>
+        <Stack gap="8px" mt={20}>
+          <Tooltip
+            label={defaultDir}
+            disabled={!defaultDir}
+            multiline
+            maw={360}
+            style={{ wordBreak: 'break-all' }}
+          >
+            <Button onClick={onUseDefault} loading={busy} fullWidth>
+              {lang.data_dir_use_default}
+            </Button>
+          </Tooltip>
           <Button onClick={onChooseNew} loading={busy} variant="default" fullWidth>
             {lang.data_dir_choose_new}
           </Button>
-          <Button onClick={() => actions.quit()} variant="subtle" color="red" disabled={busy} fullWidth>
+          <Button
+            onClick={() => actions.quit()}
+            variant="subtle"
+            color="red"
+            disabled={busy}
+            fullWidth
+          >
             {lang.quit}
           </Button>
         </Stack>
