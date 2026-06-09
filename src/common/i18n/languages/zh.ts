@@ -48,6 +48,8 @@ const lang: LanguageDict = {
   data_dir_change_title: '更改数据存储位置',
   data_dir_choose_new: '选择新文件夹…',
   data_dir_copy_existing: '将现有数据复制到新位置',
+  data_dir_invalid_message: '数据位置记录已损坏，SwitchHosts 无法确定数据的存储位置。你的数据未被改动。请选择如何继续。',
+  data_dir_invalid_title: '无法读取数据位置',
   data_dir_missing_message: '找不到数据目录，它可能已被移动或删除。请选择如何继续。',
   data_dir_missing_title: '找不到数据目录',
   data_dir_overwrite_warning: '目标文件夹已包含数据，同名文件将被覆盖。',

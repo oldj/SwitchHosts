@@ -1,8 +1,12 @@
 /**
- * Startup recovery dialog shown when a recorded custom data directory has
- * gone missing (moved/deleted). Not closeable — the user must pick one of
- * three actions: use the default location, choose a new folder, or quit.
- * Each successful action restarts or exits the app.
+ * Startup recovery dialog shown when a recorded custom data directory can no
+ * longer be used. Two cases:
+ *  - `missing`: the folder was moved/deleted (its path is shown);
+ *  - `invalid`: the pointer file is unreadable/corrupt, so the location is
+ *    unknown (no path to show).
+ * Not closeable — the user must pick one of three actions: use the default
+ * location, choose a new folder, or quit. Each successful action restarts or
+ * exits the app.
  */
 
 import { Button, Code, Modal, Stack, Text } from '@mantine/core'
@@ -11,14 +15,21 @@ import { getErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import useI18n from '@renderer/models/useI18n'
 import React, { useState } from 'react'
 
-interface Props {
-  opened: boolean
-  missingPath: string
+export interface DataDirRecovery {
+  kind: 'missing' | 'invalid'
+  path: string | null
 }
 
-const MissingDataDirModal = ({ opened, missingPath }: Props) => {
+interface Props {
+  recovery: DataDirRecovery | null
+}
+
+const DataDirRecoveryModal = ({ recovery }: Props) => {
   const { lang } = useI18n()
   const [busy, setBusy] = useState(false)
+
+  const isInvalid = recovery?.kind === 'invalid'
+  const title = isInvalid ? lang.data_dir_invalid_title : lang.data_dir_missing_title
 
   const onUseDefault = async () => {
     setBusy(true)
@@ -26,7 +37,7 @@ const MissingDataDirModal = ({ opened, missingPath }: Props) => {
       await actions.resetDataDir()
     } catch (e) {
       showErrorNotification({
-        title: lang.data_dir_missing_title,
+        title,
         message: getErrorMessage(e, lang.fail),
       })
       setBusy(false)
@@ -47,7 +58,7 @@ const MissingDataDirModal = ({ opened, missingPath }: Props) => {
       await actions.applyDataDir({ target: picked.data_dir, copy: false })
     } catch (e) {
       showErrorNotification({
-        title: lang.data_dir_missing_title,
+        title,
         message: getErrorMessage(e, lang.fail),
       })
       setBusy(false)
@@ -56,17 +67,19 @@ const MissingDataDirModal = ({ opened, missingPath }: Props) => {
 
   return (
     <Modal
-      opened={opened}
+      opened={!!recovery}
       onClose={() => {}}
       centered
-      title={lang.data_dir_missing_title}
+      title={title}
       withCloseButton={false}
       closeOnClickOutside={false}
       closeOnEscape={false}
     >
       <Stack gap="md">
-        <Text size="sm">{lang.data_dir_missing_message}</Text>
-        <Code block>{missingPath}</Code>
+        <Text size="sm">
+          {isInvalid ? lang.data_dir_invalid_message : lang.data_dir_missing_message}
+        </Text>
+        {recovery?.path ? <Code block>{recovery.path}</Code> : null}
         <Stack gap="8px">
           <Button onClick={onUseDefault} loading={busy} fullWidth>
             {lang.data_dir_use_default}
@@ -83,4 +96,4 @@ const MissingDataDirModal = ({ opened, missingPath }: Props) => {
   )
 }
 
-export default MissingDataDirModal
+export default DataDirRecoveryModal

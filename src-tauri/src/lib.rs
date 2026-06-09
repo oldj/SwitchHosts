@@ -164,12 +164,13 @@ pub fn run() {
             // convention; items that need Rust action (Find, URL open)
             // are dispatched inline.
             //
-            // While a custom data directory is missing, the main window only
-            // hosts the recovery dialog. Suppress menu actions that open a
-            // window or act on the fallback default data (Find / New /
-            // Preferences / Comment) so they can't bypass the recovery
-            // prompt; Quit, About and external links stay available.
-            let dir_missing = app.state::<AppState>().missing_custom_dir.is_some();
+            // While the data directory is unavailable (it went missing, or
+            // its pointer is corrupt), the main window only hosts the recovery
+            // dialog. Suppress menu actions that open a window or act on the
+            // fallback default data (Find / New / Preferences / Comment) so
+            // they can't bypass the recovery prompt; Quit, About and external
+            // links stay available.
+            let in_recovery = app.state::<AppState>().data_dir_recovery.is_some();
             match id {
                 #[cfg(target_os = "macos")]
                 app_menu::MENU_ID_HIDE_APP => {
@@ -177,7 +178,7 @@ pub fn run() {
                     return;
                 }
                 app_menu::MENU_ID_FIND => {
-                    if dir_missing {
+                    if in_recovery {
                         return;
                     }
                     if let Err(e) = find::show_find_window(app) {
@@ -190,8 +191,9 @@ pub fn run() {
                 | app_menu::MENU_ID_PREFERENCES
                 | app_menu::MENU_ID_COMMENT => {
                     // New / Preferences / Comment act on data; suppress them
-                    // while a custom data dir is missing. About is read-only.
-                    if dir_missing && id != app_menu::MENU_ID_ABOUT {
+                    // while the data directory is unavailable. About is
+                    // read-only.
+                    if in_recovery && id != app_menu::MENU_ID_ABOUT {
                         return;
                     }
                     let event_name = match id {
@@ -243,10 +245,9 @@ pub fn run() {
             // renderer's ready event gives UpdateDialog a chance to attach
             // its listeners before the first check can emit `new_version`.
             //
-            // The listener is registered unconditionally and fires on the
-            // first `main_window_ready` emission. Only `pages/index.tsx`
-            // (the main window's React root) broadcasts that event —
-            // find / tray-mini windows do not — so the trigger is:
+            // The listener fires on the first `main_window_ready` emission.
+            // Only `pages/index.tsx` (the main window's React root) broadcasts
+            // that event — find / tray-mini windows do not — so the trigger is:
             //
             //   - `hide_at_launch = false`: setup creates the main window
             //     and the renderer emits ready shortly after, so the
@@ -263,25 +264,35 @@ pub fn run() {
             // Once the check has started for a session, the AtomicBool
             // swap guarantees subsequent tray-rebuild `main_window_ready`
             // emissions don't re-start it.
-            let update_checker_started = Arc::new(AtomicBool::new(false));
-            let update_checker_ready_app = app_handle.clone();
-            let update_checker_ready_flag = update_checker_started.clone();
-            app.listen("main_window_ready", move |_event| {
-                if !update_checker_ready_flag.swap(true, Ordering::SeqCst) {
-                    commands::start_auto_update_checker(update_checker_ready_app.clone());
-                }
-            });
+            //
+            // Gated on the recovery state being unset — like the tray title,
+            // refresh scanner and HTTP API below. In recovery we fell back to
+            // the default root, so the config we'd read isn't the user's (and
+            // defaults to auto-check on), and a `new_version` dialog must not
+            // cover the recovery dialog before they resolve their data
+            // location. `run_auto_update_check` re-checks this as a backstop.
+            if app_state.data_dir_recovery.is_none() {
+                let update_checker_started = Arc::new(AtomicBool::new(false));
+                let update_checker_ready_app = app_handle.clone();
+                let update_checker_ready_flag = update_checker_started.clone();
+                app.listen("main_window_ready", move |_event| {
+                    if !update_checker_ready_flag.swap(true, Ordering::SeqCst) {
+                        commands::start_auto_update_checker(update_checker_ready_app.clone());
+                    }
+                });
+            }
 
             let hide_at_launch = app_state
                 .config
                 .lock()
                 .map(|cfg| cfg.hide_at_launch)
                 .unwrap_or(false);
-            // If a recorded custom data directory went missing, force the
-            // main window to appear (even under hide_at_launch) so the
-            // renderer can show the recovery dialog — otherwise the user
-            // might unknowingly operate on the fallback default root.
-            if hide_at_launch && app_state.missing_custom_dir.is_none() {
+            // If the recorded data directory is unavailable (it went missing,
+            // or its pointer is corrupt), force the main window to appear
+            // (even under hide_at_launch) so the renderer can show the
+            // recovery dialog — otherwise the user might unknowingly operate
+            // on the fallback default root.
+            if hide_at_launch && app_state.data_dir_recovery.is_none() {
                 // Skip creating the main window — mark hide-to-tray so
                 // the exit-guard machinery recognises subsequent
                 // last-window closes (e.g. dismissing a find window) as
@@ -338,11 +349,11 @@ pub fn run() {
             // otherwise hiding the Dock icon on macOS would strand the
             // user (no Dock icon, no tray to summon the window back).
             tray::install_tray(&app_handle)?;
-            // Skip the tray title while a custom data dir is missing: it
+            // Skip the tray title while the data directory is unavailable: it
             // reads the fallback default manifest and would expose/mislead
             // with the default dir's enabled hosts. It refreshes after the
             // user resolves the location and restarts.
-            if app_state.missing_custom_dir.is_none() {
+            if app_state.data_dir_recovery.is_none() {
                 if let Err(e) = tray::refresh_title(&app_handle, app_state.inner()) {
                     log::warn!("failed to initialize tray title: {e}");
                 }
@@ -377,14 +388,15 @@ pub fn run() {
                 );
             });
 
-            // When a recorded custom data directory is missing we've only
-            // fallen back to the default root so the renderer can show the
-            // recovery dialog. Defer side effects that read/write or expose
-            // that fallback root — the remote-hosts refresh scanner (which
-            // would write entries into the default dir after ~5s) and the
-            // HTTP API (which would expose hosts operations on it) — until
-            // the user resolves the data location and the app restarts.
-            if app_state.missing_custom_dir.is_none() {
+            // When the recorded data directory is unavailable (it went
+            // missing, or its pointer is corrupt) we've only fallen back to
+            // the default root so the renderer can show the recovery dialog.
+            // Defer side effects that read/write or expose that fallback root
+            // — the remote-hosts refresh scanner (which would write entries
+            // into the default dir after ~5s) and the HTTP API (which would
+            // expose hosts operations on it) — until the user resolves the
+            // data location and the app restarts.
+            if app_state.data_dir_recovery.is_none() {
                 // Background scanner for remote-hosts auto refresh.
                 // Wakes every 60s, replaces `src/main/libs/cron.ts`.
                 refresh::start_background_scanner(app_handle.clone());
@@ -404,7 +416,7 @@ pub fn run() {
                 }
             } else {
                 log::warn!(
-                    "custom data directory missing — deferring remote-hosts refresh and HTTP API until the data location is resolved"
+                    "data directory unavailable — deferring remote-hosts refresh and HTTP API until the data location is resolved"
                 );
             }
 
@@ -423,9 +435,10 @@ pub fn run() {
                     launch_at_login = actual;
                     // Apply the relaunch policy below regardless, but don't
                     // persist this OS-sync into a fallback default root while
-                    // a custom dir is missing — the user hasn't confirmed the
-                    // location yet; it re-syncs after the restart.
-                    if app_state.missing_custom_dir.is_none() {
+                    // the data directory is unavailable — the user hasn't
+                    // confirmed the location yet; it re-syncs after the
+                    // restart.
+                    if app_state.data_dir_recovery.is_none() {
                         {
                             let mut cfg = app_state.config.lock().expect("config mutex poisoned");
                             cfg.launch_at_login = actual;

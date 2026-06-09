@@ -58,6 +58,10 @@ const Advanced = (props: IProps) => {
   const [hostsPath, setHostsPath] = useState('')
   const [dataDir, setDataDir] = useState('')
   const [defaultPath, setDefaultPath] = useState('')
+  // Whether a reset would actually do anything (a custom-dir pointer exists).
+  // When false we're already on the default root, so disable "reset" rather
+  // than let it trigger a pointless app restart.
+  const [canReset, setCanReset] = useState(false)
   const [changeModalOpen, setChangeModalOpen] = useState(false)
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
   const [pickedDataDir, setPickedDataDir] = useState('')
@@ -68,7 +72,10 @@ const Advanced = (props: IProps) => {
     actions.getDataDir().then((dataDir) => setDataDir(dataDir))
     actions
       .getDataDirStatus()
-      .then((status) => setDefaultPath(status?.default_dir || ''))
+      .then((status) => {
+        setDefaultPath(status?.default_dir || '')
+        setCanReset(!!status?.can_reset)
+      })
       .catch((e) => console.error(e))
   }, [])
 
@@ -207,7 +214,12 @@ const Advanced = (props: IProps) => {
           <Button size="xs" variant="default" onClick={onChangeDataDir}>
             {lang.change}
           </Button>
-          <Button size="xs" variant="subtle" onClick={() => setResetConfirmOpen(true)}>
+          <Button
+            size="xs"
+            variant="subtle"
+            disabled={!canReset}
+            onClick={() => setResetConfirmOpen(true)}
+          >
             {lang.reset}
           </Button>
         </Group>

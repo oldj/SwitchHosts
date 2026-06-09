@@ -52,6 +52,9 @@ const lang: LanguageDict = {
   data_dir_change_title: 'Datenspeicherort ändern',
   data_dir_choose_new: 'Neuen Ordner wählen…',
   data_dir_copy_existing: 'Vorhandene Daten an den neuen Speicherort kopieren',
+  data_dir_invalid_message:
+    'SwitchHosts konnte den Speicherort Ihrer Daten nicht ermitteln, da der gespeicherte Standorteintrag beschädigt ist. Ihre Daten wurden nicht verändert. Bitte wählen Sie, wie Sie fortfahren möchten.',
+  data_dir_invalid_title: 'Datenspeicherort nicht lesbar',
   data_dir_missing_message:
     'Das Datenverzeichnis wurde nicht gefunden. Möglicherweise wurde es verschoben oder gelöscht. Bitte wählen Sie, wie Sie fortfahren möchten.',
   data_dir_missing_title: 'Datenverzeichnis nicht gefunden',

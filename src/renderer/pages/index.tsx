@@ -7,7 +7,7 @@ import LeftSidebar from '@renderer/components/LeftSidebar'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
 import PreferencePanel from '@renderer/components/Pref'
-import MissingDataDirModal from '@renderer/components/Pref/MissingDataDirModal'
+import DataDirRecoveryModal, { DataDirRecovery } from '@renderer/components/Pref/DataDirRecoveryModal'
 import ResizeHandle from '@renderer/components/ResizeHandle'
 import RightPanel from '@renderer/components/RightPanel'
 import SetWriteMode from '@renderer/components/SetWriteMode'
@@ -34,7 +34,7 @@ const clampPanel = (value: number) =>
 
 const MainPage = () => {
   const [loading, setLoading] = useState(true)
-  const [missingDataDir, setMissingDataDir] = useState<string | null>(null)
+  const [dataDirRecovery, setDataDirRecovery] = useState<DataDirRecovery | null>(null)
   const mainWindowReadySentRef = useRef(false)
   const { setLocale, i18n, lang } = useI18n()
   const { loadHostsData } = useHostsData()
@@ -48,15 +48,15 @@ const MainPage = () => {
   const resolvedTheme = useResolvedTheme(configs?.theme)
   const init = async () => {
     // v5: migration is handled automatically by the Rust backend on startup.
-    // Check whether a recorded custom data directory has gone missing
-    // independently of data loading (fire-and-forget), so the recovery
-    // dialog still shows even if loading the fallback data fails — e.g. a
-    // corrupt manifest in the default dir.
+    // Check whether a recorded custom data directory is unavailable (moved/
+    // deleted, or its pointer is corrupt) independently of data loading
+    // (fire-and-forget), so the recovery dialog still shows even if loading
+    // the fallback data fails — e.g. a corrupt manifest in the default dir.
     actions
       .getDataDirStatus()
       .then((status) => {
-        if (status?.missing_custom_dir) {
-          setMissingDataDir(status.missing_custom_dir)
+        if (status?.recovery) {
+          setDataDirRecovery(status.recovery)
         }
       })
       .catch((e) => console.error(e))
@@ -251,7 +251,7 @@ const MainPage = () => {
   return (
     <>
       {loading ? <Loading /> : mainView}
-      <MissingDataDirModal opened={!!missingDataDir} missingPath={missingDataDir || ''} />
+      <DataDirRecoveryModal recovery={dataDirRecovery} />
     </>
   )
 }

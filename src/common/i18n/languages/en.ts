@@ -48,6 +48,9 @@ export default {
   data_dir_change_title: 'Change Data Storage Location',
   data_dir_choose_new: 'Choose New Folder…',
   data_dir_copy_existing: 'Copy existing data to the new location',
+  data_dir_invalid_message:
+    'SwitchHosts could not determine where your data is stored because the saved location record is damaged. Your data has not been changed. Please choose how to proceed.',
+  data_dir_invalid_title: 'Data Location Unreadable',
   data_dir_missing_message:
     'The data directory could not be found. It may have been moved or deleted. Please choose how to proceed.',
   data_dir_missing_title: 'Data Directory Not Found',

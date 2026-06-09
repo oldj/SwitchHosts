@@ -7,6 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
+use super::data_dir_pointer::PointerState;
 use super::error::StorageError;
 
 /// Fixed sub-directory name created inside a user-chosen folder. Picking
@@ -161,23 +162,47 @@ fn usable(root: &Path) -> bool {
     root.exists() && root.is_dir()
 }
 
-/// Pure startup decision: pick the active root from the pointer value and
-/// report any unusable custom directory (so the UI can prompt the user).
-/// Kept free of globals for testing.
-pub fn choose_root(pointer: Option<PathBuf>, default_root: PathBuf) -> (PathBuf, Option<PathBuf>) {
+/// Why the app fell back to the default root at startup and must run the
+/// recovery flow (prompt the user, block data writes, skip migration)
+/// instead of using the data normally.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DataDirRecovery {
+    /// A recorded custom directory could not be used: it no longer exists
+    /// (moved/deleted) or can't host the layout. Carries the path so the UI
+    /// can show it.
+    Missing(PathBuf),
+    /// The pointer file exists but is unreadable/corrupt/empty/relative, so
+    /// the custom location is unknown (no path to show).
+    Invalid,
+}
+
+/// Pure startup decision: pick the active root from the pointer state and
+/// report why a recorded custom directory is unavailable (so the UI can
+/// prompt the user). Kept free of globals for testing.
+///
+/// Note the asymmetry: `Absent` is the normal default-location case and
+/// reports no recovery, but `Invalid` (pointer present yet unusable) must
+/// NOT be treated like `Absent` — that would silently strand a user who had
+/// a custom directory on the default root and migrate stale data there.
+pub fn choose_root(
+    pointer: PointerState,
+    default_root: PathBuf,
+) -> (PathBuf, Option<DataDirRecovery>) {
     match pointer {
-        Some(p) if usable(&p) => (p, None),
-        Some(p) => (default_root, Some(p)),
-        None => (default_root, None),
+        PointerState::Recorded(p) if usable(&p) => (p, None),
+        PointerState::Recorded(p) => (default_root, Some(DataDirRecovery::Missing(p))),
+        PointerState::Invalid => (default_root, Some(DataDirRecovery::Invalid)),
+        PointerState::Absent => (default_root, None),
     }
 }
 
 /// Resolve the active root at startup, honouring the data-dir pointer.
-/// Returns `(paths, missing_custom_dir)`; `missing_custom_dir` is `Some`
-/// when a recorded custom directory no longer exists (UI then prompts).
-pub fn resolve_root() -> Result<(V5Paths, Option<PathBuf>), StorageError> {
-    let (root, missing) = choose_root(super::data_dir_pointer::load(), default_root()?);
-    Ok((V5Paths::under(root), missing))
+/// Returns `(paths, recovery)`; `recovery` is `Some` when a recorded custom
+/// directory is unavailable — either gone (`Missing`) or its pointer is
+/// unreadable/corrupt (`Invalid`) — so the UI prompts the user.
+pub fn resolve_root() -> Result<(V5Paths, Option<DataDirRecovery>), StorageError> {
+    let (root, recovery) = choose_root(super::data_dir_pointer::load(), default_root()?);
+    Ok((V5Paths::under(root), recovery))
 }
 
 #[cfg(test)]
@@ -252,7 +277,7 @@ mod tests {
         let existing = temp_existing_dir("usable");
         let default = PathBuf::from("/tmp/swh-default-xyz");
         assert_eq!(
-            choose_root(Some(existing.clone()), default),
+            choose_root(PointerState::Recorded(existing.clone()), default),
             (existing.clone(), None)
         );
         let _ = std::fs::remove_dir_all(&existing);
@@ -263,15 +288,30 @@ mod tests {
         let missing = std::env::temp_dir().join("swh-missing-pointer-abc-999");
         let default = PathBuf::from("/tmp/swh-default-abc");
         assert_eq!(
-            choose_root(Some(missing.clone()), default.clone()),
-            (default, Some(missing))
+            choose_root(PointerState::Recorded(missing.clone()), default.clone()),
+            (default, Some(DataDirRecovery::Missing(missing)))
         );
     }
 
     #[test]
     fn choose_root_none_uses_default() {
         let default = PathBuf::from("/tmp/swh-default-none");
-        assert_eq!(choose_root(None, default.clone()), (default, None));
+        assert_eq!(
+            choose_root(PointerState::Absent, default.clone()),
+            (default, None)
+        );
+    }
+
+    #[test]
+    fn choose_root_invalid_pointer_enters_recovery() {
+        // A pointer that exists but is unreadable/corrupt must fall back to
+        // default AND report recovery — never be treated like Absent (which
+        // would silently use the default and hide the user's real data).
+        let default = PathBuf::from("/tmp/swh-default-invalid");
+        assert_eq!(
+            choose_root(PointerState::Invalid, default.clone()),
+            (default, Some(DataDirRecovery::Invalid))
+        );
     }
 
     #[test]
@@ -283,8 +323,8 @@ mod tests {
         std::fs::write(&file, b"x").unwrap();
         let default = PathBuf::from("/tmp/swh-default-pf");
         assert_eq!(
-            choose_root(Some(file.clone()), default.clone()),
-            (default, Some(file))
+            choose_root(PointerState::Recorded(file.clone()), default.clone()),
+            (default, Some(DataDirRecovery::Missing(file)))
         );
         let _ = std::fs::remove_dir_all(&base);
     }

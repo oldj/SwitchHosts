@@ -49,6 +49,9 @@ export default {
   data_dir_change_title: 'Veri Depolama Konumunu Değiştir',
   data_dir_choose_new: 'Yeni Klasör Seç…',
   data_dir_copy_existing: 'Mevcut verileri yeni konuma kopyala',
+  data_dir_invalid_message:
+    'Kayıtlı konum bilgisi bozuk olduğu için SwitchHosts verilerinizin nerede saklandığını belirleyemedi. Verileriniz değiştirilmedi. Lütfen nasıl devam etmek istediğinizi seçin.',
+  data_dir_invalid_title: 'Veri konumu okunamadı',
   data_dir_missing_message:
     'Veri dizini bulunamadı. Taşınmış veya silinmiş olabilir. Lütfen nasıl devam edeceğinizi seçin.',
   data_dir_missing_title: 'Veri Dizini Bulunamadı',

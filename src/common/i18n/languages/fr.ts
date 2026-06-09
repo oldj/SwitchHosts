@@ -52,6 +52,9 @@ const lang: LanguageDict = {
   data_dir_change_title: "Changer l'emplacement de stockage des données",
   data_dir_choose_new: 'Choisir un nouveau dossier…',
   data_dir_copy_existing: 'Copier les données existantes vers le nouvel emplacement',
+  data_dir_invalid_message:
+    'SwitchHosts n’a pas pu déterminer l’emplacement de vos données car l’enregistrement de l’emplacement est endommagé. Vos données n’ont pas été modifiées. Veuillez choisir comment continuer.',
+  data_dir_invalid_title: 'Emplacement des données illisible',
   data_dir_missing_message:
     'Le répertoire de données est introuvable. Il a peut-être été déplacé ou supprimé. Veuillez choisir comment continuer.',
   data_dir_missing_title: 'Répertoire de données introuvable',

@@ -50,6 +50,9 @@ const lang: LanguageDict = {
   data_dir_change_title: 'データの保存場所を変更',
   data_dir_choose_new: '新しいフォルダーを選択…',
   data_dir_copy_existing: '既存のデータを新しい場所にコピーする',
+  data_dir_invalid_message:
+    '保存場所の記録が破損しているため、SwitchHosts はデータの保存場所を特定できませんでした。データは変更されていません。続行方法を選択してください。',
+  data_dir_invalid_title: 'データの保存場所を読み取れません',
   data_dir_missing_message:
     'データディレクトリが見つかりません。移動または削除された可能性があります。続行方法を選択してください。',
   data_dir_missing_title: 'データディレクトリが見つかりません',

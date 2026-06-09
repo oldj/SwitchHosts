@@ -1222,6 +1222,10 @@ pub async fn export_data<R: Runtime>(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, String> {
+    // Refuse during recovery: the active root is a fallback default, so an
+    // export there would silently dump that fallback's data rather than the
+    // user's real (unavailable) data. Block it until the location is resolved.
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
     let picked = app
         .dialog()
         .file()
@@ -1356,6 +1360,14 @@ pub fn start_auto_update_checker<R: Runtime + 'static>(app: AppHandle<R>) {
 
 async fn run_auto_update_check<R: Runtime>(app: &AppHandle<R>) {
     let state = app.state::<AppState>();
+    // Backstop for the gate in lib.rs setup: while the data directory is
+    // unavailable we're on a fallback root, so the config we'd read isn't the
+    // user's (and defaults to auto-check on), and emitting `new_version` would
+    // pop the update dialog over the recovery dialog. Don't check until the
+    // user has resolved their data location.
+    if state.data_dir_recovery.is_some() {
+        return;
+    }
     let auto_check_update = state
         .config
         .lock()
@@ -1580,22 +1592,35 @@ pub async fn get_data_dir(state: State<'_, AppState>, _args: Args) -> Result<Val
     Ok(json!(state.paths.root.display().to_string()))
 }
 
-/// Startup status for the renderer: the active data directory, plus the
-/// path of a recorded custom directory that has gone missing (so the UI
-/// can prompt the user to choose how to proceed). `missing_custom_dir`
-/// is `null` in the normal case.
+/// Startup status for the renderer: the active data directory, the default
+/// location, whether a reset would actually change anything (`can_reset`),
+/// and a `recovery` descriptor when the recorded custom directory is
+/// unavailable (so the UI can prompt the user). `recovery` is `null` in the
+/// normal case; otherwise `{ kind, path }` where `kind` is `"missing"` (the
+/// directory is gone/unusable, `path` is its path) or `"invalid"` (the
+/// pointer file is unreadable/corrupt, `path` is `null`). `can_reset` is
+/// `false` when there is no pointer to clear (already on the default root),
+/// so the UI can disable a pointless "reset".
 #[tauri::command]
 pub async fn get_data_dir_status(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
+    let recovery = state.data_dir_recovery.as_ref().map(|r| match r {
+        paths::DataDirRecovery::Missing(p) => json!({
+            "kind": "missing",
+            "path": p.display().to_string(),
+        }),
+        paths::DataDirRecovery::Invalid => json!({
+            "kind": "invalid",
+            "path": Value::Null,
+        }),
+    });
     Ok(json!({
         "active_dir": state.paths.root.display().to_string(),
         "default_dir": paths::default_root()?.display().to_string(),
-        "missing_custom_dir": state
-            .missing_custom_dir
-            .as_ref()
-            .map(|p| p.display().to_string()),
+        "can_reset": data_dir_pointer::pointer_exists(),
+        "recovery": recovery,
     }))
 }
 
@@ -1653,7 +1678,8 @@ pub async fn pick_data_dir<R: Runtime>(
 /// path). If `copy` is set, the current data is copied first (merge,
 /// overwriting same-named files; the source is never modified). If
 /// `target` resolves to the default location this is treated as a reset
-/// (pointer cleared, no copy). Persists window geometry first so the
+/// (pointer cleared, no copy; a no-op without restart when no pointer is
+/// recorded). Persists window geometry first so the
 /// copied `state.json` is current, then restarts the app to pick up the
 /// new root. Returns `Err` (no restart) on any validation/copy failure.
 #[tauri::command]
@@ -1714,6 +1740,14 @@ pub async fn apply_data_dir<R: Runtime>(
         }
     }
 
+    // Resetting to the default location when no pointer is recorded is a
+    // no-op (we're already on the default root) — don't persist geometry or
+    // restart. Symmetric with reset_data_dir, and keyed on the pointer FILE
+    // existing so the recovery dialog can still clear a corrupt/stale pointer.
+    if is_default && !data_dir_pointer::pointer_exists() {
+        return Ok(json!({ "changed": false }));
+    }
+
     // Persist geometry on the OLD root before any copy so the copied
     // state.json reflects the latest window position.
     if let Some(window) = app.get_webview_window(lifecycle::MAIN_WINDOW_LABEL) {
@@ -1770,12 +1804,20 @@ pub async fn apply_data_dir<R: Runtime>(
 /// Reset the data directory back to the default `~/.SwitchHosts`: clear
 /// the pointer and restart. Does not copy data back. Shared by the
 /// preferences "reset" button and the missing-directory recovery dialog.
+/// No-op (returns `{ "changed": false }` without restarting) when no pointer
+/// is recorded — there is nothing to clear and a restart would just
+/// interrupt the user. Keyed on the pointer FILE existing, not on the active
+/// root, so the recovery dialog can still clear a corrupt pointer (root is
+/// default there, but the bad pointer file remains).
 #[tauri::command]
 pub async fn reset_data_dir<R: Runtime>(
     app: AppHandle<R>,
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
+    if !data_dir_pointer::pointer_exists() {
+        return Ok(json!({ "changed": false }));
+    }
     // Verify the default root is usable before clearing the pointer, so we
     // don't reset into a broken default and crash bootstrap on next launch.
     paths::V5Paths::under(paths::default_root()?)

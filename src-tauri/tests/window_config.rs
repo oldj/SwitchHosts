@@ -85,42 +85,46 @@ fn setup_skips_main_window_creation_when_hide_at_launch_is_on() {
         "the non-hide_at_launch branch must create the main window so it appears at launch"
     );
     assert!(
-        SOURCE.contains("missing_custom_dir.is_none()"),
-        "hide_at_launch must be guarded by `missing_custom_dir.is_none()` so a missing custom data directory forces the main window (and its recovery dialog) to appear"
+        SOURCE.contains("data_dir_recovery.is_none()"),
+        "hide_at_launch must be guarded by `data_dir_recovery.is_none()` so an unavailable data directory (gone, or its pointer corrupt) forces the main window (and its recovery dialog) to appear"
     );
 }
 
 #[test]
-fn missing_custom_dir_gates_fallback_side_effects() {
+fn data_dir_recovery_gates_fallback_side_effects() {
     const SOURCE: &str = include_str!("../src/lib.rs");
-    // While a custom data dir is missing we fall back to the default root
-    // only to show the recovery dialog. Four startup side effects that
-    // would read/write/expose that fallback root stay gated behind
-    // `missing_custom_dir.is_none()`: hide_at_launch (force the window so
-    // the dialog shows), the tray title, the refresh scanner + HTTP API,
-    // and the launch_at_login config persist. Catch silently dropping any.
-    let guards = SOURCE.matches("missing_custom_dir.is_none()").count();
+    // While the data directory is unavailable (gone, or its pointer corrupt)
+    // we fall back to the default root only to show the recovery dialog. Five
+    // startup side effects that would read/write/expose that fallback root
+    // stay gated behind `data_dir_recovery.is_none()`: hide_at_launch (force
+    // the window so the dialog shows), the tray title, the refresh scanner +
+    // HTTP API, the launch_at_login config persist, and the auto-update
+    // checker. Catch silently dropping any.
+    let guards = SOURCE.matches("data_dir_recovery.is_none()").count();
     assert!(
-        guards >= 4,
-        "expected >=4 `missing_custom_dir.is_none()` guards in lib.rs setup (hide_at_launch, tray title, background services, launch_at_login persist); found {guards}"
+        guards >= 5,
+        "expected >=5 `data_dir_recovery.is_none()` guards in lib.rs setup (hide_at_launch, tray title, background services, launch_at_login persist, auto-update checker); found {guards}"
     );
     assert!(
-        SOURCE.contains("start_background_scanner") && SOURCE.contains("refresh_title"),
-        "the gated side effects (refresh scanner, tray title) must still be present"
+        SOURCE.contains("start_background_scanner")
+            && SOURCE.contains("refresh_title")
+            && SOURCE.contains("start_auto_update_checker"),
+        "the gated side effects (refresh scanner, tray title, auto-update checker) must still be present"
     );
 }
 
 #[test]
-fn tray_left_click_funnels_to_main_window_when_dir_missing() {
+fn tray_left_click_funnels_to_main_window_during_recovery() {
     const SOURCE: &str = include_str!("../src/tray.rs");
     let body =
         extract_block_from(SOURCE, "fn handle_left_click").expect("handle_left_click must exist");
-    // A missing custom data dir must not open the tray mini window (which
-    // would load and act on the fallback default data); the click focuses
-    // the main window (recovery dialog) instead.
+    // While the data directory is unavailable (gone, or its pointer corrupt)
+    // the tray must not open the mini window (which would load and act on the
+    // fallback default data); the click focuses the main window (recovery
+    // dialog) instead.
     assert!(
-        body.contains("missing_custom_dir"),
-        "tray left-click must check missing_custom_dir to avoid bypassing the recovery dialog"
+        body.contains("data_dir_recovery"),
+        "tray left-click must check data_dir_recovery to avoid bypassing the recovery dialog"
     );
     assert!(
         body.contains("show_main_window"),
@@ -129,20 +133,21 @@ fn tray_left_click_funnels_to_main_window_when_dir_missing() {
 }
 
 #[test]
-fn app_menu_data_actions_are_gated_when_dir_missing() {
+fn app_menu_data_actions_are_gated_during_recovery() {
     const SOURCE: &str = include_str!("../src/lib.rs");
     let handler = extract_block_from(SOURCE, "on_menu_event(|app, event|")
         .expect("on_menu_event handler must exist");
-    // While a custom data dir is missing, the app menu must not open windows
-    // or act on the fallback default data (Find / New / Preferences /
-    // Comment) — those would bypass the recovery dialog. Quit/About stay ok.
+    // While the data directory is unavailable (gone, or its pointer corrupt),
+    // the app menu must not open windows or act on the fallback default data
+    // (Find / New / Preferences / Comment) — those would bypass the recovery
+    // dialog. Quit/About stay ok.
     assert!(
-        handler.contains("missing_custom_dir.is_some()"),
-        "menu handler must detect a missing custom data dir"
+        handler.contains("data_dir_recovery.is_some()"),
+        "menu handler must detect the data-dir recovery state"
     );
     assert!(
-        handler.contains("if dir_missing"),
-        "menu handler must gate data-affecting actions on dir_missing"
+        handler.contains("if in_recovery"),
+        "menu handler must gate data-affecting actions on in_recovery"
     );
 }
 
