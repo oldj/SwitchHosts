@@ -46,6 +46,17 @@ export default {
   content: 'Zawartość',
   copy: 'Kopiuj',
   cut: 'Wytnij',
+  data_dir_already_current: 'Ten folder jest już bieżącą lokalizacją danych.',
+  data_dir_change_title: 'Zmień lokalizację przechowywania danych',
+  data_dir_choose_new: 'Wybierz nowy folder…',
+  data_dir_copy_existing: 'Skopiuj istniejące dane do nowej lokalizacji',
+  data_dir_missing_message:
+    'Nie można znaleźć katalogu danych. Mógł zostać przeniesiony lub usunięty. Wybierz, jak kontynuować.',
+  data_dir_missing_title: 'Nie znaleziono katalogu danych',
+  data_dir_overwrite_warning:
+    'Folder docelowy zawiera już dane. Pliki o tej samej nazwie zostaną nadpisane.',
+  data_dir_subfolder_note: 'Wszystkie dane będą przechowywane w powyższej lokalizacji.',
+  data_dir_use_default: 'Użyj domyślnej lokalizacji',
   day: 'dzień',
   days: 'dni',
   delete: 'Usuń',

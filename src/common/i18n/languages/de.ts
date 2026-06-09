@@ -48,6 +48,17 @@ const lang: LanguageDict = {
   content: 'Inhalt',
   copy: 'Kopieren',
   cut: 'Ausschneiden',
+  data_dir_already_current: 'Dieser Ordner ist bereits Ihr aktueller Datenspeicherort.',
+  data_dir_change_title: 'Datenspeicherort ändern',
+  data_dir_choose_new: 'Neuen Ordner wählen…',
+  data_dir_copy_existing: 'Vorhandene Daten an den neuen Speicherort kopieren',
+  data_dir_missing_message:
+    'Das Datenverzeichnis wurde nicht gefunden. Möglicherweise wurde es verschoben oder gelöscht. Bitte wählen Sie, wie Sie fortfahren möchten.',
+  data_dir_missing_title: 'Datenverzeichnis nicht gefunden',
+  data_dir_overwrite_warning:
+    'Der Zielordner enthält bereits Daten. Dateien mit gleichem Namen werden überschrieben.',
+  data_dir_subfolder_note: 'Alle Daten werden am oben angegebenen Ort gespeichert.',
+  data_dir_use_default: 'Standardspeicherort verwenden',
   day: 'Tag',
   days: 'Tage',
   delete: 'Löschen',

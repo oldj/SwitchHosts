@@ -163,6 +163,13 @@ pub fn run() {
             // renderer as a broadcast use the same `_args` envelope
             // convention; items that need Rust action (Find, URL open)
             // are dispatched inline.
+            //
+            // While a custom data directory is missing, the main window only
+            // hosts the recovery dialog. Suppress menu actions that open a
+            // window or act on the fallback default data (Find / New /
+            // Preferences / Comment) so they can't bypass the recovery
+            // prompt; Quit, About and external links stay available.
+            let dir_missing = app.state::<AppState>().missing_custom_dir.is_some();
             match id {
                 #[cfg(target_os = "macos")]
                 app_menu::MENU_ID_HIDE_APP => {
@@ -170,6 +177,9 @@ pub fn run() {
                     return;
                 }
                 app_menu::MENU_ID_FIND => {
+                    if dir_missing {
+                        return;
+                    }
                     if let Err(e) = find::show_find_window(app) {
                         log::warn!("failed to show find window: {e}");
                     }
@@ -179,6 +189,11 @@ pub fn run() {
                 | app_menu::MENU_ID_NEW
                 | app_menu::MENU_ID_PREFERENCES
                 | app_menu::MENU_ID_COMMENT => {
+                    // New / Preferences / Comment act on data; suppress them
+                    // while a custom data dir is missing. About is read-only.
+                    if dir_missing && id != app_menu::MENU_ID_ABOUT {
+                        return;
+                    }
                     let event_name = match id {
                         app_menu::MENU_ID_ABOUT => "show_about",
                         app_menu::MENU_ID_NEW => "add_new",
@@ -262,7 +277,11 @@ pub fn run() {
                 .lock()
                 .map(|cfg| cfg.hide_at_launch)
                 .unwrap_or(false);
-            if hide_at_launch {
+            // If a recorded custom data directory went missing, force the
+            // main window to appear (even under hide_at_launch) so the
+            // renderer can show the recovery dialog — otherwise the user
+            // might unknowingly operate on the fallback default root.
+            if hide_at_launch && app_state.missing_custom_dir.is_none() {
                 // Skip creating the main window — mark hide-to-tray so
                 // the exit-guard machinery recognises subsequent
                 // last-window closes (e.g. dismissing a find window) as
@@ -319,8 +338,14 @@ pub fn run() {
             // otherwise hiding the Dock icon on macOS would strand the
             // user (no Dock icon, no tray to summon the window back).
             tray::install_tray(&app_handle)?;
-            if let Err(e) = tray::refresh_title(&app_handle, app_state.inner()) {
-                log::warn!("failed to initialize tray title: {e}");
+            // Skip the tray title while a custom data dir is missing: it
+            // reads the fallback default manifest and would expose/mislead
+            // with the default dir's enabled hosts. It refreshes after the
+            // user resolves the location and restarts.
+            if app_state.missing_custom_dir.is_none() {
+                if let Err(e) = tray::refresh_title(&app_handle, app_state.inner()) {
+                    log::warn!("failed to initialize tray title: {e}");
+                }
             }
 
             #[cfg(target_os = "macos")]
@@ -352,22 +377,35 @@ pub fn run() {
                 );
             });
 
-            // Background scanner for remote-hosts auto refresh.
-            // Wakes every 60s, replaces `src/main/libs/cron.ts`.
-            refresh::start_background_scanner(app_handle.clone());
+            // When a recorded custom data directory is missing we've only
+            // fallen back to the default root so the renderer can show the
+            // recovery dialog. Defer side effects that read/write or expose
+            // that fallback root — the remote-hosts refresh scanner (which
+            // would write entries into the default dir after ~5s) and the
+            // HTTP API (which would expose hosts operations on it) — until
+            // the user resolves the data location and the app restarts.
+            if app_state.missing_custom_dir.is_none() {
+                // Background scanner for remote-hosts auto refresh.
+                // Wakes every 60s, replaces `src/main/libs/cron.ts`.
+                refresh::start_background_scanner(app_handle.clone());
 
-            // Local HTTP API on port 50761. Only started if the user
-            // turned it on in the preferences pane; the config_set /
-            // config_update commands also call start/stop on the fly
-            // when the renderer flips the toggle.
-            let (http_on, only_local) = {
-                let cfg = app_state.config.lock().expect("config mutex poisoned");
-                (cfg.http_api_on, cfg.http_api_only_local)
-            };
-            if http_on {
-                if let Err(e) = http_api::start(app_handle.clone(), only_local) {
-                    log::warn!("http_api startup failed: {e}");
+                // Local HTTP API on port 50761. Only started if the user
+                // turned it on in the preferences pane; the config_set /
+                // config_update commands also call start/stop on the fly
+                // when the renderer flips the toggle.
+                let (http_on, only_local) = {
+                    let cfg = app_state.config.lock().expect("config mutex poisoned");
+                    (cfg.http_api_on, cfg.http_api_only_local)
+                };
+                if http_on {
+                    if let Err(e) = http_api::start(app_handle.clone(), only_local) {
+                        log::warn!("http_api startup failed: {e}");
+                    }
                 }
+            } else {
+                log::warn!(
+                    "custom data directory missing — deferring remote-hosts refresh and HTTP API until the data location is resolved"
+                );
             }
 
             // Reconcile launch_at_login with what the OS actually reports.
@@ -383,12 +421,18 @@ pub fn run() {
             match app_handle.autolaunch().is_enabled() {
                 Ok(actual) if actual != want_launch_at_login => {
                     launch_at_login = actual;
-                    {
-                        let mut cfg = app_state.config.lock().expect("config mutex poisoned");
-                        cfg.launch_at_login = actual;
-                    }
-                    if let Err(e) = app_state.persist_config() {
-                        log::warn!("failed to persist launch_at_login sync from OS: {e}");
+                    // Apply the relaunch policy below regardless, but don't
+                    // persist this OS-sync into a fallback default root while
+                    // a custom dir is missing — the user hasn't confirmed the
+                    // location yet; it re-syncs after the restart.
+                    if app_state.missing_custom_dir.is_none() {
+                        {
+                            let mut cfg = app_state.config.lock().expect("config mutex poisoned");
+                            cfg.launch_at_login = actual;
+                        }
+                        if let Err(e) = app_state.persist_config() {
+                            log::warn!("failed to persist launch_at_login sync from OS: {e}");
+                        }
                     }
                 }
                 Ok(actual) => {
@@ -475,6 +519,10 @@ pub fn run() {
             commands::install_update,
             // data dir
             commands::get_data_dir,
+            commands::get_data_dir_status,
+            commands::pick_data_dir,
+            commands::apply_data_dir,
+            commands::reset_data_dir,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application");

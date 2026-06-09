@@ -48,6 +48,17 @@ const lang: LanguageDict = {
   content: 'Contenu',
   copy: 'Copier',
   cut: 'Couper',
+  data_dir_already_current: 'Ce dossier est déjà votre emplacement de données actuel.',
+  data_dir_change_title: "Changer l'emplacement de stockage des données",
+  data_dir_choose_new: 'Choisir un nouveau dossier…',
+  data_dir_copy_existing: 'Copier les données existantes vers le nouvel emplacement',
+  data_dir_missing_message:
+    'Le répertoire de données est introuvable. Il a peut-être été déplacé ou supprimé. Veuillez choisir comment continuer.',
+  data_dir_missing_title: 'Répertoire de données introuvable',
+  data_dir_overwrite_warning:
+    'Le dossier cible contient déjà des données. Les fichiers du même nom seront écrasés.',
+  data_dir_subfolder_note: "Toutes les données seront stockées à l'emplacement ci-dessus.",
+  data_dir_use_default: "Utiliser l'emplacement par défaut",
   day: 'jour',
   days: 'jours',
   delete: 'Supprimer',

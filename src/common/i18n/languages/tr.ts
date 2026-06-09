@@ -45,6 +45,17 @@ export default {
   content: 'İçerik',
   copy: 'Kopyala',
   cut: 'Kes',
+  data_dir_already_current: 'Bu klasör zaten geçerli veri konumunuz.',
+  data_dir_change_title: 'Veri Depolama Konumunu Değiştir',
+  data_dir_choose_new: 'Yeni Klasör Seç…',
+  data_dir_copy_existing: 'Mevcut verileri yeni konuma kopyala',
+  data_dir_missing_message:
+    'Veri dizini bulunamadı. Taşınmış veya silinmiş olabilir. Lütfen nasıl devam edeceğinizi seçin.',
+  data_dir_missing_title: 'Veri Dizini Bulunamadı',
+  data_dir_overwrite_warning:
+    'Hedef klasör zaten veri içeriyor. Aynı ada sahip dosyaların üzerine yazılacak.',
+  data_dir_subfolder_note: 'Tüm veriler yukarıdaki konumda saklanacaktır.',
+  data_dir_use_default: 'Varsayılan Konumu Kullan',
   day: 'gün',
   days: 'günler',
   delete: 'Sil',

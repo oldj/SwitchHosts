@@ -7,11 +7,12 @@ import LeftSidebar from '@renderer/components/LeftSidebar'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
 import PreferencePanel from '@renderer/components/Pref'
+import MissingDataDirModal from '@renderer/components/Pref/MissingDataDirModal'
 import ResizeHandle from '@renderer/components/ResizeHandle'
 import RightPanel from '@renderer/components/RightPanel'
 import SetWriteMode from '@renderer/components/SetWriteMode'
 import UpdateDialog from '@renderer/components/UpdateDialog'
-import { agent } from '@renderer/core/agent'
+import { actions, agent } from '@renderer/core/agent'
 import { showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
@@ -33,6 +34,7 @@ const clampPanel = (value: number) =>
 
 const MainPage = () => {
   const [loading, setLoading] = useState(true)
+  const [missingDataDir, setMissingDataDir] = useState<string | null>(null)
   const mainWindowReadySentRef = useRef(false)
   const { setLocale, i18n, lang } = useI18n()
   const { loadHostsData } = useHostsData()
@@ -46,7 +48,18 @@ const MainPage = () => {
   const resolvedTheme = useResolvedTheme(configs?.theme)
   const init = async () => {
     // v5: migration is handled automatically by the Rust backend on startup.
-    // The renderer only needs to load data.
+    // Check whether a recorded custom data directory has gone missing
+    // independently of data loading (fire-and-forget), so the recovery
+    // dialog still shows even if loading the fallback data fails — e.g. a
+    // corrupt manifest in the default dir.
+    actions
+      .getDataDirStatus()
+      .then((status) => {
+        if (status?.missing_custom_dir) {
+          setMissingDataDir(status.missing_custom_dir)
+        }
+      })
+      .catch((e) => console.error(e))
     try {
       await loadHostsData()
     } finally {
@@ -147,11 +160,7 @@ const MainPage = () => {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  if (loading) {
-    return <Loading />
-  }
-
-  return (
+  const mainView = (
     <div
       className={styles.root}
       style={{ '--swh-left-sidebar-width': `${LEFT_SIDEBAR_WIDTH}px` } as React.CSSProperties}
@@ -235,6 +244,15 @@ const MainPage = () => {
       <UpdateDialog />
       <About />
     </div>
+  )
+
+  // Render the recovery dialog at a stable top level (not gated by
+  // `loading`), so it shows even if the initial data load never settles.
+  return (
+    <>
+      {loading ? <Loading /> : mainView}
+      <MissingDataDirModal opened={!!missingDataDir} missingPath={missingDataDir || ''} />
+    </>
   )
 }
 

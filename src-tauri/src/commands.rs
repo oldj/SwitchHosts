@@ -29,9 +29,9 @@ use crate::import_export;
 use crate::lifecycle::{self, MAIN_WINDOW_LABEL};
 use crate::refresh::{self, RefreshOutcome};
 use crate::storage::{
-    entries,
+    data_dir_pointer, entries, fs_copy,
     manifest::{self, Manifest},
-    AppConfig, AppState, StorageError, Trashcan,
+    paths, AppConfig, AppState, StorageError, Trashcan,
 };
 use crate::tray;
 
@@ -154,6 +154,7 @@ pub async fn config_set(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let key = args
         .first()
         .and_then(Value::as_str)
@@ -177,6 +178,7 @@ pub async fn config_update(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let patch = args.first().cloned().unwrap_or(Value::Null);
     if patch.is_null() {
         return Err(StorageError::InvalidConfigValue {
@@ -419,6 +421,7 @@ pub async fn get_content_of_list(
 
 #[tauri::command]
 pub async fn set_list(state: State<'_, AppState>, args: Args) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let list = args.into_iter().next().unwrap_or(Value::Null);
     let root = match list {
         Value::Array(arr) => arr,
@@ -442,6 +445,7 @@ pub async fn move_to_trashcan(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
     let _guard = state.store_lock.lock().expect("store lock poisoned");
     move_ids_to_trashcan(&state, &[id])?;
@@ -453,6 +457,7 @@ pub async fn move_many_to_trashcan(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let ids_value = args.into_iter().next().unwrap_or(Value::Null);
     let ids: Vec<String> = match ids_value {
         Value::Array(arr) => arr
@@ -498,6 +503,7 @@ pub async fn clear_trashcan(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let _guard = state.store_lock.lock().expect("store lock poisoned");
     let mut t = load_trashcan(&state).unwrap_or_default();
 
@@ -523,6 +529,7 @@ pub async fn delete_item_from_trashcan(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
     let _guard = state.store_lock.lock().expect("store lock poisoned");
     let mut t = load_trashcan(&state).unwrap_or_default();
@@ -549,6 +556,7 @@ pub async fn restore_item_from_trashcan(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
     let _guard = state.store_lock.lock().expect("store lock poisoned");
     let mut t = load_trashcan(&state).unwrap_or_default();
@@ -593,6 +601,7 @@ pub async fn set_hosts_content(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
     let content = args
         .get(1)
@@ -636,6 +645,7 @@ pub async fn apply_hosts_selection<R: Runtime>(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
     // args[0] = content (string, already aggregated by get_content_of_list).
     // No further args are read — OS-native elevation handles credentials,
     // so the legacy `{ sudo_pswd }` options object from the Electron port
@@ -817,6 +827,7 @@ pub async fn refresh_remote_hosts<R: Runtime>(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
     let id = args
         .first()
         .and_then(Value::as_str)
@@ -835,6 +846,7 @@ pub async fn refresh_all_remote_hosts<R: Runtime>(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
     let results = refresh::refresh_all(&app, state.inner()).await;
     let payload: Vec<Value> = results
         .into_iter()
@@ -871,6 +883,7 @@ pub async fn delete_apply_history_item(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?;
     let path = state.paths.histories_dir.join("system-hosts.json");
     let removed = hosts_apply::history::delete_by_id(&path, id)?;
@@ -896,6 +909,7 @@ pub async fn cmd_delete_history_item(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?;
     let path = state.paths.histories_dir.join("cmd-after-apply.json");
     let removed = hosts_apply::cmd_runner::delete_by_id(&path, id)?;
@@ -907,6 +921,7 @@ pub async fn cmd_clear_history(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let path = state.paths.histories_dir.join("cmd-after-apply.json");
     hosts_apply::cmd_runner::clear(&path)?;
     Ok(Value::Null)
@@ -951,6 +966,7 @@ pub async fn find_by(state: State<'_, AppState>, args: Args) -> Result<Value, St
 
 #[tauri::command]
 pub async fn find_replace_one(state: State<'_, AppState>, args: Args) -> Result<Value, String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
     let request = args
         .into_iter()
         .next()
@@ -964,6 +980,7 @@ pub async fn find_replace_one(state: State<'_, AppState>, args: Args) -> Result<
 
 #[tauri::command]
 pub async fn find_replace_all(state: State<'_, AppState>, args: Args) -> Result<Value, String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
     let keyword = args
         .first()
         .and_then(Value::as_str)
@@ -989,6 +1006,7 @@ pub async fn find_add_history(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let entry: FindHistoryEntry = match args.into_iter().next() {
         Some(v) => serde_json::from_value(v).map_err(|e| StorageError::InvalidConfigValue {
             key: "find_add_history.args[0]".into(),
@@ -1019,6 +1037,7 @@ pub async fn find_set_history(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let items: Vec<FindHistoryEntry> = match args.into_iter().next() {
         Some(Value::Array(arr)) => arr
             .into_iter()
@@ -1035,6 +1054,7 @@ pub async fn find_add_replace_history(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let value = arg_str(&args, 0, "find_add_replace_history")?.to_string();
     let all = find::add_replace_history(state.inner(), value)?;
     Ok(serde_json::to_value(all).map_err(|e| StorageError::serialize("replace.json", e))?)
@@ -1054,6 +1074,7 @@ pub async fn find_set_replace_history(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    state.require_data_dir_usable()?;
     let items: Vec<String> = match args.into_iter().next() {
         Some(Value::Array(arr)) => arr
             .into_iter()
@@ -1253,6 +1274,7 @@ pub async fn import_data<R: Runtime>(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
     let picked = app
         .dialog()
         .file()
@@ -1285,6 +1307,7 @@ pub async fn import_data<R: Runtime>(
 
 #[tauri::command]
 pub async fn import_data_from_url(state: State<'_, AppState>, args: Args) -> Result<Value, String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
     let url = arg_str(&args, 0, "url").map_err(|e| format!("{e:?}"))?;
 
     // Build the HTTP client outside of any lock so the proxy snapshot
@@ -1555,4 +1578,217 @@ pub fn popup_menu<R: Runtime>(
 #[tauri::command]
 pub async fn get_data_dir(state: State<'_, AppState>, _args: Args) -> Result<Value, StorageError> {
     Ok(json!(state.paths.root.display().to_string()))
+}
+
+/// Startup status for the renderer: the active data directory, plus the
+/// path of a recorded custom directory that has gone missing (so the UI
+/// can prompt the user to choose how to proceed). `missing_custom_dir`
+/// is `null` in the normal case.
+#[tauri::command]
+pub async fn get_data_dir_status(
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<Value, StorageError> {
+    Ok(json!({
+        "active_dir": state.paths.root.display().to_string(),
+        "default_dir": paths::default_root()?.display().to_string(),
+        "missing_custom_dir": state
+            .missing_custom_dir
+            .as_ref()
+            .map(|p| p.display().to_string()),
+    }))
+}
+
+/// Show a folder picker and report what the chosen folder resolves to.
+/// Returns `null` if the user cancels. Otherwise returns
+/// `{ kind, data_dir, is_empty, is_same_as_current }` where `kind` is
+/// `"default"` (the choice maps to the default location → a reset) or
+/// `"custom"`, `data_dir` is the final `SwitchHosts.data` directory,
+/// `is_empty` ignores OS metadata, and `is_same_as_current` guards the
+/// no-op case. Does not create any directory.
+#[tauri::command]
+pub async fn pick_data_dir<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<Value, StorageError> {
+    let current_root = state.paths.root.clone();
+
+    let picked = app
+        .dialog()
+        .file()
+        .set_directory(&current_root)
+        .set_can_create_directories(true)
+        .blocking_pick_folder();
+
+    let Some(picked) = picked else {
+        return Ok(Value::Null);
+    };
+    let picked_path = picked
+        .into_path()
+        .map_err(|e| StorageError::InvalidDataDirChoice {
+            reason: format!("invalid folder path: {e}"),
+        })?;
+
+    let default = paths::default_root()?;
+    let current_c = fs_copy::lexical_canonicalize(&current_root);
+
+    match paths::resolve_target_dir(&picked_path, &default) {
+        paths::TargetKind::Default => Ok(json!({
+            "kind": "default",
+            "data_dir": default.display().to_string(),
+            "is_empty": true,
+            "is_same_as_current": fs_copy::lexical_canonicalize(&default) == current_c,
+        })),
+        paths::TargetKind::Custom(final_dir) => Ok(json!({
+            "kind": "custom",
+            "data_dir": final_dir.display().to_string(),
+            "is_empty": fs_copy::dir_is_empty_ignoring_meta(&final_dir),
+            "is_same_as_current": fs_copy::lexical_canonicalize(&final_dir) == current_c,
+        })),
+    }
+}
+
+/// Switch the data directory to `target` (the final `SwitchHosts.data`
+/// path). If `copy` is set, the current data is copied first (merge,
+/// overwriting same-named files; the source is never modified). If
+/// `target` resolves to the default location this is treated as a reset
+/// (pointer cleared, no copy). Persists window geometry first so the
+/// copied `state.json` is current, then restarts the app to pick up the
+/// new root. Returns `Err` (no restart) on any validation/copy failure.
+#[tauri::command]
+pub async fn apply_data_dir<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    args: Args,
+) -> Result<Value, StorageError> {
+    let obj = args.first().and_then(Value::as_object).ok_or_else(|| {
+        StorageError::InvalidDataDirChoice {
+            reason: "missing arguments".into(),
+        }
+    })?;
+    let target = obj.get("target").and_then(Value::as_str).ok_or_else(|| {
+        StorageError::InvalidDataDirChoice {
+            reason: "missing 'target'".into(),
+        }
+    })?;
+    let copy = obj.get("copy").and_then(Value::as_bool).unwrap_or(false);
+    let raw_target = PathBuf::from(target);
+    // Reject a relative path up front, before any side effect: the pointer
+    // only stores absolute paths (and rejects relative ones on read), so a
+    // relative target would otherwise "succeed + restart" then be dropped on
+    // the next launch.
+    if !raw_target.is_absolute() {
+        return Err(StorageError::InvalidDataDirChoice {
+            reason: "the target data directory must be an absolute path".into(),
+        });
+    }
+
+    let default = paths::default_root()?;
+    // Normalize through the same rule as `pick_data_dir`: a folder not named
+    // `SwitchHosts.data` gets that sub-dir appended, and the default location
+    // is treated as a reset. Guards against a caller passing a raw parent
+    // (e.g. ~/Desktop) — data would otherwise land directly in it.
+    let (target, is_default) = match paths::resolve_target_dir(&raw_target, &default) {
+        paths::TargetKind::Default => (default.clone(), true),
+        paths::TargetKind::Custom(p) => (p, false),
+    };
+    let current_root = state.paths.root.clone();
+
+    let target_c = fs_copy::lexical_canonicalize(&target);
+    let current_c = fs_copy::lexical_canonicalize(&current_root);
+
+    // Validate up front (cheap, no side effects) before touching disk.
+    if !is_default {
+        if target_c == current_c {
+            return Err(StorageError::InvalidDataDirChoice {
+                reason: "the chosen folder is already the current data directory".into(),
+            });
+        }
+        if target_c.starts_with(&current_c) || current_c.starts_with(&target_c) {
+            return Err(StorageError::InvalidDataDirChoice {
+                reason:
+                    "the chosen folder and the current data directory cannot contain each other"
+                        .into(),
+            });
+        }
+    }
+
+    // Persist geometry on the OLD root before any copy so the copied
+    // state.json reflects the latest window position.
+    if let Some(window) = app.get_webview_window(lifecycle::MAIN_WINDOW_LABEL) {
+        lifecycle::persist_window_geometry(&window, state.inner());
+    }
+
+    if is_default {
+        // Reset: verify the default root is usable *before* forgetting the
+        // pointer, so we don't clear it and then crash bootstrap on a broken
+        // default (e.g. ~/.SwitchHosts blocked by a file, or read-only). Then
+        // forget the pointer (no copy back into default).
+        paths::V5Paths::under(default.clone())
+            .ensure_usable()
+            .map_err(|e| StorageError::InvalidDataDirChoice {
+                reason: format!("the default data directory is not usable: {e}"),
+            })?;
+        data_dir_pointer::clear()?;
+    } else {
+        if copy {
+            // Hold store_lock for the copy, like export_data. This
+            // serializes against the manifest/trashcan read-modify-write
+            // cycles (renderer edits and refresh's stamp step), keeping
+            // those files consistent in the copy. Note: refresh writes
+            // entry files *outside* this lock (see refresh.rs), so a
+            // remote refresh landing mid-copy could pair a freshly written
+            // entry with a slightly older manifest stamp in the copy —
+            // harmless, since each file is written atomically and the app
+            // re-refreshes after the imminent restart. Synchronous because
+            // the data is small and we restart right after.
+            let _guard = state.store_lock.lock().expect("store lock poisoned");
+            fs_copy::copy_dir_recursive(&current_root, &target)?;
+        }
+        // Prepare and verify the target can host the full v5 layout AND is
+        // writable before committing the pointer, so we never restart into a
+        // root that fails data writes (or crashes bootstrap). `ensure_usable`
+        // catches a folder already containing a *file* named entries/internal,
+        // a read-only volume, and read-only existing sub-dirs alike (a root-
+        // only probe would miss the last). For the copy path it's idempotent.
+        paths::V5Paths::under(target.clone())
+            .ensure_usable()
+            .map_err(|e| StorageError::InvalidDataDirChoice {
+                reason: format!("the chosen folder can't store SwitchHosts data: {e}"),
+            })?;
+        // Only flip the pointer once the layout is ready and writable.
+        data_dir_pointer::save(&target)?;
+    }
+
+    state.is_will_quit.store(true, Ordering::SeqCst);
+    app.restart();
+    #[allow(unreachable_code)]
+    Ok(Value::Null)
+}
+
+/// Reset the data directory back to the default `~/.SwitchHosts`: clear
+/// the pointer and restart. Does not copy data back. Shared by the
+/// preferences "reset" button and the missing-directory recovery dialog.
+#[tauri::command]
+pub async fn reset_data_dir<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<Value, StorageError> {
+    // Verify the default root is usable before clearing the pointer, so we
+    // don't reset into a broken default and crash bootstrap on next launch.
+    paths::V5Paths::under(paths::default_root()?)
+        .ensure_usable()
+        .map_err(|e| StorageError::InvalidDataDirChoice {
+            reason: format!("the default data directory is not usable: {e}"),
+        })?;
+    if let Some(window) = app.get_webview_window(lifecycle::MAIN_WINDOW_LABEL) {
+        lifecycle::persist_window_geometry(&window, state.inner());
+    }
+    data_dir_pointer::clear()?;
+    state.is_will_quit.store(true, Ordering::SeqCst);
+    app.restart();
+    #[allow(unreachable_code)]
+    Ok(Value::Null)
 }

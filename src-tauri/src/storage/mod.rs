@@ -6,8 +6,10 @@
 
 pub mod atomic;
 pub mod config;
+pub mod data_dir_pointer;
 pub mod entries;
 pub mod error;
+pub mod fs_copy;
 pub mod manifest;
 pub mod paths;
 pub mod state;
@@ -19,6 +21,7 @@ pub use error::StorageError;
 pub use paths::V5Paths;
 pub use trashcan::Trashcan;
 
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::Mutex;
 
@@ -52,24 +55,62 @@ pub struct AppState {
     /// the Moved/Resized handlers in `lifecycle` to coalesce writes
     /// during a drag (which fires 60 events/sec on macOS).
     pub last_geometry_persist_ms: AtomicU64,
+    /// Set at startup when a recorded custom data directory could not be
+    /// found (moved/deleted). The renderer reads this via
+    /// `get_data_dir_status` and prompts the user to choose how to
+    /// proceed. `None` in the normal case.
+    pub missing_custom_dir: Option<PathBuf>,
 }
 
 impl AppState {
     /// Initialise the shared state at app startup:
     ///
-    /// 1. Resolve the default v5 paths (`~/.SwitchHosts`).
+    /// 1. Resolve the active v5 root, honouring the data-dir pointer
+    ///    (custom location), falling back to `~/.SwitchHosts` if the
+    ///    pointer is absent, corrupt, or points at a missing directory.
     /// 2. Ensure all v5 directories exist.
     /// 3. Run the one-shot PotDb → v5 migration if `manifest.json` is
-    ///    missing and legacy data is present.
+    ///    missing and legacy data is present — **but only** when we are
+    ///    on the intended root. If a custom directory went missing and we
+    ///    were forced back to the default, skip migration so stale v4
+    ///    data in the default location is not migrated/archived behind
+    ///    the user's back (they will be prompted to choose a directory).
     /// 4. Load `internal/config.json` into memory, or fall back to
     ///    defaults if the file is missing / corrupt.
     pub fn bootstrap() -> Result<Self, StorageError> {
-        let paths = V5Paths::resolve_default()?;
-        paths.ensure_dirs()?;
+        let (mut paths, mut missing_custom_dir) = paths::resolve_root()?;
+
+        // If the resolved root can't host the v5 layout — a file blocking a
+        // required directory (e.g. a plain file named `entries`), or a
+        // read-only volume / read-only sub-dir — fall back to the default
+        // root and surface the chosen path as missing, so the recovery
+        // dialog handles it instead of crashing here (bootstrap is
+        // `.expect()`ed at the app entry). `ensure_usable` probes each v5
+        // dir for writability, not just existence.
+        if let Err(e) = paths.ensure_usable() {
+            let default = paths::default_root()?;
+            if paths.root == default {
+                return Err(e);
+            }
+            log::warn!(
+                "custom data directory {} cannot host the data layout ({e}); falling back to default",
+                paths.root.display()
+            );
+            missing_custom_dir = Some(paths.root.clone());
+            paths = V5Paths::under(default);
+            paths.ensure_dirs()?;
+        }
         paths.cleanup_tmp_files();
 
-        let outcome = crate::migration::run_if_needed(&paths)?;
-        log::info!("migration outcome: {outcome:?}");
+        if let Some(missing) = &missing_custom_dir {
+            log::warn!(
+                "custom data directory unavailable ({}) — using default root and skipping migration; the user will be prompted",
+                missing.display()
+            );
+        } else {
+            let outcome = crate::migration::run_if_needed(&paths)?;
+            log::info!("migration outcome: {outcome:?}");
+        }
 
         let config = AppConfig::load(&paths.config_file);
         Ok(Self {
@@ -80,6 +121,7 @@ impl AppState {
             update_check_lock: tokio::sync::Mutex::new(()),
             is_will_quit: AtomicBool::new(false),
             last_geometry_persist_ms: AtomicU64::new(0),
+            missing_custom_dir,
         })
     }
 
@@ -88,5 +130,56 @@ impl AppState {
     pub fn persist_config(&self) -> Result<(), StorageError> {
         let guard = self.config.lock().expect("config mutex poisoned");
         guard.save(&self.paths.config_file)
+    }
+
+    /// Backstop guard for data-mutating commands. When a custom data
+    /// directory is missing we've fallen back to the default root only to
+    /// host the recovery dialog; commands that write or apply the user's
+    /// data/config/system must refuse until the location is resolved (use
+    /// default / choose new / quit). The UI, app menu and tray already gate
+    /// their entry points — this is the unified backstop so a future window,
+    /// shortcut or invoke path can't slip a data mutation through. Recovery
+    /// commands (`pick`/`apply`/`reset_data_dir`) must NOT call this.
+    pub fn require_data_dir_usable(&self) -> Result<(), StorageError> {
+        if self.missing_custom_dir.is_some() {
+            return Err(StorageError::InvalidDataDirChoice {
+                reason: "the data directory is unavailable; choose a location to continue".into(),
+            });
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn state(missing: Option<PathBuf>) -> AppState {
+        let root = std::env::temp_dir().join(format!(
+            "swh-guard-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        AppState {
+            paths: V5Paths::under(root),
+            config: Mutex::new(AppConfig::default()),
+            store_lock: Mutex::new(()),
+            config_write_lock: Mutex::new(()),
+            update_check_lock: tokio::sync::Mutex::new(()),
+            is_will_quit: AtomicBool::new(false),
+            last_geometry_persist_ms: AtomicU64::new(0),
+            missing_custom_dir: missing,
+        }
+    }
+
+    #[test]
+    fn require_data_dir_usable_rejects_when_missing() {
+        assert!(state(Some(PathBuf::from("/tmp/gone")))
+            .require_data_dir_usable()
+            .is_err());
+        assert!(state(None).require_data_dir_usable().is_ok());
     }
 }

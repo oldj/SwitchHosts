@@ -44,6 +44,17 @@ export default {
   content: 'Content',
   copy: 'Copy',
   cut: 'Cut',
+  data_dir_already_current: 'This folder is already your current data location.',
+  data_dir_change_title: 'Change Data Storage Location',
+  data_dir_choose_new: 'Choose New Folder…',
+  data_dir_copy_existing: 'Copy existing data to the new location',
+  data_dir_missing_message:
+    'The data directory could not be found. It may have been moved or deleted. Please choose how to proceed.',
+  data_dir_missing_title: 'Data Directory Not Found',
+  data_dir_overwrite_warning:
+    'The target folder already contains data. Files with the same name will be overwritten.',
+  data_dir_subfolder_note: 'All data will be stored at the location above.',
+  data_dir_use_default: 'Use Default Location',
   day: 'day',
   days: 'days',
   delete: 'Delete',
