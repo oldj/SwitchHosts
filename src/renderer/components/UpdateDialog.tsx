@@ -1,6 +1,6 @@
 import events from '@common/events'
 import { AppDownloadedUpdateInfo, AppUpdateInfo, AppUpdateProgress } from '@common/update'
-import { Button, Group, Modal, Progress, Stack, Text } from '@mantine/core'
+import { Button, Group, Modal, Progress, ScrollArea, Stack, Text } from '@mantine/core'
 import { actions, agent } from '@renderer/core/agent'
 import { getFriendlyUpdateErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -123,9 +123,19 @@ const UpdateDialog = () => {
         </Text>
 
         {updateInfo.releaseNotes ? (
-          <Text size="xs" c="dimmed" style={{ whiteSpace: 'pre-wrap' }} lineClamp={6}>
-            {updateInfo.releaseNotes}
-          </Text>
+          // Release notes can be a full changelog, so cap the height and let the
+          // body scroll instead of truncating. Because the scroll area is bounded
+          // the modal never grows tall enough to push the title or the footer
+          // buttons out of view.
+          <ScrollArea.Autosize mah="40vh" scrollbars="y" type="auto">
+            <Text
+              size="xs"
+              c="dimmed"
+              style={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
+            >
+              {updateInfo.releaseNotes}
+            </Text>
+          </ScrollArea.Autosize>
         ) : null}
 
         {isDownloading ? (
