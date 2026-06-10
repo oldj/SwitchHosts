@@ -153,15 +153,22 @@ fn handle_left_click<R: Runtime + 'static>(
     cursor: PhysicalPosition<f64>,
     icon_rect: TauriRect,
 ) {
-    let mini_enabled = {
+    let (mini_enabled, in_recovery) = {
         let state = app.state::<AppState>();
-        state
+        let mini = state
             .config
             .lock()
             .map(|cfg| cfg.tray_mini_window)
-            .unwrap_or(false)
+            .unwrap_or(false);
+        (mini, state.data_dir_recovery.is_some())
     };
-    if mini_enabled {
+    // While the data directory is unavailable (it went missing, or its
+    // pointer is corrupt) we've fallen back to the default root only to
+    // surface the recovery dialog. Never open the tray mini window then — it
+    // would load the fallback data and let the user switch hosts from it,
+    // bypassing the recovery prompt. Funnel the click to the main window
+    // (which shows the recovery dialog) instead.
+    if mini_enabled && !in_recovery {
         // Toggle semantics: a click on the icon while the mini window
         // is open should dismiss it. Tray icon clicks and auto-hide
         // paths can interleave differently across platforms, so handle

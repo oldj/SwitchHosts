@@ -67,8 +67,8 @@ fn setup_skips_main_window_creation_when_hide_at_launch_is_on() {
     // identifier* but moves `create_main_window` into the wrong branch
     // is caught — the previous string-presence check would pass either
     // way and leave the regression invisible.
-    let if_body = extract_block_after(SOURCE, "if hide_at_launch {")
-        .expect("setup must contain an `if hide_at_launch {` branch");
+    let if_body = extract_block_from(SOURCE, "if hide_at_launch")
+        .expect("setup must contain an `if hide_at_launch` branch");
     let else_body = extract_block_after(SOURCE, "} else {")
         .expect("the hide_at_launch branch must have a matching `} else {`");
 
@@ -83,6 +83,87 @@ fn setup_skips_main_window_creation_when_hide_at_launch_is_on() {
     assert!(
         else_body.contains("create_main_window"),
         "the non-hide_at_launch branch must create the main window so it appears at launch"
+    );
+    assert!(
+        SOURCE.contains("data_dir_recovery.is_none()"),
+        "hide_at_launch must be guarded by `data_dir_recovery.is_none()` so an unavailable data directory (gone, or its pointer corrupt) forces the main window (and its recovery dialog) to appear"
+    );
+}
+
+#[test]
+fn data_dir_recovery_gates_fallback_side_effects() {
+    const SOURCE: &str = include_str!("../src/lib.rs");
+    // While the data directory is unavailable (gone, or its pointer corrupt)
+    // we fall back to the default root only to show the recovery dialog. Five
+    // startup side effects that would read/write/expose that fallback root
+    // stay gated behind `data_dir_recovery.is_none()`: hide_at_launch (force
+    // the window so the dialog shows), the tray title, the refresh scanner +
+    // HTTP API, the launch_at_login config persist, and the auto-update
+    // checker. Catch silently dropping any.
+    let guards = SOURCE.matches("data_dir_recovery.is_none()").count();
+    assert!(
+        guards >= 5,
+        "expected >=5 `data_dir_recovery.is_none()` guards in lib.rs setup (hide_at_launch, tray title, background services, launch_at_login persist, auto-update checker); found {guards}"
+    );
+    assert!(
+        SOURCE.contains("start_background_scanner")
+            && SOURCE.contains("refresh_title")
+            && SOURCE.contains("start_auto_update_checker"),
+        "the gated side effects (refresh scanner, tray title, auto-update checker) must still be present"
+    );
+}
+
+#[test]
+fn tray_left_click_funnels_to_main_window_during_recovery() {
+    const SOURCE: &str = include_str!("../src/tray.rs");
+    let body =
+        extract_block_from(SOURCE, "fn handle_left_click").expect("handle_left_click must exist");
+    // While the data directory is unavailable (gone, or its pointer corrupt)
+    // the tray must not open the mini window (which would load and act on the
+    // fallback default data); the click focuses the main window (recovery
+    // dialog) instead.
+    assert!(
+        body.contains("data_dir_recovery"),
+        "tray left-click must check data_dir_recovery to avoid bypassing the recovery dialog"
+    );
+    assert!(
+        body.contains("show_main_window"),
+        "tray left-click must be able to fall back to focusing the main window"
+    );
+}
+
+#[test]
+fn app_menu_data_actions_are_gated_during_recovery() {
+    const SOURCE: &str = include_str!("../src/lib.rs");
+    let handler = extract_block_from(SOURCE, "on_menu_event(|app, event|")
+        .expect("on_menu_event handler must exist");
+    // While the data directory is unavailable (gone, or its pointer corrupt),
+    // the app menu must not open windows or act on the fallback default data
+    // (Find / New / Preferences / Comment) — those would bypass the recovery
+    // dialog. Quit/About stay ok.
+    assert!(
+        handler.contains("data_dir_recovery.is_some()"),
+        "menu handler must detect the data-dir recovery state"
+    );
+    assert!(
+        handler.contains("if in_recovery"),
+        "menu handler must gate data-affecting actions on in_recovery"
+    );
+}
+
+#[test]
+fn data_mutating_commands_have_missing_dir_backstop() {
+    const SOURCE: &str = include_str!("../src/commands.rs");
+    // Every data-mutating command must call the unified
+    // `require_data_dir_usable` backstop at its entry — before any file
+    // side effect — so a future window/shortcut/invoke path can't slip a
+    // write/apply through while the custom data dir is missing. Guarding at
+    // the entry (not the persistence layer) is required: e.g. clear_trashcan
+    // deletes entry files before it would persist. Guard against removals.
+    let calls = SOURCE.matches("require_data_dir_usable()").count();
+    assert!(
+        calls >= 20,
+        "expected >=20 require_data_dir_usable() entry guards in commands.rs (one per data-mutating command, incl. history journals); found {calls}"
     );
 }
 
