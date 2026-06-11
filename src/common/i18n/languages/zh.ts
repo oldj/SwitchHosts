@@ -153,6 +153,7 @@ const lang: LanguageDict = {
   protocol: '协议',
   proxy: '代理',
   quit: '退出',
+  quit_on_close: '关闭主窗口时退出应用',
   read_only: '只读',
   redo: '重做',
   refresh: '刷新',

@@ -46,6 +46,7 @@ pub struct AppConfig {
     pub multi_chose_folder_switch_all: bool,
     pub tray_mini_window: bool,
     pub lightweight_mode: bool,
+    pub quit_on_close: bool,
 
     // find window
     pub find_is_regexp: bool,
@@ -93,6 +94,7 @@ impl Default for AppConfig {
             multi_chose_folder_switch_all: false,
             tray_mini_window: true,
             lightweight_mode: false,
+            quit_on_close: false,
 
             find_is_regexp: false,
             find_is_ignore_case: false,
@@ -299,6 +301,23 @@ mod tests {
             .unwrap();
 
         assert!(cfg.lightweight_mode);
+    }
+
+    #[test]
+    fn defaults_quit_on_close_to_false() {
+        let cfg = AppConfig::default();
+
+        assert!(!cfg.quit_on_close);
+    }
+
+    #[test]
+    fn apply_partial_accepts_quit_on_close() {
+        let mut cfg = AppConfig::default();
+
+        cfg.apply_partial(&json!({ "quit_on_close": true }))
+            .unwrap();
+
+        assert!(cfg.quit_on_close);
     }
 
     #[test]

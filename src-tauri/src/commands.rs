@@ -1095,6 +1095,18 @@ pub async fn hide_main_window<R: Runtime>(
     _args: Args,
 ) -> Result<Value, String> {
     if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        let quit_on_close = state
+            .config
+            .lock()
+            .map(|cfg| cfg.quit_on_close)
+            .unwrap_or(false);
+        if quit_on_close {
+            // Frameless Windows/Linux close button routes here; honour
+            // quit-on-close the same way the macOS CloseRequested path does.
+            lifecycle::quit_app(&app);
+            return Ok(Value::Null);
+        }
+
         let lightweight = state
             .config
             .lock()

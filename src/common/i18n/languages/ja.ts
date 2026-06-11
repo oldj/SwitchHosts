@@ -161,6 +161,7 @@ const lang: LanguageDict = {
   protocol: 'プロトコル',
   proxy: 'プロキシ',
   quit: '終了',
+  quit_on_close: 'メインウィンドウを閉じたらアプリを終了する',
   read_only: '読み取り専用',
   redo: 'やり直し',
   refresh: '更新',

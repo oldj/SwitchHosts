@@ -154,6 +154,20 @@ pub fn install_main_window_handlers<R: Runtime>(window: &WebviewWindow<R>) {
                 return;
             }
 
+            // Quit-on-close: when the user opts in (a Windows-style
+            // habit) closing the main window terminates the app instead
+            // of staying resident in the tray / menu bar. Checked before
+            // the lightweight branch so it wins regardless of that mode.
+            let quit_on_close = app_state
+                .config
+                .lock()
+                .map(|cfg| cfg.quit_on_close)
+                .unwrap_or(false);
+            if quit_on_close {
+                quit_app(&app);
+                return;
+            }
+
             let lightweight = app_state
                 .config
                 .lock()

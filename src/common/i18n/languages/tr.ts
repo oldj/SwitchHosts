@@ -161,6 +161,7 @@ export default {
   protocol: 'Protokol',
   proxy: 'Proxy',
   quit: 'Çıkış',
+  quit_on_close: 'Ana pencere kapatıldığında uygulamadan çık',
   read_only: 'Salt okunur',
   redo: 'Yinele',
   refresh: 'Yenile',

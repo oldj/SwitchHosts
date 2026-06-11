@@ -164,6 +164,7 @@ const lang: LanguageDict = {
   protocol: 'Protokoll',
   proxy: 'Proxy',
   quit: 'Beenden',
+  quit_on_close: 'App beim Schließen des Hauptfensters beenden',
   read_only: 'Schreibgeschützt',
   redo: 'Wiederherstellen',
   refresh: 'Auffrischen',

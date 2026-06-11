@@ -433,3 +433,36 @@ fn find_window_hides_native_menu_on_windows_and_linux() {
         "find window should hide its native menu bar on Windows/Linux"
     );
 }
+
+#[test]
+fn quit_on_close_quits_app_from_native_close() {
+    // macOS native close button routes through CloseRequested. When the
+    // user opts into quit-on-close, that branch must terminate the app
+    // (via quit_app) and must NOT prevent_close — the app is exiting.
+    const SOURCE: &str = include_str!("../src/lifecycle.rs");
+    let branch = extract_block_from(SOURCE, "if quit_on_close {")
+        .expect("CloseRequested must have an `if quit_on_close {` branch");
+    assert!(
+        branch.contains("quit_app"),
+        "the quit_on_close close branch must terminate the app via quit_app"
+    );
+    assert!(
+        !branch.contains("prevent_close"),
+        "the quit_on_close branch must NOT prevent_close — the app is exiting"
+    );
+}
+
+#[test]
+fn hide_main_window_quits_app_under_quit_on_close() {
+    // On Windows/Linux the frameless title-bar close button routes through
+    // the hide_main_window command rather than the OS close path, so it
+    // must honour quit_on_close too — otherwise the option would silently
+    // do nothing on the platforms it primarily targets.
+    const SOURCE: &str = include_str!("../src/commands.rs");
+    let body = extract_block_from(SOURCE, "pub async fn hide_main_window")
+        .expect("hide_main_window command must exist");
+    assert!(
+        body.contains("quit_on_close"),
+        "hide_main_window must read quit_on_close so the renderer close button can quit the app"
+    );
+}

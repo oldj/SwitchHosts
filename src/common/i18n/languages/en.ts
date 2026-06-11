@@ -160,6 +160,7 @@ export default {
   protocol: 'Protocol',
   proxy: 'Proxy',
   quit: 'Quit',
+  quit_on_close: 'Quit App When Main Window Is Closed',
   read_only: 'Read Only',
   redo: 'Redo',
   refresh: 'Refresh',

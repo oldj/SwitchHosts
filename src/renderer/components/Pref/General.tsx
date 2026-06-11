@@ -216,6 +216,16 @@ const General = (props: IProps) => {
       ) : null}
 
       <Box w="100%">
+        <Group>
+          <Checkbox
+            checked={data.quit_on_close}
+            onChange={(e) => onChange({ quit_on_close: e.target.checked })}
+            label={lang.quit_on_close}
+          />
+        </Group>
+      </Box>
+
+      <Box w="100%">
         <Checkbox
           checked={data.auto_check_update}
           onChange={(e) => onChange({ auto_check_update: e.target.checked })}

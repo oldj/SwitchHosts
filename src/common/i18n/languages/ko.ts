@@ -156,6 +156,7 @@ export default {
   protocol: '프로토콜',
   proxy: '프록시',
   quit: '종료',
+  quit_on_close: '메인 창을 닫으면 앱 종료',
   read_only: '읽기 전용',
   redo: '재실행',
   refresh: '새로고침',

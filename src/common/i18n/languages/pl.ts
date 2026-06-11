@@ -162,6 +162,7 @@ export default {
   protocol: 'Protokół',
   proxy: 'Proxy',
   quit: 'Zamknij',
+  quit_on_close: 'Zamknij aplikację po zamknięciu głównego okna',
   read_only: 'Tylko do odczytu',
   redo: 'Powtórz',
   refresh: 'Odśwież',
