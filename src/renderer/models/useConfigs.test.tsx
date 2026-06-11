@@ -102,6 +102,9 @@ describe('useConfigs', () => {
   })
 
   it('updateConfigs surfaces backend failures via showErrorNotification and rethrows', async () => {
+    // The catch block logs a diagnostic via console.error; that is the
+    // expected behavior on this path, so silence it to keep test output clean.
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mocks.actions.configUpdate.mockRejectedValue(new Error('disk full'))
     mocks.actions.configAll.mockResolvedValue({ theme: 'system', http_api_on: false })
     const { result } = renderHook(() => useConfigs())
@@ -120,5 +123,6 @@ describe('useConfigs', () => {
     const args = mocks.notify.showErrorNotification.mock.calls[0]?.[0]
     expect(args?.title).toBe('Failed to save configuration')
     expect(args?.message).toBe('disk full')
+    expect(errorSpy).toHaveBeenCalledTimes(1)
   })
 })
