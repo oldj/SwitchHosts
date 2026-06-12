@@ -15,7 +15,7 @@
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use tauri::{
     webview::WebviewWindowBuilder, AppHandle, EventId, Listener, LogicalPosition, LogicalSize,
@@ -42,6 +42,33 @@ const GEOMETRY_PERSIST_THROTTLE_MS: u64 = 200;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
 const MAIN_WINDOW_READY_EVENT: &str = "main_window_ready";
+
+/// Marker flag the autostart plugin appends to the OS login-start entry
+/// (macOS LaunchAgent plist / Windows run key / Linux autostart desktop
+/// file). Its presence in a process's argv is what distinguishes "the
+/// login machinery started me" from "the user opened me" — both for the
+/// current process (see `begin_login_launch_show_suppression`) and for a
+/// duplicate instance reporting in through the single-instance plugin
+/// (see `focus_main_on_second_instance`).
+pub const LOGIN_LAUNCH_ARG: &str = "--launched-at-login";
+
+/// How long after a hidden login launch the main window ignores macOS
+/// `Reopen` events. Right after login, loginwindow's window-restore and
+/// stale login items "open" the already-running app, which AppKit
+/// delivers as the same reopen Apple Event a Dock click produces (#997).
+/// Those system pings land within the login storm, so a generous grace
+/// window starting at process launch covers them; a real user can always
+/// summon the window from the tray, which bypasses — and permanently
+/// clears — the suppression.
+const LOGIN_LAUNCH_SHOW_SUPPRESS_WINDOW: Duration = Duration::from_secs(30);
+
+/// Deadline before which reopen-driven shows are ignored. Armed once
+/// from `lib.rs::setup` when a login-launched session keeps the main
+/// window uncreated under `hide_at_launch`; never armed for manual
+/// launches, so Dock clicks in ordinary sessions are unaffected.
+/// Cleared by the first `show_main_window` from any explicit-intent
+/// path (tray, renderer command, menu).
+static LOGIN_LAUNCH_SHOW_SUPPRESS_UNTIL: Mutex<Option<Instant>> = Mutex::new(None);
 
 /// How long the lazy-rebuild path waits for the renderer's
 /// `main_window_ready` event before falling back to showing the window
@@ -215,7 +242,40 @@ pub fn hide_app_from_menu<R: Runtime>(app: &AppHandle<R>) {
     hide_app_after_restoring_window_hide_policy(app);
 }
 
+/// Arm the login-launch grace window. Only `lib.rs::setup` calls this,
+/// and only when this process was started by the OS login machinery
+/// (`LOGIN_LAUNCH_ARG` in argv) *and* `hide_at_launch` skipped creating
+/// the main window — the one state where a post-login reopen ping must
+/// not be mistaken for a user's Dock click.
+pub fn begin_login_launch_show_suppression() {
+    *LOGIN_LAUNCH_SHOW_SUPPRESS_UNTIL
+        .lock()
+        .expect("login-launch suppression mutex poisoned") =
+        Some(Instant::now() + LOGIN_LAUNCH_SHOW_SUPPRESS_WINDOW);
+}
+
+#[cfg(target_os = "macos")]
+fn login_launch_show_suppressed() -> bool {
+    LOGIN_LAUNCH_SHOW_SUPPRESS_UNTIL
+        .lock()
+        .expect("login-launch suppression mutex poisoned")
+        .map(|deadline| Instant::now() < deadline)
+        .unwrap_or(false)
+}
+
+fn clear_login_launch_show_suppression() {
+    LOGIN_LAUNCH_SHOW_SUPPRESS_UNTIL
+        .lock()
+        .expect("login-launch suppression mutex poisoned")
+        .take();
+}
+
 pub fn show_main_window<R: Runtime + 'static>(app: &AppHandle<R>) {
+    // Reaching here means an explicit show intent (tray, renderer
+    // command, menu) or a gate-approved system signal — either way the
+    // login-launch grace window is over for good.
+    clear_login_launch_show_suppression();
+
     #[cfg(target_os = "macos")]
     {
         let _ = app.show();
@@ -981,12 +1041,78 @@ fn schedule_main_window_restore_after_dock_policy<R: Runtime>(
 /// Callback registered with `tauri-plugin-single-instance`. A second
 /// invocation of SwitchHosts focuses the existing main window instead
 /// of creating a duplicate.
+///
+/// Exception (#997): when macOS login restore and the login LaunchAgent
+/// race, whichever process loses the single-instance race arrives here —
+/// and if that loser is the LaunchAgent's, its argv carries
+/// `LOGIN_LAUNCH_ARG`. That signal comes from the login machinery, not
+/// the user, so honouring it would pop the main window a hide_at_launch
+/// user asked to keep hidden. A user-initiated second launch (Finder,
+/// `open -n`, desktop shortcut) never carries the marker and still
+/// focuses the window immediately, at any time.
 pub fn focus_main_on_second_instance<R: Runtime + 'static>(
     app: &AppHandle<R>,
-    _args: Vec<String>,
+    args: Vec<String>,
     _cwd: String,
 ) {
+    if args.iter().any(|arg| arg == LOGIN_LAUNCH_ARG) {
+        log::info!(
+            "ignoring duplicate login-launch instance — the login machinery started it, not the user"
+        );
+        return;
+    }
     show_main_window(app);
+}
+
+/// Show path for macOS `RunEvent::Reopen`. A Dock click on an app whose
+/// main window is hidden must re-show it — but right after a hidden
+/// login launch, loginwindow's restore machinery delivers the exact same
+/// reopen Apple Event (#997), and AppKit gives us nothing to tell them
+/// apart. The login-launch grace window armed at setup is that signal:
+/// inside it, reopen pings are system noise; outside it (or in any
+/// manually-started session, where it is never armed) a reopen is a real
+/// user action and shows the window immediately.
+#[cfg(target_os = "macos")]
+pub fn show_main_on_reopen<R: Runtime + 'static>(app: &AppHandle<R>) {
+    if login_launch_show_suppressed() {
+        log::info!("ignoring macOS reopen during the login-launch grace window");
+        return;
+    }
+    show_main_window(app);
+}
+
+/// One-time migration for existing users (#997): LaunchAgent plists
+/// written before `LOGIN_LAUNCH_ARG` existed start the app with a bare
+/// argv, so neither the duplicate-instance marker check nor the grace
+/// window can engage. If the agent file is live but predates the marker,
+/// rewrite it through the autostart plugin — idempotent: same label,
+/// same path, args now included.
+#[cfg(target_os = "macos")]
+pub fn ensure_launch_agent_carries_login_launch_arg<R: Runtime>(app: &AppHandle<R>) {
+    use tauri_plugin_autostart::ManagerExt;
+
+    let Some(home) = dirs::home_dir() else {
+        return;
+    };
+    let plist = home
+        .join("Library")
+        .join("LaunchAgents")
+        .join(format!("{}.plist", app.package_info().name));
+    let needs_marker = match std::fs::read_to_string(&plist) {
+        Ok(contents) => !contents.contains(LOGIN_LAUNCH_ARG),
+        // No agent file — launch-at-login is off (or was turned off in
+        // System Settings); nothing to migrate.
+        Err(_) => false,
+    };
+    if !needs_marker {
+        return;
+    }
+    match app.autolaunch().enable() {
+        Ok(()) => log::info!("rewrote the login LaunchAgent to carry the login-launch marker"),
+        Err(e) => {
+            log::warn!("failed to rewrite the login LaunchAgent with the login-launch marker: {e}")
+        }
+    }
 }
 
 /// When SwitchHosts is configured to start through a macOS LaunchAgent,

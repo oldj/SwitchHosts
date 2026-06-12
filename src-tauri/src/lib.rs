@@ -135,9 +135,12 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             lifecycle::focus_main_on_second_instance(app, args, cwd)
         }))
+        // The login-start entry (LaunchAgent / run key / autostart file)
+        // passes a marker flag so a login launch is distinguishable from
+        // the user opening the app — see LOGIN_LAUNCH_ARG in lifecycle.
         .plugin(tauri_plugin_autostart::init(
             MacosLauncher::LaunchAgent,
-            None,
+            Some(vec![lifecycle::LOGIN_LAUNCH_ARG]),
         ))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -287,6 +290,11 @@ pub fn run() {
                 .lock()
                 .map(|cfg| cfg.hide_at_launch)
                 .unwrap_or(false);
+            // Did the OS login machinery start this process? The autostart
+            // entry appends LOGIN_LAUNCH_ARG exactly so this is knowable.
+            // (`args_os` + `to_str`: never panic on non-Unicode argv.)
+            let launched_at_login_session = std::env::args_os()
+                .any(|arg| arg.to_str() == Some(lifecycle::LOGIN_LAUNCH_ARG));
             // If the recorded data directory is unavailable (it went missing,
             // or its pointer is corrupt), force the main window to appear
             // (even under hide_at_launch) so the renderer can show the
@@ -299,6 +307,16 @@ pub fn run() {
                 // "stay in tray" rather than exit. The flag is cleared
                 // by `show_main_window` after a successful rebuild.
                 lifecycle::enter_hidden_to_tray_state();
+                // A hidden login launch is the one state where macOS sends
+                // show signals nobody asked for: right after login,
+                // loginwindow's restore and stale login items "open" the
+                // already-running app, delivered as the same Reopen event a
+                // Dock click produces (#997). Arm the grace window so those
+                // pings can't undo hide_at_launch; manual launches never
+                // arm it, so their Dock clicks are never delayed.
+                if launched_at_login_session {
+                    lifecycle::begin_login_launch_show_suppression();
+                }
             } else {
                 let main = lifecycle::create_main_window(&app_handle, app_state.inner())?;
 
@@ -312,11 +330,7 @@ pub fn run() {
                 let ready_flag = did_show_main.clone();
                 app.listen("main_window_ready", move |_event| {
                     if !ready_flag.swap(true, Ordering::SeqCst) {
-                        lifecycle::focus_main_on_second_instance(
-                            &ready_app,
-                            Vec::new(),
-                            String::new(),
-                        );
+                        lifecycle::show_main_window(&ready_app);
                     }
                 });
 
@@ -327,11 +341,7 @@ pub fn run() {
                     if !fallback_flag.swap(true, Ordering::SeqCst) {
                         let app = fallback_app.clone();
                         let _ = fallback_app.run_on_main_thread(move || {
-                            lifecycle::focus_main_on_second_instance(
-                                &app,
-                                Vec::new(),
-                                String::new(),
-                            );
+                            lifecycle::show_main_window(&app);
                         });
                     }
                 });
@@ -378,14 +388,11 @@ pub fn run() {
             // `message.on('active_main_window', onActive)` handler in
             // `src/main/main.ts`; we mirror it via the global event
             // bus so the renderer's existing call sites keep working
-            // unchanged.
+            // unchanged. Explicit user intent — never gated, and it
+            // clears the login-launch grace window.
             let active_main_app = app_handle.clone();
             app.listen("active_main_window", move |_event| {
-                lifecycle::focus_main_on_second_instance(
-                    &active_main_app,
-                    Vec::new(),
-                    String::new(),
-                );
+                lifecycle::show_main_window(&active_main_app);
             });
 
             // When the recorded data directory is unavailable (it went
@@ -456,6 +463,13 @@ pub fn run() {
                 }
             }
             lifecycle::apply_launch_at_login_relaunch_policy(&app_handle, launch_at_login);
+            // Existing users' LaunchAgent plists predate the login-launch
+            // marker; rewrite them once so the #997 protections can engage
+            // on the next login.
+            #[cfg(target_os = "macos")]
+            if launch_at_login {
+                lifecycle::ensure_launch_agent_carries_login_launch_arg(&app_handle);
+            }
 
             Ok(())
         })
@@ -557,7 +571,10 @@ pub fn run() {
     //   * Reopen (macOS) — clicking the Dock icon for an app whose
     //     main window is hidden should re-show it. Tauri does not do
     //     this automatically; has_visible_windows == false means the
-    //     OS didn't find any windows to bring forward.
+    //     OS didn't find any windows to bring forward. Routed through
+    //     show_main_on_reopen so the reopen pings loginwindow sends
+    //     right after a hidden login launch don't undo hide_at_launch
+    //     (#997) — see the login-launch grace window in lifecycle.
     app.run(|app_handle, event| match event {
         RunEvent::WindowEvent {
             ref label,
@@ -581,7 +598,7 @@ pub fn run() {
             ..
         } => {
             if !has_visible_windows {
-                lifecycle::focus_main_on_second_instance(app_handle, Vec::new(), String::new());
+                lifecycle::show_main_on_reopen(app_handle);
             }
         }
         _ => {}

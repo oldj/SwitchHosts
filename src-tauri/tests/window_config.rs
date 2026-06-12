@@ -178,16 +178,11 @@ fn macos_main_window_disables_appkit_window_restoration() {
 }
 
 #[test]
-fn launch_at_login_uses_macos_relaunch_policy_instead_of_time_suppression() {
+fn launch_at_login_keeps_macos_relaunch_policy_in_sync() {
     const LIFECYCLE: &str = include_str!("../src/lifecycle.rs");
     const LIB: &str = include_str!("../src/lib.rs");
     const COMMANDS: &str = include_str!("../src/commands.rs");
 
-    assert!(
-        !LIFECYCLE.contains("SUPPRESS_AUTO_SHOW_UNTIL_MS")
-            && !LIFECYCLE.contains("HIDE_AT_LAUNCH_AUTO_SHOW_SUPPRESS_MS"),
-        "hide_at_launch must not rely on a startup time window because that also suppresses real Dock clicks"
-    );
     assert!(
         LIFECYCLE.contains("disableRelaunchOnLogin")
             && LIFECYCLE.contains("enableRelaunchOnLogin"),
@@ -201,18 +196,108 @@ fn launch_at_login_uses_macos_relaunch_policy_instead_of_time_suppression() {
 }
 
 #[test]
-fn dock_reopen_still_shows_main_window_immediately() {
-    const SOURCE: &str = include_str!("../src/lifecycle.rs");
+fn login_launch_sessions_are_marked_via_autostart_argv() {
+    const LIFECYCLE: &str = include_str!("../src/lifecycle.rs");
+    const LIB: &str = include_str!("../src/lib.rs");
 
-    let focus_body = extract_block_from(SOURCE, "pub fn focus_main_on_second_instance")
-        .expect("lifecycle must define focus_main_on_second_instance");
     assert!(
-        focus_body.contains("show_main_window(app)"),
-        "Dock Reopen and second-instance signals should still funnel to the normal main-window show path"
+        LIFECYCLE.contains("pub const LOGIN_LAUNCH_ARG"),
+        "lifecycle must define the login-launch argv marker shared by the autostart entry and its consumers"
     );
     assert!(
-        !focus_body.contains("return;") && !focus_body.contains("now_ms()"),
-        "focus_main_on_second_instance must not contain a startup suppression early-return that blocks a real Dock click"
+        LIB.contains("Some(vec![lifecycle::LOGIN_LAUNCH_ARG])"),
+        "the autostart plugin must register the login-launch marker so OS login starts are distinguishable from user opens (#997)"
+    );
+    assert!(
+        LIB.contains("std::env::args_os()")
+            && LIB.contains("arg.to_str() == Some(lifecycle::LOGIN_LAUNCH_ARG)"),
+        "setup must detect the login-launch marker in this process's argv (args_os so non-Unicode argv cannot panic)"
+    );
+    assert!(
+        LIFECYCLE.contains("fn ensure_launch_agent_carries_login_launch_arg")
+            && LIB.contains("ensure_launch_agent_carries_login_launch_arg(&app_handle)"),
+        "existing users' marker-less LaunchAgent plists must be migrated at startup or the #997 protections never engage for them"
+    );
+}
+
+#[test]
+fn login_launch_grace_window_only_arms_for_hidden_login_sessions() {
+    const LIB: &str = include_str!("../src/lib.rs");
+
+    // The grace window must be armed inside the hide_at_launch branch,
+    // gated on the login-launch marker — and nowhere else. Arming it in
+    // a manual session would reintroduce the "Dock click does nothing"
+    // failure that got the earlier blanket time-suppression design
+    // rejected; the marker gate is what makes a time window acceptable.
+    let if_body = extract_block_from(LIB, "if hide_at_launch")
+        .expect("setup must contain an `if hide_at_launch` branch");
+    let arm_block = extract_block_from(if_body, "if launched_at_login_session")
+        .expect("the hide_at_launch branch must gate grace-window arming on the login-launch session marker");
+    assert!(
+        arm_block.contains("begin_login_launch_show_suppression"),
+        "a hidden login-launched session must arm the login-launch grace window (#997)"
+    );
+    assert_eq!(
+        LIB.matches("begin_login_launch_show_suppression").count(),
+        1,
+        "the grace window must be armed only from the hidden login-launch path — any other call site risks suppressing real user actions"
+    );
+}
+
+#[test]
+fn second_instance_ignores_duplicate_login_launch_instances() {
+    const LIFECYCLE: &str = include_str!("../src/lifecycle.rs");
+
+    let focus_body = extract_block_from(LIFECYCLE, "pub fn focus_main_on_second_instance")
+        .expect("lifecycle must define focus_main_on_second_instance");
+    assert!(
+        focus_body.contains("LOGIN_LAUNCH_ARG"),
+        "a duplicate instance carrying the login-launch marker is the login machinery double-starting the app (#997), not a user show request"
+    );
+    assert!(
+        focus_body.contains("show_main_window(app)"),
+        "an unmarked second launch is a real user action and must still focus the main window immediately"
+    );
+    assert!(
+        !focus_body.contains("login_launch_show_suppressed"),
+        "the second-instance path must not consult the time-based grace window — an unmarked manual relaunch during it must keep working on every platform"
+    );
+}
+
+#[test]
+fn dock_reopen_shows_main_window_unless_in_login_grace_window() {
+    const LIFECYCLE: &str = include_str!("../src/lifecycle.rs");
+    const LIB: &str = include_str!("../src/lib.rs");
+
+    let reopen_body = extract_block_from(LIFECYCLE, "pub fn show_main_on_reopen")
+        .expect("lifecycle must define show_main_on_reopen");
+    assert!(
+        reopen_body.contains("login_launch_show_suppressed"),
+        "macOS reopen must be gated on the login-launch grace window — loginwindow's post-login pings arrive as the same event as a Dock click (#997)"
+    );
+    assert!(
+        reopen_body.contains("show_main_window(app)"),
+        "outside the grace window a reopen is a real Dock click and must show the main window"
+    );
+    assert!(
+        LIB.contains("lifecycle::show_main_on_reopen(app_handle)"),
+        "the RunEvent::Reopen hook must route through the gated reopen path"
+    );
+
+    // Explicit-intent paths must bypass the gate entirely and clear it,
+    // so a user summoning the window from the tray is never blocked and
+    // ends the grace window for good.
+    let show_body = extract_block_from(LIFECYCLE, "pub fn show_main_window<")
+        .expect("lifecycle must define show_main_window");
+    assert!(
+        show_body.contains("clear_login_launch_show_suppression"),
+        "show_main_window must clear the login-launch grace window — any explicit show ends it permanently"
+    );
+    let active_block = extract_block_from(LIB, "app.listen(\"active_main_window\"")
+        .expect("setup must listen for active_main_window");
+    assert!(
+        active_block.contains("show_main_window") && !active_block.contains("show_main_on_reopen"),
+        "tray / dialog activation requests are explicit user intent and must not pass through the reopen gate"
     );
 }
 
