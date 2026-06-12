@@ -350,14 +350,22 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Validate macOS signing identity
+      - name: Validate macOS signing secrets
         if: runner.os == 'macOS'
         shell: bash
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           if [ -z "$APPLE_SIGNING_IDENTITY" ]; then
             echo "::error::Repository secret APPLE_SIGNING_IDENTITY is not set"
+            exit 1
+          fi
+          # APPLE_TEAM_ID moved from a hardcoded literal to a secret.
+          # An empty secret would silently break notarization (app and
+          # DMG), so fail loudly here the same way we do for the identity.
+          if [ -z "$APPLE_TEAM_ID" ]; then
+            echo "::error::Repository secret APPLE_TEAM_ID is not set"
             exit 1
           fi
 
@@ -372,7 +380,7 @@ jobs:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: J5J6USUX2F
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # Tauri updater signing
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -396,6 +404,67 @@ jobs:
           # job is the single writer.
           includeUpdaterJson: false
           args: ${{ matrix.args }}
+
+      # Notarize and staple the DMG itself. tauri-action (via Tauri's
+      # bundler) notarizes and staples only the .app *inside* the DMG;
+      # the .dmg container is merely signed. A quarantined but un-stapled
+      # DMG forces Gatekeeper to verify notarization ONLINE on every
+      # open — an unreliable round-trip that fails intermittently with
+      # "… is damaged and can't be opened. You should move it to the
+      # Trash." (observed on a v5.0.1-beta.10 arm64 download while the
+      # universal DMG from the same run opened fine). Submitting the DMG
+      # to notarytool and stapling the ticket makes it verify offline and
+      # deterministically. We staple the freshly-built local DMG and
+      # re-upload over the asset tauri-action already pushed; the later
+      # "Rename release assets" step renames in place via API PATCH (no
+      # byte change), so the stapled bytes survive the rename.
+      - name: Notarize and staple DMG (macOS)
+        if: runner.os == 'macOS' && needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.prep.outputs.tag }}"
+          REPO="${{ github.repository }}"
+          VERSION=$(node -p "require('./package.json').version")
+
+          # Collect this version's DMGs up-front so a glob miss fails
+          # loudly instead of silently stapling nothing (a macOS build
+          # must produce a DMG). Scope by VERSION so a stale DMG left in
+          # the cached target dir from an earlier build can't be stapled
+          # and re-uploaded over the current one.
+          DMGS=()
+          while IFS= read -r DMG; do
+            DMGS+=("$DMG")
+          done < <(find src-tauri/target -path '*/bundle/dmg/*.dmg' \
+                     -name "SwitchHosts_${VERSION}_*.dmg")
+
+          if [ "${#DMGS[@]}" -eq 0 ]; then
+            echo "::error::No DMG matching SwitchHosts_${VERSION}_*.dmg under src-tauri/target/*/bundle/dmg/"
+            exit 1
+          fi
+
+          for DMG in "${DMGS[@]}"; do
+            echo "Notarizing DMG: $DMG"
+            # --wait blocks until Apple finishes and exits non-zero on a
+            # rejected submission, so a bad DMG fails the job here.
+            xcrun notarytool submit "$DMG" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" \
+              --wait
+
+            echo "Stapling: $DMG"
+            xcrun stapler staple "$DMG"
+            xcrun stapler validate "$DMG"
+
+            echo "Re-uploading stapled DMG: $(basename "$DMG")"
+            gh release upload "$TAG" "$DMG" --repo "$REPO" --clobber
+          done
 
       # Create updater archives for Windows and Linux.
       # tauri-action only creates .app.tar.gz for macOS. Windows and
