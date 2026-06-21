@@ -55,6 +55,32 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+# Serialize runs that target the same tag. The race we are fixing is
+# *intra-run* across the 8 matrix jobs — separate jobs racing to POST
+# /releases — and the new `create-release` job below handles that.
+# This block is the *inter-run* safety net.
+#
+# We group by the *resolved tag*, not by `github.ref`. The same tag
+# can be released two ways:
+#   - `push: tags: ['v*']`        → github.ref = refs/tags/v5.0.1-beta.1
+#   - `workflow_dispatch` w/ tag  → github.ref = refs/heads/<branch>
+# Grouping by `github.ref` would put these in *different* concurrency
+# groups, so a tag push and a manual dispatch for the SAME tag could
+# run in parallel and both call create-release's POST /releases —
+# re-introducing the race in a rarer path. The expression below picks
+# the dispatch input first, then falls back to `github.ref_name`
+# (which is the short tag name on a tag push, or the branch name on a
+# dispatch dry-run). For a dispatch dry-run with no tag input,
+# different branches still get different groups so dry-runs from
+# different branches can run in parallel.
+#
+# cancel-in-progress=false because a release build takes ~10 min per
+# platform with signing+notarization; a mid-flight cancel would leave
+# a half-populated draft requiring manual cleanup.
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -145,8 +171,113 @@ jobs:
       - name: Run all tests
         run: npm run test:all
 
+  # ── Create the draft release ONCE before the matrix builds ────────
+  # The 8 matrix `release` jobs used to each call tauri-action with
+  # `tagName` + `releaseDraft: true`. Under that contract, tauri-action
+  # does its own find-or-create on the tag — and when the draft does
+  # not exist yet, multiple matrix jobs racing to POST /releases lose
+  # to GitHub's "already_exists" 422 and fail. This job is the single
+  # writer that creates (or re-uses on a re-run) the draft and emits
+  # `release_id`; the matrix consumes it and tauri-action's find-or-
+  # create branch is bypassed entirely.
+  create-release:
+    needs: [prep, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release_id: ${{ steps.create.outputs.release_id }}
+    steps:
+      - name: Generate release notes
+        id: notes
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.prep.outputs.tag }}"
+          REPO="${{ github.repository }}"
+          BODY_FILE="$RUNNER_TEMP/release_body.md"
+          if ! gh api -X POST "repos/$REPO/releases/generate-notes" \
+            -f tag_name="$TAG" --jq '.body // ""' > "$BODY_FILE"; then
+            echo "::error::Failed to generate release notes for $TAG"
+            exit 1
+          fi
+          if [ ! -s "$BODY_FILE" ]; then
+            echo "::error::Generated release notes for $TAG are empty"
+            exit 1
+          fi
+          echo "body_file=$BODY_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Create or refresh draft release
+        id: create
+        if: needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.prep.outputs.tag }}"
+          REPO="${{ github.repository }}"
+          NAME="SwitchHosts $TAG"
+          # Pre-release if the tag carries a SemVer suffix (e.g. -beta.1).
+          if [[ "$TAG" == *-* ]]; then
+            PRERELEASE=true
+          else
+            PRERELEASE=false
+          fi
+          BODY_FILE="${{ steps.notes.outputs.body_file }}"
+
+          # Use the list+jq approach (same recipe as finalize_release's
+          # old Resolve release step): `GET /releases/tags/$TAG` returns
+          # 404 for drafts, and our releases are always created as
+          # drafts. We must iterate the full list to find a draft by
+          # tag_name.
+          RELEASE_ID=$(gh api "repos/$REPO/releases" --paginate \
+            --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -1)
+
+          if [ -n "$RELEASE_ID" ]; then
+            # A release for this tag exists. We accept it ONLY if it
+            # is still a draft — re-running over a draft is the
+            # normal recovery path. If it has been promoted to
+            # published, fail loudly: re-running would have downstream
+            # (matrix uploads, finalize_release re-signing, updater-
+            # manifest --clobber) silently overwrite the assets of a
+            # release users are already updating from. To intentionally
+            # replace a published release's assets, demote it back to
+            # draft in the GitHub UI first, then re-run.
+            CURRENT_DRAFT=$(gh api "repos/$REPO/releases/$RELEASE_ID" --jq '.draft')
+            if [ "$CURRENT_DRAFT" != "true" ]; then
+              echo "::error::Release $TAG (id=$RELEASE_ID) is already published. Refusing to overwrite its assets. Demote to draft in the GitHub UI to allow a re-run."
+              exit 1
+            fi
+            echo "Re-using existing draft release $RELEASE_ID for $TAG"
+            # Refresh name/body/prerelease to whatever this run computed.
+            gh api -X PATCH "repos/$REPO/releases/$RELEASE_ID" \
+              -f name="$NAME" \
+              -F prerelease=$PRERELEASE \
+              --field body=@"$BODY_FILE" --silent
+          else
+            echo "Creating new draft release for $TAG"
+            # target_commitish pins the release UI's source-of-truth
+            # commit to the tag's commit. Without it GitHub picks the
+            # default branch HEAD, which can be misleading on re-runs
+            # or on tags created from a non-default branch.
+            RELEASE_ID=$(gh api -X POST "repos/$REPO/releases" \
+              -f tag_name="$TAG" \
+              -f target_commitish="${{ github.sha }}" \
+              -f name="$NAME" \
+              -F draft=true \
+              -F prerelease=$PRERELEASE \
+              --field body=@"$BODY_FILE" \
+              --jq '.id')
+          fi
+
+          echo "release_id=$RELEASE_ID" >> "$GITHUB_OUTPUT"
+
   release:
-    needs: [test, prep]
+    needs: [prep, test, create-release]
 
     strategy:
       fail-fast: false
@@ -219,44 +350,24 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Validate macOS signing identity
+      - name: Validate macOS signing secrets
         if: runner.os == 'macOS'
         shell: bash
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           if [ -z "$APPLE_SIGNING_IDENTITY" ]; then
             echo "::error::Repository secret APPLE_SIGNING_IDENTITY is not set"
             exit 1
           fi
-
-      - name: Generate release notes
-        id: release_notes
-        if: needs.prep.outputs.tag != ''
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${{ needs.prep.outputs.tag }}"
-          REPO="${{ github.repository }}"
-
-          if ! NOTES=$(gh api -X POST "repos/$REPO/releases/generate-notes" \
-            -f tag_name="$TAG" \
-            --jq '.body // ""'); then
-            echo "::error::Failed to generate release notes for $TAG"
+          # APPLE_TEAM_ID moved from a hardcoded literal to a secret.
+          # An empty secret would silently break notarization (app and
+          # DMG), so fail loudly here the same way we do for the identity.
+          if [ -z "$APPLE_TEAM_ID" ]; then
+            echo "::error::Repository secret APPLE_TEAM_ID is not set"
             exit 1
           fi
-
-          if [ -z "$NOTES" ]; then
-            echo "::error::Generated release notes for $TAG are empty"
-            exit 1
-          fi
-
-          {
-            echo "body<<__SWITCHHOSTS_RELEASE_NOTES__"
-            printf '%s\n' "$NOTES"
-            echo "__SWITCHHOSTS_RELEASE_NOTES__"
-          } >> "$GITHUB_OUTPUT"
 
       - name: Build and release (Tauri)
         id: tauri
@@ -269,25 +380,91 @@ jobs:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: J5J6USUX2F
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # Tauri updater signing
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ needs.prep.outputs.tag }}
-          releaseName: "SwitchHosts ${{ needs.prep.outputs.tag }}"
-          releaseBody: ${{ steps.release_notes.outputs.body || 'See the assets below to download and install this version.' }}
-          releaseDraft: true
-          # Mark anything with a SemVer pre-release suffix (e.g.
-          # v5.0.0-beta.23) as prerelease. Drafts hide assets until
-          # we manually publish, but once we do, GitHub treats
-          # prerelease=false as the project's "latest release" and
-          # surfaces it through /releases/latest/download/latest.json
-          # — beta builds must opt out of that path so stable users
-          # don't auto-update into them.
-          prerelease: ${{ contains(needs.prep.outputs.tag, '-') }}
-          includeUpdaterJson: true
+          # Passing `releaseId` makes tauri-action skip its built-in
+          # find-or-create branch (see src/index.ts: the create path is
+          # guarded by `if (tagName && !releaseId)`), so the 8 matrix
+          # jobs no longer race to POST /releases. In dry-run mode
+          # (`needs.prep.outputs.tag == ''`) `release_id` is the empty
+          # string, tauri-action's upload branch is skipped, and the
+          # build still runs — preserving the existing dry-run smoke
+          # test. `tagName`, `releaseName`, `releaseBody`,
+          # `releaseDraft`, and `prerelease` are intentionally absent:
+          # they only take effect when tauri-action creates the release
+          # itself, which it no longer does for us.
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          # We generate the final latest.json ourselves in the
+          # `updater-manifest` job. Letting tauri-action also write a
+          # per-matrix-job latest.json would have 8 jobs racing to write
+          # the same asset on the draft. Disable it here; the manifest
+          # job is the single writer.
+          includeUpdaterJson: false
           args: ${{ matrix.args }}
+
+      # Notarize and staple the DMG itself. tauri-action (via Tauri's
+      # bundler) notarizes and staples only the .app *inside* the DMG;
+      # the .dmg container is merely signed. A quarantined but un-stapled
+      # DMG forces Gatekeeper to verify notarization ONLINE on every
+      # open — an unreliable round-trip that fails intermittently with
+      # "… is damaged and can't be opened. You should move it to the
+      # Trash." (observed on a v5.0.1-beta.10 arm64 download while the
+      # universal DMG from the same run opened fine). Submitting the DMG
+      # to notarytool and stapling the ticket makes it verify offline and
+      # deterministically. We staple the freshly-built local DMG and
+      # re-upload over the asset tauri-action already pushed; the later
+      # "Rename release assets" step renames in place via API PATCH (no
+      # byte change), so the stapled bytes survive the rename.
+      - name: Notarize and staple DMG (macOS)
+        if: runner.os == 'macOS' && needs.prep.outputs.tag != ''
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.prep.outputs.tag }}"
+          REPO="${{ github.repository }}"
+          VERSION=$(node -p "require('./package.json').version")
+
+          # Collect this version's DMGs up-front so a glob miss fails
+          # loudly instead of silently stapling nothing (a macOS build
+          # must produce a DMG). Scope by VERSION so a stale DMG left in
+          # the cached target dir from an earlier build can't be stapled
+          # and re-uploaded over the current one.
+          DMGS=()
+          while IFS= read -r DMG; do
+            DMGS+=("$DMG")
+          done < <(find src-tauri/target -path '*/bundle/dmg/*.dmg' \
+                     -name "SwitchHosts_${VERSION}_*.dmg")
+
+          if [ "${#DMGS[@]}" -eq 0 ]; then
+            echo "::error::No DMG matching SwitchHosts_${VERSION}_*.dmg under src-tauri/target/*/bundle/dmg/"
+            exit 1
+          fi
+
+          for DMG in "${DMGS[@]}"; do
+            echo "Notarizing DMG: $DMG"
+            # --wait blocks until Apple finishes and exits non-zero on a
+            # rejected submission, so a bad DMG fails the job here.
+            xcrun notarytool submit "$DMG" \
+              --apple-id "$APPLE_ID" \
+              --password "$APPLE_PASSWORD" \
+              --team-id "$APPLE_TEAM_ID" \
+              --wait
+
+            echo "Stapling: $DMG"
+            xcrun stapler staple "$DMG"
+            xcrun stapler validate "$DMG"
+
+            echo "Re-uploading stapled DMG: $(basename "$DMG")"
+            gh release upload "$TAG" "$DMG" --repo "$REPO" --clobber
+          done
 
       # Create updater archives for Windows and Linux.
       # tauri-action only creates .app.tar.gz for macOS. Windows and
@@ -327,11 +504,13 @@ jobs:
 
   # ── Finalize release after all platform builds complete ───────────
   finalize_release:
-    needs: [release, prep]
+    needs: [release, prep, create-release]
     if: ${{ needs.release.result == 'success' }}
     runs-on: ubuntu-latest
+    # Re-export create-release's release_id so updater-manifest can keep
+    # reading `needs.finalize_release.outputs.release_id` unchanged.
     outputs:
-      release_id: ${{ steps.release.outputs.id }}
+      release_id: ${{ needs.create-release.outputs.release_id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -347,23 +526,6 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Resolve release
-        id: release
-        if: needs.prep.outputs.tag != ''
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${{ needs.prep.outputs.tag }}"
-          REPO="${{ github.repository }}"
-          RELEASE_ID=$(gh api "repos/$REPO/releases" --paginate \
-            --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -1)
-          if [ -z "$RELEASE_ID" ]; then
-            echo "::error::No release found for tag $TAG"
-            exit 1
-          fi
-          echo "id=$RELEASE_ID" >> "$GITHUB_OUTPUT"
-
       # Sign updater archives once, after every matrix build has uploaded its assets.
       - name: Sign updater archives
         if: needs.prep.outputs.tag != ''
@@ -374,7 +536,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ needs.prep.outputs.tag }}"
-          RELEASE_ID="${{ steps.release.outputs.id }}"
+          RELEASE_ID="${{ needs.create-release.outputs.release_id }}"
           REPO="${{ github.repository }}"
           # Read VERSION from package.json (the same source of truth
           # tauri-action uses) so we can scope the rest of this step
@@ -536,7 +698,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          RELEASE_ID="${{ steps.release.outputs.id }}"
+          RELEASE_ID="${{ needs.create-release.outputs.release_id }}"
           REPO="${{ github.repository }}"
 
           if [ -z "$RELEASE_ID" ]; then
@@ -632,7 +794,7 @@ jobs:
         run: |
           TAG="${{ needs.prep.outputs.tag }}"
           VERSION=$(node -p "require('./package.json').version")
-          RELEASE_ID="${{ steps.release.outputs.id }}"
+          RELEASE_ID="${{ needs.create-release.outputs.release_id }}"
           REPO="${{ github.repository }}"
           PACKAGE_PREFIX="SwitchHosts-${VERSION}-linux-"
 

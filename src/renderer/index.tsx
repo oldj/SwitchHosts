@@ -8,6 +8,7 @@ import {
   Drawer,
   MantineColorsTuple,
   MantineProvider,
+  Modal,
   SegmentedControl,
   Select,
   Tooltip,
@@ -87,6 +88,15 @@ const theme = createTheme({
       styles: {
         label: {
           fontWeight: 400,
+        },
+      },
+    }),
+    // Mantine renders modal titles at regular weight; make them semibold so
+    // the title stands out from the body text.
+    Modal: Modal.extend({
+      styles: {
+        title: {
+          fontWeight: 600,
         },
       },
     }),

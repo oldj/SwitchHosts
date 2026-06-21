@@ -23,6 +23,7 @@ pub const MENU_ID_FIND: &str = "app-find";
 pub const MENU_ID_COMMENT: &str = "app-comment";
 pub const MENU_ID_FEEDBACK: &str = "app-feedback";
 pub const MENU_ID_HOMEPAGE: &str = "app-homepage";
+pub const MENU_ID_QUIT_APP: &str = "app-quit";
 #[cfg(target_os = "macos")]
 pub const MENU_ID_HIDE_APP: &str = "app-hide";
 
@@ -88,7 +89,13 @@ fn build_macos_app_menu<R: Runtime>(
         .build(app)?;
     let hide_others = PredefinedMenuItem::hide_others(app, Some(labels.hide_others))?;
     let show_all = PredefinedMenuItem::show_all(app, Some(labels.show_all))?;
-    let quit = PredefinedMenuItem::quit(app, Some(labels.quit_app))?;
+    // Custom Quit item (rather than PredefinedMenuItem::quit) so its
+    // handler can set `is_will_quit` before exiting — letting the
+    // CloseRequested / ExitRequested hooks distinguish a real user-
+    // initiated quit from a window-close in lightweight_mode.
+    let quit = MenuItemBuilder::with_id(MENU_ID_QUIT_APP, labels.quit_app)
+        .accelerator("CmdOrCtrl+Q")
+        .build(app)?;
 
     SubmenuBuilder::new(app, "SwitchHosts")
         .item(&about)
@@ -129,7 +136,11 @@ fn build_file_menu<R: Runtime>(
 
     #[cfg(not(target_os = "macos"))]
     {
-        let quit = PredefinedMenuItem::quit(app, Some(labels.quit))?;
+        // See macOS Quit comment above — same rationale for using a
+        // custom item.
+        let quit = MenuItemBuilder::with_id(MENU_ID_QUIT_APP, labels.quit)
+            .accelerator("CmdOrCtrl+Q")
+            .build(app)?;
         builder = builder.separator().item(&quit);
     }
 

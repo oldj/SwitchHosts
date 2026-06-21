@@ -27,6 +27,9 @@ pub enum StorageError {
 
     #[error("failed to apply {key} to the OS: {reason}")]
     SideEffect { key: String, reason: String },
+
+    #[error("invalid data directory choice: {reason}")]
+    InvalidDataDirChoice { reason: String },
 }
 
 #[allow(dead_code)] // `parse` helper lands in Phase 1B step 2

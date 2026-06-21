@@ -30,7 +30,7 @@ use tauri::{
 };
 
 use crate::i18n::menu_labels;
-use crate::lifecycle::{self, MAIN_WINDOW_LABEL};
+use crate::lifecycle;
 use crate::storage::{manifest::Manifest, AppState, StorageError};
 
 pub const TRAY_ID: &str = "main-tray";
@@ -59,6 +59,19 @@ const TRAY_TOGGLE_DEDUPE_MS: u64 = 300;
 #[cfg(target_os = "macos")]
 const TRAY_GLOBAL_HIDE_SUPPRESS_AFTER_ICON_CLICK_MS: u64 = 150;
 
+/// Windows/Linux dismiss the tray mini window from its `Focused(false)`
+/// event. A freshly shown window briefly loses then regains focus while
+/// the compositor settles — and because the triggering click lands on
+/// the tray icon rather than the window, that settle can deliver a
+/// spurious focus-loss the instant the window appears. When dismissal
+/// only hid the window this was self-correcting (the next click re-
+/// showed it), but now that dismissal *closes* (destroys) the window it
+/// would tear the window down the moment it opens, looping forever.
+/// Ignore focus loss for a short window after an icon-triggered show.
+/// Mirrors macOS's `TRAY_GLOBAL_HIDE_SUPPRESS_AFTER_ICON_CLICK_MS`.
+#[cfg(not(target_os = "macos"))]
+const TRAY_FOCUS_LOSS_SUPPRESS_AFTER_SHOW_MS: u64 = 250;
+
 /// Wall-clock millis of the last auto-hide of the tray window. 0 means
 /// "never". `AtomicU64` keeps it lock-free and safe to read/write from
 /// any thread.
@@ -69,6 +82,12 @@ static LAST_TRAY_AUTO_HIDE_MS: AtomicU64 = AtomicU64::new(0);
 /// from the same physical click.
 #[cfg(target_os = "macos")]
 static LAST_TRAY_ICON_SHOW_CLICK_MS: AtomicU64 = AtomicU64::new(0);
+
+/// Wall-clock millis of the last tray mini-window show on Windows/Linux.
+/// Drives the post-show focus-loss suppression described on
+/// `TRAY_FOCUS_LOSS_SUPPRESS_AFTER_SHOW_MS`.
+#[cfg(not(target_os = "macos"))]
+static LAST_TRAY_SHOW_MS: AtomicU64 = AtomicU64::new(0);
 
 fn now_ms() -> u64 {
     SystemTime::now()
@@ -134,15 +153,22 @@ fn handle_left_click<R: Runtime + 'static>(
     cursor: PhysicalPosition<f64>,
     icon_rect: TauriRect,
 ) {
-    let mini_enabled = {
+    let (mini_enabled, in_recovery) = {
         let state = app.state::<AppState>();
-        state
+        let mini = state
             .config
             .lock()
             .map(|cfg| cfg.tray_mini_window)
-            .unwrap_or(false)
+            .unwrap_or(false);
+        (mini, state.data_dir_recovery.is_some())
     };
-    if mini_enabled {
+    // While the data directory is unavailable (it went missing, or its
+    // pointer is corrupt) we've fallen back to the default root only to
+    // surface the recovery dialog. Never open the tray mini window then — it
+    // would load the fallback data and let the user switch hosts from it,
+    // bypassing the recovery prompt. Funnel the click to the main window
+    // (which shows the recovery dialog) instead.
+    if mini_enabled && !in_recovery {
         // Toggle semantics: a click on the icon while the mini window
         // is open should dismiss it. Tray icon clicks and auto-hide
         // paths can interleave differently across platforms, so handle
@@ -155,7 +181,10 @@ fn handle_left_click<R: Runtime + 'static>(
         //       dismissal sticks.
         if let Some(window) = app.get_webview_window(TRAY_WINDOW_LABEL) {
             if window.is_visible().unwrap_or(false) {
-                let _ = window.hide();
+                // Destroy rather than hide so the webview process is
+                // released; `show_tray_window` lazy-recreates the window
+                // on the next icon click.
+                let _ = window.close();
                 return;
             }
         }
@@ -246,7 +275,7 @@ fn read_hide_dock_icon<R: Runtime>(app: &AppHandle<R>) -> bool {
 
 /// Called from the global `on_menu_event` handler in `lib.rs` when an
 /// id starts with `tray-`. Returns `true` if the id was handled here.
-pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, id: &str) -> bool {
+pub fn handle_menu_event<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) -> bool {
     match id {
         MENU_ID_SHOW_MAIN => {
             show_main_window(app);
@@ -268,17 +297,12 @@ pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, id: &str) -> bool {
     }
 }
 
-fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
+fn show_main_window<R: Runtime + 'static>(app: &AppHandle<R>) {
     lifecycle::show_main_window(app);
 }
 
 fn quit_app<R: Runtime>(app: &AppHandle<R>) {
-    let state = app.state::<AppState>();
-    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        lifecycle::persist_window_geometry(&window, state.inner());
-    }
-    state.is_will_quit.store(true, Ordering::SeqCst);
-    app.exit(0);
+    lifecycle::quit_app(app);
 }
 
 #[cfg(target_os = "macos")]
@@ -435,6 +459,14 @@ fn show_tray_window<R: Runtime>(
     }
     #[cfg(not(target_os = "macos"))]
     {
+        // Stamp the show *before* show()/set_focus() so the suppression
+        // window already covers the whole display+focus phase. If the
+        // compositor delivers a transient Focused(false) synchronously
+        // during these calls (or before the post-call store lands), the
+        // handler would otherwise still read a stale timestamp — 0 on the
+        // first show — fall through the suppression check, and destroy the
+        // window the instant it appears.
+        LAST_TRAY_SHOW_MS.store(now_ms(), Ordering::Relaxed);
         window.show().map_err(|e| e.to_string())?;
         window.set_focus().map_err(|e| e.to_string())?;
     }
@@ -469,17 +501,28 @@ fn create_tray_window<R: Runtime>(
     {
         let window_for_handler = window.clone();
         window.on_window_event(move |event| {
-            // Hide on focus loss so the popover behaves like a real
-            // tray mini-window: click outside -> it disappears.
-            // Only stamp the auto-hide timestamp + call hide when the
-            // window is still visible -- otherwise this is the trailing
-            // blur from a hide we already performed in handle_left_click,
-            // and re-stamping would freeze the next click out of show via
-            // the dedupe window.
+            // Close (destroy) on focus loss so the popover behaves like
+            // a real tray mini-window: click outside → it disappears
+            // and its webview process is released.
             if let tauri::WindowEvent::Focused(false) = event {
+                // Ignore the focus flicker that fires right after an
+                // icon-triggered show (see
+                // TRAY_FOCUS_LOSS_SUPPRESS_AFTER_SHOW_MS) — closing here
+                // would destroy the window the instant it opens and loop.
+                let last_show = LAST_TRAY_SHOW_MS.load(Ordering::Relaxed);
+                if last_show != 0
+                    && now_ms().saturating_sub(last_show) < TRAY_FOCUS_LOSS_SUPPRESS_AFTER_SHOW_MS
+                {
+                    return;
+                }
+                // Only stamp the auto-hide timestamp + call close when the
+                // window is still visible -- otherwise this is the trailing
+                // blur from a close we already performed in
+                // handle_left_click, and re-stamping would freeze the next
+                // click out of show via the dedupe window.
                 if window_for_handler.is_visible().unwrap_or(false) {
                     LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
-                    let _ = window_for_handler.hide();
+                    let _ = window_for_handler.close();
                 }
             }
         });
@@ -715,7 +758,10 @@ fn hide_tray_if_visible<R: Runtime>(app: &AppHandle<R>) {
     if let Some(tray) = app.get_webview_window(TRAY_WINDOW_LABEL) {
         if tray.is_visible().unwrap_or(false) {
             LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
-            let _ = tray.hide();
+            // Destroy rather than hide so the webview process is
+            // released; the next tray click recreates it via
+            // `show_tray_window`.
+            let _ = tray.close();
         }
     }
 }

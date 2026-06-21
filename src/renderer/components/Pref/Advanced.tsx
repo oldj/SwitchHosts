@@ -5,9 +5,12 @@
 
 import { httpApiPort } from '@common/constants'
 import { ConfigsType } from '@common/default_configs'
-import { Box, Checkbox, Stack, Tooltip } from '@mantine/core'
+import { Box, Button, Checkbox, Group, Stack, Tooltip } from '@mantine/core'
+import ConfirmModal from '@renderer/components/ConfirmModal'
 import DescriptionText, { checkboxDescriptionStyles } from '@renderer/components/DescriptionText'
+import ChangeDataDirModal from '@renderer/components/Pref/ChangeDataDirModal'
 import { actions, agent } from '@renderer/core/agent'
+import { getErrorMessage, showErrorNotification, showSuccessNotification } from '@renderer/core/notify'
 import useI18n from '@renderer/models/useI18n'
 import { IconFile, IconFolder } from '@tabler/icons-react'
 import React, { useEffect, useState } from 'react'
@@ -54,11 +57,56 @@ const Advanced = (props: IProps) => {
   const { platform } = agent
   const [hostsPath, setHostsPath] = useState('')
   const [dataDir, setDataDir] = useState('')
+  const [defaultPath, setDefaultPath] = useState('')
+  // Whether a reset would actually do anything (a custom-dir pointer exists).
+  // When false we're already on the default root, so disable "reset" rather
+  // than let it trigger a pointless app restart.
+  const [canReset, setCanReset] = useState(false)
+  const [changeModalOpen, setChangeModalOpen] = useState(false)
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
+  const [pickedDataDir, setPickedDataDir] = useState('')
+  const [pickedIsEmpty, setPickedIsEmpty] = useState(true)
 
   useEffect(() => {
     actions.getPathOfSystemHosts().then((hostsPath) => setHostsPath(hostsPath))
     actions.getDataDir().then((dataDir) => setDataDir(dataDir))
+    actions
+      .getDataDirStatus()
+      .then((status) => {
+        setDefaultPath(status?.default_dir || '')
+        setCanReset(!!status?.can_reset)
+      })
+      .catch((e) => console.error(e))
   }, [])
+
+  const onChangeDataDir = async () => {
+    try {
+      const picked = await actions.pickDataDir()
+      if (!picked) return // user cancelled the folder picker
+      if (picked.is_same_as_current) {
+        showSuccessNotification({ title: lang.change, message: lang.data_dir_already_current })
+        return
+      }
+      if (picked.kind === 'default') {
+        // Choosing the default location is a reset, not a custom dir.
+        setResetConfirmOpen(true)
+        return
+      }
+      setPickedDataDir(picked.data_dir)
+      setPickedIsEmpty(!!picked.is_empty)
+      setChangeModalOpen(true)
+    } catch (e) {
+      showErrorNotification({ title: lang.change, message: getErrorMessage(e, lang.fail) })
+    }
+  }
+
+  const onResetDataDir = async () => {
+    try {
+      await actions.resetDataDir()
+    } catch (e) {
+      showErrorNotification({ title: lang.reset, message: getErrorMessage(e, lang.fail) })
+    }
+  }
 
   return (
     <Stack gap="40px" pb={60}>
@@ -112,6 +160,16 @@ const Advanced = (props: IProps) => {
         </Box>
 
         <Box w="100%">
+          <Checkbox
+            checked={data.lightweight_mode}
+            onChange={(e) => onChange({ lightweight_mode: e.target.checked })}
+            label={lang.lightweight_mode}
+            description={lang.lightweight_mode_desc}
+            styles={checkboxDescriptionStyles}
+          />
+        </Box>
+
+        <Box w="100%">
           <Stack gap="8px">
             <Checkbox
               checked={data.http_api_on}
@@ -152,7 +210,36 @@ const Advanced = (props: IProps) => {
         <div>{lang.where_is_my_data}</div>
         <DescriptionText mb="8px">{lang.your_data_is}</DescriptionText>
         <PathLink link={dataDir} icon={<IconFolder size={16} />} />
+        <Group gap="12px" mt="12px">
+          <Button size="xs" variant="default" onClick={onChangeDataDir}>
+            {lang.change}
+          </Button>
+          <Button
+            size="xs"
+            variant="subtle"
+            disabled={!canReset}
+            onClick={() => setResetConfirmOpen(true)}
+          >
+            {lang.reset}
+          </Button>
+        </Group>
       </div>
+
+      <ChangeDataDirModal
+        opened={changeModalOpen}
+        onClose={() => setChangeModalOpen(false)}
+        dataDir={pickedDataDir}
+        isEmpty={pickedIsEmpty}
+      />
+      <ConfirmModal
+        opened={resetConfirmOpen}
+        onClose={() => setResetConfirmOpen(false)}
+        onConfirm={onResetDataDir}
+        title={lang.reset}
+        message={i18n.trans('reset_data_dir_confirm', [defaultPath])}
+        confirmLabel={lang.reset}
+        danger
+      />
     </Stack>
   )
 }

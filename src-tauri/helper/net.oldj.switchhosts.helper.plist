@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchDaemon definition for the SwitchHosts privileged helper.
+
+  Shipped inside the signed app bundle at
+  `Contents/Library/LaunchDaemons/net.oldj.switchhosts.helper.plist` and
+  registered via `SMAppService.daemonServiceWithPlistName:` (macOS 13+).
+  launchd starts the daemon as root on demand when the app connects to
+  the `net.oldj.switchhosts.helper` Mach service, and lets it idle out
+  when not in use (no KeepAlive).
+-->
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>net.oldj.switchhosts.helper</string>
+
+    <!-- Executable to run, relative to the app bundle. This is the
+         `swh_helper` cargo bin target, which Tauri builds, copies into
+         Contents/MacOS/, and code-signs as part of the app bundle. -->
+    <key>BundleProgram</key>
+    <string>Contents/MacOS/swh_helper</string>
+
+    <!-- The Mach service the daemon listens on; the app connects to this
+         name in the privileged (system) launchd domain. -->
+    <key>MachServices</key>
+    <dict>
+      <key>net.oldj.switchhosts.helper</key>
+      <true/>
+    </dict>
+
+    <!-- Attribute the daemon to the main app in System Settings. -->
+    <key>AssociatedBundleIdentifiers</key>
+    <array>
+      <string>net.oldj.switchhosts</string>
+    </array>
+  </dict>
+</plist>

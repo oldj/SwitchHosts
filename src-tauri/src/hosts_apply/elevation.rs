@@ -25,6 +25,7 @@
 use std::path::{Path, PathBuf};
 
 use super::error::HostsApplyError;
+use super::helper_admin::HelperStatus;
 
 /// Argv flag that marks the current process as the Windows UAC
 /// elevation helper. Shared between [`elevate_copy`] (parent, builds
@@ -43,6 +44,147 @@ pub fn write_with_elevation(target: &Path, content: &str) -> Result<(), HostsApp
     // is OS-managed and the file is small.
     let _ = std::fs::remove_file(&tmp_path);
     result
+}
+
+// ---- privileged-write strategy ---------------------------------------------
+
+/// Which privileged-write mechanism to use. A pure decision (unit
+/// tested); the actual I/O lives in [`write_privileged`] /
+/// [`write_with_elevation`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ElevationStrategy {
+    /// macOS persistent root daemon — silent after a one-time install.
+    Helper,
+    /// macOS `AuthorizationExecuteWithPrivileges` — prompts whenever the
+    /// OS auth cache has lapsed (the legacy path).
+    Aewp,
+    /// Linux `pkexec`.
+    Pkexec,
+    /// Windows UAC self-relaunch.
+    Uac,
+}
+
+// The non-host platform variants are only constructed on their own OS
+// builds and in the cross-platform unit tests, so a single-target
+// compile sees some as "never constructed" — that's expected.
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Platform {
+    Macos,
+    Linux,
+    Windows,
+}
+
+/// Decide the privileged-write strategy. On macOS we prefer the silent
+/// helper, but only for a signed build whose helper is installed or
+/// installable; everything else uses the OS-native prompt path. The
+/// helper attempt itself (in [`write_privileged`]) handles
+/// register/retry and falls back to AEWP on any failure, so this only
+/// needs to answer "is the helper worth trying first?".
+pub fn choose_elevation_strategy(
+    platform: Platform,
+    is_signed: bool,
+    helper_status: HelperStatus,
+) -> ElevationStrategy {
+    match platform {
+        Platform::Linux => ElevationStrategy::Pkexec,
+        Platform::Windows => ElevationStrategy::Uac,
+        Platform::Macos => {
+            if !is_signed {
+                return ElevationStrategy::Aewp;
+            }
+            match helper_status {
+                HelperStatus::InstalledCurrent
+                | HelperStatus::NotInstalled
+                | HelperStatus::InstalledOutdated => ElevationStrategy::Helper,
+                // Enabled-but-unreachable: the probe already failed, so
+                // don't double-try the helper — use AEWP now (the UI
+                // surfaces a reinstall prompt separately).
+                HelperStatus::RequiresApproval
+                | HelperStatus::NotSupported
+                | HelperStatus::InstalledUnreachable => ElevationStrategy::Aewp,
+            }
+        }
+    }
+}
+
+/// Privileged write entry point used by the apply pipeline. On a signed
+/// macOS 13+ build it tries the silent helper first (installing it on
+/// first use); on any other platform/state, or if the helper attempt
+/// fails for any reason, it falls back to the OS-native elevation path
+/// (`write_with_elevation`) — preserving today's behavior exactly.
+pub fn write_privileged(target: &Path, content: &str) -> Result<(), HostsApplyError> {
+    #[cfg(target_os = "macos")]
+    {
+        let is_signed = super::helper_admin::is_signable_build();
+        let status = if is_signed {
+            super::helper_admin::status()
+        } else {
+            HelperStatus::NotSupported
+        };
+        // Only route to the daemon for the exact system hosts path it is
+        // hard-coded to write.
+        if choose_elevation_strategy(Platform::Macos, is_signed, status)
+            == ElevationStrategy::Helper
+            && target == Path::new(crate::helper_proto::SYSTEM_HOSTS_PATH)
+        {
+            if let Some(result) = try_helper(content, status) {
+                return result;
+            }
+        }
+    }
+    write_with_elevation(target, content)
+}
+
+/// Set once we lazily attempt helper registration from the apply path.
+/// A declined / failed attempt must NOT re-prompt on every subsequent
+/// apply (a background remote-refresh applies on its own), so we try the
+/// lazy install at most once per app session. Users can still install
+/// explicitly from Preferences — that calls `helper_admin::register`
+/// directly and bypasses this gate.
+#[cfg(target_os = "macos")]
+static HELPER_REGISTER_ATTEMPTED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// Attempt the silent helper write. Returns `Some(Ok)` on success,
+/// `None` to fall back to AEWP. Never returns `Some(Err)`: any helper
+/// failure (unreachable, register declined, daemon error) defers to the
+/// OS-native prompt rather than hard-failing the apply.
+#[cfg(target_os = "macos")]
+fn try_helper(content: &str, status: HelperStatus) -> Option<Result<(), HostsApplyError>> {
+    let attempt = |label: &str| match super::helper_client::write_hosts(content.as_bytes()) {
+        Ok(()) => Some(Ok(())),
+        Err(e) => {
+            log::warn!("privileged helper write failed ({label}): {e}; falling back to elevation");
+            None
+        }
+    };
+
+    match status {
+        HelperStatus::InstalledCurrent => attempt("installed"),
+        HelperStatus::NotInstalled | HelperStatus::InstalledOutdated => {
+            // Lazy install / repair — the one-time auth prompt. Attempt
+            // at most once per session so a declined prompt doesn't recur
+            // on every apply; fall back to AEWP thereafter.
+            if HELPER_REGISTER_ATTEMPTED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+                return None;
+            }
+            match super::helper_admin::register() {
+                Ok(HelperStatus::InstalledCurrent) => attempt("post-register"),
+                Ok(other) => {
+                    log::info!("helper not usable after register ({other:?}); falling back");
+                    None
+                }
+                Err(e) => {
+                    log::warn!("helper register failed ({e}); falling back to elevation");
+                    None
+                }
+            }
+        }
+        HelperStatus::RequiresApproval
+        | HelperStatus::NotSupported
+        | HelperStatus::InstalledUnreachable => None,
+    }
 }
 
 fn stage_temp_file(content: &str) -> Result<PathBuf, HostsApplyError> {
@@ -650,7 +792,74 @@ mod tests {
     use std::path::Path;
 
     use super::is_allowed_windows_elevation_target_for;
+    use super::{choose_elevation_strategy, ElevationStrategy, Platform};
+    use crate::hosts_apply::helper_admin::HelperStatus;
     use crate::hosts_apply::write::windows_hosts_path_from_windows_dir;
+
+    #[test]
+    fn linux_and_windows_ignore_helper_state() {
+        for signed in [true, false] {
+            for status in [
+                HelperStatus::InstalledCurrent,
+                HelperStatus::NotInstalled,
+                HelperStatus::NotSupported,
+            ] {
+                assert_eq!(
+                    choose_elevation_strategy(Platform::Linux, signed, status),
+                    ElevationStrategy::Pkexec
+                );
+                assert_eq!(
+                    choose_elevation_strategy(Platform::Windows, signed, status),
+                    ElevationStrategy::Uac
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn macos_unsigned_always_uses_aewp() {
+        // An unsigned / ad-hoc / wrong-team build can't install a daemon
+        // the OS would trust, so it must use the legacy prompt path.
+        for status in [
+            HelperStatus::InstalledCurrent,
+            HelperStatus::NotInstalled,
+            HelperStatus::RequiresApproval,
+            HelperStatus::NotSupported,
+        ] {
+            assert_eq!(
+                choose_elevation_strategy(Platform::Macos, false, status),
+                ElevationStrategy::Aewp
+            );
+        }
+    }
+
+    #[test]
+    fn macos_signed_prefers_helper_when_installed_or_installable() {
+        for status in [
+            HelperStatus::InstalledCurrent,
+            HelperStatus::NotInstalled,
+            HelperStatus::InstalledOutdated,
+        ] {
+            assert_eq!(
+                choose_elevation_strategy(Platform::Macos, true, status),
+                ElevationStrategy::Helper
+            );
+        }
+    }
+
+    #[test]
+    fn macos_signed_falls_back_when_helper_unavailable() {
+        for status in [
+            HelperStatus::RequiresApproval,
+            HelperStatus::NotSupported,
+            HelperStatus::InstalledUnreachable,
+        ] {
+            assert_eq!(
+                choose_elevation_strategy(Platform::Macos, true, status),
+                ElevationStrategy::Aewp
+            );
+        }
+    }
 
     #[test]
     fn windows_elevation_target_accepts_exact_resolved_hosts_path() {

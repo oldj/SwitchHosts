@@ -21,7 +21,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
-use super::elevation::write_with_elevation;
+use super::elevation::write_privileged;
 use super::error::HostsApplyError;
 
 const CONTENT_START_MARKER: &str = "# --- SWITCHHOSTS_CONTENT_START ---";
@@ -74,7 +74,10 @@ pub fn apply_to_system_hosts(
             unchanged: false,
         }),
         Err(e) if is_permission_denied(&e) => {
-            write_with_elevation(&target, &disk_content)?;
+            // Prefer the silent macOS helper; falls back to OS-native
+            // elevation (AEWP / pkexec / UAC) for any other platform or
+            // when the helper isn't available.
+            write_privileged(&target, &disk_content)?;
             Ok(ApplyOutcome {
                 previous_content: previous_lf,
                 new_content: final_content_lf,

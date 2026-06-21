@@ -37,6 +37,8 @@ const configs = {
   tray_mini_window: true,
   multi_chose_folder_switch_all: false,
   auto_check_update: true,
+  lightweight_mode: false,
+  quit_on_close: false,
 
   // find window — sticky search options across reopens and restarts
   find_is_regexp: false,

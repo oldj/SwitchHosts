@@ -74,10 +74,16 @@ const ImportFromUrl = (props: Props) => {
   }
 
   return (
-    <Modal opened={opened} onClose={onCancel} centered padding={0} withCloseButton={false}>
+    <Modal
+      opened={opened}
+      onClose={onCancel}
+      centered
+      padding={0}
+      title={lang.import}
+      styles={{ header: { padding: 'var(--mantine-spacing-md)' } }}
+    >
       <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <Modal.CloseButton />
-        <div style={{ padding: 'var(--mantine-spacing-md)', paddingBottom: 24 }}>
+        <div style={{ padding: 'var(--mantine-spacing-md)', paddingTop: 0, paddingBottom: 24 }}>
           <div className={styles.label}>{lang.import_from_url}</div>
           <TextInput
             ref={iptRef}

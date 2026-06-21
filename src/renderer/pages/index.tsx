@@ -7,11 +7,12 @@ import LeftSidebar from '@renderer/components/LeftSidebar'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
 import PreferencePanel from '@renderer/components/Pref'
+import DataDirRecoveryModal, { DataDirRecovery } from '@renderer/components/Pref/DataDirRecoveryModal'
 import ResizeHandle from '@renderer/components/ResizeHandle'
 import RightPanel from '@renderer/components/RightPanel'
 import SetWriteMode from '@renderer/components/SetWriteMode'
 import UpdateDialog from '@renderer/components/UpdateDialog'
-import { agent } from '@renderer/core/agent'
+import { actions, agent } from '@renderer/core/agent'
 import { showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
@@ -33,6 +34,8 @@ const clampPanel = (value: number) =>
 
 const MainPage = () => {
   const [loading, setLoading] = useState(true)
+  const [dataDirRecovery, setDataDirRecovery] = useState<DataDirRecovery | null>(null)
+  const [defaultDataDir, setDefaultDataDir] = useState('')
   const mainWindowReadySentRef = useRef(false)
   const { setLocale, i18n, lang } = useI18n()
   const { loadHostsData } = useHostsData()
@@ -46,7 +49,24 @@ const MainPage = () => {
   const resolvedTheme = useResolvedTheme(configs?.theme)
   const init = async () => {
     // v5: migration is handled automatically by the Rust backend on startup.
-    // The renderer only needs to load data.
+    // Resolve the data-dir recovery state BEFORE loading or rendering any
+    // data. While in recovery the active root is a fallback default, so a
+    // slow status call must not let the main view flash that fallback data
+    // (or let the user act on it) before the recovery dialog mounts. Awaited;
+    // a failure here just falls through to a normal load.
+    try {
+      const status = await actions.getDataDirStatus()
+      if (status?.recovery) {
+        setDataDirRecovery(status.recovery)
+        setDefaultDataDir(status.default_dir || '')
+        // In recovery we show ONLY the (non-closeable) recovery dialog — don't
+        // load or render the fallback root's data at all.
+        setLoading(false)
+        return
+      }
+    } catch (e) {
+      console.error(e)
+    }
     try {
       await loadHostsData()
     } finally {
@@ -68,6 +88,7 @@ const MainPage = () => {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async startup: recovery/loading state is set after awaiting the backend status
     init().catch((e) => console.error(e))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -147,11 +168,7 @@ const MainPage = () => {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  if (loading) {
-    return <Loading />
-  }
-
-  return (
+  const mainView = (
     <div
       className={styles.root}
       style={{ '--swh-left-sidebar-width': `${LEFT_SIDEBAR_WIDTH}px` } as React.CSSProperties}
@@ -235,6 +252,16 @@ const MainPage = () => {
       <UpdateDialog />
       <About />
     </div>
+  )
+
+  // Render the recovery dialog at a stable top level. While in recovery, show
+  // ONLY the dialog — never the main view over the fallback default root's
+  // data. Otherwise gate the main view on the initial load.
+  return (
+    <>
+      {dataDirRecovery ? null : loading ? <Loading /> : mainView}
+      <DataDirRecoveryModal recovery={dataDirRecovery} defaultDir={defaultDataDir} />
+    </>
   )
 }
 

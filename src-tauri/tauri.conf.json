@@ -1,12 +1,13 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "SwitchHosts",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "identifier": "net.oldj.switchhosts",
   "build": {
     "beforeDevCommand": "npm run dev:renderer",
     "devUrl": "http://127.0.0.1:8220",
     "beforeBuildCommand": "npm run build:renderer:tauri",
+    "beforeBundleCommand": "npm run build:universal-helper",
     "frontendDist": "../build-tauri"
   },
   "app": {
@@ -33,6 +34,9 @@
     "macOS": {
       "entitlements": "../scripts/entitlements.mac.plist",
       "minimumSystemVersion": "10.15",
+      "files": {
+        "Library/LaunchDaemons/net.oldj.switchhosts.helper.plist": "helper/net.oldj.switchhosts.helper.plist"
+      },
       "dmg": {
         "background": "../assets/dmg-bg.png",
         "windowSize": {

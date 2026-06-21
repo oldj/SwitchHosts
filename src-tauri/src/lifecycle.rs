@@ -11,20 +11,22 @@
 //! Tray and find window plumbing land in P2.B / P2.D and will reuse
 //! the same persistence helpers.
 
-use std::sync::atomic::Ordering;
-use std::time::{SystemTime, UNIX_EPOCH};
 #[cfg(target_os = "macos")]
-use std::{sync::atomic::AtomicU64, time::Duration};
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use tauri::{
-    webview::WebviewWindowBuilder, AppHandle, LogicalPosition, LogicalSize, Manager, Monitor,
-    Runtime, WebviewUrl, WebviewWindow, WindowEvent,
+    webview::WebviewWindowBuilder, AppHandle, EventId, Listener, LogicalPosition, LogicalSize,
+    Manager, Monitor, Runtime, Theme, WebviewUrl, WebviewWindow, WindowEvent,
 };
 
 use crate::storage::{
     state::{StateFile, WindowGeometry},
     AppState, StorageError,
 };
+use crate::window_theme::{background_color_for_theme, configured_theme};
 
 #[cfg(target_os = "macos")]
 use objc2::{class, msg_send, runtime::AnyObject, MainThreadMarker};
@@ -39,9 +41,116 @@ use objc2_foundation::{NSPoint, NSSize};
 const GEOMETRY_PERSIST_THROTTLE_MS: u64 = 200;
 
 pub const MAIN_WINDOW_LABEL: &str = "main";
+const MAIN_WINDOW_READY_EVENT: &str = "main_window_ready";
+
+/// Marker flag the autostart plugin appends to the OS login-start entry
+/// (macOS LaunchAgent plist / Windows run key / Linux autostart desktop
+/// file). Its presence in a process's argv is what distinguishes "the
+/// login machinery started me" from "the user opened me" — both for the
+/// current process (see `begin_login_launch_show_suppression`) and for a
+/// duplicate instance reporting in through the single-instance plugin
+/// (see `focus_main_on_second_instance`).
+pub const LOGIN_LAUNCH_ARG: &str = "--launched-at-login";
+
+/// How long after a hidden login launch the main window ignores macOS
+/// `Reopen` events. Right after login, loginwindow's window-restore and
+/// stale login items "open" the already-running app, which AppKit
+/// delivers as the same reopen Apple Event a Dock click produces (#997).
+/// Those system pings land within the login storm, so a generous grace
+/// window starting at process launch covers them; a real user can always
+/// summon the window from the tray, which bypasses — and permanently
+/// clears — the suppression.
+const LOGIN_LAUNCH_SHOW_SUPPRESS_WINDOW: Duration = Duration::from_secs(30);
+
+/// Deadline before which reopen-driven shows are ignored. Armed once
+/// from `lib.rs::setup` when a login-launched session keeps the main
+/// window uncreated under `hide_at_launch`; never armed for manual
+/// launches, so Dock clicks in ordinary sessions are unaffected.
+/// Cleared by the first `show_main_window` from any explicit-intent
+/// path (tray, renderer command, menu).
+static LOGIN_LAUNCH_SHOW_SUPPRESS_UNTIL: Mutex<Option<Instant>> = Mutex::new(None);
+
+/// How long the lazy-rebuild path waits for the renderer's
+/// `main_window_ready` event before falling back to showing the window
+/// anyway. Five seconds matches the existing first-show fallback in
+/// `lib.rs::setup`, which is sized for cold-load of the hosts manifest.
+const MAIN_WINDOW_READY_FALLBACK_MS: u64 = 5000;
+
+/// Per-window state for the renderer-ready gate used by the
+/// lightweight-mode rebuild path. A new instance is installed every
+/// time `show_main_window` rebuilds a destroyed main window; on
+/// re-create we `abandon()` the previous one so its listener and
+/// fallback timer become no-ops and can't accidentally show an
+/// unrelated window. Mirrors `FindGate` in `find.rs`.
+struct MainGate {
+    did_show: Arc<AtomicBool>,
+    listener_id: Arc<Mutex<Option<EventId>>>,
+}
+
+impl MainGate {
+    fn abandon<R: Runtime>(&self, app: &AppHandle<R>) {
+        self.did_show.store(true, Ordering::SeqCst);
+        if let Some(id) = self
+            .listener_id
+            .lock()
+            .expect("main listener mutex poisoned")
+            .take()
+        {
+            app.unlisten(id);
+        }
+    }
+
+    fn is_pending(&self) -> bool {
+        !self.did_show.load(Ordering::SeqCst)
+    }
+}
+
+static MAIN_GATE: Mutex<Option<MainGate>> = Mutex::new(None);
+
+/// Long-lived semantic state: `true` while the main window is in the
+/// "hide-to-tray" state — its webview process does not currently
+/// exist, but the app remains alive in the tray and the next user-
+/// initiated show is expected to rebuild it.
+///
+/// Two entry points set this flag:
+/// - `install_main_window_handlers::CloseRequested` when a
+///   lightweight-mode close lets the webview be destroyed.
+/// - `enter_hidden_to_tray_state` from `lib.rs::setup` when
+///   `hide_at_launch` is on, so the main window is skipped at
+///   startup and its webview never loads until the user asks for it.
+///
+/// Both cases share the same downstream behaviour: a subsequent
+/// last-window close (e.g. dismissing a find / tray-mini window) must
+/// still be prevented so the app stays in the tray rather than
+/// silently exiting.
+///
+/// Cleared by `show_main_window` only after the main window has been
+/// successfully rebuilt and rewired. Not cleared by `quit_app`
+/// because `is_will_quit` takes priority downstream.
+static MAIN_WINDOW_LIGHTWEIGHT_HIDDEN: AtomicBool = AtomicBool::new(false);
+
+/// Short-lived guard armed by `arm_lightweight_exit_guard_if_last_window`
+/// when a window's `CloseRequested` is about to leave the app with no
+/// webview windows while still in the lightweight-hidden state. Consumed
+/// (swap-take) by `ExitRequested` to decide whether to `prevent_exit`.
+///
+/// Why two flags? `MAIN_WINDOW_LIGHTWEIGHT_HIDDEN` is the long-lived
+/// truth ("the main window is hidden to tray"); `EXPECT_LIGHTWEIGHT_EXIT`
+/// is the per-close cue tied to a specific imminent `ExitRequested`.
+/// Using only the long flag would force us to prevent every
+/// `ExitRequested` while hidden — including Dock → Quit and system
+/// shutdown — because `code: None` is shared by both implicit
+/// last-window exits and direct user-interaction exits, so neither
+/// `is_will_quit` nor `code` alone can tell them apart. Tying the
+/// prevent decision to a guard that only a close handler can arm
+/// solves that.
+static EXPECT_LIGHTWEIGHT_EXIT: AtomicBool = AtomicBool::new(false);
 
 #[cfg(target_os = "macos")]
 static MAIN_WINDOW_USER_HIDE_GENERATION: AtomicU64 = AtomicU64::new(0);
+
+#[cfg(target_os = "macos")]
+static RELAUNCH_ON_LOGIN_DISABLED: AtomicBool = AtomicBool::new(false);
 
 // ---- main-window event handlers --------------------------------------------
 
@@ -72,6 +181,44 @@ pub fn install_main_window_handlers<R: Runtime>(window: &WebviewWindow<R>) {
                 return;
             }
 
+            // Quit-on-close: when the user opts in (a Windows-style
+            // habit) closing the main window terminates the app instead
+            // of staying resident in the tray / menu bar. Checked before
+            // the lightweight branch so it wins regardless of that mode.
+            let quit_on_close = app_state
+                .config
+                .lock()
+                .map(|cfg| cfg.quit_on_close)
+                .unwrap_or(false);
+            if quit_on_close {
+                quit_app(&app);
+                return;
+            }
+
+            let lightweight = app_state
+                .config
+                .lock()
+                .map(|cfg| cfg.lightweight_mode)
+                .unwrap_or(false);
+
+            if lightweight {
+                // Lightweight mode: let Tauri close the window so the
+                // underlying webview process is destroyed and its memory
+                // released. Mark the main window as lightweight-hidden
+                // — that state persists until the main window is
+                // rebuilt or the user explicitly quits, so a subsequent
+                // close of any auxiliary window (find, tray mini) still
+                // gets recognised as "stay in tray" rather than exit.
+                //
+                // We don't arm EXPECT_LIGHTWEIGHT_EXIT here: the
+                // `RunEvent::WindowEvent::CloseRequested` hook in
+                // `lib.rs::run` does that, and it runs after this
+                // per-window handler (per tauri-runtime-wry), so the
+                // long-flag write above is visible by then.
+                MAIN_WINDOW_LIGHTWEIGHT_HIDDEN.store(true, Ordering::SeqCst);
+                return;
+            }
+
             // Default close-button behaviour: hide instead of close.
             api.prevent_close();
             mark_main_window_user_hide();
@@ -95,15 +242,175 @@ pub fn hide_app_from_menu<R: Runtime>(app: &AppHandle<R>) {
     hide_app_after_restoring_window_hide_policy(app);
 }
 
-pub fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
+/// Arm the login-launch grace window. Only `lib.rs::setup` calls this,
+/// and only when this process was started by the OS login machinery
+/// (`LOGIN_LAUNCH_ARG` in argv) *and* `hide_at_launch` skipped creating
+/// the main window — the one state where a post-login reopen ping must
+/// not be mistaken for a user's Dock click.
+pub fn begin_login_launch_show_suppression() {
+    *LOGIN_LAUNCH_SHOW_SUPPRESS_UNTIL
+        .lock()
+        .expect("login-launch suppression mutex poisoned") =
+        Some(Instant::now() + LOGIN_LAUNCH_SHOW_SUPPRESS_WINDOW);
+}
+
+#[cfg(target_os = "macos")]
+fn login_launch_show_suppressed() -> bool {
+    LOGIN_LAUNCH_SHOW_SUPPRESS_UNTIL
+        .lock()
+        .expect("login-launch suppression mutex poisoned")
+        .map(|deadline| Instant::now() < deadline)
+        .unwrap_or(false)
+}
+
+fn clear_login_launch_show_suppression() {
+    LOGIN_LAUNCH_SHOW_SUPPRESS_UNTIL
+        .lock()
+        .expect("login-launch suppression mutex poisoned")
+        .take();
+}
+
+pub fn show_main_window<R: Runtime + 'static>(app: &AppHandle<R>) {
+    // Reaching here means an explicit show intent (tray, renderer
+    // command, menu) or a gate-approved system signal — either way the
+    // login-launch grace window is over for good.
+    clear_login_launch_show_suppression();
+
     #[cfg(target_os = "macos")]
     {
         let _ = app.show();
     }
+
     if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
+        // If a previous rebuild is still waiting on `main_window_ready`,
+        // let its listener / fallback do the show — pre-empting them
+        // would reintroduce a white flash on the unready webview.
+        let pending = MAIN_GATE
+            .lock()
+            .expect("main gate mutex poisoned")
+            .as_ref()
+            .map(|g| g.is_pending())
+            .unwrap_or(false);
+        if pending {
+            return;
+        }
+        show_main_window_now(&window);
+        return;
+    }
+
+    // Window was destroyed (lightweight_mode close). Rebuild it.
+    {
+        let mut slot = MAIN_GATE.lock().expect("main gate mutex poisoned");
+        if let Some(old) = slot.take() {
+            old.abandon(app);
+        }
+    }
+
+    let app_state = app.state::<AppState>();
+    let window = match create_main_window(app, app_state.inner()) {
+        Ok(w) => w,
+        Err(e) => {
+            // Leave MAIN_WINDOW_LIGHTWEIGHT_HIDDEN set: we still have
+            // no main window, so subsequent last-window closes should
+            // still keep the app alive in the tray. A future
+            // show_main_window attempt will retry.
+            log::warn!("failed to rebuild main window: {e}");
+            return;
+        }
+    };
+    install_main_window_handlers(&window);
+    let gate = install_main_window_ready_handlers(app, &window);
+    *MAIN_GATE.lock().expect("main gate mutex poisoned") = Some(gate);
+    // Only clear the hide-to-tray state once the new main window is
+    // fully wired up — handlers + ready gate in place. If any step
+    // above failed and returned early, the flag stays true.
+    MAIN_WINDOW_LIGHTWEIGHT_HIDDEN.store(false, Ordering::SeqCst);
+}
+
+fn show_main_window_now<R: Runtime>(window: &WebviewWindow<R>) {
+    let _ = window.unminimize();
+    let _ = window.show();
+    let _ = window.set_focus();
+}
+
+fn show_main_window_once<R: Runtime>(
+    app: &AppHandle<R>,
+    window: &WebviewWindow<R>,
+    did_show: &AtomicBool,
+    listener_id: &Arc<Mutex<Option<EventId>>>,
+) {
+    // `compare_exchange` doubles as the "abandoned" check: when a newer
+    // window supersedes this gate, `MainGate::abandon` forces `did_show`
+    // to true, so this exchange returns Err and we exit without touching
+    // anything.
+    if did_show
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {
+        return;
+    }
+    show_main_window_now(window);
+    unlisten_main_window_ready(app, listener_id);
+}
+
+fn unlisten_main_window_ready<R: Runtime>(
+    app: &AppHandle<R>,
+    listener_id: &Arc<Mutex<Option<EventId>>>,
+) {
+    if let Some(id) = listener_id
+        .lock()
+        .expect("main listener mutex poisoned")
+        .take()
+    {
+        app.unlisten(id);
+    }
+}
+
+fn install_main_window_ready_handlers<R: Runtime + 'static>(
+    app: &AppHandle<R>,
+    window: &WebviewWindow<R>,
+) -> MainGate {
+    let did_show = Arc::new(AtomicBool::new(false));
+    let listener_id = Arc::new(Mutex::new(None));
+
+    let ready_app = app.clone();
+    let ready_window = window.clone();
+    let ready_flag = did_show.clone();
+    let ready_listener_id = listener_id.clone();
+    let id = app.listen(MAIN_WINDOW_READY_EVENT, move |event| {
+        show_main_window_once(&ready_app, &ready_window, &ready_flag, &ready_listener_id);
+        ready_app.unlisten(event.id());
+    });
+    *listener_id.lock().expect("main listener mutex poisoned") = Some(id);
+
+    let fallback_app = app.clone();
+    let fallback_window = window.clone();
+    let fallback_flag = did_show.clone();
+    let fallback_listener_id = listener_id.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(MAIN_WINDOW_READY_FALLBACK_MS));
+        if fallback_flag.load(Ordering::SeqCst) {
+            return;
+        }
+
+        let app = fallback_app.clone();
+        let window = fallback_window.clone();
+        let flag = fallback_flag.clone();
+        let listener_id = fallback_listener_id.clone();
+        // Show the exact window this gate was created for, never
+        // `app.get_webview_window(LABEL)` — after a fast close-then-
+        // reopen the label can resolve to a newer window whose renderer
+        // hasn't emitted ready yet, and showing it would reintroduce
+        // the flash. If the captured window has been destroyed, the
+        // show call simply fails silently.
+        let _ = fallback_app.run_on_main_thread(move || {
+            show_main_window_once(&app, &window, &flag, &listener_id);
+        });
+    });
+
+    MainGate {
+        did_show,
+        listener_id,
     }
 }
 
@@ -205,10 +512,14 @@ pub fn create_main_window<R: Runtime>(
         .map(|g| geometry_is_visible_on_monitors(&monitors, g))
         .unwrap_or(false);
 
+    let theme_pref = configured_theme(app_state);
+    let initial_theme = theme_pref.unwrap_or(Theme::Light);
     let builder = WebviewWindowBuilder::new(app, MAIN_WINDOW_LABEL, WebviewUrl::App("/".into()))
         .title("SwitchHosts")
         .min_inner_size(300.0, 200.0)
         .resizable(true)
+        .theme(theme_pref)
+        .background_color(background_color_for_theme(initial_theme))
         .visible(false)
         // Without this Tauri's OS-level drag-drop handler swallows
         // dragstart inside the webview, breaking the hosts tree's
@@ -241,6 +552,15 @@ pub fn create_main_window<R: Runtime>(
         path: MAIN_WINDOW_LABEL.to_string(),
         reason: e.to_string(),
     })?;
+
+    #[cfg(target_os = "macos")]
+    disable_window_state_restoration(&window);
+
+    // After build, ask the actual OS theme so users on `system` get the
+    // real light/dark colour rather than the Light fallback above.
+    if let Ok(theme) = window.theme() {
+        let _ = window.set_background_color(Some(background_color_for_theme(theme)));
+    }
 
     if let Some(geom) = saved {
         if saved_on_screen {
@@ -308,6 +628,25 @@ fn apply_restored_geometry_before_show<R: Runtime>(
 fn apply_restored_geometry_fallback<R: Runtime>(window: &WebviewWindow<R>, geom: &WindowGeometry) {
     let _ = window.set_size(LogicalSize::new(geom.width as f64, geom.height as f64));
     let _ = window.set_position(LogicalPosition::new(geom.x as f64, geom.y as f64));
+}
+
+#[cfg(target_os = "macos")]
+fn disable_window_state_restoration<R: Runtime>(window: &WebviewWindow<R>) {
+    let window_for_task = window.clone();
+    if let Err(e) = window.run_on_main_thread(move || {
+        let ns_window = match window_for_task.ns_window() {
+            Ok(ptr) => ptr as *mut AnyObject,
+            Err(e) => {
+                log::warn!("failed to get native main window handle for restoration policy: {e}");
+                return;
+            }
+        };
+        unsafe {
+            let _: () = msg_send![ns_window, setRestorable: false];
+        }
+    }) {
+        log::warn!("failed to schedule main window restoration policy: {e}");
+    }
 }
 
 /// Bounds in the same top-left coordinate space that Tauri/tao's
@@ -702,12 +1041,132 @@ fn schedule_main_window_restore_after_dock_policy<R: Runtime>(
 /// Callback registered with `tauri-plugin-single-instance`. A second
 /// invocation of SwitchHosts focuses the existing main window instead
 /// of creating a duplicate.
-pub fn focus_main_on_second_instance<R: Runtime>(
+///
+/// Exception (#997): when macOS login restore and the login LaunchAgent
+/// race, whichever process loses the single-instance race arrives here —
+/// and if that loser is the LaunchAgent's, its argv carries
+/// `LOGIN_LAUNCH_ARG`. That signal comes from the login machinery, not
+/// the user, so honouring it would pop the main window a hide_at_launch
+/// user asked to keep hidden. A user-initiated second launch (Finder,
+/// `open -n`, desktop shortcut) never carries the marker and still
+/// focuses the window immediately, at any time.
+pub fn focus_main_on_second_instance<R: Runtime + 'static>(
     app: &AppHandle<R>,
-    _args: Vec<String>,
+    args: Vec<String>,
     _cwd: String,
 ) {
+    if args.iter().any(|arg| arg == LOGIN_LAUNCH_ARG) {
+        log::info!(
+            "ignoring duplicate login-launch instance — the login machinery started it, not the user"
+        );
+        return;
+    }
     show_main_window(app);
+}
+
+/// Show path for macOS `RunEvent::Reopen`. A Dock click on an app whose
+/// main window is hidden must re-show it — but right after a hidden
+/// login launch, loginwindow's restore machinery delivers the exact same
+/// reopen Apple Event (#997), and AppKit gives us nothing to tell them
+/// apart. The login-launch grace window armed at setup is that signal:
+/// inside it, reopen pings are system noise; outside it (or in any
+/// manually-started session, where it is never armed) a reopen is a real
+/// user action and shows the window immediately.
+#[cfg(target_os = "macos")]
+pub fn show_main_on_reopen<R: Runtime + 'static>(app: &AppHandle<R>) {
+    if login_launch_show_suppressed() {
+        log::info!("ignoring macOS reopen during the login-launch grace window");
+        return;
+    }
+    show_main_window(app);
+}
+
+/// One-time migration for existing users (#997): LaunchAgent plists
+/// written before `LOGIN_LAUNCH_ARG` existed start the app with a bare
+/// argv, so neither the duplicate-instance marker check nor the grace
+/// window can engage. If the agent file is live but predates the marker,
+/// rewrite it through the autostart plugin — idempotent: same label,
+/// same path, args now included.
+#[cfg(target_os = "macos")]
+pub fn ensure_launch_agent_carries_login_launch_arg<R: Runtime>(app: &AppHandle<R>) {
+    use tauri_plugin_autostart::ManagerExt;
+
+    let Some(home) = dirs::home_dir() else {
+        return;
+    };
+    let plist = home
+        .join("Library")
+        .join("LaunchAgents")
+        .join(format!("{}.plist", app.package_info().name));
+    let needs_marker = match std::fs::read_to_string(&plist) {
+        Ok(contents) => !contents.contains(LOGIN_LAUNCH_ARG),
+        // No agent file — launch-at-login is off (or was turned off in
+        // System Settings); nothing to migrate.
+        Err(_) => false,
+    };
+    if !needs_marker {
+        return;
+    }
+    match app.autolaunch().enable() {
+        Ok(()) => log::info!("rewrote the login LaunchAgent to carry the login-launch marker"),
+        Err(e) => {
+            log::warn!("failed to rewrite the login LaunchAgent with the login-launch marker: {e}")
+        }
+    }
+}
+
+/// When SwitchHosts is configured to start through a macOS LaunchAgent,
+/// prevent AppKit's logout/login restoration from launching a second copy.
+/// Dock `Reopen` remains a user action and still flows through
+/// `focus_main_on_second_instance` immediately.
+pub fn apply_launch_at_login_relaunch_policy<R: Runtime>(
+    app: &AppHandle<R>,
+    launch_at_login: bool,
+) {
+    #[cfg(target_os = "macos")]
+    {
+        let previous = RELAUNCH_ON_LOGIN_DISABLED.swap(launch_at_login, Ordering::SeqCst);
+        if previous == launch_at_login {
+            return;
+        }
+
+        if let Err(e) = set_relaunch_on_login_disabled(app, launch_at_login) {
+            RELAUNCH_ON_LOGIN_DISABLED.store(previous, Ordering::SeqCst);
+            log::warn!("failed to apply macOS relaunch-on-login policy: {e}");
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (app, launch_at_login);
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn set_relaunch_on_login_disabled<R: Runtime>(
+    app: &AppHandle<R>,
+    disabled: bool,
+) -> Result<(), tauri::Error> {
+    if MainThreadMarker::new().is_some() {
+        set_relaunch_on_login_disabled_on_main_thread(disabled);
+        return Ok(());
+    }
+
+    app.run_on_main_thread(move || {
+        set_relaunch_on_login_disabled_on_main_thread(disabled);
+    })
+}
+
+#[cfg(target_os = "macos")]
+fn set_relaunch_on_login_disabled_on_main_thread(disabled: bool) {
+    unsafe {
+        let ns_app: *mut AnyObject = msg_send![class!(NSApplication), sharedApplication];
+        if disabled {
+            let _: () = msg_send![ns_app, disableRelaunchOnLogin];
+        } else {
+            let _: () = msg_send![ns_app, enableRelaunchOnLogin];
+        }
+    }
 }
 
 // ---- run-event hook for Cmd+Q / system shutdown ---------------------------
@@ -720,4 +1179,66 @@ pub fn persist_on_exit_requested<R: Runtime>(app: &AppHandle<R>) {
     if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
         persist_window_geometry(&window, app_state.inner());
     }
+}
+
+/// Shared "user explicitly asked to quit" path used by the renderer's
+/// `quit_app` command, the tray Quit item, and the application menu's
+/// Quit item. Sets `is_will_quit` so the `CloseRequested` handler stops
+/// intercepting closes as "hide" and the `ExitRequested` hook stops
+/// preventing the exit, then asks Tauri to terminate.
+pub fn quit_app<R: Runtime>(app: &AppHandle<R>) {
+    let state = app.state::<AppState>();
+    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        persist_window_geometry(&window, state.inner());
+    }
+    state.is_will_quit.store(true, Ordering::SeqCst);
+    app.exit(0);
+}
+
+/// Mark the main window as hidden-to-tray without going through a
+/// close event. Called from `lib.rs::setup` when `hide_at_launch` is
+/// on so the main window is skipped at startup entirely — its webview
+/// process never loads until the user explicitly brings it up from
+/// the tray. From that point on the flag behaves exactly the same as
+/// when a lightweight-mode close sets it: `show_main_window`'s
+/// rebuild path is the canonical clear point, and the exit-guard
+/// machinery in `RunEvent::WindowEvent::CloseRequested` /
+/// `RunEvent::ExitRequested` keeps the app alive in the tray across
+/// auxiliary-window closes.
+pub fn enter_hidden_to_tray_state() {
+    MAIN_WINDOW_LIGHTWEIGHT_HIDDEN.store(true, Ordering::SeqCst);
+}
+
+/// Called from `RunEvent::WindowEvent::CloseRequested` for every
+/// webview the runtime is about to close. If the main window is in
+/// the hide-to-tray state *and* the window being closed is currently
+/// the last live webview, arm the short-lived exit guard so the
+/// imminent `ExitRequested` can be `prevent_exit`-ed without also
+/// blocking unrelated exit signals (Dock → Quit, shutdown).
+///
+/// Per-window `on_window_event` listeners run before
+/// `RunEvent::WindowEvent` (see tauri-runtime-wry `on_close_requested`),
+/// so when this is called for the main window, the lightweight-hidden
+/// state has already been set by `install_main_window_handlers`.
+pub fn arm_lightweight_exit_guard_if_last_window<R: Runtime>(
+    app: &AppHandle<R>,
+    closing_label: &str,
+) {
+    if !MAIN_WINDOW_LIGHTWEIGHT_HIDDEN.load(Ordering::SeqCst) {
+        return;
+    }
+    let other_alive = app
+        .webview_windows()
+        .keys()
+        .any(|label| label.as_str() != closing_label);
+    if !other_alive {
+        EXPECT_LIGHTWEIGHT_EXIT.store(true, Ordering::SeqCst);
+    }
+}
+
+/// Swap-take the short-lived exit guard set by
+/// `arm_lightweight_exit_guard_if_last_window`. Used by the
+/// `ExitRequested` run-event hook.
+pub fn take_expecting_lightweight_exit() -> bool {
+    EXPECT_LIGHTWEIGHT_EXIT.swap(false, Ordering::SeqCst)
 }
