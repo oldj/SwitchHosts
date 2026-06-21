@@ -146,6 +146,10 @@ fn read_collection_ids(dir: &Path) -> Result<Vec<String>, StorageError> {
     }
     let bytes = std::fs::read(&ids_file)
         .map_err(|e| StorageError::io(ids_file.display().to_string(), e))?;
-    serde_json::from_slice::<Vec<String>>(&bytes)
-        .map_err(|e| StorageError::parse(ids_file.display().to_string(), e))
+    // PotDb marks deleted slots with null rather than compacting the array,
+    // so ids.json can contain [null, null, "1895", "1896", ...]. Parse as
+    // Value first and skip any non-string entries.
+    let raw: Vec<Value> = serde_json::from_slice(&bytes)
+        .map_err(|e| StorageError::parse(ids_file.display().to_string(), e))?;
+    Ok(raw.into_iter().filter_map(|v| v.as_str().map(String::from)).collect())
 }
