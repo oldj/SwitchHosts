@@ -6,7 +6,7 @@
 import { ITreeNodeData, NodeIdType } from '@common/tree'
 import clsx from 'clsx'
 import lodash from 'lodash'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { canBeSelected, flatten, getNodeById, selectTo, treeMoveNode } from './fn'
 import Node, { NodeUpdate } from './Node'
 import styles from './style.module.scss'
@@ -41,6 +41,17 @@ const Tree = (props: ITreeProps) => {
   const [dropTargetId, setDropTargetId] = useState<NodeIdType | null>(null)
   const [selectedIds, setSelectedIds] = useState<NodeIdType[]>(props.selectedIds || [])
   const [dropWhere, setDropWhere] = useState<DropWhereType | null>(null)
+
+  // Stable refs so onNodeChange (memoized with []) always reads the
+  // latest tree and onChange, avoiding the React.memo stale-closure
+  // bug where a node whose data didn't change keeps an old handler
+  // whose captured tree lacks collapse states from sibling operations.
+  const treeRef = useRef(tree)
+  const onChangeRef = useRef(onChange)
+  useEffect(() => {
+    treeRef.current = tree
+    onChangeRef.current = onChange
+  })
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- local working copy; mutated mid-drag and reset when source data changes
@@ -93,15 +104,15 @@ const Tree = (props: ITreeProps) => {
     if (onChange) onChange(tree)
   }
 
-  const onNodeChange = (id: NodeIdType, data: Partial<ITreeNodeData>) => {
-    const tree2 = lodash.cloneDeep(tree)
+  const onNodeChange = useCallback((id: NodeIdType, data: Partial<ITreeNodeData>) => {
+    const tree2 = lodash.cloneDeep(treeRef.current)
     const node = getNodeById(tree2, id)
     if (!node) return
 
     Object.assign(node, data)
     setTree(tree2)
-    onTreeChange(tree2)
-  }
+    onChangeRef.current?.(tree2)
+  }, [])
 
   const onSelectOne = (id: NodeIdType, multipleType: MultipleSelectType = 0) => {
     // console.log('multipleType:', multipleType, 'ids:', selectedIds, 'id:', id)
