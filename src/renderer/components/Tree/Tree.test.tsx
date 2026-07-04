@@ -169,3 +169,37 @@ describe('Tree reorder DOM reconciliation', () => {
     expect(after.e).toBe(before.e)
   })
 })
+
+describe('folder collapse (React.memo stale closure)', () => {
+  // Regression for #1014: toggling one folder must not revert a
+  // sibling folder's collapse state. The bug was a stale onNodeChange
+  // closure retained by a memoized (unchanged data) Node, whose
+  // captured tree snapshot rewound siblings on cloneDeep.
+  const folders: ITreeNodeData[] = [
+    { id: 'A', title: 'A', is_collapsed: false, children: [{ id: 'a1', title: 'a1' }] },
+    { id: 'B', title: 'B', is_collapsed: false, children: [{ id: 'b1', title: 'b1' }] },
+  ]
+
+  const arrowOf = (container: HTMLElement, id: string): HTMLElement => {
+    const el = container.querySelector(`[data-id="${id}"] [data-collapsed]`)
+    if (!el) throw new Error(`collapse arrow for #${id} not found`)
+    return el as HTMLElement
+  }
+
+  const collapsedOf = (tree: ITreeNodeData[], id: string): boolean | undefined =>
+    tree.find((n) => n.id === id)?.is_collapsed
+
+  it('collapsing one folder does not revert a sibling folder', () => {
+    const onChange = vi.fn()
+    const { container } = render(<Harness initial_data={folders} onChange={onChange} />)
+
+    fireEvent.click(arrowOf(container, 'A'))
+    expect(collapsedOf(lastReceivedTree(onChange), 'A')).toBe(true)
+
+    // Collapsing B must not resurrect A's previous (expanded) state.
+    fireEvent.click(arrowOf(container, 'B'))
+    const tree = lastReceivedTree(onChange)
+    expect(collapsedOf(tree, 'B')).toBe(true)
+    expect(collapsedOf(tree, 'A')).toBe(true)
+  })
+})

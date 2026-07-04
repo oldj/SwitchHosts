@@ -47,9 +47,11 @@ const Tree = (props: ITreeProps) => {
   // bug where a node whose data didn't change keeps an old handler
   // whose captured tree lacks collapse states from sibling operations.
   const treeRef = useRef(tree)
-  treeRef.current = tree
   const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
+  useEffect(() => {
+    treeRef.current = tree
+    onChangeRef.current = onChange
+  })
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- local working copy; mutated mid-drag and reset when source data changes
