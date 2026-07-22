@@ -344,22 +344,13 @@ pub fn handle_menu_event<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) -> 
         if let Ok(manifest) = Manifest::load(&state.paths) {
             if let Some(node) = crate::storage::manifest::find_node(&manifest.root, host_id) {
                 let current_on = node.get("on").and_then(|v| v.as_bool()).unwrap_or(false);
-                let main_win = app.get_webview_window(crate::lifecycle::MAIN_WINDOW_LABEL);
-                if main_win.is_some() {
-                    let _ = app.emit("toggle_item", json!({ "_args": [host_id, !current_on] }));
-                } else if let Some(tray_win) = app.get_webview_window(TRAY_WINDOW_LABEL) {
-                    let _ = tray_win.emit("tray_toggle_item", json!({ "_args": [host_id, !current_on] }));
-                } else {
-                    if let Ok(tray_win) = create_tray_window(app) {
-                        let host_id = host_id.to_string();
-                        tauri::async_runtime::spawn(async move {
-                            tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
-                            let _ = tray_win.emit("tray_toggle_item", json!({ "_args": [&host_id, !current_on] }));
-                        });
-                    } else {
-                        crate::lifecycle::show_main_window(app);
-                    }
-                }
+                // Toggle + apply entirely in the backend so it works no
+                // matter which windows are alive — including lightweight
+                // mode, where the main window has been destroyed. Doing
+                // the apply here (rather than broadcasting to a webview)
+                // removes the old dependency on a live renderer and the
+                // fragile "create a window and wait" fallback.
+                crate::commands::toggle_host_from_tray(app, host_id, !current_on);
             }
         }
         return true;

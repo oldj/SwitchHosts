@@ -668,6 +668,19 @@ pub async fn apply_hosts_selection<R: Runtime>(
         }
     };
 
+    Ok(apply_aggregated_content(&app, state.inner(), content).await)
+}
+
+/// Apply already-aggregated hosts content to the system file, persist
+/// apply history, refresh the tray title, and run cmd-after-apply.
+/// Shared by the renderer-driven `apply_hosts_selection` command and
+/// the backend-only tray toggle path so both traverse an identical
+/// pipeline. Returns the renderer-facing result `Value`.
+pub async fn apply_aggregated_content<R: Runtime>(
+    app: &AppHandle<R>,
+    state: &AppState,
+    content: String,
+) -> Value {
     let (write_mode, history_limit, cmd_after_apply) = {
         let cfg = state.config.lock().expect("config mutex poisoned");
         (
@@ -684,11 +697,11 @@ pub async fn apply_hosts_selection<R: Runtime>(
     let outcome = match hosts_apply::apply_to_system_hosts(&content, &write_mode) {
         Ok(o) => o,
         Err(HostsApplyError::Cancelled) => {
-            return Ok(HostsApplyError::Cancelled.into_renderer_value());
+            return HostsApplyError::Cancelled.into_renderer_value();
         }
         Err(e) => {
             log::warn!("apply failed: {e}");
-            return Ok(e.into_renderer_value());
+            return e.into_renderer_value();
         }
     };
 
@@ -736,7 +749,7 @@ pub async fn apply_hosts_selection<R: Runtime>(
     // Push the freshest tray title to the menubar without waiting on
     // the renderer to call `update_tray_title` — the user expects to
     // see the title flip immediately after an apply.
-    if let Err(e) = tray::refresh_title(&app, state.inner()) {
+    if let Err(e) = tray::refresh_title(app, state) {
         log::warn!("failed to refresh tray title: {e}");
     }
 
@@ -761,11 +774,85 @@ pub async fn apply_hosts_selection<R: Runtime>(
         }
     }
 
-    Ok(json!({
+    json!({
         "success": true,
         "old_content": outcome.previous_content,
         "new_content": outcome.new_content,
-    }))
+    })
+}
+
+/// Toggle a single hosts item's on-state from a native tray-menu click
+/// and apply the result to the system — entirely in the backend, with
+/// no dependency on any webview being alive. This is what makes tray
+/// toggling work in lightweight mode where the main window has been
+/// destroyed.
+///
+/// Runs the mutation + apply on a background task (the privileged write
+/// may block at the OS auth prompt) and mirrors the renderer's
+/// `onToggleItem` gate: when no write mode is configured we can't apply
+/// silently, so we surface the main window instead.
+pub fn toggle_host_from_tray<R: Runtime>(app: &AppHandle<R>, id: &str, on: bool) {
+    let state = app.state::<AppState>();
+    let write_mode_empty = state
+        .config
+        .lock()
+        .map(|c| c.write_mode.is_empty())
+        .unwrap_or(true);
+    if write_mode_empty {
+        // No write mode configured — can't silently apply. Surface the
+        // main window (and ask it to prompt) like the renderer does.
+        lifecycle::show_main_window(app);
+        let _ = app.emit("show_set_write_mode", json!({ "_args": [{ "id": id, "on": on }] }));
+        return;
+    }
+
+    let app = app.clone();
+    let id = id.to_string();
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = toggle_host_and_apply(&app, &id, on).await {
+            log::warn!("tray toggle failed: {e}");
+        }
+    });
+}
+
+async fn toggle_host_and_apply<R: Runtime>(
+    app: &AppHandle<R>,
+    id: &str,
+    on: bool,
+) -> Result<(), String> {
+    let state = app.state::<AppState>();
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
+
+    let (choice_mode, multi_switch_all, remove_duplicate) = {
+        let cfg = state.config.lock().expect("config mutex poisoned");
+        (
+            cfg.choice_mode,
+            cfg.multi_chose_folder_switch_all,
+            cfg.remove_duplicate_records,
+        )
+    };
+
+    // Mutate the manifest on-state under the store lock, then release it
+    // before the potentially long-blocking privileged system write.
+    let new_list = {
+        let _guard = state.store_lock.lock().expect("store lock poisoned");
+        let mut m = load_manifest(&state).unwrap_or_default();
+        manifest::set_on_state_of_item(&mut m.root, id, on, choice_mode, multi_switch_all);
+        save_manifest(&state, &m).map_err(|e| e.to_string())?;
+        m.root.clone()
+    };
+
+    let content =
+        hosts_apply::aggregate_selected_content(&new_list, &state.paths, remove_duplicate)
+            .map_err(|e| e.to_string())?;
+
+    let _ = apply_aggregated_content(app, state.inner(), content).await;
+
+    // Refresh tray menu checkmarks and let any live window reload its list.
+    tray::refresh_menu(app);
+    let _ = app.emit("reload_list", json!({ "_args": [] }));
+
+    Ok(())
 }
 
 // ---- privileged helper (macOS SMAppService) --------------------------------
