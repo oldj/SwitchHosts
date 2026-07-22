@@ -347,7 +347,7 @@ pub fn handle_menu_event<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) -> 
                 let main_win = app.get_webview_window(crate::lifecycle::MAIN_WINDOW_LABEL);
                 if main_win.is_some() {
                     let _ = app.emit("toggle_item", json!({ "_args": [host_id, !current_on] }));
-                } else if let Some(tray_win) = app.get_webview_window("tray_window") {
+                } else if let Some(tray_win) = app.get_webview_window(TRAY_WINDOW_LABEL) {
                     let _ = tray_win.emit("tray_toggle_item", json!({ "_args": [host_id, !current_on] }));
                 } else {
                     crate::lifecycle::show_main_window(app);
