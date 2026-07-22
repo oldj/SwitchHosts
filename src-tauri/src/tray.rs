@@ -350,7 +350,15 @@ pub fn handle_menu_event<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) -> 
                 } else if let Some(tray_win) = app.get_webview_window(TRAY_WINDOW_LABEL) {
                     let _ = tray_win.emit("tray_toggle_item", json!({ "_args": [host_id, !current_on] }));
                 } else {
-                    crate::lifecycle::show_main_window(app);
+                    if let Ok(tray_win) = create_tray_window(app) {
+                        let host_id = host_id.to_string();
+                        tauri::async_runtime::spawn(async move {
+                            tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+                            let _ = tray_win.emit("tray_toggle_item", json!({ "_args": [&host_id, !current_on] }));
+                        });
+                    } else {
+                        crate::lifecycle::show_main_window(app);
+                    }
                 }
             }
         }
