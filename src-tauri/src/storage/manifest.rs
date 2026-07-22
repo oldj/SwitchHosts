@@ -208,6 +208,184 @@ fn node_children_mut(node: &mut Value) -> Option<&mut Vec<Value>> {
     node.get_mut("children").and_then(Value::as_array_mut)
 }
 
+fn node_is_folder(node: &Value) -> bool {
+    node.get("type").and_then(Value::as_str) == Some("folder")
+}
+
+/// Read a node's `folder_mode` (0 = default / inherit, 1 = single,
+/// 2 = multiple). Missing / non-numeric → 0, mirroring the renderer's
+/// `parent.folder_mode || defaultChoiceMode` falsy-coalescing.
+fn node_folder_mode(node: &Value) -> u8 {
+    node.get("folder_mode").and_then(Value::as_u64).unwrap_or(0) as u8
+}
+
+fn set_node_on(node: &mut Value, on: bool) {
+    if let Some(obj) = node.as_object_mut() {
+        obj.insert("on".to_string(), Value::Bool(on));
+    }
+}
+
+/// Mutable twin of `find_node`.
+fn find_node_mut<'a>(nodes: &'a mut [Value], id: &str) -> Option<&'a mut Value> {
+    for node in nodes.iter_mut() {
+        if node_id(node) == Some(id) {
+            return Some(node);
+        }
+        if let Some(children) = node_children_mut(node) {
+            if let Some(found) = find_node_mut(children, id) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
+/// Whether `id` is a direct child of the root forest.
+fn is_in_top_level(nodes: &[Value], id: &str) -> bool {
+    nodes.iter().any(|n| node_id(n) == Some(id))
+}
+
+/// Id of the folder that directly contains `id`, or `None` when `id`
+/// lives at the top level (mirrors renderer `getParentOfItem`).
+fn parent_id_of(nodes: &[Value], id: &str) -> Option<String> {
+    if is_in_top_level(nodes, id) {
+        return None;
+    }
+    fn rec(nodes: &[Value], id: &str) -> Option<String> {
+        for node in nodes {
+            if let Some(children) = node_children(node) {
+                if children.iter().any(|c| node_id(c) == Some(id)) {
+                    return node_id(node).map(String::from);
+                }
+                if let Some(found) = rec(children, id) {
+                    return Some(found);
+                }
+            }
+        }
+        None
+    }
+    rec(nodes, id)
+}
+
+/// Port of renderer `switchFolderChild`: cascade `on` to every
+/// descendant of a folder, unless the folder is in single-select mode
+/// (`folder_mode === 1`), which owns its own exclusivity.
+fn switch_folder_child(item: &mut Value, on: bool) {
+    if !node_is_folder(item) || node_folder_mode(item) == 1 {
+        return;
+    }
+    if let Some(children) = node_children_mut(item) {
+        for child in children.iter_mut() {
+            set_node_on(child, on);
+            if node_is_folder(child) {
+                switch_folder_child(child, on);
+            }
+        }
+    }
+}
+
+/// Port of renderer `switchItemParentIsON`: walk from `id` up through
+/// its folder ancestors, keeping each parent's `on` in sync with its
+/// children. Stops at the first single-select ancestor (`folder_mode
+/// === 1`), which manages its own state.
+fn switch_item_parent_is_on(nodes: &mut Vec<Value>, id: &str, on: bool) {
+    let mut current = id.to_string();
+    while let Some(pid) = parent_id_of(nodes, &current) {
+        if find_node(nodes, &pid).map(|p| node_folder_mode(&p)) == Some(1) {
+            return;
+        }
+        if !on {
+            if let Some(parent) = find_node_mut(nodes, &pid) {
+                set_node_on(parent, false);
+            }
+        } else if let Some(all_on) = find_node(nodes, &pid).and_then(|p| {
+            p.get("children").and_then(Value::as_array).map(|ch| {
+                ch.iter()
+                    .all(|c| c.get("on").and_then(Value::as_bool).unwrap_or(false))
+            })
+        }) {
+            if let Some(parent) = find_node_mut(nodes, &pid) {
+                set_node_on(parent, all_on);
+            }
+        }
+        if is_in_top_level(nodes, &pid) {
+            break;
+        }
+        current = pid;
+    }
+}
+
+/// In-place Rust port of renderer `setOnStateOfItem`
+/// (`src/common/hostsFn.ts`). Sets the on-state of `id`, applying
+/// choice-mode / folder-mode single-selection exclusion and the
+/// optional folder cascade so that tray, HTTP-API, and renderer
+/// toggles all produce byte-for-byte identical trees.
+///
+/// `default_choice_mode` is the global `choice_mode` config value
+/// (0 = default, 1 = single, 2 = multiple); it only excludes siblings
+/// when equal to 1. Folders may override it via their own
+/// `folder_mode`.
+pub fn set_on_state_of_item(
+    nodes: &mut Vec<Value>,
+    id: &str,
+    on: bool,
+    default_choice_mode: u8,
+    multi_chose_folder_switch_all: bool,
+) {
+    let item_is_top = is_in_top_level(nodes, id);
+
+    {
+        let Some(item) = find_node_mut(nodes, id) else {
+            return;
+        };
+        set_node_on(item, on);
+        if multi_chose_folder_switch_all {
+            switch_folder_child(item, on);
+        }
+    }
+
+    if multi_chose_folder_switch_all && !item_is_top {
+        switch_item_parent_is_on(nodes, id, on);
+    }
+
+    if !on {
+        return;
+    }
+
+    if item_is_top {
+        if default_choice_mode == 1 {
+            for node in nodes.iter_mut() {
+                if node_id(node) != Some(id) {
+                    set_node_on(node, false);
+                    if multi_chose_folder_switch_all {
+                        switch_folder_child(node, false);
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    if let Some(pid) = parent_id_of(nodes, id) {
+        let folder_mode = find_node(nodes, &pid).map(|p| node_folder_mode(&p)).unwrap_or(0);
+        let effective = if folder_mode != 0 { folder_mode } else { default_choice_mode };
+        if effective == 1 {
+            if let Some(parent) = find_node_mut(nodes, &pid) {
+                if let Some(children) = node_children_mut(parent) {
+                    for child in children.iter_mut() {
+                        if node_id(child) != Some(id) {
+                            set_node_on(child, false);
+                            if multi_chose_folder_switch_all {
+                                switch_folder_child(child, false);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// Walk the tree and collect the ids of every `local`/`remote` node
 /// reachable from the root. Used by the export command to know which
 /// `entries/<id>.hosts` files to inline into the backup JSON.
@@ -222,5 +400,125 @@ pub fn collect_content_ids(nodes: &[Value], out: &mut Vec<String>) {
         if let Some(children) = node_children(node) {
             collect_content_ids(children, out);
         }
+    }
+}
+
+#[cfg(test)]
+mod set_on_tests {
+    use super::*;
+
+    // root
+    // ├── a (local, on)
+    // ├── b (local, off)
+    // └── f (folder, off)
+    //     ├── c (local, off)
+    //     └── d (local, on)
+    fn fixture() -> Vec<Value> {
+        json!([
+            { "id": "a", "type": "local", "on": true },
+            { "id": "b", "type": "local", "on": false },
+            {
+                "id": "f",
+                "type": "folder",
+                "on": false,
+                "children": [
+                    { "id": "c", "type": "local", "on": false },
+                    { "id": "d", "type": "local", "on": true },
+                ]
+            },
+        ])
+        .as_array()
+        .cloned()
+        .unwrap()
+    }
+
+    fn on_of(nodes: &[Value], id: &str) -> bool {
+        find_node(nodes, id)
+            .and_then(|n| n.get("on").and_then(Value::as_bool))
+            .unwrap()
+    }
+
+    #[test]
+    fn multiple_mode_does_not_exclude_siblings() {
+        let mut nodes = fixture();
+        // choice_mode = 2 (multiple): turning b on leaves a on.
+        set_on_state_of_item(&mut nodes, "b", true, 2, false);
+        assert!(on_of(&nodes, "a"));
+        assert!(on_of(&nodes, "b"));
+    }
+
+    #[test]
+    fn single_mode_top_level_excludes_other_top_level_items() {
+        let mut nodes = fixture();
+        // choice_mode = 1 (single): turning b on turns a (and folder f) off.
+        set_on_state_of_item(&mut nodes, "b", true, 1, false);
+        assert!(on_of(&nodes, "b"));
+        assert!(!on_of(&nodes, "a"));
+        assert!(!on_of(&nodes, "f"));
+    }
+
+    #[test]
+    fn turning_off_never_excludes_siblings() {
+        let mut nodes = fixture();
+        set_on_state_of_item(&mut nodes, "a", false, 1, false);
+        assert!(!on_of(&nodes, "a"));
+        // b was already off; d inside folder stays on.
+        assert!(on_of(&nodes, "d"));
+    }
+
+    #[test]
+    fn folder_single_mode_excludes_only_within_folder() {
+        let mut nodes = fixture();
+        // Give folder f its own single-select mode.
+        find_node_mut(&mut nodes, "f")
+            .unwrap()
+            .as_object_mut()
+            .unwrap()
+            .insert("folder_mode".into(), json!(1));
+        // Turn c on: d (its sibling in f) goes off, top-level a stays on.
+        set_on_state_of_item(&mut nodes, "c", true, 2, false);
+        assert!(on_of(&nodes, "c"));
+        assert!(!on_of(&nodes, "d"));
+        assert!(on_of(&nodes, "a"));
+    }
+
+    #[test]
+    fn folder_inherits_global_single_mode_when_folder_mode_is_default() {
+        let mut nodes = fixture();
+        // folder_mode absent (0/default) → inherit global choice_mode = 1.
+        set_on_state_of_item(&mut nodes, "c", true, 1, false);
+        assert!(on_of(&nodes, "c"));
+        assert!(!on_of(&nodes, "d"));
+    }
+
+    #[test]
+    fn multi_switch_all_cascades_folder_children_and_updates_parent() {
+        let mut nodes = fixture();
+        // Turn the folder on with cascade → both children on, folder on.
+        set_on_state_of_item(&mut nodes, "f", true, 2, true);
+        assert!(on_of(&nodes, "f"));
+        assert!(on_of(&nodes, "c"));
+        assert!(on_of(&nodes, "d"));
+    }
+
+    #[test]
+    fn multi_switch_all_syncs_parent_off_when_a_child_turns_off() {
+        let mut nodes = fixture();
+        // d is on, c is off → folder currently off. Turn c on with
+        // cascade: all children on ⇒ parent folder flips on.
+        set_on_state_of_item(&mut nodes, "c", true, 2, true);
+        assert!(on_of(&nodes, "f"));
+        // Now turn d off with cascade: parent must flip off.
+        set_on_state_of_item(&mut nodes, "d", false, 2, true);
+        assert!(!on_of(&nodes, "f"));
+    }
+
+    #[test]
+    fn missing_id_is_a_noop() {
+        let mut nodes = fixture();
+        set_on_state_of_item(&mut nodes, "nope", true, 1, false);
+        // Nothing changed.
+        assert!(on_of(&nodes, "a"));
+        assert!(!on_of(&nodes, "b"));
     }
 }

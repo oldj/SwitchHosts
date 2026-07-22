@@ -531,6 +531,7 @@ pub fn run() {
             // window / misc
             commands::hide_main_window,
             commands::focus_main_window,
+            commands::is_main_window_alive,
             commands::quit_app,
             commands::update_tray_title,
             commands::open_url,

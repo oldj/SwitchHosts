@@ -79,7 +79,17 @@ const ListItem = (props: Props) => {
     on = typeof on === 'boolean' ? on : !isOn
     setIsOn(on)
 
-    agent.broadcast(events.toggle_item, data.id, on)
+    if (isTray) {
+      agent.call('is_main_window_alive').then((isMainAlive: boolean) => {
+        if (isMainAlive) {
+          agent.broadcast(events.toggle_item, data.id, on)
+        } else {
+          agent.broadcast(events.tray_toggle_item, data.id, on)
+        }
+      }).catch(console.error)
+    } else {
+      agent.broadcast(events.toggle_item, data.id, on)
+    }
   }
 
   if (!data) return null

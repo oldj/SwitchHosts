@@ -173,6 +173,15 @@ const List = (props: Props) => {
     [hostsData, configs, isTray],
   )
   useOnBroadcast(
+    events.tray_toggle_item,
+    (id: string, on: boolean) => {
+      if (isTray) {
+        onToggleItem(id, on)
+      }
+    },
+    [hostsData, configs, isTray],
+  )
+  useOnBroadcast(
     events.tray_list_updated,
     () => {
       if (!isTray) return
