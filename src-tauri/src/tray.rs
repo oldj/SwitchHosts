@@ -344,7 +344,14 @@ pub fn handle_menu_event<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) -> 
         if let Ok(manifest) = Manifest::load(&state.paths) {
             if let Some(node) = crate::storage::manifest::find_node(&manifest.root, host_id) {
                 let current_on = node.get("on").and_then(|v| v.as_bool()).unwrap_or(false);
-                let _ = app.emit("toggle_item", json!({ "_args": [host_id, !current_on] }));
+                let main_win = app.get_webview_window(crate::lifecycle::MAIN_WINDOW_LABEL);
+                if main_win.is_some() {
+                    let _ = app.emit("toggle_item", json!({ "_args": [host_id, !current_on] }));
+                } else if let Some(tray_win) = app.get_webview_window("tray_window") {
+                    let _ = tray_win.emit("tray_toggle_item", json!({ "_args": [host_id, !current_on] }));
+                } else {
+                    crate::lifecycle::show_main_window(app);
+                }
             }
         }
         return true;
