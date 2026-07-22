@@ -420,7 +420,7 @@ pub async fn get_content_of_list(
 }
 
 #[tauri::command]
-pub async fn set_list(state: State<'_, AppState>, args: Args) -> Result<Value, StorageError> {
+pub async fn set_list(app: AppHandle<Wry>, state: State<'_, AppState>, args: Args) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let list = args.into_iter().next().unwrap_or(Value::Null);
     let root = match list {
@@ -437,11 +437,13 @@ pub async fn set_list(state: State<'_, AppState>, args: Args) -> Result<Value, S
     let mut m = load_manifest(&state).unwrap_or_default();
     m.root = root;
     save_manifest(&state, &m)?;
+    tray::refresh_menu(&app);
     Ok(Value::Null)
 }
 
 #[tauri::command]
 pub async fn move_to_trashcan(
+    app: AppHandle<Wry>,
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
@@ -449,11 +451,13 @@ pub async fn move_to_trashcan(
     let id = arg_str(&args, 0, "id")?.to_string();
     let _guard = state.store_lock.lock().expect("store lock poisoned");
     move_ids_to_trashcan(&state, &[id])?;
+    tray::refresh_menu(&app);
     Ok(Value::Null)
 }
 
 #[tauri::command]
 pub async fn move_many_to_trashcan(
+    app: AppHandle<Wry>,
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
@@ -473,6 +477,7 @@ pub async fn move_many_to_trashcan(
     };
     let _guard = state.store_lock.lock().expect("store lock poisoned");
     move_ids_to_trashcan(&state, &ids)?;
+    tray::refresh_menu(&app);
     Ok(Value::Null)
 }
 
@@ -553,6 +558,7 @@ pub async fn delete_item_from_trashcan(
 
 #[tauri::command]
 pub async fn restore_item_from_trashcan(
+    app: AppHandle<Wry>,
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
@@ -581,6 +587,7 @@ pub async fn restore_item_from_trashcan(
     manifest::insert_node(&mut m.root, node, parent_id.as_deref());
     save_manifest(&state, &m)?;
     save_trashcan(&state, &t)?;
+    tray::refresh_menu(&app);
     Ok(json!(true))
 }
 

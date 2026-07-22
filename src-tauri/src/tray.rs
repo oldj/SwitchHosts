@@ -22,7 +22,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde_json::json;
 use tauri::image::Image;
-use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
+use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder, CheckMenuItemBuilder, SubmenuBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::webview::WebviewWindowBuilder;
 use tauri::{
@@ -241,10 +241,16 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> Result<Menu<R>, tauri::Error> {
         .build(app)?;
     let quit = MenuItemBuilder::with_id(MENU_ID_QUIT, labels.quit).build(app)?;
 
-    let menu_builder = MenuBuilder::new(app)
+    let mut menu_builder = MenuBuilder::new(app)
         .item(&show_main)
         .item(&version)
         .separator();
+
+    let state = app.state::<AppState>();
+    if let Ok(manifest) = Manifest::load(&state.paths) {
+        menu_builder = build_hosts_menu_items(app, menu_builder, &manifest.root)?;
+        menu_builder = menu_builder.separator();
+    }
 
     #[cfg(target_os = "macos")]
     let menu_builder = {
@@ -259,6 +265,62 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> Result<Menu<R>, tauri::Error> {
     };
 
     menu_builder.item(&quit).build()
+}
+
+fn build_hosts_menu_items<'a, R: Runtime>(
+    app: &'a AppHandle<R>,
+    mut builder: MenuBuilder<'a, R, AppHandle<R>>,
+    nodes: &[serde_json::Value],
+) -> Result<MenuBuilder<'a, R, AppHandle<R>>, tauri::Error> {
+    for node in nodes {
+        let title = node.get("title").and_then(|v| v.as_str()).unwrap_or("");
+        let id = node.get("id").and_then(|v| v.as_str()).unwrap_or("");
+        let is_on = node.get("on").and_then(|v| v.as_bool()).unwrap_or(false);
+        let kind = node.get("type").and_then(|v| v.as_str()).unwrap_or("");
+        
+        if kind == "folder" {
+            let mut submenu_builder = SubmenuBuilder::new(app, title);
+            if let Some(children) = node.get("children").and_then(|v| v.as_array()) {
+                submenu_builder = build_hosts_submenu_items(app, submenu_builder, children)?;
+            }
+            builder = builder.item(&submenu_builder.build()?);
+        } else if kind == "local" || kind == "remote" {
+            let menu_id = format!("tray-host-{}", id);
+            let item = CheckMenuItemBuilder::with_id(&menu_id, title)
+                .checked(is_on)
+                .build(app)?;
+            builder = builder.item(&item);
+        }
+    }
+    Ok(builder)
+}
+
+fn build_hosts_submenu_items<'a, R: Runtime>(
+    app: &'a AppHandle<R>,
+    mut builder: SubmenuBuilder<'a, R, AppHandle<R>>,
+    nodes: &[serde_json::Value],
+) -> Result<SubmenuBuilder<'a, R, AppHandle<R>>, tauri::Error> {
+    for node in nodes {
+        let title = node.get("title").and_then(|v| v.as_str()).unwrap_or("");
+        let id = node.get("id").and_then(|v| v.as_str()).unwrap_or("");
+        let is_on = node.get("on").and_then(|v| v.as_bool()).unwrap_or(false);
+        let kind = node.get("type").and_then(|v| v.as_str()).unwrap_or("");
+        
+        if kind == "folder" {
+            let mut submenu_builder = SubmenuBuilder::new(app, title);
+            if let Some(children) = node.get("children").and_then(|v| v.as_array()) {
+                submenu_builder = build_hosts_submenu_items(app, submenu_builder, children)?;
+            }
+            builder = builder.item(&submenu_builder.build()?);
+        } else if kind == "local" || kind == "remote" {
+            let menu_id = format!("tray-host-{}", id);
+            let item = CheckMenuItemBuilder::with_id(&menu_id, title)
+                .checked(is_on)
+                .build(app)?;
+            builder = builder.item(&item);
+        }
+    }
+    Ok(builder)
 }
 
 #[cfg(target_os = "macos")]
@@ -276,6 +338,18 @@ fn read_hide_dock_icon<R: Runtime>(app: &AppHandle<R>) -> bool {
 /// Called from the global `on_menu_event` handler in `lib.rs` when an
 /// id starts with `tray-`. Returns `true` if the id was handled here.
 pub fn handle_menu_event<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) -> bool {
+    if id.starts_with("tray-host-") {
+        let host_id = &id["tray-host-".len()..];
+        let state = app.state::<AppState>();
+        if let Ok(manifest) = Manifest::load(&state.paths) {
+            if let Some(node) = crate::storage::manifest::find_node(&manifest.root, host_id) {
+                let current_on = node.get("on").and_then(|v| v.as_bool()).unwrap_or(false);
+                let _ = app.emit("toggle_item", json!({ "_args": [host_id, !current_on] }));
+            }
+        }
+        return true;
+    }
+
     match id {
         MENU_ID_SHOW_MAIN => {
             show_main_window(app);
