@@ -1,7 +1,7 @@
 use encoding_rs::GBK;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::net::IpAddr;
@@ -10,7 +10,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error;
 
 pub const PROTOCOL_VERSION: u32 = 1;
-pub const PROTOCOL_SOURCE_ID: &str = "cfmind-hosts-v1-20260821";
+pub const PROTOCOL_SOURCE_ID: &str = "cfmind-hosts-v1-simple-20260821";
 pub const OWNER_LOCAL_AGENT: &str = "easyclaw.local-agent";
 pub const OWNER_ENVIRONMENT: &str = "easyclaw.environment";
 pub const SWITCHHOSTS_MARKER: &str = "# --- SWITCHHOSTS_CONTENT_START ---";
@@ -148,8 +148,6 @@ pub struct HostsInspection {
 #[derive(Debug, Clone)]
 struct OwnerBlock {
     content: String,
-    writer: Option<String>,
-    profile: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -422,12 +420,7 @@ fn transform(
     let mut warnings = Vec::new();
 
     match intent {
-        HostsIntentV1::UpsertOwner {
-            owner,
-            content,
-            writer,
-            profile,
-        } => {
+        HostsIntentV1::UpsertOwner { owner, content, .. } => {
             validate_owner(owner)?;
             validate_managed_content(content)?;
             if owner == OWNER_LOCAL_AGENT
@@ -447,8 +440,6 @@ fn transform(
                 owner.clone(),
                 OwnerBlock {
                     content: normalize_lf(content).trim_matches('\n').to_string(),
-                    writer: Some(writer.clone()),
-                    profile: profile.clone(),
                 },
             );
         }
@@ -461,7 +452,7 @@ fn transform(
             environment_content,
             expected_unmanaged_sha256,
             expected_environment_sha256,
-            writer,
+            ..
         } => {
             let current_unmanaged = sha256_text(&document.unmanaged);
             let current_environment = sha256_text(
@@ -490,8 +481,6 @@ fn transform(
                         OWNER_ENVIRONMENT.to_string(),
                         OwnerBlock {
                             content: normalize_lf(content).trim_matches('\n').to_string(),
-                            writer: Some(writer.clone()),
-                            profile: Some("Custom".to_string()),
                         },
                     );
                 }
@@ -533,11 +522,15 @@ fn transform(
     } else {
         rendered_lf
     };
-    let bytes = encode_hosts(&rendered, decoded.encoding)?;
+    #[cfg(target_os = "windows")]
+    let output_encoding = HostsEncoding::Gbk;
+    #[cfg(not(target_os = "windows"))]
+    let output_encoding = decoded.encoding;
+    let bytes = encode_hosts(&rendered, output_encoding)?;
     Ok(TransformOutcome {
         bytes,
         text: rendered,
-        encoding: decoded.encoding,
+        encoding: output_encoding,
         shadowed,
         warnings,
     })
@@ -596,8 +589,6 @@ fn parse_document(text: &str) -> Result<Document, CoordinatorError> {
             let expected_end = format!("{BLOCK_END_PREFIX}{owner}");
             index += 1;
             let mut content = Vec::new();
-            let mut writer = None;
-            let mut profile = None;
             let mut closed = false;
             while index < lines.len() {
                 let nested = lines[index].trim();
@@ -616,16 +607,7 @@ fn parse_document(text: &str) -> Result<Document, CoordinatorError> {
                     )));
                 }
                 if let Some(json) = nested.strip_prefix(META_PREFIX) {
-                    if let Ok(value) = serde_json::from_str::<serde_json::Value>(json) {
-                        writer = value
-                            .get("writer")
-                            .and_then(|value| value.as_str())
-                            .map(str::to_string);
-                        profile = value
-                            .get("profile")
-                            .and_then(|value| value.as_str())
-                            .map(str::to_string);
-                    }
+                    let _ = json;
                 } else {
                     content.push(lines[index].to_string());
                 }
@@ -640,8 +622,6 @@ fn parse_document(text: &str) -> Result<Document, CoordinatorError> {
                 owner.to_string(),
                 OwnerBlock {
                     content: content.join("\n").trim_matches('\n').to_string(),
-                    writer,
-                    profile,
                 },
             );
         } else if line.trim() == LEGACY_START {
@@ -670,8 +650,6 @@ fn parse_document(text: &str) -> Result<Document, CoordinatorError> {
                 OWNER_LOCAL_AGENT.to_string(),
                 OwnerBlock {
                     content: content.join("\n").trim_matches('\n').to_string(),
-                    writer: Some("local-agent-legacy".to_string()),
-                    profile: Some("Local Gateway".to_string()),
                 },
             );
         } else if line.trim().starts_with(BLOCK_END_PREFIX) {
@@ -716,56 +694,22 @@ fn parse_document(text: &str) -> Result<Document, CoordinatorError> {
 }
 
 fn compose_document(document: &Document) -> Result<(String, Vec<String>), CoordinatorError> {
-    let mut sections = Vec::<(String, Vec<String>)>::new();
-    for owner in [OWNER_LOCAL_AGENT, OWNER_ENVIRONMENT] {
-        if let Some(block) = document.blocks.get(owner) {
-            sections.push((owner.to_string(), split_lines(&block.content)));
-        }
-    }
-    for (owner, block) in &document.blocks {
-        if owner != OWNER_LOCAL_AGENT && owner != OWNER_ENVIRONMENT {
-            sections.push((owner.clone(), split_lines(&block.content)));
-        }
-    }
-    sections.push(("unmanaged".to_string(), split_lines(&document.unmanaged)));
-    if let Some(content) = &document.switchhosts {
-        sections.push(("switchhosts".to_string(), split_lines(content)));
-    }
-
-    let (resolved, shadowed) = resolve_conflicts(sections)?;
-    let mut resolved_by_source: HashMap<String, Vec<String>> = resolved.into_iter().collect();
     let mut output_sections = Vec::<String>::new();
 
     for owner in [OWNER_LOCAL_AGENT, OWNER_ENVIRONMENT] {
         if let Some(block) = document.blocks.get(owner) {
-            let content = resolved_by_source
-                .remove(owner)
-                .unwrap_or_default()
-                .join("\n");
-            output_sections.push(render_block(owner, block, &content));
+            output_sections.push(render_block(owner, &block.content));
         }
     }
     for (owner, block) in &document.blocks {
         if owner != OWNER_LOCAL_AGENT && owner != OWNER_ENVIRONMENT {
-            let content = resolved_by_source
-                .remove(owner)
-                .unwrap_or_default()
-                .join("\n");
-            output_sections.push(render_block(owner, block, &content));
+            output_sections.push(render_block(owner, &block.content));
         }
     }
-    let unmanaged = resolved_by_source
-        .remove("unmanaged")
-        .unwrap_or_default()
-        .join("\n");
-    if !unmanaged.trim().is_empty() {
-        output_sections.push(unmanaged.trim_matches('\n').to_string());
+    if !document.unmanaged.trim().is_empty() {
+        output_sections.push(document.unmanaged.trim_matches('\n').to_string());
     }
-    if document.switchhosts.is_some() {
-        let content = resolved_by_source
-            .remove("switchhosts")
-            .unwrap_or_default()
-            .join("\n");
+    if let Some(content) = &document.switchhosts {
         let switch_section = if content.trim().is_empty() {
             SWITCHHOSTS_MARKER.to_string()
         } else {
@@ -782,112 +726,16 @@ fn compose_document(document: &Document) -> Result<(String, Vec<String>), Coordi
     if !output.is_empty() {
         output.push('\n');
     }
-    Ok((output, shadowed))
+    Ok((output, Vec::new()))
 }
 
-fn render_block(owner: &str, block: &OwnerBlock, content: &str) -> String {
-    let mut meta = serde_json::Map::new();
-    if let Some(writer) = &block.writer {
-        meta.insert(
-            "writer".to_string(),
-            serde_json::Value::String(writer.clone()),
-        );
-    }
-    if let Some(profile) = &block.profile {
-        meta.insert(
-            "profile".to_string(),
-            serde_json::Value::String(profile.clone()),
-        );
-    }
+fn render_block(owner: &str, content: &str) -> String {
     let mut lines = vec![format!("{BLOCK_START_PREFIX}{owner}")];
-    if !meta.is_empty() {
-        lines.push(format!("{META_PREFIX}{}", serde_json::Value::Object(meta)));
-    }
     if !content.trim().is_empty() {
         lines.push(content.trim_matches('\n').to_string());
     }
     lines.push(format!("{BLOCK_END_PREFIX}{owner}"));
     lines.join("\n")
-}
-
-#[derive(Debug, Clone)]
-struct SeenRecord {
-    ip: IpAddr,
-    source: String,
-}
-
-fn resolve_conflicts(
-    sections: Vec<(String, Vec<String>)>,
-) -> Result<(Vec<(String, Vec<String>)>, Vec<String>), CoordinatorError> {
-    let mut seen = HashMap::<(String, u8), SeenRecord>::new();
-    let mut output = Vec::new();
-    let mut shadowed = Vec::new();
-    let mut conflicts = Vec::new();
-
-    for (source, lines) in sections {
-        let mut rendered = Vec::with_capacity(lines.len());
-        for line in lines {
-            let Some((ip, domains)) = parse_active_record(&line) else {
-                rendered.push(line);
-                continue;
-            };
-            let family = if ip.is_ipv4() { 4 } else { 6 };
-            let mut shadows = Vec::<String>::new();
-            let mut line_conflicts = Vec::<String>::new();
-            for domain in &domains {
-                let key = (domain.to_ascii_lowercase(), family);
-                if let Some(previous) = seen.get(&key) {
-                    if previous.ip == ip {
-                        shadows.push(previous.source.clone());
-                    } else if previous.source == OWNER_LOCAL_AGENT {
-                        shadows.push(OWNER_LOCAL_AGENT.to_string());
-                    } else {
-                        line_conflicts.push(format!(
-                            "{domain} (IPv{family}) maps to {} in {} but {ip} in {source}",
-                            previous.ip, previous.source
-                        ));
-                    }
-                }
-            }
-            if !line_conflicts.is_empty() {
-                conflicts.extend(line_conflicts);
-                rendered.push(line);
-                continue;
-            }
-            if !shadows.is_empty() {
-                if shadows.len() != domains.len() {
-                    conflicts.push(format!(
-                        "multi-domain line is only partially shadowed and must be split: {line}"
-                    ));
-                    rendered.push(line);
-                    continue;
-                }
-                let by = if shadows.iter().any(|item| item == OWNER_LOCAL_AGENT) {
-                    OWNER_LOCAL_AGENT
-                } else {
-                    shadows.first().map(String::as_str).unwrap_or("duplicate")
-                };
-                rendered.push(format!("{SHADOW_PREFIX}{by} | {line}"));
-                shadowed.push(format!("{source}: {line}"));
-                continue;
-            }
-            for domain in domains {
-                seen.insert(
-                    (domain.to_ascii_lowercase(), family),
-                    SeenRecord {
-                        ip,
-                        source: source.clone(),
-                    },
-                );
-            }
-            rendered.push(line);
-        }
-        output.push((source, rendered));
-    }
-    if !conflicts.is_empty() {
-        return Err(CoordinatorError::Conflict(conflicts.join("; ")));
-    }
-    Ok((output, shadowed))
 }
 
 fn parse_active_record(line: &str) -> Option<(IpAddr, Vec<String>)> {
@@ -1005,17 +853,6 @@ fn encode_hosts(text: &str, encoding: HostsEncoding) -> Result<Vec<u8>, Coordina
 
 fn normalize_lf(value: &str) -> String {
     value.replace("\r\n", "\n").replace('\r', "\n")
-}
-
-fn split_lines(value: &str) -> Vec<String> {
-    if value.is_empty() {
-        Vec::new()
-    } else {
-        normalize_lf(value)
-            .split('\n')
-            .map(str::to_string)
-            .collect()
-    }
 }
 
 fn sha256_text(value: &str) -> String {
@@ -1337,7 +1174,7 @@ mod tests {
     }
 
     #[test]
-    fn local_agent_shadows_and_then_restores_an_environment_mapping() {
+    fn local_agent_uses_section_order_and_removal_reveals_environment_mapping() {
         let env = transform_bytes(
             b"",
             &upsert(
@@ -1356,9 +1193,13 @@ mod tests {
             ),
         )
         .unwrap();
+        let local_pos = local.new_content.find(OWNER_LOCAL_AGENT).unwrap();
+        let environment_pos = local.new_content.find(OWNER_ENVIRONMENT).unwrap();
+        assert!(local_pos < environment_pos);
         assert!(local
             .new_content
-            .contains("cfmind-shadowed-by=easyclaw.local-agent"));
+            .contains("43.159.159.176 aibot-srv.easyclaw.com"));
+        assert!(!local.new_content.contains("cfmind-shadowed-by"));
         let restored = transform_bytes(
             local.new_content.as_bytes(),
             &HostsIntentV1::RemoveOwner {
@@ -1419,7 +1260,7 @@ mod tests {
     }
 
     #[test]
-    fn unrelated_different_ip_conflict_is_rejected() {
+    fn different_ip_records_coexist_without_conflict_detection() {
         let env = transform_bytes(
             b"",
             &upsert(OWNER_ENVIRONMENT, "10.0.0.1 api.local", "config-switcher"),
@@ -1432,8 +1273,27 @@ mod tests {
                 write_mode: "append".to_string(),
                 writer: "SwitchHosts".to_string(),
             },
-        );
-        assert!(matches!(result, Err(CoordinatorError::Conflict(_))));
+        )
+        .unwrap();
+        assert!(result.new_content.contains("10.0.0.1 api.local"));
+        assert!(result.new_content.contains("10.0.0.2 api.local"));
+        assert!(result.conflicts.is_empty());
+    }
+
+    #[test]
+    fn one_environment_block_accepts_existing_duplicate_domains() {
+        let result = transform_bytes(
+            b"",
+            &upsert(
+                OWNER_ENVIRONMENT,
+                "49.233.6.183 api-webchat-enterprise-v2.easyclaw.cn\n140.143.221.64 api-webchat-enterprise-v2.easyclaw.cn",
+                "config-switcher",
+            ),
+        )
+        .unwrap();
+        assert!(result.new_content.contains("49.233.6.183"));
+        assert!(result.new_content.contains("140.143.221.64"));
+        assert!(!result.new_content.contains(META_PREFIX));
     }
 
     #[test]
@@ -1469,6 +1329,36 @@ mod tests {
         let decoded =
             decode_hosts(&encode_hosts(&result.new_content, result.encoding).unwrap()).unwrap();
         assert!(decoded.text.contains("测试"));
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_converts_utf8_bom_input_to_gbk() {
+        let mut input = vec![0xef, 0xbb, 0xbf];
+        input.extend_from_slice("# 中文注释\r\n127.0.0.1 localhost\r\n".as_bytes());
+        let result = transform(
+            &input,
+            &upsert(OWNER_ENVIRONMENT, "10.0.0.1 env.local", "test"),
+            None,
+        )
+        .unwrap();
+
+        assert_eq!(result.encoding, HostsEncoding::Gbk);
+        assert!(!result.bytes.starts_with(&[0xef, 0xbb, 0xbf]));
+        assert!(std::str::from_utf8(&result.bytes).is_err());
+        let decoded = decode_hosts(&result.bytes).unwrap();
+        assert_eq!(decoded.encoding, HostsEncoding::Gbk);
+        assert!(decoded.text.contains("中文注释"));
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_rejects_text_that_cannot_be_encoded_as_gbk() {
+        let result = transform_bytes(
+            "# emoji 😀\r\n127.0.0.1 localhost\r\n".as_bytes(),
+            &upsert(OWNER_ENVIRONMENT, "10.0.0.1 env.local", "test"),
+        );
+        assert!(matches!(result, Err(CoordinatorError::Encoding(_))));
     }
 
     #[test]
