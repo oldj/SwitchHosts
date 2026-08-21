@@ -618,6 +618,20 @@ pub async fn set_hosts_content(
 #[tauri::command]
 pub async fn get_system_hosts(_args: Args) -> Result<Value, StorageError> {
     let path = system_hosts_path()?;
+    #[cfg(target_os = "windows")]
+    {
+        return match std::fs::read(&path) {
+            Ok(bytes) => hosts_coordinator_core::decode_fragment(&bytes)
+                .map(|content| json!(content))
+                .map_err(|e| StorageError::InvalidConfigValue {
+                    key: path.display().to_string(),
+                    reason: e.to_string(),
+                }),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(json!("")),
+            Err(e) => Err(StorageError::io(path.display().to_string(), e)),
+        };
+    }
+    #[cfg(not(target_os = "windows"))]
     match std::fs::read_to_string(&path) {
         Ok(s) => Ok(json!(s)),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(json!("")),
@@ -690,6 +704,7 @@ pub async fn apply_hosts_selection<R: Runtime>(
     // insert the new content). Skip the journal updates entirely when
     // the file was already up-to-date — we don't want a noop apply
     // to spam the history.
+    #[cfg(not(target_os = "windows"))]
     if !outcome.unchanged {
         let history_path = state.paths.histories_dir.join("system-hosts.json");
         let now_ms = chrono::Utc::now().timestamp_millis();
@@ -758,6 +773,12 @@ pub async fn apply_hosts_selection<R: Runtime>(
         "success": true,
         "old_content": outcome.previous_content,
         "new_content": outcome.new_content,
+        "changed": !outcome.unchanged,
+        "revision": outcome.revision,
+        "warnings": outcome.warnings,
+        "shadowed": outcome.shadowed,
+        "conflicts": [],
+        "history_id": outcome.history_id,
     }))
 }
 
@@ -871,11 +892,64 @@ pub async fn get_apply_history(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
-    let path = state.paths.histories_dir.join("system-hosts.json");
-    let items = hosts_apply::history::load(&path)?;
-    let value = serde_json::to_value(items)
-        .map_err(|e| StorageError::serialize(path.display().to_string(), e))?;
-    Ok(value)
+    #[cfg(target_os = "windows")]
+    {
+        let shared_dir = hosts_coordinator_core::shared_state_dir();
+        let mut entries =
+            hosts_coordinator_core::load_shared_history(&shared_dir).map_err(|e| {
+                StorageError::InvalidConfigValue {
+                    key: "shared Hosts history".to_string(),
+                    reason: e.to_string(),
+                }
+            })?;
+        if entries.is_empty() {
+            let legacy_path = state.paths.histories_dir.join("system-hosts.json");
+            for item in hosts_apply::history::load(&legacy_path)? {
+                if let Err(error) = hosts_coordinator_core::import_shared_snapshot(
+                    &shared_dir,
+                    item.content.as_bytes(),
+                    "SwitchHosts (legacy)",
+                    "import_legacy_history",
+                ) {
+                    log::warn!(
+                        "could not import legacy Hosts history item {}: {error}",
+                        item.id
+                    );
+                }
+            }
+            entries = hosts_coordinator_core::load_shared_history(&shared_dir).map_err(|e| {
+                StorageError::InvalidConfigValue {
+                    key: "shared Hosts history".to_string(),
+                    reason: e.to_string(),
+                }
+            })?;
+        }
+        let items = entries
+            .into_iter()
+            .filter_map(|entry| {
+                let bytes =
+                    hosts_coordinator_core::load_shared_snapshot(&shared_dir, &entry.sha256)
+                        .ok()?;
+                let content = hosts_coordinator_core::decode_fragment(&bytes).ok()?;
+                Some(ApplyHistoryItem {
+                    id: entry.id,
+                    content,
+                    add_time_ms: entry.timestamp_ms.min(i64::MAX as u128) as i64,
+                    label: Some(format!("{} · {}", entry.writer, entry.action)),
+                })
+            })
+            .collect::<Vec<_>>();
+        return serde_json::to_value(items)
+            .map_err(|e| StorageError::serialize("shared Hosts history", e));
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let path = state.paths.histories_dir.join("system-hosts.json");
+        let items = hosts_apply::history::load(&path)?;
+        let value = serde_json::to_value(items)
+            .map_err(|e| StorageError::serialize(path.display().to_string(), e))?;
+        Ok(value)
+    }
 }
 
 #[tauri::command]
@@ -885,9 +959,52 @@ pub async fn delete_apply_history_item(
 ) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?;
-    let path = state.paths.histories_dir.join("system-hosts.json");
-    let removed = hosts_apply::history::delete_by_id(&path, id)?;
-    Ok(json!(removed))
+    #[cfg(target_os = "windows")]
+    {
+        let removed = hosts_coordinator_core::delete_shared_history_entry(
+            &hosts_coordinator_core::shared_state_dir(),
+            id,
+        )
+        .map_err(|e| StorageError::InvalidConfigValue {
+            key: "shared Hosts history".to_string(),
+            reason: e.to_string(),
+        })?;
+        return Ok(json!(removed));
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let path = state.paths.histories_dir.join("system-hosts.json");
+        let removed = hosts_apply::history::delete_by_id(&path, id)?;
+        Ok(json!(removed))
+    }
+}
+
+#[tauri::command]
+pub async fn restore_apply_history_item(args: Args) -> Result<Value, String> {
+    let id = arg_str(&args, 0, "id").map_err(|e| e.to_string())?;
+    #[cfg(target_os = "windows")]
+    {
+        let history = hosts_coordinator_core::load_shared_history(
+            &hosts_coordinator_core::shared_state_dir(),
+        )
+        .map_err(|e| e.to_string())?;
+        let entry = history
+            .iter()
+            .find(|entry| entry.id == id)
+            .ok_or_else(|| format!("Hosts history entry not found: {id}"))?;
+        let intent = hosts_coordinator_core::HostsIntentV1::RestoreSnapshot {
+            snapshot_sha256: entry.sha256.clone(),
+            writer: "SwitchHosts".to_string(),
+        };
+        let result = hosts_apply::elevation::execute_coordinated_intent(&intent)
+            .map_err(|e| e.to_string())?;
+        return serde_json::to_value(result).map_err(|e| e.to_string());
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = id;
+        Err("shared Hosts snapshot restore is available on Windows only".to_string())
+    }
 }
 
 // ---- cmd_after_hosts_apply history -----------------------------------------
@@ -1758,10 +1875,7 @@ pub async fn apply_data_dir<R: Runtime>(
     // root is a degraded fallback, so even a missing pointer must still
     // restart to leave recovery — never short-circuit there, or the dialog's
     // button spins forever on a no-op that never restarts.
-    if is_default
-        && !data_dir_pointer::pointer_exists()
-        && state.data_dir_recovery.is_none()
-    {
+    if is_default && !data_dir_pointer::pointer_exists() && state.data_dir_recovery.is_none() {
         return Ok(json!({ "changed": false }));
     }
 

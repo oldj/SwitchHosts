@@ -26,6 +26,12 @@ pub enum HostsApplyError {
     #[error("cancelled")]
     Cancelled,
 
+    #[error("hosts conflict: {message}")]
+    Conflict {
+        message: String,
+        conflicts: Vec<String>,
+    },
+
     /// Filesystem / process error from a step that should normally
     /// succeed: temp file write, copy, chmod, exit code from
     /// osascript/pkexec/UAC helper.
@@ -42,15 +48,19 @@ impl HostsApplyError {
     /// { success: false, code?: string, message?: string }
     /// ```
     pub fn into_renderer_value(self) -> Value {
-        let (code, message) = match self {
-            HostsApplyError::NoAccess { message } => ("no_access", message),
-            HostsApplyError::Cancelled => ("cancelled", "user cancelled".to_string()),
-            HostsApplyError::Io { message } => ("fail", message),
-        };
-        json!({
-            "success": false,
-            "code": code,
-            "message": message,
-        })
+        match self {
+            HostsApplyError::NoAccess { message } => json!({
+                "success": false, "code": "no_access", "message": message, "conflicts": []
+            }),
+            HostsApplyError::Cancelled => json!({
+                "success": false, "code": "cancelled", "message": "user cancelled", "conflicts": []
+            }),
+            HostsApplyError::Conflict { message, conflicts } => json!({
+                "success": false, "code": "conflict", "message": message, "conflicts": conflicts
+            }),
+            HostsApplyError::Io { message } => json!({
+                "success": false, "code": "fail", "message": message, "conflicts": []
+            }),
+        }
     }
 }

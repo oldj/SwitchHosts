@@ -39,7 +39,9 @@ export const formatLine = (o: Partial<IHostsLineObj>): string => {
 
 const removeDuplicateRecords = (content: string): string => {
   const domainIpMap: IDomainsIPMap = {}
-  const lines = content.split('\n')
+  // Work on a canonical LF view so CRLF input does not retain a stray `\r`
+  // that later becomes `\r\r\n` when joined with the platform line ending.
+  const lines = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n')
   const newLines: string[] = []
 
   lines.map((line) => {

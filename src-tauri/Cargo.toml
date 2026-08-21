@@ -28,6 +28,7 @@ tauri-plugin-updater = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 dirs = "5"
+hosts-coordinator-core = { path = "crates/hosts-coordinator-core" }
 thiserror = "1"
 log = "0.4"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "gzip", "brotli", "socks"] }

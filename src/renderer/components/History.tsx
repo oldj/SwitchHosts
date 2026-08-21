@@ -128,6 +128,7 @@ const History = () => {
   const [list, setList] = useState<IHostsHistoryObject[]>([])
   const [selectedItem, setSelectedItem] = useState<IHostsHistoryObject>()
   const [deleteTarget, setDeleteTarget] = useState<IHostsHistoryObject>()
+  const [restoreTarget, setRestoreTarget] = useState<IHostsHistoryObject>()
 
   const { lang } = useI18n()
 
@@ -148,6 +149,7 @@ const History = () => {
     setIsOpen(false)
     setList([])
     setDeleteTarget(undefined)
+    setRestoreTarget(undefined)
   }
 
   const deleteItem = async (id: string) => {
@@ -168,6 +170,13 @@ const History = () => {
   const updateHistoryLimit = async (value: number) => {
     if (!value || value < 0) return
     await updateConfigs({ history_limit: value })
+  }
+
+  const restoreItem = async (id: string) => {
+    await actions.restoreHistory(id)
+    setRestoreTarget(undefined)
+    await loadData()
+    showSuccessNotification({ title: lang.trashcan_restore, message: lang.success })
   }
 
   useOnBroadcast(events.show_history, () => {
@@ -215,6 +224,13 @@ const History = () => {
             <Button
               variant="outline"
               disabled={!selectedItem}
+              onClick={() => selectedItem && setRestoreTarget(selectedItem)}
+            >
+              {lang.trashcan_restore}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={!selectedItem}
               onClick={() => selectedItem && setDeleteTarget(selectedItem)}
               leftSection={<IconX size={16} />}
             >
@@ -238,6 +254,15 @@ const History = () => {
           )}
         </Box>
       </SideDrawer>
+
+      <ConfirmModal
+        opened={!!restoreTarget}
+        onClose={() => setRestoreTarget(undefined)}
+        onConfirm={() => restoreTarget && restoreItem(restoreTarget.id)}
+        title={lang.trashcan_restore}
+        message={lang.trashcan_restore}
+        confirmLabel={lang.trashcan_restore}
+      />
 
       <ConfirmModal
         opened={!!deleteTarget}

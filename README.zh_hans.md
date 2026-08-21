@@ -1,3 +1,5 @@
+> Windows 版已支持 `CFMIND-HOSTS v1` 协同写入；append/overwrite 均保留 EasyClaw 受管分区，共享历史位于 `%ProgramData%\CFMind\HostsCoordinator\v1`。详见 [HOSTS_COORDINATION.md](../HOSTS_COORDINATION.md)。
+
 <div align="center" markdown="1">
   <sup>Special thanks to:</sup>
   <br>

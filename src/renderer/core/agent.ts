@@ -52,6 +52,7 @@ const LEGACY_TO_NEW: Record<string, string> = {
   refreshHosts: 'refresh_remote_hosts',
   getHistoryList: 'get_apply_history',
   deleteHistory: 'delete_apply_history_item',
+  restoreHistory: 'restore_apply_history_item',
 
   cmdGetHistoryList: 'cmd_get_history_list',
   cmdDeleteHistory: 'cmd_delete_history_item',

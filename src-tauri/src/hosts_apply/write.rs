@@ -36,6 +36,10 @@ pub struct ApplyOutcome {
     /// Renderer-visible result is still success in that case, but the
     /// caller can skip recording redundant history entries.
     pub unchanged: bool,
+    pub revision: String,
+    pub warnings: Vec<String>,
+    pub shadowed: Vec<String>,
+    pub history_id: Option<String>,
 }
 
 /// Write `aggregated_content` to the system hosts file using the
@@ -45,48 +49,86 @@ pub fn apply_to_system_hosts(
     aggregated_content: &str,
     write_mode: &str,
 ) -> Result<ApplyOutcome, HostsApplyError> {
-    let target = system_hosts_path()?;
-    let content_lf = normalize_line_endings(aggregated_content);
-
-    let previous_raw = read_system_hosts(&target).unwrap_or_default();
-    let previous_lf = normalize_line_endings(&previous_raw);
-
-    let final_content_lf = if write_mode == "append" {
-        make_append_content(&previous_lf, &content_lf)
-    } else {
-        content_lf.clone()
-    };
-
-    let disk_content = restore_line_endings(&final_content_lf);
-
-    if hash_str(&previous_raw) == hash_str(&disk_content) {
+    #[cfg(target_os = "windows")]
+    {
+        let intent = hosts_coordinator_core::HostsIntentV1::ApplySwitchHosts {
+            content: aggregated_content.to_string(),
+            write_mode: if write_mode.is_empty() {
+                "append".to_string()
+            } else {
+                write_mode.to_string()
+            },
+            writer: "SwitchHosts".to_string(),
+        };
+        let result = super::elevation::execute_coordinated_intent(&intent)?;
         return Ok(ApplyOutcome {
-            previous_content: previous_lf,
-            new_content: final_content_lf,
-            unchanged: true,
+            previous_content: result.old_content,
+            new_content: result.new_content,
+            unchanged: !result.changed,
+            revision: result.revision,
+            warnings: result.warnings,
+            shadowed: result.shadowed,
+            history_id: result.history_id,
         });
     }
 
-    match std::fs::write(&target, disk_content.as_bytes()) {
-        Ok(()) => Ok(ApplyOutcome {
-            previous_content: previous_lf,
-            new_content: final_content_lf,
-            unchanged: false,
-        }),
-        Err(e) if is_permission_denied(&e) => {
-            // Prefer the silent macOS helper; falls back to OS-native
-            // elevation (AEWP / pkexec / UAC) for any other platform or
-            // when the helper isn't available.
-            write_privileged(&target, &disk_content)?;
-            Ok(ApplyOutcome {
+    #[cfg(not(target_os = "windows"))]
+    {
+        let target = system_hosts_path()?;
+        let content_lf = normalize_line_endings(aggregated_content);
+
+        let previous_raw = read_system_hosts(&target).unwrap_or_default();
+        let previous_lf = normalize_line_endings(&previous_raw);
+
+        let final_content_lf = if write_mode == "append" {
+            make_append_content(&previous_lf, &content_lf)
+        } else {
+            content_lf.clone()
+        };
+
+        let disk_content = restore_line_endings(&final_content_lf);
+
+        if hash_str(&previous_raw) == hash_str(&disk_content) {
+            return Ok(ApplyOutcome {
+                previous_content: previous_lf,
+                new_content: final_content_lf,
+                unchanged: true,
+                revision: format!("{:016x}", hash_str(&disk_content)),
+                warnings: Vec::new(),
+                shadowed: Vec::new(),
+                history_id: None,
+            });
+        }
+
+        match std::fs::write(&target, disk_content.as_bytes()) {
+            Ok(()) => Ok(ApplyOutcome {
                 previous_content: previous_lf,
                 new_content: final_content_lf,
                 unchanged: false,
-            })
+                revision: format!("{:016x}", hash_str(&disk_content)),
+                warnings: Vec::new(),
+                shadowed: Vec::new(),
+                history_id: None,
+            }),
+            Err(e) if is_permission_denied(&e) => {
+                // Prefer the silent macOS helper; falls back to OS-native
+                // elevation (AEWP / pkexec / UAC) for any other platform or
+                // when the helper isn't available.
+                write_privileged(&target, &disk_content)?;
+                Ok(ApplyOutcome {
+                    previous_content: previous_lf,
+                    new_content: final_content_lf,
+                    unchanged: false,
+                    revision: format!("{:016x}", hash_str(&disk_content)),
+                    warnings: Vec::new(),
+                    shadowed: Vec::new(),
+                    history_id: None,
+                })
+            }
+            Err(e) => Err(HostsApplyError::Io {
+                message: format!("write {}: {e}", target.display()),
+            }),
         }
-        Err(e) => Err(HostsApplyError::Io {
-            message: format!("write {}: {e}", target.display()),
-        }),
     }
 }
 

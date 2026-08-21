@@ -46,6 +46,56 @@ pub fn write_with_elevation(target: &Path, content: &str) -> Result<(), HostsApp
     result
 }
 
+#[cfg(target_os = "windows")]
+pub fn execute_coordinated_intent(
+    intent: &hosts_coordinator_core::HostsIntentV1,
+) -> Result<hosts_coordinator_core::ApplyResultV1, HostsApplyError> {
+    let payload = serde_json::to_string(intent).map_err(|e| HostsApplyError::Io {
+        message: format!("failed to serialize coordinated Hosts intent: {e}"),
+    })?;
+    let staged = stage_temp_file(&payload)?;
+    let result_path = staged.with_extension("result.json");
+    let target = super::write::system_hosts_path()?;
+    let elevated = elevate_copy(&staged, &target);
+    let result_bytes = std::fs::read(&result_path).ok();
+    let _ = std::fs::remove_file(&staged);
+    let _ = std::fs::remove_file(&result_path);
+    if let Some(bytes) = result_bytes {
+        if let Ok(result) = serde_json::from_slice::<hosts_coordinator_core::ApplyResultV1>(&bytes)
+        {
+            return Ok(result);
+        }
+        if let Ok(value) = serde_json::from_slice::<serde_json::Value>(&bytes) {
+            if let Some(message) = value.get("error").and_then(serde_json::Value::as_str) {
+                if value.get("code").and_then(serde_json::Value::as_str) == Some("conflict") {
+                    let conflicts = value
+                        .get("conflicts")
+                        .and_then(serde_json::Value::as_array)
+                        .map(|items| {
+                            items
+                                .iter()
+                                .filter_map(serde_json::Value::as_str)
+                                .map(str::to_string)
+                                .collect()
+                        })
+                        .unwrap_or_default();
+                    return Err(HostsApplyError::Conflict {
+                        message: message.to_string(),
+                        conflicts,
+                    });
+                }
+                return Err(HostsApplyError::Io {
+                    message: message.to_string(),
+                });
+            }
+        }
+    }
+    elevated?;
+    Err(HostsApplyError::Io {
+        message: "elevated Hosts coordinator returned no result".to_string(),
+    })
+}
+
 // ---- privileged-write strategy ---------------------------------------------
 
 /// Which privileged-write mechanism to use. A pure decision (unit

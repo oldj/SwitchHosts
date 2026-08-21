@@ -70,6 +70,48 @@ fn overwrite_file_contents(src: &Path, dst: &Path) -> std::io::Result<u64> {
     std::io::copy(&mut input, &mut output)
 }
 
+#[cfg(target_os = "windows")]
+fn run_staged_hosts_operation(src: &Path, dst: &Path) -> Result<(), String> {
+    let bytes = std::fs::read(src).map_err(|e| {
+        format!(
+            "failed to read staged Hosts operation {}: {e}",
+            src.display()
+        )
+    })?;
+    if let Ok(intent) = serde_json::from_slice::<hosts_coordinator_core::HostsIntentV1>(&bytes) {
+        let result_path = src.with_extension("result.json");
+        let result = hosts_coordinator_core::execute_transaction(
+            dst,
+            &hosts_coordinator_core::shared_state_dir(),
+            &intent,
+        );
+        let payload = match &result {
+            Ok(value) => serde_json::to_vec(value)
+                .map_err(|e| format!("failed to serialize Hosts coordinator result: {e}"))?,
+            Err(error) => {
+                let (code, conflicts) = match error {
+                    hosts_coordinator_core::CoordinatorError::Conflict(message) => {
+                        ("conflict", vec![message.clone()])
+                    }
+                    _ => ("fail", Vec::new()),
+                };
+                serde_json::to_vec(&serde_json::json!({
+                    "error": error.to_string(),
+                    "code": code,
+                    "conflicts": conflicts,
+                }))
+                .map_err(|e| format!("failed to serialize Hosts coordinator error: {e}"))?
+            }
+        };
+        std::fs::write(&result_path, payload)
+            .map_err(|e| format!("failed to write {}: {e}", result_path.display()))?;
+        return result.map(|_| ()).map_err(|error| error.to_string());
+    }
+    overwrite_file_contents(src, dst)
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 /// Early argv check for the Windows elevation helper. On macOS / Linux
 /// this always returns false. On Windows, if the binary was spawned by
 /// [`hosts_apply::elevation::elevate_copy`] with
@@ -98,8 +140,8 @@ fn maybe_run_as_elevation_helper() -> bool {
                         std::process::exit(1);
                     }
                 };
-                let exit_code = match overwrite_file_contents(&src, &dst) {
-                    Ok(_) => 0,
+                let exit_code = match run_staged_hosts_operation(&src, &dst) {
+                    Ok(()) => 0,
                     Err(e) => {
                         eprintln!(
                             "[v5 elevation-helper] write {} -> {} failed: {e}",
@@ -512,6 +554,7 @@ pub fn run() {
             commands::refresh_all_remote_hosts,
             commands::get_apply_history,
             commands::delete_apply_history_item,
+            commands::restore_apply_history_item,
             // cmd_after_hosts_apply history
             commands::cmd_get_history_list,
             commands::cmd_delete_history_item,
