@@ -36,6 +36,8 @@ pub struct MenuLabels {
     pub show_main_window: &'static str,
     pub show_dock_icon: &'static str,
     pub hide_dock_icon: &'static str,
+    /// Fallback label for a hosts entry with an empty title.
+    pub untitled: &'static str,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -123,6 +125,7 @@ impl MenuLabels {
                 show_main_window: "显示主窗口",
                 show_dock_icon: "显示 Dock 图标",
                 hide_dock_icon: "隐藏 Dock 图标",
+                untitled: "未命名",
             },
             MenuLocale::ZhHant => Self {
                 file: "檔案",
@@ -157,6 +160,7 @@ impl MenuLabels {
                 show_main_window: "顯示主視窗",
                 show_dock_icon: "顯示 Dock 圖示",
                 hide_dock_icon: "隱藏 Dock 圖示",
+                untitled: "未命名",
             },
             MenuLocale::Fr => Self {
                 file: "Fichier",
@@ -191,6 +195,7 @@ impl MenuLabels {
                 show_main_window: "Afficher la fenêtre principale",
                 show_dock_icon: "Afficher l'icône dans le Dock",
                 hide_dock_icon: "Cacher l'icône dans le Dock",
+                untitled: "Sans titre",
             },
             MenuLocale::De => Self {
                 file: "Datei",
@@ -225,6 +230,7 @@ impl MenuLabels {
                 show_main_window: "Hauptfenster anzeigen",
                 show_dock_icon: "Dock-Symbol anzeigen",
                 hide_dock_icon: "Dock-Symbol ausblenden",
+                untitled: "Ohne Titel",
             },
             MenuLocale::Ja => Self {
                 file: "ファイル",
@@ -259,6 +265,7 @@ impl MenuLabels {
                 show_main_window: "メインウィンドウを表示",
                 show_dock_icon: "Dockアイコンを表示",
                 hide_dock_icon: "Dockアイコンを非表示",
+                untitled: "無題",
             },
             MenuLocale::Tr => Self {
                 file: "Dosya",
@@ -293,6 +300,7 @@ impl MenuLabels {
                 show_main_window: "Ana pencereyi göster",
                 show_dock_icon: "Dock simgesini göster",
                 hide_dock_icon: "Dock simgesini gizle",
+                untitled: "Başlıksız",
             },
             MenuLocale::Ko => Self {
                 file: "파일",
@@ -327,6 +335,7 @@ impl MenuLabels {
                 show_main_window: "메인 창 보기",
                 show_dock_icon: "Dock 아이콘 보기",
                 hide_dock_icon: "Dock 아이콘 숨기기",
+                untitled: "제목없음",
             },
             MenuLocale::Pl => Self {
                 file: "Plik",
@@ -361,6 +370,7 @@ impl MenuLabels {
                 show_main_window: "Pokaż główne okno",
                 show_dock_icon: "Pokaż ikonę Docka",
                 hide_dock_icon: "Ukryj ikonę Docka",
+                untitled: "Bez tytułu",
             },
             MenuLocale::En => Self {
                 file: "File",
@@ -395,6 +405,7 @@ impl MenuLabels {
                 show_main_window: "Show Main Window",
                 show_dock_icon: "Show Dock Icon",
                 hide_dock_icon: "Hide Dock Icon",
+                untitled: "Untitled",
             },
         }
     }
