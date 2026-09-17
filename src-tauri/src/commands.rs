@@ -1200,6 +1200,11 @@ pub async fn update_tray_title<R: Runtime>(
     _args: Args,
 ) -> Result<Value, StorageError> {
     tray::refresh_title(&app, &state)?;
+    // The tray menu lists every hosts entry with its on/off mark, and
+    // the renderer calls this straight after persisting any list change
+    // (`useHostsData::setList`) — so this is also where the menu learns
+    // about renames, new entries, deletions and toggles.
+    tray::refresh_menu(&app);
     Ok(Value::Null)
 }
 

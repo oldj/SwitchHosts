@@ -5,8 +5,11 @@
 //! - Tray icon present on every platform. macOS uses the template
 //!   variant so the OS recolours it for light/dark menu bars.
 //! - Right-click (or any-click on Linux) opens a context menu with a
-//!   main-window item, a disabled version label, an optional macOS-only
-//!   Dock toggle, and a quit item.
+//!   main-window item, a disabled version label, a check item per hosts
+//!   entry (folders become submenus) so configurations can be switched
+//!   without opening a window, an optional macOS-only Dock toggle, and a
+//!   quit item. The hosts items are rebuilt on every `refresh_menu`, and
+//!   clicking one runs `hosts_toggle::spawn_tray_toggle`.
 //! - Left-click on macOS/Windows shows the main window directly. The
 //!   tray mini-window (`/tray` route) is deferred to P2.B.2.
 //! - `update_tray_title` command (in commands.rs) walks the manifest
@@ -20,15 +23,19 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use serde_json::json;
+use serde_json::{json, Value};
 use tauri::image::Image;
-use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
+use tauri::menu::{
+    CheckMenuItem, CheckMenuItemBuilder, Menu, MenuBuilder, MenuItemBuilder, Submenu,
+    SubmenuBuilder,
+};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::webview::WebviewWindowBuilder;
 use tauri::{
     AppHandle, Emitter, Manager, Monitor, PhysicalPosition, Rect as TauriRect, Runtime, WebviewUrl,
 };
 
+use crate::hosts_toggle;
 use crate::i18n::menu_labels;
 use crate::lifecycle;
 use crate::storage::{manifest::Manifest, AppState, StorageError};
@@ -101,6 +108,9 @@ pub const MENU_ID_VERSION: &str = "tray-version";
 #[cfg(target_os = "macos")]
 pub const MENU_ID_TOGGLE_DOCK: &str = "tray-toggle-dock";
 pub const MENU_ID_QUIT: &str = "tray-quit";
+/// Prefix for the per-hosts-entry check items. The rest of the id is the
+/// entry's own id, so a click maps straight back to a manifest node.
+pub const MENU_ID_HOSTS_PREFIX: &str = "tray-hosts-";
 
 const TRAY_MAC_ICON: &[u8] = include_bytes!("../icons/tray-mac.png");
 const TRAY_ICON: &[u8] = include_bytes!("../icons/tray.png");
@@ -241,10 +251,23 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> Result<Menu<R>, tauri::Error> {
         .build(app)?;
     let quit = MenuItemBuilder::with_id(MENU_ID_QUIT, labels.quit).build(app)?;
 
-    let menu_builder = MenuBuilder::new(app)
+    let mut menu_builder = MenuBuilder::new(app)
         .item(&show_main)
         .item(&version)
         .separator();
+
+    // One check item per hosts entry, so configurations can be switched
+    // from the menu bar without opening a window at all.
+    let hosts_items = build_hosts_items(app, &hosts_nodes(app), labels.untitled)?;
+    if !hosts_items.is_empty() {
+        for item in &hosts_items {
+            menu_builder = match item {
+                HostsMenuItem::Entry(entry) => menu_builder.item(entry),
+                HostsMenuItem::Folder(folder) => menu_builder.item(folder),
+            };
+        }
+        menu_builder = menu_builder.separator();
+    }
 
     #[cfg(target_os = "macos")]
     let menu_builder = {
@@ -259,6 +282,83 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> Result<Menu<R>, tauri::Error> {
     };
 
     menu_builder.item(&quit).build()
+}
+
+/// A hosts entry as it appears in the tray menu: a plain check item, or
+/// — for a folder with children — a submenu holding the folder's own
+/// check item plus its contents.
+enum HostsMenuItem<R: Runtime> {
+    Entry(CheckMenuItem<R>),
+    Folder(Submenu<R>),
+}
+
+/// The manifest list the menu should mirror. Empty while the data
+/// directory is unavailable: the fallback root is only loaded to drive
+/// the recovery dialog, and offering to apply it from the menu bar would
+/// walk straight past that prompt.
+fn hosts_nodes<R: Runtime>(app: &AppHandle<R>) -> Vec<Value> {
+    let state = app.state::<AppState>();
+    if state.data_dir_recovery.is_some() {
+        return Vec::new();
+    }
+    match Manifest::load(&state.paths) {
+        Ok(manifest) => manifest.root,
+        Err(e) => {
+            log::warn!("failed to load manifest for the tray menu: {e}");
+            Vec::new()
+        }
+    }
+}
+
+fn build_hosts_items<R: Runtime>(
+    app: &AppHandle<R>,
+    nodes: &[Value],
+    untitled: &str,
+) -> Result<Vec<HostsMenuItem<R>>, tauri::Error> {
+    let mut items: Vec<HostsMenuItem<R>> = Vec::new();
+
+    for node in nodes {
+        let Some(id) = node.get("id").and_then(Value::as_str) else {
+            continue;
+        };
+        let title = entry_title(node, untitled);
+        let check = CheckMenuItemBuilder::with_id(hosts_menu_id(id), &title)
+            .checked(node.get("on").and_then(Value::as_bool).unwrap_or(false))
+            .build(app)?;
+
+        // A folder's own row can't be clicked once it carries a submenu,
+        // so its toggle moves inside, above its contents.
+        let children = node
+            .get("children")
+            .and_then(Value::as_array)
+            .filter(|c| !c.is_empty());
+        match children {
+            Some(children) => {
+                let mut submenu = SubmenuBuilder::new(app, &title).item(&check).separator();
+                for child in build_hosts_items(app, children, untitled)? {
+                    submenu = match child {
+                        HostsMenuItem::Entry(entry) => submenu.item(&entry),
+                        HostsMenuItem::Folder(folder) => submenu.item(&folder),
+                    };
+                }
+                items.push(HostsMenuItem::Folder(submenu.build()?));
+            }
+            None => items.push(HostsMenuItem::Entry(check)),
+        }
+    }
+
+    Ok(items)
+}
+
+fn hosts_menu_id(id: &str) -> String {
+    format!("{MENU_ID_HOSTS_PREFIX}{id}")
+}
+
+fn entry_title(node: &Value, untitled: &str) -> String {
+    match node.get("title").and_then(Value::as_str) {
+        Some(title) if !title.trim().is_empty() => title.to_string(),
+        _ => untitled.to_string(),
+    }
 }
 
 #[cfg(target_os = "macos")]
@@ -293,7 +393,16 @@ pub fn handle_menu_event<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) -> 
         // The version label is disabled, but the OS still surfaces a
         // click event for it on some platforms — swallow it silently.
         MENU_ID_VERSION => true,
-        _ => false,
+        _ => {
+            let Some(hosts_id) = id.strip_prefix(MENU_ID_HOSTS_PREFIX) else {
+                return false;
+            };
+            // The apply can block on an OS auth prompt, so it runs off
+            // the main thread; the toggle rebuilds this menu when it is
+            // done.
+            hosts_toggle::spawn_tray_toggle(app, hosts_id.to_string());
+            true
+        }
     }
 }
 
@@ -831,5 +940,36 @@ mod tests {
     fn title_for_tray_api_clears_missing_title_with_empty_string() {
         assert_eq!(title_for_tray_api(None), "");
         assert_eq!(title_for_tray_api(Some("Development")), "Development");
+    }
+
+    #[test]
+    fn hosts_menu_ids_round_trip_back_to_the_entry_id() {
+        let id = hosts_menu_id("6f0e1b2c-dev");
+        assert_eq!(id.strip_prefix(MENU_ID_HOSTS_PREFIX), Some("6f0e1b2c-dev"));
+    }
+
+    #[test]
+    fn hosts_menu_ids_never_collide_with_the_fixed_tray_items() {
+        for fixed in [MENU_ID_SHOW_MAIN, MENU_ID_VERSION, MENU_ID_QUIT] {
+            assert!(
+                fixed.strip_prefix(MENU_ID_HOSTS_PREFIX).is_none(),
+                "{fixed} would be dispatched as a hosts toggle"
+            );
+        }
+        #[cfg(target_os = "macos")]
+        assert!(MENU_ID_TOGGLE_DOCK
+            .strip_prefix(MENU_ID_HOSTS_PREFIX)
+            .is_none());
+    }
+
+    #[test]
+    fn entry_title_falls_back_to_the_untitled_label() {
+        assert_eq!(entry_title(&json!({ "title": "Dev" }), "Untitled"), "Dev");
+        assert_eq!(entry_title(&json!({ "title": "" }), "Untitled"), "Untitled");
+        assert_eq!(
+            entry_title(&json!({ "title": "  " }), "Untitled"),
+            "Untitled"
+        );
+        assert_eq!(entry_title(&json!({}), "Untitled"), "Untitled");
     }
 }

@@ -21,6 +21,7 @@ use tauri::{AppHandle, Emitter, Manager, Runtime};
 
 use crate::commands;
 use crate::hosts_apply::{self, HostsApplyError};
+use crate::lifecycle;
 use crate::storage::{manifest, manifest::Manifest, AppState};
 use crate::tray;
 
@@ -123,6 +124,81 @@ pub(crate) async fn apply_toggle<R: Runtime>(
     let _ = app.emit("tray:list_updated", json!({ "_args": [] }));
 
     Ok(())
+}
+
+/// Entry point for the tray menu's per-entry check items.
+///
+/// Spawned rather than awaited: menu events arrive on the main thread,
+/// and the privileged write can sit on an OS auth prompt for as long as
+/// the user takes to answer it.
+pub fn spawn_tray_toggle<R: Runtime + 'static>(app: &AppHandle<R>, id: String) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        toggle_from_tray(&app, &id).await;
+    });
+}
+
+async fn toggle_from_tray<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) {
+    let state = app.state::<AppState>();
+
+    // While the data directory is unavailable we're running on the
+    // fallback root purely to show the recovery dialog. Toggling then
+    // would apply the wrong data behind the user's back — send them to
+    // the dialog instead, exactly like the tray icon's click handler.
+    if state.data_dir_recovery.is_some() {
+        lifecycle::show_main_window(app);
+        return;
+    }
+
+    let manifest = match Manifest::load(&state.paths) {
+        Ok(m) => m,
+        Err(e) => {
+            log::warn!("failed to load the manifest for a tray toggle: {e}");
+            return;
+        }
+    };
+    let Some(node) = manifest::find_node(&manifest.root, id) else {
+        // The menu was built from an older manifest — the entry has been
+        // deleted since. Rebuild so the stale item disappears.
+        tray::refresh_menu(app);
+        return;
+    };
+    let on = !node
+        .get("on")
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false);
+
+    match apply_toggle(app, manifest, id, on).await {
+        Ok(()) => {
+            // Keep any open window in step. Folder and choice-mode rules
+            // can flip more than the entry that was clicked, so the list
+            // reloads rather than patching the one row — the explicit
+            // status broadcast bypasses `Tree`'s deep-equal memo, which
+            // can otherwise swallow the change.
+            let _ = app.emit("set_hosts_on_status", json!({ "_args": [id, on] }));
+            let _ = app.emit("reload_list", json!({ "_args": [] }));
+        }
+        Err(ToggleError::WriteModeUnset) => {
+            // Unlike the HTTP API, the tray can fall back on a UI: show
+            // the picker the renderer would have shown. Best effort —
+            // if the main window has to be built first, it may come up
+            // after this broadcast, and the user simply toggles again.
+            lifecycle::show_main_window(app);
+            let _ = app.emit(
+                "show_set_write_mode",
+                json!({ "_args": [{ "id": id, "on": on }] }),
+            );
+        }
+        Err(ToggleError::Apply(HostsApplyError::Cancelled)) => {
+            log::info!("tray toggle cancelled by the user: {id}");
+        }
+        Err(e) => log::warn!("tray toggle failed for {id}: {e}"),
+    }
+
+    // Always rebuild: the OS flips a check item's mark on click, so a
+    // failed or cancelled apply would otherwise leave the menu claiming
+    // a state the hosts file doesn't have.
+    tray::refresh_menu(app);
 }
 
 /// Why a backend toggle failed. Kept distinct so callers can say which,
