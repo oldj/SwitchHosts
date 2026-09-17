@@ -200,6 +200,8 @@ const lang: LanguageDict = {
   settings: '設定',
   show_dock_icon: 'Dockアイコンを表示',
   show_history: '履歴を表示',
+  show_hosts_in_tray_menu: 'トレイメニューから hosts を切り替える',
+  show_hosts_in_tray_menu_desc: 'トレイアイコンのメニューに hosts の一覧を表示し、ウィンドウを開かずに切り替えられるようにします。項目が多くメニューが長くなる場合はオフにしてください。',
   show_main_window: 'メインウィンドウを表示',
   show_title_on_tray: 'トレイにタイトルを表示',
   source_code: 'ソースコード',

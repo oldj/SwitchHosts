@@ -204,6 +204,8 @@ const lang: LanguageDict = {
   settings: 'Paramètres',
   show_dock_icon: "Afficher l'icône dans le Dock",
   show_history: "Afficher l'historique",
+  show_hosts_in_tray_menu: 'Changer de hosts depuis le menu de la barre',
+  show_hosts_in_tray_menu_desc: "Affiche vos entrées hosts dans le menu de l'icône de la barre des tâches, pour les activer sans ouvrir de fenêtre. Désactivez cette option si la liste rend le menu trop long.",
   show_main_window: 'Afficher la fenêtre principale',
   show_title_on_tray: 'Afficher le titre dans la barre des menus',
   source_code: 'Code source',

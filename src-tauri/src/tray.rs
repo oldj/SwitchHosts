@@ -292,13 +292,25 @@ enum HostsMenuItem<R: Runtime> {
     Folder(Submenu<R>),
 }
 
-/// The manifest list the menu should mirror. Empty while the data
-/// directory is unavailable: the fallback root is only loaded to drive
-/// the recovery dialog, and offering to apply it from the menu bar would
-/// walk straight past that prompt.
+/// The manifest list the menu should mirror, or nothing when the menu
+/// shouldn't carry one.
+///
+/// Empty in two cases: the user turned `show_hosts_in_tray_menu` off
+/// (a long list makes for an unwieldy menu), or the data directory is
+/// unavailable — the fallback root is only loaded to drive the recovery
+/// dialog, and offering to apply it from the menu bar would walk
+/// straight past that prompt.
 fn hosts_nodes<R: Runtime>(app: &AppHandle<R>) -> Vec<Value> {
     let state = app.state::<AppState>();
     if state.data_dir_recovery.is_some() {
+        return Vec::new();
+    }
+    let show = state
+        .config
+        .lock()
+        .map(|cfg| cfg.show_hosts_in_tray_menu)
+        .unwrap_or(true);
+    if !show {
         return Vec::new();
     }
     match Manifest::load(&state.paths) {

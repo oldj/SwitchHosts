@@ -201,6 +201,8 @@ export default {
   settings: 'Ayarlar',
   show_dock_icon: 'Dock simgesini göster',
   show_history: 'Geçmişi göster',
+  show_hosts_in_tray_menu: "Hosts'u görev çubuğu menüsünden değiştir",
+  show_hosts_in_tray_menu_desc: 'Hosts girdilerinizi görev çubuğu simgesinin menüsünde listeler, böylece pencere açmadan geçiş yapabilirsiniz. Liste menüyü çok uzatıyorsa bunu kapatın.',
   show_main_window: 'Ana pencereyi göster',
   show_title_on_tray: 'Görev çubuğunda başlığı göster',
   source_code: 'Kaynak kod',

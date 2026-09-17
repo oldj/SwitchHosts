@@ -190,6 +190,8 @@ const lang: LanguageDict = {
   settings: '設定',
   show_dock_icon: '顯示 Dock 圖示',
   show_history: '顯示歷史紀錄',
+  show_hosts_in_tray_menu: '在系統匣選單中切換 hosts',
+  show_hosts_in_tray_menu_desc: '在系統匣圖示的選單中列出所有 hosts 方案，無需開啟視窗即可切換。方案較多時可關閉此項，以免選單過長。',
   show_main_window: '顯示主視窗',
   show_title_on_tray: '在系統匣顯示標題',
   source_code: '原始碼',

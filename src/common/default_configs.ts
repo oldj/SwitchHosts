@@ -37,6 +37,7 @@ const configs = {
   http_api_on: false,
   http_api_only_local: true,
   tray_mini_window: true,
+  show_hosts_in_tray_menu: true,
   multi_chose_folder_switch_all: false,
   auto_check_update: true,
   lightweight_mode: false,

@@ -304,6 +304,33 @@ test.describe('preferences', () => {
     )
   })
 
+  test('tray menu hosts list defaults on and can be switched off', async ({ page }) => {
+    await clearMockCalls(page)
+
+    await page.getByLabel('Settings').click()
+    await page.getByText('Preferences').click()
+    const preferences = page.getByRole('dialog')
+    await expect(preferences.getByText('General')).toBeVisible()
+    await preferences.getByRole('tab', { name: 'Advanced' }).click()
+
+    const hostsInTrayMenu = preferences.getByLabel('Switch Hosts from the Tray Menu')
+    await expect(hostsInTrayMenu).toBeChecked()
+
+    await hostsInTrayMenu.uncheck()
+
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.configs.show_hosts_in_tray_menu
+      })
+      .toBe(false)
+
+    const calls = await getMockCalls(page)
+    expect(configPatches(calls)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ show_hosts_in_tray_menu: false })]),
+    )
+  })
+
   test('automatic update checks default on and save immediately', async ({ page }) => {
     await clearMockCalls(page)
 

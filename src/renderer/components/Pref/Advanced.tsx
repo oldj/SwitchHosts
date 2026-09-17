@@ -162,6 +162,16 @@ const Advanced = (props: IProps) => {
 
         <Box w="100%">
           <Checkbox
+            checked={data.show_hosts_in_tray_menu}
+            onChange={(e) => onChange({ show_hosts_in_tray_menu: e.target.checked })}
+            label={lang.show_hosts_in_tray_menu}
+            description={lang.show_hosts_in_tray_menu_desc}
+            styles={checkboxDescriptionStyles}
+          />
+        </Box>
+
+        <Box w="100%">
+          <Checkbox
             checked={data.lightweight_mode}
             onChange={(e) => onChange({ lightweight_mode: e.target.checked })}
             label={lang.lightweight_mode}

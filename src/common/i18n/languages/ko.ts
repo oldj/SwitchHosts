@@ -195,6 +195,8 @@ export default {
   settings: '설정',
   show_dock_icon: '독(Dock) 아이콘 보기',
   show_history: '이력 보기',
+  show_hosts_in_tray_menu: '트레이 메뉴에서 hosts 전환',
+  show_hosts_in_tray_menu_desc: '트레이 아이콘 메뉴에 hosts 항목을 나열하여 창을 열지 않고 전환할 수 있습니다. 항목이 많아 메뉴가 길어지면 이 옵션을 끄세요.',
   show_main_window: '메인 창 보기',
   show_title_on_tray: '트레이에 제목 표시',
   source_code: '소스 코드',

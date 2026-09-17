@@ -45,6 +45,7 @@ pub struct AppConfig {
     pub hide_dock_icon: bool,
     pub multi_chose_folder_switch_all: bool,
     pub tray_mini_window: bool,
+    pub show_hosts_in_tray_menu: bool,
     pub lightweight_mode: bool,
     pub quit_on_close: bool,
 
@@ -97,6 +98,7 @@ impl Default for AppConfig {
             hide_dock_icon: false,
             multi_chose_folder_switch_all: false,
             tray_mini_window: true,
+            show_hosts_in_tray_menu: true,
             lightweight_mode: false,
             quit_on_close: false,
 
