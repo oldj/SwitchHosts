@@ -192,6 +192,8 @@ const lang: LanguageDict = {
   settings: 'Einstellungen',
   show_dock_icon: 'Dock-Symbol anzeigen',
   show_history: 'Historie anzeigen',
+  show_hosts_in_tray_menu: 'Hosts über das Traymenü umschalten',
+  show_hosts_in_tray_menu_desc: 'Zeigt Ihre Hosts-Einträge im Menü des Taskleistensymbols an, sodass Sie sie ohne ein Fenster umschalten können. Deaktivieren Sie dies, wenn die Liste das Menü zu lang macht.',
   show_main_window: 'Hauptfenster anzeigen',
   show_title_on_tray: 'Titel in der Menüleiste anzeigen',
   source_code: 'Quellcode',

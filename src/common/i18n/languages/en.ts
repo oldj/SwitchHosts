@@ -188,6 +188,8 @@ export default {
   settings: 'Settings',
   show_dock_icon: 'Show Dock Icon',
   show_history: 'Show History',
+  show_hosts_in_tray_menu: 'Switch Hosts from the Tray Menu',
+  show_hosts_in_tray_menu_desc: 'List your hosts entries in the tray icon menu so you can switch them without opening a window. Turn this off if the list makes the menu too long.',
   show_main_window: 'Show Main Window',
   show_title_on_tray: 'Show Title in Tray',
   source_code: 'Source Code',

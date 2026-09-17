@@ -179,6 +179,8 @@ const lang: LanguageDict = {
   settings: '设置',
   show_dock_icon: '显示任务栏图标',
   show_history: '显示历史记录',
+  show_hosts_in_tray_menu: '在托盘菜单中切换 hosts',
+  show_hosts_in_tray_menu_desc: '在系统托盘图标的菜单中列出所有 hosts 方案，无需打开窗口即可切换。方案较多时可关闭此项，以免菜单过长。',
   show_main_window: '显示主窗口',
   show_title_on_tray: '在系统托盘显示标题',
   source_code: '源码',

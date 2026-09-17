@@ -278,6 +278,8 @@ fn apply_launch_at_login(app: &AppHandle<Wry>, enabled: bool) -> Result<(), Stor
 /// - `http_api_on` / `http_api_only_local` → start, stop or rebind
 ///   the local HTTP API server.
 /// - `locale` → rebuild native application and tray menus.
+/// - `show_hosts_in_tray_menu` → rebuild the tray menu so its hosts
+///   items appear or disappear.
 /// - `show_title_on_tray` → refresh or clear the tray title text.
 /// - `hide_dock_icon` → apply the macOS Dock policy and update the tray
 ///   toggle label.
@@ -295,13 +297,19 @@ fn apply_side_effects(app: &AppHandle<Wry>, state: &AppState, touched_keys: &[&s
     let touches_locale = touched_keys.iter().any(|k| *k == "locale");
     let touches_tray_title = touched_keys.iter().any(|k| *k == "show_title_on_tray");
     let touches_auto_update = touched_keys.iter().any(|k| *k == "auto_check_update");
+    let touches_tray_hosts = touched_keys.iter().any(|k| *k == "show_hosts_in_tray_menu");
 
     if touches_locale {
         if let Err(e) = app_menu::refresh(app) {
             log::warn!("failed to refresh app menu: {e}");
         }
-        tray::refresh_menu(app);
         find::refresh_find_window_title(app);
+    }
+
+    // The locale changes the menu's labels; the hosts preference changes
+    // whether it lists hosts entries at all.
+    if touches_locale || touches_tray_hosts {
+        tray::refresh_menu(app);
     }
 
     if touches_tray_title {

@@ -190,6 +190,8 @@ export default {
   settings: 'Ustawienia',
   show_dock_icon: 'Pokaż ikonę docka',
   show_history: 'Pokaż historię',
+  show_hosts_in_tray_menu: 'Przełączaj hosts z menu paska zadań',
+  show_hosts_in_tray_menu_desc: 'Wyświetla wpisy hosts w menu ikony paska zadań, aby przełączać je bez otwierania okna. Wyłącz tę opcję, jeśli lista sprawia, że menu jest zbyt długie.',
   show_main_window: 'Pokaż główne okno',
   show_title_on_tray: 'Pokaż tytuł na pasku zadań',
   source_code: 'Kod źródłowy',

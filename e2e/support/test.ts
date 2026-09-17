@@ -35,6 +35,7 @@ interface MockState {
     proxy_port: number
     refresh_remote_hosts_on_startup: boolean
     auto_check_update: boolean
+    show_hosts_in_tray_menu: boolean
   }
   contents: Record<string, string>
   systemHosts: string
