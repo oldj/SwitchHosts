@@ -53,7 +53,8 @@
 //! nobody while the endpoint still answers `ok`. The v5 storage plan
 //! anticipated this — it noted that applying directly inside the HTTP
 //! handler works even when no renderer is alive — so that is what the
-//! no-window path does, reusing the renderer's selection rules
+//! no-window path does, delegating to `hosts_toggle::apply_toggle`,
+//! which reuses the renderer's selection rules
 //! (`manifest::set_on_state_of_item`) and the same apply pipeline
 //! (`commands::apply_aggregated_content`) rather than a bare write.
 //!
@@ -78,12 +79,11 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager, Wry};
 
-use crate::commands;
-use crate::hosts_apply::{self, HostsApplyError};
+use crate::hosts_apply::HostsApplyError;
+use crate::hosts_toggle::{self, ToggleError};
 use crate::lifecycle::MAIN_WINDOW_LABEL;
 use crate::refresh::{self, RefreshError, RefreshOutcome};
-use crate::storage::{manifest, manifest::Manifest, AppState};
-use crate::tray;
+use crate::storage::{manifest::Manifest, AppState};
 
 // We pin the HTTP API to the default `Wry` runtime instead of staying
 // generic over `R: Runtime`. axum's `Handler` trait requires the
@@ -244,7 +244,7 @@ async fn api_toggle(State(state): State<AppRouterState>, Query(q): Query<IdQuery
     // No main window: a Tauri event with no listener is dropped, so the
     // broadcast above would silently do nothing. Apply in the handler
     // instead, reusing the same selection rules the renderer applies.
-    match apply_toggle_in_backend(&state.app, manifest, &id, !on).await {
+    match hosts_toggle::apply_toggle(&state.app, manifest, &id, !on).await {
         Ok(()) => "ok",
         Err(e) => {
             // A cancelled prompt is a deliberate user action, not a fault;
@@ -254,145 +254,20 @@ async fn api_toggle(State(state): State<AppRouterState>, Query(q): Query<IdQuery
             } else {
                 log::warn!("toggle failed for {id}: {e}");
             }
-            e.as_body()
+            toggle_error_body(&e)
         }
     }
 }
 
-/// Serialises backend applies. Without it two concurrent HTTP toggles
-/// would each stack an OS auth prompt and race to write the same files.
-static BACKEND_APPLY_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
-
-/// Backend-side equivalent of the renderer's `onToggleItem`: flip the
-/// node, apply through the same pipeline a UI-driven apply uses, then
-/// persist the tree. Used only when no renderer is alive to receive
-/// `toggle_item`.
-async fn apply_toggle_in_backend(
-    app: &AppHandle<Wry>,
-    manifest: Manifest,
-    id: &str,
-    on: bool,
-) -> Result<(), ToggleError> {
-    // One backend apply at a time. The privileged write can sit on an OS
-    // auth prompt indefinitely, and `cmd_after_hosts_apply` adds up to
-    // 30s on top; letting requests overlap would stack prompts and make
-    // the store races below unavoidable.
-    let _apply_guard = BACKEND_APPLY_LOCK.lock().await;
-
-    let app_state = app.state::<AppState>();
-    app_state
-        .require_data_dir_usable()
-        .map_err(|e| ToggleError::Storage(e.to_string()))?;
-
-    let (choice_mode, multi_chose_folder_switch_all, remove_duplicate, write_mode) = {
-        let cfg = app_state.config.lock().expect("config mutex poisoned");
-        (
-            cfg.choice_mode as u64,
-            cfg.multi_chose_folder_switch_all,
-            cfg.remove_duplicate_records,
-            cfg.write_mode.clone(),
-        )
-    };
-
-    // The renderer refuses to apply before a write mode is chosen and
-    // opens the picker instead (`onToggleItem` in List/index.tsx). We
-    // have no UI to fall back on, so refuse rather than silently taking
-    // `apply_to_system_hosts`'s overwrite default — that would wipe
-    // hand-written entries for anyone still carrying the empty value
-    // from an Electron-era config.
-    if write_mode.is_empty() {
-        return Err(ToggleError::WriteModeUnset);
-    }
-
-    let mut proposed = manifest;
-    manifest::set_on_state_of_item(
-        &mut proposed.root,
-        id,
-        on,
-        choice_mode,
-        multi_chose_folder_switch_all,
-    );
-
-    let content =
-        hosts_apply::aggregate_selected_content(&proposed.root, &app_state.paths, remove_duplicate)
-            .map_err(|e| ToggleError::Storage(e.to_string()))?;
-
-    commands::apply_aggregated_content(app, app_state.inner(), &content)
-        .await
-        .map_err(|commands::ApplyPipelineError::Apply(e)| ToggleError::Apply(e))?;
-
-    // Re-read under the store lock and re-apply the flip, rather than
-    // saving the tree we loaded before the write. The apply above can
-    // block on an auth prompt for minutes, and the refresh scanner or a
-    // tray window may have legitimately rewritten manifest.json in the
-    // meantime — saving our stale snapshot would clobber that. Same
-    // reasoning as the remote-refresh path in `refresh.rs`.
-    {
-        let _guard = app_state.store_lock.lock().expect("store lock poisoned");
-        let mut fresh =
-            Manifest::load(&app_state.paths).map_err(|e| ToggleError::Persist(e.to_string()))?;
-        manifest::set_on_state_of_item(
-            &mut fresh.root,
-            id,
-            on,
-            choice_mode,
-            multi_chose_folder_switch_all,
-        );
-        fresh
-            .save(&app_state.paths)
-            .map_err(|e| ToggleError::Persist(e.to_string()))?;
-    }
-
-    // `tray::refresh_title` reads manifest.json from disk, so the call
-    // inside the apply pipeline saw the pre-toggle tree. Refresh again
-    // now that the new one has landed, otherwise the menubar title
-    // trails one toggle behind — and with no window open it is the only
-    // place the user can see which profile is active.
-    if let Err(e) = tray::refresh_title(app, app_state.inner()) {
-        log::warn!("failed to refresh tray title after backend toggle: {e}");
-    }
-    // Mirrors the renderer's post-apply broadcast: a tray mini window is
-    // built lazily and then reused, so without this its list keeps
-    // showing the pre-toggle state.
-    let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
-
-    Ok(())
-}
-
-/// Why a backend toggle failed. Kept distinct so the endpoint can say
-/// which, instead of collapsing a user-cancelled prompt, a policy denial
-/// and a full disk into one opaque string.
-enum ToggleError {
-    WriteModeUnset,
-    Apply(HostsApplyError),
-    /// The write succeeded but the tree could not be persisted — the
-    /// system file and manifest.json now disagree.
-    Persist(String),
-    Storage(String),
-}
-
-impl ToggleError {
-    /// Response body. Terse and stable, like the existing `bad id.` /
-    /// `not found.` replies.
-    fn as_body(&self) -> &'static str {
-        match self {
-            ToggleError::WriteModeUnset => "write mode not set.",
-            ToggleError::Apply(HostsApplyError::Cancelled) => "cancelled.",
-            ToggleError::Apply(_) => "apply failed.",
-            ToggleError::Persist(_) => "applied but not persisted.",
-            ToggleError::Storage(_) => "apply failed.",
-        }
-    }
-}
-
-impl std::fmt::Display for ToggleError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ToggleError::WriteModeUnset => write!(f, "write mode is not set"),
-            ToggleError::Apply(e) => write!(f, "{e}"),
-            ToggleError::Persist(e) => write!(f, "applied but failed to persist the tree: {e}"),
-            ToggleError::Storage(e) => write!(f, "{e}"),
-        }
+/// Response body for a failed backend toggle. Terse and stable, like
+/// the existing `bad id.` / `not found.` replies.
+fn toggle_error_body(e: &ToggleError) -> &'static str {
+    match e {
+        ToggleError::WriteModeUnset => "write mode not set.",
+        ToggleError::Apply(HostsApplyError::Cancelled) => "cancelled.",
+        ToggleError::Apply(_) => "apply failed.",
+        ToggleError::Persist(_) => "applied but not persisted.",
+        ToggleError::Storage(_) => "apply failed.",
     }
 }
 
