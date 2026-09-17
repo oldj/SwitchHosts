@@ -117,8 +117,10 @@ pub(crate) async fn apply_toggle<R: Runtime>(
     }
     // Mirrors the renderer's post-apply broadcast: a tray mini window is
     // built lazily and then reused, so without this its list keeps
-    // showing the pre-toggle state.
-    let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+    // showing the pre-toggle state. The channel name is the *value* of
+    // `events.tray_list_updated` in `src/common/events.ts`, not the key
+    // — they differ for this one event.
+    let _ = app.emit("tray:list_updated", json!({ "_args": [] }));
 
     Ok(())
 }
