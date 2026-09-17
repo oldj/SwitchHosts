@@ -661,6 +661,23 @@ pub async fn apply_hosts_selection<R: Runtime>(
         }
     };
 
+    Ok(apply_content_to_system(&app, state.inner(), &content).await)
+}
+
+/// Write `content` to the system hosts file and run every side effect
+/// that has to follow a successful apply: the history journal, the
+/// `system_hosts_updated` broadcast, the tray title, and
+/// `cmd_after_hosts_apply`.
+///
+/// Shared by the renderer's `apply_hosts_selection` command and the
+/// tray menu's native toggle (`hosts_toggle::toggle_item`), so both
+/// paths journal and notify identically. Returns the same JSON envelope
+/// the renderer has always received.
+pub(crate) async fn apply_content_to_system<R: Runtime>(
+    app: &AppHandle<R>,
+    state: &AppState,
+    content: &str,
+) -> Value {
     let (write_mode, history_limit, cmd_after_apply) = {
         let cfg = state.config.lock().expect("config mutex poisoned");
         (
@@ -674,14 +691,14 @@ pub async fn apply_hosts_selection<R: Runtime>(
     // user at the OS auth prompt) and *must not* hold the store_lock —
     // see implementation-notes A5. We do all the work outside the lock
     // and only retake it for the history journal write below.
-    let outcome = match hosts_apply::apply_to_system_hosts(&content, &write_mode) {
+    let outcome = match hosts_apply::apply_to_system_hosts(content, &write_mode) {
         Ok(o) => o,
         Err(HostsApplyError::Cancelled) => {
-            return Ok(HostsApplyError::Cancelled.into_renderer_value());
+            return HostsApplyError::Cancelled.into_renderer_value();
         }
         Err(e) => {
             log::warn!("apply failed: {e}");
-            return Ok(e.into_renderer_value());
+            return e.into_renderer_value();
         }
     };
 
@@ -729,7 +746,7 @@ pub async fn apply_hosts_selection<R: Runtime>(
     // Push the freshest tray title to the menubar without waiting on
     // the renderer to call `update_tray_title` — the user expects to
     // see the title flip immediately after an apply.
-    if let Err(e) = tray::refresh_title(&app, state.inner()) {
+    if let Err(e) = tray::refresh_title(app, state) {
         log::warn!("failed to refresh tray title: {e}");
     }
 
@@ -754,11 +771,11 @@ pub async fn apply_hosts_selection<R: Runtime>(
         }
     }
 
-    Ok(json!({
+    json!({
         "success": true,
         "old_content": outcome.previous_content,
         "new_content": outcome.new_content,
-    }))
+    })
 }
 
 // ---- privileged helper (macOS SMAppService) --------------------------------
