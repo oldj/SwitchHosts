@@ -73,6 +73,6 @@
     "typescript-eslint": "^8.66.0",
     "vite": "8.2.1",
     "vite-plugin-static-copy": "4.1.1",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
