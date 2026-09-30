@@ -1,9 +1,27 @@
-# macOS 托盘小窗在全屏 Space 上的显示问题 — 三次修改历程
+# macOS 托盘全屏问题：修复与排查记录
+
+## 当前状态（2026-09-30）
+
+PR [#1051](https://github.com/oldj/SwitchHosts/pull/1051) 已合入 master，修复也已同步到 develop。
+作者已在 PR 描述确认四项手工验证通过：全屏上方显示、窗内移动不关闭、窗外移动不关闭、
+外部点击关闭。作者未提供完整 macOS 版本和显示器配置，不能将此视为全场景验证。
+
+后续改进在 `feature/macos-tray-regression-tests` 分支：
+
+- 用 AppKit 的具名 `NSEventMask` 常量代替手写位移，并对全部 64 位检查实际订阅范围。
+- 原生生命周期测试复用生产窗口模块，检查面板配置、销毁、注销和同名窗口再次创建。
+- 原生测试发现原先 `set_floating_panel(true)` 会把已设置的层级 101 重置为 3；
+  已调整调用顺序，确保最终层级为 `PopUpMenu`。
+- CI 补充 macOS Rust 及原生窗口测试，并覆盖 develop。
+
+可执行命令、测试边界、当前验证结果及待执行的手工矩阵见
+[macOS 托盘回归验证](macos-tray-testing.md)。下文保留排查历史；其中的根因假设与废弃方案
+不代表当前实现，当前状态以本节和验证记录为准。
 
 ## 背景
 
 SwitchHosts 的 macOS 托盘图标点击后会弹出一个小窗（`/tray` 路由），逻辑集中在
-`src-tauri/src/tray.rs`。小窗由 Tauri 的 `WebviewWindowBuilder` 创建，配置了
+`src-tauri/src/tray.rs`，原生窗口生命周期在 `src-tauri/src/tray/window.rs`。小窗由 Tauri 的 `WebviewWindowBuilder` 创建，配置了
 `always_on_top(true)` 与 `visible_on_all_workspaces(true)`。
 
 **初始 bug**：当其他 App 处于全屏（独立的 full-screen Space）时，点击托盘图标，
@@ -61,15 +79,15 @@ ScreenSaver level`。用户第二次实测后现象完全不变，排除了窗�
 继续检查关闭路径后定位到确定原因：`install_dismiss_monitors()` 使用原始
 `NSEventMask` 位运算，其中把 `1 << 5` 注释为 `OtherMouseDown`。但 NSEvent type 5 实际是
 `MouseMoved`，`OtherMouseDown` 是 type 25。于是当另一个 App 位于前台时，任何细微鼠标
-移动都会触发 global monitor，继而执行 `hide_tray_window()`；这也解释了为什么用户没有
+移动都会触发 global monitor，继而执行托盘关闭路径；这也解释了为什么用户没有
 把鼠标移出小窗范围，小窗仍会立刻消失。
 
-当前修复将第三个掩码位改为 `1 << 25`，只监听左键、右键和其他鼠标键按下；同时撤回
+PR #1051 将第三个掩码位改为 `1 << 25`，只监听左键、右键和其他鼠标键按下；同时撤回
 已被实测否定的层级试验，恢复 `Transient + PopUpMenu level`。新增结构回归测试，防止
-type 5 再次混入外部点击监听。修复已通过编译与自动化测试，等待用户进行第三轮真实
-全屏交互验证。
+type 5 再次混入外部点击监听。作者随后在 PR 描述中确认全屏显示及鼠标交互验证通过；
+后续代码已改用具名事件常量，详见当前验证记录。
 
-### 自动化验证
+### PR 提交时的自动化验证（历史记录）
 
 - `cargo check`：通过；
 - Rust：143 个单元测试通过；
@@ -79,8 +97,8 @@ type 5 再次混入外部点击监听。修复已通过编译与自动化测试�
 - ESLint：通过；
 - Playwright：本机缺少对应 Chromium 二进制，44 个用例未启动，不属于断言失败。
 
-> 后续真实 macOS 全屏行为由用户手工验证；自动化测试只保证配置与生命周期结构不会
-> 静默退回普通 `NSWindow` / 全局激活路径。
+> 上述是 PR 提交时的记录。后续新增了真正创建和销毁原生窗口的测试；
+> 真实跨应用全屏、鼠标交互和键盘焦点仍需手工矩阵验证。
 
 下面记录针对这个 bug 家族连续做的三次修复，每次修复各自引入的新症状，以及最终
 认定的根因和架构结论。
@@ -297,4 +315,4 @@ AppKit 代码承载 `WKWebView`，工作量明显更大。
 
 上面的 Fix #1～#3 保留为排查历史，不再代表当前代码。当前实现已经进入 Fix #4：复用
 原有 Tauri WebView，将 macOS 托盘窗转换为 nonactivating `NSPanel`，并移除托盘显示路径
-中的 App 全局激活。最新代码与验证状态以本文开头的“2026-09-17 修复进展”为准。
+中的 App 全局激活。最新代码与验证状态以本文开头的“当前状态”和链接的回归验证记录为准。
