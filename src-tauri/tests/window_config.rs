@@ -476,6 +476,36 @@ fn tray_routes_native_operations_through_the_runtime_tested_module() {
 }
 
 #[test]
+fn macos_tray_show_does_not_activate_the_application() {
+    const TRAY_SOURCE: &str = include_str!("../src/tray.rs");
+    const WINDOW_SOURCE: &str = include_str!("../src/tray/window.rs");
+    let show = extract_block_from(TRAY_SOURCE, "fn show_tray_window<")
+        .expect("show_tray_window must exist");
+    // Windows/Linux intentionally use set_focus(). Exclude only that block,
+    // keeping shared code and the macOS branch under this guard.
+    let other_platforms = extract_block_from(show, "#[cfg(not(target_os = \"macos\"))]")
+        .expect("non-macOS show branch must exist");
+    let macos_show = show.replacen(other_platforms, "", 1);
+    let native_show = extract_block_from(WINDOW_SOURCE, "pub fn show<")
+        .expect("native tray show helper must exist");
+
+    // Supplement the native lifecycle test, which cannot distinguish app
+    // launch activation from tray activation in an isolated desktop session.
+    for (name, body) in [
+        ("show_tray_window", macos_show.as_str()),
+        ("window::show", native_show),
+    ] {
+        let compact: String = body.chars().filter(|c| !c.is_whitespace()).collect();
+        for forbidden in ["activateIgnoringOtherApps", "activateWithOptions", ".set_focus("] {
+            assert!(
+                !compact.contains(forbidden),
+                "{name} must not activate the application through `{forbidden}`"
+            );
+        }
+    }
+}
+
+#[test]
 fn macos_tray_monitors_share_the_tested_mouse_event_mask() {
     const SOURCE: &str = include_str!("../src/tray.rs");
     let monitor = extract_block_from(SOURCE, "fn install_dismiss_monitors")

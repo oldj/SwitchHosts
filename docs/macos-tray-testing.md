@@ -13,7 +13,8 @@ cargo test --locked --manifest-path src-tauri/Cargo.toml
 
 `tray::tests::dismiss_monitor_accepts_only_mouse_button_presses` 检查全部 64 个事件掩码位：
 只允许左键、右键和其他鼠标键按下，排除移动、拖动、抬起、滚轮及键盘事件。
-结构测试仅保留接线检查，确保两个监听器使用被测试的掩码，生产入口调用被测试的窗口模块。
+结构测试检查两个监听器使用被测试的掩码，生产入口调用被测试的窗口模块；另外检查托盘显示
+入口及原生显示函数不重新引入全局激活调用。Windows/Linux 所需的 `set_focus()` 不受此限制。
 
 原生生命周期测试需要 **macOS 已登录的桌面会话**，会短暂显示空白测试窗口：
 
