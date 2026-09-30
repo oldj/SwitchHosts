@@ -129,12 +129,16 @@ pub fn run() {
 
     let state = AppState::bootstrap().expect("failed to bootstrap SwitchHosts v5 storage layer");
 
-    let app = tauri::Builder::default()
+    let builder = tauri::Builder::default()
         // Single-instance MUST be the first plugin so a second
         // launch is intercepted before any other plugin starts up.
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             lifecycle::focus_main_on_second_instance(app, args, cwd)
-        }))
+        }));
+    #[cfg(target_os = "macos")]
+    let builder = builder.plugin(tauri_nspanel::init());
+
+    let app = builder
         // The login-start entry (LaunchAgent / run key / autostart file)
         // passes a marker flag so a login launch is distinguishable from
         // the user opening the app — see LOGIN_LAUNCH_ARG in lifecycle.

@@ -463,6 +463,71 @@ fn tray_window_suppresses_focus_loss_right_after_show() {
 }
 
 #[test]
+fn macos_tray_uses_a_nonactivating_fullscreen_panel() {
+    const SOURCE: &str = include_str!("../src/tray.rs");
+    let configure = extract_block_from(SOURCE, "fn configure_tray_panel")
+        .expect("macOS tray window must have an NSPanel configuration step");
+
+    for required in [
+        "to_panel::<TrayPanel<R>>()",
+        "nonactivating_panel()",
+        "can_join_all_spaces()",
+        "full_screen_auxiliary()",
+        "PanelLevel::PopUpMenu",
+    ] {
+        assert!(
+            configure.contains(required),
+            "macOS tray panel configuration must contain `{required}`"
+        );
+    }
+
+    let show =
+        extract_block_from(SOURCE, "fn show_tray_window<").expect("show_tray_window must exist");
+    assert!(
+        show.contains("show_and_make_key"),
+        "macOS must show the nonactivating panel through the panel API"
+    );
+    assert!(
+        !show.contains("activateIgnoringOtherApps"),
+        "showing the tray panel must not activate the whole app and switch Spaces"
+    );
+}
+
+#[test]
+fn macos_tray_global_monitor_does_not_treat_mouse_move_as_outside_click() {
+    const SOURCE: &str = include_str!("../src/tray.rs");
+    let monitor = extract_block_from(SOURCE, "fn install_dismiss_monitors")
+        .expect("macOS tray must install outside-click monitors");
+
+    assert!(
+        monitor.contains("OTHER_MOUSE_DOWN_MASK: u64 = 1 << 25"),
+        "NSEventType::OtherMouseDown is type 25 and its mask must use bit 25"
+    );
+    assert!(
+        !monitor.contains("const MASK: u64 = (1 << 1) | (1 << 3) | (1 << 5)"),
+        "NSEvent type 5 is MouseMoved; monitoring bit 5 closes the tray on any pointer movement"
+    );
+}
+
+#[test]
+fn macos_tray_panel_is_restored_before_destroying_its_webview() {
+    const SOURCE: &str = include_str!("../src/tray.rs");
+    let close = extract_block_from(SOURCE, "fn close_tray_window")
+        .expect("tray dismissal must have a platform-aware close path");
+
+    let restore = close
+        .find("panel.to_window()")
+        .expect("macOS close must remove the retained panel and restore NSWindow");
+    let destroy = close
+        .find("window.close()")
+        .expect("the restored Tauri window must be destroyed");
+    assert!(
+        restore < destroy,
+        "the panel must be restored and unregistered before its WebView is destroyed"
+    );
+}
+
+#[test]
 fn find_window_waits_for_renderer_ready_before_showing() {
     const RUST_SOURCE: &str = include_str!("../src/find.rs");
     const FIND_PAGE_SOURCE: &str = include_str!("../../src/renderer/pages/find.tsx");
