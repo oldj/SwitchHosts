@@ -24,37 +24,29 @@ use serde_json::json;
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::webview::WebviewWindowBuilder;
 use tauri::{
-    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, Rect as TauriRect, Runtime, WebviewUrl,
+    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, Rect as TauriRect, Runtime,
 };
 
 use crate::i18n::menu_labels;
 use crate::lifecycle;
 use crate::storage::{AppState, StorageError};
 
+mod window;
+use window::{TRAY_WINDOW_HEIGHT, TRAY_WINDOW_WIDTH};
+pub use window::TRAY_WINDOW_LABEL;
+
+// Use AppKit's named masks so pointer motion cannot accidentally become a
+// dismissal event (NSEventType::MouseMoved is 5, OtherMouseDown is 25).
 #[cfg(target_os = "macos")]
-use tauri_nspanel::{
-    tauri_panel, CollectionBehavior, ManagerExt as PanelManagerExt, PanelLevel, StyleMask,
-    WebviewWindowExt,
+const TRAY_DISMISS_MOUSE_EVENTS: tauri_nspanel::objc2_app_kit::NSEventMask = {
+    use tauri_nspanel::objc2_app_kit::NSEventMask;
+    NSEventMask::LeftMouseDown
+        .union(NSEventMask::RightMouseDown)
+        .union(NSEventMask::OtherMouseDown)
 };
 
-#[cfg(target_os = "macos")]
-tauri_panel! {
-    panel!(TrayPanel {
-        config: {
-            can_become_key_window: true,
-            can_become_main_window: false,
-            is_floating_panel: true
-        }
-    })
-}
-
 pub const TRAY_ID: &str = "main-tray";
-pub const TRAY_WINDOW_LABEL: &str = "tray";
-
-const TRAY_WINDOW_WIDTH: f64 = 300.0;
-const TRAY_WINDOW_HEIGHT: f64 = 600.0;
 
 /// Click-toggle dedupe window, in milliseconds.
 ///
@@ -479,10 +471,7 @@ fn show_tray_window<R: Runtime>(
     // activating SwitchHosts or disturbing the current Space.
     #[cfg(target_os = "macos")]
     {
-        let panel = app
-            .get_webview_panel(TRAY_WINDOW_LABEL)
-            .map_err(|_| "tray NSPanel is not registered".to_string())?;
-        panel.show_and_make_key();
+        window::show(app)?;
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -504,29 +493,7 @@ fn show_tray_window<R: Runtime>(
 fn create_tray_window<R: Runtime>(
     app: &AppHandle<R>,
 ) -> Result<tauri::WebviewWindow<R>, tauri::Error> {
-    // The renderer's HashRouter mounts /tray at `#/tray`. WebviewUrl::App
-    // joins its argument into the app base URL via `Url::join`, which
-    // treats `#/tray` as setting the fragment — so the resulting webview
-    // URL is `<base>/#/tray`, exactly what HashRouter expects.
-    let url = WebviewUrl::App("#/tray".into());
-    let window = WebviewWindowBuilder::new(app, TRAY_WINDOW_LABEL, url)
-        .title("SwitchHosts Tray")
-        .inner_size(TRAY_WINDOW_WIDTH, TRAY_WINDOW_HEIGHT)
-        .resizable(false)
-        .maximizable(false)
-        .minimizable(false)
-        .decorations(false)
-        .transparent(true)
-        .always_on_top(true)
-        .skip_taskbar(true)
-        .visible_on_all_workspaces(true)
-        .accept_first_mouse(true)
-        .visible(false)
-        .shadow(true)
-        .build()?;
-
-    #[cfg(target_os = "macos")]
-    configure_tray_panel(&window)?;
+    let window = window::create(app)?;
 
     #[cfg(not(target_os = "macos"))]
     {
@@ -562,53 +529,10 @@ fn create_tray_window<R: Runtime>(
     Ok(window)
 }
 
-#[cfg(target_os = "macos")]
-fn configure_tray_panel<R: Runtime>(window: &tauri::WebviewWindow<R>) -> Result<(), tauri::Error> {
-    let panel = window.to_panel::<TrayPanel<R>>()?;
-
-    // Borderless preserves the existing transparent popover appearance;
-    // NonactivatingPanel is the key behavior that lets the webview receive
-    // input without bringing the whole Regular app (and its home Space) to
-    // the foreground.
-    panel.set_style_mask(
-        StyleMask::empty()
-            .borderless()
-            .nonactivating_panel()
-            .value(),
-    );
-    panel.set_collection_behavior(
-        CollectionBehavior::new()
-            .can_join_all_spaces()
-            .full_screen_auxiliary()
-            .transient()
-            .ignores_cycle()
-            .value(),
-    );
-    // A tray popover belongs above ordinary floating windows, but should not
-    // cover protected system UI such as the screen saver or lock screen.
-    panel.set_level(PanelLevel::PopUpMenu.value());
-    panel.set_floating_panel(true);
-    panel.set_hides_on_deactivate(false);
-
-    Ok(())
-}
-
 fn close_tray_window<R: Runtime>(app: &AppHandle<R>, window: &tauri::WebviewWindow<R>) {
-    #[cfg(target_os = "macos")]
-    {
-        // `to_window` removes the retained panel handle and restores the
-        // original NSWindow class before Tauri destroys it. This preserves
-        // the lazy-create/release behavior and avoids retaining one closed
-        // panel per tray click.
-        if let Ok(panel) = app.get_webview_panel(TRAY_WINDOW_LABEL) {
-            if let Some(window) = panel.to_window() {
-                let _ = window.close();
-                return;
-            }
-        }
+    if let Err(error) = window::close(app, window) {
+        log::warn!("failed to close tray window: {error}");
     }
-
-    let _ = window.close();
 }
 
 /// Compute the mini window's position so it sits flush against the
@@ -768,16 +692,6 @@ fn install_dismiss_monitors<R: Runtime>(app: &AppHandle<R>) {
         return;
     }
 
-    // NSEvent masks use `1 << NSEventType`. OtherMouseDown is event type 25,
-    // not 5 (type 5 is MouseMoved). Using `1 << 5` here makes every pointer
-    // movement in another app look like an outside click and instantly closes
-    // the panel, which is especially visible over another app's full-screen
-    // Space.
-    const LEFT_MOUSE_DOWN_MASK: u64 = 1 << 1;
-    const RIGHT_MOUSE_DOWN_MASK: u64 = 1 << 3;
-    const OTHER_MOUSE_DOWN_MASK: u64 = 1 << 25;
-    const MASK: u64 = LEFT_MOUSE_DOWN_MASK | RIGHT_MOUSE_DOWN_MASK | OTHER_MOUSE_DOWN_MASK;
-
     // Global monitor: clicks anywhere outside our app — other apps,
     // the desktop, the menu bar (incl. the tray icon itself).
     let app_for_global = app.clone();
@@ -811,12 +725,12 @@ fn install_dismiss_monitors<R: Runtime>(app: &AppHandle<R>) {
         let cls = class!(NSEvent);
         let _: *mut AnyObject = msg_send![
             cls,
-            addGlobalMonitorForEventsMatchingMask: MASK,
+            addGlobalMonitorForEventsMatchingMask: TRAY_DISMISS_MOUSE_EVENTS,
             handler: &*global_block,
         ];
         let _: *mut AnyObject = msg_send![
             cls,
-            addLocalMonitorForEventsMatchingMask: MASK,
+            addLocalMonitorForEventsMatchingMask: TRAY_DISMISS_MOUSE_EVENTS,
             handler: &*local_block,
         ];
     }
@@ -856,6 +770,28 @@ fn hide_tray_if_visible<R: Runtime>(app: &AppHandle<R>) {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn dismiss_monitor_accepts_only_mouse_button_presses() {
+        use tauri_nspanel::objc2_app_kit::NSEventType;
+
+        // Check the mask against event types, including motion, drags,
+        // releases, scrolling and keyboard input, rather than source text.
+        for event_type in 0..=63 {
+            let should_dismiss = [
+                NSEventType::LeftMouseDown.0,
+                NSEventType::RightMouseDown.0,
+                NSEventType::OtherMouseDown.0,
+            ]
+            .contains(&event_type);
+            assert_eq!(
+                TRAY_DISMISS_MOUSE_EVENTS.bits() & (1u64 << event_type) != 0,
+                should_dismiss,
+                "unexpected dismissal subscription for NSEvent type {event_type}",
+            );
+        }
+    }
 
     #[test]
     fn recovery_title_uses_applied_order_or_explicit_unknown_state() {
