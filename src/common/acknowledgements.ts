@@ -43,4 +43,5 @@ export default [
   { name: 'synsa', link: 'https://github.com/synsa' },
   { name: 'beyond-infra', link: 'https://github.com/beyond-infra' },
   { name: 'Chen, Ting-An', link: 'https://github.com/nrps9909' },
+  { name: 'cui fliter', link: 'https://github.com/cuishuang' },
 ]
