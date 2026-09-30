@@ -33,6 +33,23 @@ use crate::i18n::menu_labels;
 use crate::lifecycle;
 use crate::storage::{AppState, StorageError};
 
+#[cfg(target_os = "macos")]
+use tauri_nspanel::{
+    tauri_panel, CollectionBehavior, ManagerExt as PanelManagerExt, PanelLevel, StyleMask,
+    WebviewWindowExt,
+};
+
+#[cfg(target_os = "macos")]
+tauri_panel! {
+    panel!(TrayPanel {
+        config: {
+            can_become_key_window: true,
+            can_become_main_window: false,
+            is_floating_panel: true
+        }
+    })
+}
+
 pub const TRAY_ID: &str = "main-tray";
 pub const TRAY_WINDOW_LABEL: &str = "tray";
 
@@ -184,7 +201,7 @@ fn handle_left_click<R: Runtime + 'static>(
                 // Destroy rather than hide so the webview process is
                 // released; `show_tray_window` lazy-recreates the window
                 // on the next icon click.
-                let _ = window.close();
+                close_tray_window(app, &window);
                 return;
             }
         }
@@ -454,24 +471,18 @@ fn show_tray_window<R: Runtime>(
             .map_err(|e| e.to_string())?;
     }
 
-    // On macOS, avoid Tauri's `set_focus()` because it unconditionally
-    // activates the whole app and can surface the main window. If the
-    // app is inactive, though, the tray window must activate the app or
-    // it remains a painted-but-not-interactive window that disappears
-    // as soon as the pointer leaves the status item. Activate only in
-    // that inactive case, then make the tray window key.
+    // A regular NSWindow needs to activate its owning app before it can
+    // reliably become interactive. Activating a Regular app from another
+    // app's full-screen Space switches back to the app's home Space. The
+    // macOS tray window is therefore converted to a non-activating NSPanel
+    // at creation time: it can become key and receive webview input without
+    // activating SwitchHosts or disturbing the current Space.
     #[cfg(target_os = "macos")]
     {
-        use objc2::{class, msg_send, runtime::AnyObject};
-        let ns_window = window.ns_window().map_err(|e| e.to_string())? as *mut AnyObject;
-        unsafe {
-            let ns_app: *mut AnyObject = msg_send![class!(NSApplication), sharedApplication];
-            let app_is_active: bool = msg_send![ns_app, isActive];
-            if !app_is_active {
-                let _: () = msg_send![ns_app, activateIgnoringOtherApps: true];
-            }
-            let _: () = msg_send![ns_window, makeKeyAndOrderFront: std::ptr::null::<AnyObject>()];
-        }
+        let panel = app
+            .get_webview_panel(TRAY_WINDOW_LABEL)
+            .map_err(|_| "tray NSPanel is not registered".to_string())?;
+        panel.show_and_make_key();
     }
     #[cfg(not(target_os = "macos"))]
     {
@@ -509,9 +520,13 @@ fn create_tray_window<R: Runtime>(
         .always_on_top(true)
         .skip_taskbar(true)
         .visible_on_all_workspaces(true)
+        .accept_first_mouse(true)
         .visible(false)
         .shadow(true)
         .build()?;
+
+    #[cfg(target_os = "macos")]
+    configure_tray_panel(&window)?;
 
     #[cfg(not(target_os = "macos"))]
     {
@@ -545,6 +560,55 @@ fn create_tray_window<R: Runtime>(
     }
 
     Ok(window)
+}
+
+#[cfg(target_os = "macos")]
+fn configure_tray_panel<R: Runtime>(window: &tauri::WebviewWindow<R>) -> Result<(), tauri::Error> {
+    let panel = window.to_panel::<TrayPanel<R>>()?;
+
+    // Borderless preserves the existing transparent popover appearance;
+    // NonactivatingPanel is the key behavior that lets the webview receive
+    // input without bringing the whole Regular app (and its home Space) to
+    // the foreground.
+    panel.set_style_mask(
+        StyleMask::empty()
+            .borderless()
+            .nonactivating_panel()
+            .value(),
+    );
+    panel.set_collection_behavior(
+        CollectionBehavior::new()
+            .can_join_all_spaces()
+            .full_screen_auxiliary()
+            .transient()
+            .ignores_cycle()
+            .value(),
+    );
+    // A tray popover belongs above ordinary floating windows, but should not
+    // cover protected system UI such as the screen saver or lock screen.
+    panel.set_level(PanelLevel::PopUpMenu.value());
+    panel.set_floating_panel(true);
+    panel.set_hides_on_deactivate(false);
+
+    Ok(())
+}
+
+fn close_tray_window<R: Runtime>(app: &AppHandle<R>, window: &tauri::WebviewWindow<R>) {
+    #[cfg(target_os = "macos")]
+    {
+        // `to_window` removes the retained panel handle and restores the
+        // original NSWindow class before Tauri destroys it. This preserves
+        // the lazy-create/release behavior and avoids retaining one closed
+        // panel per tray click.
+        if let Ok(panel) = app.get_webview_panel(TRAY_WINDOW_LABEL) {
+            if let Some(window) = panel.to_window() {
+                let _ = window.close();
+                return;
+            }
+        }
+    }
+
+    let _ = window.close();
 }
 
 /// Compute the mini window's position so it sits flush against the
@@ -704,9 +768,15 @@ fn install_dismiss_monitors<R: Runtime>(app: &AppHandle<R>) {
         return;
     }
 
-    // NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown |
-    // NSEventMaskOtherMouseDown — covers all mouse buttons.
-    const MASK: u64 = (1 << 1) | (1 << 3) | (1 << 5);
+    // NSEvent masks use `1 << NSEventType`. OtherMouseDown is event type 25,
+    // not 5 (type 5 is MouseMoved). Using `1 << 5` here makes every pointer
+    // movement in another app look like an outside click and instantly closes
+    // the panel, which is especially visible over another app's full-screen
+    // Space.
+    const LEFT_MOUSE_DOWN_MASK: u64 = 1 << 1;
+    const RIGHT_MOUSE_DOWN_MASK: u64 = 1 << 3;
+    const OTHER_MOUSE_DOWN_MASK: u64 = 1 << 25;
+    const MASK: u64 = LEFT_MOUSE_DOWN_MASK | RIGHT_MOUSE_DOWN_MASK | OTHER_MOUSE_DOWN_MASK;
 
     // Global monitor: clicks anywhere outside our app — other apps,
     // the desktop, the menu bar (incl. the tray icon itself).
@@ -777,7 +847,7 @@ fn hide_tray_if_visible<R: Runtime>(app: &AppHandle<R>) {
             // Destroy rather than hide so the webview process is
             // released; the next tray click recreates it via
             // `show_tray_window`.
-            let _ = tray.close();
+            close_tray_window(app, &tray);
         }
     }
 }
