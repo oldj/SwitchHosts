@@ -494,19 +494,18 @@ fn macos_tray_uses_a_nonactivating_fullscreen_panel() {
 }
 
 #[test]
-fn macos_tray_global_monitor_does_not_treat_mouse_move_as_outside_click() {
+fn macos_tray_monitors_share_the_tested_mouse_event_mask() {
     const SOURCE: &str = include_str!("../src/tray.rs");
     let monitor = extract_block_from(SOURCE, "fn install_dismiss_monitors")
         .expect("macOS tray must install outside-click monitors");
-
-    assert!(
-        monitor.contains("OTHER_MOUSE_DOWN_MASK: u64 = 1 << 25"),
-        "NSEventType::OtherMouseDown is type 25 and its mask must use bit 25"
-    );
-    assert!(
-        !monitor.contains("const MASK: u64 = (1 << 1) | (1 << 3) | (1 << 5)"),
-        "NSEvent type 5 is MouseMoved; monitoring bit 5 closes the tray on any pointer movement"
-    );
+    // A wiring guard supplements the behavioural mask test: neither monitor
+    // may bypass the tested mask with its own literal.
+    for selector in [
+        "addGlobalMonitorForEventsMatchingMask",
+        "addLocalMonitorForEventsMatchingMask",
+    ] {
+        assert!(monitor.contains(&format!("{selector}: TRAY_DISMISS_MOUSE_EVENTS")));
+    }
 }
 
 #[test]
