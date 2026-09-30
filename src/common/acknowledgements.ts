@@ -44,4 +44,5 @@ export default [
   { name: 'beyond-infra', link: 'https://github.com/beyond-infra' },
   { name: 'Chen, Ting-An', link: 'https://github.com/nrps9909' },
   { name: 'cui fliter', link: 'https://github.com/cuishuang' },
+  { name: 'Jarvis', link: 'https://github.com/Jarvis636431' },
 ]
