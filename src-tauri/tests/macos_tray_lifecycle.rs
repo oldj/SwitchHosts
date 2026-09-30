@@ -106,10 +106,18 @@ mod native {
         tray_window::show(app)?;
         check(window.is_visible()?, "tray did not become visible")?;
         tray_window::show(app)?;
+        let current_window = app
+            .get_webview_window(tray_window::TRAY_WINDOW_LABEL)
+            .ok_or("repeated show removed the registered tray window")?;
         check(
-            window.ns_window()? as *mut AnyObject == native_window,
+            current_window.is_visible()?,
+            "repeated show hid the tray window",
+        )?;
+        check(
+            current_window.ns_window()? as *mut AnyObject == native_window,
             "show must reuse the current window",
         )?;
+        drop(current_window);
 
         tray_window::close(app, &window)?;
         check(

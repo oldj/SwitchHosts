@@ -30,7 +30,7 @@ cargo test --locked --manifest-path src-tauri/Cargo.toml --features native-tray-
 
 - 新窗口隐藏、面板已注册，具有非激活样式、跨 Space 和全屏辅助行为。
 - 实际窗口层级为 `PopUpMenu`（101），可成为 key window、不可成为 main window。
-- 显示后窗口可见，重复显示复用同一个原生窗口。
+- 显示后窗口可见；重复显示后重新从应用管理器获取窗口，确认仍然可见且复用同一个原生窗口。
 - 关闭立即清除面板注册、恢复 NSWindow 类型；随后实际收到 `Destroyed` 事件，Tauri 窗口注册消失。
 - 完成销毁后才开始下一轮，同一标签可再次创建，另一个主窗口不会随托盘关闭。
 
@@ -100,6 +100,7 @@ actionlint .github/workflows/ci.yml
 | --- | --- | --- | --- |
 | PR #1051，`3f3ccb3` | 作者未记录完整 OS、显示器与 Dock 配置 | 作者在 PR 描述确认：全屏上方显示、内外移动不关闭、外部点击关闭 | 完整矩阵与版本兼容范围不能从该记录推断 |
 | 2026-09-30，feature/macos-tray-regression-tests | macOS 27.0.1（26A434），arm64 | 225 个 Rust 单元测试、26 个结构测试；原生十轮测试正常模式及 Zombie 诊断通过；故意省略面板注销时测试按预期失败；actionlint 通过 | 上述手工矩阵；远端 GitHub Actions（分支未推送） |
+| 2026-09-30，审查后的测试修复 | 同上 | 6 个托盘结构测试及原生十轮测试通过；在显示入口和原生函数分别注入全局激活、模拟重复显示隐藏窗口，三处故障均被捕获并已恢复源码 | 未重跑全量测试；手工矩阵和远端 CI 仍待执行 |
 
 本次原生测试还发现并修复了配置顺序问题：`set_floating_panel(true)` 会把之前设置的
 `PopUpMenu` 层级 101 重置为 Floating 层级 3。现在先设置 floating，再设置最终层级；
