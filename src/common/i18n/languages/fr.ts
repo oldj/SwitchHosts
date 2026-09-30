@@ -112,6 +112,8 @@ const lang: LanguageDict = {
   homepage: "Page d'accueil",
   host: 'Host',
   hosts_add: 'Ajouter un nouvel hosts',
+  hosts_applied_save_failed:
+    'Le fichier hosts système a été appliqué, mais la sauvegarde des paramètres et la restauration du contenu précédent ont échoué. Les interrupteurs affichent la dernière sélection appliquée. Veuillez réessayer.',
   hosts_delete: 'Supprimer cet hosts',
   hosts_delete_confirm: 'Êtes-vous sûr de vouloir supprimer cet hosts ?',
   hosts_edit: "Éditer l'hosts",
@@ -210,6 +212,7 @@ const lang: LanguageDict = {
   source_domain: 'Domaine',
   source_type: 'Source',
   source_url: "URL d'abonnement",
+  storage_conflict: 'La liste a été modifiée par une autre opération. Veuillez réessayer.',
   success: 'Succès !',
   sudo_prompt_title: 'Entrez votre mot de passe sudo',
   system: 'Système',

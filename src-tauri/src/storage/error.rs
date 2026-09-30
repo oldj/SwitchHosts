@@ -19,6 +19,9 @@ pub enum StorageError {
     #[error("failed to serialize {path}: {reason}")]
     Serialize { path: String, reason: String },
 
+    #[error("concurrent storage change: {reason}")]
+    Conflict { reason: String },
+
     #[error("config key not found: {key}")]
     UnknownConfigKey { key: String },
 

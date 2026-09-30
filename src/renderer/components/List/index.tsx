@@ -27,7 +27,15 @@ interface Props {
 
 const List = (props: Props) => {
   const { isTray } = props
-  const { hostsData, loadHostsData, setList, currentHosts, setCurrentHosts } = useHostsData()
+  const {
+    hostsData,
+    loadHostsData,
+    setList,
+    applyList,
+    setAppliedSelection,
+    currentHosts,
+    setCurrentHosts,
+  } = useHostsData()
   const { configs } = useConfigs()
   const { lang } = useI18n()
   const [selectedIds, setSelectedIds] = useState<string[]>(isTray ? [] : [currentHosts?.id || '0'])
@@ -72,58 +80,20 @@ const List = (props: Props) => {
       return
     }
 
-    const newList = setOnStateOfItem(
-      hostsData.list,
-      id,
-      on,
-      configs?.choice_mode ?? 0,
-      configs?.multi_chose_folder_switch_all ?? false,
+    const success = await applyList((list) =>
+      setOnStateOfItem(
+        list,
+        id,
+        on,
+        configs?.choice_mode ?? 0,
+        configs?.multi_chose_folder_switch_all ?? false,
+      ),
     )
-    const success = await writeHostsToSystem(newList)
     if (success) {
       agent.broadcast(events.set_hosts_on_status, id, on)
     } else {
       agent.broadcast(events.set_hosts_on_status, id, !on)
     }
-  }
-
-  const writeHostsToSystem = async (list?: IHostsListObject[]): Promise<boolean> => {
-    if (!Array.isArray(list)) {
-      list = hostsData.list
-    }
-
-    const content: string = await actions.getContentOfList(list)
-    const result = await actions.setSystemHosts(content)
-    if (result.success) {
-      try {
-        await setList(list)
-      } catch (e) {
-        console.error(e)
-        return false
-      }
-
-      if (currentHosts) {
-        const hosts = findItemById(list, currentHosts.id)
-        if (hosts) {
-          agent.broadcast(events.set_hosts_on_status, currentHosts.id, hosts.on)
-        }
-      }
-    } else {
-      // `cancelled` means the user dismissed the OS auth prompt — that's
-      // intentional, not an error worth a toast. Other failures surface
-      // through the standard error notification.
-      await loadHostsData().catch((e) => console.error(e))
-      if (result.code !== 'cancelled') {
-        const errDesc =
-          result.code === 'no_access' ? lang.no_access_to_hosts : result.message || lang.fail
-        showErrorNotification({ title: lang.fail, message: errDesc })
-        console.error(errDesc)
-      }
-    }
-
-    await agent.broadcast(events.tray_list_updated)
-
-    return result.success
   }
 
   const applyChangedRemoteHostsToSystem = async (ids: string[]) => {
@@ -150,7 +120,7 @@ const List = (props: Props) => {
         })
         if (!hasEnabledChangedHosts) continue
 
-        await writeHostsToSystem(list)
+        await applyList()
       }
     } catch (e) {
       console.error(e)
@@ -178,8 +148,9 @@ const List = (props: Props) => {
   )
   useOnBroadcast(
     events.tray_list_updated,
-    () => {
+    (selection: Record<string, boolean> | null = null) => {
       if (!isTray) return
+      setAppliedSelection(selection)
       loadHostsData()
     },
     [isTray],
@@ -274,7 +245,7 @@ const List = (props: Props) => {
               .join('\n')
 
           if (enabledIdSeq(hostsData.list) !== enabledIdSeq(newUserList) && configs?.write_mode) {
-            writeHostsToSystem(newUserList)
+            applyList(newUserList)
               .then((success) => {
                 if (!success) restoreView()
               })

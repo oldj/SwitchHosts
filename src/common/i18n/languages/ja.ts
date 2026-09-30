@@ -109,6 +109,8 @@ const lang: LanguageDict = {
   homepage: 'ホームページ',
   host: 'ホスト',
   hosts_add: 'hostsを追加',
+  hosts_applied_save_failed:
+    'システムの hosts は適用されましたが、設定の保存と元の内容の復元に失敗しました。スイッチは最後に適用した選択を表示しています。保存または適用を再試行してください。',
   hosts_delete: 'hostsを削除',
   hosts_delete_confirm: 'このhostsを削除してもよろしいですか？',
   hosts_edit: 'hostsを編集',
@@ -206,6 +208,7 @@ const lang: LanguageDict = {
   source_domain: 'ドメイン',
   source_type: 'ソース',
   source_url: 'サブスクリプション URL',
+  storage_conflict: '別の操作によってリストが変更されました。再試行してください。',
   success: '成功',
   sudo_prompt_title: '管理者パスワードを入力してください',
   system: 'システム',

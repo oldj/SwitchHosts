@@ -112,6 +112,8 @@ const lang: LanguageDict = {
   homepage: 'Startseite',
   host: 'Host',
   hosts_add: 'Neue Hosts hinzufügen',
+  hosts_applied_save_failed:
+    'Die System-hosts wurden angewendet, aber die Einstellungen konnten weder gespeichert noch die vorherigen Inhalte wiederhergestellt werden. Die Schalter zeigen die zuletzt angewendete Auswahl. Bitte erneut speichern oder anwenden.',
   hosts_delete: 'Diesen Host löschen',
   hosts_delete_confirm: 'Sind Sie sicher, dass Sie die aktuellen Hosts löschen wollen?',
   hosts_edit: 'Hosts bearbeiten',
@@ -210,6 +212,7 @@ const lang: LanguageDict = {
   source_domain: 'Domäne',
   source_type: 'Quelle',
   source_url: 'Abo-URL',
+  storage_conflict: 'Die Liste wurde durch einen anderen Vorgang geändert. Bitte erneut versuchen.',
   success: 'Erfolg!',
   sudo_prompt_title: 'Geben Sie Ihr sudo-Passwort ein',
   system: 'System',

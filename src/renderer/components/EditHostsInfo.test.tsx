@@ -134,7 +134,9 @@ function openDialog(payload?: any) {
 }
 
 beforeEach(() => {
-  mocks.setList.mockClear().mockResolvedValue(undefined)
+  mocks.setList.mockReset().mockImplementation(async (update) => {
+    update(structuredClone(mocks.hostsData.list))
+  })
   mocks.actions.refreshHosts.mockClear()
   mocks.broadcast.mockClear()
 })
@@ -168,7 +170,7 @@ describe('EditHostsInfo domain source', () => {
     await waitFor(() => {
       expect(mocks.setList).toHaveBeenCalled()
     })
-    const saved = mocks.setList.mock.calls[0][0] as any[]
+    const saved = mocks.setList.mock.calls[0][0](structuredClone(mocks.hostsData.list)) as any[]
     expect(saved[0].source).toBe('domain')
     expect(saved[0].url).toBe('github.com')
   })
@@ -189,7 +191,7 @@ describe('EditHostsInfo domain source', () => {
     await waitFor(() => {
       expect(mocks.setList).toHaveBeenCalled()
     })
-    const saved = mocks.setList.mock.calls[0][0] as any[]
+    const saved = mocks.setList.mock.calls[0][0](structuredClone(mocks.hostsData.list)) as any[]
     expect(saved[0].url).toBe('dblp.org')
   })
 
@@ -218,7 +220,7 @@ describe('EditHostsInfo domain source', () => {
     await waitFor(() => {
       expect(mocks.setList).toHaveBeenCalled()
     })
-    const saved = mocks.setList.mock.calls[0][0] as any[]
+    const saved = mocks.setList.mock.calls[0][0](structuredClone(mocks.hostsData.list)) as any[]
     expect(saved[0].source).toBe('domain')
     expect(saved[0].url).toBe('example.com')
     expect(mocks.actions.refreshHosts).toHaveBeenCalledWith('u1')
@@ -240,5 +242,37 @@ it('does not mutate the current list or refresh/select an item after a failed ed
   expect(mocks.hostsData.list[0].url).toBe('github.com')
   expect(mocks.actions.refreshHosts).not.toHaveBeenCalled()
   expect(mocks.broadcast).not.toHaveBeenCalled()
+  spy.mockRestore()
+})
+
+it('preserves switch and refresh metadata when editing a node read before a concurrent update', async () => {
+  mocks.hostsData.list = [
+    {
+      id: 'd1',
+      type: 'remote',
+      title: 'Before',
+      url: 'https://example.com',
+      on: false,
+      last_refresh_ms: 10,
+    },
+  ]
+  openDialog(mocks.hostsData.list[0])
+  fireEvent.change(await screen.findByDisplayValue('Before'), { target: { value: 'After' } })
+  fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+  await waitFor(() => expect(mocks.setList).toHaveBeenCalled())
+  const latest = [{ ...mocks.hostsData.list[0], on: true, last_refresh_ms: 20 }]
+  const saved = mocks.setList.mock.calls[0][0](latest)
+  expect(saved[0]).toMatchObject({ title: 'After', on: true, last_refresh_ms: 20 })
+})
+
+it('does not recreate a node deleted while its edit form was open', async () => {
+  const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  mocks.hostsData.list = [{ id: 'deleted', type: 'local', title: 'Deleted' }]
+  openDialog(mocks.hostsData.list[0])
+  mocks.hostsData.list = []
+  fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+  await waitFor(() => expect(spy).toHaveBeenCalled())
+  expect(mocks.broadcast).not.toHaveBeenCalled()
+  expect(mocks.hostsData.list).toEqual([])
   spy.mockRestore()
 })

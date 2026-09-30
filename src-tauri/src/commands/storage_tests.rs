@@ -360,3 +360,47 @@ fn pending_rollback_is_recovered_before_reading_or_mutating_again() {
     run(&fixture.state, Operation::Move).unwrap();
     assert_eq!(load_trashcan(&fixture.state).unwrap().items.len(), 2);
 }
+
+#[test]
+fn stale_list_save_cannot_overwrite_an_edit_or_resurrect_a_trashed_entry() {
+    for delete in [false, true] {
+        let fixture = Fixture::populated();
+        let original = load_manifest(&fixture.state).unwrap().root;
+        let mut edited = original.clone();
+        edited[0]["title"] = json!("Updated elsewhere");
+        if delete {
+            move_ids_to_trashcan(&fixture.state, &["live".into()]).unwrap();
+        } else {
+            set_list_inner(&fixture.state, vec![json!(edited), json!(original)]).unwrap();
+        }
+        let before = fixture.snapshot();
+        let error =
+            set_list_inner(&fixture.state, vec![json!(original), json!(original)]).unwrap_err();
+        assert!(matches!(error, StorageError::Conflict { .. }));
+        assert_eq!(fixture.snapshot(), before);
+        if delete {
+            assert!(load_manifest(&fixture.state).unwrap().root.is_empty());
+            assert!(load_trashcan(&fixture.state)
+                .unwrap()
+                .items
+                .iter()
+                .any(|item| item["data"]["id"] == "live"));
+        }
+    }
+}
+
+#[test]
+fn conditional_list_save_compares_canonical_fields_and_collapse_state() {
+    let fixture = Fixture::empty();
+    let original = json!([{"id":"folder", "type":"folder", "children":[], "is_collapsed":false}]);
+    set_list_inner(&fixture.state, vec![original.clone(), json!([])]).unwrap();
+    let collapsed = json!([{"id":"folder", "type":"folder", "children":[], "is_collapsed":true}]);
+    // False/omitted collapse state normalizes to the same persisted state.
+    set_list_inner(&fixture.state, vec![collapsed, original.clone()]).unwrap();
+    let before = fixture.snapshot();
+    assert!(matches!(
+        set_list_inner(&fixture.state, vec![json!([]), original]),
+        Err(StorageError::Conflict { .. })
+    ));
+    assert_eq!(fixture.snapshot(), before);
+}

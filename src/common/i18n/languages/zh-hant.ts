@@ -104,6 +104,8 @@ const lang: LanguageDict = {
   homepage: '首頁',
   host: '主機',
   hosts_add: '新增 hosts',
+  hosts_applied_save_failed:
+    '系統 hosts 已套用，但設定儲存及還原原內容均失敗。開關顯示目前已套用的狀態，請重試儲存或重新套用。',
   hosts_delete: '刪除 Hosts 項目',
   hosts_delete_confirm: '確定要刪除目前的 Hosts 項目嗎？',
   hosts_edit: '編輯 hosts',
@@ -196,6 +198,7 @@ const lang: LanguageDict = {
   source_domain: '域名解析',
   source_type: '來源',
   source_url: '訂閱 URL',
+  storage_conflict: '清單已被其他操作變更，請重試。',
   success: '操作成功！',
   sudo_prompt_title: '請輸入你的登入密碼（sudo 密碼）',
   system: '系統',

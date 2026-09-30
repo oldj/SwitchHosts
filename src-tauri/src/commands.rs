@@ -432,7 +432,9 @@ pub async fn set_list(state: State<'_, AppState>, args: Args) -> Result<Value, S
 
 fn set_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
-    let list = args.into_iter().next().unwrap_or(Value::Null);
+    let mut args = args.into_iter();
+    let list = args.next().unwrap_or(Value::Null);
+    let expected = args.next();
     let root = match list {
         Value::Array(arr) => arr,
         Value::Null => Vec::new(),
@@ -445,6 +447,23 @@ fn set_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
     };
     let _guard = state.lock_store()?;
     let mut m = load_manifest(&state)?;
+    if let Some(expected) = expected {
+        let expected = expected
+            .as_array()
+            .ok_or_else(|| StorageError::InvalidConfigValue {
+                key: "set_list.args[1]".into(),
+                reason: "expected the previously read array of host nodes".into(),
+            })?;
+        // Compare persisted fields, including collapse state, in canonical form.
+        // Renderer defaults (e.g. an omitted `type`) must not cause conflicts.
+        if crate::storage::tree_format::legacy_root_to_v5(expected)
+            != crate::storage::tree_format::legacy_root_to_v5(&m.root)
+        {
+            return Err(StorageError::Conflict {
+                reason: "The hosts list changed. Reload it and retry your edit.".into(),
+            });
+        }
+    }
     m.root = root;
     transaction::run(&state.paths, vec![Target::State, Target::Manifest], || {
         save_manifest(state, &m)
@@ -709,6 +728,33 @@ pub async fn apply_hosts_selection<R: Runtime>(
             "new_content": outcome.new_content,
         })),
         Err(ApplyPipelineError::Apply(e)) => Ok(e.into_renderer_value()),
+    }
+}
+
+/// Compensate an apply whose metadata could not be saved. Do not run the
+/// post-apply command again or feed a complete hosts file through append mode.
+#[tauri::command]
+pub async fn restore_system_hosts<R: Runtime>(
+    app: AppHandle<R>,
+    args: Args,
+) -> Result<Value, String> {
+    let previous = arg_str(&args, 0, "previous")
+        .map_err(|e| e.to_string())?
+        .to_owned();
+    let expected = arg_str(&args, 1, "expected")
+        .map_err(|e| e.to_string())?
+        .to_owned();
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        hosts_apply::write::restore_system_hosts(&previous, &expected)
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    match result {
+        Ok(()) => {
+            let _ = app.emit("system_hosts_updated", json!({ "_args": [] }));
+            Ok(json!({ "success": true }))
+        }
+        Err(e) => Ok(e.into_renderer_value()),
     }
 }
 
