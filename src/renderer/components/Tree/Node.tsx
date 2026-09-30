@@ -191,9 +191,7 @@ const Node = (props: INodeProps) => {
   const isDragSource = dragSourceId === data.id
   const isDropTarget = dropTargetId === data.id
   const isSelected = selectedIds.includes(data.id)
-  const isParentIsDragSource = dragSourceId
-    ? isChildOf(props.tree, data.id, dragSourceId)
-    : false
+  const isParentIsDragSource = dragSourceId ? isChildOf(props.tree, data.id, dragSourceId) : false
   const hasChildren = Array.isArray(data.children) && data.children.length > 0
 
   return (
@@ -205,9 +203,7 @@ const Node = (props: INodeProps) => {
           isDragging && styles.isDragging,
           (isDragSource || isParentIsDragSource) && styles.is_source,
           isDropTarget && dragTargetWhere === 'before' && styles.drop_before,
-          isDropTarget &&
-            dragTargetWhere === 'in' &&
-            (props.nodeDropInClassName || styles.drop_in),
+          isDropTarget && dragTargetWhere === 'in' && (props.nodeDropInClassName || styles.drop_in),
           isDropTarget && dragTargetWhere === 'after' && styles.drop_after,
           isSelected && (props.nodeSelectedClassName || styles.selected),
           nodeClassName,
@@ -292,6 +288,10 @@ function diff<T>(a: T[], b: T[]): T[] {
 
 function isEqual(prevProps: INodeProps, nextProps: INodeProps): boolean {
   const { data, selectedIds, allowedMultipleSelection } = nextProps
+
+  // Attributes can change independently of node data (e.g. recovery toggles
+  // drag permissions). This also invalidates descendants using the callback.
+  if (prevProps.nodeAttr !== nextProps.nodeAttr) return false
 
   if (!lodash.isEqual(prevProps.data, data)) {
     return false

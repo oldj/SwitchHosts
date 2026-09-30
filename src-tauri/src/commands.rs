@@ -732,9 +732,16 @@ pub async fn apply_hosts_selection<R: Runtime>(
         }
     };
 
-    match apply_aggregated_content(&app, state.inner(), &content).await {
+    let result = state
+        .application_recovery
+        .track_apply(async {
+            let _ = tray::refresh_title(&app, &state);
+            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            apply_aggregated_content(&app, state.inner(), &content).await
+        })
+        .await;
+    match result {
         Ok(outcome) => {
-            state.application_recovery.begin();
             let _ = tray::refresh_title(&app, &state);
             let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
             Ok(json!({
@@ -743,7 +750,12 @@ pub async fn apply_hosts_selection<R: Runtime>(
                 "new_content": outcome.new_content,
             }))
         }
-        Err(ApplyPipelineError::Apply(e)) => Ok(e.into_renderer_value()),
+        Err(ApplyPipelineError::Apply(e)) => {
+            read_application_recovery(&app, &state);
+            let _ = tray::refresh_title(&app, &state);
+            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            Ok(e.into_renderer_value())
+        }
     }
 }
 

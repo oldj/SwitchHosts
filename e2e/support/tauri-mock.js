@@ -495,9 +495,15 @@
           return aggregateContent(params[0] || state.list)
         case 'apply_hosts_selection': {
           const oldContent = state.systemHosts
+          state.beforeApplyRecovery = clone(state.applicationRecovery)
+          state.applicationRecovery = { status: 'unknown' }
+          dispatchEvent('tray_list_updated', { _args: [] })
           if (state.nextApplyResult) {
             const result = state.nextApplyResult
             state.nextApplyResult = null
+            state.applicationRecovery = state.beforeApplyRecovery
+            state.beforeApplyRecovery = null
+            dispatchEvent('tray_list_updated', { _args: [] })
             return clone(result)
           }
           state.systemHosts =
@@ -509,9 +515,6 @@
             content: state.systemHosts,
             add_time_ms: Date.now(),
           })
-          state.beforeApplyRecovery = clone(state.applicationRecovery)
-          state.applicationRecovery = { status: 'unknown' }
-          dispatchEvent('tray_list_updated', { _args: [] })
           return { success: true, old_content: oldContent, new_content: state.systemHosts }
         }
         case 'get_apply_history':

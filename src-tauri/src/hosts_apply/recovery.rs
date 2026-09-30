@@ -26,14 +26,34 @@ struct RecoveryState {
 }
 
 #[derive(Default)]
-pub struct ApplicationRecovery(Mutex<RecoveryState>);
+pub struct ApplicationRecovery {
+    state: Mutex<RecoveryState>,
+    apply_lock: tokio::sync::Mutex<()>,
+}
 
 impl ApplicationRecovery {
-    /// Record the unacknowledged write before returning it to the renderer.
-    /// Even if its subsequent compensation request never arrives, every window
-    /// must keep showing recovery until an explicit acknowledgement succeeds.
+    /// Cover the write and its post-apply work with one pending state. In
+    /// particular, a destroyed renderer's delayed command must not register
+    /// another pending state after a newer renderer has completed recovery.
+    pub async fn track_apply<T, E>(
+        &self,
+        apply: impl std::future::Future<Output = Result<T, E>>,
+    ) -> Result<T, E> {
+        let _serial = self.apply_lock.lock().await;
+        self.begin();
+        let result = apply.await;
+        if result.is_err() {
+            // No successful apply to acknowledge. Restore the prior view;
+            // the caller revalidates it before publishing the error.
+            let mut state = self.state.lock().unwrap();
+            state.pending = state.before_apply.take();
+        }
+        result
+    }
+
+    /// Save the previous view before any write or snapshot can change it.
     pub fn begin(&self) {
-        let mut state = self.0.lock().unwrap();
+        let mut state = self.state.lock().unwrap();
         state.before_apply = state.pending.take();
         state.pending = Some(Self::unknown());
     }
@@ -46,7 +66,7 @@ impl ApplicationRecovery {
     }
 
     pub fn record(&self, list: Vec<Value>, expected_content: String) {
-        let mut state = self.0.lock().unwrap();
+        let mut state = self.state.lock().unwrap();
         state.before_apply = None;
         state.pending = Some(Pending {
             view: RecoveryView::Applied { list },
@@ -57,18 +77,18 @@ impl ApplicationRecovery {
     /// The request survives a destroyed webview. Only the main renderer
     /// consumes it after loading, so event delivery is just a wake-up hint.
     pub fn request(&self) -> bool {
-        let mut state = self.0.lock().unwrap();
+        let mut state = self.state.lock().unwrap();
         state.requested = state.pending.is_some();
         state.requested
     }
 
     pub fn take_request(&self) -> bool {
-        let mut state = self.0.lock().unwrap();
+        let mut state = self.state.lock().unwrap();
         std::mem::take(&mut state.requested) && state.pending.is_some()
     }
 
     pub fn is_pending(&self) -> bool {
-        self.0.lock().unwrap().pending.is_some()
+        self.state.lock().unwrap().pending.is_some()
     }
 
     pub fn snapshot(&self, on_change: impl FnOnce()) -> Option<RecoveryView> {
@@ -89,7 +109,7 @@ impl ApplicationRecovery {
     }
 
     fn inspect(&self, matches: impl FnOnce(&str) -> bool) -> (Option<RecoveryView>, bool) {
-        let mut state = self.0.lock().unwrap();
+        let mut state = self.state.lock().unwrap();
         let Some(pending) = state.pending.as_mut() else {
             return (None, false);
         };
@@ -120,7 +140,7 @@ impl ApplicationRecovery {
     }
 
     fn restored_with(&self, current: bool) {
-        let mut state = self.0.lock().unwrap();
+        let mut state = self.state.lock().unwrap();
         let previous = state.before_apply.take();
         state.pending = if current {
             previous
@@ -130,7 +150,7 @@ impl ApplicationRecovery {
     }
 
     fn finish_with(&self, current: bool) -> Option<RecoveryView> {
-        let mut state = self.0.lock().unwrap();
+        let mut state = self.state.lock().unwrap();
         state.before_apply = None;
         state.pending = if current { None } else { Some(Self::unknown()) };
         state.pending.as_ref().map(|p| p.view.clone())
@@ -141,6 +161,81 @@ impl ApplicationRecovery {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[tokio::test]
+    async fn pending_precedes_pipeline_reads_and_preserves_compensation_snapshot() {
+        let recovery = ApplicationRecovery::default();
+        let list = vec![json!({"id":"b", "on":true}), json!({"id":"a", "on":true})];
+        recovery.record(list.clone(), "old applied content".into());
+        let result: Result<(), ()> = recovery
+            .track_apply(async {
+                // Matches the real pipeline: system file has just changed, then
+                // tray refresh runs before the post-apply command completes.
+                assert_eq!(
+                    recovery.inspect(|_| false),
+                    (Some(RecoveryView::Unknown), false)
+                );
+                Ok(())
+            })
+            .await;
+        assert!(result.is_ok());
+        // Metadata save fails but compensation restores the pre-write file.
+        recovery.restored_with(true);
+        assert_eq!(
+            recovery.inspect(|s| s == "old applied content"),
+            (Some(RecoveryView::Applied { list }), false)
+        );
+    }
+
+    #[tokio::test]
+    async fn failed_or_cancelled_apply_restores_prior_recovery() {
+        let recovery = ApplicationRecovery::default();
+        let result: Result<(), ()> = recovery.track_apply(async { Err(()) }).await;
+        assert!(result.is_err());
+        assert!(!recovery.is_pending());
+        let list = vec![json!({"id":"a", "on":true})];
+        recovery.record(list.clone(), "original".into());
+        let result: Result<(), ()> = recovery.track_apply(async { Err(()) }).await;
+        assert!(result.is_err());
+        assert_eq!(
+            recovery.inspect(|s| s == "original"),
+            (Some(RecoveryView::Applied { list }), false)
+        );
+    }
+
+    #[tokio::test]
+    async fn recreated_window_cannot_overtake_an_old_post_apply_command() {
+        use std::sync::Arc;
+        let recovery = Arc::new(ApplicationRecovery::default());
+        let (entered_tx, entered_rx) = tokio::sync::oneshot::channel();
+        let (release_tx, release_rx) = tokio::sync::oneshot::channel();
+        let old_state = recovery.clone();
+        let old = tokio::spawn(async move {
+            old_state
+                .track_apply(async {
+                    entered_tx.send(()).unwrap();
+                    release_rx.await.unwrap(); // slow post-apply command
+                    Ok::<_, ()>(())
+                })
+                .await
+        });
+        entered_rx.await.unwrap();
+        assert!(recovery.is_pending()); // already visible to a recreated window
+        let mut replacement = Box::pin(recovery.track_apply(async { Ok::<_, ()>(()) }));
+        // Poll deterministically: the new explicit recovery must wait.
+        assert!(matches!(
+            std::future::Future::poll(
+                replacement.as_mut(),
+                &mut std::task::Context::from_waker(std::task::Waker::noop()),
+            ),
+            std::task::Poll::Pending
+        ));
+        release_tx.send(()).unwrap();
+        assert!(old.await.unwrap().is_ok());
+        assert!(replacement.await.is_ok());
+        assert_eq!(recovery.finish_with(true), None);
+        assert!(!recovery.is_pending());
+    }
 
     #[test]
     fn recovery_request_survives_absent_window_and_is_consumed_once() {

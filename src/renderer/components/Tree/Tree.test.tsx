@@ -133,16 +133,22 @@ describe('Tree reorder DOM reconciliation', () => {
   // hover tracking, focus, etc.) implicitly depends on this.
   it('preserves DOM node identity for keyed children across a reorder', () => {
     const initial: ITreeNodeData[] = [
-      { id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }, { id: 'e' },
+      { id: 'a' },
+      { id: 'b' },
+      { id: 'c' },
+      { id: 'd' },
+      { id: 'e' },
     ]
     const reordered: ITreeNodeData[] = [
-      { id: 'a' }, { id: 'd' }, { id: 'b' }, { id: 'c' }, { id: 'e' },
+      { id: 'a' },
+      { id: 'd' },
+      { id: 'b' },
+      { id: 'c' },
+      { id: 'e' },
     ]
 
     const onChange = vi.fn()
-    const { container, rerender } = render(
-      <Harness initial_data={initial} onChange={onChange} />,
-    )
+    const { container, rerender } = render(<Harness initial_data={initial} onChange={onChange} />)
 
     const before = {
       a: findNode(container, 'a'),
@@ -202,4 +208,19 @@ describe('folder collapse (React.memo stale closure)', () => {
     expect(collapsedOf(tree, 'B')).toBe(true)
     expect(collapsedOf(tree, 'A')).toBe(true)
   })
+})
+
+it('updates drag permissions for unchanged nodes and descendants after recovery changes', () => {
+  const data: ITreeNodeData[] = [{ id: 'folder', children: [{ id: 'child' }] }, { id: 'local' }]
+  const disabled = () => ({ can_drag: false })
+  const enabled = () => ({ can_drag: true })
+  const view = render(<Tree data={data} selectedIds={[]} nodeAttr={disabled} />)
+  for (const id of ['folder', 'child', 'local'])
+    expect(findNode(view.container, id).draggable).toBe(false)
+  view.rerender(<Tree data={data} selectedIds={[]} nodeAttr={enabled} />)
+  for (const id of ['folder', 'child', 'local'])
+    expect(findNode(view.container, id).draggable).toBe(true)
+  view.rerender(<Tree data={data} selectedIds={[]} nodeAttr={disabled} />)
+  for (const id of ['folder', 'child', 'local'])
+    expect(findNode(view.container, id).draggable).toBe(false)
 })

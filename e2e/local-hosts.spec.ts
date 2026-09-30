@@ -259,10 +259,12 @@ test('shows unknown state rather than claiming an old selection is active after 
   await expect(notice).toBeVisible()
   await expect(row.getByRole('switch')).toHaveCount(0)
   await expect(row.getByRole('status')).toHaveText('?')
+  await expect(row).toHaveAttribute('draggable', 'false')
   expect((await getMockState(page)).systemHosts).toBe('10.9.9.9 external.test\n')
   await notice.getByRole('button', { name: 'Reapply saved settings' }).click()
   await expect(notice).toHaveCount(0)
   await expect(row.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
+  await expect(row).toHaveAttribute('draggable', 'true')
 })
 
 for (const failure of ['cancelled', 'transport'] as const) {

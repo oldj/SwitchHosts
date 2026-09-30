@@ -17,7 +17,7 @@ import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import clsx from 'clsx'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
 import styles from './index.module.scss'
 import ListItem from './ListItem'
@@ -37,6 +37,16 @@ const List = (props: Props) => {
     currentHosts,
     setCurrentHosts,
   } = useHostsData()
+  const recoveryPending = !!applicationRecovery
+  const nodeAttr = useCallback(
+    (item: IHostsListObject) => ({
+      can_drag: !item.is_sys && !isTray && !recoveryPending,
+      can_drop_before: !item.is_sys,
+      can_drop_in: item.type === 'folder',
+      can_drop_after: !item.is_sys,
+    }),
+    [isTray, recoveryPending],
+  )
   const { configs } = useConfigs()
   const { lang } = useI18n()
   const [selectedIds, setSelectedIds] = useState<string[]>(isTray ? [] : [currentHosts?.id || '0'])
@@ -282,14 +292,7 @@ const List = (props: Props) => {
             <BiChevronRight />
           </div>
         }
-        nodeAttr={(item) => {
-          return {
-            can_drag: !item.is_sys && !isTray && !applicationRecovery,
-            can_drop_before: !item.is_sys,
-            can_drop_in: item.type === 'folder',
-            can_drop_after: !item.is_sys,
-          }
-        }}
+        nodeAttr={nodeAttr}
         draggingNodeRender={(data) => {
           return (
             <div className={clsx(styles.for_drag)}>
