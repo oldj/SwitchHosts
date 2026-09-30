@@ -175,7 +175,10 @@ export default function useHostsData() {
             result.new_content,
             list,
           )
-          if (restored.success) return false
+          if (restored.success) {
+            setApplicationRecovery(restored.application_recovery ?? null)
+            return restored.application_recovery ? null : false
+          }
           // The backend re-reads system hosts before returning this view. In
           // particular, content_changed must never be presented as our apply.
           recovery = restored.application_recovery ?? { status: 'unknown' }

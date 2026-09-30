@@ -733,11 +733,16 @@ pub async fn apply_hosts_selection<R: Runtime>(
     };
 
     match apply_aggregated_content(&app, state.inner(), &content).await {
-        Ok(outcome) => Ok(json!({
-            "success": true,
-            "old_content": outcome.previous_content,
-            "new_content": outcome.new_content,
-        })),
+        Ok(outcome) => {
+            state.application_recovery.begin();
+            let _ = tray::refresh_title(&app, &state);
+            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            Ok(json!({
+                "success": true,
+                "old_content": outcome.previous_content,
+                "new_content": outcome.new_content,
+            }))
+        }
         Err(ApplyPipelineError::Apply(e)) => Ok(e.into_renderer_value()),
     }
 }
@@ -800,8 +805,9 @@ pub async fn restore_system_hosts<R: Runtime>(
         .ok_or_else(|| "expected the complete applied list".to_string())?
         .clone();
     let expected_for_write = expected.clone();
+    let previous_for_write = previous.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
-        hosts_apply::write::restore_system_hosts(&previous, &expected_for_write)
+        hosts_apply::write::restore_system_hosts(&previous_for_write, &expected_for_write)
     })
     .await
     .unwrap_or_else(|e| {
@@ -811,8 +817,11 @@ pub async fn restore_system_hosts<R: Runtime>(
     });
     match result {
         Ok(()) => {
+            let recovery = state.application_recovery.restored(&previous);
+            let _ = tray::refresh_title(&app, &state);
             let _ = app.emit("system_hosts_updated", json!({ "_args": [] }));
-            Ok(json!({ "success": true }))
+            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            Ok(json!({ "success": true, "application_recovery": recovery }))
         }
         Err(e) => {
             state.application_recovery.record(list, expected);

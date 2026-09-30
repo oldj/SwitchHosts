@@ -80,13 +80,21 @@ beforeEach(() => {
     if (JSON.stringify(expected) !== JSON.stringify(disk)) throw { kind: 'conflict' }
     disk = structuredClone(next)
   })
-  mocks.setSystemHosts.mockResolvedValue({
-    success: true,
-    old_content: 'original system file',
-    new_content: 'applied system file',
+  mocks.setSystemHosts.mockImplementation(async () => {
+    // The apply command records pending recovery before replying. A dropped
+    // restore/finish request must not leave the backend reporting null.
+    recovery = { status: 'unknown' }
+    return {
+      success: true,
+      old_content: 'original system file',
+      new_content: 'applied system file',
+    }
   })
   mocks.getContentOfList.mockResolvedValue('new managed content')
-  mocks.restoreSystemHosts.mockResolvedValue({ success: true })
+  mocks.restoreSystemHosts.mockImplementation(async () => {
+    recovery = null
+    return { success: true, application_recovery: null }
+  })
   mocks.broadcast.mockResolvedValue(undefined)
   mocks.updateTrayTitle.mockResolvedValue(undefined)
 })
@@ -410,7 +418,7 @@ it.each(['content_changed', 'unreadable'])(
   },
 )
 
-it('treats an unavailable compensation result as unknown rather than successful application', async () => {
+it('retains unknown recovery after a dropped compensation request, reload and window recreation', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {})
   mocks.setList.mockRejectedValue(new Error('disk full'))
   mocks.restoreSystemHosts.mockRejectedValue(new Error('connection lost'))
@@ -424,6 +432,31 @@ it('treats an unavailable compensation result as unknown rather than successful 
     ).toBeNull()
   })
   expect(result.current.first.applicationRecovery?.status).toBe('unknown')
+  expect(mocks.broadcast).toHaveBeenCalledWith(events.tray_list_updated)
+  await act(async () => {
+    await result.current.first.loadHostsData()
+  })
+  expect(result.current.first.applicationRecovery?.status).toBe('unknown')
+  const reopened = setup()
+  await act(async () => {
+    await reopened.result.current.first.loadHostsData()
+  })
+  expect(reopened.result.current.first.applicationRecovery?.status).toBe('unknown')
+  await act(async () => {
+    await expect(reopened.result.current.first.setList((items) => items)).rejects.toThrow(
+      'Application state unknown',
+    )
+  })
+  mocks.setList.mockImplementation(async (next) => {
+    disk = structuredClone(next)
+  })
+  await act(async () => {
+    expect(await result.current.first.reapplySavedList()).toBe(true)
+  })
+  await act(async () => {
+    await reopened.result.current.first.loadHostsData()
+  })
+  expect(reopened.result.current.first.applicationRecovery).toBeNull()
 })
 
 it('does not persist or compensate a cancelled system apply', async () => {
@@ -515,4 +548,32 @@ it('keeps the application unknown if system hosts change between persistence and
   })
   expect(result.current.first.applicationRecovery?.status).toBe('unknown')
   expect(mocks.restoreSystemHosts).not.toHaveBeenCalled()
+})
+
+it('retains pending recovery if the acknowledgement request never reaches the backend', async () => {
+  mocks.finishHostsApplication.mockRejectedValue(new Error('connection lost'))
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.applyList()).toBeNull()
+  })
+  await act(async () => {
+    await result.current.first.loadHostsData()
+  })
+  expect(result.current.first.applicationRecovery?.status).toBe('unknown')
+})
+
+it('keeps earlier recovery when a failed explicit reapply is compensated', async () => {
+  recovery = { status: 'applied', list: [{ ...list('original')[0], on: true }] }
+  const previous = structuredClone(recovery)
+  mocks.setList.mockRejectedValue(new Error('disk full'))
+  mocks.restoreSystemHosts.mockImplementation(async () => {
+    recovery = previous
+    return { success: true, application_recovery: previous }
+  })
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.reapplySavedList()).toBeNull()
+  })
+  expect(result.current.first.applicationRecovery).toEqual(previous)
+  expect(result.current.first.hostsData.list[0].on).toBe(true)
 })

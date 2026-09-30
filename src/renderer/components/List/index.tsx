@@ -33,7 +33,6 @@ const List = (props: Props) => {
     loadHostsData,
     setList,
     applyList,
-    reapplySavedList,
     applicationRecovery,
     currentHosts,
     setCurrentHosts,
@@ -151,6 +150,7 @@ const List = (props: Props) => {
   useOnBroadcast(
     events.tray_list_updated,
     () => {
+      if (!isTray) return
       loadHostsData().catch((error: unknown) => console.error(error))
     },
     [isTray],
@@ -197,14 +197,6 @@ const List = (props: Props) => {
   )
 
   useOnBroadcast(events.reload_list, loadHostsData)
-  useOnBroadcast(
-    events.reapply_saved_hosts,
-    () => {
-      if (!isTray) return reapplySavedList().catch((error: unknown) => console.error(error))
-    },
-    [isTray, hostsData],
-  )
-
   useOnBroadcast(
     events.hosts_content_changed,
     (hostsId: string) => {

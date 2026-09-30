@@ -19,11 +19,35 @@ struct Pending {
 }
 
 #[derive(Default)]
-pub struct ApplicationRecovery(Mutex<Option<Pending>>);
+struct RecoveryState {
+    pending: Option<Pending>,
+    before_apply: Option<Pending>,
+}
+
+#[derive(Default)]
+pub struct ApplicationRecovery(Mutex<RecoveryState>);
 
 impl ApplicationRecovery {
+    /// Record the unacknowledged write before returning it to the renderer.
+    /// Even if its subsequent compensation request never arrives, every window
+    /// must keep showing recovery until an explicit acknowledgement succeeds.
+    pub fn begin(&self) {
+        let mut state = self.0.lock().unwrap();
+        state.before_apply = state.pending.take();
+        state.pending = Some(Self::unknown());
+    }
+
+    fn unknown() -> Pending {
+        Pending {
+            view: RecoveryView::Unknown,
+            expected_content: String::new(),
+        }
+    }
+
     pub fn record(&self, list: Vec<Value>, expected_content: String) {
-        *self.0.lock().unwrap() = Some(Pending {
+        let mut state = self.0.lock().unwrap();
+        state.before_apply = None;
+        state.pending = Some(Pending {
             view: RecoveryView::Applied { list },
             expected_content,
         });
@@ -38,8 +62,8 @@ impl ApplicationRecovery {
     }
 
     fn inspect(&self, matches: impl FnOnce(&str) -> bool) -> (Option<RecoveryView>, bool) {
-        let mut pending = self.0.lock().unwrap();
-        let Some(pending) = pending.as_mut() else {
+        let mut state = self.0.lock().unwrap();
+        let Some(pending) = state.pending.as_mut() else {
             return (None, false);
         };
         // A read error is also unknown. Never infer that an old apply is still
@@ -57,17 +81,28 @@ impl ApplicationRecovery {
         self.finish_with(current)
     }
 
-    fn finish_with(&self, current: bool) -> Option<RecoveryView> {
-        let mut pending = self.0.lock().unwrap();
-        *pending = if current {
-            None
+    /// A successful compensation restores the recovery state from before
+    /// this apply, which may itself still need explicit reconciliation.
+    pub fn restored(&self, previous_content: &str) -> Option<RecoveryView> {
+        self.restored_with(write::system_hosts_matches(previous_content));
+        self.snapshot()
+    }
+
+    fn restored_with(&self, current: bool) {
+        let mut state = self.0.lock().unwrap();
+        let previous = state.before_apply.take();
+        state.pending = if current {
+            previous
         } else {
-            Some(Pending {
-                view: RecoveryView::Unknown,
-                expected_content: String::new(),
-            })
+            Some(Self::unknown())
         };
-        pending.as_ref().map(|p| p.view.clone())
+    }
+
+    fn finish_with(&self, current: bool) -> Option<RecoveryView> {
+        let mut state = self.0.lock().unwrap();
+        state.before_apply = None;
+        state.pending = if current { None } else { Some(Self::unknown()) };
+        state.pending.as_ref().map(|p| p.view.clone())
     }
 }
 
@@ -75,6 +110,44 @@ impl ApplicationRecovery {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn unacknowledged_apply_survives_queries_until_verified_finish() {
+        let recovery = ApplicationRecovery::default();
+        recovery.begin();
+        for _window in 0..3 {
+            assert_eq!(
+                recovery.inspect(|_| true),
+                (Some(RecoveryView::Unknown), false)
+            );
+        }
+        assert_eq!(recovery.finish_with(false), Some(RecoveryView::Unknown));
+        assert_eq!(recovery.finish_with(true), None);
+    }
+
+    #[test]
+    fn verified_compensation_restores_the_previous_recovery_state() {
+        let recovery = ApplicationRecovery::default();
+        recovery.begin();
+        recovery.restored_with(true);
+        assert_eq!(recovery.inspect(|_| true), (None, false));
+
+        let list = vec![json!({"id":"a", "on":true})];
+        recovery.record(list.clone(), "earlier applied content".into());
+        recovery.begin();
+        recovery.restored_with(true);
+        assert_eq!(
+            recovery.inspect(|s| s == "earlier applied content"),
+            (Some(RecoveryView::Applied { list }), false)
+        );
+
+        recovery.begin();
+        recovery.restored_with(false);
+        assert_eq!(
+            recovery.inspect(|_| true),
+            (Some(RecoveryView::Unknown), false)
+        );
+    }
 
     #[test]
     fn independent_window_reads_preserve_the_full_ordered_snapshot() {

@@ -211,14 +211,6 @@ describe('List tray synchronization', () => {
     expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', false)
   })
 
-  it('routes the explicit recovery action to reapplying saved settings', async () => {
-    render(<List />)
-    await act(async () => {
-      await latestHandler(events.reapply_saved_hosts)()
-    })
-    expect(mocks.reapplySavedList).toHaveBeenCalledTimes(1)
-  })
-
   it('reports move failures without reloading or changing selection', async () => {
     mocks.actions.moveManyToTrashcan.mockRejectedValue({ reason: 'Corrupt trashcan' })
     render(<List />)

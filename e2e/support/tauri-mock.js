@@ -411,6 +411,7 @@
         case 'restore_system_hosts': {
           const failure = state.nextRestoreFailure
           state.nextRestoreFailure = null
+          if (failure === 'transport') throw new Error('restore request did not reach backend')
           if (failure === 'content_changed') state.systemHosts = '10.9.9.9 external.test\n'
           if (failure || state.systemHosts !== params[1]) {
             state.applicationRecovery =
@@ -425,7 +426,10 @@
             }
           }
           state.systemHosts = params[0]
-          return { success: true }
+          state.applicationRecovery = state.beforeApplyRecovery ?? null
+          state.beforeApplyRecovery = null
+          dispatchEvent('tray_list_updated', { _args: [] })
+          return { success: true, application_recovery: clone(state.applicationRecovery) }
         }
         case 'get_list':
           return clone(state.list)
@@ -496,6 +500,9 @@
             content: state.systemHosts,
             add_time_ms: Date.now(),
           })
+          state.beforeApplyRecovery = clone(state.applicationRecovery)
+          state.applicationRecovery = { status: 'unknown' }
+          dispatchEvent('tray_list_updated', { _args: [] })
           return { success: true, old_content: oldContent, new_content: state.systemHosts }
         }
         case 'get_apply_history':

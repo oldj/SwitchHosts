@@ -7,7 +7,9 @@ import LeftSidebar from '@renderer/components/LeftSidebar'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
 import PreferencePanel from '@renderer/components/Pref'
-import DataDirRecoveryModal, { DataDirRecovery } from '@renderer/components/Pref/DataDirRecoveryModal'
+import DataDirRecoveryModal, {
+  DataDirRecovery,
+} from '@renderer/components/Pref/DataDirRecoveryModal'
 import ResizeHandle from '@renderer/components/ResizeHandle'
 import RightPanel from '@renderer/components/RightPanel'
 import SetWriteMode from '@renderer/components/SetWriteMode'
@@ -38,7 +40,7 @@ const MainPage = () => {
   const [defaultDataDir, setDefaultDataDir] = useState('')
   const mainWindowReadySentRef = useRef(false)
   const { setLocale, i18n, lang } = useI18n()
-  const { loadHostsData } = useHostsData()
+  const { loadHostsData, reapplySavedList } = useHostsData()
   const { configs, loadConfigs, updateConfigs } = useConfigs()
   const [leftWidth, setLeftWidth] = useState(0)
   const [rightWidth, setRightWidth] = useState(240)
@@ -113,6 +115,14 @@ const MainPage = () => {
       Promise.resolve(agent.broadcast(events.main_window_ready)).catch((e) => console.error(e))
     }, 0)
   }, [configs, loading])
+
+  // Keep recovery available while the list is unmounted (e.g. trashcan view).
+  useOnBroadcast(events.reapply_saved_hosts, () => {
+    reapplySavedList().catch((error: unknown) => console.error(error))
+  })
+  useOnBroadcast(events.tray_list_updated, () => {
+    loadHostsData().catch((error: unknown) => console.error(error))
+  })
 
   useOnBroadcast(events.toggle_left_panel, (show: boolean) => {
     setLeftShow(show)
