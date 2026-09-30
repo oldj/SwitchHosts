@@ -105,6 +105,11 @@ export default {
   homepage: '홈페이지',
   host: '호스트',
   hosts_add: '새로운 호스트 추가',
+  hosts_applied_save_failed:
+    '시스템 hosts는 적용되었지만 설정 저장과 이전 내용 복원에 실패했습니다. 목록은 적용된 상태를 표시합니다. 편집 전에 저장된 설정을 다시 적용해 주세요.',
+  hosts_application_unknown:
+    '시스템 hosts가 변경되었거나 읽을 수 없어 적용 상태를 확인할 수 없습니다. 편집 전에 저장된 설정을 다시 적용해 주세요.',
+  hosts_reapply_saved: '저장된 설정 다시 적용',
   hosts_delete: '이 호스트 삭제',
   hosts_delete_confirm: '현재 호스트를 삭제하시겠습니까?',
   hosts_edit: '호스트 수정',
@@ -201,6 +206,7 @@ export default {
   source_domain: '도메인',
   source_type: '소스',
   source_url: '구독 URL',
+  storage_conflict: '다른 작업으로 목록이 변경되었습니다. 다시 시도해 주세요.',
   success: '성공!',
   sudo_prompt_title: 'sudo password 입력',
   system: '시스템',

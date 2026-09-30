@@ -1,0 +1,28 @@
+.root {
+  margin: 8px;
+  padding: 8px;
+  border: 1px solid var(--swh-border-color-1);
+  border-radius: var(--swh-border-radius);
+  font-size: 12px;
+  line-height: 1.5;
+
+  p {
+    margin: 0 0 8px;
+  }
+
+  button {
+    padding: 4px 8px;
+    border: 1px solid var(--swh-border-color-1);
+    border-radius: var(--swh-border-radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.compact {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

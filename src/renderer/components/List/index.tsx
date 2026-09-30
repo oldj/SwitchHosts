@@ -7,16 +7,17 @@ import { IHostsListObject } from '@common/data'
 import events from '@common/events'
 import { findItemById, flatten, getNextSelectedItem, setOnStateOfItem } from '@common/hostsFn'
 import { IFindShowSourceParam } from '@common/types'
+import ApplicationRecoveryNotice from '@renderer/components/ApplicationRecoveryNotice'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
-import { showErrorNotification } from '@renderer/core/notify'
+import { getErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
 import clsx from 'clsx'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { BiChevronRight } from 'react-icons/bi'
 import styles from './index.module.scss'
 import ListItem from './ListItem'
@@ -27,19 +28,38 @@ interface Props {
 
 const List = (props: Props) => {
   const { isTray } = props
-  const { hostsData, loadHostsData, setList, currentHosts, setCurrentHosts } = useHostsData()
+  const {
+    hostsData,
+    loadHostsData,
+    setList,
+    applyList,
+    applicationRecovery,
+    currentHosts,
+    setCurrentHosts,
+  } = useHostsData()
+  const recoveryPending = !!applicationRecovery
+  const nodeAttr = useCallback(
+    (item: IHostsListObject) => ({
+      can_drag: !item.is_sys && !isTray && !recoveryPending,
+      can_drop_before: !item.is_sys,
+      can_drop_in: item.type === 'folder',
+      can_drop_after: !item.is_sys,
+    }),
+    [isTray, recoveryPending],
+  )
   const { configs } = useConfigs()
   const { lang } = useI18n()
-  const [selectedIds, setSelectedIds] = useState<string[]>(
-    isTray ? [] : [currentHosts?.id || '0'],
-  )
+  const [selectedIds, setSelectedIds] = useState<string[]>(isTray ? [] : [currentHosts?.id || '0'])
   const [showList, setShowList] = useState<IHostsListObject[]>([])
+  const latestHostsData = useRef(hostsData)
+  const changeRevision = useRef(0)
   const remoteContentApplyRef = useRef({
     isApplying: false,
     pendingIds: new Set<string>(),
   })
 
   useEffect(() => {
+    latestHostsData.current = hostsData
     /* eslint-disable react-hooks/set-state-in-effect -- showList also mutated by drag onChange; keep as state synced from hostsData */
     if (!isTray) {
       setShowList([
@@ -71,57 +91,20 @@ const List = (props: Props) => {
       return
     }
 
-    const newList = setOnStateOfItem(
-      hostsData.list,
-      id,
-      on,
-      configs?.choice_mode ?? 0,
-      configs?.multi_chose_folder_switch_all ?? false,
+    const success = await applyList((list) =>
+      setOnStateOfItem(
+        list,
+        id,
+        on,
+        configs?.choice_mode ?? 0,
+        configs?.multi_chose_folder_switch_all ?? false,
+      ),
     )
-    const success = await writeHostsToSystem(newList)
-    if (success) {
+    if (success === true) {
       agent.broadcast(events.set_hosts_on_status, id, on)
-    } else {
+    } else if (success === false) {
       agent.broadcast(events.set_hosts_on_status, id, !on)
     }
-  }
-
-  const writeHostsToSystem = async (list?: IHostsListObject[]): Promise<boolean> => {
-    if (!Array.isArray(list)) {
-      list = hostsData.list
-    }
-
-    const content: string = await actions.getContentOfList(list)
-    const result = await actions.setSystemHosts(content)
-    if (result.success) {
-      try {
-        await setList(list)
-      } catch (e) {
-        console.error(e)
-      }
-
-      if (currentHosts) {
-        const hosts = findItemById(list, currentHosts.id)
-        if (hosts) {
-          agent.broadcast(events.set_hosts_on_status, currentHosts.id, hosts.on)
-        }
-      }
-    } else {
-      // `cancelled` means the user dismissed the OS auth prompt — that's
-      // intentional, not an error worth a toast. Other failures surface
-      // through the standard error notification.
-      await loadHostsData().catch((e) => console.error(e))
-      if (result.code !== 'cancelled') {
-        const errDesc =
-          result.code === 'no_access' ? lang.no_access_to_hosts : result.message || lang.fail
-        showErrorNotification({ title: lang.fail, message: errDesc })
-        console.error(errDesc)
-      }
-    }
-
-    await agent.broadcast(events.tray_list_updated)
-
-    return result.success
   }
 
   const applyChangedRemoteHostsToSystem = async (ids: string[]) => {
@@ -148,7 +131,7 @@ const List = (props: Props) => {
         })
         if (!hasEnabledChangedHosts) continue
 
-        await writeHostsToSystem(list)
+        await applyList()
       }
     } catch (e) {
       console.error(e)
@@ -168,7 +151,9 @@ const List = (props: Props) => {
     events.toggle_item,
     (id: string, on: boolean) => {
       if (isTray) return
-      onToggleItem(id, on)
+      return onToggleItem(id, on).catch((error: unknown) => {
+        showErrorNotification({ title: lang.fail, message: getErrorMessage(error, lang.fail) })
+      })
     },
     [hostsData, configs, isTray],
   )
@@ -176,7 +161,7 @@ const List = (props: Props) => {
     events.tray_list_updated,
     () => {
       if (!isTray) return
-      loadHostsData()
+      loadHostsData().catch((error: unknown) => console.error(error))
     },
     [isTray],
   )
@@ -184,14 +169,18 @@ const List = (props: Props) => {
   useOnBroadcast(
     events.move_to_trashcan,
     async (ids: string[]) => {
-      await actions.moveManyToTrashcan(ids)
-      await loadHostsData()
+      try {
+        await actions.moveManyToTrashcan(ids)
+        await loadHostsData()
 
-      if (currentHosts && ids.includes(currentHosts.id)) {
-        // 选中删除指定节点后的兄弟节点
-        const nextItem = getNextSelectedItem(hostsData.list, (i) => ids.includes(i.id))
-        setCurrentHosts(nextItem || null)
-        setSelectedIds(nextItem ? [nextItem.id] : [])
+        if (currentHosts && ids.includes(currentHosts.id)) {
+          // 选中删除指定节点后的兄弟节点
+          const nextItem = getNextSelectedItem(hostsData.list, (i) => ids.includes(i.id))
+          setCurrentHosts(nextItem || null)
+          setSelectedIds(nextItem ? [nextItem.id] : [])
+        }
+      } catch (error) {
+        showErrorNotification({ title: lang.fail, message: getErrorMessage(error, lang.fail) })
       }
     },
     [currentHosts, hostsData],
@@ -218,7 +207,6 @@ const List = (props: Props) => {
   )
 
   useOnBroadcast(events.reload_list, loadHostsData)
-
   useOnBroadcast(
     events.hosts_content_changed,
     (hostsId: string) => {
@@ -243,12 +231,20 @@ const List = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      {/*<SystemHostsItem/>*/}
+      <ApplicationRecoveryNotice />
       <Tree
         data={showList}
         selectedIds={selectedIds}
         onChange={(list) => {
+          const revision = ++changeRevision.current
           setShowList(list)
+          const restoreView = () => {
+            if (revision !== changeRevision.current) return
+            const saved = latestHostsData.current.list
+            setShowList(
+              isTray ? [...saved] : [{ id: '0', title: lang.system_hosts, is_sys: true }, ...saved],
+            )
+          }
           const newUserList = list.filter((i) => !i.is_sys)
 
           const enabledIdSeq = (l: IHostsListObject[]) =>
@@ -257,13 +253,23 @@ const List = (props: Props) => {
               .map((i) => i.id)
               .join('\n')
 
-          if (
-            enabledIdSeq(hostsData.list) !== enabledIdSeq(newUserList) &&
-            configs?.write_mode
-          ) {
-            writeHostsToSystem(newUserList).catch((e) => console.error(e))
+          if (enabledIdSeq(hostsData.list) !== enabledIdSeq(newUserList) && configs?.write_mode) {
+            applyList(newUserList)
+              .then((success) => {
+                if (success === false) restoreView()
+              })
+              .catch((error: unknown) => {
+                restoreView()
+                showErrorNotification({
+                  title: lang.fail,
+                  message: getErrorMessage(error, lang.fail),
+                })
+              })
           } else {
-            setList(newUserList).catch((e) => console.error(e))
+            setList(newUserList).catch((error: unknown) => {
+              restoreView()
+              console.error(error)
+            })
           }
         }}
         onSelect={(ids: string[]) => {
@@ -286,14 +292,7 @@ const List = (props: Props) => {
             <BiChevronRight />
           </div>
         }
-        nodeAttr={(item) => {
-          return {
-            can_drag: !item.is_sys && !isTray,
-            can_drop_before: !item.is_sys,
-            can_drop_in: item.type === 'folder',
-            can_drop_after: !item.is_sys,
-          }
-        }}
+        nodeAttr={nodeAttr}
         draggingNodeRender={(data) => {
           return (
             <div className={clsx(styles.for_drag)}>

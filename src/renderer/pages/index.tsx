@@ -7,7 +7,9 @@ import LeftSidebar from '@renderer/components/LeftSidebar'
 import Loading from '@renderer/components/Loading'
 import MainPanel from '@renderer/components/MainPanel'
 import PreferencePanel from '@renderer/components/Pref'
-import DataDirRecoveryModal, { DataDirRecovery } from '@renderer/components/Pref/DataDirRecoveryModal'
+import DataDirRecoveryModal, {
+  DataDirRecovery,
+} from '@renderer/components/Pref/DataDirRecoveryModal'
 import ResizeHandle from '@renderer/components/ResizeHandle'
 import RightPanel from '@renderer/components/RightPanel'
 import SetWriteMode from '@renderer/components/SetWriteMode'
@@ -16,6 +18,7 @@ import { actions, agent } from '@renderer/core/agent'
 import { showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
+import useRecoveryRequests from '@renderer/models/useRecoveryRequests'
 import useResolvedTheme from '@renderer/models/useResolvedTheme'
 import { applyThemeToBody, normalizeTheme } from '@renderer/utils/theme'
 import clsx from 'clsx'
@@ -113,6 +116,11 @@ const MainPage = () => {
       Promise.resolve(agent.broadcast(events.main_window_ready)).catch((e) => console.error(e))
     }, 0)
   }, [configs, loading])
+
+  useRecoveryRequests(!loading && !dataDirRecovery)
+  useOnBroadcast(events.tray_list_updated, () => {
+    loadHostsData().catch((error: unknown) => console.error(error))
+  })
 
   useOnBroadcast(events.toggle_left_panel, (show: boolean) => {
     setLeftShow(show)

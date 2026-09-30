@@ -24,6 +24,10 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
+
+// Serialize our read/write pairs, including compensation, across app entry points.
+static SYSTEM_WRITE_LOCK: Mutex<()> = Mutex::new(());
 
 use super::elevation::write_privileged;
 use super::error::HostsApplyError;
@@ -50,10 +54,21 @@ pub fn apply_to_system_hosts(
     aggregated_content: &str,
     write_mode: &str,
 ) -> Result<ApplyOutcome, HostsApplyError> {
+    let _guard = SYSTEM_WRITE_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let target = system_hosts_path()?;
+    apply_at(&target, aggregated_content, write_mode)
+}
+
+fn apply_at(
+    target: &Path,
+    aggregated_content: &str,
+    write_mode: &str,
+) -> Result<ApplyOutcome, HostsApplyError> {
     let content_lf = normalize_line_endings(aggregated_content);
 
-    let previous_raw = read_system_hosts(&target).unwrap_or_default();
+    // Compensation needs a trustworthy pre-write snapshot. An unreadable file
+    // must not be mistaken for an empty file and later "restored" to empty.
+    let previous_raw = read_system_hosts(target)?;
     let previous_lf = normalize_line_endings(&previous_raw);
 
     let final_content_lf = if write_mode == "append" {
@@ -72,7 +87,7 @@ pub fn apply_to_system_hosts(
         });
     }
 
-    match std::fs::write(&target, disk_content.as_bytes()) {
+    match std::fs::write(target, disk_content.as_bytes()) {
         Ok(()) => Ok(ApplyOutcome {
             previous_content: previous_lf,
             new_content: final_content_lf,
@@ -82,7 +97,7 @@ pub fn apply_to_system_hosts(
             // Prefer the silent macOS helper; falls back to OS-native
             // elevation (AEWP / pkexec / UAC) for any other platform or
             // when the helper isn't available.
-            write_privileged(&target, &disk_content)?;
+            write_privileged(target, &disk_content)?;
             Ok(ApplyOutcome {
                 previous_content: previous_lf,
                 new_content: final_content_lf,
@@ -93,6 +108,39 @@ pub fn apply_to_system_hosts(
             message: format!("write {}: {e}", target.display()),
         }),
     }
+}
+
+/// Restore the exact pre-apply file only while our write is still current.
+pub fn restore_system_hosts(previous: &str, expected: &str) -> Result<(), HostsApplyError> {
+    let _guard = SYSTEM_WRITE_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    restore_at(&system_hosts_path()?, previous, expected)
+}
+
+fn restore_at(target: &Path, previous: &str, expected: &str) -> Result<(), HostsApplyError> {
+    let current = read_system_hosts(target)?;
+    if normalize_line_endings(&current) != normalize_line_endings(expected) {
+        return Err(HostsApplyError::ContentChanged);
+    }
+    let content = restore_line_endings(&normalize_line_endings(previous));
+    if current == content {
+        return Ok(());
+    }
+    match std::fs::write(target, content.as_bytes()) {
+        Ok(()) => Ok(()),
+        Err(e) if is_permission_denied(&e) => write_privileged(target, &content),
+        Err(e) => Err(HostsApplyError::Io {
+            message: format!("restore {}: {e}", target.display()),
+        }),
+    }
+}
+
+/// Only a verified readable match can be presented as a known applied state.
+pub fn system_hosts_matches(expected: &str) -> bool {
+    let _guard = SYSTEM_WRITE_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    system_hosts_path()
+        .and_then(|path| read_system_hosts(&path))
+        .map(|current| normalize_line_endings(&current) == normalize_line_endings(expected))
+        .unwrap_or(false)
 }
 
 fn read_system_hosts(target: &Path) -> Result<String, HostsApplyError> {
@@ -371,5 +419,48 @@ mod tests {
                 .join("etc")
                 .join("hosts")
         ));
+    }
+}
+
+#[cfg(test)]
+mod compensation_tests {
+    use super::*;
+
+    #[test]
+    fn restores_complete_file_without_reappending_managed_or_unmanaged_content() {
+        let target =
+            std::env::temp_dir().join(format!("switchhosts-restore-{}", std::process::id()));
+        let old = "127.0.0.1 localhost\n# --- SWITCHHOSTS_CONTENT_START ---\n10.0.0.2 old.test\n# --- SWITCHHOSTS_CONTENT_END ---\n# user-managed tail\n";
+        std::fs::write(&target, restore_line_endings(old)).unwrap();
+        let applied = apply_at(&target, "10.0.0.1 dev.test\n", "append").unwrap();
+        assert!(applied.new_content.contains("dev.test"));
+        assert!(applied.new_content.contains("# user-managed tail"));
+        restore_at(&target, &applied.previous_content, &applied.new_content).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&target).unwrap(),
+            restore_line_endings(old)
+        );
+        // A later write must survive a delayed compensation attempt.
+        std::fs::write(&target, "newer external content\n").unwrap();
+        assert!(matches!(
+            restore_at(&target, old, &applied.new_content),
+            Err(HostsApplyError::ContentChanged)
+        ));
+        assert_eq!(
+            std::fs::read_to_string(&target).unwrap(),
+            "newer external content\n"
+        );
+        std::fs::remove_file(target).unwrap();
+    }
+
+    #[test]
+    fn unreadable_previous_file_aborts_apply_and_compensation() {
+        let target =
+            std::env::temp_dir().join(format!("switchhosts-unreadable-{}", std::process::id()));
+        std::fs::create_dir_all(&target).unwrap();
+        assert!(apply_at(&target, "new content", "overwrite").is_err());
+        assert!(restore_at(&target, "old content", "new content").is_err());
+        assert!(target.is_dir());
+        std::fs::remove_dir(target).unwrap();
     }
 }

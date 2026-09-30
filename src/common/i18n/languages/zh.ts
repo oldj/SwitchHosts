@@ -104,6 +104,11 @@ const lang: LanguageDict = {
   homepage: '主页',
   host: '主机',
   hosts_add: '添加 hosts',
+  hosts_applied_save_failed:
+    '系统 hosts 已应用，但配置保存和恢复原内容均失败。列表显示已应用的快照，请先重新应用已保存配置再编辑。',
+  hosts_application_unknown:
+    '系统 hosts 已变化或无法读取，当前生效状态待确认。请先重新应用已保存配置再编辑。',
+  hosts_reapply_saved: '重新应用已保存配置',
   hosts_delete: '删除当前方案',
   hosts_delete_confirm: '确实要删除当前方案吗？',
   hosts_edit: '编辑 hosts',
@@ -196,6 +201,7 @@ const lang: LanguageDict = {
   source_domain: '域名解析',
   source_type: '来源',
   source_url: '订阅 URL',
+  storage_conflict: '列表已被其他操作更改，请重试。',
   success: '操作成功！',
   sudo_prompt_title: '请输入你的登录密码（sudo 密码）',
   system: '系统',

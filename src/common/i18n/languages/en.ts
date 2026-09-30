@@ -107,6 +107,11 @@ export default {
   homepage: 'Homepage',
   host: 'Host',
   hosts_add: 'Add Hosts Entry',
+  hosts_applied_save_failed:
+    'System hosts were applied, but saving settings and restoring the previous content failed. The list shows the applied snapshot. Reapply saved settings before editing.',
+  hosts_application_unknown:
+    'The active hosts selection cannot be confirmed because system hosts changed or could not be read. Reapply saved settings before editing.',
+  hosts_reapply_saved: 'Reapply saved settings',
   hosts_delete: 'Delete Hosts Entry',
   hosts_delete_confirm: 'Are you sure you want to delete the current hosts entry?',
   hosts_edit: 'Edit Hosts',
@@ -205,6 +210,7 @@ export default {
   source_domain: 'Domain',
   source_type: 'Source',
   source_url: 'Subscription URL',
+  storage_conflict: 'The list changed in another operation. Please retry.',
   success: 'Success!',
   sudo_prompt_title: 'Enter Your Sudo Password',
   system: 'System',

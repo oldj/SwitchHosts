@@ -1,4 +1,4 @@
-(() => {
+;(() => {
   const clone = (value) => JSON.parse(JSON.stringify(value))
   const contentStartMarker = '# --- SWITCHHOSTS_CONTENT_START ---'
   const contentEndMarker = '# --- SWITCHHOSTS_CONTENT_END ---'
@@ -65,6 +65,9 @@
 
   const state = {
     configs,
+    applicationRecovery: null,
+    nextSaveError: false,
+    nextRestoreFailure: null,
     list: [
       {
         id: 'local-dev',
@@ -238,18 +241,13 @@
     let head = previousLf
     let tail = ''
     const previousLines = previousLf.split('\n')
-    const startIndex = previousLines.findIndex(
-      (line) => line.trim() === contentStartMarker,
-    )
+    const startIndex = previousLines.findIndex((line) => line.trim() === contentStartMarker)
     if (startIndex >= 0) {
       head = previousLines.slice(0, startIndex).join('\n')
       const endOffset = previousLines
         .slice(startIndex + 1)
         .findIndex((line) => line.trim() === contentEndMarker)
-      tail =
-        endOffset >= 0
-          ? previousLines.slice(startIndex + 1 + endOffset + 1).join('\n')
-          : ''
+      tail = endOffset >= 0 ? previousLines.slice(startIndex + 1 + endOffset + 1).join('\n') : ''
     }
     head = head.trimEnd()
     tail = tail.trim()
@@ -294,6 +292,11 @@
     getCalls: () => clone(state.calls),
     clearCalls: () => {
       state.calls.length = 0
+    },
+    failNextSaveAndRestore: (failure = 'cancelled') => {
+      state.nextSaveError = true
+      state.storageReadOnly = true
+      state.nextRestoreFailure = failure
     },
     failNextApply: (result = {}) => {
       state.nextApplyResult = {
@@ -397,10 +400,55 @@
             list: clone(state.list),
             trashcan: clone(state.trashcan),
             version: '5.0.0-beta.22',
+            application_recovery: clone(state.applicationRecovery),
           }
+        case 'request_hosts_recovery':
+          state.recoveryRequested = !!state.applicationRecovery
+          dispatchEvent('reapply_saved_hosts', { _args: [] })
+          return null
+        case 'take_hosts_recovery_request': {
+          const requested = !!state.recoveryRequested && !!state.applicationRecovery
+          state.recoveryRequested = false
+          return requested
+        }
+        case 'get_application_recovery':
+          return clone(state.applicationRecovery)
+        case 'finish_hosts_application':
+          state.applicationRecovery = state.systemHosts === params[0] ? null : { status: 'unknown' }
+          dispatchEvent('tray_list_updated', { _args: [] })
+          return clone(state.applicationRecovery)
+        case 'restore_system_hosts': {
+          const failure = state.nextRestoreFailure
+          state.nextRestoreFailure = null
+          if (failure === 'transport') throw new Error('restore request did not reach backend')
+          if (failure === 'content_changed') state.systemHosts = '10.9.9.9 external.test\n'
+          if (failure || state.systemHosts !== params[1]) {
+            state.applicationRecovery =
+              state.systemHosts === params[1]
+                ? { status: 'applied', list: clone(params[2]) }
+                : { status: 'unknown' }
+            dispatchEvent('tray_list_updated', { _args: [] })
+            return {
+              success: false,
+              code: failure || 'content_changed',
+              application_recovery: clone(state.applicationRecovery),
+            }
+          }
+          state.systemHosts = params[0]
+          state.applicationRecovery = state.beforeApplyRecovery ?? null
+          state.beforeApplyRecovery = null
+          dispatchEvent('tray_list_updated', { _args: [] })
+          return { success: true, application_recovery: clone(state.applicationRecovery) }
+        }
         case 'get_list':
           return clone(state.list)
         case 'set_list':
+          if (JSON.stringify(params[0]) === JSON.stringify(state.list)) return true
+          if (state.storageReadOnly) throw new Error('storage is read-only')
+          if (state.nextSaveError) {
+            state.nextSaveError = false
+            throw new Error('disk full')
+          }
           state.list = clone(params[0] || [])
           for (const item of flatten(state.list)) {
             if (!state.contents[item.id]) state.contents[item.id] = ''
@@ -445,10 +493,17 @@
           return true
         case 'get_content_of_list':
           return aggregateContent(params[0] || state.list)
-        case 'apply_hosts_selection':
+        case 'apply_hosts_selection': {
+          const oldContent = state.systemHosts
+          state.beforeApplyRecovery = clone(state.applicationRecovery)
+          state.applicationRecovery = { status: 'unknown' }
+          dispatchEvent('tray_list_updated', { _args: [] })
           if (state.nextApplyResult) {
             const result = state.nextApplyResult
             state.nextApplyResult = null
+            state.applicationRecovery = state.beforeApplyRecovery
+            state.beforeApplyRecovery = null
+            dispatchEvent('tray_list_updated', { _args: [] })
             return clone(result)
           }
           state.systemHosts =
@@ -460,7 +515,8 @@
             content: state.systemHosts,
             add_time_ms: Date.now(),
           })
-          return { success: true }
+          return { success: true, old_content: oldContent, new_content: state.systemHosts }
+        }
         case 'get_apply_history':
           return clone(state.history)
         case 'delete_apply_history_item':

@@ -76,45 +76,49 @@ const EditHostsInfo = () => {
         ...data,
         id: uuidv4(),
       }
-      const list: IHostsListObject[] = [...hostsData.list, h]
-      await setList(list)
+      await setList((list) => [...list, h])
       agent.broadcast(events.select_hosts, h.id, 1000)
       if (data.type === 'remote' && (data.source as string) === 'domain') {
         actions.refreshHosts(h.id).catch((e) => console.error(e))
       }
     } else if (data && data.id) {
-      const h: IHostsListObject | undefined = hostsFn.findItemById(hostsData.list, data.id)
-      if (h) {
-        const prevSource = h.source || 'url'
-        const prevUrl = h.url || ''
-        Object.assign(h, data)
-        await setList([...hostsData.list])
-
-        if (data.id === currentHosts?.id) {
-          setCurrentHosts(h)
-        }
-
-        // Switching to (or retargeting) a domain source leaves the old
-        // content on disk until the next scheduled refresh; kick one off
-        // now so the entry reflects the new domain immediately.
-        if (
+      const id = data.id
+      // Only form fields belong to this edit. Apply them to the latest node,
+      // preserving concurrent switch changes and remote-refresh metadata.
+      const fields = lodash.pick(data, [
+        'title',
+        'type',
+        'url',
+        'source',
+        'refresh_interval',
+        'include',
+        'folder_mode',
+      ])
+      let edited: IHostsListObject | undefined
+      let refresh = false
+      await setList((list) => {
+        const h = hostsFn.findItemById(list, id)
+        if (!h) throw new Error(lang.storage_conflict)
+        refresh =
           data.type === 'remote' &&
-          (data.source as string) === 'domain' &&
-          (prevSource !== 'domain' || prevUrl !== data.url)
-        ) {
-          actions.refreshHosts(h.id).catch((e) => console.error(e))
-        }
-      } else {
-        setIsAdd(true)
-        setTimeout(onSave, 300)
-        return
-      }
+          data.source === 'domain' &&
+          ((h.source || 'url') !== 'domain' || (h.url || '') !== data.url)
+        Object.assign(h, fields)
+        edited = h
+        return list
+      })
+      if (id === currentHosts?.id && edited) setCurrentHosts(edited)
+      if (refresh) actions.refreshHosts(id).catch((e) => console.error(e))
     } else {
       showErrorNotification({ title: lang.fail, message: lang.unknown_error })
     }
 
     setIsShow(false)
   }
+
+  // setList reports persistence failures. Keep the editor open and consume
+  // the rejection at event boundaries so no success follow-up runs.
+  const saveFromUI = () => onSave().catch((error: unknown) => console.error(error))
 
   const onUpdate = (kv: Partial<IHostsListObject>) => {
     const obj: IHostsListObject = Object.assign({}, hosts, kv)
@@ -165,7 +169,9 @@ const EditHostsInfo = () => {
             value={hosts?.url || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdate({ url: e.target.value })}
             placeholder={source === 'domain' ? lang.domain_placeholder : lang.url_placeholder}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onSave()}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
+              e.key === 'Enter' && saveFromUI()
+            }
             error={source === 'domain' && domainError ? domainError : undefined}
           />
           {source === 'domain' ? (
@@ -331,7 +337,7 @@ const EditHostsInfo = () => {
             <Button onClick={onCancel} variant="outline">
               {lang.btn_cancel}
             </Button>
-            <Button onClick={onSave}>{lang.btn_ok}</Button>
+            <Button onClick={saveFromUI}>{lang.btn_ok}</Button>
           </Group>
         </SimpleGrid>
       }
@@ -366,7 +372,9 @@ const EditHostsInfo = () => {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               onUpdate({ title: e.target.value })
             }
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onSave()}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
+              e.key === 'Enter' && saveFromUI()
+            }
           />
         </Box>
 

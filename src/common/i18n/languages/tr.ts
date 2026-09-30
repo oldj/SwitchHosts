@@ -109,6 +109,11 @@ export default {
   homepage: 'Anasayfa',
   host: 'Host',
   hosts_add: 'Yeni host ekle',
+  hosts_applied_save_failed:
+    'Sistem hosts dosyası uygulandı, ancak kaydetme ve geri yükleme başarısız oldu. Liste uygulanan durumu gösteriyor. Düzenlemeden önce kayıtlı ayarları yeniden uygulayın.',
+  hosts_application_unknown:
+    'Sistem hosts dosyası değiştiği veya okunamadığı için etkin seçim doğrulanamıyor. Düzenlemeden önce kayıtlı ayarları yeniden uygulayın.',
+  hosts_reapply_saved: 'Kayıtlı ayarları yeniden uygula',
   hosts_delete: 'Bu hostu sil',
   hosts_delete_confirm: 'Mevcut hostu silmek istediğinizden emin misiniz?',
   hosts_edit: 'Hostları düzenle',
@@ -207,6 +212,7 @@ export default {
   source_domain: 'Alan adı',
   source_type: 'Kaynak',
   source_url: "Abonelik URL'si",
+  storage_conflict: 'Liste başka bir işlem tarafından değiştirildi. Lütfen yeniden deneyin.',
   success: 'Başarılı!',
   sudo_prompt_title: 'Sudo parolanızı girin',
   system: 'Sistem',

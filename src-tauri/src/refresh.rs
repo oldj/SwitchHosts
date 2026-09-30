@@ -13,19 +13,13 @@
 //!
 //! Locking discipline (per implementation-notes A5): the HTTP fetch
 //! happens *outside* `store_lock`, since it can block for many
-//! seconds. We acquire the lock only for the read-modify-write of
-//! manifest.json, and *re-find* the target node by id at lock time so
-//! a concurrent renderer edit doesn't get clobbered.
+//! seconds. The lock covers content writes and the manifest stamp, and we
+//! re-find the target node before writing so concurrent deletion does not
+//! recreate its content. Readers and transaction recovery use the same lock.
 //!
-//! That leaves the fetch → compare → write sequence on the *entry*
-//! file unguarded, which two overlapping refreshes of the same node
-//! can interleave into a rollback: A fetches V1 slowly, B fetches V2
-//! and writes it, then A wakes up, sees "disk differs from what I
-//! fetched", writes V1 back, stamps a *newer* `last_refresh` and emits
-//! `hosts_content_changed` — so the system hosts file ends up on stale
-//! content while the UI reports a successful refresh. Three callers can
-//! overlap: the `refresh_remote_hosts` command, the background scanner
-//! below, and `/api/refresh` (which has no UI debounce in front of it).
+//! Two overlapping fetches of the same node can still finish out of order:
+//! A fetches V1 slowly, B writes V2, then A overwrites it with V1. The command,
+//! scanner and HTTP API can all initiate a refresh concurrently.
 //! `refresh_one_inner` therefore serialises on a per-node mutex held
 //! across the whole sequence. Per-node rather than global: a single
 //! mutex would park an `/api/refresh` call behind an entire
@@ -142,9 +136,9 @@ async fn refresh_one_inner<R: Runtime>(
     let node_lock = refresh_lock_for(id);
     let _serialised = node_lock.lock().await;
 
-    // Step 1: snapshot the node from the current manifest. No lock —
-    // we only need to read.
-    let manifest = Manifest::load(&state.paths).map_err(|e| RefreshError::Storage {
+    // Step 1: take a consistent snapshot, then release the store lock
+    // before fetching from the network.
+    let manifest = state.read_manifest().map_err(|e| RefreshError::Storage {
         message: e.to_string(),
     })?;
     let snapshot = match find_node(&manifest.root, id) {
@@ -174,29 +168,12 @@ async fn refresh_one_inner<R: Runtime>(
         fetch_remote(&url, state).await?
     };
 
-    // Step 3: compare with the entries file (always LF on disk). The
-    // remote payload may use CRLF, so normalize before comparing —
-    // otherwise a CRLF response would defeat the equality check on
-    // every poll and we'd emit a spurious "content changed" event each
-    // tick.
-    let old_content =
-        entries::read_entry(&state.paths.entries_dir, id).map_err(|e| RefreshError::Storage {
+    // Step 3: re-acquire the manifest under the store lock and stamp
+    // last_refresh / last_refresh_ms on the (possibly relocated) node.
+    let (updated_snapshot, content_changed) = {
+        let _guard = state.lock_store().map_err(|e| RefreshError::Storage {
             message: e.to_string(),
         })?;
-    let new_content_lf = entries::normalize_to_lf(&new_content);
-    let content_changed = old_content != new_content_lf;
-    if content_changed {
-        entries::write_entry(&state.paths.entries_dir, id, &new_content_lf).map_err(|e| {
-            RefreshError::Storage {
-                message: e.to_string(),
-            }
-        })?;
-    }
-
-    // Step 4: re-acquire the manifest under the store lock and stamp
-    // last_refresh / last_refresh_ms on the (possibly relocated) node.
-    let updated_snapshot = {
-        let _guard = state.store_lock.lock().expect("store lock poisoned");
         let mut manifest = Manifest::load(&state.paths).map_err(|e| RefreshError::Storage {
             message: e.to_string(),
         })?;
@@ -204,20 +181,41 @@ async fn refresh_one_inner<R: Runtime>(
         let stamp = format_timestamp(now_ms);
         let touched = stamp_node(&mut manifest.root, id, &stamp, now_ms);
         if !touched {
-            // Concurrent delete between step 1 and now. Treat as
-            // success — the entries file we just wrote is harmless
-            // garbage that the next GC pass will clean up.
+            // The node was deleted while fetching. Do not recreate its content.
             return Err(RefreshError::InvalidId);
         }
+        // Compare with the entries file (always LF on disk). The
+        // remote payload may use CRLF, so normalize before comparing —
+        // otherwise a CRLF response would defeat the equality check on
+        // every poll and we'd emit a spurious "content changed" event each
+        // tick.
+        let old_content = entries::read_entry(&state.paths.entries_dir, id).map_err(|e| {
+            RefreshError::Storage {
+                message: e.to_string(),
+            }
+        })?;
+        let new_content_lf = entries::normalize_to_lf(&new_content);
+        let content_changed = old_content != new_content_lf;
+        if content_changed {
+            entries::write_entry(&state.paths.entries_dir, id, &new_content_lf).map_err(|e| {
+                RefreshError::Storage {
+                    message: e.to_string(),
+                }
+            })?;
+        }
+
         manifest
             .save(&state.paths)
             .map_err(|e| RefreshError::Storage {
                 message: e.to_string(),
             })?;
-        find_node(&manifest.root, id).unwrap_or(snapshot.clone())
+        (
+            find_node(&manifest.root, id).unwrap_or(snapshot.clone()),
+            content_changed,
+        )
     };
 
-    // Step 5: tell the UI. Both events match the Electron broadcast
+    // Step 4: tell the UI. Both events match the Electron broadcast
     // names so the existing renderer subscribers fire unchanged.
     let _ = app.emit(
         "hosts_refreshed",
@@ -245,7 +243,7 @@ pub async fn refresh_all<R: Runtime>(
     app: &AppHandle<R>,
     state: &AppState,
 ) -> Vec<(String, Result<RefreshOutcome, RefreshError>)> {
-    let manifest = match Manifest::load(&state.paths) {
+    let manifest = match state.read_manifest() {
         Ok(m) => m,
         Err(e) => {
             log::warn!("manifest load failed: {e}");
@@ -328,7 +326,7 @@ pub fn start_background_scanner<R: Runtime>(app: AppHandle<R>) -> Arc<AtomicBool
 async fn scan_once<R: Runtime>(app: &AppHandle<R>) {
     let state_guard = app.state::<AppState>();
     let state = state_guard.inner();
-    let manifest = match Manifest::load(&state.paths) {
+    let manifest = match state.read_manifest() {
         Ok(m) => m,
         Err(e) => {
             log::warn!("manifest load failed: {e}");
@@ -371,11 +369,10 @@ async fn resolve_domain_content(state: &AppState, domain: &str) -> Result<String
         let cfg = state.config.lock().expect("config mutex poisoned");
         (cfg.dns_provider.clone(), cfg.dns_custom_url.clone())
     };
-    let provider = crate::dns::provider_by_id(&provider_id, &custom_url).map_err(|e| {
-        RefreshError::Fetch {
+    let provider =
+        crate::dns::provider_by_id(&provider_id, &custom_url).map_err(|e| RefreshError::Fetch {
             message: e.to_string(),
-        }
-    })?;
+        })?;
     let client = http::build_client(state).map_err(|message| RefreshError::Fetch { message })?;
     let ips = crate::dns::resolve_domain(&client, &provider, domain)
         .await

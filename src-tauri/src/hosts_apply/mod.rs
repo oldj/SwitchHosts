@@ -20,6 +20,7 @@ pub mod error;
 pub mod helper_admin;
 pub mod helper_client;
 pub mod history;
+pub mod recovery;
 pub mod write;
 
 pub use aggregate::aggregate_selected_content;

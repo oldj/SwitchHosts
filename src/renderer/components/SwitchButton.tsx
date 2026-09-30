@@ -10,6 +10,8 @@ interface Props {
   on: boolean
   onChange?: (on: boolean) => void
   disabled?: boolean
+  unknown?: boolean
+  unknownLabel?: string
   ariaLabel?: string
 }
 
@@ -33,6 +35,13 @@ const SwitchButton = (props: Props) => {
     e.stopPropagation()
     onClick()
   }
+
+  if (props.unknown)
+    return (
+      <span role="status" aria-label={props.unknownLabel} title={props.unknownLabel}>
+        ?
+      </span>
+    )
 
   return (
     <div

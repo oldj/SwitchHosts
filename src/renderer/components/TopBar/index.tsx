@@ -7,6 +7,7 @@ import logo from '@/assets/logo@4x.png'
 import events from '@common/events'
 import { ActionIcon, Badge, Box, Divider, Flex } from '@mantine/core'
 import ItemIcon from '@renderer/components/ItemIcon'
+import ApplicationRecoveryNotice from '@renderer/components/ApplicationRecoveryNotice'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -36,13 +37,12 @@ interface IProps {
 const TopBar = (props: IProps) => {
   const { showLeftPanel, showRightPanel } = props
   const { lang } = useI18n()
-  const { isHostsInTrashcan, currentHosts, isReadOnly } = useHostsData()
+  const { isHostsInTrashcan, currentHosts, isReadOnly, applicationRecovery } = useHostsData()
   const [isOn, setIsOn] = useState(!!currentHosts?.on)
   const iconSize = 20
   const iconStroke = 1.5
 
-  const showToggleSwitch =
-    !showLeftPanel && currentHosts && !isHostsInTrashcan(currentHosts.id)
+  const showToggleSwitch = !showLeftPanel && currentHosts && !isHostsInTrashcan(currentHosts.id)
   const showAppBrand = agent.platform !== 'darwin'
   const showWindowControls = agent.platform !== 'darwin'
   const currentTitle = currentHosts ? currentHosts.title || lang.untitled : lang.system_hosts
@@ -50,7 +50,7 @@ const TopBar = (props: IProps) => {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror prop into local optimistic state; also set by useOnBroadcast
     setIsOn(!!currentHosts?.on)
-  }, [currentHosts])
+  }, [currentHosts, applicationRecovery])
 
   useOnBroadcast(
     events.set_hosts_on_status,
@@ -69,11 +69,7 @@ const TopBar = (props: IProps) => {
     >
       <div className={styles.left_cluster} data-tauri-drag-region>
         {showAppBrand ? (
-          <div
-            className={styles.app_brand}
-            data-testid="titlebar-brand"
-            data-tauri-drag-region
-          >
+          <div className={styles.app_brand} data-testid="titlebar-brand" data-tauri-drag-region>
             <span
               className={styles.app_logo_slot}
               data-testid="titlebar-logo-slot"
@@ -163,10 +159,14 @@ const TopBar = (props: IProps) => {
       </Box>
 
       <Flex align="center" justify="flex-end" gap={8}>
+        {!showLeftPanel && <ApplicationRecoveryNotice compact />}
         {showToggleSwitch ? (
           <Flex align="center" mr="12px">
             <SwitchButton
               ariaLabel="Toggle current hosts"
+              disabled={!!applicationRecovery}
+              unknown={applicationRecovery?.status === 'unknown'}
+              unknownLabel={lang.hosts_application_unknown}
               on={isOn}
               onChange={(on) => {
                 setIsOn(on)

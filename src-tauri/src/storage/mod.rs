@@ -13,6 +13,7 @@ pub mod fs_copy;
 pub mod manifest;
 pub mod paths;
 pub mod state;
+pub mod transaction;
 pub mod trashcan;
 pub mod tree_format;
 
@@ -22,14 +23,13 @@ pub use paths::V5Paths;
 pub use trashcan::Trashcan;
 
 use std::sync::atomic::{AtomicBool, AtomicU64};
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 
 /// Process-wide shared state held by Tauri as `State<'_, AppState>`.
 ///
 /// `store_lock` serializes every read-modify-write cycle that touches
-/// `manifest.json` or `trashcan.json`. Commands that only read may
-/// skip it. Commands that mutate must hold the guard until after the
-/// atomic rename lands on both files.
+/// `manifest.json`, `trashcan.json`, state, or entry files. Readers also
+/// acquire it so they cannot observe an incomplete transaction.
 ///
 /// `is_will_quit` distinguishes "user clicked the close button"
 /// (CloseRequested handler hides the window instead of letting it
@@ -39,6 +39,7 @@ pub struct AppState {
     pub paths: V5Paths,
     pub config: Mutex<AppConfig>,
     pub store_lock: Mutex<()>,
+    pub application_recovery: crate::hosts_apply::recovery::ApplicationRecovery,
     /// Serializes the entire `config_set` / `config_update` commit
     /// pipeline. Tauri runs `#[tauri::command] async fn`s concurrently
     /// on tokio, so without this guard two concurrent commits can each
@@ -130,6 +131,7 @@ impl AppState {
                 "custom data directory unavailable ({recovery:?}) — using default root and skipping migration; the user will be prompted"
             );
         } else {
+            transaction::recover(&paths)?;
             let outcome = crate::migration::run_if_needed(&paths)?;
             log::info!("migration outcome: {outcome:?}");
         }
@@ -139,6 +141,7 @@ impl AppState {
             paths,
             config: Mutex::new(config),
             store_lock: Mutex::new(()),
+            application_recovery: Default::default(),
             config_write_lock: Mutex::new(()),
             update_check_lock: tokio::sync::Mutex::new(()),
             is_will_quit: AtomicBool::new(false),
@@ -152,6 +155,22 @@ impl AppState {
     pub fn persist_config(&self) -> Result<(), StorageError> {
         let guard = self.config.lock().expect("config mutex poisoned");
         guard.save(&self.paths.config_file)
+    }
+
+    /// Recover before exposing data or allowing another writer to proceed.
+    /// A failed recovery leaves the journal intact and refuses the operation.
+    pub fn lock_store(&self) -> Result<MutexGuard<'_, ()>, StorageError> {
+        let guard = self.store_lock.lock().map_err(|_| StorageError::Io {
+            path: self.paths.root.display().to_string(),
+            reason: "storage lock poisoned; restart to recover the interrupted transaction".into(),
+        })?;
+        transaction::recover(&self.paths)?;
+        Ok(guard)
+    }
+
+    pub fn read_manifest(&self) -> Result<manifest::Manifest, StorageError> {
+        let _guard = self.lock_store()?;
+        manifest::Manifest::load(&self.paths)
     }
 
     /// Backstop guard for data-mutating commands. When the recorded data
@@ -191,6 +210,7 @@ mod tests {
             paths: V5Paths::under(root),
             config: Mutex::new(AppConfig::default()),
             store_lock: Mutex::new(()),
+            application_recovery: Default::default(),
             config_write_lock: Mutex::new(()),
             update_check_lock: tokio::sync::Mutex::new(()),
             is_will_quit: AtomicBool::new(false),
@@ -203,11 +223,11 @@ mod tests {
     fn require_data_dir_usable_rejects_during_recovery() {
         // Both recovery kinds (missing dir and invalid pointer) must block
         // data-mutating commands; the normal (None) case allows them.
-        assert!(
-            state(Some(paths::DataDirRecovery::Missing(PathBuf::from("/tmp/gone"))))
-                .require_data_dir_usable()
-                .is_err()
-        );
+        assert!(state(Some(paths::DataDirRecovery::Missing(PathBuf::from(
+            "/tmp/gone"
+        ))))
+        .require_data_dir_usable()
+        .is_err());
         assert!(state(Some(paths::DataDirRecovery::Invalid))
             .require_data_dir_usable()
             .is_err());

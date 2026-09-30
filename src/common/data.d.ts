@@ -60,7 +60,11 @@ export interface IHostsHistoryObject {
 
 export type VersionType = string
 
+export type IApplicationRecovery =
+  { status: 'applied'; list: IHostsListObject[] } | { status: 'unknown' }
+
 export interface IHostsBasicData {
+  application_recovery?: IApplicationRecovery | null
   list: IHostsListObject[]
   trashcan: ITrashcanObject[]
   version: VersionType

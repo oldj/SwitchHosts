@@ -150,6 +150,7 @@ pub fn find_in_manifest(
     }
     let regex = build_regex(keyword, options)?;
 
+    let _guard = state.lock_store().map_err(|e| e.to_string())?;
     let manifest = Manifest::load(&state.paths).map_err(|e| e.to_string())?;
     let mut out = Vec::new();
     walk_searchable(&manifest.root, &mut |id, title, kind| {
@@ -360,6 +361,7 @@ pub fn replace_one_in_manifest(state: &AppState, args: FindReplaceOneArgs) -> Re
         return Err("find_replace_one: start must be <= end".to_string());
     }
 
+    let _guard = state.lock_store().map_err(|e| e.to_string())?;
     let manifest = Manifest::load(&state.paths).map_err(|e| e.to_string())?;
     let Some(node) = manifest::find_node(&manifest.root, &args.item_id) else {
         return Ok(false);
@@ -398,6 +400,7 @@ pub fn replace_all_in_manifest(
         });
     }
     let regex = build_regex(keyword, options)?;
+    let _guard = state.lock_store().map_err(|e| e.to_string())?;
     let manifest = Manifest::load(&state.paths).map_err(|e| e.to_string())?;
     // First read every local entry and compute its replacement. That way a
     // later read error does not leave earlier entries already written.
@@ -815,6 +818,7 @@ mod tests {
             paths,
             config: Mutex::new(AppConfig::default()),
             store_lock: Mutex::new(()),
+            application_recovery: Default::default(),
             config_write_lock: Mutex::new(()),
             update_check_lock: tokio::sync::Mutex::new(()),
             is_will_quit: AtomicBool::new(false),

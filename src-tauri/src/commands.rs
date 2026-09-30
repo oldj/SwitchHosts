@@ -31,7 +31,9 @@ use crate::refresh::{self, RefreshOutcome};
 use crate::storage::{
     data_dir_pointer, entries, fs_copy,
     manifest::{self, Manifest},
-    paths, AppConfig, AppState, StorageError, Trashcan,
+    paths,
+    transaction::{self, Target},
+    AppConfig, AppState, StorageError, Trashcan,
 };
 use crate::tray;
 
@@ -82,16 +84,20 @@ pub async fn ping(_args: Args) -> Value {
 }
 
 #[tauri::command]
-pub async fn get_basic_data(
+pub async fn get_basic_data<R: Runtime>(
+    app: AppHandle<R>,
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
-    let manifest = load_manifest(&state)?;
-    let trashcan = load_trashcan(&state)?;
+    let (manifest, trashcan) = {
+        let _guard = state.lock_store()?;
+        (load_manifest(&state)?, load_trashcan(&state)?)
+    };
     Ok(json!({
         "list": manifest.root,
         "trashcan": trashcan.items,
         "version": env!("SWH_VERSION"),
+        "application_recovery": read_application_recovery(&app, &state),
     }))
 }
 
@@ -375,6 +381,7 @@ fn apply_side_effects(app: &AppHandle<Wry>, state: &AppState, touched_keys: &[&s
 
 #[tauri::command]
 pub async fn get_list(state: State<'_, AppState>, _args: Args) -> Result<Value, StorageError> {
+    let _guard = state.lock_store()?;
     let m = load_manifest(&state)?;
     Ok(Value::Array(m.root))
 }
@@ -384,6 +391,7 @@ pub async fn get_item_from_list(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    let _guard = state.lock_store()?;
     let id = arg_str(&args, 0, "id")?;
     let m = load_manifest(&state)?;
     Ok(manifest::find_node(&m.root, id).unwrap_or(Value::Null))
@@ -415,14 +423,21 @@ pub async fn get_content_of_list(
         cfg.remove_duplicate_records
     };
 
+    let _guard = state.lock_store()?;
     let content = hosts_apply::aggregate_selected_content(&list, &state.paths, remove_duplicate)?;
     Ok(json!(content))
 }
 
 #[tauri::command]
 pub async fn set_list(state: State<'_, AppState>, args: Args) -> Result<Value, StorageError> {
+    set_list_inner(&state, args)
+}
+
+fn set_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
-    let list = args.into_iter().next().unwrap_or(Value::Null);
+    let mut args = args.into_iter();
+    let list = args.next().unwrap_or(Value::Null);
+    let expected = args.next();
     let root = match list {
         Value::Array(arr) => arr,
         Value::Null => Vec::new(),
@@ -433,10 +448,37 @@ pub async fn set_list(state: State<'_, AppState>, args: Args) -> Result<Value, S
             });
         }
     };
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store()?;
     let mut m = load_manifest(&state)?;
+    if let Some(expected) = expected {
+        let expected = expected
+            .as_array()
+            .ok_or_else(|| StorageError::InvalidConfigValue {
+                key: "set_list.args[1]".into(),
+                reason: "expected the previously read array of host nodes".into(),
+            })?;
+        // Compare persisted fields, including collapse state, in canonical form.
+        // Renderer defaults (e.g. an omitted `type`) must not cause conflicts.
+        if crate::storage::tree_format::legacy_root_to_v5(expected)
+            != crate::storage::tree_format::legacy_root_to_v5(&m.root)
+        {
+            return Err(StorageError::Conflict {
+                reason: "The hosts list changed. Reload it and retry your edit.".into(),
+            });
+        }
+    }
+    // Reapplying the already saved configuration only needs the CAS check.
+    // Do not make recovery depend on rewriting unchanged metadata on a full
+    // or read-only disk. Compare canonical fields, including collapse state.
+    if crate::storage::tree_format::legacy_root_to_v5(&root)
+        == crate::storage::tree_format::legacy_root_to_v5(&m.root)
+    {
+        return Ok(Value::Null);
+    }
     m.root = root;
-    save_manifest(&state, &m)?;
+    transaction::run(&state.paths, vec![Target::State, Target::Manifest], || {
+        save_manifest(state, &m)
+    })?;
     Ok(Value::Null)
 }
 
@@ -447,7 +489,6 @@ pub async fn move_to_trashcan(
 ) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
     move_ids_to_trashcan(&state, &[id])?;
     Ok(Value::Null)
 }
@@ -471,12 +512,12 @@ pub async fn move_many_to_trashcan(
             });
         }
     };
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
     move_ids_to_trashcan(&state, &ids)?;
     Ok(Value::Null)
 }
 
 fn move_ids_to_trashcan(state: &AppState, ids: &[String]) -> Result<(), StorageError> {
+    let _guard = state.lock_store()?;
     let mut m = load_manifest(state)?;
     let mut t = load_trashcan(state)?;
     for id in ids {
@@ -484,9 +525,14 @@ fn move_ids_to_trashcan(state: &AppState, ids: &[String]) -> Result<(), StorageE
             t.add_item(node, parent_id);
         }
     }
-    save_manifest(state, &m)?;
-    save_trashcan(state, &t)?;
-    Ok(())
+    transaction::run(
+        &state.paths,
+        vec![Target::State, Target::Manifest, Target::Trashcan],
+        || {
+            save_manifest(state, &m)?;
+            save_trashcan(state, &t)
+        },
+    )
 }
 
 #[tauri::command]
@@ -494,6 +540,7 @@ pub async fn get_trashcan_list(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
+    let _guard = state.lock_store()?;
     let t = load_trashcan(&state)?;
     Ok(Value::Array(t.items))
 }
@@ -503,8 +550,12 @@ pub async fn clear_trashcan(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
+    clear_trashcan_inner(&state, _args)
+}
+
+fn clear_trashcan_inner(state: &AppState, _args: Args) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store()?;
     let mut t = load_trashcan(&state)?;
 
     // Collect all content ids from every trashcan item before clearing,
@@ -515,12 +566,16 @@ pub async fn clear_trashcan(
             manifest::collect_content_ids(std::slice::from_ref(data), &mut content_ids);
         }
     }
-    for cid in &content_ids {
-        let _ = entries::delete_entry(&state.paths.entries_dir, cid);
-    }
-
+    let mut targets = vec![Target::Trashcan];
+    targets.extend(content_ids.iter().cloned().map(Target::Entry));
     t.items.clear();
-    save_trashcan(&state, &t)?;
+    transaction::run(&state.paths, targets, || {
+        save_trashcan(state, &t)?;
+        for cid in &content_ids {
+            entries::delete_entry(&state.paths.entries_dir, cid)?;
+        }
+        Ok(())
+    })?;
     Ok(Value::Null)
 }
 
@@ -529,24 +584,28 @@ pub async fn delete_item_from_trashcan(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    delete_item_from_trashcan_inner(&state, args)
+}
+
+fn delete_item_from_trashcan_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store()?;
     let mut t = load_trashcan(&state)?;
     let removed_item = t.remove_item(&id);
-    save_trashcan(&state, &t)?;
-
-    // Clean up entries/<id>.hosts files for the permanently deleted item
-    // (and any children if it was a folder).
-    if let Some(item) = &removed_item {
-        if let Some(data) = item.get("data") {
-            let mut content_ids = Vec::new();
-            manifest::collect_content_ids(std::slice::from_ref(data), &mut content_ids);
-            for cid in &content_ids {
-                let _ = entries::delete_entry(&state.paths.entries_dir, cid);
-            }
-        }
+    let mut content_ids = Vec::new();
+    if let Some(data) = removed_item.as_ref().and_then(|item| item.get("data")) {
+        manifest::collect_content_ids(std::slice::from_ref(data), &mut content_ids);
     }
+    let mut targets = vec![Target::Trashcan];
+    targets.extend(content_ids.iter().cloned().map(Target::Entry));
+    transaction::run(&state.paths, targets, || {
+        save_trashcan(state, &t)?;
+        for cid in &content_ids {
+            entries::delete_entry(&state.paths.entries_dir, cid)?;
+        }
+        Ok(())
+    })?;
 
     Ok(json!(removed_item.is_some()))
 }
@@ -556,9 +615,13 @@ pub async fn restore_item_from_trashcan(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    restore_item_from_trashcan_inner(&state, args)
+}
+
+fn restore_item_from_trashcan_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store()?;
     let mut t = load_trashcan(&state)?;
     let item = match t.remove_item(&id) {
         Some(item) => item,
@@ -579,8 +642,14 @@ pub async fn restore_item_from_trashcan(
 
     let mut m = load_manifest(&state)?;
     manifest::insert_node(&mut m.root, node, parent_id.as_deref());
-    save_manifest(&state, &m)?;
-    save_trashcan(&state, &t)?;
+    transaction::run(
+        &state.paths,
+        vec![Target::State, Target::Manifest, Target::Trashcan],
+        || {
+            save_manifest(state, &m)?;
+            save_trashcan(state, &t)
+        },
+    )?;
     Ok(json!(true))
 }
 
@@ -591,6 +660,7 @@ pub async fn get_hosts_content(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    let _guard = state.lock_store()?;
     let id = arg_str(&args, 0, "id")?;
     let content = entries::read_entry(&state.paths.entries_dir, id)?;
     Ok(json!(content))
@@ -602,6 +672,7 @@ pub async fn set_hosts_content(
     args: Args,
 ) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
+    let _guard = state.lock_store()?;
     let id = arg_str(&args, 0, "id")?.to_string();
     let content = args
         .get(1)
@@ -661,13 +732,145 @@ pub async fn apply_hosts_selection<R: Runtime>(
         }
     };
 
-    match apply_aggregated_content(&app, state.inner(), &content).await {
-        Ok(outcome) => Ok(json!({
-            "success": true,
-            "old_content": outcome.previous_content,
-            "new_content": outcome.new_content,
-        })),
-        Err(ApplyPipelineError::Apply(e)) => Ok(e.into_renderer_value()),
+    let result = state
+        .application_recovery
+        .track_apply(async {
+            let _ = tray::refresh_title(&app, &state);
+            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            apply_aggregated_content(&app, state.inner(), &content).await
+        })
+        .await;
+    match result {
+        Ok(outcome) => {
+            let _ = tray::refresh_title(&app, &state);
+            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            Ok(json!({
+                "success": true,
+                "old_content": outcome.previous_content,
+                "new_content": outcome.new_content,
+            }))
+        }
+        Err(ApplyPipelineError::Apply(e)) => {
+            read_application_recovery(&app, &state);
+            let _ = tray::refresh_title(&app, &state);
+            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            Ok(e.into_renderer_value())
+        }
+    }
+}
+
+fn read_application_recovery<R: Runtime>(
+    app: &AppHandle<R>,
+    state: &AppState,
+) -> Option<hosts_apply::recovery::RecoveryView> {
+    state.application_recovery.snapshot(|| {
+        let _ = tray::refresh_title(app, state);
+        let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+    })
+}
+
+#[tauri::command]
+pub async fn get_application_recovery<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<Value, String> {
+    Ok(json!(read_application_recovery(&app, &state)))
+}
+
+/// Queue recovery before waking or rebuilding the main window. A newly
+/// created webview consumes the request after its initial data load.
+#[tauri::command]
+pub async fn request_hosts_recovery<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<(), String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
+    if state.application_recovery.request() {
+        let wake_app = app.clone();
+        app.run_on_main_thread(move || {
+            lifecycle::show_main_window(&wake_app);
+            let _ = wake_app.emit("reapply_saved_hosts", json!({ "_args": [] }));
+        })
+        .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn take_hosts_recovery_request(
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<bool, String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
+    Ok(state.application_recovery.take_request())
+}
+
+/// Clear recovery only after an explicit apply has been saved and its actual
+/// system content can still be verified. Metadata edits never call this.
+#[tauri::command]
+pub async fn finish_hosts_application<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    args: Args,
+) -> Result<Value, String> {
+    let expected = arg_str(&args, 0, "expected").map_err(|e| e.to_string())?;
+    let recovery = state.application_recovery.finish(expected);
+    let _ = tray::refresh_title(&app, &state);
+    let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+    Ok(json!(recovery))
+}
+
+/// Compensate an apply whose metadata could not be saved. Do not run the
+/// post-apply command again or feed a complete hosts file through append mode.
+#[tauri::command]
+pub async fn restore_system_hosts<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    args: Args,
+) -> Result<Value, String> {
+    let previous = arg_str(&args, 0, "previous")
+        .map_err(|e| e.to_string())?
+        .to_owned();
+    let expected = arg_str(&args, 1, "expected")
+        .map_err(|e| e.to_string())?
+        .to_owned();
+    let list = args
+        .get(2)
+        .and_then(Value::as_array)
+        .ok_or_else(|| "expected the complete applied list".to_string())?
+        .clone();
+    let expected_for_write = expected.clone();
+    let previous_for_write = previous.clone();
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        hosts_apply::write::restore_system_hosts(&previous_for_write, &expected_for_write)
+    })
+    .await
+    .unwrap_or_else(|e| {
+        Err(HostsApplyError::Io {
+            message: e.to_string(),
+        })
+    });
+    match result {
+        Ok(()) => {
+            let recovery = state.application_recovery.restored(&previous, || {
+                let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            });
+            let _ = tray::refresh_title(&app, &state);
+            let _ = app.emit("system_hosts_updated", json!({ "_args": [] }));
+            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            Ok(json!({ "success": true, "application_recovery": recovery }))
+        }
+        Err(e) => {
+            state.application_recovery.record(list, expected);
+            let recovery = read_application_recovery(&app, &state);
+            let _ = tray::refresh_title(&app, &state);
+            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            let mut result = e.into_renderer_value();
+            result["application_recovery"] = json!(recovery);
+            Ok(result)
+        }
     }
 }
 
@@ -1299,7 +1502,7 @@ pub async fn export_data<R: Runtime>(
         Err(e) => return Err(format!("invalid save path: {e}")),
     };
 
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store().map_err(|e| e.to_string())?;
     if let Err(e) = import_export::export_to_file(&dest_path, &state.paths) {
         log::warn!("export failed: {e}");
         return Ok(Value::Bool(false));
@@ -1330,74 +1533,7 @@ mod export_file_name_tests {
 }
 
 #[cfg(test)]
-mod storage_load_error_tests {
-    use std::path::PathBuf;
-    use std::sync::atomic::{AtomicBool, AtomicU64};
-    use std::sync::Mutex;
-
-    use super::move_ids_to_trashcan;
-    use crate::storage::{AppConfig, AppState, V5Paths};
-
-    fn test_state(name: &str) -> (AppState, PathBuf) {
-        let root = std::env::temp_dir().join(format!(
-            "switchhosts-commands-{name}-{}-{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("system clock should be after unix epoch")
-                .as_nanos()
-        ));
-        let paths = V5Paths::under(root.clone());
-        paths.ensure_dirs().expect("create storage directories");
-        let state = AppState {
-            paths,
-            config: Mutex::new(AppConfig::default()),
-            store_lock: Mutex::new(()),
-            config_write_lock: Mutex::new(()),
-            update_check_lock: tokio::sync::Mutex::new(()),
-            is_will_quit: AtomicBool::new(false),
-            last_geometry_persist_ms: AtomicU64::new(0),
-            data_dir_recovery: None,
-        };
-        (state, root)
-    }
-
-    #[test]
-    fn move_to_trashcan_preserves_corrupt_manifest() {
-        let (state, root) = test_state("manifest-error");
-        let corrupt = br#"{"root":["unfinished"}"#;
-        std::fs::write(&state.paths.manifest_file, corrupt).expect("write corrupt manifest");
-
-        let result = move_ids_to_trashcan(&state, &["host-1".into()]);
-
-        assert!(result.is_err());
-        assert_eq!(std::fs::read(&state.paths.manifest_file).unwrap(), corrupt);
-        assert!(!state.paths.trashcan_file.exists());
-        std::fs::remove_dir_all(root).expect("remove temporary data directory");
-    }
-
-    #[test]
-    fn move_to_trashcan_preserves_corrupt_trashcan() {
-        let (state, root) = test_state("trashcan-error");
-        std::fs::write(
-            &state.paths.manifest_file,
-            br#"{"format":"switchhosts-data","schemaVersion":1,"root":[]}"#,
-        )
-        .expect("write valid manifest");
-        let corrupt = br#"{"items":["unfinished"]"#;
-        std::fs::write(&state.paths.trashcan_file, corrupt).expect("write corrupt trashcan");
-
-        let result = move_ids_to_trashcan(&state, &["host-1".into()]);
-
-        assert!(result.is_err());
-        assert_eq!(std::fs::read(&state.paths.trashcan_file).unwrap(), corrupt);
-        assert_eq!(
-            std::fs::read_to_string(&state.paths.manifest_file).unwrap(),
-            r#"{"format":"switchhosts-data","schemaVersion":1,"root":[]}"#
-        );
-        std::fs::remove_dir_all(root).expect("remove temporary data directory");
-    }
-}
+mod storage_tests;
 
 #[tauri::command]
 pub async fn import_data<R: Runtime>(
@@ -1429,7 +1565,7 @@ pub async fn import_data<R: Runtime>(
         }
     };
 
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store().map_err(|e| e.to_string())?;
     match import_export::import_backup_bytes(&bytes, &state.paths) {
         Ok(result) => Ok(result),
         Err(e) => Err(format!("import failed: {e}")),
@@ -1454,7 +1590,7 @@ pub async fn import_data_from_url(state: State<'_, AppState>, args: Args) -> Res
         }
     };
 
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store().map_err(|e| e.to_string())?;
     match import_export::import_backup_bytes(&bytes, &state.paths) {
         Ok(result) => Ok(result),
         Err(e) => Err(format!("import failed: {e}")),
@@ -1873,10 +2009,7 @@ pub async fn apply_data_dir<R: Runtime>(
     // root is a degraded fallback, so even a missing pointer must still
     // restart to leave recovery — never short-circuit there, or the dialog's
     // button spins forever on a no-op that never restarts.
-    if is_default
-        && !data_dir_pointer::pointer_exists()
-        && state.data_dir_recovery.is_none()
-    {
+    if is_default && !data_dir_pointer::pointer_exists() && state.data_dir_recovery.is_none() {
         return Ok(json!({ "changed": false }));
     }
 
@@ -1902,14 +2035,9 @@ pub async fn apply_data_dir<R: Runtime>(
             // Hold store_lock for the copy, like export_data. This
             // serializes against the manifest/trashcan read-modify-write
             // cycles (renderer edits and refresh's stamp step), keeping
-            // those files consistent in the copy. Note: refresh writes
-            // entry files *outside* this lock (see refresh.rs), so a
-            // remote refresh landing mid-copy could pair a freshly written
-            // entry with a slightly older manifest stamp in the copy —
-            // harmless, since each file is written atomically and the app
-            // re-refreshes after the imminent restart. Synchronous because
-            // the data is small and we restart right after.
-            let _guard = state.store_lock.lock().expect("store lock poisoned");
+            // those files and entry content consistent in the copy. Network
+            // refreshes fetch outside the lock, then acquire it to write.
+            let _guard = state.lock_store()?;
             fs_copy::copy_dir_recursive(&current_root, &target)?;
         }
         // Prepare and verify the target can host the full v5 layout AND is

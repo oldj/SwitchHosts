@@ -22,6 +22,10 @@ pub enum HostsApplyError {
     #[error("no access: {message}")]
     NoAccess { message: String },
 
+    /// The system file no longer matches the content being compensated.
+    #[error("system hosts changed since the apply")]
+    ContentChanged,
+
     /// User dismissed the OS authentication prompt.
     #[error("cancelled")]
     Cancelled,
@@ -44,6 +48,10 @@ impl HostsApplyError {
     pub fn into_renderer_value(self) -> Value {
         let (code, message) = match self {
             HostsApplyError::NoAccess { message } => ("no_access", message),
+            HostsApplyError::ContentChanged => (
+                "content_changed",
+                "System hosts changed since the apply".to_string(),
+            ),
             HostsApplyError::Cancelled => ("cancelled", "user cancelled".to_string()),
             HostsApplyError::Io { message } => ("fail", message),
         };

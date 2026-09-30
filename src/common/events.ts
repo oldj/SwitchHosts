@@ -20,6 +20,7 @@ export default {
   move_to_trashcan: 'move_to_trashcan',
   new_version: 'new_version',
   reload_list: 'reload_list',
+  reapply_saved_hosts: 'reapply_saved_hosts',
   select_hosts: 'select_hosts',
   set_hosts_on_status: 'set_hosts_on_status',
   show_about: 'show_about',

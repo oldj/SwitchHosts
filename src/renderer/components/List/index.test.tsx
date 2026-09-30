@@ -11,7 +11,9 @@ const mocks = vi.hoisted(() => ({
     getContentOfList: vi.fn(),
     getList: vi.fn(),
     setSystemHosts: vi.fn(),
+    moveManyToTrashcan: vi.fn(),
   },
+  treeOnChange: null as any,
   broadcast: vi.fn(),
   handlers: new Map<string, Handler[]>(),
   hostsList: [
@@ -37,6 +39,9 @@ const mocks = vi.hoisted(() => ({
   loadHostsData: vi.fn(),
   setCurrentHosts: vi.fn(),
   setList: vi.fn(),
+  applyList: vi.fn(),
+  reapplySavedList: vi.fn(),
+  applicationRecovery: null as any,
   showErrorNotification: vi.fn(),
 }))
 
@@ -44,12 +49,14 @@ vi.mock('@renderer/components/Tree', async () => {
   const React = await import('react')
 
   return {
-    Tree: ({ data }: any) =>
-      React.createElement(
+    Tree: ({ data, onChange }: any) => {
+      mocks.treeOnChange = onChange
+      return React.createElement(
         'div',
         { 'data-testid': 'tree' },
         data.map((item: any) => React.createElement('div', { key: item.id }, item.title)),
-      ),
+      )
+    },
   }
 })
 
@@ -71,6 +78,7 @@ vi.mock('@renderer/core/agent', () => ({
 
 vi.mock('@renderer/core/notify', () => ({
   showErrorNotification: mocks.showErrorNotification,
+  getErrorMessage: (error: any, fallback: string) => error.reason || error.message || fallback,
 }))
 
 vi.mock('@renderer/core/useOnBroadcast', () => ({
@@ -92,6 +100,9 @@ vi.mock('@renderer/models/useHostsData', () => ({
     hostsData: mocks.hostsData,
     loadHostsData: mocks.loadHostsData,
     setList: mocks.setList,
+    applyList: mocks.applyList,
+    reapplySavedList: mocks.reapplySavedList,
+    applicationRecovery: mocks.applicationRecovery,
     currentHosts: null,
     setCurrentHosts: mocks.setCurrentHosts,
   }),
@@ -135,6 +146,7 @@ describe('List tray synchronization', () => {
   })
 
   beforeEach(() => {
+    mocks.actions.moveManyToTrashcan.mockReset()
     mocks.actions.getContentOfList.mockReset()
     mocks.actions.getList.mockReset()
     mocks.actions.setSystemHosts.mockReset()
@@ -143,6 +155,9 @@ describe('List tray synchronization', () => {
     mocks.loadHostsData.mockReset()
     mocks.setCurrentHosts.mockReset()
     mocks.setList.mockReset()
+    mocks.applyList.mockReset().mockResolvedValue(true)
+    mocks.reapplySavedList.mockReset().mockResolvedValue(true)
+    mocks.applicationRecovery = null
     mocks.showErrorNotification.mockReset()
 
     mocks.actions.getContentOfList.mockResolvedValue('10.0.0.8 api.local\n')
@@ -157,37 +172,70 @@ describe('List tray synchronization', () => {
     mocks.loadHostsData.mockResolvedValue(undefined)
   })
 
-  it('notifies the tray after the new list state has been persisted', async () => {
-    const persistList = deferred()
-    mocks.setList.mockReturnValue(persistList.promise)
-
+  it('waits for application and passes a latest-list updater for toggles', async () => {
+    const pending = deferred<boolean>()
+    mocks.applyList.mockReturnValue(pending.promise)
     render(<List />)
-
-    const toggleHandlers = mocks.handlers.get(events.toggle_item) ?? []
-    expect(toggleHandlers.length).toBeGreaterThan(0)
-    const toggleHandler = toggleHandlers[toggleHandlers.length - 1]
-
+    let toggle!: Promise<unknown>
     await act(async () => {
-      toggleHandler('local-dev', true)
+      toggle = Promise.resolve(latestHandler(events.toggle_item)('local-dev', true))
     })
-
-    await waitFor(() => expect(mocks.setList).toHaveBeenCalled())
-    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.tray_list_updated)
-
+    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', true)
+    const latest = [...mocks.hostsList, { id: 'new', title: 'Added elsewhere', on: true }]
+    const updated = mocks.applyList.mock.calls[0][0](latest)
+    expect(updated.find((item: any) => item.id === 'local-dev').on).toBe(true)
+    expect(updated.find((item: any) => item.id === 'new')).toEqual(latest[2])
     await act(async () => {
-      persistList.resolve()
-      await persistList.promise
+      pending.resolve(true)
+      await toggle
     })
+    expect(mocks.broadcast).toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', true)
+  })
 
+  it('reverts the optimistic switch only when application reports a reverted or failed write', async () => {
+    mocks.applyList.mockResolvedValue(false)
+    render(<List />)
+    await act(async () => {
+      await latestHandler(events.toggle_item)('local-dev', true)
+    })
+    expect(mocks.broadcast).toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', false)
+  })
+
+  it('does not broadcast a known switch state when the application result is unknown', async () => {
+    mocks.applyList.mockResolvedValue(null)
+    render(<List />)
+    await act(async () => {
+      await latestHandler(events.toggle_item)('local-dev', true)
+    })
+    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', true)
+    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', false)
+  })
+
+  it('reports move failures without reloading or changing selection', async () => {
+    mocks.actions.moveManyToTrashcan.mockRejectedValue({ reason: 'Corrupt trashcan' })
+    render(<List />)
+    await act(async () => {
+      await latestHandler(events.move_to_trashcan)(['local-dev'])
+    })
+    expect(mocks.showErrorNotification).toHaveBeenCalledWith({
+      title: 'Fail',
+      message: 'Corrupt trashcan',
+    })
+    expect(mocks.loadHostsData).not.toHaveBeenCalled()
+    expect(mocks.setCurrentHosts).not.toHaveBeenCalled()
+  })
+
+  it('restores the displayed tree when a drag cannot be persisted', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mocks.setList.mockRejectedValue(new Error('disk full'))
+    const view = render(<List />)
+    await act(async () => {
+      mocks.treeOnChange([...mocks.hostsList].reverse())
+    })
     await waitFor(() => {
-      expect(mocks.broadcast).toHaveBeenCalledWith(events.tray_list_updated)
-      expect(mocks.broadcast).toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', true)
+      expect(view.getByTestId('tree').textContent).toBe('System HostsDevelopmentAPI Override')
     })
-
-    const channels = mocks.broadcast.mock.calls.map(([channel]) => channel)
-    expect(channels.indexOf(events.tray_list_updated)).toBeLessThan(
-      channels.indexOf(events.set_hosts_on_status),
-    )
+    spy.mockRestore()
   })
 
   it('applies system hosts when a changed remote hosts entry is enabled', async () => {
@@ -204,8 +252,8 @@ describe('List tray synchronization', () => {
       await Promise.resolve(latestHandler(events.hosts_content_changed)('remote-on'))
     })
 
-    await waitFor(() => expect(mocks.actions.setSystemHosts).toHaveBeenCalledTimes(1))
-    expect(mocks.actions.getContentOfList).toHaveBeenCalledWith(list)
+    await waitFor(() => expect(mocks.applyList).toHaveBeenCalledTimes(1))
+    expect(mocks.applyList).toHaveBeenCalledWith()
   })
 
   it('applies system hosts once for a batch with multiple enabled remote changes', async () => {
@@ -224,9 +272,8 @@ describe('List tray synchronization', () => {
       )
     })
 
-    await waitFor(() => expect(mocks.actions.setSystemHosts).toHaveBeenCalledTimes(1))
-    expect(mocks.actions.getContentOfList).toHaveBeenCalledTimes(1)
-    expect(mocks.actions.getContentOfList).toHaveBeenCalledWith(list)
+    await waitFor(() => expect(mocks.applyList).toHaveBeenCalledTimes(1))
+    expect(mocks.applyList).toHaveBeenCalledWith()
   })
 
   it('does not apply system hosts when a batch only changes disabled remote entries', async () => {
@@ -246,8 +293,7 @@ describe('List tray synchronization', () => {
     })
 
     expect(mocks.actions.getList).toHaveBeenCalledTimes(1)
-    expect(mocks.actions.getContentOfList).not.toHaveBeenCalled()
-    expect(mocks.actions.setSystemHosts).not.toHaveBeenCalled()
+    expect(mocks.applyList).not.toHaveBeenCalled()
   })
 
   it('queues remote content changes while a system hosts apply is in progress', async () => {
@@ -255,12 +301,10 @@ describe('List tray synchronization', () => {
       { id: 'remote-one', title: 'Remote One', type: 'remote', on: true },
       { id: 'remote-two', title: 'Remote Two', type: 'remote', on: true },
     ]
-    const firstApply = deferred<{ success: boolean }>()
+    const firstApply = deferred<boolean>()
     mocks.hostsData = { list, trashcan: [], version: 'test' }
     mocks.actions.getList.mockResolvedValue(list)
-    mocks.actions.setSystemHosts
-      .mockReturnValueOnce(firstApply.promise)
-      .mockResolvedValue({ success: true })
+    mocks.applyList.mockReturnValueOnce(firstApply.promise).mockResolvedValue(true)
 
     render(<List />)
     const handler = latestHandler(events.hosts_content_changed)
@@ -270,20 +314,20 @@ describe('List tray synchronization', () => {
       firstHandlerPromise = Promise.resolve(handler('remote-one'))
     })
 
-    await waitFor(() => expect(mocks.actions.setSystemHosts).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(mocks.applyList).toHaveBeenCalledTimes(1))
 
     await act(async () => {
       await Promise.resolve(handler('remote-two'))
     })
 
-    expect(mocks.actions.setSystemHosts).toHaveBeenCalledTimes(1)
+    expect(mocks.applyList).toHaveBeenCalledTimes(1)
 
     await act(async () => {
-      firstApply.resolve({ success: true })
+      firstApply.resolve(true)
       await firstApply.promise
       await firstHandlerPromise
     })
 
-    await waitFor(() => expect(mocks.actions.setSystemHosts).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(mocks.applyList).toHaveBeenCalledTimes(2))
   })
 })

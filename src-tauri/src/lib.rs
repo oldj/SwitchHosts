@@ -128,8 +128,6 @@ pub fn run() {
         return;
     }
 
-    let state = AppState::bootstrap().expect("failed to bootstrap SwitchHosts v5 storage layer");
-
     let app = tauri::Builder::default()
         // Single-instance MUST be the first plugin so a second
         // launch is intercepted before any other plugin starts up.
@@ -150,7 +148,6 @@ pub fn run() {
                 .level(log::LevelFilter::Info)
                 .build(),
         )
-        .manage(state)
         // Popup menu item clicks are routed back to the renderer as Tauri
         // events: the menu item id equals the renderer-generated
         // `_click_evt` string, so forwarding the id verbatim as an event
@@ -230,6 +227,11 @@ pub fn run() {
             }
         })
         .setup(|app| {
+            // Plugins (including single-instance) initialize before setup.
+            // Only the owning instance may clean temporary files or recover
+            // an undo journal; a second launch must not roll back its work.
+            app.manage(AppState::bootstrap()?);
+
             // We build the main window programmatically (rather than
             // declaring it in tauri.conf.json) so saved geometry can be
             // baked into the builder — `set_position` on a conf-declared
@@ -503,6 +505,11 @@ pub fn run() {
             commands::get_path_of_system_hosts,
             // apply / refresh
             commands::apply_hosts_selection,
+            commands::restore_system_hosts,
+            commands::get_application_recovery,
+            commands::request_hosts_recovery,
+            commands::take_hosts_recovery_request,
+            commands::finish_hosts_application,
             // privileged helper (macOS SMAppService)
             commands::helper_status,
             commands::helper_install,

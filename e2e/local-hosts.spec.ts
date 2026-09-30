@@ -46,17 +46,18 @@ test.describe('local hosts', () => {
     await expect(page.locator('.cm-editor.cm-focused')).toHaveCount(0)
     await expect(editor).toHaveCSS('caret-color', 'rgba(0, 0, 0, 0)')
 
-    const visibleCursorCount = await page.locator('.cm-cursor-primary').evaluateAll((cursors) =>
-      cursors.filter((cursor) => {
-        const style = window.getComputedStyle(cursor)
-        const rect = cursor.getBoundingClientRect()
-        return (
-          style.display !== 'none' &&
-          style.visibility !== 'hidden' &&
-          style.opacity !== '0' &&
-          rect.height > 0
-        )
-      }).length,
+    const visibleCursorCount = await page.locator('.cm-cursor-primary').evaluateAll(
+      (cursors) =>
+        cursors.filter((cursor) => {
+          const style = window.getComputedStyle(cursor)
+          const rect = cursor.getBoundingClientRect()
+          return (
+            style.display !== 'none' &&
+            style.visibility !== 'hidden' &&
+            style.opacity !== '0' &&
+            rect.height > 0
+          )
+        }).length,
     )
     expect(visibleCursorCount).toBe(0)
   })
@@ -183,7 +184,9 @@ test.describe('local hosts', () => {
     expect(Math.abs(toggleCenter - buttonCenter)).toBeLessThanOrEqual(0.5)
   })
 
-  test('prompts for write mode before first apply and then continues toggling', async ({ page }) => {
+  test('prompts for write mode before first apply and then continues toggling', async ({
+    page,
+  }) => {
     await gotoApp(page, '/?e2eWriteMode=null')
     await clearMockCalls(page)
 
@@ -222,3 +225,88 @@ test.describe('local hosts', () => {
     expect(calls.some((call) => call.cmd === 'apply_hosts_selection')).toBe(true)
   })
 })
+
+test('keeps the applied snapshot until saved settings are explicitly reapplied', async ({
+  page,
+}) => {
+  await page.evaluate(() => window.__SWITCHHOSTS_E2E__.failNextSaveAndRestore())
+  const toggle = page.locator('[data-id="local-dev"]').getByRole('switch')
+  await toggle.click()
+  const notice = page
+    .locator('#root')
+    .getByRole('alert')
+    .filter({ hasText: 'The list shows the applied snapshot' })
+  await expect(notice).toBeVisible()
+  await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  await expect(toggle).toHaveAttribute('aria-disabled', 'true')
+  expect((await getMockState(page)).list.find((item) => item.id === 'local-dev')?.on).toBe(false)
+  await notice.getByRole('button', { name: 'Reapply saved settings' }).click()
+  await expect(notice).toHaveCount(0)
+  await expect(toggle).toHaveAttribute('aria-checked', 'false')
+  await expect(toggle).not.toHaveAttribute('aria-disabled', 'true')
+})
+
+test('shows unknown state rather than claiming an old selection is active after external modification', async ({
+  page,
+}) => {
+  await page.evaluate(() => window.__SWITCHHOSTS_E2E__.failNextSaveAndRestore('content_changed'))
+  const row = page.locator('[data-id="local-dev"]')
+  await row.getByRole('switch').click()
+  const notice = page
+    .locator('#root')
+    .getByRole('alert')
+    .filter({ hasText: 'The active hosts selection cannot be confirmed' })
+  await expect(notice).toBeVisible()
+  await expect(row.getByRole('switch')).toHaveCount(0)
+  await expect(row.getByRole('status')).toHaveText('?')
+  await expect(row).toHaveAttribute('draggable', 'false')
+  expect((await getMockState(page)).systemHosts).toBe('10.9.9.9 external.test\n')
+  await notice.getByRole('button', { name: 'Reapply saved settings' }).click()
+  await expect(notice).toHaveCount(0)
+  await expect(row.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
+  await expect(row).toHaveAttribute('draggable', 'true')
+})
+
+for (const failure of ['cancelled', 'transport'] as const) {
+  test(`recovers from ${failure} while the main list is unmounted in trashcan view`, async ({
+    page,
+  }) => {
+    await page.evaluate((mode) => window.__SWITCHHOSTS_E2E__.failNextSaveAndRestore(mode), failure)
+    await page.locator('[data-id="local-dev"]').getByRole('switch').click()
+    await expect(
+      page.locator('#root').getByRole('button', { name: 'Reapply saved settings' }),
+    ).toBeVisible()
+    // Wait for the reload broadcast by the failed compensation, not just its toast.
+    await expect
+      .poll(async () => {
+        const calls = await getMockCalls(page)
+        const restore = calls.findLastIndex((call) => call.cmd === 'restore_system_hosts')
+        return (
+          restore >= 0 && calls.slice(restore + 1).some((call) => call.cmd === 'get_basic_data')
+        )
+      })
+      .toBe(true)
+    if (failure === 'transport') {
+      await expect(page.locator('[data-id="local-dev"]').getByRole('switch')).toHaveCount(0)
+      await expect(page.locator('[data-id="local-dev"]').getByRole('status')).toHaveText('?')
+    }
+    await page.getByLabel('Trashcan', { exact: true }).click()
+    await expect(page.getByText('Trashcan is empty')).toBeVisible()
+    await page.getByLabel('Trashcan', { exact: true }).click()
+    await clearMockCalls(page)
+    const recoveryButton = page
+      .locator('#root')
+      .getByRole('button', { name: 'Reapply saved settings' })
+    await expect(recoveryButton).toBeVisible()
+    await recoveryButton.click()
+    await expect(recoveryButton).toHaveCount(0)
+    const calls = await getMockCalls(page)
+    expect(calls.filter((call) => call.cmd === 'apply_hosts_selection')).toHaveLength(1)
+    expect(calls.filter((call) => call.cmd === 'finish_hosts_application')).toHaveLength(1)
+    await page.getByLabel('Hosts', { exact: true }).click()
+    await expect(page.locator('[data-id="local-dev"]').getByRole('switch')).toHaveAttribute(
+      'aria-checked',
+      'false',
+    )
+  })
+}

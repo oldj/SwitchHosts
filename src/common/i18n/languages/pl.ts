@@ -110,6 +110,11 @@ export default {
   homepage: 'Strona główna',
   host: 'Host',
   hosts_add: 'Dodaj nowe hosty',
+  hosts_applied_save_failed:
+    'Zastosowano systemowy plik hosts, ale zapis i przywracanie nie powiodły się. Lista pokazuje zastosowany stan. Przed edycją zastosuj ponownie zapisane ustawienia.',
+  hosts_application_unknown:
+    'Nie można potwierdzić aktywnego wyboru, ponieważ systemowy plik hosts zmienił się lub jest nieczytelny. Przed edycją zastosuj ponownie zapisane ustawienia.',
+  hosts_reapply_saved: 'Zastosuj ponownie zapisane ustawienia',
   hosts_delete: 'Usuń ten wpis hosts',
   hosts_delete_confirm: 'Czy na pewno chcesz usunąć bieżące hosty?',
   hosts_edit: 'Edytuj hosty',
@@ -208,6 +213,7 @@ export default {
   source_domain: 'Domena',
   source_type: 'Źródło',
   source_url: 'Adres URL subskrypcji',
+  storage_conflict: 'Lista została zmieniona przez inną operację. Spróbuj ponownie.',
   success: 'Sukces!',
   sudo_prompt_title: 'Wpisz swoje hasło sudo',
   system: 'System',
