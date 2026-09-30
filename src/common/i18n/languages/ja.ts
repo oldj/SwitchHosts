@@ -110,7 +110,10 @@ const lang: LanguageDict = {
   host: 'ホスト',
   hosts_add: 'hostsを追加',
   hosts_applied_save_failed:
-    'システムの hosts は適用されましたが、設定の保存と元の内容の復元に失敗しました。スイッチは最後に適用した選択を表示しています。保存または適用を再試行してください。',
+    'システム hosts は適用されましたが、設定の保存と元の内容の復元に失敗しました。リストには適用済みの状態を表示しています。編集前に保存済み設定を再適用してください。',
+  hosts_application_unknown:
+    'システム hosts が変更されたか読み取れないため、有効な選択を確認できません。編集前に保存済み設定を再適用してください。',
+  hosts_reapply_saved: '保存済み設定を再適用',
   hosts_delete: 'hostsを削除',
   hosts_delete_confirm: 'このhostsを削除してもよろしいですか？',
   hosts_edit: 'hostsを編集',

@@ -506,6 +506,8 @@ pub fn run() {
             // apply / refresh
             commands::apply_hosts_selection,
             commands::restore_system_hosts,
+            commands::get_application_recovery,
+            commands::finish_hosts_application,
             // privileged helper (macOS SMAppService)
             commands::helper_status,
             commands::helper_install,

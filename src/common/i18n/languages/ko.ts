@@ -106,7 +106,10 @@ export default {
   host: '호스트',
   hosts_add: '새로운 호스트 추가',
   hosts_applied_save_failed:
-    '시스템 hosts는 적용되었지만 설정 저장과 이전 내용 복원에 실패했습니다. 스위치는 마지막으로 적용한 선택을 표시합니다. 저장하거나 적용을 다시 시도해 주세요.',
+    '시스템 hosts는 적용되었지만 설정 저장과 이전 내용 복원에 실패했습니다. 목록은 적용된 상태를 표시합니다. 편집 전에 저장된 설정을 다시 적용해 주세요.',
+  hosts_application_unknown:
+    '시스템 hosts가 변경되었거나 읽을 수 없어 적용 상태를 확인할 수 없습니다. 편집 전에 저장된 설정을 다시 적용해 주세요.',
+  hosts_reapply_saved: '저장된 설정 다시 적용',
   hosts_delete: '이 호스트 삭제',
   hosts_delete_confirm: '현재 호스트를 삭제하시겠습니까?',
   hosts_edit: '호스트 수정',

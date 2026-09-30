@@ -55,6 +55,7 @@ declare global {
       getState: () => MockState
       getCalls: () => MockCall[]
       clearCalls: () => void
+      failNextSaveAndRestore: (failure?: 'cancelled' | 'content_changed') => void
       failNextApply: (result?: { code?: string; message?: string }) => void
       failNextRefresh: (result?: { code?: string; message?: string }) => void
       delayNextImport: (ms?: number) => void

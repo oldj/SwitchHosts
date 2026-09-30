@@ -4,7 +4,7 @@
  */
 
 import version from '@/version.json'
-import { IHostsListObject } from '@common/data'
+import { IApplicationRecovery, IHostsListObject } from '@common/data'
 import { flatten } from '@common/hostsFn'
 import events from '@common/events'
 import { actions, agent } from '@renderer/core/agent'
@@ -16,9 +16,8 @@ import { useMemo } from 'react'
 import useI18n from './useI18n'
 
 export type ListChange = IHostsListObject[] | ((list: IHostsListObject[]) => IHostsListObject[])
-// If both persistence and compensation fail, retain the actual applied switches
-// across reloads. Keep saved metadata separate so it remains usable as a CAS base.
-const appliedSelectionAtom = atom<Record<string, boolean> | null>(null)
+// Cached only for rendering; the backend owns the session-wide recovery state.
+const applicationRecoveryAtom = atom<IApplicationRecovery | null>(null)
 
 // Share the queue across hook consumers in the same window/store. A failed
 // save must not poison subsequent saves or let responses publish out of order.
@@ -26,16 +25,20 @@ const saves = new WeakMap<ReturnType<typeof useStore>, { tail: Promise<void>; re
 
 export default function useHostsData() {
   const [savedHostsData, setHostsData] = useAtom(hostsDataAtom)
-  const [currentHosts, setCurrentHosts] = useAtom(currentHostsAtom)
-  const [appliedSelection, setAppliedSelection] = useAtom(appliedSelectionAtom)
-  const hostsData = useMemo(() => {
-    if (!appliedSelection) return savedHostsData
-    const list = lodash.cloneDeep(savedHostsData.list)
-    for (const node of flatten(list)) {
-      if (node.id in appliedSelection) node.on = appliedSelection[node.id]
-    }
-    return { ...savedHostsData, list }
-  }, [savedHostsData, appliedSelection])
+  const [savedCurrentHosts, setCurrentHosts] = useAtom(currentHostsAtom)
+  const [applicationRecovery, setApplicationRecovery] = useAtom(applicationRecoveryAtom)
+  const hostsData = useMemo(
+    () =>
+      applicationRecovery?.status === 'applied'
+        ? { ...savedHostsData, list: applicationRecovery.list }
+        : savedHostsData,
+    [savedHostsData, applicationRecovery],
+  )
+  const currentHosts =
+    applicationRecovery?.status === 'applied' && savedCurrentHosts
+      ? flatten(applicationRecovery.list).find((item) => item.id === savedCurrentHosts.id) ||
+        savedCurrentHosts
+      : savedCurrentHosts
   const store = useStore()
   const { lang } = useI18n()
   if (!saves.has(store)) saves.set(store, { tail: Promise.resolve(), revision: 0 })
@@ -49,6 +52,7 @@ export default function useHostsData() {
       const data = await actions.getBasicData()
       if (revision === queue.revision) {
         setHostsData(data)
+        setApplicationRecovery(data.application_recovery ?? null)
         return
       }
     }
@@ -72,22 +76,27 @@ export default function useHostsData() {
     return task
   }
 
-  const prepare = (change: ListChange) => {
+  const prepare = (change: ListChange, resolving = false) => {
     // Snapshot array arguments and their base at submission. Updaters are run
     // inside the queue against a fresh backend read, never a render-time closure.
     const snapshot = typeof change === 'function' ? change : lodash.cloneDeep(change)
     const base = lodash.cloneDeep(savedHostsData.list)
     return async () => {
       try {
+        const recovery: IApplicationRecovery | null = await actions.getApplicationRecovery()
+        setApplicationRecovery(recovery)
+        // Ordinary edits must not silently acknowledge or overwrite an apply
+        // whose persistence/recovery failed. Explicit reapply uses saved data.
+        if (recovery && !resolving) {
+          throw new Error(
+            recovery.status === 'unknown'
+              ? lang.hosts_application_unknown
+              : lang.hosts_applied_save_failed,
+          )
+        }
         const expected: IHostsListObject[] =
           typeof snapshot === 'function' ? await actions.getList() : base
         const working = lodash.cloneDeep(typeof snapshot === 'function' ? expected : snapshot)
-        const applied = store.get(appliedSelectionAtom)
-        if (applied) {
-          for (const node of flatten(working)) {
-            if (node.id in applied) node.on = applied[node.id]
-          }
-        }
         const list = (typeof snapshot === 'function' ? snapshot(working) : working).filter(
           (i) => !i.is_sys,
         )
@@ -107,7 +116,13 @@ export default function useHostsData() {
       // A delete/restore/import may have bypassed this window's queue. The
       // backend rejects stale snapshots under its lock; refresh for a retry.
       if ((error as { kind?: string })?.kind === 'conflict') {
-        await actions.getBasicData().then(setHostsData).catch(console.error)
+        await actions
+          .getBasicData()
+          .then((data) => {
+            setHostsData(data)
+            setApplicationRecovery(data.application_recovery ?? null)
+          })
+          .catch(console.error)
       }
       throw error
     }
@@ -121,17 +136,16 @@ export default function useHostsData() {
     return enqueue(async () => {
       const { list, expected } = await resolve()
       await persist(list, expected)
-      setAppliedSelection(null)
     })
   }
 
-  const applyList = (change: ListChange = (list) => list): Promise<boolean> => {
-    const resolve = prepare(change)
+  const apply = (change: ListChange, resolving = false): Promise<boolean | null> => {
+    const resolve = prepare(change, resolving)
     return enqueue(async () => {
       // Fail before changing the system file when the latest list cannot be
       // read or aggregated. resolve() already reports its own read errors.
       const prepared = await resolve().catch(() => null)
-      if (!prepared) return false
+      if (!prepared) return store.get(applicationRecoveryAtom) ? null : false
       const { list, expected } = prepared
       let result
       try {
@@ -153,20 +167,46 @@ export default function useHostsData() {
       }
       try {
         await persist(list, expected)
-        setAppliedSelection(null)
       } catch {
+        let recovery: IApplicationRecovery | null
         try {
-          const restored = await actions.restoreSystemHosts(result.old_content, result.new_content)
-          if (!restored.success) throw new Error(restored.message || lang.fail)
-          return false
+          const restored = await actions.restoreSystemHosts(
+            result.old_content,
+            result.new_content,
+            list,
+          )
+          if (restored.success) return false
+          // The backend re-reads system hosts before returning this view. In
+          // particular, content_changed must never be presented as our apply.
+          recovery = restored.application_recovery ?? { status: 'unknown' }
         } catch (error) {
-          // The OS write remains applied. Never signal an off/rollback state
-          // unless compensation actually succeeded.
           console.error(error)
-          const selection = Object.fromEntries(flatten(list).map((item) => [item.id, !!item.on]))
-          setAppliedSelection(selection)
-          showErrorNotification({ title: lang.fail, message: lang.hosts_applied_save_failed })
+          recovery = { status: 'unknown' }
         }
+        setApplicationRecovery(recovery)
+        showErrorNotification({
+          title: lang.fail,
+          message:
+            recovery?.status === 'applied'
+              ? lang.hosts_applied_save_failed
+              : lang.hosts_application_unknown,
+        })
+        await Promise.resolve(agent.broadcast(events.tray_list_updated)).catch(notify)
+        return recovery?.status === 'applied' ? true : null
+      }
+      // Verifies the system content before clearing any prior pending state.
+      // A metadata-only save never reaches this acknowledgement.
+      let recovery: IApplicationRecovery | null
+      try {
+        recovery = await actions.finishHostsApplication(result.new_content)
+      } catch (error) {
+        notify(error)
+        recovery = { status: 'unknown' }
+      }
+      setApplicationRecovery(recovery)
+      if (recovery) {
+        showErrorNotification({ title: lang.fail, message: lang.hosts_application_unknown })
+        return null
       }
       const current = store.get(currentHostsAtom)
       const appliedCurrent = current && flatten(list).find((item) => item.id === current.id)
@@ -175,9 +215,7 @@ export default function useHostsData() {
           agent.broadcast(events.set_hosts_on_status, appliedCurrent.id, appliedCurrent.on),
         ).catch(notify)
       }
-      await Promise.resolve(
-        agent.broadcast(events.tray_list_updated, store.get(appliedSelectionAtom)),
-      ).catch(notify)
+      await Promise.resolve(agent.broadcast(events.tray_list_updated)).catch(notify)
       return true
     })
   }
@@ -215,8 +253,9 @@ export default function useHostsData() {
     loadHostsData,
 
     setList,
-    applyList,
-    setAppliedSelection,
+    applyList: (change: ListChange = (list) => list) => apply(change),
+    reapplySavedList: () => apply((list) => list, true),
+    applicationRecovery,
 
     currentHosts,
     setCurrentHosts,

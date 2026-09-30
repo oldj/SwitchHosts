@@ -84,17 +84,20 @@ pub async fn ping(_args: Args) -> Value {
 }
 
 #[tauri::command]
-pub async fn get_basic_data(
+pub async fn get_basic_data<R: Runtime>(
+    app: AppHandle<R>,
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
-    let _guard = state.lock_store()?;
-    let manifest = load_manifest(&state)?;
-    let trashcan = load_trashcan(&state)?;
+    let (manifest, trashcan) = {
+        let _guard = state.lock_store()?;
+        (load_manifest(&state)?, load_trashcan(&state)?)
+    };
     Ok(json!({
         "list": manifest.root,
         "trashcan": trashcan.items,
         "version": env!("SWH_VERSION"),
+        "application_recovery": read_application_recovery(&app, &state),
     }))
 }
 
@@ -464,6 +467,14 @@ fn set_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
             });
         }
     }
+    // Reapplying the already saved configuration only needs the CAS check.
+    // Do not make recovery depend on rewriting unchanged metadata on a full
+    // or read-only disk. Compare canonical fields, including collapse state.
+    if crate::storage::tree_format::legacy_root_to_v5(&root)
+        == crate::storage::tree_format::legacy_root_to_v5(&m.root)
+    {
+        return Ok(Value::Null);
+    }
     m.root = root;
     transaction::run(&state.paths, vec![Target::State, Target::Manifest], || {
         save_manifest(state, &m)
@@ -731,11 +742,50 @@ pub async fn apply_hosts_selection<R: Runtime>(
     }
 }
 
+fn read_application_recovery<R: Runtime>(
+    app: &AppHandle<R>,
+    state: &AppState,
+) -> Option<hosts_apply::recovery::RecoveryView> {
+    let (recovery, changed) = state.application_recovery.snapshot_changed();
+    if changed {
+        // Notify other windows once when a formerly known snapshot becomes
+        // unknown. Repeated queries must not create a reload/broadcast loop.
+        let _ = tray::refresh_title(app, state);
+        let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+    }
+    recovery
+}
+
+#[tauri::command]
+pub async fn get_application_recovery<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<Value, String> {
+    Ok(json!(read_application_recovery(&app, &state)))
+}
+
+/// Clear recovery only after an explicit apply has been saved and its actual
+/// system content can still be verified. Metadata edits never call this.
+#[tauri::command]
+pub async fn finish_hosts_application<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    args: Args,
+) -> Result<Value, String> {
+    let expected = arg_str(&args, 0, "expected").map_err(|e| e.to_string())?;
+    let recovery = state.application_recovery.finish(expected);
+    let _ = tray::refresh_title(&app, &state);
+    let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+    Ok(json!(recovery))
+}
+
 /// Compensate an apply whose metadata could not be saved. Do not run the
 /// post-apply command again or feed a complete hosts file through append mode.
 #[tauri::command]
 pub async fn restore_system_hosts<R: Runtime>(
     app: AppHandle<R>,
+    state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, String> {
     let previous = arg_str(&args, 0, "previous")
@@ -744,17 +794,35 @@ pub async fn restore_system_hosts<R: Runtime>(
     let expected = arg_str(&args, 1, "expected")
         .map_err(|e| e.to_string())?
         .to_owned();
+    let list = args
+        .get(2)
+        .and_then(Value::as_array)
+        .ok_or_else(|| "expected the complete applied list".to_string())?
+        .clone();
+    let expected_for_write = expected.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
-        hosts_apply::write::restore_system_hosts(&previous, &expected)
+        hosts_apply::write::restore_system_hosts(&previous, &expected_for_write)
     })
     .await
-    .map_err(|e| e.to_string())?;
+    .unwrap_or_else(|e| {
+        Err(HostsApplyError::Io {
+            message: e.to_string(),
+        })
+    });
     match result {
         Ok(()) => {
             let _ = app.emit("system_hosts_updated", json!({ "_args": [] }));
             Ok(json!({ "success": true }))
         }
-        Err(e) => Ok(e.into_renderer_value()),
+        Err(e) => {
+            state.application_recovery.record(list, expected);
+            let recovery = state.application_recovery.snapshot();
+            let _ = tray::refresh_title(&app, &state);
+            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            let mut result = e.into_renderer_value();
+            result["application_recovery"] = json!(recovery);
+            Ok(result)
+        }
     }
 }
 

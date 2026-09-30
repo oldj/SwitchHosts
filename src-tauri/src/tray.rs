@@ -362,10 +362,24 @@ pub fn refresh_title<R: Runtime>(app: &AppHandle<R>, state: &AppState) -> Result
         let cfg = state.config.lock().expect("config mutex poisoned");
         cfg.show_title_on_tray
     };
-    let manifest = state.read_manifest()?;
-    let title = compute_tray_title(&manifest.root, show);
+    let title = match state.application_recovery.snapshot() {
+        Some(recovery) => compute_recovery_title(&recovery, show),
+        None => compute_tray_title(&state.read_manifest()?.root, show),
+    };
     set_tray_title(app, title.as_deref());
     Ok(())
+}
+
+fn compute_recovery_title(
+    recovery: &crate::hosts_apply::recovery::RecoveryView,
+    show: bool,
+) -> Option<String> {
+    match recovery {
+        crate::hosts_apply::recovery::RecoveryView::Applied { list } => {
+            compute_tray_title(list, show)
+        }
+        crate::hosts_apply::recovery::RecoveryView::Unknown => show.then(|| "?".to_string()),
+    }
 }
 
 /// Compute the tray title text from the manifest list, mirroring
@@ -770,6 +784,23 @@ fn hide_tray_if_visible<R: Runtime>(app: &AppHandle<R>) {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn recovery_title_uses_applied_order_or_explicit_unknown_state() {
+        use crate::hosts_apply::recovery::RecoveryView;
+        let recovery = RecoveryView::Applied {
+            list: vec![
+                json!({"id":"b", "title":"B", "on":true}),
+                json!({"id":"a", "title":"A", "on":true}),
+            ],
+        };
+        assert_eq!(compute_recovery_title(&recovery, true), Some("B,A".into()));
+        assert_eq!(
+            compute_recovery_title(&RecoveryView::Unknown, true),
+            Some("?".into())
+        );
+        assert_eq!(compute_recovery_title(&RecoveryView::Unknown, false), None);
+    }
 
     #[test]
     fn compute_tray_title_returns_none_when_hidden() {

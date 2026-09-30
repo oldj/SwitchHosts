@@ -29,7 +29,7 @@ interface Props {
 const ListItem = (props: Props) => {
   const { data, isTray, selectedIds } = props
   const { lang, i18n } = useI18n()
-  const { currentHosts, setCurrentHosts } = useHostsData()
+  const { currentHosts, setCurrentHosts, applicationRecovery } = useHostsData()
   const [isOn, setIsOn] = useState(data.on)
   const el = useRef<HTMLDivElement>(null)
   // const [item_height, setItemHeight] = useState(0)
@@ -38,7 +38,7 @@ const ListItem = (props: Props) => {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror prop into local optimistic state
     setIsOn(data.on)
-  }, [data])
+  }, [data, applicationRecovery])
 
   // Roll-back signal from List/index.tsx::onToggleItem. The optimistic
   // toggle in `toggleOn` flips `isOn` locally before the apply round
@@ -192,7 +192,13 @@ const ListItem = (props: Props) => {
                 <IconEdit size={16} stroke={1.5} />
               </ActionIcon>
             </div>
-            <SwitchButton on={!!isOn} onChange={(on) => toggleOn(on)} />
+            <SwitchButton
+              on={!!isOn}
+              onChange={(on) => toggleOn(on)}
+              disabled={!!applicationRecovery}
+              unknown={applicationRecovery?.status === 'unknown'}
+              unknownLabel={lang.hosts_application_unknown}
+            />
           </>
         )}
       </div>

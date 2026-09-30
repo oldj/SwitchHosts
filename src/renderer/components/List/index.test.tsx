@@ -40,7 +40,8 @@ const mocks = vi.hoisted(() => ({
   setCurrentHosts: vi.fn(),
   setList: vi.fn(),
   applyList: vi.fn(),
-  setAppliedSelection: vi.fn(),
+  reapplySavedList: vi.fn(),
+  applicationRecovery: null as any,
   showErrorNotification: vi.fn(),
 }))
 
@@ -100,7 +101,8 @@ vi.mock('@renderer/models/useHostsData', () => ({
     loadHostsData: mocks.loadHostsData,
     setList: mocks.setList,
     applyList: mocks.applyList,
-    setAppliedSelection: mocks.setAppliedSelection,
+    reapplySavedList: mocks.reapplySavedList,
+    applicationRecovery: mocks.applicationRecovery,
     currentHosts: null,
     setCurrentHosts: mocks.setCurrentHosts,
   }),
@@ -154,6 +156,8 @@ describe('List tray synchronization', () => {
     mocks.setCurrentHosts.mockReset()
     mocks.setList.mockReset()
     mocks.applyList.mockReset().mockResolvedValue(true)
+    mocks.reapplySavedList.mockReset().mockResolvedValue(true)
+    mocks.applicationRecovery = null
     mocks.showErrorNotification.mockReset()
 
     mocks.actions.getContentOfList.mockResolvedValue('10.0.0.8 api.local\n')
@@ -195,6 +199,24 @@ describe('List tray synchronization', () => {
       await latestHandler(events.toggle_item)('local-dev', true)
     })
     expect(mocks.broadcast).toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', false)
+  })
+
+  it('does not broadcast a known switch state when the application result is unknown', async () => {
+    mocks.applyList.mockResolvedValue(null)
+    render(<List />)
+    await act(async () => {
+      await latestHandler(events.toggle_item)('local-dev', true)
+    })
+    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', true)
+    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', false)
+  })
+
+  it('routes the explicit recovery action to reapplying saved settings', async () => {
+    render(<List />)
+    await act(async () => {
+      await latestHandler(events.reapply_saved_hosts)()
+    })
+    expect(mocks.reapplySavedList).toHaveBeenCalledTimes(1)
   })
 
   it('reports move failures without reloading or changing selection', async () => {

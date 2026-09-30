@@ -7,6 +7,7 @@ import { IHostsListObject } from '@common/data'
 import events from '@common/events'
 import { findItemById, flatten, getNextSelectedItem, setOnStateOfItem } from '@common/hostsFn'
 import { IFindShowSourceParam } from '@common/types'
+import ApplicationRecoveryNotice from '@renderer/components/ApplicationRecoveryNotice'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
@@ -32,7 +33,8 @@ const List = (props: Props) => {
     loadHostsData,
     setList,
     applyList,
-    setAppliedSelection,
+    reapplySavedList,
+    applicationRecovery,
     currentHosts,
     setCurrentHosts,
   } = useHostsData()
@@ -89,9 +91,9 @@ const List = (props: Props) => {
         configs?.multi_chose_folder_switch_all ?? false,
       ),
     )
-    if (success) {
+    if (success === true) {
       agent.broadcast(events.set_hosts_on_status, id, on)
-    } else {
+    } else if (success === false) {
       agent.broadcast(events.set_hosts_on_status, id, !on)
     }
   }
@@ -148,10 +150,8 @@ const List = (props: Props) => {
   )
   useOnBroadcast(
     events.tray_list_updated,
-    (selection: Record<string, boolean> | null = null) => {
-      if (!isTray) return
-      setAppliedSelection(selection)
-      loadHostsData()
+    () => {
+      loadHostsData().catch((error: unknown) => console.error(error))
     },
     [isTray],
   )
@@ -197,6 +197,13 @@ const List = (props: Props) => {
   )
 
   useOnBroadcast(events.reload_list, loadHostsData)
+  useOnBroadcast(
+    events.reapply_saved_hosts,
+    () => {
+      if (!isTray) return reapplySavedList().catch((error: unknown) => console.error(error))
+    },
+    [isTray, hostsData],
+  )
 
   useOnBroadcast(
     events.hosts_content_changed,
@@ -222,7 +229,7 @@ const List = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      {/*<SystemHostsItem/>*/}
+      <ApplicationRecoveryNotice />
       <Tree
         data={showList}
         selectedIds={selectedIds}
@@ -247,7 +254,7 @@ const List = (props: Props) => {
           if (enabledIdSeq(hostsData.list) !== enabledIdSeq(newUserList) && configs?.write_mode) {
             applyList(newUserList)
               .then((success) => {
-                if (!success) restoreView()
+                if (success === false) restoreView()
               })
               .catch((error: unknown) => {
                 restoreView()
@@ -285,7 +292,7 @@ const List = (props: Props) => {
         }
         nodeAttr={(item) => {
           return {
-            can_drag: !item.is_sys && !isTray,
+            can_drag: !item.is_sys && !isTray && !applicationRecovery,
             can_drop_before: !item.is_sys,
             can_drop_in: item.type === 'folder',
             can_drop_after: !item.is_sys,

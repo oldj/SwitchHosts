@@ -41,3 +41,11 @@ describe('SwitchButton', () => {
     expect(onParentClick).not.toHaveBeenCalled()
   })
 })
+
+it('represents an unknown state without claiming the selection is on or off', () => {
+  const onChange = vi.fn()
+  render(<SwitchButton on unknown unknownLabel="Active selection unknown" onChange={onChange} />)
+  expect(screen.queryByRole('switch')).toBeNull()
+  fireEvent.click(screen.getByRole('status', { name: 'Active selection unknown' }))
+  expect(onChange).not.toHaveBeenCalled()
+})

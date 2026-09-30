@@ -113,7 +113,10 @@ const lang: LanguageDict = {
   host: 'Host',
   hosts_add: 'Ajouter un nouvel hosts',
   hosts_applied_save_failed:
-    'Le fichier hosts système a été appliqué, mais la sauvegarde des paramètres et la restauration du contenu précédent ont échoué. Les interrupteurs affichent la dernière sélection appliquée. Veuillez réessayer.',
+    'Le fichier hosts système a été appliqué, mais la sauvegarde et la restauration ont échoué. La liste affiche la configuration appliquée. Réappliquez les paramètres enregistrés avant toute modification.',
+  hosts_application_unknown:
+    'La sélection active est inconnue car le fichier hosts système a changé ou est illisible. Réappliquez les paramètres enregistrés avant toute modification.',
+  hosts_reapply_saved: 'Réappliquer les paramètres enregistrés',
   hosts_delete: 'Supprimer cet hosts',
   hosts_delete_confirm: 'Êtes-vous sûr de vouloir supprimer cet hosts ?',
   hosts_edit: "Éditer l'hosts",

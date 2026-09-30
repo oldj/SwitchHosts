@@ -110,7 +110,10 @@ export default {
   host: 'Host',
   hosts_add: 'Yeni host ekle',
   hosts_applied_save_failed:
-    'Sistem hosts dosyası uygulandı, ancak ayarlar kaydedilemedi ve önceki içerik geri yüklenemedi. Anahtarlar son uygulanan seçimi gösteriyor. Lütfen kaydetmeyi veya uygulamayı yeniden deneyin.',
+    'Sistem hosts dosyası uygulandı, ancak kaydetme ve geri yükleme başarısız oldu. Liste uygulanan durumu gösteriyor. Düzenlemeden önce kayıtlı ayarları yeniden uygulayın.',
+  hosts_application_unknown:
+    'Sistem hosts dosyası değiştiği veya okunamadığı için etkin seçim doğrulanamıyor. Düzenlemeden önce kayıtlı ayarları yeniden uygulayın.',
+  hosts_reapply_saved: 'Kayıtlı ayarları yeniden uygula',
   hosts_delete: 'Bu hostu sil',
   hosts_delete_confirm: 'Mevcut hostu silmek istediğinizden emin misiniz?',
   hosts_edit: 'Hostları düzenle',

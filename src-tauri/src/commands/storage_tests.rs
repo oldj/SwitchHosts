@@ -27,6 +27,7 @@ impl Fixture {
                 paths,
                 config: Mutex::new(AppConfig::default()),
                 store_lock: Mutex::new(()),
+                application_recovery: Default::default(),
                 config_write_lock: Mutex::new(()),
                 update_check_lock: tokio::sync::Mutex::new(()),
                 is_will_quit: AtomicBool::new(false),
@@ -402,5 +403,22 @@ fn conditional_list_save_compares_canonical_fields_and_collapse_state() {
         set_list_inner(&fixture.state, vec![json!([]), original]),
         Err(StorageError::Conflict { .. })
     ));
+    assert_eq!(fixture.snapshot(), before);
+}
+
+#[test]
+fn reapplying_saved_list_does_not_rewrite_unchanged_metadata() {
+    let fixture = Fixture::populated();
+    let saved = load_manifest(&fixture.state).unwrap().root;
+    // Block both atomic destinations. A genuine edit must fail, while a
+    // conditional acknowledgement of the saved list must remain read-only.
+    std::fs::create_dir(fixture.state.paths.root.join("manifest.json.tmp")).unwrap();
+    std::fs::create_dir(fixture.state.paths.internal.join("state.json.tmp")).unwrap();
+    let before = fixture.snapshot();
+    set_list_inner(&fixture.state, vec![json!(saved), json!(saved)]).unwrap();
+    assert_eq!(fixture.snapshot(), before);
+    let mut edit = saved.clone();
+    edit[0]["title"] = json!("Changed");
+    assert!(set_list_inner(&fixture.state, vec![json!(edit), json!(saved)]).is_err());
     assert_eq!(fixture.snapshot(), before);
 }

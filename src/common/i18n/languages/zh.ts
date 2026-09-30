@@ -105,7 +105,10 @@ const lang: LanguageDict = {
   host: '主机',
   hosts_add: '添加 hosts',
   hosts_applied_save_failed:
-    '系统 hosts 已应用，但配置保存及恢复原内容均失败。开关显示当前已应用的状态，请重试保存或重新应用。',
+    '系统 hosts 已应用，但配置保存和恢复原内容均失败。列表显示已应用的快照，请先重新应用已保存配置再编辑。',
+  hosts_application_unknown:
+    '系统 hosts 已变化或无法读取，当前生效状态待确认。请先重新应用已保存配置再编辑。',
+  hosts_reapply_saved: '重新应用已保存配置',
   hosts_delete: '删除当前方案',
   hosts_delete_confirm: '确实要删除当前方案吗？',
   hosts_edit: '编辑 hosts',

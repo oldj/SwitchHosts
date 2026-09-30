@@ -119,10 +119,7 @@ pub fn restore_system_hosts(previous: &str, expected: &str) -> Result<(), HostsA
 fn restore_at(target: &Path, previous: &str, expected: &str) -> Result<(), HostsApplyError> {
     let current = read_system_hosts(target)?;
     if normalize_line_endings(&current) != normalize_line_endings(expected) {
-        return Err(HostsApplyError::Io {
-            message: "System hosts changed after applying; refusing to overwrite newer content"
-                .into(),
-        });
+        return Err(HostsApplyError::ContentChanged);
     }
     let content = restore_line_endings(&normalize_line_endings(previous));
     if current == content {
@@ -135,6 +132,15 @@ fn restore_at(target: &Path, previous: &str, expected: &str) -> Result<(), Hosts
             message: format!("restore {}: {e}", target.display()),
         }),
     }
+}
+
+/// Only a verified readable match can be presented as a known applied state.
+pub fn system_hosts_matches(expected: &str) -> bool {
+    let _guard = SYSTEM_WRITE_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    system_hosts_path()
+        .and_then(|path| read_system_hosts(&path))
+        .map(|current| normalize_line_endings(&current) == normalize_line_endings(expected))
+        .unwrap_or(false)
 }
 
 fn read_system_hosts(target: &Path) -> Result<String, HostsApplyError> {
@@ -436,7 +442,10 @@ mod compensation_tests {
         );
         // A later write must survive a delayed compensation attempt.
         std::fs::write(&target, "newer external content\n").unwrap();
-        assert!(restore_at(&target, old, &applied.new_content).is_err());
+        assert!(matches!(
+            restore_at(&target, old, &applied.new_content),
+            Err(HostsApplyError::ContentChanged)
+        ));
         assert_eq!(
             std::fs::read_to_string(&target).unwrap(),
             "newer external content\n"
