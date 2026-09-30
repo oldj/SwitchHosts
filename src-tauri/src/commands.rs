@@ -751,14 +751,10 @@ fn read_application_recovery<R: Runtime>(
     app: &AppHandle<R>,
     state: &AppState,
 ) -> Option<hosts_apply::recovery::RecoveryView> {
-    let (recovery, changed) = state.application_recovery.snapshot_changed();
-    if changed {
-        // Notify other windows once when a formerly known snapshot becomes
-        // unknown. Repeated queries must not create a reload/broadcast loop.
+    state.application_recovery.snapshot(|| {
         let _ = tray::refresh_title(app, state);
         let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
-    }
-    recovery
+    })
 }
 
 #[tauri::command]
@@ -768,6 +764,35 @@ pub async fn get_application_recovery<R: Runtime>(
     _args: Args,
 ) -> Result<Value, String> {
     Ok(json!(read_application_recovery(&app, &state)))
+}
+
+/// Queue recovery before waking or rebuilding the main window. A newly
+/// created webview consumes the request after its initial data load.
+#[tauri::command]
+pub async fn request_hosts_recovery<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<(), String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
+    if state.application_recovery.request() {
+        let wake_app = app.clone();
+        app.run_on_main_thread(move || {
+            lifecycle::show_main_window(&wake_app);
+            let _ = wake_app.emit("reapply_saved_hosts", json!({ "_args": [] }));
+        })
+        .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn take_hosts_recovery_request(
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<bool, String> {
+    state.require_data_dir_usable().map_err(|e| e.to_string())?;
+    Ok(state.application_recovery.take_request())
 }
 
 /// Clear recovery only after an explicit apply has been saved and its actual
@@ -817,7 +842,9 @@ pub async fn restore_system_hosts<R: Runtime>(
     });
     match result {
         Ok(()) => {
-            let recovery = state.application_recovery.restored(&previous);
+            let recovery = state.application_recovery.restored(&previous, || {
+                let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+            });
             let _ = tray::refresh_title(&app, &state);
             let _ = app.emit("system_hosts_updated", json!({ "_args": [] }));
             let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
@@ -825,7 +852,7 @@ pub async fn restore_system_hosts<R: Runtime>(
         }
         Err(e) => {
             state.application_recovery.record(list, expected);
-            let recovery = state.application_recovery.snapshot();
+            let recovery = read_application_recovery(&app, &state);
             let _ = tray::refresh_title(&app, &state);
             let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
             let mut result = e.into_renderer_value();

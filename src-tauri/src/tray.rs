@@ -362,7 +362,9 @@ pub fn refresh_title<R: Runtime>(app: &AppHandle<R>, state: &AppState) -> Result
         let cfg = state.config.lock().expect("config mutex poisoned");
         cfg.show_title_on_tray
     };
-    let title = match state.application_recovery.snapshot() {
+    let title = match state.application_recovery.snapshot(|| {
+        let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+    }) {
         Some(recovery) => compute_recovery_title(&recovery, show),
         None => compute_tray_title(&state.read_manifest()?.root, show),
     };

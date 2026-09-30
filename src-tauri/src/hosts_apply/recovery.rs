@@ -22,6 +22,7 @@ struct Pending {
 struct RecoveryState {
     pending: Option<Pending>,
     before_apply: Option<Pending>,
+    requested: bool,
 }
 
 #[derive(Default)]
@@ -53,12 +54,38 @@ impl ApplicationRecovery {
         });
     }
 
-    pub fn snapshot(&self) -> Option<RecoveryView> {
-        self.snapshot_changed().0
+    /// The request survives a destroyed webview. Only the main renderer
+    /// consumes it after loading, so event delivery is just a wake-up hint.
+    pub fn request(&self) -> bool {
+        let mut state = self.0.lock().unwrap();
+        state.requested = state.pending.is_some();
+        state.requested
     }
 
-    pub fn snapshot_changed(&self) -> (Option<RecoveryView>, bool) {
-        self.inspect(write::system_hosts_matches)
+    pub fn take_request(&self) -> bool {
+        let mut state = self.0.lock().unwrap();
+        std::mem::take(&mut state.requested) && state.pending.is_some()
+    }
+
+    pub fn is_pending(&self) -> bool {
+        self.0.lock().unwrap().pending.is_some()
+    }
+
+    pub fn snapshot(&self, on_change: impl FnOnce()) -> Option<RecoveryView> {
+        self.inspect_and_notify(write::system_hosts_matches, on_change)
+    }
+
+    fn inspect_and_notify(
+        &self,
+        matches: impl FnOnce(&str) -> bool,
+        on_change: impl FnOnce(),
+    ) -> Option<RecoveryView> {
+        let (view, changed) = self.inspect(matches);
+        // Publish after releasing the mutex; listeners may read the state.
+        if changed {
+            on_change();
+        }
+        view
     }
 
     fn inspect(&self, matches: impl FnOnce(&str) -> bool) -> (Option<RecoveryView>, bool) {
@@ -83,9 +110,13 @@ impl ApplicationRecovery {
 
     /// A successful compensation restores the recovery state from before
     /// this apply, which may itself still need explicit reconciliation.
-    pub fn restored(&self, previous_content: &str) -> Option<RecoveryView> {
+    pub fn restored(
+        &self,
+        previous_content: &str,
+        on_change: impl FnOnce(),
+    ) -> Option<RecoveryView> {
         self.restored_with(write::system_hosts_matches(previous_content));
-        self.snapshot()
+        self.snapshot(on_change)
     }
 
     fn restored_with(&self, current: bool) {
@@ -110,6 +141,50 @@ impl ApplicationRecovery {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn recovery_request_survives_absent_window_and_is_consumed_once() {
+        let recovery = ApplicationRecovery::default();
+        assert!(!recovery.request());
+        assert!(!recovery.take_request());
+        recovery.begin();
+        assert!(recovery.request());
+        assert!(recovery.request());
+        // A recreated main window and its wake-up event can both try to drain.
+        assert!(recovery.take_request());
+        assert!(!recovery.take_request());
+        assert!(recovery.is_pending());
+        recovery.request();
+        recovery.finish_with(true);
+        assert!(!recovery.take_request());
+        assert!(!recovery.is_pending());
+    }
+
+    #[test]
+    fn first_reader_publishes_unknown_transition_exactly_once() {
+        use std::cell::Cell;
+        let recovery = ApplicationRecovery::default();
+        recovery.record(vec![json!({"id":"a", "on":true})], "applied".into());
+        let notifications = Cell::new(0);
+        // The tray may observe a mismatch before a command reads basic data.
+        let title_view = recovery.inspect_and_notify(
+            |_| false,
+            || {
+                notifications.set(notifications.get() + 1);
+                // Notifications run without holding the recovery mutex.
+                assert!(recovery.is_pending());
+            },
+        );
+        assert_eq!(title_view, Some(RecoveryView::Unknown));
+        let command_view = recovery.inspect_and_notify(
+            |_| false,
+            || {
+                notifications.set(notifications.get() + 1);
+            },
+        );
+        assert_eq!(command_view, title_view);
+        assert_eq!(notifications.get(), 1);
+    }
 
     #[test]
     fn unacknowledged_apply_survives_queries_until_verified_finish() {

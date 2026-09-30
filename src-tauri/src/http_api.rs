@@ -219,6 +219,9 @@ async fn api_toggle(State(state): State<AppRouterState>, Query(q): Query<IdQuery
     log::info!("toggle: {id}");
 
     let app_state = state.app.state::<AppState>();
+    if let Err(error) = ensure_toggle_allowed(&app_state.application_recovery) {
+        return error.as_body();
+    }
     let manifest = match app_state.read_manifest() {
         Ok(m) => m,
         Err(e) => {
@@ -283,6 +286,11 @@ async fn apply_toggle_in_backend(
     app_state
         .require_data_dir_usable()
         .map_err(|e| ToggleError::Storage(e.to_string()))?;
+
+    // Recheck after waiting for the backend apply lock. Recovery must be
+    // resolved explicitly, just as on the renderer path; an API toggle must
+    // not report success while leaving an older recovery state behind.
+    ensure_toggle_allowed(&app_state.application_recovery)?;
 
     let (choice_mode, multi_chose_folder_switch_all, remove_duplicate, write_mode) = {
         let cfg = app_state.config.lock().expect("config mutex poisoned");
@@ -365,10 +373,21 @@ async fn apply_toggle_in_backend(
     Ok(())
 }
 
+fn ensure_toggle_allowed(
+    recovery: &hosts_apply::recovery::ApplicationRecovery,
+) -> Result<(), ToggleError> {
+    if recovery.is_pending() {
+        Err(ToggleError::RecoveryRequired)
+    } else {
+        Ok(())
+    }
+}
+
 /// Why a backend toggle failed. Kept distinct so the endpoint can say
 /// which, instead of collapsing a user-cancelled prompt, a policy denial
 /// and a full disk into one opaque string.
 enum ToggleError {
+    RecoveryRequired,
     WriteModeUnset,
     Apply(HostsApplyError),
     /// The write succeeded but the tree could not be persisted — the
@@ -382,6 +401,7 @@ impl ToggleError {
     /// `not found.` replies.
     fn as_body(&self) -> &'static str {
         match self {
+            ToggleError::RecoveryRequired => "recovery required.",
             ToggleError::WriteModeUnset => "write mode not set.",
             ToggleError::Apply(HostsApplyError::Cancelled) => "cancelled.",
             ToggleError::Apply(_) => "apply failed.",
@@ -394,6 +414,9 @@ impl ToggleError {
 impl std::fmt::Display for ToggleError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            ToggleError::RecoveryRequired => {
+                write!(f, "resolve the pending hosts application first")
+            }
             ToggleError::WriteModeUnset => write!(f, "write mode is not set"),
             ToggleError::Apply(e) => write!(f, "{e}"),
             ToggleError::Persist(e) => write!(f, "applied but failed to persist the tree: {e}"),
@@ -494,6 +517,27 @@ fn find_node(nodes: &[Value], id: &str) -> Option<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pending_recovery_rejects_http_toggle_before_any_write() {
+        let recovery = hosts_apply::recovery::ApplicationRecovery::default();
+        assert!(ensure_toggle_allowed(&recovery).is_ok());
+        recovery.record(vec![json!({"id":"a", "on":true})], "applied".into());
+        assert!(matches!(
+            ensure_toggle_allowed(&recovery),
+            Err(ToggleError::RecoveryRequired)
+        ));
+        assert_eq!(
+            ensure_toggle_allowed(&recovery).err().unwrap().as_body(),
+            "recovery required."
+        );
+        recovery.begin();
+        assert!(matches!(
+            ensure_toggle_allowed(&recovery),
+            Err(ToggleError::RecoveryRequired)
+        ));
+        assert!(recovery.is_pending());
+    }
 
     fn tree_fixture() -> Vec<Value> {
         // root

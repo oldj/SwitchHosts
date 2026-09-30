@@ -18,6 +18,7 @@ import { actions, agent } from '@renderer/core/agent'
 import { showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
+import useRecoveryRequests from '@renderer/models/useRecoveryRequests'
 import useResolvedTheme from '@renderer/models/useResolvedTheme'
 import { applyThemeToBody, normalizeTheme } from '@renderer/utils/theme'
 import clsx from 'clsx'
@@ -40,7 +41,7 @@ const MainPage = () => {
   const [defaultDataDir, setDefaultDataDir] = useState('')
   const mainWindowReadySentRef = useRef(false)
   const { setLocale, i18n, lang } = useI18n()
-  const { loadHostsData, reapplySavedList } = useHostsData()
+  const { loadHostsData } = useHostsData()
   const { configs, loadConfigs, updateConfigs } = useConfigs()
   const [leftWidth, setLeftWidth] = useState(0)
   const [rightWidth, setRightWidth] = useState(240)
@@ -116,10 +117,7 @@ const MainPage = () => {
     }, 0)
   }, [configs, loading])
 
-  // Keep recovery available while the list is unmounted (e.g. trashcan view).
-  useOnBroadcast(events.reapply_saved_hosts, () => {
-    reapplySavedList().catch((error: unknown) => console.error(error))
-  })
+  useRecoveryRequests(!loading && !dataDirRecovery)
   useOnBroadcast(events.tray_list_updated, () => {
     loadHostsData().catch((error: unknown) => console.error(error))
   })

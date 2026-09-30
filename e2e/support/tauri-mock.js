@@ -402,6 +402,15 @@
             version: '5.0.0-beta.22',
             application_recovery: clone(state.applicationRecovery),
           }
+        case 'request_hosts_recovery':
+          state.recoveryRequested = !!state.applicationRecovery
+          dispatchEvent('reapply_saved_hosts', { _args: [] })
+          return null
+        case 'take_hosts_recovery_request': {
+          const requested = !!state.recoveryRequested && !!state.applicationRecovery
+          state.recoveryRequested = false
+          return requested
+        }
         case 'get_application_recovery':
           return clone(state.applicationRecovery)
         case 'finish_hosts_application':
