@@ -11,7 +11,9 @@ const mocks = vi.hoisted(() => ({
     getContentOfList: vi.fn(),
     getList: vi.fn(),
     setSystemHosts: vi.fn(),
+    moveManyToTrashcan: vi.fn(),
   },
+  treeOnChange: null as any,
   broadcast: vi.fn(),
   handlers: new Map<string, Handler[]>(),
   hostsList: [
@@ -44,12 +46,14 @@ vi.mock('@renderer/components/Tree', async () => {
   const React = await import('react')
 
   return {
-    Tree: ({ data }: any) =>
-      React.createElement(
+    Tree: ({ data, onChange }: any) => {
+      mocks.treeOnChange = onChange
+      return React.createElement(
         'div',
         { 'data-testid': 'tree' },
         data.map((item: any) => React.createElement('div', { key: item.id }, item.title)),
-      ),
+      )
+    },
   }
 })
 
@@ -71,6 +75,7 @@ vi.mock('@renderer/core/agent', () => ({
 
 vi.mock('@renderer/core/notify', () => ({
   showErrorNotification: mocks.showErrorNotification,
+  getErrorMessage: (error: any, fallback: string) => error.reason || error.message || fallback,
 }))
 
 vi.mock('@renderer/core/useOnBroadcast', () => ({
@@ -135,6 +140,7 @@ describe('List tray synchronization', () => {
   })
 
   beforeEach(() => {
+    mocks.actions.moveManyToTrashcan.mockReset()
     mocks.actions.getContentOfList.mockReset()
     mocks.actions.getList.mockReset()
     mocks.actions.setSystemHosts.mockReset()
@@ -188,6 +194,46 @@ describe('List tray synchronization', () => {
     expect(channels.indexOf(events.tray_list_updated)).toBeLessThan(
       channels.indexOf(events.set_hosts_on_status),
     )
+  })
+
+  it('does not announce successful selection when list persistence fails', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mocks.setList.mockRejectedValue(new Error('disk full'))
+    render(<List />)
+    await act(async () => {
+      await latestHandler(events.toggle_item)('local-dev', true)
+    })
+    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.tray_list_updated)
+    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', true)
+    expect(mocks.broadcast).toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', false)
+    spy.mockRestore()
+  })
+
+  it('reports move failures without reloading or changing selection', async () => {
+    mocks.actions.moveManyToTrashcan.mockRejectedValue({ reason: 'Corrupt trashcan' })
+    render(<List />)
+    await act(async () => {
+      await latestHandler(events.move_to_trashcan)(['local-dev'])
+    })
+    expect(mocks.showErrorNotification).toHaveBeenCalledWith({
+      title: 'Fail',
+      message: 'Corrupt trashcan',
+    })
+    expect(mocks.loadHostsData).not.toHaveBeenCalled()
+    expect(mocks.setCurrentHosts).not.toHaveBeenCalled()
+  })
+
+  it('restores the displayed tree when a drag cannot be persisted', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mocks.setList.mockRejectedValue(new Error('disk full'))
+    const view = render(<List />)
+    await act(async () => {
+      mocks.treeOnChange([...mocks.hostsList].reverse())
+    })
+    await waitFor(() => {
+      expect(view.getByTestId('tree').textContent).toBe('System HostsDevelopmentAPI Override')
+    })
+    spy.mockRestore()
   })
 
   it('applies system hosts when a changed remote hosts entry is enabled', async () => {

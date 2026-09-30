@@ -224,3 +224,21 @@ describe('EditHostsInfo domain source', () => {
     expect(mocks.actions.refreshHosts).toHaveBeenCalledWith('u1')
   })
 })
+
+it('does not mutate the current list or refresh/select an item after a failed edit', async () => {
+  const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  mocks.hostsData.list = [
+    { id: 'd1', type: 'remote', source: 'domain', title: 'GH', url: 'github.com' },
+  ]
+  mocks.setList.mockRejectedValue(new Error('disk full'))
+  openDialog(mocks.hostsData.list[0])
+  fireEvent.change(await screen.findByDisplayValue('github.com'), {
+    target: { value: 'example.com' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+  await waitFor(() => expect(spy).toHaveBeenCalled())
+  expect(mocks.hostsData.list[0].url).toBe('github.com')
+  expect(mocks.actions.refreshHosts).not.toHaveBeenCalled()
+  expect(mocks.broadcast).not.toHaveBeenCalled()
+  spy.mockRestore()
+})

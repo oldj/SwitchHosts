@@ -10,7 +10,7 @@ import { IFindShowSourceParam } from '@common/types'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { Tree } from '@renderer/components/Tree'
 import { actions, agent } from '@renderer/core/agent'
-import { showErrorNotification } from '@renderer/core/notify'
+import { getErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
@@ -30,16 +30,17 @@ const List = (props: Props) => {
   const { hostsData, loadHostsData, setList, currentHosts, setCurrentHosts } = useHostsData()
   const { configs } = useConfigs()
   const { lang } = useI18n()
-  const [selectedIds, setSelectedIds] = useState<string[]>(
-    isTray ? [] : [currentHosts?.id || '0'],
-  )
+  const [selectedIds, setSelectedIds] = useState<string[]>(isTray ? [] : [currentHosts?.id || '0'])
   const [showList, setShowList] = useState<IHostsListObject[]>([])
+  const latestHostsData = useRef(hostsData)
+  const changeRevision = useRef(0)
   const remoteContentApplyRef = useRef({
     isApplying: false,
     pendingIds: new Set<string>(),
   })
 
   useEffect(() => {
+    latestHostsData.current = hostsData
     /* eslint-disable react-hooks/set-state-in-effect -- showList also mutated by drag onChange; keep as state synced from hostsData */
     if (!isTray) {
       setShowList([
@@ -98,6 +99,7 @@ const List = (props: Props) => {
         await setList(list)
       } catch (e) {
         console.error(e)
+        return false
       }
 
       if (currentHosts) {
@@ -168,7 +170,9 @@ const List = (props: Props) => {
     events.toggle_item,
     (id: string, on: boolean) => {
       if (isTray) return
-      onToggleItem(id, on)
+      return onToggleItem(id, on).catch((error: unknown) => {
+        showErrorNotification({ title: lang.fail, message: getErrorMessage(error, lang.fail) })
+      })
     },
     [hostsData, configs, isTray],
   )
@@ -184,14 +188,18 @@ const List = (props: Props) => {
   useOnBroadcast(
     events.move_to_trashcan,
     async (ids: string[]) => {
-      await actions.moveManyToTrashcan(ids)
-      await loadHostsData()
+      try {
+        await actions.moveManyToTrashcan(ids)
+        await loadHostsData()
 
-      if (currentHosts && ids.includes(currentHosts.id)) {
-        // 选中删除指定节点后的兄弟节点
-        const nextItem = getNextSelectedItem(hostsData.list, (i) => ids.includes(i.id))
-        setCurrentHosts(nextItem || null)
-        setSelectedIds(nextItem ? [nextItem.id] : [])
+        if (currentHosts && ids.includes(currentHosts.id)) {
+          // 选中删除指定节点后的兄弟节点
+          const nextItem = getNextSelectedItem(hostsData.list, (i) => ids.includes(i.id))
+          setCurrentHosts(nextItem || null)
+          setSelectedIds(nextItem ? [nextItem.id] : [])
+        }
+      } catch (error) {
+        showErrorNotification({ title: lang.fail, message: getErrorMessage(error, lang.fail) })
       }
     },
     [currentHosts, hostsData],
@@ -248,7 +256,15 @@ const List = (props: Props) => {
         data={showList}
         selectedIds={selectedIds}
         onChange={(list) => {
+          const revision = ++changeRevision.current
           setShowList(list)
+          const restoreView = () => {
+            if (revision !== changeRevision.current) return
+            const saved = latestHostsData.current.list
+            setShowList(
+              isTray ? [...saved] : [{ id: '0', title: lang.system_hosts, is_sys: true }, ...saved],
+            )
+          }
           const newUserList = list.filter((i) => !i.is_sys)
 
           const enabledIdSeq = (l: IHostsListObject[]) =>
@@ -257,13 +273,23 @@ const List = (props: Props) => {
               .map((i) => i.id)
               .join('\n')
 
-          if (
-            enabledIdSeq(hostsData.list) !== enabledIdSeq(newUserList) &&
-            configs?.write_mode
-          ) {
-            writeHostsToSystem(newUserList).catch((e) => console.error(e))
+          if (enabledIdSeq(hostsData.list) !== enabledIdSeq(newUserList) && configs?.write_mode) {
+            writeHostsToSystem(newUserList)
+              .then((success) => {
+                if (!success) restoreView()
+              })
+              .catch((error: unknown) => {
+                restoreView()
+                showErrorNotification({
+                  title: lang.fail,
+                  message: getErrorMessage(error, lang.fail),
+                })
+              })
           } else {
-            setList(newUserList).catch((e) => console.error(e))
+            setList(newUserList).catch((error: unknown) => {
+              restoreView()
+              console.error(error)
+            })
           }
         }}
         onSelect={(ids: string[]) => {

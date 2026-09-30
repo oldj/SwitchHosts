@@ -83,12 +83,13 @@ const EditHostsInfo = () => {
         actions.refreshHosts(h.id).catch((e) => console.error(e))
       }
     } else if (data && data.id) {
-      const h: IHostsListObject | undefined = hostsFn.findItemById(hostsData.list, data.id)
+      const list = lodash.cloneDeep(hostsData.list)
+      const h: IHostsListObject | undefined = hostsFn.findItemById(list, data.id)
       if (h) {
         const prevSource = h.source || 'url'
         const prevUrl = h.url || ''
         Object.assign(h, data)
-        await setList([...hostsData.list])
+        await setList(list)
 
         if (data.id === currentHosts?.id) {
           setCurrentHosts(h)
@@ -106,7 +107,7 @@ const EditHostsInfo = () => {
         }
       } else {
         setIsAdd(true)
-        setTimeout(onSave, 300)
+        setTimeout(saveFromUI, 300)
         return
       }
     } else {
@@ -115,6 +116,10 @@ const EditHostsInfo = () => {
 
     setIsShow(false)
   }
+
+  // setList reports persistence failures. Keep the editor open and consume
+  // the rejection at event boundaries so no success follow-up runs.
+  const saveFromUI = () => onSave().catch((error: unknown) => console.error(error))
 
   const onUpdate = (kv: Partial<IHostsListObject>) => {
     const obj: IHostsListObject = Object.assign({}, hosts, kv)
@@ -165,7 +170,9 @@ const EditHostsInfo = () => {
             value={hosts?.url || ''}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdate({ url: e.target.value })}
             placeholder={source === 'domain' ? lang.domain_placeholder : lang.url_placeholder}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onSave()}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
+              e.key === 'Enter' && saveFromUI()
+            }
             error={source === 'domain' && domainError ? domainError : undefined}
           />
           {source === 'domain' ? (
@@ -331,7 +338,7 @@ const EditHostsInfo = () => {
             <Button onClick={onCancel} variant="outline">
               {lang.btn_cancel}
             </Button>
-            <Button onClick={onSave}>{lang.btn_ok}</Button>
+            <Button onClick={saveFromUI}>{lang.btn_ok}</Button>
           </Group>
         </SimpleGrid>
       }
@@ -366,7 +373,9 @@ const EditHostsInfo = () => {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               onUpdate({ title: e.target.value })
             }
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && onSave()}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
+              e.key === 'Enter' && saveFromUI()
+            }
           />
         </Box>
 
