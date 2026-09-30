@@ -4,9 +4,11 @@ on:
   pull_request:
     branches:
       - master
+      - develop
   push:
     branches:
       - master
+      - develop
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -54,3 +56,32 @@ jobs:
 
       - name: Run all tests
         run: npm run test:all
+
+  rust-macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      # The Linux job cannot compile or exercise AppKit / NSPanel paths.
+      - name: Compile and run Rust tests on macOS
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml
+
+      - name: Build native tray lifecycle test
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml --features native-tray-tests --test macos_tray_lifecycle --no-run
+
+      # Requires a desktop session. Keep this separate from ordinary tests
+      # so headless local runs do not create UI windows.
+      - name: Verify native tray window lifecycle
+        timeout-minutes: 2
+        run: cargo test --locked --manifest-path src-tauri/Cargo.toml --features native-tray-tests --test macos_tray_lifecycle
