@@ -31,7 +31,9 @@ use crate::refresh::{self, RefreshOutcome};
 use crate::storage::{
     data_dir_pointer, entries, fs_copy,
     manifest::{self, Manifest},
-    paths, AppConfig, AppState, StorageError, Trashcan,
+    paths,
+    transaction::{self, Target},
+    AppConfig, AppState, StorageError, Trashcan,
 };
 use crate::tray;
 
@@ -86,6 +88,7 @@ pub async fn get_basic_data(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
+    let _guard = state.lock_store()?;
     let manifest = load_manifest(&state)?;
     let trashcan = load_trashcan(&state)?;
     Ok(json!({
@@ -375,6 +378,7 @@ fn apply_side_effects(app: &AppHandle<Wry>, state: &AppState, touched_keys: &[&s
 
 #[tauri::command]
 pub async fn get_list(state: State<'_, AppState>, _args: Args) -> Result<Value, StorageError> {
+    let _guard = state.lock_store()?;
     let m = load_manifest(&state)?;
     Ok(Value::Array(m.root))
 }
@@ -384,6 +388,7 @@ pub async fn get_item_from_list(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    let _guard = state.lock_store()?;
     let id = arg_str(&args, 0, "id")?;
     let m = load_manifest(&state)?;
     Ok(manifest::find_node(&m.root, id).unwrap_or(Value::Null))
@@ -415,6 +420,7 @@ pub async fn get_content_of_list(
         cfg.remove_duplicate_records
     };
 
+    let _guard = state.lock_store()?;
     let content = hosts_apply::aggregate_selected_content(&list, &state.paths, remove_duplicate)?;
     Ok(json!(content))
 }
@@ -437,10 +443,12 @@ fn set_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
             });
         }
     };
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store()?;
     let mut m = load_manifest(&state)?;
     m.root = root;
-    save_manifest(&state, &m)?;
+    transaction::run(&state.paths, vec![Target::State, Target::Manifest], || {
+        save_manifest(state, &m)
+    })?;
     Ok(Value::Null)
 }
 
@@ -451,7 +459,6 @@ pub async fn move_to_trashcan(
 ) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
     move_ids_to_trashcan(&state, &[id])?;
     Ok(Value::Null)
 }
@@ -475,12 +482,12 @@ pub async fn move_many_to_trashcan(
             });
         }
     };
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
     move_ids_to_trashcan(&state, &ids)?;
     Ok(Value::Null)
 }
 
 fn move_ids_to_trashcan(state: &AppState, ids: &[String]) -> Result<(), StorageError> {
+    let _guard = state.lock_store()?;
     let mut m = load_manifest(state)?;
     let mut t = load_trashcan(state)?;
     for id in ids {
@@ -488,9 +495,14 @@ fn move_ids_to_trashcan(state: &AppState, ids: &[String]) -> Result<(), StorageE
             t.add_item(node, parent_id);
         }
     }
-    save_manifest(state, &m)?;
-    save_trashcan(state, &t)?;
-    Ok(())
+    transaction::run(
+        &state.paths,
+        vec![Target::State, Target::Manifest, Target::Trashcan],
+        || {
+            save_manifest(state, &m)?;
+            save_trashcan(state, &t)
+        },
+    )
 }
 
 #[tauri::command]
@@ -498,6 +510,7 @@ pub async fn get_trashcan_list(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
+    let _guard = state.lock_store()?;
     let t = load_trashcan(&state)?;
     Ok(Value::Array(t.items))
 }
@@ -512,7 +525,7 @@ pub async fn clear_trashcan(
 
 fn clear_trashcan_inner(state: &AppState, _args: Args) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store()?;
     let mut t = load_trashcan(&state)?;
 
     // Collect all content ids from every trashcan item before clearing,
@@ -523,12 +536,16 @@ fn clear_trashcan_inner(state: &AppState, _args: Args) -> Result<Value, StorageE
             manifest::collect_content_ids(std::slice::from_ref(data), &mut content_ids);
         }
     }
-    for cid in &content_ids {
-        let _ = entries::delete_entry(&state.paths.entries_dir, cid);
-    }
-
+    let mut targets = vec![Target::Trashcan];
+    targets.extend(content_ids.iter().cloned().map(Target::Entry));
     t.items.clear();
-    save_trashcan(&state, &t)?;
+    transaction::run(&state.paths, targets, || {
+        save_trashcan(state, &t)?;
+        for cid in &content_ids {
+            entries::delete_entry(&state.paths.entries_dir, cid)?;
+        }
+        Ok(())
+    })?;
     Ok(Value::Null)
 }
 
@@ -543,22 +560,22 @@ pub async fn delete_item_from_trashcan(
 fn delete_item_from_trashcan_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store()?;
     let mut t = load_trashcan(&state)?;
     let removed_item = t.remove_item(&id);
-    save_trashcan(&state, &t)?;
-
-    // Clean up entries/<id>.hosts files for the permanently deleted item
-    // (and any children if it was a folder).
-    if let Some(item) = &removed_item {
-        if let Some(data) = item.get("data") {
-            let mut content_ids = Vec::new();
-            manifest::collect_content_ids(std::slice::from_ref(data), &mut content_ids);
-            for cid in &content_ids {
-                let _ = entries::delete_entry(&state.paths.entries_dir, cid);
-            }
-        }
+    let mut content_ids = Vec::new();
+    if let Some(data) = removed_item.as_ref().and_then(|item| item.get("data")) {
+        manifest::collect_content_ids(std::slice::from_ref(data), &mut content_ids);
     }
+    let mut targets = vec![Target::Trashcan];
+    targets.extend(content_ids.iter().cloned().map(Target::Entry));
+    transaction::run(&state.paths, targets, || {
+        save_trashcan(state, &t)?;
+        for cid in &content_ids {
+            entries::delete_entry(&state.paths.entries_dir, cid)?;
+        }
+        Ok(())
+    })?;
 
     Ok(json!(removed_item.is_some()))
 }
@@ -574,7 +591,7 @@ pub async fn restore_item_from_trashcan(
 fn restore_item_from_trashcan_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store()?;
     let mut t = load_trashcan(&state)?;
     let item = match t.remove_item(&id) {
         Some(item) => item,
@@ -595,8 +612,14 @@ fn restore_item_from_trashcan_inner(state: &AppState, args: Args) -> Result<Valu
 
     let mut m = load_manifest(&state)?;
     manifest::insert_node(&mut m.root, node, parent_id.as_deref());
-    save_manifest(&state, &m)?;
-    save_trashcan(&state, &t)?;
+    transaction::run(
+        &state.paths,
+        vec![Target::State, Target::Manifest, Target::Trashcan],
+        || {
+            save_manifest(state, &m)?;
+            save_trashcan(state, &t)
+        },
+    )?;
     Ok(json!(true))
 }
 
@@ -607,6 +630,7 @@ pub async fn get_hosts_content(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    let _guard = state.lock_store()?;
     let id = arg_str(&args, 0, "id")?;
     let content = entries::read_entry(&state.paths.entries_dir, id)?;
     Ok(json!(content))
@@ -618,6 +642,7 @@ pub async fn set_hosts_content(
     args: Args,
 ) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
+    let _guard = state.lock_store()?;
     let id = arg_str(&args, 0, "id")?.to_string();
     let content = args
         .get(1)
@@ -1315,7 +1340,7 @@ pub async fn export_data<R: Runtime>(
         Err(e) => return Err(format!("invalid save path: {e}")),
     };
 
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store().map_err(|e| e.to_string())?;
     if let Err(e) = import_export::export_to_file(&dest_path, &state.paths) {
         log::warn!("export failed: {e}");
         return Ok(Value::Bool(false));
@@ -1378,7 +1403,7 @@ pub async fn import_data<R: Runtime>(
         }
     };
 
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store().map_err(|e| e.to_string())?;
     match import_export::import_backup_bytes(&bytes, &state.paths) {
         Ok(result) => Ok(result),
         Err(e) => Err(format!("import failed: {e}")),
@@ -1403,7 +1428,7 @@ pub async fn import_data_from_url(state: State<'_, AppState>, args: Args) -> Res
         }
     };
 
-    let _guard = state.store_lock.lock().expect("store lock poisoned");
+    let _guard = state.lock_store().map_err(|e| e.to_string())?;
     match import_export::import_backup_bytes(&bytes, &state.paths) {
         Ok(result) => Ok(result),
         Err(e) => Err(format!("import failed: {e}")),
@@ -1822,10 +1847,7 @@ pub async fn apply_data_dir<R: Runtime>(
     // root is a degraded fallback, so even a missing pointer must still
     // restart to leave recovery — never short-circuit there, or the dialog's
     // button spins forever on a no-op that never restarts.
-    if is_default
-        && !data_dir_pointer::pointer_exists()
-        && state.data_dir_recovery.is_none()
-    {
+    if is_default && !data_dir_pointer::pointer_exists() && state.data_dir_recovery.is_none() {
         return Ok(json!({ "changed": false }));
     }
 
@@ -1851,14 +1873,9 @@ pub async fn apply_data_dir<R: Runtime>(
             // Hold store_lock for the copy, like export_data. This
             // serializes against the manifest/trashcan read-modify-write
             // cycles (renderer edits and refresh's stamp step), keeping
-            // those files consistent in the copy. Note: refresh writes
-            // entry files *outside* this lock (see refresh.rs), so a
-            // remote refresh landing mid-copy could pair a freshly written
-            // entry with a slightly older manifest stamp in the copy —
-            // harmless, since each file is written atomically and the app
-            // re-refreshes after the imminent restart. Synchronous because
-            // the data is small and we restart right after.
-            let _guard = state.store_lock.lock().expect("store lock poisoned");
+            // those files and entry content consistent in the copy. Network
+            // refreshes fetch outside the lock, then acquire it to write.
+            let _guard = state.lock_store()?;
             fs_copy::copy_dir_recursive(&current_root, &target)?;
         }
         // Prepare and verify the target can host the full v5 layout AND is

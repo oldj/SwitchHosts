@@ -191,7 +191,7 @@ async fn remote_test() -> String {
 
 async fn api_list(State(state): State<AppRouterState>) -> Response {
     let app_state = state.app.state::<AppState>();
-    match Manifest::load(&app_state.paths) {
+    match app_state.read_manifest() {
         Ok(manifest) => {
             let flat = flatten_root(&manifest.root);
             Json(json!({ "success": true, "data": flat })).into_response()
@@ -219,7 +219,7 @@ async fn api_toggle(State(state): State<AppRouterState>, Query(q): Query<IdQuery
     log::info!("toggle: {id}");
 
     let app_state = state.app.state::<AppState>();
-    let manifest = match Manifest::load(&app_state.paths) {
+    let manifest = match app_state.read_manifest() {
         Ok(m) => m,
         Err(e) => {
             log::warn!("manifest load failed: {e}");
@@ -313,9 +313,13 @@ async fn apply_toggle_in_backend(
         multi_chose_folder_switch_all,
     );
 
-    let content =
-        hosts_apply::aggregate_selected_content(&proposed.root, &app_state.paths, remove_duplicate)
+    let content = {
+        let _guard = app_state
+            .lock_store()
             .map_err(|e| ToggleError::Storage(e.to_string()))?;
+        hosts_apply::aggregate_selected_content(&proposed.root, &app_state.paths, remove_duplicate)
+            .map_err(|e| ToggleError::Storage(e.to_string()))?
+    };
 
     commands::apply_aggregated_content(app, app_state.inner(), &content)
         .await
@@ -328,7 +332,9 @@ async fn apply_toggle_in_backend(
     // meantime — saving our stale snapshot would clobber that. Same
     // reasoning as the remote-refresh path in `refresh.rs`.
     {
-        let _guard = app_state.store_lock.lock().expect("store lock poisoned");
+        let _guard = app_state
+            .lock_store()
+            .map_err(|e| ToggleError::Persist(e.to_string()))?;
         let mut fresh =
             Manifest::load(&app_state.paths).map_err(|e| ToggleError::Persist(e.to_string()))?;
         manifest::set_on_state_of_item(

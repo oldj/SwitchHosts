@@ -246,3 +246,117 @@ fn move_and_restore_round_trip_without_duplicates() {
     assert_eq!(load_manifest(&fixture.state).unwrap().root.len(), 1);
     assert_eq!(load_trashcan(&fixture.state).unwrap().items.len(), 1);
 }
+
+#[test]
+fn failed_second_metadata_write_rolls_back_and_retry_does_not_duplicate() {
+    for operation in [Operation::Move, Operation::Restore] {
+        let fixture = Fixture::populated();
+        let blocked = fixture.state.paths.root.join("trashcan.json.tmp");
+        std::fs::create_dir(&blocked).unwrap();
+        let before = fixture.snapshot();
+        assert!(run(&fixture.state, operation).is_err());
+        assert_eq!(
+            fixture.snapshot(),
+            before,
+            "{operation:?}: all files must roll back"
+        );
+        std::fs::remove_dir(blocked).unwrap();
+        run(&fixture.state, operation).unwrap();
+        run(&fixture.state, operation).unwrap();
+        let manifest = load_manifest(&fixture.state).unwrap();
+        let trashcan = load_trashcan(&fixture.state).unwrap();
+        match operation {
+            Operation::Move => {
+                assert!(manifest.root.is_empty());
+                assert_eq!(trashcan.items.len(), 2);
+            }
+            Operation::Restore => {
+                assert_eq!(manifest.root.len(), 2);
+                assert!(trashcan.items.is_empty());
+            }
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[test]
+fn failed_list_save_restores_collapsed_state_too() {
+    let fixture = Fixture::populated();
+    std::fs::create_dir(fixture.state.paths.root.join("manifest.json.tmp")).unwrap();
+    let before = fixture.snapshot();
+    assert!(set_list_inner(
+        &fixture.state,
+        vec![json!([
+            {"id":"folder", "type":"folder", "is_collapsed":true, "children":[]}
+        ])]
+    )
+    .is_err());
+    assert_eq!(fixture.snapshot(), before);
+}
+
+#[test]
+fn failed_trashcan_save_never_deletes_contents() {
+    for operation in [Operation::Clear, Operation::Delete] {
+        let fixture = Fixture::populated();
+        std::fs::create_dir(fixture.state.paths.root.join("trashcan.json.tmp")).unwrap();
+        let before = fixture.snapshot();
+        assert!(run(&fixture.state, operation).is_err());
+        assert_eq!(fixture.snapshot(), before, "{operation:?}");
+    }
+}
+
+#[test]
+fn unreadable_content_blocks_permanent_deletion_before_any_writes() {
+    for operation in [Operation::Clear, Operation::Delete] {
+        let fixture = Fixture::populated();
+        let content = entries::entry_path(&fixture.state.paths.entries_dir, "child").unwrap();
+        std::fs::remove_file(&content).unwrap();
+        std::fs::create_dir(content).unwrap();
+        let before = fixture.snapshot();
+        assert!(run(&fixture.state, operation).is_err());
+        assert_eq!(fixture.snapshot(), before, "{operation:?}");
+    }
+}
+
+#[test]
+fn permanent_deletion_removes_nested_contents_but_preserves_live_hosts() {
+    for operation in [Operation::Clear, Operation::Delete] {
+        let fixture = Fixture::populated();
+        run(&fixture.state, operation).unwrap();
+        assert!(load_trashcan(&fixture.state).unwrap().items.is_empty());
+        assert!(
+            !entries::entry_path(&fixture.state.paths.entries_dir, "child")
+                .unwrap()
+                .exists()
+        );
+        assert_eq!(
+            entries::read_entry(&fixture.state.paths.entries_dir, "live").unwrap(),
+            "127.0.0.1 live.test\n"
+        );
+        assert_eq!(load_manifest(&fixture.state).unwrap().root.len(), 1);
+    }
+}
+
+#[test]
+fn pending_rollback_is_recovered_before_reading_or_mutating_again() {
+    let fixture = Fixture::populated();
+    let blocked = fixture.state.paths.root.join("manifest.json.tmp");
+    let before = fixture.snapshot();
+    let error = transaction::run(&fixture.state.paths, vec![Target::Manifest], || {
+        std::fs::write(&fixture.state.paths.manifest_file, b"interrupted").unwrap();
+        std::fs::create_dir(&blocked).unwrap();
+        Err::<(), _>(StorageError::Io {
+            path: "injected".into(),
+            reason: "injected".into(),
+        })
+    })
+    .unwrap_err();
+    assert!(error.to_string().contains("rollback incomplete"));
+    assert!(fixture.state.read_manifest().is_err());
+    assert!(run(&fixture.state, Operation::Move).is_err());
+    std::fs::remove_dir(blocked).unwrap();
+    assert_eq!(fixture.state.read_manifest().unwrap().root[0]["id"], "live");
+    assert_eq!(fixture.snapshot(), before);
+    run(&fixture.state, Operation::Move).unwrap();
+    assert_eq!(load_trashcan(&fixture.state).unwrap().items.len(), 2);
+}

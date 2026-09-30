@@ -31,7 +31,7 @@ use tauri::{
 
 use crate::i18n::menu_labels;
 use crate::lifecycle;
-use crate::storage::{manifest::Manifest, AppState, StorageError};
+use crate::storage::{AppState, StorageError};
 
 pub const TRAY_ID: &str = "main-tray";
 pub const TRAY_WINDOW_LABEL: &str = "tray";
@@ -362,7 +362,7 @@ pub fn refresh_title<R: Runtime>(app: &AppHandle<R>, state: &AppState) -> Result
         let cfg = state.config.lock().expect("config mutex poisoned");
         cfg.show_title_on_tray
     };
-    let manifest = Manifest::load(&state.paths)?;
+    let manifest = state.read_manifest()?;
     let title = compute_tray_title(&manifest.root, show);
     set_tray_title(app, title.as_deref());
     Ok(())

@@ -432,6 +432,13 @@ pub fn persist_window_geometry<R: Runtime>(window: &WebviewWindow<R>, app_state:
         }
     };
 
+    let _guard = match app_state.lock_store() {
+        Ok(guard) => guard,
+        Err(error) => {
+            log::warn!("cannot persist geometry before storage recovery: {error}");
+            return;
+        }
+    };
     let mut state_file = StateFile::load(&app_state.paths.state_file);
     state_file.window.main = Some(geometry);
     if let Err(e) = state_file.save(&app_state.paths.state_file) {

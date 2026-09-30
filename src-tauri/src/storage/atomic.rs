@@ -19,9 +19,17 @@ pub fn atomic_write(dest: &Path, contents: &[u8]) -> Result<(), StorageError> {
     }
 
     let tmp = tmp_sibling(dest);
-    std::fs::write(&tmp, contents).map_err(|e| StorageError::io(tmp.display().to_string(), e))?;
-    std::fs::rename(&tmp, dest).map_err(|e| StorageError::io(dest.display().to_string(), e))?;
-    Ok(())
+    let result = std::fs::write(&tmp, contents)
+        .map_err(|e| StorageError::io(tmp.display().to_string(), e))
+        .and_then(|()| {
+            std::fs::rename(&tmp, dest).map_err(|e| StorageError::io(dest.display().to_string(), e))
+        });
+    if result.is_err() {
+        // A failed write is not a recovery record. Leave only the original
+        // destination; transaction journals carry any required undo data.
+        let _ = std::fs::remove_file(&tmp);
+    }
+    result
 }
 
 fn tmp_sibling(path: &Path) -> PathBuf {
