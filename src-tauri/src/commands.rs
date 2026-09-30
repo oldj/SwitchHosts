@@ -434,7 +434,7 @@ pub async fn set_list(state: State<'_, AppState>, args: Args) -> Result<Value, S
         }
     };
     let _guard = state.store_lock.lock().expect("store lock poisoned");
-    let mut m = load_manifest(&state).unwrap_or_default();
+    let mut m = load_manifest(&state)?;
     m.root = root;
     save_manifest(&state, &m)?;
     Ok(Value::Null)
@@ -477,8 +477,8 @@ pub async fn move_many_to_trashcan(
 }
 
 fn move_ids_to_trashcan(state: &AppState, ids: &[String]) -> Result<(), StorageError> {
-    let mut m = load_manifest(state).unwrap_or_default();
-    let mut t = load_trashcan(state).unwrap_or_default();
+    let mut m = load_manifest(state)?;
+    let mut t = load_trashcan(state)?;
     for id in ids {
         if let Some((node, parent_id)) = manifest::remove_node(&mut m.root, id) {
             t.add_item(node, parent_id);
@@ -505,7 +505,7 @@ pub async fn clear_trashcan(
 ) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let _guard = state.store_lock.lock().expect("store lock poisoned");
-    let mut t = load_trashcan(&state).unwrap_or_default();
+    let mut t = load_trashcan(&state)?;
 
     // Collect all content ids from every trashcan item before clearing,
     // then delete the corresponding entries/<id>.hosts files.
@@ -532,7 +532,7 @@ pub async fn delete_item_from_trashcan(
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
     let _guard = state.store_lock.lock().expect("store lock poisoned");
-    let mut t = load_trashcan(&state).unwrap_or_default();
+    let mut t = load_trashcan(&state)?;
     let removed_item = t.remove_item(&id);
     save_trashcan(&state, &t)?;
 
@@ -559,7 +559,7 @@ pub async fn restore_item_from_trashcan(
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
     let _guard = state.store_lock.lock().expect("store lock poisoned");
-    let mut t = load_trashcan(&state).unwrap_or_default();
+    let mut t = load_trashcan(&state)?;
     let item = match t.remove_item(&id) {
         Some(item) => item,
         None => return Ok(json!(false)),
@@ -577,7 +577,7 @@ pub async fn restore_item_from_trashcan(
         return Ok(json!(false));
     }
 
-    let mut m = load_manifest(&state).unwrap_or_default();
+    let mut m = load_manifest(&state)?;
     manifest::insert_node(&mut m.root, node, parent_id.as_deref());
     save_manifest(&state, &m)?;
     save_trashcan(&state, &t)?;
@@ -1326,6 +1326,76 @@ mod export_file_name_tests {
             export_file_name_for(now),
             "switchhosts_20260509_121436.789.json"
         );
+    }
+}
+
+#[cfg(test)]
+mod storage_load_error_tests {
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicBool, AtomicU64};
+    use std::sync::Mutex;
+
+    use super::move_ids_to_trashcan;
+    use crate::storage::{AppConfig, AppState, V5Paths};
+
+    fn test_state(name: &str) -> (AppState, PathBuf) {
+        let root = std::env::temp_dir().join(format!(
+            "switchhosts-commands-{name}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("system clock should be after unix epoch")
+                .as_nanos()
+        ));
+        let paths = V5Paths::under(root.clone());
+        paths.ensure_dirs().expect("create storage directories");
+        let state = AppState {
+            paths,
+            config: Mutex::new(AppConfig::default()),
+            store_lock: Mutex::new(()),
+            config_write_lock: Mutex::new(()),
+            update_check_lock: tokio::sync::Mutex::new(()),
+            is_will_quit: AtomicBool::new(false),
+            last_geometry_persist_ms: AtomicU64::new(0),
+            data_dir_recovery: None,
+        };
+        (state, root)
+    }
+
+    #[test]
+    fn move_to_trashcan_preserves_corrupt_manifest() {
+        let (state, root) = test_state("manifest-error");
+        let corrupt = br#"{"root":["unfinished"}"#;
+        std::fs::write(&state.paths.manifest_file, corrupt).expect("write corrupt manifest");
+
+        let result = move_ids_to_trashcan(&state, &["host-1".into()]);
+
+        assert!(result.is_err());
+        assert_eq!(std::fs::read(&state.paths.manifest_file).unwrap(), corrupt);
+        assert!(!state.paths.trashcan_file.exists());
+        std::fs::remove_dir_all(root).expect("remove temporary data directory");
+    }
+
+    #[test]
+    fn move_to_trashcan_preserves_corrupt_trashcan() {
+        let (state, root) = test_state("trashcan-error");
+        std::fs::write(
+            &state.paths.manifest_file,
+            br#"{"format":"switchhosts-data","schemaVersion":1,"root":[]}"#,
+        )
+        .expect("write valid manifest");
+        let corrupt = br#"{"items":["unfinished"]"#;
+        std::fs::write(&state.paths.trashcan_file, corrupt).expect("write corrupt trashcan");
+
+        let result = move_ids_to_trashcan(&state, &["host-1".into()]);
+
+        assert!(result.is_err());
+        assert_eq!(std::fs::read(&state.paths.trashcan_file).unwrap(), corrupt);
+        assert_eq!(
+            std::fs::read_to_string(&state.paths.manifest_file).unwrap(),
+            r#"{"format":"switchhosts-data","schemaVersion":1,"root":[]}"#
+        );
+        std::fs::remove_dir_all(root).expect("remove temporary data directory");
     }
 }
 

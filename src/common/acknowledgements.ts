@@ -45,4 +45,5 @@ export default [
   { name: 'Chen, Ting-An', link: 'https://github.com/nrps9909' },
   { name: 'wuziji', link: 'https://github.com/ziji-wu' },
   { name: 'kingdom8', link: 'https://github.com/zbeosf' },
+  { name: 'cui fliter', link: 'https://github.com/cuishuang' },
 ]
