@@ -250,20 +250,24 @@ export const isValidDomain = (s: string): boolean => {
   return true
 }
 
-// Extract a bare domain from user input: accepts a bare domain or a
-// pasted URL (with scheme / path / port / userinfo / trailing dot) and
-// returns its hostname. Returns null when no valid domain can be
-// extracted.
+// Extract a bare domain or the hostname of a network URL. Use the standard
+// parser for URL authorities so invalid ports and userinfo cannot silently
+// discard part of the input. HTTP(S), FTP and WS(S) URLs are supported.
 export const extractDomain = (input: string): string | null => {
   const v = input.trim()
-  if (!v) return null
+  // Backslashes are treated as path separators by special URL schemes, which
+  // can make an apparent userinfo/hostname pair resolve to a different host.
+  // Require an unambiguous input instead of silently repairing it.
+  if (!v || /[\s\\]/.test(v)) return null
   if (isValidDomain(v)) return v
 
   const scheme = v.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//)
-  let rest = scheme ? v.slice(scheme[0].length) : v
-  rest = rest.split(/[/?#]/)[0]
-  rest = rest.split('@').pop() || ''
-  rest = rest.split(':')[0]
-  if (rest.endsWith('.')) rest = rest.slice(0, -1)
-  return isValidDomain(rest) ? rest : null
+  try {
+    const url = new URL(scheme ? v : `https://${v}`)
+    if (!['http:', 'https:', 'ftp:', 'ws:', 'wss:'].includes(url.protocol)) return null
+    const domain = url.hostname.replace(/\.$/, '')
+    return isValidDomain(domain) ? domain : null
+  } catch {
+    return null
+  }
 }

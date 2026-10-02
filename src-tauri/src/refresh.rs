@@ -3,13 +3,12 @@
 //! Mirrors the Electron implementation in
 //! [src/main/actions/hosts/refresh.ts] and [src/main/libs/cron.ts]:
 //!
-//! - `refresh_one` fetches the URL of a remote node, writes the new
-//!   content to `entries/<id>.hosts` if it differs from the current
-//!   contents, and updates `last_refresh` / `last_refresh_ms` on the
-//!   node in the manifest.
+//! - `refresh_one` fetches a URL or resolves a domain list, writes the new
+//!   content to `entries/<id>.hosts` if it differs, and commits metadata
+//!   and content together. Domain failures retain their own cached IPs.
 //! - The background scanner wakes every 60 seconds and calls
 //!   `refresh_one` on every remote node whose `refresh_interval`
-//!   has elapsed since `last_refresh_ms`.
+//!   has elapsed since `last_attempt_ms` (or legacy `last_refresh_ms`).
 //!
 //! Locking discipline (per implementation-notes A5): the HTTP fetch
 //! happens *outside* `store_lock`, since it can block for many
@@ -26,7 +25,7 @@
 //! `refresh_all` fan-out — N nodes × up to the 30s fetch timeout.
 //! Lock order is always refresh-lock → `store_lock`, never the reverse.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -53,6 +52,33 @@ pub enum RefreshOutcome {
     Unchanged { node: Value },
 }
 
+impl RefreshOutcome {
+    /// A batch may write useful content while some queries failed. Keep that
+    /// distinct from full success on both command and HTTP API surfaces.
+    pub fn into_renderer_value(self) -> Value {
+        let (node, changed) = match self {
+            Self::Updated { node } => (node, true),
+            Self::Unchanged { node } => (node, false),
+        };
+        let status = node.get("domain_refresh_status").and_then(Value::as_str);
+        let failure = if node.get("source").and_then(Value::as_str) == Some("domain") {
+            match status {
+                Some("partial") => Some(("domain_partial", "Some domains could not be resolved. Previous addresses were kept where available.")),
+                Some("failed") => Some(("domain_failed", "No domains could be resolved. Previous addresses were kept where available.")),
+                _ => None,
+            }
+        } else {
+            None
+        };
+        match failure {
+            Some((code, message)) => {
+                json!({ "success": false, "code": code, "message": message, "changed": changed, "data": node })
+            }
+            None => json!({ "success": true, "changed": changed, "data": node }),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum RefreshError {
     /// Node id doesn't exist in the manifest.
@@ -61,6 +87,8 @@ pub enum RefreshError {
     NotRemote,
     /// Node has no URL set.
     NoUrl,
+    /// The target or its cached data changed while a request was outstanding.
+    SourceChanged,
     /// HTTP / network failure, file:// read failure, etc.
     Fetch { message: String },
     /// Filesystem failure during the write or manifest update.
@@ -73,6 +101,10 @@ impl RefreshError {
             RefreshError::InvalidId => ("invalid_id", "node not found".to_string()),
             RefreshError::NotRemote => ("not_remote", "node is not a remote hosts".to_string()),
             RefreshError::NoUrl => ("no_url", "remote node has no URL".to_string()),
+            RefreshError::SourceChanged => (
+                "source_changed",
+                "Remote source or cached content changed during refresh; its old result was discarded.".to_string(),
+            ),
             RefreshError::Fetch { message } => ("fetch_failed", message),
             RefreshError::Storage { message } => ("storage_failed", message),
         };
@@ -138,82 +170,37 @@ async fn refresh_one_inner<R: Runtime>(
 
     // Step 1: take a consistent snapshot, then release the store lock
     // before fetching from the network.
-    let manifest = state.read_manifest().map_err(|e| RefreshError::Storage {
-        message: e.to_string(),
-    })?;
-    let snapshot = match find_node(&manifest.root, id) {
-        Some(n) => n,
-        None => return Err(RefreshError::InvalidId),
-    };
-    if snapshot.get("type").and_then(Value::as_str) != Some("remote") {
-        return Err(RefreshError::NotRemote);
-    }
-    let url = match snapshot.get("url").and_then(Value::as_str) {
-        Some(u) if !u.is_empty() => u.to_string(),
-        _ => return Err(RefreshError::NoUrl),
-    };
-    let source = snapshot
-        .get("source")
-        .and_then(Value::as_str)
-        .unwrap_or("url")
-        .to_string();
+    let snapshot = read_refresh_snapshot(state, id)?;
 
     // Step 2: fetch the new content. May take seconds; lockless.
     // Domain-sourced nodes resolve via the configured DoH provider
     // instead of an HTTP fetch; everything downstream (write, stamp,
     // events) is shared with the URL path.
-    let new_content = if source == "domain" {
-        resolve_domain_content(state, &url).await?
-    } else {
-        fetch_remote(&url, state).await?
+    let (new_content, batch_results) = match &snapshot.target {
+        RefreshTarget::Domains(domains) => {
+            let cached =
+                crate::dns::cached_domain_results(&snapshot.node, domains, &snapshot.content);
+            let (provider_label, attempts) = resolve_domain_batch(state, domains).await;
+            let now_ms = chrono::Utc::now().timestamp_millis();
+            let results = crate::dns::merge_domain_results(
+                domains,
+                attempts,
+                &cached,
+                &format_timestamp(now_ms),
+                now_ms,
+            );
+            (
+                crate::dns::build_batch_hosts_content(&results, &provider_label),
+                Some(results),
+            )
+        }
+        RefreshTarget::Url(url) => (fetch_remote(url, state).await?, None),
     };
 
     // Step 3: re-acquire the manifest under the store lock and stamp
     // last_refresh / last_refresh_ms on the (possibly relocated) node.
-    let (updated_snapshot, content_changed) = {
-        let _guard = state.lock_store().map_err(|e| RefreshError::Storage {
-            message: e.to_string(),
-        })?;
-        let mut manifest = Manifest::load(&state.paths).map_err(|e| RefreshError::Storage {
-            message: e.to_string(),
-        })?;
-        let now_ms = chrono::Utc::now().timestamp_millis();
-        let stamp = format_timestamp(now_ms);
-        let touched = stamp_node(&mut manifest.root, id, &stamp, now_ms);
-        if !touched {
-            // The node was deleted while fetching. Do not recreate its content.
-            return Err(RefreshError::InvalidId);
-        }
-        // Compare with the entries file (always LF on disk). The
-        // remote payload may use CRLF, so normalize before comparing —
-        // otherwise a CRLF response would defeat the equality check on
-        // every poll and we'd emit a spurious "content changed" event each
-        // tick.
-        let old_content = entries::read_entry(&state.paths.entries_dir, id).map_err(|e| {
-            RefreshError::Storage {
-                message: e.to_string(),
-            }
-        })?;
-        let new_content_lf = entries::normalize_to_lf(&new_content);
-        let content_changed = old_content != new_content_lf;
-        if content_changed {
-            entries::write_entry(&state.paths.entries_dir, id, &new_content_lf).map_err(|e| {
-                RefreshError::Storage {
-                    message: e.to_string(),
-                }
-            })?;
-        }
-
-        manifest
-            .save(&state.paths)
-            .map_err(|e| RefreshError::Storage {
-                message: e.to_string(),
-            })?;
-        (
-            find_node(&manifest.root, id).unwrap_or(snapshot.clone()),
-            content_changed,
-        )
-    };
+    let (updated_snapshot, content_changed) =
+        commit_refresh(state, id, &snapshot, &new_content, batch_results.as_deref())?;
 
     // Step 4: tell the UI. Both events match the Electron broadcast
     // names so the existing renderer subscribers fire unchanged.
@@ -234,6 +221,88 @@ async fn refresh_one_inner<R: Runtime>(
             node: updated_snapshot,
         })
     }
+}
+
+struct RefreshSnapshot {
+    node: Value,
+    target: RefreshTarget,
+    content: String,
+}
+
+fn read_refresh_snapshot(state: &AppState, id: &str) -> Result<RefreshSnapshot, RefreshError> {
+    let _guard = state.lock_store().map_err(storage_error)?;
+    let manifest = Manifest::load(&state.paths).map_err(storage_error)?;
+    let node = find_node(&manifest.root, id).ok_or(RefreshError::InvalidId)?;
+    let target = refresh_target(&node)?;
+    let content = entries::read_entry(&state.paths.entries_dir, id).map_err(storage_error)?;
+    Ok(RefreshSnapshot {
+        node,
+        target,
+        content,
+    })
+}
+
+/// Recheck the request snapshot and commit content plus per-domain metadata
+/// under the same lock and undo journal. Readers cannot observe a half batch,
+/// and a storage failure restores both the prior content and its timestamps.
+fn commit_refresh(
+    state: &AppState,
+    id: &str,
+    snapshot: &RefreshSnapshot,
+    new_content: &str,
+    batch_results: Option<&[crate::dns::DomainResult]>,
+) -> Result<(Value, bool), RefreshError> {
+    use crate::storage::transaction::{self, Target};
+
+    let _guard = state.lock_store().map_err(storage_error)?;
+    let mut manifest = Manifest::load(&state.paths).map_err(storage_error)?;
+    let current = find_node(&manifest.root, id).ok_or(RefreshError::InvalidId)?;
+    ensure_same_target(&current, &snapshot.target)?;
+    let old_content = entries::read_entry(&state.paths.entries_dir, id).map_err(storage_error)?;
+    // Import/restore can replace a node with the same id and source while the
+    // request is in flight. Preserve that content and cache, including newer
+    // success times for an unchanged IP. Ordinary title/on/interval edits do
+    // not invalidate the request.
+    let cache_changed = [
+        "domain_results",
+        "domain_refresh_status",
+        "last_refresh",
+        "last_refresh_ms",
+        "last_attempt",
+        "last_attempt_ms",
+    ]
+    .iter()
+    .any(|key| current.get(key) != snapshot.node.get(key));
+    if old_content != snapshot.content || cache_changed {
+        return Err(RefreshError::SourceChanged);
+    }
+    let now_ms = chrono::Utc::now().timestamp_millis();
+    stamp_refresh(
+        &mut manifest.root,
+        id,
+        &format_timestamp(now_ms),
+        now_ms,
+        batch_results,
+    );
+
+    // Normalize before comparing to avoid changes caused only by CRLF.
+    let new_content_lf = entries::normalize_to_lf(new_content);
+    let content_changed = old_content != new_content_lf;
+    let mut targets = vec![Target::State, Target::Manifest];
+    if content_changed {
+        targets.push(Target::Entry(id.into()));
+    }
+    transaction::run(&state.paths, targets, || {
+        if content_changed {
+            entries::write_entry(&state.paths.entries_dir, id, &new_content_lf)?;
+        }
+        manifest.save(&state.paths)
+    })
+    .map_err(storage_error)?;
+    Ok((
+        find_node(&manifest.root, id).expect("committed node exists"),
+        content_changed,
+    ))
 }
 
 /// Refresh every remote node in the manifest. Failures are collected
@@ -356,34 +425,35 @@ fn should_refresh_all_on_startup<R: Runtime>(app: &AppHandle<R>) -> bool {
 
 // ---- fetch -----------------------------------------------------------------
 
-/// Resolve a domain-sourced remote node into hosts content via the
-/// configured DoH provider. Errors keep the previous content on disk
-/// (the caller only writes on success), matching the HTTP path.
-async fn resolve_domain_content(state: &AppState, domain: &str) -> Result<String, RefreshError> {
-    if !crate::dns::is_valid_domain(domain) {
-        return Err(RefreshError::Fetch {
-            message: format!("invalid domain: {domain}"),
-        });
-    }
+/// Configuration and client errors are recorded against every domain as an
+/// attempted failure, so retries respect the interval and cached IPs survive.
+async fn resolve_domain_batch(
+    state: &AppState,
+    domains: &[String],
+) -> (
+    String,
+    Vec<Result<Vec<std::net::Ipv4Addr>, crate::dns::DnsError>>,
+) {
     let (provider_id, custom_url) = {
         let cfg = state.config.lock().expect("config mutex poisoned");
         (cfg.dns_provider.clone(), cfg.dns_custom_url.clone())
     };
-    let provider =
-        crate::dns::provider_by_id(&provider_id, &custom_url).map_err(|e| RefreshError::Fetch {
-            message: e.to_string(),
-        })?;
-    let client = http::build_client(state).map_err(|message| RefreshError::Fetch { message })?;
-    let ips = crate::dns::resolve_domain(&client, &provider, domain)
-        .await
-        .map_err(|e| RefreshError::Fetch {
-            message: e.to_string(),
-        })?;
-    Ok(crate::dns::build_domain_hosts_content(
-        domain,
-        &ips,
-        &provider.label,
-    ))
+    let prepared = crate::dns::provider_by_id(&provider_id, &custom_url)
+        .map_err(|error| error.to_string())
+        .and_then(|provider| http::build_client(state).map(|client| (provider, client)));
+    match prepared {
+        Ok((provider, client)) => {
+            let attempts = crate::dns::resolve_domains(&client, &provider, domains).await;
+            (provider.label, attempts)
+        }
+        Err(message) => (
+            String::new(),
+            domains
+                .iter()
+                .map(|_| Err(crate::dns::DnsError::Network(message.clone())))
+                .collect(),
+        ),
+    }
 }
 
 async fn fetch_remote(url: &str, state: &AppState) -> Result<String, RefreshError> {
@@ -426,6 +496,81 @@ fn read_file_url(stripped: &str, original: &str) -> Result<String, RefreshError>
 
 // ---- tree helpers ----------------------------------------------------------
 
+fn storage_error(error: crate::storage::StorageError) -> RefreshError {
+    RefreshError::Storage {
+        message: error.to_string(),
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum RefreshTarget {
+    Url(String),
+    Domains(Vec<String>),
+}
+
+fn refresh_target(node: &Value) -> Result<RefreshTarget, RefreshError> {
+    if node.get("type").and_then(Value::as_str) != Some("remote") {
+        return Err(RefreshError::NotRemote);
+    }
+    if node.get("source").and_then(Value::as_str) != Some("domain") {
+        return node
+            .get("url")
+            .and_then(Value::as_str)
+            .filter(|url| !url.is_empty())
+            .map(|url| RefreshTarget::Url(url.into()))
+            .ok_or(RefreshError::NoUrl);
+    }
+    let raw: Vec<&str> = match node.get("domains") {
+        Some(Value::Array(domains)) => domains
+            .iter()
+            .map(|domain| {
+                domain.as_str().ok_or_else(|| RefreshError::Fetch {
+                    message: "Domain list must contain strings.".into(),
+                })
+            })
+            .collect::<Result<_, _>>()?,
+        Some(_) => {
+            return Err(RefreshError::Fetch {
+                message: "Domain list must be an array.".into(),
+            })
+        }
+        None => node
+            .get("url")
+            .and_then(Value::as_str)
+            .into_iter()
+            .collect(),
+    };
+    let mut seen = HashSet::new();
+    let mut domains = Vec::new();
+    for raw_domain in raw {
+        let domain = raw_domain.trim().to_ascii_lowercase();
+        if domain.is_empty() {
+            continue;
+        }
+        if !crate::dns::is_valid_domain(&domain) {
+            return Err(RefreshError::Fetch {
+                message: format!("Invalid domain: {domain}"),
+            });
+        }
+        if seen.insert(domain.clone()) {
+            domains.push(domain);
+        }
+    }
+    if domains.is_empty() {
+        return Err(RefreshError::Fetch {
+            message: "At least one domain is required.".into(),
+        });
+    }
+    Ok(RefreshTarget::Domains(domains))
+}
+
+fn ensure_same_target(current: &Value, expected: &RefreshTarget) -> Result<(), RefreshError> {
+    match refresh_target(current) {
+        Ok(target) if &target == expected => Ok(()),
+        _ => Err(RefreshError::SourceChanged),
+    }
+}
+
 fn find_node(nodes: &[Value], id: &str) -> Option<Value> {
     for node in nodes {
         if node.get("id").and_then(Value::as_str) == Some(id) {
@@ -440,17 +585,39 @@ fn find_node(nodes: &[Value], id: &str) -> Option<Value> {
     None
 }
 
-fn stamp_node(nodes: &mut [Value], id: &str, ts_str: &str, ts_ms: i64) -> bool {
+fn stamp_refresh(
+    nodes: &mut [Value],
+    id: &str,
+    ts_str: &str,
+    ts_ms: i64,
+    results: Option<&[crate::dns::DomainResult]>,
+) -> bool {
     for node in nodes.iter_mut() {
         if node.get("id").and_then(Value::as_str) == Some(id) {
             if let Some(obj) = node.as_object_mut() {
-                obj.insert("last_refresh".to_string(), json!(ts_str));
-                obj.insert("last_refresh_ms".to_string(), json!(ts_ms));
+                let status = results.map(crate::dns::domain_refresh_status);
+                obj.insert("last_attempt".to_string(), json!(ts_str));
+                obj.insert("last_attempt_ms".to_string(), json!(ts_ms));
+                if status != Some("failed") {
+                    obj.insert("last_refresh".to_string(), json!(ts_str));
+                    obj.insert("last_refresh_ms".to_string(), json!(ts_ms));
+                }
+                if let Some(results) = results {
+                    obj.insert(
+                        "domains".to_string(),
+                        json!(results
+                            .iter()
+                            .map(|result| &result.domain)
+                            .collect::<Vec<_>>()),
+                    );
+                    obj.insert("domain_results".to_string(), json!(results));
+                    obj.insert("domain_refresh_status".to_string(), json!(status));
+                }
                 return true;
             }
         }
         if let Some(children) = node.get_mut("children").and_then(Value::as_array_mut) {
-            if stamp_node(children, id, ts_str, ts_ms) {
+            if stamp_refresh(children, id, ts_str, ts_ms, results) {
                 return true;
             }
         }
@@ -483,22 +650,27 @@ fn collect_due_remote_ids(nodes: &[Value], now_ms: i64) -> Vec<String> {
         // that was an oversight: local reads are cheap and "auto
         // refresh from a file watched on disk" is a real workflow.
         let is_domain = node.get("source").and_then(Value::as_str) == Some("domain");
-        // Domain-sourced nodes carry a bare domain in `url` — accept it
-        // directly; URL-sourced nodes keep the http/https/file scheme
-        // requirement.
-        let url_ok = match node.get("url").and_then(Value::as_str) {
-            Some(u) if is_domain => !u.is_empty(),
-            Some(u) => {
-                u.starts_with("http://") || u.starts_with("https://") || u.starts_with("file://")
+        // Domain lists and legacy single-domain URLs are both valid.
+        // URL-sourced nodes keep the http/https/file scheme requirement.
+        let url_ok = if is_domain {
+            refresh_target(node).is_ok()
+        } else {
+            match node.get("url").and_then(Value::as_str) {
+                Some(u) => {
+                    u.starts_with("http://")
+                        || u.starts_with("https://")
+                        || u.starts_with("file://")
+                }
+                None => false,
             }
-            None => false,
         };
         if !url_ok {
             return;
         }
         let last_ms = node
-            .get("last_refresh_ms")
+            .get("last_attempt_ms")
             .and_then(Value::as_i64)
+            .or_else(|| node.get("last_refresh_ms").and_then(Value::as_i64))
             .unwrap_or(0);
         let due = last_ms == 0 || (now_ms - last_ms) / 1000 >= interval_sec;
         if due {
@@ -535,6 +707,417 @@ fn format_timestamp(ms: i64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    struct Fixture(AppState);
+
+    impl Fixture {
+        fn new() -> Self {
+            let root = std::env::temp_dir().join(format!(
+                "switchhosts-refresh-{}-{}",
+                std::process::id(),
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            ));
+            let paths = crate::storage::V5Paths::under(root);
+            paths.ensure_dirs().unwrap();
+            Self(AppState {
+                paths,
+                config: Mutex::new(crate::storage::AppConfig::default()),
+                store_lock: Mutex::new(()),
+                application_recovery: Default::default(),
+                config_write_lock: Mutex::new(()),
+                update_check_lock: tokio::sync::Mutex::new(()),
+                is_will_quit: AtomicBool::new(false),
+                last_geometry_persist_ms: std::sync::atomic::AtomicU64::new(0),
+                data_dir_recovery: None,
+            })
+        }
+    }
+
+    impl Drop for Fixture {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0.paths.root);
+        }
+    }
+
+    #[test]
+    fn refresh_commit_rolls_back_content_and_metadata_when_manifest_save_fails() {
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        let node = json!({"id":"batch", "type":"remote", "source":"domain", "domains":["a.test"], "last_refresh_ms":100});
+        Manifest {
+            root: vec![node.clone()],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        entries::write_entry(&state.paths.entries_dir, "batch", "1.2.3.4 a.test\n").unwrap();
+        let snapshot = read_refresh_snapshot(state, "batch").unwrap();
+        let previous_manifest = std::fs::read(&state.paths.manifest_file).unwrap();
+        let previous_state = std::fs::read(&state.paths.state_file).unwrap();
+        std::fs::create_dir(state.paths.root.join("manifest.json.tmp")).unwrap();
+        let results = crate::dns::merge_domain_results(
+            &["a.test".into()],
+            vec![Ok(vec!["5.6.7.8".parse().unwrap()])],
+            &HashMap::new(),
+            "now",
+            200,
+        );
+        assert!(matches!(
+            commit_refresh(
+                state,
+                "batch",
+                &snapshot,
+                "5.6.7.8 a.test\n",
+                Some(&results)
+            ),
+            Err(RefreshError::Storage { .. })
+        ));
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "batch").unwrap(),
+            "1.2.3.4 a.test\n"
+        );
+        assert_eq!(
+            std::fs::read(&state.paths.manifest_file).unwrap(),
+            previous_manifest
+        );
+        assert_eq!(
+            std::fs::read(&state.paths.state_file).unwrap(),
+            previous_state
+        );
+        assert!(!state
+            .paths
+            .internal
+            .join("storage-transaction.json")
+            .exists());
+    }
+
+    #[test]
+    fn outdated_and_deleted_refresh_targets_do_not_write_content() {
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        let node =
+            json!({"id":"batch", "type":"remote", "source":"domain", "domains":["new.test"]});
+        Manifest {
+            root: vec![node],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        entries::write_entry(&state.paths.entries_dir, "batch", "current").unwrap();
+        let mut snapshot = read_refresh_snapshot(state, "batch").unwrap();
+        snapshot.target = RefreshTarget::Domains(vec!["old.test".into()]);
+        assert!(matches!(
+            commit_refresh(state, "batch", &snapshot, "outdated", None),
+            Err(RefreshError::SourceChanged)
+        ));
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "batch").unwrap(),
+            "current"
+        );
+        Manifest::default().save(&state.paths).unwrap();
+        entries::delete_entry(&state.paths.entries_dir, "batch").unwrap();
+        assert!(matches!(
+            commit_refresh(state, "batch", &snapshot, "outdated", None),
+            Err(RefreshError::InvalidId)
+        ));
+        assert!(!entries::entry_path(&state.paths.entries_dir, "batch")
+            .unwrap()
+            .exists());
+    }
+
+    #[test]
+    fn in_flight_results_cannot_overwrite_a_reimported_domain_cache() {
+        for query_succeeds in [false, true] {
+            for imported_ip in ["1.2.3.4", "5.6.7.8"] {
+                let fixture = Fixture::new();
+                let state = &fixture.0;
+                let node = json!({"id":"batch", "type":"remote", "source":"domain", "domains":["a.test"],
+                    "domain_results":[{"domain":"a.test", "ips":["1.2.3.4"], "status":"resolved", "last_success_ms":100}]});
+                let original_content = crate::dns::build_domain_hosts_content(
+                    "a.test",
+                    &["1.2.3.4".parse().unwrap()],
+                    "Test DoH",
+                );
+                Manifest {
+                    root: vec![node],
+                    ..Default::default()
+                }
+                .save(&state.paths)
+                .unwrap();
+                entries::write_entry(&state.paths.entries_dir, "batch", &original_content).unwrap();
+                let snapshot = read_refresh_snapshot(state, "batch").unwrap();
+                let domains = vec!["a.test".into()];
+                let cached =
+                    crate::dns::cached_domain_results(&snapshot.node, &domains, &snapshot.content);
+
+                // The request is still in flight when the user deletes the item
+                // and imports the same id/source, possibly with the same IP but
+                // a more recent successful lookup.
+                Manifest::default().save(&state.paths).unwrap();
+                entries::delete_entry(&state.paths.entries_dir, "batch").unwrap();
+                let imported_node = json!({"id":"batch", "type":"remote", "source":"domain", "domains":["a.test"],
+                    "domain_results":[{"domain":"a.test", "ips":[imported_ip], "status":"resolved", "last_success_ms":200}]});
+                let imported_content = crate::dns::build_domain_hosts_content(
+                    "a.test",
+                    &[imported_ip.parse().unwrap()],
+                    "Test DoH",
+                );
+                let backup = json!({"format":"switchhosts-backup", "manifest":{"root":[imported_node.clone()]},
+                    "entries":{"batch":imported_content.clone()}});
+                assert_eq!(
+                    crate::import_export::import_backup_bytes(
+                        &serde_json::to_vec(&backup).unwrap(),
+                        &state.paths,
+                    )
+                    .unwrap(),
+                    json!(true)
+                );
+
+                let attempt = if query_succeeds {
+                    Ok(vec!["9.8.7.6".parse().unwrap()])
+                } else {
+                    Err(crate::dns::DnsError::NoARecord)
+                };
+                let results = crate::dns::merge_domain_results(
+                    &domains,
+                    vec![attempt],
+                    &cached,
+                    "later",
+                    300,
+                );
+                let content = crate::dns::build_batch_hosts_content(&results, "Test DoH");
+                assert!(matches!(
+                    commit_refresh(state, "batch", &snapshot, &content, Some(&results)),
+                    Err(RefreshError::SourceChanged)
+                ));
+                assert_eq!(
+                    Manifest::load(&state.paths).unwrap().root,
+                    vec![imported_node]
+                );
+                assert_eq!(
+                    entries::read_entry(&state.paths.entries_dir, "batch").unwrap(),
+                    imported_content
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn in_flight_url_result_cannot_overwrite_replaced_content() {
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        let node = json!({"id":"url", "type":"remote", "url":"https://example.test/hosts"});
+        Manifest {
+            root: vec![node.clone()],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        entries::write_entry(&state.paths.entries_dir, "url", "original").unwrap();
+        let snapshot = read_refresh_snapshot(state, "url").unwrap();
+        let backup = json!({"format":"switchhosts-backup", "manifest":{"root":[node.clone()]},
+            "entries":{"url":"imported"}});
+        crate::import_export::import_backup_bytes(
+            &serde_json::to_vec(&backup).unwrap(),
+            &state.paths,
+        )
+        .unwrap();
+        assert!(matches!(
+            commit_refresh(state, "url", &snapshot, "old response", None),
+            Err(RefreshError::SourceChanged)
+        ));
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "url").unwrap(),
+            "imported"
+        );
+        assert_eq!(Manifest::load(&state.paths).unwrap().root, vec![node]);
+    }
+
+    #[test]
+    fn in_flight_result_cannot_restore_cache_cleared_by_a_source_switch() {
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        let mut node = json!({"id":"batch", "type":"remote", "source":"domain", "domains":["a.test"],
+            "domain_results":[{"domain":"a.test", "ips":["1.2.3.4"], "status":"resolved"}]});
+        Manifest {
+            root: vec![node.clone()],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        entries::write_entry(&state.paths.entries_dir, "batch", "original").unwrap();
+        let snapshot = read_refresh_snapshot(state, "batch").unwrap();
+        // Switching to URL and back clears DNS cache provenance even if the
+        // final domain list matches the in-flight request's initial target.
+        node["source"] = json!("url");
+        node["url"] = json!("https://example.test/hosts");
+        node["domain_results"] = json!([]);
+        Manifest {
+            root: vec![node.clone()],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        node["source"] = json!("domain");
+        node["url"] = json!("a.test");
+        Manifest {
+            root: vec![node.clone()],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        assert!(matches!(
+            commit_refresh(state, "batch", &snapshot, "outdated", None),
+            Err(RefreshError::SourceChanged)
+        ));
+        assert_eq!(Manifest::load(&state.paths).unwrap().root, vec![node]);
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "batch").unwrap(),
+            "original"
+        );
+    }
+
+    #[test]
+    fn refresh_commit_preserves_concurrent_title_switch_and_interval_edits() {
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        let mut node = json!({"id":"url", "type":"remote", "url":"https://example.test/hosts",
+            "title":"before", "on":false, "refresh_interval":60});
+        Manifest {
+            root: vec![node.clone()],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        entries::write_entry(&state.paths.entries_dir, "url", "original").unwrap();
+        let snapshot = read_refresh_snapshot(state, "url").unwrap();
+        node["title"] = json!("after");
+        node["on"] = json!(true);
+        node["refresh_interval"] = json!(300);
+        Manifest {
+            root: vec![node],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        let (updated, changed) =
+            commit_refresh(state, "url", &snapshot, "new response", None).unwrap();
+        assert!(changed);
+        assert_eq!(updated["title"], "after");
+        assert_eq!(updated["on"], true);
+        assert_eq!(updated["refresh_interval"], 300);
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "url").unwrap(),
+            "new response"
+        );
+    }
+
+    #[tokio::test]
+    async fn provider_configuration_failure_still_commits_attempts_and_prunes_removed_domains() {
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        state.config.lock().unwrap().dns_provider = "not-a-provider".into();
+        let node = json!({"id":"batch", "type":"remote", "source":"domain", "domains":["a.test"], "last_refresh_ms":100,
+            "domain_results":[{"domain":"a.test", "ips":["1.2.3.4"], "status":"resolved", "last_success_ms":100}]});
+        Manifest {
+            root: vec![node.clone()],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        let original = "1.2.3.4 a.test\n5.6.7.8 removed.test\n";
+        entries::write_entry(&state.paths.entries_dir, "batch", original).unwrap();
+        let snapshot = read_refresh_snapshot(state, "batch").unwrap();
+        let domains = vec!["a.test".into()];
+        let cached = crate::dns::cached_domain_results(&node, &domains, original);
+        let (label, attempts) = resolve_domain_batch(state, &domains).await;
+        let results = crate::dns::merge_domain_results(&domains, attempts, &cached, "now", 200);
+        let content = crate::dns::build_batch_hosts_content(&results, &label);
+        let (updated, changed) =
+            commit_refresh(state, "batch", &snapshot, &content, Some(&results)).unwrap();
+        assert!(changed);
+        assert_eq!(updated["domain_refresh_status"], "failed");
+        assert_eq!(updated["last_refresh_ms"], 100);
+        assert!(updated["last_attempt_ms"].as_i64().unwrap() > 100);
+        assert_eq!(updated["domain_results"][0]["status"], "stale");
+        let persisted = entries::read_entry(&state.paths.entries_dir, "batch").unwrap();
+        assert!(persisted.contains("1.2.3.4 a.test"));
+        assert!(!persisted.contains("removed.test"));
+    }
+
+    #[test]
+    fn domain_targets_upgrade_old_urls_and_prefer_explicit_lists() {
+        assert_eq!(
+            refresh_target(&json!({"type":"remote", "source":"domain", "url":"GitHub.com"}))
+                .unwrap(),
+            RefreshTarget::Domains(vec!["github.com".into()])
+        );
+        assert_eq!(refresh_target(&json!({"type":"remote", "source":"domain", "url":"old.test", "domains":[" A.test ", "b.test", "a.test", ""]})).unwrap(),
+            RefreshTarget::Domains(vec!["a.test".into(), "b.test".into()]));
+        assert!(refresh_target(
+            &json!({"type":"remote", "source":"domain", "url":"old.test", "domains":[]})
+        )
+        .is_err());
+        assert!(refresh_target(
+            &json!({"type":"remote", "source":"domain", "domains":["a.test", "bad domain"]})
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn stale_refresh_cannot_overwrite_a_changed_source_domain_list_or_type() {
+        let original = json!({"type":"remote", "source":"domain", "domains":["a.test", "b.test"]});
+        let target = refresh_target(&original).unwrap();
+        assert!(ensure_same_target(&original, &target).is_ok());
+        for updated in [
+            json!({"type":"remote", "source":"domain", "domains":["a.test"]}),
+            json!({"type":"remote", "source":"domain", "domains":["b.test", "a.test"]}),
+            json!({"type":"remote", "source":"url", "url":"https://a.test"}),
+            json!({"type":"local", "source":"domain", "domains":["a.test", "b.test"]}),
+        ] {
+            assert!(matches!(
+                ensure_same_target(&updated, &target),
+                Err(RefreshError::SourceChanged)
+            ));
+        }
+    }
+
+    #[test]
+    fn failed_attempt_updates_status_and_retry_clock_without_erasing_last_success() {
+        let mut nodes = vec![
+            json!({"id":"batch", "type":"remote", "source":"domain", "domains":["a.test"],
+            "refresh_interval":60, "last_refresh_ms":100, "last_refresh":"previous"}),
+        ];
+        let results = crate::dns::merge_domain_results(
+            &["a.test".into()],
+            vec![Err(crate::dns::DnsError::NoARecord)],
+            &HashMap::new(),
+            "now",
+            1_000_000,
+        );
+        stamp_refresh(&mut nodes, "batch", "now", 1_000_000, Some(&results));
+        assert_eq!(nodes[0]["domain_refresh_status"], "failed");
+        assert_eq!(nodes[0]["last_attempt_ms"], 1_000_000);
+        assert_eq!(nodes[0]["last_refresh_ms"], 100);
+        assert_eq!(nodes[0]["domain_results"][0]["status"], "failed");
+        assert!(collect_due_remote_ids(&nodes, 1_030_000).is_empty());
+        assert_eq!(collect_due_remote_ids(&nodes, 1_060_000), vec!["batch"]);
+    }
+
+    #[test]
+    fn partial_and_failed_batches_are_never_reported_as_complete_success() {
+        for (status, code) in [("partial", "domain_partial"), ("failed", "domain_failed")] {
+            let node = json!({"source":"domain", "domain_refresh_status":status});
+            let result = RefreshOutcome::Updated { node: node.clone() }.into_renderer_value();
+            assert_eq!(result["success"], false);
+            assert_eq!(result["code"], code);
+            assert_eq!(result["changed"], true);
+            assert_eq!(result["data"], node);
+        }
+    }
 
     fn tree() -> Vec<Value> {
         // Mixed types under a folder so the walk_remote / find_node /
@@ -615,7 +1198,13 @@ mod tests {
     #[test]
     fn stamp_node_writes_both_fields_and_returns_true_only_when_found() {
         let mut nodes = tree();
-        let touched = stamp_node(&mut nodes, "remote-2", "2026-05-09 14:00:00", 1_700_000);
+        let touched = stamp_refresh(
+            &mut nodes,
+            "remote-2",
+            "2026-05-09 14:00:00",
+            1_700_000,
+            None,
+        );
         assert!(touched);
         let stamped = find_node(&nodes, "remote-2").unwrap();
         assert_eq!(
@@ -634,7 +1223,7 @@ mod tests {
             Some(0)
         );
 
-        assert!(!stamp_node(&mut nodes, "missing-id", "ts", 0));
+        assert!(!stamp_refresh(&mut nodes, "missing-id", "ts", 0, None));
     }
 
     #[test]
@@ -689,7 +1278,7 @@ mod tests {
         // interval it must not be reported.
         let mut nodes = tree();
         let now_ms: i64 = 10_000_000;
-        stamp_node(&mut nodes, "remote-2", "ignored", now_ms - 30_000);
+        stamp_refresh(&mut nodes, "remote-2", "ignored", now_ms - 30_000, None);
         let due = collect_due_remote_ids(&nodes, now_ms);
         assert!(!due.contains(&"remote-2".into()));
         // remote-1 (last_ms=0) is still due.

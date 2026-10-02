@@ -207,6 +207,11 @@ const List = (props: Props) => {
   )
 
   useOnBroadcast(events.reload_list, loadHostsData)
+  // Refreshes also change per-domain status when the generated content is
+  // unchanged. Reload the list so reselecting an item keeps those results.
+  useOnBroadcast(events.hosts_refreshed, () => {
+    loadHostsData().catch((error: unknown) => console.error(error))
+  })
   useOnBroadcast(
     events.hosts_content_changed,
     (hostsId: string) => {

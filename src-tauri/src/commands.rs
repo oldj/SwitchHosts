@@ -27,7 +27,7 @@ use crate::http;
 use crate::http_api;
 use crate::import_export;
 use crate::lifecycle::{self, MAIN_WINDOW_LABEL};
-use crate::refresh::{self, RefreshOutcome};
+use crate::refresh;
 use crate::storage::{
     data_dir_pointer, entries, fs_copy,
     manifest::{self, Manifest},
@@ -1081,9 +1081,7 @@ pub async fn refresh_remote_hosts<R: Runtime>(
         .and_then(Value::as_str)
         .ok_or_else(|| "refresh_remote_hosts: args[0] must be a string".to_string())?;
     match refresh::refresh_one(&app, state.inner(), id).await {
-        Ok(RefreshOutcome::Updated { node }) | Ok(RefreshOutcome::Unchanged { node }) => {
-            Ok(json!({ "success": true, "data": node }))
-        }
+        Ok(outcome) => Ok(outcome.into_renderer_value()),
         Err(e) => Ok(e.into_renderer_value()),
     }
 }
@@ -1099,8 +1097,10 @@ pub async fn refresh_all_remote_hosts<R: Runtime>(
     let payload: Vec<Value> = results
         .into_iter()
         .map(|(id, outcome)| match outcome {
-            Ok(RefreshOutcome::Updated { node }) | Ok(RefreshOutcome::Unchanged { node }) => {
-                json!({ "id": id, "success": true, "data": node })
+            Ok(outcome) => {
+                let mut value = outcome.into_renderer_value();
+                value["id"] = json!(id);
+                value
             }
             Err(e) => {
                 let mut v = e.into_renderer_value();

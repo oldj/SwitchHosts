@@ -449,25 +449,13 @@ async fn api_refresh(State(state): State<AppRouterState>, Query(q): Query<IdQuer
     Json(refresh_result_value(result)).into_response()
 }
 
-/// Shape a refresh outcome for the wire. Successes mirror the
-/// `refresh_remote_hosts` command's `{success, data}` and add
-/// `changed`, which the command drops — over HTTP there's no
-/// `hosts_refreshed` event to listen for, so "did anything actually
-/// move?" has to travel in the response. Failures reuse the command's
-/// `{success: false, code, message}` so both surfaces speak the same
-/// error vocabulary.
+/// Share the command's response shape, including `changed` because HTTP
+/// callers cannot listen for `hosts_refreshed`. Partial domain failures
+/// carry `success: false` and the committed node in `data`, so callers can
+/// distinguish usable cached results from a fully successful refresh.
 fn refresh_result_value(result: Result<RefreshOutcome, RefreshError>) -> Value {
     match result {
-        Ok(RefreshOutcome::Updated { node }) => json!({
-            "success": true,
-            "changed": true,
-            "data": node,
-        }),
-        Ok(RefreshOutcome::Unchanged { node }) => json!({
-            "success": true,
-            "changed": false,
-            "data": node,
-        }),
+        Ok(outcome) => outcome.into_renderer_value(),
         Err(e) => e.into_renderer_value(),
     }
 }

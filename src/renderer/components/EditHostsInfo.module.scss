@@ -1,9 +1,13 @@
 .ln {
-  margin-bottom: 20px;
+  margin-bottom: var(--edit-hosts-field-gap, 20px);
 
   &:last-child {
     margin-bottom: 0;
   }
+}
+
+.domain_form {
+  --edit-hosts-field-gap: 8px;
 }
 
 .refresh_info {
@@ -12,4 +16,62 @@
   span {
     margin-right: 8px;
   }
+}
+
+.domain_editor {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-default);
+  background: var(--mantine-color-body);
+
+  &:focus-within {
+    border-color: var(--mantine-primary-color-filled);
+  }
+
+  &[data-invalid] {
+    border-color: var(--mantine-color-error);
+  }
+}
+
+.line_numbers,
+.domain_input {
+  box-sizing: content-box;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 20px;
+  height: 120px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.line_numbers {
+  flex: 0 0 36px;
+  padding-inline: 0 8px;
+  text-align: right;
+  overflow: hidden;
+  color: var(--swh-font-color-weak);
+  background: var(--mantine-color-default-hover);
+  user-select: none;
+}
+
+.domain_input {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  padding-inline: 10px;
+  border: 0;
+  margin: 0;
+  outline: 0;
+  resize: none;
+  color: inherit;
+  background: transparent;
+
+  &::placeholder {
+    color: var(--mantine-color-placeholder);
+  }
+}
+
+.domain_error {
+  overflow-wrap: anywhere;
 }

@@ -178,6 +178,73 @@ it('does not publish a stale load over a newer save', async () => {
   expect(mocks.getBasicData).toHaveBeenCalledTimes(2)
 })
 
+it('keeps newer refresh data when loads from separate consumers finish out of order', async () => {
+  const firstRead = deferred<any>()
+  const secondRead = deferred<any>()
+  mocks.getBasicData.mockReturnValueOnce(firstRead.promise).mockReturnValueOnce(secondRead.promise)
+  const { store, result } = setup()
+  let firstLoad!: Promise<void>, secondLoad!: Promise<void>
+  await act(async () => {
+    firstLoad = result.current.first.loadHostsData()
+  })
+  await act(async () => {
+    secondLoad = result.current.second.loadHostsData()
+  })
+  const refreshed = {
+    list: [{ id: 'domain', type: 'remote', last_attempt_ms: 200 }],
+    trashcan: [{ data: list('deleted')[0], add_time_ms: 1, parent_id: null }],
+    version: 'test',
+    application_recovery: null,
+  }
+  await act(async () => {
+    secondRead.resolve(refreshed)
+    await secondLoad
+  })
+  await act(async () => {
+    firstRead.resolve({
+      list: [{ id: 'domain', type: 'remote', last_attempt_ms: 100 }],
+      trashcan: [],
+      version: 'test',
+      application_recovery: { status: 'unknown' },
+    })
+    await firstLoad
+  })
+  expect(store.get(hostsDataAtom)).toEqual(refreshed)
+  expect(result.current.first.applicationRecovery).toBeNull()
+  expect(result.current.second.applicationRecovery).toBeNull()
+  expect(mocks.getBasicData).toHaveBeenCalledTimes(2)
+})
+
+it('does not let a load retry after a save supersede a newer consumer reload', async () => {
+  const firstRead = deferred<any>()
+  const retryRead = deferred<any>()
+  mocks.getBasicData
+    .mockReturnValueOnce(firstRead.promise)
+    .mockReturnValueOnce(retryRead.promise)
+    .mockResolvedValueOnce({ list: list('refreshed'), trashcan: [], version: 'test' })
+  const { store, result } = setup()
+  let oldLoad!: Promise<void>
+  await act(async () => {
+    oldLoad = result.current.first.loadHostsData()
+  })
+  await act(async () => {
+    await result.current.second.setList(list('saved'))
+  })
+  await act(async () => {
+    firstRead.resolve({ list: list('original'), trashcan: [], version: 'test' })
+  })
+  expect(mocks.getBasicData).toHaveBeenCalledTimes(2)
+  await act(async () => {
+    await result.current.second.loadHostsData()
+  })
+  await act(async () => {
+    retryRead.resolve({ list: list('saved'), trashcan: [], version: 'test' })
+    await oldLoad
+  })
+  expect(store.get(hostsDataAtom).list).toEqual(list('refreshed'))
+  expect(mocks.getBasicData).toHaveBeenCalledTimes(3)
+})
+
 it('keeps a successful save when only the tray refresh fails', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {})
   mocks.updateTrayTitle.mockRejectedValue(new Error('tray unavailable'))

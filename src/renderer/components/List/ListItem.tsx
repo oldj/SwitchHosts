@@ -11,6 +11,7 @@ import ItemIcon from '@renderer/components/ItemIcon'
 import SwitchButton from '@renderer/components/SwitchButton'
 import { actions, agent } from '@renderer/core/agent'
 import { PopupMenu } from '@renderer/core/PopupMenu'
+import { getErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useHostsData from '@renderer/models/useHostsData'
 import useI18n from '@renderer/models/useI18n'
@@ -115,12 +116,21 @@ const ListItem = (props: Props) => {
                 .refreshHosts(data.id)
                 .then((r) => {
                   if (!r.success) {
-                    console.error(r.message || r.code || 'Error!')
+                    showErrorNotification({
+                      title: lang.refresh,
+                      message:
+                        r.code === 'domain_partial' || r.code === 'domain_failed'
+                          ? lang.domain_resolution_incomplete
+                          : r.message || r.code || lang.fail,
+                    })
                     return
                   }
                 })
                 .catch((e) => {
-                  console.error(e.message)
+                  showErrorNotification({
+                    title: lang.refresh,
+                    message: getErrorMessage(e, lang.fail),
+                  })
                 })
                 .finally(() => {
                   if (refToastRefresh.current) {

@@ -1,9 +1,11 @@
 import { FolderModeType, IHostsListObject, IOperationResult } from '@common/data'
+import { getDomainList, getRefreshTime, mergeRefreshMetadata } from '@common/dns'
 import events from '@common/events'
 import * as hostsFn from '@common/hostsFn'
 import { Button, Group, ScrollArea, Stack, Text } from '@mantine/core'
 import BrowserLink from '@renderer/components/BrowserLink'
 import ConfirmModal from '@renderer/components/ConfirmModal'
+import DomainResolutionResults from '@renderer/components/DomainResolutionResults'
 import ItemIcon from '@renderer/components/ItemIcon'
 import { actions, agent } from '@renderer/core/agent'
 import {
@@ -25,38 +27,47 @@ const RightPanel = () => {
   const { lang } = useI18n()
   const { currentHosts, hostsData, setCurrentHosts, isHostsInTrashcan, loadHostsData } =
     useHostsData()
-  const [ruleCount, setRuleCount] = useState<number | null>(null)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [ruleCount, setRuleCount] = useState<{ id: string; value: number } | null>(null)
+  const [refreshingIds, setRefreshingIds] = useState<Set<string>>(() => new Set())
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
-  const refLoadingId = useRef<string | null>(null)
+  const ruleCountRequestRef = useRef(0)
 
   const hosts = currentHosts
   const type = hosts?.type || 'local'
   const hasContent = !!hosts && (type === 'local' || type === 'remote')
+  const isRefreshing = !!hosts && refreshingIds.has(hosts.id)
+  const currentRuleCount = ruleCount?.id === hosts?.id ? ruleCount?.value : null
+
+  useEffect(() => {
+    if (!hosts?.id) return
+    const latest = hostsFn.findItemById(hostsData.list, hosts.id)
+    if (!latest) return
+    // A fast initial refresh can finish before the new item is selected.
+    // Recover its metadata from the reloaded list even if that event was missed.
+    setCurrentHosts((current) => mergeRefreshMetadata(current, latest))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hosts?.id, hostsData.list])
 
   const loadRuleCount = async (id: string) => {
-    refLoadingId.current = id
+    const request = ++ruleCountRequestRef.current
     try {
       const content: string = (await actions.getHostsContent(id)) || ''
-      if (refLoadingId.current !== id) return
-      setRuleCount(countRules(content))
+      if (ruleCountRequestRef.current !== request) return
+      setRuleCount({ id, value: countRules(content) })
     } catch {
-      if (refLoadingId.current !== id) return
+      if (ruleCountRequestRef.current !== request) return
       setRuleCount(null)
     }
   }
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- fetch rule count or reset when current hosts changes */
-    if (!hosts) {
-      refLoadingId.current = null
-      setRuleCount(null)
-      return
-    }
-    if (hasContent) {
+    setRuleCount(null)
+    if (hosts && hasContent) {
       loadRuleCount(hosts.id)
-    } else {
-      setRuleCount(null)
+    }
+    return () => {
+      ruleCountRequestRef.current += 1
     }
     /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -75,16 +86,7 @@ const RightPanel = () => {
     (refreshed: IHostsListObject) => {
       if (!hosts || refreshed.id !== hosts.id) return
       if (hasContent) loadRuleCount(hosts.id)
-      if (
-        refreshed.last_refresh !== hosts.last_refresh ||
-        refreshed.last_refresh_ms !== hosts.last_refresh_ms
-      ) {
-        setCurrentHosts({
-          ...hosts,
-          last_refresh: refreshed.last_refresh,
-          last_refresh_ms: refreshed.last_refresh_ms,
-        })
-      }
+      setCurrentHosts((current) => mergeRefreshMetadata(current, refreshed))
     },
     [hosts, hasContent],
   )
@@ -136,19 +138,15 @@ const RightPanel = () => {
   }
 
   const onRefresh = () => {
-    if (!hosts || hosts.type !== 'remote') return
-    setIsRefreshing(true)
+    if (!hosts || hosts.type !== 'remote' || refreshingIds.has(hosts.id)) return
+    setRefreshingIds((ids) => new Set(ids).add(hosts.id))
     actions
       .refreshHosts(hosts.id)
       .then((r: IOperationResult) => {
+        if (r.data) {
+          setCurrentHosts((current) => mergeRefreshMetadata(current, r.data))
+        }
         if (r?.success) {
-          if (r.data) {
-            setCurrentHosts({
-              ...hosts,
-              last_refresh: r.data.last_refresh,
-              last_refresh_ms: r.data.last_refresh_ms,
-            })
-          }
           showSuccessNotification({
             title: lang.refresh,
             message: lang.success,
@@ -156,7 +154,10 @@ const RightPanel = () => {
         } else {
           showErrorNotification({
             title: lang.refresh,
-            message: r?.message || (r?.code ? String(r.code) : lang.fail),
+            message:
+              r?.code === 'domain_partial' || r?.code === 'domain_failed'
+                ? lang.domain_resolution_incomplete
+                : r?.message || (r?.code ? String(r.code) : lang.fail),
           })
         }
       })
@@ -166,7 +167,13 @@ const RightPanel = () => {
           message: getErrorMessage(e, lang.fail),
         })
       })
-      .finally(() => setIsRefreshing(false))
+      .finally(() =>
+        setRefreshingIds((ids) => {
+          const next = new Set(ids)
+          next.delete(hosts.id)
+          return next
+        }),
+      )
   }
 
   if (!hosts) {
@@ -221,15 +228,26 @@ const RightPanel = () => {
 
         <Stack gap="8px" className={styles.section}>
           <InfoRow label={lang.hosts_type} value={lang[type] || type} />
-          {hasContent && ruleCount != null ? (
-            <InfoRow label={lang.rules} value={String(ruleCount)} />
+          {hasContent && currentRuleCount != null ? (
+            <InfoRow label={lang.rules} value={String(currentRuleCount)} />
           ) : null}
         </Stack>
 
         {type === 'remote' ? (
           <Stack gap="8px" className={styles.section}>
             {hosts.source === 'domain' ? (
-              <InfoRow label={lang.source_domain} value={hosts.url || '—'} mono />
+              <>
+                <InfoRow
+                  label={lang.domain_list}
+                  value={getDomainList(hosts).map((domain, index) => (
+                    <span key={`${domain}-${index}`} style={{ display: 'block' }}>
+                      {domain}
+                    </span>
+                  ))}
+                  mono
+                />
+                <DomainResolutionResults hosts={hosts} />
+              </>
             ) : (
               <InfoRow
                 label="URL"
@@ -245,8 +263,14 @@ const RightPanel = () => {
             )}
             <InfoRow
               label={lang.last_refresh.replace(/[:：]\s*$/, '')}
-              value={hosts.last_refresh || 'N/A'}
+              value={getRefreshTime(hosts.last_refresh) || 'N/A'}
             />
+            {hosts.source === 'domain' && getRefreshTime(hosts.last_attempt) ? (
+              <InfoRow
+                label={lang.domain_last_attempt.replace(/[:：]\s*$/, '')}
+                value={getRefreshTime(hosts.last_attempt)}
+              />
+            ) : null}
             {inTrashcan ? null : (
               <Button
                 size="compact-sm"
