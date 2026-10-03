@@ -21,7 +21,10 @@ const applicationRecoveryAtom = atom<IApplicationRecovery | null>(null)
 
 // Share the queue across hook consumers in the same window/store. A failed
 // save must not poison subsequent saves or let responses publish out of order.
-const saves = new WeakMap<ReturnType<typeof useStore>, { tail: Promise<void>; revision: number }>()
+const saves = new WeakMap<
+  ReturnType<typeof useStore>,
+  { tail: Promise<void>; revision: number; loadGeneration: number }
+>()
 
 export default function useHostsData() {
   const [savedHostsData, setHostsData] = useAtom(hostsDataAtom)
@@ -41,15 +44,21 @@ export default function useHostsData() {
       : savedCurrentHosts
   const store = useStore()
   const { lang } = useI18n()
-  if (!saves.has(store)) saves.set(store, { tail: Promise.resolve(), revision: 0 })
+  if (!saves.has(store)) {
+    saves.set(store, { tail: Promise.resolve(), revision: 0, loadGeneration: 0 })
+  }
   const queue = saves.get(store)!
 
   const loadHostsData = async () => {
-    // Discard a read that started before a more recent save was requested.
+    // Background refreshes can trigger overlapping loads in separate consumers.
+    // Only the latest load may publish; saves still make that load retry.
+    const generation = ++queue.loadGeneration
     for (;;) {
       const revision = queue.revision
       await queue.tail
+      if (generation !== queue.loadGeneration) return
       const data = await actions.getBasicData()
+      if (generation !== queue.loadGeneration) return
       if (revision === queue.revision) {
         setHostsData(data)
         setApplicationRecovery(data.application_recovery ?? null)

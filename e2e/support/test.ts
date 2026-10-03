@@ -11,6 +11,19 @@ interface MockHostEntry {
   type?: string
   on?: boolean
   url?: string
+  source?: 'url' | 'domain'
+  domains?: string[]
+  domain_results?: Array<{
+    domain: string
+    ips: string[]
+    status: 'resolved' | 'stale' | 'failed'
+    last_success?: string
+    last_success_ms?: number
+    error?: string
+  }>
+  domain_refresh_status?: 'complete' | 'partial' | 'failed'
+  last_attempt?: string
+  last_attempt_ms?: number
   refresh_interval?: number
   last_refresh?: string
   last_refresh_ms?: number
@@ -58,6 +71,7 @@ declare global {
       failNextSaveAndRestore: (failure?: 'cancelled' | 'content_changed' | 'transport') => void
       failNextApply: (result?: { code?: string; message?: string }) => void
       failNextRefresh: (result?: { code?: string; message?: string }) => void
+      setNextDomainRefreshFailures: (failures?: Record<string, string>) => void
       delayNextImport: (ms?: number) => void
       failNextImport: (result?: string | false | null) => void
       delayNextImportFromUrl: (ms?: number) => void

@@ -169,6 +169,7 @@
     calls: [],
     nextApplyResult: null,
     nextRefreshResult: null,
+    nextDomainRefreshFailures: {},
     nextCheckUpdateResult: { has_update: false },
     nextCheckUpdateDelayMs: 0,
   }
@@ -181,6 +182,33 @@
 
   if (searchParams.get('e2eAutoCheckUpdate') === 'false') {
     state.configs.auto_check_update = false
+  }
+
+  if (searchParams.get('e2eLegacyDomain') === 'true') {
+    state.list.push({
+      id: 'legacy-domain',
+      title: 'Legacy Domain',
+      type: 'remote',
+      source: 'domain',
+      url: 'github.com',
+      refresh_interval: 0,
+      on: false,
+    })
+    state.contents['legacy-domain'] = '203.0.113.10 github.com\n'
+  }
+
+  if (searchParams.get('e2eMalformedDomain') === 'true') {
+    state.list.push({
+      id: 'malformed-domain',
+      title: 'Imported Domains',
+      type: 'remote',
+      source: 'domain',
+      domains: ['github.com', 'bad domain'],
+      last_attempt: { invalid: true },
+      refresh_interval: 0,
+      on: false,
+    })
+    state.contents['malformed-domain'] = '198.51.100.10 github.com\n'
   }
 
   if (searchParams.get('e2eUpdateAvailable') === 'true') {
@@ -273,6 +301,59 @@
       return { success: false, message: 'Remote hosts entry not found' }
     }
 
+    if (item.source === 'domain') {
+      const domains = Array.isArray(item.domains) ? item.domains : item.url ? [item.url] : []
+      const previous = item.domain_results || []
+      const failures = state.nextDomainRefreshFailures
+      state.nextDomainRefreshFailures = {}
+      item.last_attempt = '2026-05-08 12:00:00'
+      item.last_attempt_ms = 1778203200000
+      item.domain_results = domains.map((domain, index) => {
+        const cached = previous.find((result) => result.domain === domain)
+        if (Object.prototype.hasOwnProperty.call(failures, domain)) {
+          return {
+            domain,
+            ips: cached?.ips || [],
+            status: cached?.ips?.length ? 'stale' : 'failed',
+            ...(cached?.last_success ? { last_success: cached.last_success } : {}),
+            ...(cached?.last_success_ms ? { last_success_ms: cached.last_success_ms } : {}),
+            error: failures[domain],
+          }
+        }
+        return {
+          domain,
+          ips: [`203.0.113.${index + 10}`, `203.0.113.${index + 110}`],
+          status: 'resolved',
+          last_success: item.last_attempt,
+          last_success_ms: item.last_attempt_ms,
+        }
+      })
+      const resolved = item.domain_results.filter((result) => result.status === 'resolved').length
+      item.domain_refresh_status =
+        resolved === domains.length ? 'complete' : resolved ? 'partial' : 'failed'
+      if (resolved) {
+        item.last_refresh = item.last_attempt
+        item.last_refresh_ms = item.last_attempt_ms
+      }
+      state.contents[id] = item.domain_results
+        .flatMap((result) =>
+          result.ips.map((ip, index) => `${index ? '# ' : ''}${ip} ${result.domain}`),
+        )
+        .join('\n')
+      if (state.contents[id]) state.contents[id] += '\n'
+      dispatchEvent('hosts_refreshed', { _args: [clone(item)] })
+      return {
+        success: item.domain_refresh_status === 'complete',
+        ...(item.domain_refresh_status !== 'complete'
+          ? {
+              code: `domain_${item.domain_refresh_status}`,
+              message: 'Some domains could not be resolved',
+            }
+          : {}),
+        data: clone(item),
+      }
+    }
+
     item.last_refresh = '2026-05-08 12:00:00'
     item.last_refresh_ms = 1778203200000
     dispatchEvent('hosts_refreshed', { _args: [clone(item)] })
@@ -313,6 +394,9 @@
         message: 'Refresh failed in e2e mock',
         ...result,
       }
+    },
+    setNextDomainRefreshFailures: (failures = {}) => {
+      state.nextDomainRefreshFailures = clone(failures)
     },
     delayNextImport: (ms = 300) => {
       state.nextImportDelayMs = ms

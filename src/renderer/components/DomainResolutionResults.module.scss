@@ -1,0 +1,46 @@
+.results {
+  min-width: 0;
+  font-size: var(--mantine-font-size-sm);
+
+  summary {
+    cursor: pointer;
+    padding: 6px 0;
+
+    > span {
+      margin-inline-end: 8px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--mantine-primary-color-filled);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+  }
+}
+
+.list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.item {
+  padding: 10px 0;
+  border-top: 1px solid var(--swh-border-color-1);
+}
+
+.domain,
+.ips,
+.error {
+  overflow-wrap: anywhere;
+}
+
+.status {
+  white-space: normal;
+  height: auto;
+  min-height: 20px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  text-transform: none;
+  line-height: 1.4;
+}

@@ -71,6 +71,17 @@ const KEY_V5_FOLDER_MODE: &str = "mode";
 
 const SYSTEM_NODE_ID: &str = "0";
 
+// Additional remote metadata shares the source envelope on disk. The
+// renderer's `source` discriminator is distinct from that envelope.
+const REMOTE_METADATA: &[(&str, &str)] = &[
+    ("source", "kind"),
+    ("domains", "domains"),
+    ("domain_results", "domainResults"),
+    ("domain_refresh_status", "domainRefreshStatus"),
+    ("last_attempt", "lastAttempt"),
+    ("last_attempt_ms", "lastAttemptMs"),
+];
+
 // ===========================================================================
 // renderer (legacy) → v5 (on save)
 // ===========================================================================
@@ -169,6 +180,11 @@ fn legacy_node_to_v5(node: &Value, collapsed: &mut Vec<String>) -> Value {
             if let Some(v) = obj.get(KEY_LEGACY_REFRESH_INTERVAL).cloned() {
                 source.insert(KEY_V5_SOURCE_REFRESH_INTERVAL_SEC.into(), v);
             }
+            for (legacy, persisted) in REMOTE_METADATA {
+                if let Some(value) = obj.get(*legacy) {
+                    source.insert((*persisted).into(), value.clone());
+                }
+            }
             if !source.is_empty() {
                 out.insert(KEY_V5_SOURCE.into(), Value::Object(source));
             }
@@ -219,6 +235,9 @@ fn legacy_node_to_v5(node: &Value, collapsed: &mut Vec<String>) -> Value {
 }
 
 fn is_modeled_legacy_key(key: &str) -> bool {
+    if REMOTE_METADATA.iter().any(|(legacy, _)| *legacy == key) {
+        return true;
+    }
     matches!(
         key,
         KEY_ID
@@ -309,12 +328,20 @@ fn v5_node_to_legacy(node: &Value, collapsed_set: &HashSet<&str>) -> Value {
                 if let Some(v) = source.get(KEY_V5_SOURCE_REFRESH_INTERVAL_SEC) {
                     out.insert(KEY_LEGACY_REFRESH_INTERVAL.into(), v.clone());
                 }
+                for (legacy, persisted) in REMOTE_METADATA {
+                    if let Some(value) = source.get(*persisted) {
+                        out.insert((*legacy).into(), value.clone());
+                    }
+                }
             } else {
                 // Legacy-shaped manifest — copy fields verbatim.
                 copy_if_present(obj, &mut out, KEY_LEGACY_URL);
                 copy_if_present(obj, &mut out, KEY_LEGACY_LAST_REFRESH);
                 copy_if_present(obj, &mut out, KEY_LEGACY_LAST_REFRESH_MS);
                 copy_if_present(obj, &mut out, KEY_LEGACY_REFRESH_INTERVAL);
+                for (legacy, _) in REMOTE_METADATA {
+                    copy_if_present(obj, &mut out, legacy);
+                }
             }
         }
         "group" => {
@@ -366,5 +393,39 @@ fn v5_node_to_legacy(node: &Value, collapsed_set: &HashSet<&str>) -> Value {
 fn copy_if_present(src: &Map<String, Value>, dst: &mut Map<String, Value>, key: &str) {
     if let Some(v) = src.get(key) {
         dst.insert(key.into(), v.clone());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn batch_domain_metadata_survives_v5_and_legacy_round_trips() {
+        let original = json!({
+            "id":"batch", "type":"remote", "source":"domain", "domains":["a.test", "b.test"],
+            "last_attempt":"now", "last_attempt_ms":200, "last_refresh":"before", "last_refresh_ms":100,
+            "domain_refresh_status":"partial", "domain_results":[
+                {"domain":"a.test", "ips":["1.2.3.4"], "status":"resolved", "last_success":"now", "last_success_ms":200},
+                {"domain":"b.test", "ips":[], "status":"failed", "error":"timeout"}
+            ]
+        });
+        let (persisted, collapsed) = legacy_root_to_v5(&[original.clone()]);
+        assert_eq!(persisted[0]["source"]["kind"], "domain");
+        assert_eq!(persisted[0]["source"]["domains"], original["domains"]);
+        assert_eq!(
+            v5_root_to_legacy(&persisted, &collapsed),
+            vec![original.clone()]
+        );
+        assert_eq!(v5_root_to_legacy(&[original.clone()], &[]), vec![original]);
+    }
+
+    #[test]
+    fn existing_domain_discriminator_in_extras_is_still_readable() {
+        let original = json!({"id":"old", "type":"remote", "source":{"url":"github.com", "lastRefreshMs":100}, "extras":{"source":"domain"}});
+        let legacy = v5_root_to_legacy(&[original], &[]);
+        assert_eq!(legacy[0]["source"], "domain");
+        assert_eq!(legacy[0]["url"], "github.com");
+        assert_eq!(legacy[0]["last_refresh_ms"], 100);
     }
 }
