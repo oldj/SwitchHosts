@@ -9,7 +9,9 @@ const lang: LanguageDict = {
   _app_name: 'SwitchHosts',
   domain_list: 'ドメイン一覧',
   domain_list_hint: '1行に1ドメイン。貼り付けたURLからドメインを抽出します。',
-  domain_count: '{0} 個のドメイン',
+  domain_count: '{0} / {1} 個のドメイン',
+  domain_limit_exceeded:
+    '重複を除いて最大 {0} 個のドメインを登録できます。ドメインを減らしてから保存してください。',
   domain_duplicates: '重複 {0} 件を統合',
   domain_normalized: '{0} 件を正規化',
   domain_line_error: '{0} 行目のドメインが無効です：{1}',

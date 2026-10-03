@@ -6,15 +6,15 @@ final result: passed
 
 ## Evidence
 
-- Visual target: `/Users/wu/.codex/generated_images/01a0fc46-9df4-72f1-baaa-ee2c0784e9e4/exec-de008c57-89ef-4b0a-a91e-a211228808bf.png` (1516 × 1037).
-- Implementation: `/Users/wu/.codex/visualizations/2026/10/02/01a0fc46-9df4-72f1-baaa-ee2c0784e9e4/batch-domains.jpg` (1280 × 720).
-- Combined comparison: `/Users/wu/.codex/visualizations/2026/10/02/01a0fc46-9df4-72f1-baaa-ee2c0784e9e4/batch-domains-comparison.png`.
+- Visual target: local reference image, not checked into the repository (1516 × 1037).
+- Implementation: local screenshot, not checked into the repository (1280 × 720).
+- Combined comparison: local screenshot, not checked into the repository.
 - Browser: Codex in-app browser; light theme, Chinese, editing a saved remote/domain entry with four domains and collapsed results. The preview used isolated E2E fixtures and documentation IP addresses, not live DNS or system hosts.
 - CSS viewport: 1280 × 720, device pixel ratio 1. The generated reference includes desktop framing; its drawer region was cropped and normalized to the existing 620px application drawer width. Comparison was of the app-owned drawer, not OS chrome. The combined image is readable enough to inspect typography, input, summary and footer without an additional zoom crop.
 
 ## Comparison history
 
-1. P2: the original 20px field spacing and 24px input line height pushed refresh/results below the scroll viewport at 720px height. Evidence: `/tmp/switchhosts-domain-comparison.png`.
+1. P2: the original 20px field spacing and 24px input line height pushed refresh/results below the scroll viewport at 720px height. Evidence: local screenshot, not checked into the repository.
 2. Reduced domain-only spacing and input line height. Refresh became visible, but the result summary still ended below the scroll viewport.
 3. Domain-only field gap is now 8px, input/gutter use 20px line height with six visible lines, and refresh uses the compact button. The final combined comparison confirms input, refresh, collapsed summary and fixed actions are visible together. Expanded details remain scrollable.
 
@@ -61,3 +61,11 @@ No remaining actionable P0/P1/P2 visual findings. Validation also passed typeche
 - The edit drawer only displays results for a saved DNS source and uses its saved domains. Switching sources or editing a legacy entry's URL draft cannot present an unsaved URL as a pending DNS result.
 - Added pending labels in all nine supported language dictionaries and seven regression tests, including an actual save with its automatic refresh held pending. Independent backend and frontend reviews checked metadata acceptance, cache ownership, legacy entries and source switching.
 - Validation passed: 258 frontend unit tests, 36 targeted offline Rust tests, 54 E2E tests, typecheck, ESLint, renderer build and whitespace checks. After the final drawer source guard, the 9 remote-hosts E2E tests were rerun and passed. E2E uses isolated Tauri/DNS fixtures; the existing renderer bundle-size warning remains.
+
+## Independent review findings verified on 2026-10-03
+
+- Confirmed and reproduced private DoH templates and request URLs reaching per-domain error metadata. DNS failures now use structured error categories without arbitrary strings; provider setup, proxy setup, response parsing and transport errors retain no private endpoint details. Tests exercise real local HTTP failures and actual manifest persistence plus backup export.
+- Confirmed that domain count and total batch duration were unbounded. Saving and refresh target validation now allow at most 100 distinct domains, with localized UI feedback and no silent input truncation. A 60-second batch deadline retains completed results, cancels outstanding requests, and marks remaining domains as timed out so their previous IPs can be retained.
+- Confirmed that the background scanner only logged top-level errors. Partial and failed DNS outcomes now produce one warning per node with failed/total counts, counting stale results as failed attempts and omitting endpoint and per-domain error text. A regression captures the logger used by both startup and periodic scans.
+- Replaced machine-specific screenshot paths in this record with descriptions of local evidence. The VS Code Tauri launch configuration was verified and required no changes.
+- Validation passed: 265 frontend unit tests, 253 Rust library tests, 55 E2E tests, typecheck, ESLint, renderer build, Rust formatting and whitespace checks. Default 5-second frontend timeouts were exceeded by different existing tests on two runs; a standalone rerun with a 15-second CLI timeout passed without source or test assertion changes. E2E uses isolated Tauri/DNS fixtures; Rust HTTP regressions use loopback servers, not external DoH services. The existing renderer bundle-size warning remains.

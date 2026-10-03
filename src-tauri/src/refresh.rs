@@ -350,8 +350,38 @@ fn emit_content_changed_batch<R: Runtime>(app: &AppHandle<R>, ids: &[String]) {
 
 fn log_refresh_errors(results: &[(String, Result<RefreshOutcome, RefreshError>)]) {
     for (id, outcome) in results {
-        if let Err(e) = outcome {
-            log::warn!("{id}: {e:?}");
+        match outcome {
+            Err(e) => log::warn!("{id}: {e:?}"),
+            Ok(RefreshOutcome::Updated { node } | RefreshOutcome::Unchanged { node }) => {
+                if node.get("source").and_then(Value::as_str) != Some("domain") {
+                    continue;
+                }
+                let Some(status @ ("partial" | "failed")) =
+                    node.get("domain_refresh_status").and_then(Value::as_str)
+                else {
+                    continue;
+                };
+                let results = node
+                    .get("domain_results")
+                    .and_then(Value::as_array)
+                    .map(Vec::as_slice)
+                    .unwrap_or_default();
+                let failed = results
+                    .iter()
+                    .filter(|result| {
+                        matches!(
+                            result.get("status").and_then(Value::as_str),
+                            Some("stale" | "failed")
+                        )
+                    })
+                    .count();
+                // One summary per node; per-domain error details may contain
+                // data imported from an older client and must not reach logs.
+                log::warn!(
+                    "{id}: DNS refresh {status}: {failed}/{} domains failed",
+                    results.len()
+                );
+            }
         }
     }
 }
@@ -438,20 +468,19 @@ async fn resolve_domain_batch(
         let cfg = state.config.lock().expect("config mutex poisoned");
         (cfg.dns_provider.clone(), cfg.dns_custom_url.clone())
     };
-    let prepared = crate::dns::provider_by_id(&provider_id, &custom_url)
-        .map_err(|error| error.to_string())
-        .and_then(|provider| http::build_client(state).map(|client| (provider, client)));
+    let prepared = crate::dns::provider_by_id(&provider_id, &custom_url).and_then(|provider| {
+        http::build_client(state)
+            .map(|client| (provider, client))
+            .map_err(|_| crate::dns::DnsError::Network)
+    });
     match prepared {
         Ok((provider, client)) => {
             let attempts = crate::dns::resolve_domains(&client, &provider, domains).await;
             (provider.label, attempts)
         }
-        Err(message) => (
+        Err(error) => (
             String::new(),
-            domains
-                .iter()
-                .map(|_| Err(crate::dns::DnsError::Network(message.clone())))
-                .collect(),
+            domains.iter().map(|_| Err(error.clone())).collect(),
         ),
     }
 }
@@ -554,6 +583,14 @@ fn refresh_target(node: &Value) -> Result<RefreshTarget, RefreshError> {
         }
         if seen.insert(domain.clone()) {
             domains.push(domain);
+            if domains.len() > crate::dns::MAX_DOMAINS {
+                return Err(RefreshError::Fetch {
+                    message: format!(
+                        "A domain list can contain at most {} distinct domains.",
+                        crate::dns::MAX_DOMAINS
+                    ),
+                });
+            }
         }
     }
     if domains.is_empty() {
@@ -1048,6 +1085,54 @@ mod tests {
         assert!(!persisted.contains("removed.test"));
     }
 
+    #[tokio::test]
+    async fn batch_setup_errors_keep_safe_categories_without_configuration_details() {
+        for case in 0..3 {
+            let fixture = Fixture::new();
+            let state = &fixture.0;
+            let expected = {
+                let mut config = state.config.lock().unwrap();
+                match case {
+                    0 => {
+                        config.dns_provider = "private-provider-secret".into();
+                        crate::dns::DnsError::InvalidProvider
+                    }
+                    1 => {
+                        config.dns_provider = "custom".into();
+                        config.dns_custom_url =
+                            "https://user:secret@resolver.test/resolve?token=secret".into();
+                        crate::dns::DnsError::InvalidTemplate
+                    }
+                    _ => {
+                        config.use_proxy = true;
+                        config.proxy_host = "[private-proxy-secret".into();
+                        config.proxy_port = 8080;
+                        crate::dns::DnsError::Network
+                    }
+                }
+            };
+            if case == 2 {
+                // Fail before any request so this test never uses real DNS.
+                assert!(http::build_client(state).is_err());
+            }
+            let (label, attempts) =
+                resolve_domain_batch(state, &["a.test".into(), "b.test".into()]).await;
+            assert!(label.is_empty());
+            assert_eq!(attempts.len(), 2);
+            for attempt in attempts {
+                let error = attempt.unwrap_err();
+                assert_eq!(
+                    std::mem::discriminant(&error),
+                    std::mem::discriminant(&expected)
+                );
+                let message = error.to_string();
+                assert!(!message.contains("secret"));
+                assert!(!message.contains("resolver.test"));
+                assert!(!message.contains("private"));
+            }
+        }
+    }
+
     #[test]
     fn domain_targets_upgrade_old_urls_and_prefer_explicit_lists() {
         assert_eq!(
@@ -1065,6 +1150,94 @@ mod tests {
             &json!({"type":"remote", "source":"domain", "domains":["a.test", "bad domain"]})
         )
         .is_err());
+    }
+
+    #[test]
+    fn domain_target_limit_applies_after_case_insensitive_deduplication() {
+        assert_eq!(crate::dns::MAX_DOMAINS, 100);
+        let domains: Vec<String> = (0..100).map(|index| format!("d{index}.test")).collect();
+        let mut input = domains.clone();
+        input.extend([" D0.TEST ".into(), "d99.test".into(), "".into()]);
+        assert_eq!(
+            refresh_target(&json!({"type":"remote", "source":"domain", "domains":input})).unwrap(),
+            RefreshTarget::Domains(domains)
+        );
+        input.push("one-too-many.test".into());
+        assert!(matches!(
+            refresh_target(&json!({"type":"remote", "source":"domain", "domains":input})),
+            Err(RefreshError::Fetch { .. })
+        ));
+    }
+
+    #[test]
+    fn scanner_logging_reports_batch_failures_once_without_domain_error_details() {
+        struct RecordingLogger(Mutex<Vec<String>>);
+
+        impl log::Log for RecordingLogger {
+            fn enabled(&self, metadata: &log::Metadata<'_>) -> bool {
+                metadata.level() == log::Level::Warn
+            }
+
+            fn log(&self, record: &log::Record<'_>) {
+                if self.enabled(record.metadata()) {
+                    let message = record.args().to_string();
+                    if message.starts_with("review-log-") {
+                        self.0.lock().unwrap().push(message);
+                    }
+                }
+            }
+
+            fn flush(&self) {}
+        }
+
+        static LOGGER: RecordingLogger = RecordingLogger(Mutex::new(Vec::new()));
+        log::set_logger(&LOGGER).unwrap();
+        log::set_max_level(log::LevelFilter::Warn);
+        let batch = |status, statuses: &[&str]| {
+            json!({"source":"domain", "domain_refresh_status":status, "domain_results": statuses.iter().map(|status|
+                json!({"domain":"private.test", "status":status, "ips":[], "error":"https://user:secret@resolver.test/resolve?token=secret"})
+            ).collect::<Vec<_>>()})
+        };
+        let mut url_node = batch("failed", &["failed"]);
+        url_node["source"] = json!("url");
+        // Exercise the exact log path called after startup and periodic scans.
+        log_refresh_errors(&[
+            (
+                "review-log-partial".into(),
+                Ok(RefreshOutcome::Updated {
+                    node: batch("partial", &["resolved", "stale", "failed"]),
+                }),
+            ),
+            (
+                "review-log-failed".into(),
+                Ok(RefreshOutcome::Unchanged {
+                    node: batch("failed", &["stale", "failed"]),
+                }),
+            ),
+            (
+                "review-log-complete".into(),
+                Ok(RefreshOutcome::Updated {
+                    node: batch("complete", &["resolved"]),
+                }),
+            ),
+            (
+                "review-log-url".into(),
+                Ok(RefreshOutcome::Unchanged { node: url_node }),
+            ),
+            ("review-log-error".into(), Err(RefreshError::InvalidId)),
+        ]);
+        let warnings = LOGGER.0.lock().unwrap();
+        assert_eq!(
+            warnings.as_slice(),
+            [
+                "review-log-partial: DNS refresh partial: 2/3 domains failed",
+                "review-log-failed: DNS refresh failed: 2/2 domains failed",
+                "review-log-error: InvalidId",
+            ]
+        );
+        assert!(warnings.iter().all(|warning| !warning.contains("secret")
+            && !warning.contains("resolver.test")
+            && !warning.contains("private.test")));
     }
 
     #[test]

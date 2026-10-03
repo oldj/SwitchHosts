@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getDomainList, parseDomains } from './dns'
+import { getDomainList, getRefreshTarget, parseDomains } from './dns'
 
 describe('domain list input', () => {
   it('extracts domains, ignores blank lines, deduplicates and preserves order', () => {
@@ -59,5 +59,30 @@ describe('domain list input', () => {
     expect(getDomainList({ domains: ['example.com'], url: 'github.com' })).toEqual(['example.com'])
     expect(getDomainList({ domains: [], url: 'github.com' })).toEqual([])
     expect(getDomainList(null)).toEqual([])
+  })
+})
+
+describe('domain count limit', () => {
+  const domains = Array.from({ length: 100 }, (_, index) => `d${index}.example`)
+  const item = { id: 'dns', type: 'remote' as const, source: 'domain' as const, domains }
+
+  it('allows 100 unique domains and rejects 101', () => {
+    expect(getRefreshTarget(item)).not.toBeNull()
+    expect(getRefreshTarget({ ...item, domains: [...domains, 'overflow.example'] })).toBeNull()
+  })
+
+  it('counts normalized unique domains rather than stored lines', () => {
+    expect(
+      getRefreshTarget({ ...item, domains: [...domains, '', ' D0.EXAMPLE ', 'd99.example'] }),
+    ).toBe(getRefreshTarget(item))
+  })
+
+  it('preserves every parsed domain so an oversized draft can be repaired without truncation', () => {
+    const oversized = [...domains, 'overflow.example']
+    expect(parseDomains([...oversized, 'https://D0.EXAMPLE/path'].join('\n'))).toMatchObject({
+      domains: oversized,
+      errors: [],
+      duplicates: 1,
+    })
   })
 })

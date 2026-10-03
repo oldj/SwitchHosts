@@ -6,7 +6,9 @@ export default {
   _app_name: 'SwitchHosts',
   domain_list: '도메인 목록',
   domain_list_hint: '한 줄에 도메인 하나를 입력하세요. 붙여 넣은 URL에서 도메인을 추출합니다.',
-  domain_count: '도메인 {0}개',
+  domain_count: '도메인 {0} / {1}개',
+  domain_limit_exceeded:
+    '중복을 제외하고 도메인을 최대 {0}개까지 등록할 수 있습니다. 도메인 수를 줄인 후 저장하세요.',
   domain_duplicates: '중복 {0}개 병합',
   domain_normalized: '{0}개 항목 정규화',
   domain_line_error: '{0}번째 줄은 유효한 도메인이 아닙니다: {1}',

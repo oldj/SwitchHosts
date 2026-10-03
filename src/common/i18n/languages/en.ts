@@ -7,7 +7,9 @@ export default {
   _app_name: 'SwitchHosts',
   domain_list: 'Domain list',
   domain_list_hint: 'One domain per line. Pasted URLs are converted to domains.',
-  domain_count: '{0} domains',
+  domain_count: '{0} / {1} domains',
+  domain_limit_exceeded:
+    'At most {0} unique domains are allowed. Remove some domains before saving.',
   domain_duplicates: '{0} duplicates merged',
   domain_normalized: '{0} entries normalized',
   domain_line_error: 'Line {0} is not a valid domain: {1}',

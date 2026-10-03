@@ -9,7 +9,9 @@ const lang: LanguageDict = {
   _app_name: 'SwitchHosts',
   domain_list: 'Domainliste',
   domain_list_hint: 'Eine Domain pro Zeile. Eingefügte URLs werden in Domains umgewandelt.',
-  domain_count: '{0} Domains',
+  domain_count: '{0} / {1} Domains',
+  domain_limit_exceeded:
+    'Maximal {0} unterschiedliche Domains sind erlaubt. Entfernen Sie vor dem Speichern einige Domains.',
   domain_duplicates: '{0} Duplikate zusammengeführt',
   domain_normalized: '{0} Einträge normalisiert',
   domain_line_error: 'Zeile {0} enthält keine gültige Domain: {1}',

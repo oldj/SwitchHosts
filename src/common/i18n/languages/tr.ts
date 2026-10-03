@@ -7,7 +7,9 @@ export default {
   _app_name: 'SwitchHosts',
   domain_list: 'Alan adı listesi',
   domain_list_hint: 'Her satıra bir alan adı girin. Yapıştırılan URL’lerden alan adları alınır.',
-  domain_count: '{0} alan adı',
+  domain_count: '{0} / {1} alan adı',
+  domain_limit_exceeded:
+    'En fazla {0} benzersiz alan adına izin verilir. Kaydetmeden önce bazı alan adlarını kaldırın.',
   domain_duplicates: '{0} tekrar birleştirildi',
   domain_normalized: '{0} kayıt normalleştirildi',
   domain_line_error: '{0}. satır geçerli bir alan adı değil: {1}',

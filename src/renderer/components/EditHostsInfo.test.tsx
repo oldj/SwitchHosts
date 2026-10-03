@@ -361,7 +361,7 @@ describe('EditHostsInfo domain source', () => {
     const draft = 'https://GitHub.com/path\n\napi.github.com\nGITHUB.COM\nexample.org'
     fireEvent.change(input, { target: { value: draft } })
     expect(input.value).toBe(draft)
-    expect(screen.getByText('3 domains')).toBeTruthy()
+    expect(screen.getByText('3 / 100 domains')).toBeTruthy()
     expect(screen.getByText(/1 duplicates merged/)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'OK' }))
     await waitFor(() => expect(mocks.setList).toHaveBeenCalled())
@@ -386,6 +386,82 @@ describe('EditHostsInfo domain source', () => {
     expect(input.value).toBe(draft)
     expect(input.getAttribute('aria-invalid')).toBe('true')
     expect(mocks.setList).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    { mode: 'edit', trigger: 'button' },
+    { mode: 'add', trigger: 'shortcut' },
+  ])(
+    'blocks a 101-domain $mode through the $trigger without truncating its draft',
+    async ({ mode, trigger }) => {
+      const item = { id: 'd1', type: 'remote', source: 'domain', domains: ['saved.example'] }
+      mocks.hostsData.list = [item]
+      if (mode === 'edit') {
+        openDialog(item)
+      } else {
+        openDialog()
+        fireEvent.click(screen.getByRole('radio', { name: 'Remote' }))
+        fireEvent.click(screen.getByRole('radio', { name: 'Domain' }))
+      }
+      const input = screen.getByRole('textbox', { name: 'Domain list' }) as HTMLTextAreaElement
+      const draft = Array.from({ length: 101 }, (_, index) => `d${index}.example`).join('\n')
+      fireEvent.change(input, { target: { value: draft } })
+      expect(screen.getByText('101 / 100 domains')).toBeTruthy()
+      expect(screen.getByRole('alert')).toBeTruthy()
+      if (trigger === 'button') fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+      else fireEvent.keyDown(input, { key: 'Enter', ctrlKey: true })
+      expect(mocks.setList).not.toHaveBeenCalled()
+      expect(mocks.actions.refreshHosts).not.toHaveBeenCalled()
+      await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy())
+      expect(
+        screen.getByText(
+          'At most 100 unique domains are allowed. Remove some domains before saving.',
+        ),
+      ).toBeTruthy()
+      expect(input.value).toBe(draft)
+      expect(input.getAttribute('aria-invalid')).toBe('true')
+      expect(screen.getByRole('dialog')).toBeTruthy()
+    },
+  )
+
+  it('saves 100 unique domains even when duplicate URLs and blank lines exceed 100 input lines', async () => {
+    const item = { id: 'd1', type: 'remote', source: 'domain', domains: ['saved.example'] }
+    mocks.hostsData.list = [item]
+    openDialog(item)
+    const domains = Array.from({ length: 100 }, (_, index) => `d${index}.example`)
+    const draft = [...domains, '', 'https://D0.EXAMPLE/path', 'D99.EXAMPLE'].join('\n')
+    const input = screen.getByRole('textbox', { name: 'Domain list' }) as HTMLTextAreaElement
+    fireEvent.change(input, { target: { value: draft } })
+    expect(input.value).toBe(draft)
+    expect(screen.getByText('100 / 100 domains')).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    await waitFor(() => expect(mocks.setList).toHaveBeenCalledTimes(1))
+    const saved = mocks.setList.mock.calls[0][0](structuredClone(mocks.hostsData.list)) as any[]
+    expect(saved[0].domains).toEqual(domains)
+    expect(mocks.actions.refreshHosts).toHaveBeenCalledWith('d1')
+  })
+
+  it('keeps an oversized imported list from refreshing until its 100-domain repair is saved', async () => {
+    const domains = Array.from({ length: 101 }, (_, index) => `d${index}.example`)
+    const item = { id: 'd1', type: 'remote', source: 'domain', domains }
+    mocks.hostsData.list = [item]
+    openDialog(item)
+    const refresh = screen.getByRole('button', { name: 'Save to resolve' }) as HTMLButtonElement
+    expect(refresh.disabled).toBe(true)
+    fireEvent.click(refresh)
+    expect(mocks.actions.refreshHosts).not.toHaveBeenCalled()
+    const input = screen.getByRole('textbox', { name: 'Domain list' }) as HTMLTextAreaElement
+    expect(input.value).toBe(domains.join('\n'))
+    fireEvent.change(input, { target: { value: domains.slice(0, 100).join('\n') } })
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(
+      (screen.getByRole('button', { name: 'Save to resolve' }) as HTMLButtonElement).disabled,
+    ).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    await waitFor(() => expect(mocks.actions.refreshHosts).toHaveBeenCalledWith('d1'))
+    const saved = mocks.setList.mock.calls[0][0](structuredClone(mocks.hostsData.list)) as any[]
+    expect(saved[0].domains).toEqual(domains.slice(0, 100))
   })
 
   it('blocks an empty list and does not resurrect a legacy url for an explicitly empty list', async () => {

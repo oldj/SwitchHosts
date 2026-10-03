@@ -226,6 +226,35 @@ test.describe('remote hosts', () => {
     )
   })
 
+  test('blocks more than 100 unique domains and saves the boundary without truncation', async ({
+    page,
+  }) => {
+    const drawer = await startDomainEntry(page, 'Domain Limit')
+    const input = drawer.getByRole('textbox', { name: 'Domain list', exact: true })
+    const domains = Array.from({ length: 101 }, (_, index) => `domain${index}.test`)
+    await clearMockCalls(page)
+    await input.fill(domains.join('\n'))
+    await input.press(`${selectAllModifier}+Enter`)
+    await expect(drawer).toBeVisible()
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+    await expect(input).toHaveValue(domains.join('\n'))
+    expect(setListPayloads(await getMockCalls(page))).toHaveLength(0)
+    expect((await getMockCalls(page)).some((call) => call.cmd === 'refresh_remote_hosts')).toBe(
+      false,
+    )
+
+    const allowedDomains = domains.slice(0, 100)
+    await input.fill([...allowedDomains, 'DOMAIN0.TEST', 'https://domain1.test/path'].join('\n'))
+    await drawer.getByRole('button', { name: 'OK', exact: true }).click()
+    await expect(drawer).not.toBeVisible()
+    await expect
+      .poll(async () => {
+        const entry = (await getMockState(page)).list.find((item) => item.title === 'Domain Limit')
+        return entry?.domains
+      })
+      .toEqual(allowedDomains)
+  })
+
   test('disables refresh while domain edits are unsaved', async ({ page }) => {
     let drawer = await startDomainEntry(page, 'Editable Domains')
     await drawer
@@ -324,7 +353,9 @@ test.describe('remote hosts', () => {
     await expect(input).toHaveValue('github.com\nbad domain')
     await clearMockCalls(page)
     await input.fill('github.com')
-    await expect(drawer.getByRole('button', { name: 'Save to resolve', exact: true })).toBeDisabled()
+    await expect(
+      drawer.getByRole('button', { name: 'Save to resolve', exact: true }),
+    ).toBeDisabled()
     await drawer.getByRole('button', { name: 'OK', exact: true }).click()
 
     await expect(drawer).not.toBeVisible()

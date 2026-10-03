@@ -3,6 +3,8 @@ import { extractDomain, isValidDomain } from './hostsFn'
 
 export type DnsProviderId = 'alidns' | 'dnspod' | 'cloudflare' | 'google' | 'custom'
 
+export const MAX_DOMAINS = 100
+
 export const DNS_PROVIDERS: { value: DnsProviderId; label: string }[] = [
   { value: 'alidns', label: 'Ali DoH' },
   { value: 'dnspod', label: 'DNSPod' },
@@ -115,11 +117,16 @@ export const getRefreshTarget = (hosts: IHostsListObject): string | null => {
   }
   if (source !== 'domain') return null
   const values = hosts.domains === undefined ? [hosts.url] : hosts.domains
-  if (!Array.isArray(values) || !values.every((value): value is string => typeof value === 'string')) {
+  if (
+    !Array.isArray(values) ||
+    !values.every((value): value is string => typeof value === 'string')
+  ) {
     return null
   }
   const domains = [...new Set(values.map((value) => value.trim().toLowerCase()).filter(Boolean))]
-  return !domains.length || domains.some((domain) => !isValidDomain(domain))
+  return !domains.length ||
+    domains.length > MAX_DOMAINS ||
+    domains.some((domain) => !isValidDomain(domain))
     ? null
     : JSON.stringify(['domain', domains])
 }

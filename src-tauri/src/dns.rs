@@ -9,11 +9,10 @@
 
 use std::collections::{HashMap, HashSet};
 use std::net::Ipv4Addr;
+use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
-use crate::http;
 
 #[derive(Debug, Clone)]
 pub struct DohProvider {
@@ -29,37 +28,44 @@ pub struct DohProvider {
     pub json_header: bool,
 }
 
-#[derive(Debug)]
+/// Only allow structured, non-sensitive error categories across the storage
+/// boundary. Request URLs, proxy settings, response bodies, and arbitrary
+/// transport/parser error strings must never become persisted node metadata.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DnsError {
-    Network(String),
-    Parse(String),
+    Timeout,
+    Network,
+    HttpStatus(u16),
+    Parse,
     BadStatus(i64),
     NoARecord,
-    InvalidProvider(String),
-    InvalidTemplate(String),
+    InvalidProvider,
+    InvalidTemplate,
 }
 
 impl std::fmt::Display for DnsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DnsError::Network(m) => {
+            DnsError::Timeout => write!(f, "DNS query timed out. Please retry."),
+            DnsError::Network => {
                 write!(
                     f,
-                    "DNS query failed: {m}. The DNS service can be changed in Preferences."
+                    "DNS network request failed. The DNS service can be changed in Preferences."
                 )
             }
-            DnsError::Parse(m) => write!(f, "Unexpected DNS response: {m}"),
+            DnsError::HttpStatus(status) => write!(f, "DNS service returned HTTP {status}."),
+            DnsError::Parse => write!(f, "DNS service returned an invalid response."),
             DnsError::BadStatus(s) => write!(
                 f,
                 "DNS server returned status {s}. The DNS service can be changed in Preferences."
             ),
             DnsError::NoARecord => write!(f, "Domain has no IPv4 (A) records."),
-            DnsError::InvalidProvider(id) => {
-                write!(f, "Unknown DNS provider \"{id}\". Fix it in Preferences.")
+            DnsError::InvalidProvider => {
+                write!(f, "Unknown DNS provider. Fix it in Preferences.")
             }
-            DnsError::InvalidTemplate(t) => write!(
+            DnsError::InvalidTemplate => write!(
                 f,
-                "Custom DoH template must contain the {{domain}} placeholder, got: {t}"
+                "Custom DoH template must be an HTTP(S) URL containing the {{domain}} placeholder."
             ),
         }
     }
@@ -107,8 +113,10 @@ pub fn provider_by_id(id: &str, custom_template: &str) -> Result<DohProvider, Dn
         return Ok(p);
     }
     if id == "custom" {
-        if !custom_template.contains("{domain}") {
-            return Err(DnsError::InvalidTemplate(custom_template.to_string()));
+        let valid_url = reqwest::Url::parse(&custom_template.replace("{domain}", "example.test"))
+            .is_ok_and(|url| matches!(url.scheme(), "http" | "https") && url.host_str().is_some());
+        if !custom_template.contains("{domain}") || !valid_url {
+            return Err(DnsError::InvalidTemplate);
         }
         return Ok(DohProvider {
             id: "custom".into(),
@@ -118,7 +126,7 @@ pub fn provider_by_id(id: &str, custom_template: &str) -> Result<DohProvider, Dn
             json_header: false,
         });
     }
-    Err(DnsError::InvalidProvider(id.to_string()))
+    Err(DnsError::InvalidProvider)
 }
 
 /// Validate a bare domain name (no scheme, no path). Must stay in sync
@@ -165,6 +173,8 @@ pub fn is_valid_domain(s: &str) -> bool {
 }
 
 pub const MAX_DOH_BYTES: usize = 64 * 1024;
+pub const MAX_DOMAINS: usize = 100;
+const BATCH_TIMEOUT: Duration = Duration::from_secs(60);
 
 #[derive(Deserialize)]
 struct DohAnswer {
@@ -185,8 +195,7 @@ struct DohResponse {
 /// answer order. `Status != 0`, no A records, or malformed JSON are
 /// all errors (no silent fallback).
 pub fn parse_doh_a_records(body: &str) -> Result<Vec<Ipv4Addr>, DnsError> {
-    let resp: DohResponse =
-        serde_json::from_str(body).map_err(|e| DnsError::Parse(e.to_string()))?;
+    let resp: DohResponse = serde_json::from_str(body).map_err(|_| DnsError::Parse)?;
     if resp.status != 0 {
         return Err(DnsError::BadStatus(resp.status));
     }
@@ -238,35 +247,63 @@ pub async fn resolve_domain(
     if provider.json_header {
         req = req.header("Accept", "application/dns-json");
     }
-    let response = req
-        .send()
-        .await
-        .map_err(|e| DnsError::Network(e.to_string()))?;
+    let mut response = req.send().await.map_err(classify_reqwest_error)?;
     let status = response.status();
     if !status.is_success() {
-        return Err(DnsError::Network(format!("HTTP {}", status.as_u16())));
+        return Err(DnsError::HttpStatus(status.as_u16()));
     }
-    let body = http::response_text_with_limit(response, MAX_DOH_BYTES)
-        .await
-        .map_err(DnsError::Network)?;
-    parse_doh_a_records(&body)
+    // Read bounded chunks here so timeout/network errors remain typed instead
+    // of becoming the arbitrary strings used by the general HTTP helper.
+    if response
+        .content_length()
+        .is_some_and(|size| size > MAX_DOH_BYTES as u64)
+    {
+        return Err(DnsError::Parse);
+    }
+    let mut body = Vec::new();
+    while let Some(chunk) = response.chunk().await.map_err(classify_reqwest_error)? {
+        if chunk.len() > MAX_DOH_BYTES - body.len() {
+            return Err(DnsError::Parse);
+        }
+        body.extend_from_slice(&chunk);
+    }
+    let body = std::str::from_utf8(&body).map_err(|_| DnsError::Parse)?;
+    parse_doh_a_records(body)
+}
+
+fn classify_reqwest_error(error: reqwest::Error) -> DnsError {
+    if error.is_timeout() {
+        DnsError::Timeout
+    } else if error.is_builder() {
+        DnsError::InvalidTemplate
+    } else {
+        DnsError::Network
+    }
 }
 
 /// Share the HTTP client's connection pool, with at most four outstanding
-/// queries. Indexing completed tasks restores the user's input order.
+/// queries. Indexing completed tasks restores the user's input order. A hard
+/// 60-second deadline covers the whole batch, including domains still queued.
 pub async fn resolve_domains(
     client: &reqwest::Client,
     provider: &DohProvider,
     domains: &[String],
 ) -> Vec<Result<Vec<Ipv4Addr>, DnsError>> {
+    resolve_domains_with_timeout(client, provider, domains, BATCH_TIMEOUT).await
+}
+
+async fn resolve_domains_with_timeout(
+    client: &reqwest::Client,
+    provider: &DohProvider,
+    domains: &[String],
+    timeout: Duration,
+) -> Vec<Result<Vec<Ipv4Addr>, DnsError>> {
+    let deadline = tokio::time::Instant::now() + timeout;
     let mut pending = tokio::task::JoinSet::new();
     let mut next = 0;
-    let mut results: Vec<_> = domains
-        .iter()
-        .map(|_| Err(DnsError::Network("DNS query interrupted".into())))
-        .collect();
+    let mut results: Vec<_> = domains.iter().map(|_| Err(DnsError::Timeout)).collect();
     loop {
-        while next < domains.len() && pending.len() < 4 {
+        while next < domains.len() && pending.len() < 4 && tokio::time::Instant::now() < deadline {
             let index = next;
             let domain = domains[index].clone();
             let client = client.clone();
@@ -275,10 +312,22 @@ pub async fn resolve_domains(
                 .spawn(async move { (index, resolve_domain(&client, &provider, &domain).await) });
             next += 1;
         }
-        match pending.join_next().await {
-            Some(Ok((index, result))) => results[index] = result,
-            Some(Err(error)) => log::warn!("DNS query task failed: {error}"),
-            None => break,
+        match tokio::time::timeout_at(deadline, pending.join_next()).await {
+            Ok(Some(Ok((index, result)))) => results[index] = result,
+            Ok(Some(Err(_))) => log::warn!("DNS query task failed"),
+            Ok(None) => break,
+            Err(_) => {
+                pending.abort_all();
+                // Finished tasks can already be in the completion queue when
+                // the deadline fires. Retain those results, and wait only for
+                // cancellation of the remaining HTTP futures, never their I/O.
+                while let Some(completed) = pending.join_next().await {
+                    if let Ok((index, result)) = completed {
+                        results[index] = result;
+                    }
+                }
+                break;
+            }
         }
     }
     results
@@ -476,6 +525,241 @@ pub fn build_batch_hosts_content(results: &[DomainResult], provider_label: &str)
 mod tests {
     use super::*;
     use serde_json::json;
+
+    fn assert_persisted_error_is_safe(error: DnsError, private_parts: &[&str]) {
+        let results = merge_domain_results(
+            &["example.test".into()],
+            vec![Err(error)],
+            &HashMap::new(),
+            "now",
+            100,
+        );
+        let serialized = serde_json::to_string(&results).unwrap();
+        for private in private_parts {
+            assert!(
+                !serialized.contains(private),
+                "private error detail persisted: {serialized}"
+            );
+        }
+    }
+
+    #[test]
+    fn configuration_and_parser_errors_do_not_persist_private_values() {
+        let private_template = "https://private-doh.test/resolve?token=TEST_PRIVATE_TOKEN";
+        assert_persisted_error_is_safe(
+            provider_by_id("custom", private_template).unwrap_err(),
+            &["TEST_PRIVATE_TOKEN", "private-doh.test", "https://"],
+        );
+        assert_persisted_error_is_safe(
+            provider_by_id("TEST_PRIVATE_PROVIDER", "").unwrap_err(),
+            &["TEST_PRIVATE_PROVIDER"],
+        );
+        assert_persisted_error_is_safe(
+            parse_doh_a_records(r#"{"Status":"TEST_PRIVATE_RESPONSE","Answer":[]}"#).unwrap_err(),
+            &["TEST_PRIVATE_RESPONSE"],
+        );
+    }
+
+    #[tokio::test]
+    async fn reqwest_network_errors_do_not_persist_request_urls() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            // A real transport failure: close without an HTTP response.
+            let (socket, _) = listener.accept().await.unwrap();
+            drop(socket);
+        });
+        let template = format!("http://{address}/resolve?name={{domain}}&token=TEST_PRIVATE_TOKEN");
+        let provider = provider_by_id("custom", &template).unwrap();
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let error = resolve_domain(&client, &provider, "example.test")
+            .await
+            .unwrap_err();
+        server.await.unwrap();
+        assert_eq!(error, DnsError::Network);
+        assert_persisted_error_is_safe(
+            error,
+            &["TEST_PRIVATE_TOKEN", &address.to_string(), "http://"],
+        );
+    }
+
+    #[tokio::test]
+    async fn local_http_failures_keep_safe_status_parse_and_timeout_categories() {
+        use axum::{http::StatusCode, routing::get, Router};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let app = Router::new()
+            .route(
+                "/http",
+                get(|| async { (StatusCode::BAD_GATEWAY, "TEST_PRIVATE_RESPONSE") }),
+            )
+            .route(
+                "/parse",
+                get(|| async { r#"{"Status":"TEST_PRIVATE_RESPONSE"}"# }),
+            )
+            .route(
+                "/oversized",
+                get(|| async { "x".repeat(MAX_DOH_BYTES + 1) }),
+            )
+            .route(
+                "/timeout",
+                get(|| async {
+                    tokio::time::sleep(Duration::from_secs(5)).await;
+                    "TEST_PRIVATE_RESPONSE"
+                }),
+            );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let client = reqwest::Client::builder()
+            .no_proxy()
+            .timeout(Duration::from_millis(100))
+            .build()
+            .unwrap();
+        for (path, expected) in [
+            ("http", DnsError::HttpStatus(502)),
+            ("parse", DnsError::Parse),
+            ("oversized", DnsError::Parse),
+            ("timeout", DnsError::Timeout),
+        ] {
+            let provider = provider_by_id(
+                "custom",
+                &format!("http://{address}/{path}?name={{domain}}&token=TEST_PRIVATE_TOKEN"),
+            )
+            .unwrap();
+            let error = resolve_domain(&client, &provider, "example.test")
+                .await
+                .unwrap_err();
+            assert_eq!(error, expected);
+            assert_persisted_error_is_safe(
+                error,
+                &[
+                    "TEST_PRIVATE_TOKEN",
+                    "TEST_PRIVATE_RESPONSE",
+                    &address.to_string(),
+                    "http://",
+                ],
+            );
+        }
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn response_body_transport_errors_do_not_persist_request_urls() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = [0; 4096];
+            socket.read(&mut request).await.unwrap();
+            // Truncate a declared body after the response headers succeeded.
+            socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 10000\r\nConnection: close\r\n\r\nTEST_PRIVATE_RESPONSE").await.unwrap();
+        });
+        let provider = provider_by_id(
+            "custom",
+            &format!("http://{address}/?name={{domain}}&token=TEST_PRIVATE_TOKEN"),
+        )
+        .unwrap();
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let error = resolve_domain(&client, &provider, "example.test")
+            .await
+            .unwrap_err();
+        server.await.unwrap();
+        assert_eq!(error, DnsError::Network);
+        assert_persisted_error_is_safe(
+            error,
+            &[
+                "TEST_PRIVATE_TOKEN",
+                "TEST_PRIVATE_RESPONSE",
+                &address.to_string(),
+                "http://",
+            ],
+        );
+    }
+
+    #[tokio::test]
+    async fn batch_deadline_keeps_completed_results_times_out_queue_and_cancels_connections() {
+        use std::sync::{
+            atomic::{AtomicUsize, Ordering},
+            Arc,
+        };
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let started = Arc::new(AtomicUsize::new(0));
+        let cancelled = Arc::new(AtomicUsize::new(0));
+        let (started_in_server, cancelled_in_server) = (started.clone(), cancelled.clone());
+        let server = tokio::spawn(async move {
+            let mut workers = tokio::task::JoinSet::new();
+            loop {
+                let (mut socket, _) = listener.accept().await.unwrap();
+                let started = started_in_server.clone();
+                let cancelled = cancelled_in_server.clone();
+                workers.spawn(async move {
+                    let mut request = Vec::new();
+                    let mut byte = [0];
+                    while !request.ends_with(b"\r\n\r\n") {
+                        socket.read_exact(&mut byte).await.unwrap();
+                        request.push(byte[0]);
+                    }
+                    started.fetch_add(1, Ordering::SeqCst);
+                    if String::from_utf8(request).unwrap().contains("name=fast.test") {
+                        let body = r#"{"Status":0,"Answer":[{"type":1,"data":"1.2.3.4"}]}"#;
+                        let response = format!("HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len());
+                        socket.write_all(response.as_bytes()).await.unwrap();
+                    } else {
+                        // No response: closing this connection proves the client
+                        // task was cancelled, rather than left running after return.
+                        match socket.read(&mut byte).await {
+                            Ok(0) | Err(_) => { cancelled.fetch_add(1, Ordering::SeqCst); },
+                            Ok(_) => panic!("unexpected additional request bytes"),
+                        }
+                    }
+                });
+            }
+        });
+        let provider =
+            provider_by_id("custom", &format!("http://{address}/?name={{domain}}")).unwrap();
+        let client = reqwest::Client::builder()
+            .no_proxy()
+            .timeout(Duration::from_secs(5))
+            .build()
+            .unwrap();
+        let domains = std::iter::once("fast.test".to_string())
+            .chain((1..MAX_DOMAINS).map(|index| format!("slow{index}.test")))
+            .collect::<Vec<_>>();
+        let start = tokio::time::Instant::now();
+        let results = tokio::time::timeout(
+            Duration::from_secs(1),
+            resolve_domains_with_timeout(&client, &provider, &domains, Duration::from_millis(250)),
+        )
+        .await
+        .expect("the batch must finish before the individual request timeouts");
+        assert!(
+            start.elapsed() < Duration::from_secs(1),
+            "batch exceeded its overall deadline"
+        );
+        assert_eq!(results.len(), MAX_DOMAINS);
+        assert_eq!(results[0], Ok(vec![Ipv4Addr::new(1, 2, 3, 4)]));
+        assert!(results[1..]
+            .iter()
+            .all(|result| *result == Err(DnsError::Timeout)));
+        assert_eq!(
+            started.load(Ordering::SeqCst),
+            5,
+            "queued requests must not start after the cutoff"
+        );
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while cancelled.load(Ordering::SeqCst) < 4 {
+                tokio::time::sleep(Duration::from_millis(5)).await;
+            }
+        })
+        .await
+        .expect("outstanding request connections should be closed");
+        server.abort();
+    }
 
     #[test]
     fn batch_keeps_only_configured_domains_and_merges_independent_failures() {
@@ -777,11 +1061,11 @@ mod tests {
 
         assert!(matches!(
             provider_by_id("custom", "https://no-placeholder.example/resolve"),
-            Err(DnsError::InvalidTemplate(_))
+            Err(DnsError::InvalidTemplate)
         ));
         assert!(matches!(
             provider_by_id("bogus", ""),
-            Err(DnsError::InvalidProvider(_))
+            Err(DnsError::InvalidProvider)
         ));
     }
 
@@ -825,7 +1109,7 @@ mod tests {
         ));
         assert!(matches!(
             parse_doh_a_records("not json"),
-            Err(DnsError::Parse(_))
+            Err(DnsError::Parse)
         ));
         // Answer 里全是非 A 记录 → NoARecord
         assert!(matches!(

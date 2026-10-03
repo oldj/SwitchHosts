@@ -10,6 +10,7 @@ import {
   getDomainResults,
   getRefreshTarget,
   getRefreshTime,
+  MAX_DOMAINS,
   mergeRefreshMetadata,
   parseDomains,
 } from '@common/dns'
@@ -65,6 +66,7 @@ const EditHostsInfo = () => {
   const savePendingRef = useRef<number | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const parsedDomains = useMemo(() => parseDomains(domainText), [domainText])
+  const domainLimitExceeded = parsedDomains.domains.length > MAX_DOMAINS
 
   const source = (hosts?.source as 'url' | 'domain') || 'url'
   const [isShow, setIsShow] = useState(false)
@@ -73,6 +75,7 @@ const EditHostsInfo = () => {
   const domainsChanged =
     !savedDomainSource ||
     !savedDomainsValid ||
+    domainLimitExceeded ||
     parsedDomains.errors.length > 0 ||
     !lodash.isEqual(parsedDomains.domains, savedDomains)
   const domainErrors = validateDomains
@@ -81,6 +84,9 @@ const EditHostsInfo = () => {
       )
     : []
   if (validateDomains && !domainText.trim()) domainErrors.push(lang.domain_list_empty)
+  if (domainLimitExceeded) {
+    domainErrors.push(i18n.trans('domain_limit_exceeded', [String(MAX_DOMAINS)]))
+  }
 
   const resetDomainEditor = (item?: IHostsListObject) => {
     const domains = getDomainList(item)
@@ -164,7 +170,7 @@ const EditHostsInfo = () => {
 
     if (data.type === 'remote' && (data.source as string) === 'domain') {
       setValidateDomains(true)
-      if (parsedDomains.errors.length || !parsedDomains.domains.length) {
+      if (parsedDomains.errors.length || !parsedDomains.domains.length || domainLimitExceeded) {
         return
       }
       data.domains = parsedDomains.domains
@@ -324,8 +330,11 @@ const EditHostsInfo = () => {
                 <Text component="label" htmlFor={domainInputId}>
                   {lang.domain_list}
                 </Text>
-                <Text size="xs" c="dimmed" aria-live="polite">
-                  {i18n.trans('domain_count', [String(parsedDomains.domains.length)])}
+                <Text size="xs" c={domainLimitExceeded ? 'red' : 'dimmed'} aria-live="polite">
+                  {i18n.trans('domain_count', [
+                    String(parsedDomains.domains.length),
+                    String(MAX_DOMAINS),
+                  ])}
                 </Text>
               </Group>
               <div
