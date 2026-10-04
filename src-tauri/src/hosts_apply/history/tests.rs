@@ -337,3 +337,60 @@ fn interrupted_retention_commit_recovers_both_files() {
         original_config
     );
 }
+
+#[test]
+fn config_write_after_failed_retention_rollback_survives_later_reads() {
+    let f = Fixture::new();
+    f.seed(50);
+    let blocker = f.0.paths.config_file.with_file_name("config.json.tmp");
+    let result: Result<(), StorageError> = transaction::run(
+        &f.0.paths,
+        vec![Target::Config, Target::ApplyHistory],
+        || {
+            let mut config = AppConfig::load_checked(&f.0.paths.config_file)?;
+            config.history_limit = 10;
+            config.save(&f.0.paths.config_file)?;
+            // The write failed and the config cannot yet be rolled back.
+            std::fs::create_dir(&blocker).unwrap();
+            Err(StorageError::Conflict {
+                reason: "simulated history write failure".into(),
+            })
+        },
+    );
+    assert!(result.is_err());
+    assert!(f.0.paths.internal.join("storage-transaction.json").exists());
+    std::fs::remove_dir(blocker).unwrap();
+    // The tray's config writer is allowed to retry after storage is repaired.
+    let _writer = f.0.config_write_lock.lock().unwrap();
+    f.0.config.lock().unwrap().theme = "dark".into();
+    f.0.persist_config().unwrap();
+    let _store = f.0.lock_store().unwrap();
+    let saved = AppConfig::load_checked(&f.0.paths.config_file).unwrap();
+    assert_eq!(saved.theme, "dark");
+    assert_eq!(saved.history_limit, 50);
+    assert_eq!(load(&f.path()).unwrap().len(), 50);
+}
+
+#[test]
+fn importing_hosts_without_history_does_not_require_readable_retention_config() {
+    let f = Fixture::new();
+    std::fs::write(&f.0.paths.config_file, "{broken").unwrap();
+    let backup = json!({"version": [4], "data": {
+        "list": {"tree": [{"id":"imported", "type":"local"}]},
+        "collection": {"hosts": {"data": [{"id":"imported", "content":"127.0.0.1 example.test"}]}}
+    }});
+    let result = crate::import_export::import_backup_bytes(
+        &serde_json::to_vec(&backup).unwrap(),
+        &f.0.paths,
+    )
+    .unwrap();
+    assert_eq!(result, json!(true));
+    assert_eq!(
+        std::fs::read_to_string(f.0.paths.entries_dir.join("imported.hosts")).unwrap(),
+        "127.0.0.1 example.test"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&f.0.paths.config_file).unwrap(),
+        "{broken"
+    );
+}

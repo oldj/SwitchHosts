@@ -117,3 +117,21 @@ test('history load failure exits loading state and supports retry', async ({ pag
   await expect(panel.getByText('2 saved records', { exact: true })).toBeVisible()
   await expect(panel.getByRole('button', { name: 'Delete selected' })).toBeEnabled()
 })
+
+test('a config refresh failure after a committed trim can be retried', async ({ page }) => {
+  await openHistory(page)
+  await setLimit(page, '10')
+  await page.evaluate(() => window.__SWITCHHOSTS_E2E__.failNextHistoryOperation('config_all'))
+  await page.getByRole('button', { name: 'Save and delete 40 records' }).click()
+  // The operation already committed; recovery must reload settings AND records.
+  const panel = page.getByRole('dialog', { name: 'System Hosts Version History' })
+  await expect(panel.getByRole('button', { name: 'Retry' })).toBeVisible()
+  expect((await getMockState(page)).configs.history_limit).toBe(10)
+  expect((await getMockState(page)).history).toHaveLength(10)
+  await expect(panel.getByRole('button', { name: 'Clear History' })).toBeDisabled()
+  await panel.getByRole('button', { name: 'Retry' }).click()
+  await expect(panel.getByRole('combobox', { name: 'Maximum Number of Records:' })).toHaveValue(
+    '10',
+  )
+  await expect(panel.getByText('10 saved records', { exact: true })).toBeVisible()
+})

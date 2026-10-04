@@ -164,9 +164,12 @@ impl AppState {
         })
     }
 
-    /// Persist the in-memory config to disk. Called after every
-    /// successful `config_set` / `config_update`.
+    /// Persist a config changed by startup reconciliation or a serialized
+    /// config writer. Recover a pending retention transaction before writing,
+    /// or its later rollback could silently undo this newer configuration.
+    /// Runtime callers hold config_write_lock and must not hold store_lock.
     pub fn persist_config(&self) -> Result<(), StorageError> {
+        let _store_guard = self.lock_store()?;
         let guard = self.config.lock().expect("config mutex poisoned");
         guard.save(&self.paths.config_file)
     }

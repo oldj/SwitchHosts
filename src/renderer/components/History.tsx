@@ -36,7 +36,7 @@ import { IconFileTime, IconHelpCircle, IconHistory, IconX, IconTrash } from '@ta
 import clsx from 'clsx'
 import dayjs from 'dayjs'
 import prettyBytes from 'pretty-bytes'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import styles from './History.module.scss'
 
 interface IHistoryProps {
@@ -149,6 +149,7 @@ const History = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [busy, setBusy] = useState(false)
+  const operationInFlight = useRef(false)
   const [loadFailed, setLoadFailed] = useState(false)
   const [error, setError] = useState('')
   const [list, setList] = useState<IHostsHistoryObject[]>([])
@@ -164,6 +165,10 @@ const History = () => {
   const loadData = async () => {
     setIsLoading(true)
     try {
+      // Refresh both halves of the snapshot. In particular, a successful trim
+      // followed by a failed config read must offer a retry, not leave a stale
+      // dropdown and an apparently actionable old list.
+      await loadConfigs()
       const nextList: IHostsHistoryObject[] = (await actions.getHistoryList()).reverse()
       setList(nextList)
       setSelectedItem(
@@ -179,6 +184,9 @@ const History = () => {
   }
 
   const run = async (action: () => Promise<void>) => {
+    // Broadcasts can arrive before React commits the disabled controls.
+    if (operationInFlight.current) return
+    operationInFlight.current = true
     setBusy(true)
     setError('')
     try {
@@ -186,6 +194,7 @@ const History = () => {
     } catch (e) {
       reportError(e)
     } finally {
+      operationInFlight.current = false
       setBusy(false)
     }
   }
@@ -210,7 +219,6 @@ const History = () => {
       return
     }
     setConfirmation(undefined)
-    await loadConfigs()
     await loadData()
   }
 
@@ -307,10 +315,10 @@ const History = () => {
               onChange={(event) => {
                 const enabled = event.currentTarget.checked
                 // useConfigs already reports and rolls back rejected writes.
-                setBusy(true)
-                void updateConfigs({ history_enabled: enabled })
-                  .catch(() => {})
-                  .finally(() => setBusy(false))
+                void run(async () => {
+                  await updateConfigs({ history_enabled: enabled }).catch(() => {})
+                  await loadData()
+                })
               }}
             />
             <Group gap="xs" wrap="nowrap">
