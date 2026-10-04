@@ -16,8 +16,9 @@ fn main() {
     println!("cargo:rustc-env=SWH_VERSION={version}");
     println!("cargo:rustc-env=SWH_VERSION_LABEL=v{version}");
 
-    #[cfg(target_os = "macos")]
-    {
+    // Build scripts run on the host, so cfg!(target_os) would link Apple
+    // frameworks into Windows/Linux targets when cross-compiling on macOS.
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
         println!("cargo:rustc-link-lib=framework=Security");
         // ServiceManagement: SMAppService daemon registration (the
         // privileged helper install path). See hosts_apply::helper_admin.

@@ -3,8 +3,6 @@
 //! storage lets the test use a blank WebView without touching hosts or config.
 
 use tauri::webview::WebviewWindowBuilder;
-#[cfg(target_os = "macos")]
-use tauri::Manager;
 use tauri::{AppHandle, Runtime, WebviewUrl};
 
 #[cfg(target_os = "macos")]
@@ -51,7 +49,10 @@ pub fn create<R: Runtime>(app: &AppHandle<R>) -> Result<tauri::WebviewWindow<R>,
         .build()?;
 
     #[cfg(target_os = "macos")]
-    configure_tray_panel(&window)?;
+    if let Err(error) = configure_tray_panel(&window) {
+        let _ = close(app, &window);
+        return Err(error);
+    }
 
     Ok(window)
 }
@@ -73,12 +74,14 @@ fn configure_tray_panel<R: Runtime>(window: &tauri::WebviewWindow<R>) -> Result<
     // NonactivatingPanel is the key behavior that lets the webview receive
     // input without bringing the whole Regular app (and its home Space) to
     // the foreground.
-    panel.set_style_mask(
-        StyleMask::empty()
-            .borderless()
-            .nonactivating_panel()
-            .value(),
-    );
+    panel
+        .set_style_mask(
+            StyleMask::empty()
+                .borderless()
+                .nonactivating_panel()
+                .value(),
+        )
+        .map_err(std::io::Error::other)?;
     panel.set_collection_behavior(
         CollectionBehavior::new()
             .can_join_all_spaces()

@@ -70,8 +70,8 @@ For a complete manual backup, copy the whole `~/.SwitchHosts` folder. The in-app
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/)
-- [Rust](https://www.rust-lang.org/tools/install)
+- [Node.js](https://nodejs.org/) 24 LTS
+- [Rust](https://www.rust-lang.org/tools/install) >= 1.90
 - Tauri system dependencies, see [Tauri Prerequisites](https://v2.tauri.app/start/prerequisites/)
 
 ### Development

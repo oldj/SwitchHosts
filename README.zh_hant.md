@@ -69,8 +69,8 @@ v5 數據結構如下：
 
 ### 前置要求
 
-- [Node.js](https://nodejs.org/)
-- [Rust](https://www.rust-lang.org/tools/install)
+- [Node.js](https://nodejs.org/) 24 LTS
+- [Rust](https://www.rust-lang.org/tools/install) >= 1.90
 - Tauri 系統依賴，參見 [Tauri 前置要求](https://v2.tauri.app/start/prerequisites/)
 
 ### 開發
