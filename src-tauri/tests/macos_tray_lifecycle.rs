@@ -54,7 +54,19 @@ mod native {
                 .visible(false)
                 .build()?;
         }
-        let window = tray_window::create(app)?;
+        // Exercise minimum, content-fitting and capped heights through the real
+        // creation/NSPanel path, including recreation with a different list.
+        let row_count = [2, 11, 40][cycle % 3];
+        let list = vec![serde_json::json!({"type": "local"}); row_count];
+        let height = tray_window::initial_height(&list);
+        let window = tray_window::create(app, height)?;
+        let size = window
+            .inner_size()?
+            .to_logical::<f64>(window.scale_factor()?);
+        check(
+            (size.width - 300.0).abs() < 1.0 && (size.height - height).abs() < 1.0,
+            "native tray size differs from its content-based initial size",
+        )?;
         window.on_window_event(move |event| {
             if matches!(event, WindowEvent::Destroyed) {
                 destroyed.store(true, Ordering::SeqCst);

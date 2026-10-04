@@ -466,7 +466,7 @@ fn tray_window_suppresses_focus_loss_right_after_show() {
 fn tray_routes_native_operations_through_the_runtime_tested_module() {
     const SOURCE: &str = include_str!("../src/tray.rs");
     for (function, call) in [
-        ("fn create_tray_window<", "window::create(app)?"),
+        ("fn create_tray_window<", "window::create(app, height)?"),
         ("fn show_tray_window<", "window::show(app)?"),
         ("fn close_tray_window<", "window::close(app, window)"),
     ] {
@@ -496,7 +496,11 @@ fn macos_tray_show_does_not_activate_the_application() {
         ("window::show", native_show),
     ] {
         let compact: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        for forbidden in ["activateIgnoringOtherApps", "activateWithOptions", ".set_focus("] {
+        for forbidden in [
+            "activateIgnoringOtherApps",
+            "activateWithOptions",
+            ".set_focus(",
+        ] {
             assert!(
                 !compact.contains(forbidden),
                 "{name} must not activate the application through `{forbidden}`"

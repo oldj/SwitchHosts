@@ -80,8 +80,11 @@
   --swh-editor-gutter-bg: var(--mantine-color-dark-6);
 
   // tray
-  --swh-tray-header-bg: var(--mantine-color-dark-7);
+  --swh-tray-header-bg: var(--swh-left-panel-bg);
   --swh-tray-font-color: #fff;
+  --swh-tray-border-color: #50535b;
+  --swh-tray-button-bg: #393c42;
+  --swh-tray-button-hover-bg: #454850;
 
   // scroll bar
   --swh-scrollbar-track: rgba(204, 204, 204, 0.25);
