@@ -537,7 +537,10 @@ pub fn create_main_window<R: Runtime>(
     let mut builder = builder
         .title_bar_style(tauri::TitleBarStyle::Overlay)
         .hidden_title(true)
-        .traffic_light_position(tauri::LogicalPosition::new(12.0, 18.0));
+        // Tao's inset sizes the native titlebar; it is not the button center.
+        // 22pt places the 14pt buttons at y=13..27, centered in the renderer's
+        // 40px --swh-top-bar-height (including after resize/title changes).
+        .traffic_light_position(tauri::LogicalPosition::new(12.0, 22.0));
     #[cfg(not(target_os = "macos"))]
     let mut builder = builder.decorations(false).shadow(true);
 
