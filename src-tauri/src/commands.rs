@@ -11,7 +11,7 @@
 //! storage access.
 
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use serde_json::{json, Value};
@@ -22,7 +22,7 @@ use tauri_plugin_dialog::DialogExt;
 
 use crate::app_menu;
 use crate::find::{self, FindHistoryEntry, FindOptions};
-use crate::hosts_apply::{self, ApplyHistoryItem, HostsApplyError};
+use crate::hosts_apply::{self, HostsApplyError};
 use crate::http;
 use crate::http_api;
 use crate::import_export;
@@ -36,16 +36,6 @@ use crate::storage::{
     AppConfig, AppState, StorageError, Trashcan,
 };
 use crate::tray;
-
-/// Per-process counter so apply-history ids generated within the
-/// same nanosecond are still unique. Cheap, opaque, never compared
-/// across machines or runs — adequate for journal entries.
-static APPLY_HISTORY_COUNTER: AtomicU64 = AtomicU64::new(0);
-
-fn make_history_id(now_ms: i64) -> String {
-    let seq = APPLY_HISTORY_COUNTER.fetch_add(1, Ordering::Relaxed);
-    format!("apply_{now_ms}_{seq}")
-}
 
 type Args = Vec<Value>;
 
@@ -209,6 +199,14 @@ fn commit_config_patch(
             key: "<patch>".into(),
             reason: "expected a JSON object".into(),
         })?;
+    // Retention changes must use the preview/confirmation command; allowing a
+    // generic patch would bypass its destructive-change contract.
+    if patch_obj.contains_key("history_limit") {
+        return Err(StorageError::InvalidConfigValue {
+            key: "history_limit".into(),
+            reason: "use update_apply_history_limit to confirm and apply retention changes".into(),
+        });
+    }
     let touched: Vec<String> = patch_obj.keys().cloned().collect();
 
     // Tauri runs async commands concurrently on tokio, so two
@@ -220,6 +218,7 @@ fn commit_config_patch(
         .config_write_lock
         .lock()
         .expect("config write lock poisoned");
+    let _store_guard = state.lock_store()?;
 
     // Step 1: under a short cfg lock, derive the proposed `next` value
     // and remember whether launch_at_login is changing. We deliberately
@@ -889,13 +888,9 @@ pub(crate) async fn apply_aggregated_content<R: Runtime>(
     state: &AppState,
     content: &str,
 ) -> Result<hosts_apply::write::ApplyOutcome, ApplyPipelineError> {
-    let (write_mode, history_limit, cmd_after_apply) = {
+    let (write_mode, cmd_after_apply) = {
         let cfg = state.config.lock().expect("config mutex poisoned");
-        (
-            cfg.write_mode.clone(),
-            cfg.history_limit as i32,
-            cfg.cmd_after_hosts_apply.clone(),
-        )
+        (cfg.write_mode.clone(), cfg.cmd_after_hosts_apply.clone())
     };
 
     // The privileged write is potentially long-running (waits for the
@@ -930,39 +925,14 @@ pub(crate) async fn apply_aggregated_content<R: Runtime>(
         }
     };
 
-    // Persist apply history (mirrors Electron behaviour: insert
-    // previous content first if it differs from the last entry, then
-    // insert the new content). Skip the journal updates entirely when
-    // the file was already up-to-date — we don't want a noop apply
-    // to spam the history.
     if !outcome.unchanged {
-        let history_path = state.paths.histories_dir.join("system-hosts.json");
-        let now_ms = chrono::Utc::now().timestamp_millis();
-
-        // Step 1: previous content, only if not redundant.
-        let existing = hosts_apply::history::load(&history_path).unwrap_or_default();
-        let last_content = existing.last().map(|i| i.content.as_str());
-        if last_content != Some(outcome.previous_content.as_str()) {
-            let item = ApplyHistoryItem {
-                id: make_history_id(now_ms),
-                content: outcome.previous_content.clone(),
-                add_time_ms: now_ms,
-                label: None,
-            };
-            if let Err(e) = hosts_apply::history::insert(&history_path, item, history_limit) {
-                log::warn!("failed to write previous content history: {e}");
-            }
-        }
-
-        // Step 2: new content.
-        let new_item = ApplyHistoryItem {
-            id: make_history_id(now_ms),
-            content: outcome.new_content.clone(),
-            add_time_ms: now_ms,
-            label: None,
-        };
-        if let Err(e) = hosts_apply::history::insert(&history_path, new_item, history_limit) {
-            log::warn!("failed to write new content history: {e}");
+        if let Err(e) = hosts_apply::history::record_change(
+            state,
+            &outcome.previous_content,
+            &outcome.new_content,
+        ) {
+            log::warn!("failed to persist system hosts history: {e}");
+            let _ = app.emit("apply_history_error", json!({ "_args": [e.to_string()] }));
         }
     }
 
@@ -1119,6 +1089,7 @@ pub async fn get_apply_history(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
+    let _guard = state.lock_store()?;
     let path = state.paths.histories_dir.join("system-hosts.json");
     let items = hosts_apply::history::load(&path)?;
     let value = serde_json::to_value(items)
@@ -1133,9 +1104,38 @@ pub async fn delete_apply_history_item(
 ) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?;
+    let _guard = state.lock_store()?;
     let path = state.paths.histories_dir.join("system-hosts.json");
     let removed = hosts_apply::history::delete_by_id(&path, id)?;
     Ok(json!(removed))
+}
+
+#[tauri::command]
+pub async fn clear_apply_history(
+    state: State<'_, AppState>,
+    _args: Args,
+) -> Result<(), StorageError> {
+    state.require_data_dir_usable()?;
+    let _guard = state.lock_store()?;
+    hosts_apply::history::save(&state.paths.histories_dir.join("system-hosts.json"), &[])
+}
+
+#[tauri::command]
+pub async fn update_apply_history_limit(
+    state: State<'_, AppState>,
+    args: Args,
+) -> Result<hosts_apply::history::LimitResult, StorageError> {
+    #[derive(serde::Deserialize)]
+    struct Request {
+        limit: u32,
+        confirmation: Option<hosts_apply::history::LimitConfirmation>,
+    }
+    let request: Request = serde_json::from_value(args.first().cloned().unwrap_or(Value::Null))
+        .map_err(|e| StorageError::InvalidConfigValue {
+            key: "history_limit".into(),
+            reason: e.to_string(),
+        })?;
+    hosts_apply::history::update_limit(state.inner(), request.limit, request.confirmation)
 }
 
 // ---- cmd_after_hosts_apply history -----------------------------------------

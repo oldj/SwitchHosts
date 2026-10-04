@@ -241,6 +241,21 @@ export default {
   sudo_prompt_title: 'Wpisz swoje hasło sudo',
   system: 'System',
   system_hosts: 'Hosty systemowe',
+  history_record: 'Zapisuj historię',
+  history_disabled_hint:
+    'Zapisywanie jest wyłączone. Istniejącą historię nadal można przeglądać i usuwać.',
+  history_count: 'Zapisane wpisy: {0}',
+  history_unlimited: 'Bez limitu',
+  history_delete_selected: 'Usuń zaznaczone',
+  history_clear_confirm:
+    'Wyczyścić całą historię systemowego pliku Hosts? Tej operacji nie można cofnąć.',
+  history_trim_title: 'Zmniejszyć liczbę zachowanych wpisów?',
+  history_trim_change: 'Maksymalna liczba wpisów zmieni się z {0} na {1}.',
+  history_trim_details: 'Zachowaj {0} najnowszych wpisów i usuń {1} najstarszych.',
+  history_irreversible: 'Usuniętych wpisów nie można odzyskać.',
+  history_trim_confirm: 'Zapisz i usuń {0} wpisów',
+  history_error: 'Operacja na historii nie powiodła się',
+  history_retry: 'Spróbuj ponownie',
   system_hosts_history: 'Historia wersji hostów systemowych',
   system_hosts_history_delete_confirm: 'Czy na pewno chcesz usunąć ten element?',
   system_hosts_history_help:

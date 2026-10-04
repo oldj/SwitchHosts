@@ -110,10 +110,12 @@ pub fn run_if_needed(paths: &V5Paths) -> Result<MigrationOutcome, StorageError> 
     config.save(&paths.config_file)?;
 
     // ---- 4. internal/histories/system-hosts.json ----
-    let history_items = snapshot.history.len();
+    let mut history = snapshot.history;
+    crate::hosts_apply::history::trim(&mut history, config.history_limit);
+    let history_items = history.len();
     if history_items > 0 {
         let history_file = paths.histories_dir.join("system-hosts.json");
-        let payload = serde_json::to_vec_pretty(&snapshot.history)
+        let payload = serde_json::to_vec_pretty(&history)
             .map_err(|e| StorageError::serialize(history_file.display().to_string(), e))?;
         atomic_write(&history_file, &payload)?;
     }

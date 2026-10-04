@@ -36,6 +36,8 @@ interface MockState {
   list: MockHostEntry[]
   trashcan: Array<{ data: MockHostEntry }>
   configs: {
+    history_enabled: boolean
+    history_limit: number
     theme: string
     write_mode: string | null
     choice_mode: number
@@ -65,6 +67,8 @@ interface MockCall {
 declare global {
   interface Window {
     __SWITCHHOSTS_E2E__: {
+      seedHistory: (count: number) => void
+      failNextHistoryOperation: (command: string) => void
       getState: () => MockState
       getCalls: () => MockCall[]
       clearCalls: () => void

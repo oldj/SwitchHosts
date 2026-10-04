@@ -11,7 +11,7 @@
 //! - `write` — orchestrates normalization, append-mode splice,
 //!   no-op short-circuit, and the direct → elevated write fallback.
 //! - `history` — `internal/histories/system-hosts.json` journal:
-//!   load / save / insert (trimmed by `history_limit`) / delete by id.
+//!   load / save / record changes / retention / delete by id.
 
 pub mod aggregate;
 pub mod cmd_runner;
@@ -25,5 +25,4 @@ pub mod write;
 
 pub use aggregate::aggregate_selected_content;
 pub use error::HostsApplyError;
-pub use history::ApplyHistoryItem;
 pub use write::apply_to_system_hosts;

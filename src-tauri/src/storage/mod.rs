@@ -28,7 +28,7 @@ use std::sync::{Mutex, MutexGuard};
 /// Process-wide shared state held by Tauri as `State<'_, AppState>`.
 ///
 /// `store_lock` serializes every read-modify-write cycle that touches
-/// `manifest.json`, `trashcan.json`, state, or entry files. Readers also
+/// `manifest.json`, `trashcan.json`, state, history, or entry files. Readers also
 /// acquire it so they cannot observe an incomplete transaction.
 ///
 /// `is_will_quit` distinguishes "user clicked the close button"
@@ -44,8 +44,9 @@ pub struct AppState {
     /// pipeline. Tauri runs `#[tauri::command] async fn`s concurrently
     /// on tokio, so without this guard two concurrent commits can each
     /// snapshot the same `cfg`, apply disjoint patches, then race on
-    /// `save()` — losing one of the writes. Held only by `commit_config_patch`;
-    /// callers that just *read* config still go through `config` directly.
+    /// `save()` — losing one of the writes. Retention commits also acquire
+    /// it before `store_lock`; keep that lock order in all config writers.
+    /// Callers that just *read* config go through `config` directly.
     pub config_write_lock: Mutex<()>,
     /// Serializes update checks so the background scheduler and manual
     /// "Check for Updates" action do not run two updater requests at once.
@@ -80,6 +81,8 @@ impl AppState {
     ///    user's back (they will be prompted to choose a directory).
     /// 4. Load `internal/config.json` into memory, or fall back to
     ///    defaults if the file is missing / corrupt.
+    /// 5. Enforce the saved history limit, skipping maintenance if the
+    ///    configuration cannot be read or the data directory is unavailable.
     pub fn bootstrap() -> Result<Self, StorageError> {
         let (mut paths, mut data_dir_recovery) = paths::resolve_root()?;
 
@@ -137,6 +140,17 @@ impl AppState {
         }
 
         let config = AppConfig::load(&paths.config_file);
+        if data_dir_recovery.is_none() {
+            let maintenance = AppConfig::load_checked(&paths.config_file).and_then(|cfg| {
+                crate::hosts_apply::history::enforce_limit(
+                    &paths.histories_dir.join("system-hosts.json"),
+                    cfg.history_limit,
+                )
+            });
+            if let Err(e) = maintenance {
+                log::warn!("history retention maintenance skipped; original files retained: {e}");
+            }
+        }
         Ok(Self {
             paths,
             config: Mutex::new(config),
@@ -150,9 +164,12 @@ impl AppState {
         })
     }
 
-    /// Persist the in-memory config to disk. Called after every
-    /// successful `config_set` / `config_update`.
+    /// Persist a config changed by startup reconciliation or a serialized
+    /// config writer. Recover a pending retention transaction before writing,
+    /// or its later rollback could silently undo this newer configuration.
+    /// Runtime callers hold config_write_lock and must not hold store_lock.
     pub fn persist_config(&self) -> Result<(), StorageError> {
+        let _store_guard = self.lock_store()?;
         let guard = self.config.lock().expect("config mutex poisoned");
         guard.save(&self.paths.config_file)
     }

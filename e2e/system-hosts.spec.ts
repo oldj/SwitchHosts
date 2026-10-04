@@ -24,7 +24,7 @@ test.describe('system hosts', () => {
     await expect(page.getByText('System Hosts Version History')).toBeVisible()
     await expect(page.locator('.cm-content').last()).toContainText('api.local')
 
-    await page.getByRole('button', { name: 'Delete' }).click()
+    await page.getByRole('button', { name: 'Delete selected', exact: true }).click()
     await expect(page.getByText('Are you sure you want to delete this item?')).toBeVisible()
     await page.getByRole('button', { name: 'Delete' }).last().click()
     await expect(page.getByText('Success!')).toBeVisible()

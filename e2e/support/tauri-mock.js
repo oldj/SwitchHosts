@@ -37,6 +37,7 @@
     use_system_window_frame: false,
     write_mode: 'append',
     history_limit: 50,
+    history_enabled: true,
     locale: 'en',
     theme: 'light',
     choice_mode: 2,
@@ -371,6 +372,16 @@
     state,
     getState: () => clone(state),
     getCalls: () => clone(state.calls),
+    seedHistory: (count) => {
+      state.history = Array.from({ length: count }, (_, index) => ({
+        id: `seed-${index}`,
+        content: `127.0.0.1 host-${index}.local\n`,
+        add_time_ms: 1778196000000 + index * 60000,
+      }))
+    },
+    failNextHistoryOperation: (command) => {
+      state.nextHistoryError = command
+    },
     clearCalls: () => {
       state.calls.length = 0
     },
@@ -473,6 +484,10 @@
 
       const params = Array.isArray(args.args) ? args.args : []
 
+      if (state.nextHistoryError === cmd) {
+        state.nextHistoryError = null
+        throw new Error('History disk error')
+      }
       switch (cmd) {
         case 'config_all':
           return clone(state.configs)
@@ -594,15 +609,44 @@
             state.configs.write_mode === 'append'
               ? makeAppendContent(state.systemHosts, params[0] || '')
               : normalizeLineEndings(params[0] || '')
-          state.history.push({
-            id: `history-${state.history.length + 1}`,
-            content: state.systemHosts,
-            add_time_ms: Date.now(),
-          })
+          if (state.configs.history_enabled && oldContent !== state.systemHosts) {
+            for (const content of [oldContent, state.systemHosts]) {
+              if (state.history.at(-1)?.content === content) continue
+              state.history.push({
+                id: `history-${Date.now()}-${state.history.length}`,
+                content,
+                add_time_ms: Date.now(),
+              })
+            }
+            if (state.configs.history_limit > 0)
+              state.history = state.history.slice(-state.configs.history_limit)
+          }
           return { success: true, old_content: oldContent, new_content: state.systemHosts }
         }
         case 'get_apply_history':
           return clone(state.history)
+        case 'clear_apply_history':
+          state.history = []
+          return null
+        case 'update_apply_history_limit': {
+          const { limit, confirmation } = params[0]
+          const deleteCount = limit === 0 ? 0 : Math.max(0, state.history.length - limit)
+          const confirmed =
+            confirmation?.previous_limit === state.configs.history_limit &&
+            confirmation?.delete_count === deleteCount
+          const result = {
+            confirmation_required: deleteCount > 0 && !confirmed,
+            previous_limit: state.configs.history_limit,
+            limit,
+            delete_count: deleteCount,
+            retained_count: state.history.length - deleteCount,
+          }
+          if (!result.confirmation_required) {
+            state.configs.history_limit = limit
+            state.history = state.history.slice(deleteCount)
+          }
+          return result
+        }
         case 'delete_apply_history_item':
           state.history = state.history.filter((item) => item.id !== params[0])
           return true

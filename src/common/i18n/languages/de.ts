@@ -245,6 +245,22 @@ const lang: LanguageDict = {
   sudo_prompt_title: 'Geben Sie Ihr sudo-Passwort ein',
   system: 'System',
   system_hosts: 'System-Hosts',
+  history_record: 'Verlauf aufzeichnen',
+  history_disabled_hint:
+    'Die Aufzeichnung ist aus. Vorhandene Einträge können weiterhin angezeigt und gelöscht werden.',
+  history_count: '{0} gespeicherte Einträge',
+  history_unlimited: 'Unbegrenzt',
+  history_delete_selected: 'Auswahl löschen',
+  history_clear_confirm:
+    'Den gesamten System-Hosts-Verlauf löschen? Dies kann nicht rückgängig gemacht werden.',
+  history_trim_title: 'Weniger Verlaufseinträge behalten?',
+  history_trim_change: 'Die maximale Anzahl wird von {0} auf {1} geändert.',
+  history_trim_details:
+    'Die neuesten {0} Einträge bleiben erhalten, die ältesten {1} werden gelöscht.',
+  history_irreversible: 'Gelöschte Einträge können nicht wiederhergestellt werden.',
+  history_trim_confirm: 'Speichern und {0} Einträge löschen',
+  history_error: 'Verlaufsaktion fehlgeschlagen',
+  history_retry: 'Erneut versuchen',
   system_hosts_history: 'Historische Versionen der System-Hosts',
   system_hosts_history_delete_confirm: 'Sind Sie sicher, dass Sie dieses Element löschen wollen?',
   system_hosts_history_help:
