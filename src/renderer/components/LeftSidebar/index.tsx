@@ -38,6 +38,7 @@ const LeftSidebar = (props: IProps) => {
         {/* "Hosts" is a product proper noun — kept in English across all locales. */}
         <Tooltip label={'Hosts'} position="right">
           <ActionIcon
+            className={view === 'list' ? styles.active : undefined}
             variant={view === 'list' ? 'light' : 'subtle'}
             color={view === 'list' ? undefined : 'gray'}
             size={28}
@@ -56,6 +57,7 @@ const LeftSidebar = (props: IProps) => {
             offset={4}
           >
             <ActionIcon
+              className={view === 'trashcan' ? styles.active : undefined}
               variant={view === 'trashcan' ? 'light' : 'subtle'}
               color={view === 'trashcan' ? undefined : 'gray'}
               size={28}

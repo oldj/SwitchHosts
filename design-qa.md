@@ -79,3 +79,26 @@ No remaining actionable P0/P1/P2 visual findings. Validation also passed typeche
 - Preview used isolated Tauri fixtures, not real hosts writes. Existing fixture gaps for `get_data_dir_status` and `helper_status`, and a Preferences overflow-style warning, were observed. Native release behavior was not exercised.
 
 Sidebar visual QA final result: passed.
+
+## Read-only editor palette — 2026-10-04
+
+- Implemented the approved lightweight read-only design with the revised dark surface: light editor/gutter `#fafafb`, dark editor/gutter `#383a3e`. Removed the read-only content opacity reduction. The dark title badge uses `#4b4e56` with `#f1f2f4` text; the light badge uses `#ecedef` with `#545861` text.
+- Compared the selected revision (1536 × 1024 board) and local light/dark browser captures (1280 × 720, native CSS-pixel output) in the same comparison input. Local evidence files are `readonly-light.jpg` and `readonly-dark.jpg`, not checked into the repository. The board uses enlarged presentation frames; comparison targets the editor surface, gutter and badge. Existing app typography, spacing, icons, syntax colors and copy are preserved. English fixtures and shorter code samples differ intentionally from the Chinese mock.
+- The full captures clearly show the affected surfaces; computed styles additionally confirm the exact editor/gutter colors, full content opacity and dark badge contrast. No separate crop was necessary. No actionable P0/P1/P2 visual findings remained.
+- Browser verification confirmed System Hosts remains non-editable in both themes. Switching to a local file restores the original dark editor background (`#2e2e2e`) and editability; returning to System Hosts restores read-only mode.
+- Renderer build and whitespace checks passed. Console inspection showed the previously documented mock interface gaps and Preferences overflow warning. Verification used isolated Tauri fixtures, not native system-hosts writes.
+
+Read-only palette visual QA final result: passed.
+
+## Shared soft accent surfaces — 2026-10-04
+
+- Added shared soft-accent background, foreground and hover tokens. Hosts selection retains its existing palette through aliases; active Hosts/Trashcan navigation and the System Hosts history button now use the same tokens. Button hover uses a slightly stronger tint while list hover retains the selected-row background.
+- Browser computed styles confirmed identical default backgrounds and foregrounds across all three highlighted surfaces: light `#fbecef` / `#98283b`, dark `#482c34` / `#f2cdd5`. Active navigation hover was verified as `#f7dfe5` in light mode. History opens correctly and Hosts/Trashcan navigation still switches views.
+- Local `accent-light.jpg` and `accent-dark.jpg` screenshots (1280 × 720) document the result; evidence remains outside the repository. Existing typography, geometry, icons, selection marker, enabled switches and application copy remain unchanged. The scoped color changes match the approved follow-up; no outstanding visual findings.
+- Renderer build, TypeScript checking and whitespace checks passed. Browser checks used isolated fixtures; native backend behavior was not retested.
+
+Shared accent visual QA final result: passed.
+
+### Accent intensity refinement
+
+User feedback found the unified fill too faint in both themes. Increased light fill to `#f7dce2` (hover `#f2ccd5`) and dark fill to `#623b47` (hover `#754654`), retaining the existing foreground colors. In dark mode the fill is brighter and more chromatic to separate it from the surrounding charcoal. All three surfaces still share the same tokens. Local `accent-stronger-light.jpg` and `accent-stronger-dark.jpg` captures document both themes at 1280 × 720; browser computed styles confirmed the dark surfaces remain identical. Build and whitespace checks passed. Refinement final result: passed.

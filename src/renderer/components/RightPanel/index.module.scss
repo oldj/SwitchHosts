@@ -52,6 +52,17 @@
 
 .section {
   padding: 12px;
+
+  .history_button {
+    background-color: var(--swh-accent-soft-bg);
+    color: var(--swh-accent-soft-color);
+
+    @media (hover: hover) {
+      &:hover:not(:disabled):not([data-disabled]) {
+        background-color: var(--swh-accent-soft-hover-bg);
+      }
+    }
+  }
 }
 
 .section_title {

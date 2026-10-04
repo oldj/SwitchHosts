@@ -110,6 +110,8 @@
 
 .read_only {
   --badge-bg: var(--swh-top-bar-read-only-bg);
+  --badge-color: var(--swh-top-bar-read-only-color);
   background-color: var(--swh-top-bar-read-only-bg);
+  color: var(--swh-top-bar-read-only-color);
   flex: 0 0 auto;
 }
