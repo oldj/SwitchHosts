@@ -12,9 +12,12 @@ import { Compartment, EditorState, type Extension, RangeSetBuilder } from '@code
 import {
   Decoration,
   type DecorationSet,
+  crosshairCursor,
+  drawSelection,
   EditorView,
   keymap,
   lineNumbers,
+  rectangularSelection,
   ViewPlugin,
   type ViewUpdate,
 } from '@codemirror/view'
@@ -92,9 +95,13 @@ const hostsTheme = EditorView.theme({
     padding: '8px 0',
     caretColor: 'transparent',
   },
-  '&.cm-focused .cm-content': {
-    caretColor: 'var(--swh-editor-text-color)',
+  '.cm-cursor': {
+    borderLeftColor: 'var(--swh-editor-text-color)',
   },
+  '.cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground':
+    {
+      backgroundColor: 'var(--swh-tree-selected-bg)',
+    },
   '.cm-gutters': {
     backgroundColor: 'var(--swh-editor-gutter-bg)',
     color: 'var(--swh-editor-line-number-color)',
@@ -128,6 +135,10 @@ export function buildExtensions({
 
   const extensions: Extension[] = [
     history(),
+    EditorState.allowMultipleSelections.of(true),
+    rectangularSelection(),
+    crosshairCursor(),
+    drawSelection(),
     lineNumbers({
       domEventHandlers: {
         mousedown(view, line, event) {
@@ -152,5 +163,13 @@ export function buildExtensions({
 }
 
 export function readOnlyExtensions(readOnly: boolean): Extension {
-  return [EditorState.readOnly.of(readOnly), EditorView.editable.of(!readOnly)]
+  return [
+    EditorState.readOnly.of(readOnly),
+    EditorView.editable.of(!readOnly),
+    // Keep selection/keyboard events in the viewer instead of the page (for
+    // example, WebKit otherwise treats Backspace as browser navigation).
+    readOnly ? EditorView.contentAttributes.of({ tabindex: '0' }) : [],
+    // Read-only viewers may still select text, but must not show editing cursors.
+    readOnly ? EditorView.theme({ '.cm-cursor': { display: 'none !important' } }) : [],
+  ]
 }

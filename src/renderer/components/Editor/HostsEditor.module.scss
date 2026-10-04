@@ -86,8 +86,8 @@
 
 :global(.theme-dark) {
   .editor {
-    :global(.cm-focused .cm-content) {
-      caret-color: #39c;
+    :global(.cm-cursor) {
+      border-left-color: #39c;
     }
 
     &.read_only {

@@ -16,12 +16,12 @@ import { EditorView } from '@codemirror/view'
 import { useDebounceFn } from 'ahooks'
 import clsx from 'clsx'
 import { useEffect, useRef, useState } from 'react'
+import { buildExtensions, type BuiltExtensions, readOnlyExtensions } from './hosts_cm'
 import {
-  buildExtensions,
-  type BuiltExtensions,
-  readOnlyExtensions,
-} from './hosts_cm'
-import { toggleCommentByLine, toggleCommentBySelection } from './hosts_highlight'
+  toggleCommentByLine,
+  toggleCommentBySelection,
+  toggleCommentBySelections,
+} from './hosts_highlight'
 import styles from './HostsEditor.module.scss'
 
 const HostsEditor = () => {
@@ -99,9 +99,10 @@ const HostsEditor = () => {
     const next = toggleCommentByLine(code, lineIndex, sel.from, sel.to)
     if (!next.changed) return
 
+    const changes = view.state.changes(next.changes)
     view.dispatch({
-      changes: next.changes,
-      selection: { anchor: next.selectionStart, head: next.selectionEnd },
+      changes,
+      selection: view.state.selection.map(changes, 1),
     })
     view.focus()
   }
@@ -114,6 +115,19 @@ const HostsEditor = () => {
     if (view.composing) return
 
     const code = view.state.doc.toString()
+    if (view.state.selection.ranges.length > 1) {
+      const changes = view.state.changes(
+        toggleCommentBySelections(code, view.state.selection.ranges),
+      )
+      if (changes.empty) return
+      view.dispatch({
+        changes,
+        selection: view.state.selection.map(changes, 1),
+        scrollIntoView: true,
+      })
+      view.focus()
+      return
+    }
     const sel = view.state.selection.main
     const next = toggleCommentBySelection(code, sel.from, sel.to, true)
     if (!next.changed) return

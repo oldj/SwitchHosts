@@ -4,7 +4,12 @@
  * and that the returned `changes` array forms a valid CodeMirror ChangeSpec list.
  */
 
-import { toggleCommentByLine, toggleCommentBySelection } from './hosts_highlight'
+import { EditorState } from '@codemirror/state'
+import {
+  toggleCommentByLine,
+  toggleCommentBySelection,
+  toggleCommentBySelections,
+} from './hosts_highlight'
 import { describe, expect, it } from 'vitest'
 
 describe('hosts_highlight', () => {
@@ -69,5 +74,36 @@ describe('hosts_highlight', () => {
     expect(result.selectionStart).toBe('# foo\n'.length)
     expect(result.selectionEnd).toBe('# foo\n'.length)
     expect(result.changes).toEqual([{ from: 0, insert: '# ' }])
+  })
+
+  it('toggles disjoint selections without changing the lines between them', () => {
+    const doc = 'first\nuntouched\n  # last'
+    const state = EditorState.create({ doc })
+    const changes = toggleCommentBySelections(doc, [
+      { from: 0, to: 5 },
+      { from: doc.indexOf('last'), to: doc.length },
+    ])
+    expect(state.update({ changes }).newDoc.toString()).toBe('# first\nuntouched\n  last')
+  })
+
+  it('toggles a line only once when multiple ranges touch it', () => {
+    const doc = 'first second\nthird'
+    const state = EditorState.create({ doc })
+    const changes = toggleCommentBySelections(doc, [
+      { from: 0, to: 5 },
+      { from: 6, to: doc.length },
+    ])
+    expect(state.update({ changes }).newDoc.toString()).toBe('# first second\n# third')
+  })
+
+  it('handles empty ranges, blank lines, and selections ending at a line start', () => {
+    const doc = 'first\nsecond\n\nlast'
+    const state = EditorState.create({ doc })
+    const changes = toggleCommentBySelections(doc, [
+      { from: 0, to: 6 },
+      { from: 13, to: 13 },
+      { from: doc.length, to: doc.length },
+    ])
+    expect(state.update({ changes }).newDoc.toString()).toBe('# first\nsecond\n\n# last')
   })
 })

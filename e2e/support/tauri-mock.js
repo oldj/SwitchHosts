@@ -427,6 +427,7 @@
     setNextCheckUpdateResult: (result = { has_update: false }) => {
       state.nextCheckUpdateResult = result
     },
+    toggleComment: () => dispatchEvent('toggle_comment', { _args: [] }),
     emitNextUpdateAvailable: () => {
       if (state.nextCheckUpdateResult?.has_update) {
         dispatchEvent('new_version', { _args: [clone(state.nextCheckUpdateResult)] })

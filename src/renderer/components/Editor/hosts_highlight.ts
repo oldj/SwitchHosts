@@ -261,6 +261,34 @@ export function toggleCommentBySelection(
   )
 }
 
+/** Toggle each line touched by multiple selections once, preserving gaps between them. */
+export function toggleCommentBySelections(
+  code: string,
+  selections: readonly { from: number; to: number }[],
+): CommentChange[] {
+  const lines = getLines(code)
+  const ranges = [...selections].sort((a, b) => a.from - b.from)
+  const transforms: Transform[] = []
+  let rangeIndex = 0
+
+  for (const line of lines) {
+    // A non-empty selection ending at a line's start does not include that line.
+    while (rangeIndex < ranges.length) {
+      const range = ranges[rangeIndex]
+      const lastOffset = range.from === range.to ? range.to : range.to - 1
+      if (lastOffset >= line.start) break
+      rangeIndex += 1
+    }
+    if (rangeIndex === ranges.length) break
+    if (ranges[rangeIndex].from > line.end) continue
+
+    const result = toggleLine(line.text, line.start)
+    if (result.transform) transforms.push(result.transform)
+  }
+
+  return transformsToChanges(transforms)
+}
+
 /** Toggle comment on a single line identified by its zero-based index (used for gutter clicks). */
 export function toggleCommentByLine(
   code: string,

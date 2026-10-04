@@ -83,6 +83,7 @@ declare global {
       delayNextCheckUpdate: (ms?: number) => void
       setNextCheckUpdateResult: (result?: unknown) => void
       emitNextUpdateAvailable: () => void
+      toggleComment: () => void
     }
   }
 }
