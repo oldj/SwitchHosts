@@ -3,7 +3,7 @@
   "name": "switchhosts",
   "version": "5.0.3-beta.2",
   "description": "Switch hosts quickly!",
-  "homepage": "https://switchhosts.vercel.app",
+  "homepage": "https://switchhosts.app",
   "license": "Apache-2.0",
   "scripts": {
     "pretest": "rimraf ./test/tmp",

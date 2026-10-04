@@ -19,7 +19,7 @@
 - [Polski](README.pl.md)
 - [简体中文](README.zh_hans.md)
 
-項目主頁：[https://switchhosts.vercel.app](https://switchhosts.vercel.app)
+項目主頁：[https://switchhosts.app](https://switchhosts.app)
 
 SwitchHosts 是一個管理 hosts 檔案的應用程式，基於 [Tauri](https://tauri.app/)、[React](https://facebook.github.io/react/)、[Jotai](https://jotai.org/)、[Mantine](https://mantine.dev/) 等技術開發。
 

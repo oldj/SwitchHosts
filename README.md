@@ -19,7 +19,7 @@
 - [简体中文](README.zh_hans.md)
 - [繁體中文](README.zh_hant.md)
 
-Homepage: [https://switchhosts.vercel.app](https://switchhosts.vercel.app)
+Homepage: [https://switchhosts.app](https://switchhosts.app)
 
 SwitchHosts is an App for managing hosts file, it is based on [Tauri](https://tauri.app/), [React](https://facebook.github.io/react/), [Jotai](https://jotai.org/), [Mantine](https://mantine.dev/), etc.
 
