@@ -28,7 +28,9 @@ tauri-build = { version = "2", features = [] }
 serde_json = "1"
 
 [dependencies]
-tauri = { version = "2", features = ["macos-private-api", "tray-icon", "image-png"] }
+# Tauri 2.12 uses tray-icon 0.25, which restores left-click forwarding on
+# macOS 27 when a tray menu is attached (tauri-apps/tray-icon#365).
+tauri = { version = "2.12.1", features = ["macos-private-api", "tray-icon", "image-png"] }
 tauri-plugin-autostart = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-log = "2"
