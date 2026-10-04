@@ -63,6 +63,23 @@
     .hl-error {
       color: var(--swh-editor-error);
     }
+
+    .hl-selection {
+      color: hsl(0, 0%, 98%);
+    }
+
+    .hl-comment .hl-selection {
+      color: hsl(var(--swh-editor-comment-hs), 92%);
+    }
+
+    .hl-ip .hl-selection,
+    .hl-selection .hl-ip {
+      color: hsl(var(--swh-editor-ip-hs), 92%);
+    }
+
+    .hl-error .hl-selection {
+      color: hsl(var(--swh-editor-error-hs), 94%);
+    }
   }
 
   &.read_only {

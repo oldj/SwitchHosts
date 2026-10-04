@@ -80,6 +80,39 @@ export const hostsHighlighter = ViewPlugin.fromClass(
   { decorations: (v) => v.decorations },
 )
 
+// drawSelection paints only the background. Mark the selected characters too so
+// their foreground can retain syntax hues at a readable lightness.
+const selectedTextDeco = Decoration.mark({ class: 'hl-selection' })
+const selectedText = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet
+
+    constructor(view: EditorView) {
+      this.decorations = this.build(view)
+    }
+
+    build(view: EditorView): DecorationSet {
+      const builder = new RangeSetBuilder<Decoration>()
+      for (const range of view.state.selection.ranges) {
+        if (range.empty) continue
+        for (const visible of view.visibleRanges) {
+          const from = Math.max(range.from, visible.from)
+          const to = Math.min(range.to, visible.to)
+          if (from < to) builder.add(from, to, selectedTextDeco)
+        }
+      }
+      return builder.finish()
+    }
+
+    update(u: ViewUpdate) {
+      if (u.docChanged || u.selectionSet || u.viewportChanged) {
+        this.decorations = this.build(u.view)
+      }
+    }
+  },
+  { decorations: (v) => v.decorations },
+)
+
 // Theme intentionally does NOT touch .cm-scroller — its baseTheme `fontFamily: monospace`
 // is fine as a fallback, and the project's editor font is applied via the SCSS module
 // (with selector specificity raised above baseTheme's `.cm-scroller`).
@@ -152,6 +185,7 @@ export function buildExtensions({
     }),
     keymap.of([...defaultKeymap, ...historyKeymap]),
     hostsHighlighter,
+    selectedText,
     hostsTheme,
     EditorView.updateListener.of((u) => {
       if (u.docChanged) onDocChange(u.state.doc.toString())

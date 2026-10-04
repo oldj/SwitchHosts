@@ -60,10 +60,13 @@
   --swh-editor-line-height: 1.8em;
 
   --swh-editor-bg-color: var(--mantine-color-dark-6);
-  --swh-editor-ip: #3787de;
+  --swh-editor-ip-hs: 211, 72%;
+  --swh-editor-comment-hs: 125, 16%;
+  --swh-editor-error-hs: 340, 100%;
+  --swh-editor-ip: hsl(var(--swh-editor-ip-hs), 60%);
   --swh-editor-keyword: #06427d;
-  --swh-editor-error: #ff5990;
-  --swh-editor-comment: #91af91;
+  --swh-editor-error: hsl(var(--swh-editor-error-hs), 67%);
+  --swh-editor-comment: hsl(var(--swh-editor-comment-hs), 63%);
   --swh-editor-hl-bg: #ff0;
   --swh-editor-gutter-bg: var(--mantine-color-dark-6);
 
