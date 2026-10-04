@@ -10,7 +10,7 @@ $swh-btn-height: 0.9em;
   height: $swh-btn-height;
   border-radius: math.div($swh-btn-height, 2);
   background: var(--swh-switch-button-bg-color-off);
-  box-shadow: 0 0 0 1px var(--swh-switch-button-main-color-off);
+  box-shadow: 0 0 0 1px var(--swh-switch-button-border-color-off);
   cursor: pointer;
   transition: 0.3s;
 }
@@ -30,7 +30,7 @@ $swh-btn-height: 0.9em;
 .on {
   &.root {
     background: var(--swh-switch-button-bg-color-on);
-    box-shadow: 0 0 0 1px var(--swh-switch-button-main-color-on);
+    box-shadow: 0 0 0 1px var(--swh-switch-button-border-color-on);
   }
 
   .handler {

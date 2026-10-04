@@ -66,8 +66,8 @@ Aby wykonać pełną ręczną kopię zapasową, skopiuj cały folder `~/.SwitchH
 
 ### Wymagania wstępne
 
-- [Node.js](https://nodejs.org/)
-- [Rust](https://www.rust-lang.org/tools/install)
+- [Node.js](https://nodejs.org/) 24 LTS
+- [Rust](https://www.rust-lang.org/tools/install) >= 1.90
 - Zależności systemowe Tauri, zobacz [Wymagania Tauri](https://v2.tauri.app/start/prerequisites/)
 
 ### Tworzenie

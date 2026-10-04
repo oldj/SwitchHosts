@@ -1,5 +1,8 @@
 :global(.theme-light) {
   --swh-primary-color: var(--mantine-primary-color-filled);
+  --swh-accent-soft-bg: #f7dce2;
+  --swh-accent-soft-hover-bg: #f2ccd5;
+  --swh-accent-soft-color: #98283b;
   --swh-border-color-0: var(--mantine-color-gray-2);
   --swh-border-color-1: var(--mantine-color-gray-1);
   --swh-input-bg: var(--mantine-color-gray-2);
@@ -16,7 +19,8 @@
   --swh-top-bar-height: 40px;
   --swh-top-tool-bar-height: 28px;
   --swh-top-bar-bg: #fff;
-  --swh-top-bar-read-only-bg: var(--mantine-color-gray-3);
+  --swh-top-bar-read-only-bg: #ecedef;
+  --swh-top-bar-read-only-color: #545861;
 
   // left
   --swh-left-panel-bg: var(--mantine-color-white);
@@ -25,6 +29,9 @@
   --swh-tree-node-drag-bg: var(--mantine-color-white);
   --swh-tree-selected-bg: var(--mantine-primary-color-filled);
   --swh-tree-hover-bg: var(--mantine-primary-color-light);
+  --swh-hosts-selected-bg: var(--swh-accent-soft-bg);
+  --swh-hosts-selected-color: var(--swh-accent-soft-color);
+  --swh-hosts-selected-indicator: #ce3549;
 
   // main
   --swh-main-bg: #fff;
@@ -43,10 +50,12 @@
   --swh-right-bar-bg: var(--mantine-color-gray-0);
 
   // switch button
-  --swh-switch-button-main-color-off: #999;
-  --swh-switch-button-bg-color-off: #ccc;
-  --swh-switch-button-main-color-on: #91d982;
-  --swh-switch-button-bg-color-on: #fff;
+  --swh-switch-button-main-color-off: #fff;
+  --swh-switch-button-bg-color-off: #d6d8dd;
+  --swh-switch-button-border-color-off: #a0a4ad;
+  --swh-switch-button-main-color-on: #fff;
+  --swh-switch-button-bg-color-on: #c9364f;
+  --swh-switch-button-border-color-on: #c9364f;
 
   // editor & viewer
   --swh-editor-text-color: #000;
@@ -55,21 +64,27 @@
   --swh-editor-error-color: #900;
   --swh-editor-line-number-color: #999;
   --swh-editor-line-number-bg: #fff;
-  --swh-editor-read-only-bg: #f5f5f5;
+  --swh-editor-read-only-bg: #fafafb;
   --swh-editor-font-size: 1em;
   --swh-editor-line-height: 1.8em;
 
   --swh-editor-bg-color: #fff;
-  --swh-editor-ip: #096dd9;
+  --swh-editor-ip-hs: 211, 92%;
+  --swh-editor-comment-hs: 125, 45%;
+  --swh-editor-error-hs: 340, 60%;
+  --swh-editor-ip: hsl(var(--swh-editor-ip-hs), 44%);
   --swh-editor-keyword: #06427d;
-  --swh-editor-error: #c36;
-  --swh-editor-comment: #090;
+  --swh-editor-error: hsl(var(--swh-editor-error-hs), 50%);
+  --swh-editor-comment: hsl(var(--swh-editor-comment-hs), 32%);
   --swh-editor-hl-bg: #ff0;
   --swh-editor-gutter-bg: #fff;
 
   // tray
-  --swh-tray-header-bg: var(--mantine-color-gray-1);
-  --swh-tray-font-color: #000;
+  --swh-tray-header-bg: var(--swh-left-panel-bg);
+  --swh-tray-font-color: #252830;
+  --swh-tray-border-color: #d6d8dd;
+  --swh-tray-button-bg: #f3f4f6;
+  --swh-tray-button-hover-bg: #e9ebee;
 
   // scroll bar
   --swh-scrollbar-track: rgba(204, 204, 204, 0.25);

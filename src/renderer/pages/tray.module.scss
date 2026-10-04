@@ -3,10 +3,21 @@
 .root {
   position: relative;
   height: 100vh;
-  background: var(--swh-window-bg);
+  background: var(--swh-tray-header-bg);
   border-radius: 12px;
   overflow: hidden;
   padding: 0;
+
+  // Outline the panel without changing the shared list's geometry.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--swh-tray-border-color);
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 1;
+  }
 }
 
 .header {
@@ -14,17 +25,19 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 40px;
+  height: 44px;
   margin: 0;
-  padding: 0;
+  padding: 0 48px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   background: var(--swh-tray-header-bg);
   color: var(--swh-tray-font-color);
-  font-size: 16px;
-  font-weight: normal;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
   border-bottom: 1px solid var(--swh-border-color-1);
   -webkit-user-select: none;
   -webkit-app-region: drag;
@@ -39,9 +52,9 @@
 }
 
 .body {
-  padding: 8px;
+  padding: 12px 8px;
   position: absolute;
-  top: 40px;
+  top: 44px;
   bottom: 0;
   left: 0;
   right: 0;
@@ -52,23 +65,37 @@
 
 .show_main {
   position: absolute;
-  right: 16px;
+  right: 14px;
   top: 50%;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   margin: 0;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   color: inherit;
-  background: transparent;
+  background: var(--swh-tray-button-bg);
   border: 0;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
   transform: translateY(-50%);
   -webkit-app-region: no-drag;
+
+  &:hover {
+    background: var(--swh-tray-button-hover-bg);
+  }
+
+  &:active {
+    background: var(--swh-tray-border-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--swh-primary-color);
+    outline-offset: 2px;
+  }
 
   svg {
     pointer-events: none;

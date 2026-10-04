@@ -22,19 +22,19 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7.0.0
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
       - name: Rust cache
-        uses: swatinem/rust-cache@v2
+        uses: swatinem/rust-cache@v2.9.2
         with:
           workspaces: src-tauri -> target
 
@@ -63,13 +63,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
       - name: Rust cache
-        uses: swatinem/rust-cache@v2
+        uses: swatinem/rust-cache@v2.9.2
         with:
           workspaces: src-tauri -> target
 

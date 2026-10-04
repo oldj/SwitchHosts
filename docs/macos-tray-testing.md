@@ -3,6 +3,20 @@
 本文用于验证 PR [#1051](https://github.com/oldj/SwitchHosts/pull/1051) 及后续托盘窗口改动。
 排查历史见 [macOS 托盘全屏问题](macos-tray-fullscreen-bug.md)。以下命令均从仓库根目录运行。
 
+## macOS 27 点击事件兼容性
+
+`tray-icon 0.24.2` 在 macOS 27 上给 `NSStatusItem` 常驻绑定菜单时，左键事件会被系统
+截走，`show_menu_on_left_click(false)` 也无法让事件到达应用。因此普通桌面和全屏中
+点击图标都可能无法弹出 Hosts 列表小窗；直接调用窗口显示函数的生命周期测试仍会通过。
+上游修复见 [tray-icon #365](https://github.com/tauri-apps/tray-icon/pull/365)。
+
+项目要求 Tauri 至少为 2.12.1，锁定的 `tray-icon 0.25.1` 包含该修复：只在需要弹出菜单
+时临时绑定原生菜单，关闭后解除绑定。验证时除下方窗口矩阵外，还应在 macOS 27 上检查：
+
+- 左键图标显示 Hosts 列表小窗，右键图标显示菜单。
+- 关闭右键菜单后，左键仍能打开小窗。
+- 更改语言或 Dock 图标设置触发菜单重建后，左键仍能打开小窗。
+
 ## 自动化测试
 
 普通 Rust 测试（不启动原生窗口）：
@@ -101,6 +115,7 @@ actionlint .github/workflows/ci.yml
 | PR #1051，`3f3ccb3` | 作者未记录完整 OS、显示器与 Dock 配置 | 作者在 PR 描述确认：全屏上方显示、内外移动不关闭、外部点击关闭 | 完整矩阵与版本兼容范围不能从该记录推断 |
 | 2026-09-30，feature/macos-tray-regression-tests | macOS 27.0.1（26A434），arm64 | 225 个 Rust 单元测试、26 个结构测试；原生十轮测试正常模式及 Zombie 诊断通过；故意省略面板注销时测试按预期失败；actionlint 通过 | 上述手工矩阵；远端 GitHub Actions（分支未推送） |
 | 2026-09-30，审查后的测试修复 | 同上 | 6 个托盘结构测试及原生十轮测试通过；在显示入口和原生函数分别注入全局激活、模拟重复显示隐藏窗口，三处故障均被捕获并已恢复源码 | 未重跑全量测试；手工矩阵和远端 CI 仍待执行 |
+| 2026-10-04，Tauri 2.12.1 / tray-icon 0.25.1 | macOS 27.0.1（26A434），arm64，开发构建 | 268 个 Rust 单元测试、27 个结构测试及原生十轮生命周期测试通过 | 真实托盘左/右键、菜单重建及上述跨 Space 手工矩阵待确认 |
 
 本次原生测试还发现并修复了配置顺序问题：`set_floating_panel(true)` 会把之前设置的
 `PopUpMenu` 层级 101 重置为 Floating 层级 3。现在先设置 floating，再设置最终层级；

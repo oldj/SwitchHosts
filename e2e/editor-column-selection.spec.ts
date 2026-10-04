@@ -58,6 +58,53 @@ async function selectColumn(page: Page, fromColumn = 0, toColumn = 9, lastLine =
 }
 
 for (const theme of ['light', 'dark']) {
+  test(`brightens selected syntax and restores it after deselection in ${theme} mode`, async ({
+    page,
+  }) => {
+    if (theme === 'dark') {
+      await page.getByLabel('Settings').click()
+      await page.getByText('Preferences').click()
+      await page.getByRole('dialog').getByText('Dark', { exact: true }).click()
+      await page.keyboard.press('Escape')
+    }
+    await setContent(page, '# comment\n127.0.0.1 localhost\n::1 localhost\ninvalid')
+    const textColors = () =>
+      page.locator('.cm-content').evaluate((editor) => {
+        const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT)
+        const colors: string[] = []
+        while (walker.nextNode()) {
+          if (walker.currentNode.textContent?.trim()) {
+            colors.push(getComputedStyle(walker.currentNode.parentElement!).color)
+          }
+        }
+        return colors
+      })
+    const normalColors = await textColors()
+    await page.keyboard.press(`${selectAllModifier}+A`)
+    await expect
+      .poll(async () => {
+        const colors = await textColors()
+        return (
+          colors.length >= 6 &&
+          colors.every((color) => {
+            const channels = color.match(/[\d.]+/g)!.map(Number)
+            // HSL lightness: selected glyphs should all be light, including plain text.
+            return (Math.max(...channels) + Math.min(...channels)) / 510 >= 0.9
+          })
+        )
+      })
+      .toBe(true)
+    expect(new Set(await textColors()).size).toBe(4)
+
+    await page.keyboard.press('ArrowRight')
+    await expect.poll(textColors).toEqual(normalColors)
+    // A partial token selection must leave adjacent characters at their normal color.
+    for (let i = 0; i < 3; i++) await page.keyboard.press('Shift+ArrowLeft')
+    await expect(page.locator('.hl-selection')).toHaveText('lid')
+    await expect(page.locator('.cm-line').last()).toHaveCSS('color', normalColors.at(-1)!)
+    await expect(page.locator('.hl-selection')).not.toHaveCSS('color', normalColors.at(-1)!)
+  })
+
   test(`replaces an Alt-drag column, saves, undoes and redoes in ${theme} mode`, async ({
     page,
   }) => {

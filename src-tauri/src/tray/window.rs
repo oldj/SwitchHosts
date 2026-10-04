@@ -3,8 +3,6 @@
 //! storage lets the test use a blank WebView without touching hosts or config.
 
 use tauri::webview::WebviewWindowBuilder;
-#[cfg(target_os = "macos")]
-use tauri::Manager;
 use tauri::{AppHandle, Runtime, WebviewUrl};
 
 #[cfg(target_os = "macos")]
@@ -26,9 +24,40 @@ tauri_panel! {
 
 pub const TRAY_WINDOW_LABEL: &str = "tray";
 pub const TRAY_WINDOW_WIDTH: f64 = 300.0;
-pub const TRAY_WINDOW_HEIGHT: f64 = 600.0;
+pub const TRAY_WINDOW_MIN_HEIGHT: f64 = 300.0;
+pub const TRAY_WINDOW_MAX_HEIGHT: f64 = 600.0;
 
-pub fn create<R: Runtime>(app: &AppHandle<R>) -> Result<tauri::WebviewWindow<R>, tauri::Error> {
+/// Size before creating the WebView, so the popover never flashes at full height.
+pub fn initial_height(list: &[serde_json::Value]) -> f64 {
+    // Keep in sync with tray.module.scss (44px header, 12px vertical padding)
+    // and the shared list (14px font × 2em rows, collapsed 2px vertical margins).
+    const CHROME_HEIGHT: f64 = 44.0 + 12.0 * 2.0 + 2.0;
+    const ROW_HEIGHT: f64 = 28.0 + 2.0;
+    let mut height = CHROME_HEIGHT;
+    let mut levels = vec![list.iter()];
+    while let Some(level) = levels.last_mut() {
+        let Some(node) = level.next() else {
+            levels.pop();
+            continue;
+        };
+        height += ROW_HEIGHT;
+        if height >= TRAY_WINDOW_MAX_HEIGHT {
+            return TRAY_WINDOW_MAX_HEIGHT;
+        }
+        // Match Tree/Node: count descendants only when their parent is expanded.
+        if node.get("is_collapsed").and_then(|v| v.as_bool()) != Some(true) {
+            if let Some(children) = node.get("children").and_then(|v| v.as_array()) {
+                levels.push(children.iter());
+            }
+        }
+    }
+    height.max(TRAY_WINDOW_MIN_HEIGHT)
+}
+
+pub fn create<R: Runtime>(
+    app: &AppHandle<R>,
+    height: f64,
+) -> Result<tauri::WebviewWindow<R>, tauri::Error> {
     // The renderer's HashRouter mounts /tray at `#/tray`. WebviewUrl::App
     // joins its argument into the app base URL via `Url::join`, which
     // treats `#/tray` as setting the fragment — so the resulting webview
@@ -36,7 +65,7 @@ pub fn create<R: Runtime>(app: &AppHandle<R>) -> Result<tauri::WebviewWindow<R>,
     let url = WebviewUrl::App("#/tray".into());
     let window = WebviewWindowBuilder::new(app, TRAY_WINDOW_LABEL, url)
         .title("SwitchHosts Tray")
-        .inner_size(TRAY_WINDOW_WIDTH, TRAY_WINDOW_HEIGHT)
+        .inner_size(TRAY_WINDOW_WIDTH, height)
         .resizable(false)
         .maximizable(false)
         .minimizable(false)
@@ -51,7 +80,10 @@ pub fn create<R: Runtime>(app: &AppHandle<R>) -> Result<tauri::WebviewWindow<R>,
         .build()?;
 
     #[cfg(target_os = "macos")]
-    configure_tray_panel(&window)?;
+    if let Err(error) = configure_tray_panel(&window) {
+        let _ = close(app, &window);
+        return Err(error);
+    }
 
     Ok(window)
 }
@@ -73,12 +105,14 @@ fn configure_tray_panel<R: Runtime>(window: &tauri::WebviewWindow<R>) -> Result<
     // NonactivatingPanel is the key behavior that lets the webview receive
     // input without bringing the whole Regular app (and its home Space) to
     // the foreground.
-    panel.set_style_mask(
-        StyleMask::empty()
-            .borderless()
-            .nonactivating_panel()
-            .value(),
-    );
+    panel
+        .set_style_mask(
+            StyleMask::empty()
+                .borderless()
+                .nonactivating_panel()
+                .value(),
+        )
+        .map_err(std::io::Error::other)?;
     panel.set_collection_behavior(
         CollectionBehavior::new()
             .can_join_all_spaces()
@@ -116,4 +150,48 @@ pub fn close<R: Runtime>(
     }
 
     window.close()
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn initial_height_fits_rows_between_minimum_and_scroll_limit() {
+        use super::initial_height;
+        use serde_json::json;
+
+        for (rows, expected) in [
+            (0, 300.0),
+            (7, 300.0),
+            (8, 310.0),
+            (11, 400.0),
+            (17, 580.0),
+            (18, 600.0),
+            (1000, 600.0),
+        ] {
+            let list = vec![json!({"type": "local", "on": false}); rows];
+            assert_eq!(initial_height(&list), expected, "{rows} visible rows");
+        }
+    }
+
+    #[test]
+    fn initial_height_excludes_descendants_of_collapsed_folders() {
+        use super::initial_height;
+        use serde_json::json;
+
+        let mut list = vec![json!({"type": "local"}); 7];
+        list.push(json!({
+            "type": "folder",
+            "children": [{
+                "type": "folder",
+                "is_collapsed": true,
+                "children": vec![json!({"type": "local"}); 20],
+            }],
+        }));
+        // Seven files, an expanded outer folder and its collapsed child folder.
+        assert_eq!(initial_height(&list), 340.0);
+        list[7]["children"][0]["is_collapsed"] = json!(false);
+        assert_eq!(initial_height(&list), 600.0);
+        list[7]["is_collapsed"] = json!(true);
+        assert_eq!(initial_height(&list), 310.0);
+    }
 }

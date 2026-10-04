@@ -81,6 +81,7 @@ const SystemHostsPanel = () => {
 
         <div className={styles.section}>
           <Button
+            className={styles.history_button}
             size="compact-sm"
             variant="light"
             leftSection={<IconHistory size={14} stroke={1.5} />}

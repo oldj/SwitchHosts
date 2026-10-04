@@ -195,13 +195,11 @@ mod tests {
         }
     }
 
-    /// Guards the feature-unification trick declared in Cargo.toml: if the
-    /// `reqwest_013` dep is removed or stripped of its `socks` feature, this
-    /// assertion fails — and so would SOCKS5 support inside
-    /// `tauri-plugin-updater`, which uses the same transitive reqwest 0.13.
+    /// The app and tauri-plugin-updater share reqwest 0.13, so enabling
+    /// `socks` on our client also enables it for update downloads.
     #[test]
     fn socks_feature_unified_into_updater_reqwest() {
-        let proxy = reqwest_013::Proxy::all("socks5://127.0.0.1:1080");
+        let proxy = reqwest::Proxy::all("socks5://127.0.0.1:1080");
 
         assert!(proxy.is_ok());
     }

@@ -118,14 +118,14 @@ jobs:
       # checkout instead of silently building from develop's HEAD
       # and uploading to the wrong release.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ needs.prep.outputs.tag || github.ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7.0.0
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       # Cross-check the tag against package.json's version. This
@@ -147,7 +147,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Rust cache
-        uses: swatinem/rust-cache@v2
+        uses: swatinem/rust-cache@v2.9.2
         with:
           workspaces: src-tauri -> target
 
@@ -315,14 +315,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ needs.prep.outputs.tag || github.ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7.0.0
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install Rust stable
@@ -331,7 +331,7 @@ jobs:
           targets: ${{ matrix.rust_targets }}
 
       - name: Rust cache
-        uses: swatinem/rust-cache@v2
+        uses: swatinem/rust-cache@v2.9.2
         with:
           workspaces: src-tauri -> target
 
@@ -371,7 +371,7 @@ jobs:
 
       - name: Build and release (Tauri)
         id: tauri
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@action-v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # macOS signing
@@ -402,7 +402,7 @@ jobs:
           # per-matrix-job latest.json would have 8 jobs racing to write
           # the same asset on the draft. Disable it here; the manifest
           # job is the single writer.
-          includeUpdaterJson: false
+          uploadUpdaterJson: false
           args: ${{ matrix.args }}
 
       # Notarize and staple the DMG itself. tauri-action (via Tauri's
@@ -513,14 +513,14 @@ jobs:
       release_id: ${{ needs.create-release.outputs.release_id }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ needs.prep.outputs.tag || github.ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7.0.0
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install npm dependencies
@@ -602,15 +602,12 @@ jobs:
           if [ -n "$OLD_SIG_LIST" ]; then
             while IFS=$'\t' read -r OLD_AID OLD_NAME; do
               # Scope cleanup to the names this run will replace:
-              #   - Windows / Linux: SwitchHosts_${VERSION}_*.sig (version-named)
-              #   - macOS: SwitchHosts_*.app.tar.gz.sig (tauri-action
-              #     names the .app.tar.gz with arch only, no version,
-              #     so the version filter would skip every darwin sig)
+              # All platforms use SwitchHosts_${VERSION}_*.sig;
+              # tauri-action v1 also includes the version in macOS names.
               # Other-version sigs from a re-used draft release are
               # left alone — the manifest filter below ignores them.
               case "$OLD_NAME" in
                 "${ARCHIVE_PREFIX}"*) ;;
-                SwitchHosts_*.app.tar.gz.sig) ;;
                 *)
                   echo "Keeping out-of-version sig: $OLD_NAME"
                   continue
@@ -640,16 +637,10 @@ jobs:
 
           SIGNED_COUNT=0
           while IFS=$'\t' read -r AID NAME; do
-            # Accept either:
-            #   - SwitchHosts_${VERSION}_*  (Windows / Linux archives,
-            #     where re-running with a bumped version could leave
-            #     old-version archives that would re-sign and collide)
-            #   - SwitchHosts_*.app.tar.gz  (macOS — names are arch-
-            #     only, no version, so versioned filter would exclude
-            #     every darwin archive and break the release)
+            # All updater archives include the version with tauri-action v1.
+            # Ignore leftovers from other versions in a re-used draft.
             case "$NAME" in
               "${ARCHIVE_PREFIX}"*) ;;
-              SwitchHosts_*.app.tar.gz) ;;
               *)
                 echo "Skipping out-of-version archive: $NAME"
                 continue
@@ -894,7 +885,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ needs.prep.outputs.tag || github.ref }}
 
@@ -959,14 +950,12 @@ jobs:
             SIG_NAME=$(echo "$ASSET" | jq -r '.name')
 
             # Same naming-aware filter as the sign step:
-            #   - Windows / Linux sigs include VERSION → match prefix
-            #   - macOS sigs are arch-only → match SwitchHosts_*.app.tar.gz.sig
+            # All platforms, including macOS, include VERSION in the name.
             # Old-version leftovers in a re-used draft would otherwise
             # map to the same platform_key as the current build and
             # silently overwrite it (jq `+` keeps the last writer).
             case "$SIG_NAME" in
               "${ARCHIVE_PREFIX}"*) ;;
-              SwitchHosts_*.app.tar.gz.sig) ;;
               "${PACKAGE_PREFIX}"*.deb.sig|"${PACKAGE_PREFIX}"*.rpm.sig) ;;
               *)
                 echo "Skipping out-of-version sig: $SIG_NAME"
@@ -991,10 +980,10 @@ jobs:
               *_arm64-setup.nsis.zip)    PLATFORM_KEY="windows-aarch64" ;;
               *_amd64.AppImage.tar.gz)   PLATFORM_KEY="linux-x86_64-appimage" ;;
               *_aarch64.AppImage.tar.gz) PLATFORM_KEY="linux-aarch64-appimage" ;;
-              SwitchHosts-${VERSION}-linux-amd64.deb)    PLATFORM_KEY="linux-x86_64-deb" ;;
-              SwitchHosts-${VERSION}-linux-arm64.deb)    PLATFORM_KEY="linux-aarch64-deb" ;;
-              SwitchHosts-${VERSION}-linux-x86_64.rpm)   PLATFORM_KEY="linux-x86_64-rpm" ;;
-              SwitchHosts-${VERSION}-linux-aarch64.rpm)  PLATFORM_KEY="linux-aarch64-rpm" ;;
+              "SwitchHosts-${VERSION}-linux-amd64.deb")    PLATFORM_KEY="linux-x86_64-deb" ;;
+              "SwitchHosts-${VERSION}-linux-arm64.deb")    PLATFORM_KEY="linux-aarch64-deb" ;;
+              "SwitchHosts-${VERSION}-linux-x86_64.rpm")   PLATFORM_KEY="linux-x86_64-rpm" ;;
+              "SwitchHosts-${VERSION}-linux-aarch64.rpm")  PLATFORM_KEY="linux-aarch64-rpm" ;;
             esac
             [ -z "$PLATFORM_KEY" ] && continue
 

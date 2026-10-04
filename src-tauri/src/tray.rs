@@ -24,17 +24,15 @@ use serde_json::json;
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{
-    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, Rect as TauriRect, Runtime,
-};
+use tauri::{AppHandle, Emitter, Manager, Monitor, PhysicalPosition, Rect as TauriRect, Runtime};
 
 use crate::i18n::menu_labels;
 use crate::lifecycle;
 use crate::storage::{AppState, StorageError};
 
 mod window;
-use window::{TRAY_WINDOW_HEIGHT, TRAY_WINDOW_WIDTH};
 pub use window::TRAY_WINDOW_LABEL;
+use window::{TRAY_WINDOW_MAX_HEIGHT, TRAY_WINDOW_WIDTH};
 
 // Use AppKit's named masks so pointer motion cannot accidentally become a
 // dismissal event (NSEventType::MouseMoved is 5, OtherMouseDown is 25).
@@ -457,7 +455,14 @@ fn show_tray_window<R: Runtime>(
         None => create_tray_window(app).map_err(|e| e.to_string())?,
     };
 
-    if let Some(physical_pos) = compute_position(app, cursor, icon_rect) {
+    // Reused windows retain their initial size. Use their actual logical height
+    // when anchoring above a bottom taskbar or clamping to the monitor work area.
+    let height = window
+        .inner_size()
+        .map_err(|e| e.to_string())?
+        .to_logical::<f64>(window.scale_factor().map_err(|e| e.to_string())?)
+        .height;
+    if let Some(physical_pos) = compute_position(app, cursor, icon_rect, height) {
         window
             .set_position(physical_pos)
             .map_err(|e| e.to_string())?;
@@ -493,7 +498,14 @@ fn show_tray_window<R: Runtime>(
 fn create_tray_window<R: Runtime>(
     app: &AppHandle<R>,
 ) -> Result<tauri::WebviewWindow<R>, tauri::Error> {
-    let window = window::create(app)?;
+    let height = match app.state::<AppState>().read_manifest() {
+        Ok(manifest) => window::initial_height(&manifest.root),
+        Err(error) => {
+            log::warn!("failed to read tray list for initial size: {error}");
+            TRAY_WINDOW_MAX_HEIGHT
+        }
+    };
+    let window = window::create(app, height)?;
 
     #[cfg(not(target_os = "macos"))]
     {
@@ -570,6 +582,7 @@ fn compute_position<R: Runtime>(
     app: &AppHandle<R>,
     cursor: PhysicalPosition<f64>,
     icon_rect: TauriRect,
+    height: f64,
 ) -> Option<PhysicalPosition<f64>> {
     let monitor = pick_monitor_for_cursor(app, cursor, icon_rect)?;
 
@@ -587,10 +600,10 @@ fn compute_position<R: Runtime>(
     let icon_w = icon_phys_size.width;
     let icon_h = icon_phys_size.height;
 
-    // The 300×600 design size is in logical units; scale to this
+    // The window size is in logical units; scale to this
     // monitor's physical pixels so the math below stays consistent.
     let win_w = TRAY_WINDOW_WIDTH * scale;
-    let win_h = TRAY_WINDOW_HEIGHT * scale;
+    let win_h = height * scale;
 
     // X: centre under the icon
     let mut x = icon_x + icon_w / 2.0 - win_w / 2.0;
