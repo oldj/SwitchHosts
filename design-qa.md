@@ -69,3 +69,13 @@ No remaining actionable P0/P1/P2 visual findings. Validation also passed typeche
 - Confirmed that the background scanner only logged top-level errors. Partial and failed DNS outcomes now produce one warning per node with failed/total counts, counting stale results as failed attempts and omitting endpoint and per-domain error text. A regression captures the logger used by both startup and periodic scans.
 - Replaced machine-specific screenshot paths in this record with descriptions of local evidence. The VS Code Tauri launch configuration was verified and required no changes.
 - Validation passed: 265 frontend unit tests, 253 Rust library tests, 55 E2E tests, typecheck, ESLint, renderer build, Rust formatting and whitespace checks. Default 5-second frontend timeouts were exceeded by different existing tests on two runs; a standalone rerun with a 15-second CLI timeout passed without source or test assertion changes. E2E uses isolated Tauri/DNS fixtures; Rust HTTP regressions use loopback servers, not external DoH services. The existing renderer bundle-size warning remains.
+
+## Hosts sidebar colors and selection — 2026-10-04
+
+- Adopted the approved soft-selection design: tinted selected rows with a 3 px leading marker, red enabled switches in light mode, and muted rose enabled switches in dark mode. Selected text and edit icons use theme-specific foreground colors.
+- Hover uses the same background as selection. The leading marker uses an absolutely positioned pseudo-element with rounded left corners and square right corners, preserving row geometry and pointer behavior.
+- Browser comparisons used local reference images and screenshots, not checked into the repository. Light and dark views covered selected ON/OFF states, unselected hover, edit-icon visibility, mouse toggles, Space/Enter toggles and theme switching. Post-fix 1280 × 720 captures showed selected and hovered rows together; their computed backgrounds matched in both themes.
+- Renderer build and whitespace checks passed; the existing three SwitchButton tests passed. The existing bundle-size warning remains.
+- Preview used isolated Tauri fixtures, not real hosts writes. Existing fixture gaps for `get_data_dir_status` and `helper_status`, and a Preferences overflow-style warning, were observed. Native release behavior was not exercised.
+
+Sidebar visual QA final result: passed.

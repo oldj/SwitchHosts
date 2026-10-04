@@ -1,4 +1,5 @@
 .root {
+  position: relative;
   height: var(--swh-tree-row-height);
   line-height: var(--swh-tree-row-height);
   border-radius: var(--swh-border-radius);
@@ -7,7 +8,18 @@
 }
 
 .selected {
-  background: var(--swh-tree-selected-bg);
+  background: var(--swh-hosts-selected-bg);
+  color: var(--swh-hosts-selected-color);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    border-radius: var(--swh-border-radius) 0 0 var(--swh-border-radius);
+    background: var(--swh-hosts-selected-indicator);
+    pointer-events: none;
+  }
 }
 
 .icon {

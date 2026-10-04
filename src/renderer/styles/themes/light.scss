@@ -25,6 +25,9 @@
   --swh-tree-node-drag-bg: var(--mantine-color-white);
   --swh-tree-selected-bg: var(--mantine-primary-color-filled);
   --swh-tree-hover-bg: var(--mantine-primary-color-light);
+  --swh-hosts-selected-bg: #fbecef;
+  --swh-hosts-selected-color: #98283b;
+  --swh-hosts-selected-indicator: #ce3549;
 
   // main
   --swh-main-bg: #fff;
@@ -43,10 +46,12 @@
   --swh-right-bar-bg: var(--mantine-color-gray-0);
 
   // switch button
-  --swh-switch-button-main-color-off: #999;
-  --swh-switch-button-bg-color-off: #ccc;
-  --swh-switch-button-main-color-on: #91d982;
-  --swh-switch-button-bg-color-on: #fff;
+  --swh-switch-button-main-color-off: #fff;
+  --swh-switch-button-bg-color-off: #d6d8dd;
+  --swh-switch-button-border-color-off: #a0a4ad;
+  --swh-switch-button-main-color-on: #fff;
+  --swh-switch-button-bg-color-on: #c9364f;
+  --swh-switch-button-border-color-on: #c9364f;
 
   // editor & viewer
   --swh-editor-text-color: #000;
