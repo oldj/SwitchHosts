@@ -1,3 +1,4 @@
+import { importChinese } from '../import'
 /**
  * @author: oldj
  * @homepage: https://oldj.net
@@ -6,6 +7,7 @@
 import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
+  ...importChinese,
   _app_name: 'SwitchHosts',
   domain_list: '域名列表',
   domain_list_hint: '每行一个域名，也可粘贴网址，自动提取域名',

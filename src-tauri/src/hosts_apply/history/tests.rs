@@ -219,22 +219,19 @@ fn concurrent_recording_and_deletion_do_not_resurrect_or_lose_records() {
 }
 
 #[test]
-fn legacy_import_uses_current_limit() {
+fn import_preserves_local_history_even_when_backup_contains_history() {
     let f = Fixture::new();
-    update_limit(&f.0, 10, None).unwrap();
-    let records = (0..2000)
-        .map(|i| json!({"id": i.to_string(), "content": "hosts", "add_time_ms": i}))
-        .collect::<Vec<_>>();
-    let backup = json!({"version": [4], "data": {"collection": {"history": {"data": records}}}});
-    let result = crate::import_export::import_backup_bytes(
-        &serde_json::to_vec(&backup).unwrap(),
-        &f.0.paths,
-    )
-    .unwrap();
-    assert_eq!(result, json!(true));
-    let records = load(&f.path()).unwrap();
-    assert_eq!(records.len(), 10);
-    assert_eq!(records[0].id, "1990");
+    f.seed(10);
+    let original = std::fs::read(f.path()).unwrap();
+    let backup = json!({"version": [4], "data": {
+        "list": {"tree": [{"id":"imported", "type":"local"}]},
+        "collection": {
+            "hosts": {"data": [{"id":"imported", "content":"hosts"}]},
+            "history": {"data": [{"id":"foreign", "content":"foreign history"}]}
+        }
+    }});
+    crate::import_export::preview::replace_for_test(&backup, &f.0.paths);
+    assert_eq!(std::fs::read(f.path()).unwrap(), original);
 }
 
 #[test]
@@ -379,14 +376,13 @@ fn importing_hosts_without_history_does_not_require_readable_retention_config() 
         "list": {"tree": [{"id":"imported", "type":"local"}]},
         "collection": {"hosts": {"data": [{"id":"imported", "content":"127.0.0.1 example.test"}]}}
     }});
-    let result = crate::import_export::import_backup_bytes(
-        &serde_json::to_vec(&backup).unwrap(),
-        &f.0.paths,
-    )
-    .unwrap();
-    assert_eq!(result, json!(true));
+    let root = crate::import_export::preview::replace_for_test(&backup, &f.0.paths);
     assert_eq!(
-        std::fs::read_to_string(f.0.paths.entries_dir.join("imported.hosts")).unwrap(),
+        crate::storage::entries::read_entry(
+            &f.0.paths.entries_dir,
+            root[0]["id"].as_str().unwrap()
+        )
+        .unwrap(),
         "127.0.0.1 example.test"
     );
     assert_eq!(

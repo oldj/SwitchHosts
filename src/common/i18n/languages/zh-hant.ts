@@ -1,3 +1,4 @@
+import { importTraditionalChinese } from '../import'
 /**
  * @author: rayatn1011
  * @homepage: https://github.com/rayatn1011
@@ -6,6 +7,7 @@
 import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
+  ...importTraditionalChinese,
   _app_name: 'SwitchHosts',
   domain_list: '網域列表',
   domain_list_hint: '每行一個網域，也可貼上網址，自動擷取網域',

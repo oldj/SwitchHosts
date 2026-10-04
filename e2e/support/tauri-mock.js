@@ -368,6 +368,24 @@
     }
   }
 
+  let pendingImport = null
+  let importSnapshot = ''
+  let importCounter = 0
+  const snapshotImport = () => JSON.stringify([state.list, state.contents])
+  const prepareImport = (name, list, contents) => {
+    pendingImport = {
+      id: `preview-${++importCounter}`,
+      name,
+      list,
+      contents,
+      existing_list: clone(state.list),
+      same_title: [],
+      same_content: [],
+    }
+    importSnapshot = snapshotImport()
+    return clone(pendingImport)
+  }
+
   window.__SWITCHHOSTS_E2E__ = {
     state,
     getState: () => clone(state),
@@ -408,6 +426,9 @@
     },
     setNextDomainRefreshFailures: (failures = {}) => {
       state.nextDomainRefreshFailures = clone(failures)
+    },
+    editDuringImport: () => {
+      state.contents['local-dev'] += '# concurrent edit\n'
     },
     delayNextImport: (ms = 300) => {
       state.nextImportDelayMs = ms
@@ -658,9 +679,11 @@
             return clone(result)
           }
           return refreshRemote(params[0])
+        case 'get_data_dir_status':
+          return { recovery: null, default_dir: '/Users/e2e/.SwitchHosts' }
         case 'export_data':
           return '/Users/e2e/exports/switchhosts_20260509_121436.789.json'
-        case 'import_data':
+        case 'import_data': {
           if (state.nextImportDelayMs) {
             const ms = state.nextImportDelayMs
             state.nextImportDelayMs = 0
@@ -669,43 +692,63 @@
           if (Object.prototype.hasOwnProperty.call(state, 'nextImportResult')) {
             const result = state.nextImportResult
             delete state.nextImportResult
-            return result
+            if (result === null) return null
+            throw result
           }
-          state.list = [
+          return prepareImport(
+            'switchhosts_backup',
+            [
+              { id: 'imported-local', title: 'Imported Backup', type: 'local', on: false },
+              {
+                id: 'imported-folder',
+                title: 'Imported Folder',
+                type: 'folder',
+                on: false,
+                children: [
+                  {
+                    id: 'imported-folder-child',
+                    title: 'Imported Folder Child',
+                    type: 'local',
+                    on: false,
+                  },
+                  {
+                    id: 'imported-nested',
+                    title: 'Nested Folder',
+                    type: 'folder',
+                    on: false,
+                    children: [
+                      { id: 'imported-a', title: 'Nested A', type: 'local', on: false },
+                      { id: 'imported-b', title: 'Nested B', type: 'local', on: false },
+                    ],
+                  },
+                  {
+                    id: 'imported-empty',
+                    title: 'Empty Folder',
+                    type: 'folder',
+                    on: false,
+                    children: [],
+                  },
+                ],
+              },
+              {
+                id: 'imported-group',
+                title: 'Imported Group',
+                type: 'group',
+                include: ['imported-local'],
+                on: false,
+              },
+            ],
             {
-              id: 'imported-local',
-              title: 'Imported Backup',
-              type: 'local',
-              on: false,
+              'imported-local':
+                '# Imported hosts\n::1 localhost\n' +
+                '172.16.0.10 imported-backup.local\n'.repeat(80),
+              'imported-folder-child': '172.16.0.11 imported-child.local\n',
+              'imported-a': '127.0.0.1 nested-a.local\n',
+              'imported-b': '127.0.0.1 nested-b.local\n',
             },
-            {
-              id: 'imported-folder',
-              title: 'Imported Folder',
-              type: 'folder',
-              folder_mode: 0,
-              on: false,
-              children: [
-                {
-                  id: 'imported-folder-child',
-                  title: 'Imported Folder Child',
-                  type: 'local',
-                  on: false,
-                },
-              ],
-            },
-            {
-              id: 'imported-group',
-              title: 'Imported Group',
-              type: 'group',
-              include: ['imported-local'],
-              on: false,
-            },
-          ]
-          state.contents['imported-local'] = '172.16.0.10 imported-backup.local\n'
-          state.contents['imported-folder-child'] = '172.16.0.11 imported-child.local\n'
-          state.trashcan = []
-          return true
-        case 'import_data_from_url':
+          )
+        }
+        case 'import_data_from_url': {
           if (state.nextImportFromUrlDelayMs) {
             const ms = state.nextImportFromUrlDelayMs
             state.nextImportFromUrlDelayMs = 0
@@ -714,30 +757,75 @@
           if (Object.prototype.hasOwnProperty.call(state, 'nextImportFromUrlResult')) {
             const result = state.nextImportFromUrlResult
             delete state.nextImportFromUrlResult
-            return result
+            throw result
           }
-          state.list = [
+          return prepareImport(
+            'swh_data',
+            [
+              {
+                id: 'imported-url',
+                title: 'Imported From URL',
+                type: 'remote',
+                url: params[0],
+                refresh_interval: 0,
+                on: false,
+              },
+              { id: 'imported-url-local', title: 'Imported URL Local', type: 'local', on: false },
+            ],
             {
-              id: 'imported-url',
-              title: 'Imported From URL',
-              type: 'remote',
-              url: params[0],
-              refresh_interval: 0,
-              last_refresh: '2026-05-08 13:00:00',
-              last_refresh_ms: 1778206800000,
-              on: false,
+              'imported-url': '172.16.0.20 imported-url.local\n',
+              'imported-url-local': '172.16.0.21 imported-url-local.local\n',
             },
-            {
-              id: 'imported-url-local',
-              title: 'Imported URL Local',
-              type: 'local',
-              on: false,
-            },
-          ]
-          state.contents['imported-url'] = '172.16.0.20 imported-url.local\n'
-          state.contents['imported-url-local'] = '172.16.0.21 imported-url-local.local\n'
-          state.trashcan = []
-          return true
+          )
+        }
+        case 'discard_import':
+          if (pendingImport?.id === params[0]) pendingImport = null
+          return null
+        case 'rebase_import':
+          if (pendingImport?.id !== params[0]) throw { kind: 'expired' }
+          pendingImport.existing_list = clone(state.list)
+          importSnapshot = snapshotImport()
+          return clone(pendingImport)
+        case 'commit_import': {
+          const request = params[0]
+          if (pendingImport?.id !== request.id) throw { kind: 'expired' }
+          if (snapshotImport() !== importSnapshot) throw { kind: 'changed' }
+          if (request.mode === 'replace' && !request.confirmed)
+            throw { kind: 'invalid', detail: 'confirmation_required' }
+          const selected = new Set(request.selected)
+          const prune = (items, parentSelected = false) =>
+            items.flatMap((item) => {
+              const include = parentSelected || request.mode === 'replace' || selected.has(item.id)
+              const children = prune(item.children || [], include)
+              return include || children.length
+                ? [{ ...item, ...(item.children ? { children } : {}) }]
+                : []
+            })
+          let imported = prune(pendingImport.list)
+          const mapping = new Map(
+            flatten(imported).map((item) => [item.id, `copy-${++importCounter}`]),
+          )
+          for (const item of flatten(imported)) {
+            const content = pendingImport.contents[item.id]
+            item.id = mapping.get(item.id)
+            item.on = false
+            if (item.include) item.include = item.include.map((id) => mapping.get(id))
+            if (content !== undefined) state.contents[item.id] = content
+          }
+          if (request.mode === 'append' && request.folder_name)
+            imported = [
+              {
+                id: `copy-${++importCounter}`,
+                title: request.folder_name,
+                type: 'folder',
+                on: false,
+                children: imported,
+              },
+            ]
+          state.list = request.mode === 'append' ? [...state.list, ...imported] : imported
+          pendingImport = null
+          return { imported: flatten(imported).filter((node) => node.type !== 'folder').length }
+        }
         case 'update_tray_title':
         case 'find_set_window_title':
         case 'dark_mode_toggle':

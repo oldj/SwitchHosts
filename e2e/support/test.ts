@@ -76,6 +76,7 @@ declare global {
       failNextApply: (result?: { code?: string; message?: string }) => void
       failNextRefresh: (result?: { code?: string; message?: string }) => void
       setNextDomainRefreshFailures: (failures?: Record<string, string>) => void
+      editDuringImport: () => void
       delayNextImport: (ms?: number) => void
       failNextImport: (result?: string | false | null) => void
       delayNextImportFromUrl: (ms?: number) => void

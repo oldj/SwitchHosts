@@ -19,7 +19,8 @@ import {
   updateErrorNotification,
   updateSuccessNotification,
 } from '@renderer/core/notify'
-import useHostsData from '@renderer/models/useHostsData'
+import type { ImportPreview as Preview } from '@common/import'
+import ImportPreview, { importErrorMessage } from './ImportPreview'
 import useI18n from '@renderer/models/useI18n'
 import {
   IconAdjustments,
@@ -46,7 +47,8 @@ interface IProps {
 const ConfigMenu = (props: IProps) => {
   const { iconSize = 16, size, menuPosition, tooltip } = props
   const { lang } = useI18n()
-  const { loadHostsData, setCurrentHosts } = useHostsData()
+  const [preview, setPreview] = useState<Preview | null>(null)
+  const [importing, setImporting] = useState(false)
   const [showImportFromUrl, setShowImportFromUrl] = useState(false)
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
 
@@ -168,40 +170,27 @@ const ConfigMenu = (props: IProps) => {
             </Menu.Item>
             <Menu.Item
               leftSection={<IconDownload size={iconSize} stroke={strokeWidth} />}
+              disabled={importing}
               onClick={async () => {
+                if (importing) return
+                setImporting(true)
                 const notificationId = showLoadingNotification({
                   title: lang.import,
                   message: lang.loading,
                 })
-
                 try {
-                  const r = await actions.importData()
-                  if (r === null) {
-                    hideAppNotification(notificationId)
-                    return
-                  } else if (r === true) {
-                    await loadHostsData()
-                    setCurrentHosts(null)
-                    updateSuccessNotification(notificationId, {
-                      title: lang.import,
-                      message: lang.import_done,
-                    })
-                  } else {
-                    let description = lang.import_fail
-                    if (typeof r === 'string') {
-                      description += ` [${r}]`
-                    }
-
-                    updateErrorNotification(notificationId, {
-                      title: lang.import,
-                      message: description,
-                    })
-                  }
+                  const data = await actions.importData()
+                  if (data === null) return
+                  if (!data || typeof data !== 'object' || !Array.isArray(data.list)) throw data
+                  setPreview(data)
                 } catch (error) {
-                  updateErrorNotification(notificationId, {
+                  showErrorNotification({
                     title: lang.import,
-                    message: getErrorMessage(error, lang.import_fail),
+                    message: importErrorMessage(error, lang),
                   })
+                } finally {
+                  hideAppNotification(notificationId)
+                  setImporting(false)
                 }
               }}
             >
@@ -235,7 +224,14 @@ const ConfigMenu = (props: IProps) => {
           </ScrollArea.Autosize>
         </Menu.Dropdown>
       </Menu>
-      <ImportFromUrl isShow={showImportFromUrl} setIsShow={setShowImportFromUrl} />
+      <ImportFromUrl
+        isShow={showImportFromUrl}
+        setIsShow={setShowImportFromUrl}
+        onPreview={setPreview}
+      />
+      {preview && (
+        <ImportPreview key={preview.id} preview={preview} onClose={() => setPreview(null)} />
+      )}
     </>
   )
 }

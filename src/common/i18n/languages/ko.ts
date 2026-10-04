@@ -1,8 +1,10 @@
+import { importEnglish } from '../import'
 /**
  * @author: wooklab
  */
 
 export default {
+  ...importEnglish,
   _app_name: 'SwitchHosts',
   domain_list: '도메인 목록',
   domain_list_hint: '한 줄에 도메인 하나를 입력하세요. 붙여 넣은 URL에서 도메인을 추출합니다.',

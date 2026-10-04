@@ -1,3 +1,4 @@
+import { importEnglish } from '../import'
 /**
  * @author: bergo
  * @homepage: https://bergo.dev
@@ -6,6 +7,7 @@
 import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
+  ...importEnglish,
   _app_name: 'SwitchHosts',
   domain_list: 'Domainliste',
   domain_list_hint: 'Eine Domain pro Zeile. Eingefügte URLs werden in Domains umgewandelt.',

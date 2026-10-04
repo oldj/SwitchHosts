@@ -904,14 +904,9 @@ mod tests {
                 );
                 let backup = json!({"format":"switchhosts-backup", "manifest":{"root":[imported_node.clone()]},
                     "entries":{"batch":imported_content.clone()}});
-                assert_eq!(
-                    crate::import_export::import_backup_bytes(
-                        &serde_json::to_vec(&backup).unwrap(),
-                        &state.paths,
-                    )
-                    .unwrap(),
-                    json!(true)
-                );
+                let imported =
+                    crate::import_export::preview::replace_for_test(&backup, &state.paths);
+                let imported_id = imported[0]["id"].as_str().unwrap();
 
                 let attempt = if query_succeeds {
                     Ok(vec!["9.8.7.6".parse().unwrap()])
@@ -928,14 +923,11 @@ mod tests {
                 let content = crate::dns::build_batch_hosts_content(&results, "Test DoH");
                 assert!(matches!(
                     commit_refresh(state, "batch", &snapshot, &content, Some(&results)),
-                    Err(RefreshError::SourceChanged)
+                    Err(RefreshError::InvalidId)
                 ));
+                assert_eq!(Manifest::load(&state.paths).unwrap().root, imported);
                 assert_eq!(
-                    Manifest::load(&state.paths).unwrap().root,
-                    vec![imported_node]
-                );
-                assert_eq!(
-                    entries::read_entry(&state.paths.entries_dir, "batch").unwrap(),
+                    entries::read_entry(&state.paths.entries_dir, imported_id).unwrap(),
                     imported_content
                 );
             }
@@ -957,20 +949,17 @@ mod tests {
         let snapshot = read_refresh_snapshot(state, "url").unwrap();
         let backup = json!({"format":"switchhosts-backup", "manifest":{"root":[node.clone()]},
             "entries":{"url":"imported"}});
-        crate::import_export::import_backup_bytes(
-            &serde_json::to_vec(&backup).unwrap(),
-            &state.paths,
-        )
-        .unwrap();
+        let imported = crate::import_export::preview::replace_for_test(&backup, &state.paths);
+        let imported_id = imported[0]["id"].as_str().unwrap();
         assert!(matches!(
             commit_refresh(state, "url", &snapshot, "old response", None),
-            Err(RefreshError::SourceChanged)
+            Err(RefreshError::InvalidId)
         ));
         assert_eq!(
-            entries::read_entry(&state.paths.entries_dir, "url").unwrap(),
+            entries::read_entry(&state.paths.entries_dir, imported_id).unwrap(),
             "imported"
         );
-        assert_eq!(Manifest::load(&state.paths).unwrap().root, vec![node]);
+        assert_eq!(Manifest::load(&state.paths).unwrap().root, imported);
     }
 
     #[test]

@@ -13,10 +13,11 @@ import styles from './HostsViewer.module.scss'
 
 interface Props {
   content: string
+  showStatusBar?: boolean
 }
 
 const HostsViewer = (props: Props) => {
-  const { content } = props
+  const { content, showStatusBar = true } = props
   const refMount = useRef<HTMLDivElement>(null)
   const refView = useRef<EditorView | null>(null)
 
@@ -52,14 +53,18 @@ const HostsViewer = (props: Props) => {
 
   return (
     <div className={styles.root}>
-      <div className={clsx(styles.editor, styles.read_only)}>
+      <div
+        className={clsx(styles.editor, styles.read_only, !showStatusBar && styles.fullHeight)}
+      >
         <div ref={refMount} className={styles.mount} />
       </div>
-      <StatusBar
-        lineCount={content.split('\n').length}
-        bytes={content.length}
-        readOnly={true}
-      />
+      {showStatusBar && (
+        <StatusBar
+          lineCount={content.split('\n').length}
+          bytes={content.length}
+          readOnly={true}
+        />
+      )}
     </div>
   )
 }
