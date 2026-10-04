@@ -20,6 +20,8 @@ pub enum Target {
     Manifest,
     Trashcan,
     State,
+    Config,
+    ApplyHistory,
     Entry(String),
 }
 
@@ -29,6 +31,8 @@ impl Target {
             Self::Manifest => paths.manifest_file.clone(),
             Self::Trashcan => paths.trashcan_file.clone(),
             Self::State => paths.state_file.clone(),
+            Self::Config => paths.config_file.clone(),
+            Self::ApplyHistory => paths.histories_dir.join("system-hosts.json"),
             Self::Entry(id) => entries::entry_path(&paths.entries_dir, id)?,
         })
     }

@@ -524,6 +524,8 @@ pub fn run() {
             commands::refresh_all_remote_hosts,
             commands::get_apply_history,
             commands::delete_apply_history_item,
+            commands::clear_apply_history,
+            commands::update_apply_history_limit,
             // cmd_after_hosts_apply history
             commands::cmd_get_history_list,
             commands::cmd_delete_history_item,

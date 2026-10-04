@@ -244,6 +244,22 @@ const lang: LanguageDict = {
   sudo_prompt_title: 'Entrez votre mot de passe sudo',
   system: 'Système',
   system_hosts: 'Hosts du système',
+  history_record: 'Enregistrer l’historique',
+  history_disabled_hint:
+    'L’enregistrement est désactivé. L’historique existant reste consultable et peut être supprimé.',
+  history_count: '{0} entrées enregistrées',
+  history_unlimited: 'Illimité',
+  history_delete_selected: 'Supprimer la sélection',
+  history_clear_confirm:
+    'Effacer tout l’historique du fichier Hosts système ? Cette action est irréversible.',
+  history_trim_title: 'Réduire l’historique conservé ?',
+  history_trim_change: 'Le nombre maximal d’entrées passera de {0} à {1}.',
+  history_trim_details:
+    'Conserver les {0} entrées les plus récentes et supprimer les {1} plus anciennes.',
+  history_irreversible: 'Les entrées supprimées ne pourront pas être récupérées.',
+  history_trim_confirm: 'Enregistrer et supprimer {0} entrées',
+  history_error: 'Échec de l’opération sur l’historique',
+  history_retry: 'Réessayer',
   system_hosts_history: 'Historique des versions hosts du système',
   system_hosts_history_delete_confirm: 'Êtes-vous sûr de vouloir supprimer cet élément ?',
   system_hosts_history_help:

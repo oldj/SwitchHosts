@@ -208,13 +208,16 @@ fn import_v4(data: &Value, paths: &V5Paths) -> Result<Value, StorageError> {
         .cloned()
         .unwrap_or_default();
 
-    let history_data = inner
+    let mut history_data = inner
         .get("collection")
         .and_then(|c| c.get("history"))
         .and_then(|h| h.get("data"))
         .and_then(Value::as_array)
         .cloned()
         .unwrap_or_default();
+
+    let config = crate::storage::AppConfig::load_checked(&paths.config_file)?;
+    crate::hosts_apply::history::trim(&mut history_data, config.history_limit);
 
     // Write entries first — if this fails, manifest hasn't been
     // overwritten yet, so the user still sees their pre-import state.

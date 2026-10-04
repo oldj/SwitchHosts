@@ -2,7 +2,10 @@ use super::*;
 use crate::storage::{AppConfig, V5Paths};
 use std::collections::BTreeMap;
 use std::path::Path;
-use std::sync::{atomic::AtomicBool, Mutex};
+use std::sync::{
+    atomic::{AtomicBool, AtomicU64},
+    Mutex,
+};
 
 struct Fixture {
     state: AppState,

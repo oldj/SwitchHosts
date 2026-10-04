@@ -33,6 +33,7 @@ pub struct AppConfig {
     // preferences
     pub write_mode: String, // "overwrite" | "append" | ""
     pub history_limit: u32,
+    pub history_enabled: bool,
     pub locale: Option<String>,
     pub theme: String, // "light" | "dark" | "system"
     pub choice_mode: u8,
@@ -85,6 +86,7 @@ impl Default for AppConfig {
 
             write_mode: "append".to_string(),
             history_limit: 50,
+            history_enabled: true,
             locale: None,
             theme: "system".to_string(),
             choice_mode: 2,
@@ -151,31 +153,24 @@ impl AppConfig {
     ///   warning, and defer any overwrite until the user triggers a real
     ///   write. The corrupted file is left on disk for inspection.
     pub fn load(path: &Path) -> Self {
-        if !path.exists() {
-            return Self::default();
-        }
-        match std::fs::read(path) {
-            Ok(bytes) => match serde_json::from_slice::<AppConfig>(&bytes) {
-                Ok(mut cfg) => {
-                    cfg.normalize();
-                    cfg
-                }
-                Err(e) => {
-                    log::warn!(
-                        "config.json at {} failed to parse: {e}. Falling back to defaults in memory; the file will not be overwritten until the next explicit write.",
-                        path.display()
-                    );
-                    Self::default()
-                }
-            },
-            Err(e) => {
-                log::warn!(
-                    "config.json at {} unreadable: {e}. Falling back to defaults in memory.",
-                    path.display()
-                );
-                Self::default()
-            }
-        }
+        Self::load_checked(path).unwrap_or_else(|e| {
+            log::warn!("{e}; using default config in memory without overwriting the file");
+            Self::default()
+        })
+    }
+
+    /// Maintenance must not discard history based on fallback defaults when
+    /// the user's actual retention setting cannot be read.
+    pub fn load_checked(path: &Path) -> Result<Self, StorageError> {
+        let bytes = match std::fs::read(path) {
+            Ok(bytes) => bytes,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Self::default()),
+            Err(e) => return Err(StorageError::io(path.display().to_string(), e)),
+        };
+        let mut cfg: Self = serde_json::from_slice(&bytes)
+            .map_err(|e| StorageError::parse(path.display().to_string(), e))?;
+        cfg.normalize();
+        Ok(cfg)
     }
 
     /// Save to disk with the format envelope, atomically.
