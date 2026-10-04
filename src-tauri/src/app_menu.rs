@@ -28,7 +28,7 @@ pub const MENU_ID_QUIT_APP: &str = "app-quit";
 pub const MENU_ID_HIDE_APP: &str = "app-hide";
 
 pub const FEEDBACK_URL: &str = "https://github.com/oldj/SwitchHosts/issues";
-pub const HOMEPAGE_URL: &str = "https://switchhosts.vercel.app/home/";
+pub const HOMEPAGE_URL: &str = "https://switchhosts.app";
 
 /// Build and install the application menu. Called once from
 /// `lib.rs::run`'s setup hook.
