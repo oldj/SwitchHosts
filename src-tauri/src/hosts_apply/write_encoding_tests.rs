@@ -1,4 +1,7 @@
 use super::*;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static FIXTURE_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 struct Fixture {
     root: PathBuf,
@@ -12,9 +15,14 @@ impl Fixture {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let root =
-            std::env::temp_dir().join(format!("swh-encoding-{}-{stamp}", std::process::id()));
-        std::fs::create_dir_all(&root).unwrap();
+        // Clock resolution can be coarser than parallel fixture creation.
+        // Never share a directory (or its Drop cleanup) between test cases.
+        let root = std::env::temp_dir().join(format!(
+            "swh-encoding-{}-{stamp}-{}",
+            std::process::id(),
+            FIXTURE_SEQUENCE.fetch_add(1, Ordering::Relaxed)
+        ));
+        std::fs::create_dir(&root).unwrap();
         Self {
             target: root.join("hosts"),
             backups: root.join("backups"),
