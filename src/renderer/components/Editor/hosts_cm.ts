@@ -24,6 +24,7 @@ import {
 } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { getHostsBoundary, isHostsCommentLine, isValidHostsLine } from './hosts_highlight'
+import { commentLinks } from './hosts_links'
 
 export interface BoundaryLabels {
   start: string
@@ -229,6 +230,8 @@ const hostsTheme = EditorView.theme({
 
 export interface BuildExtensionsOptions {
   initialReadOnly: boolean
+  isMac: boolean
+  onOpenUrl: (url: string) => void
   onDocChange: (next: string) => void
   onGutterClick: (lineIndex: number) => void
 }
@@ -240,6 +243,8 @@ export interface BuiltExtensions {
 
 export function buildExtensions({
   initialReadOnly,
+  isMac,
+  onOpenUrl,
   onDocChange,
   onGutterClick,
 }: BuildExtensionsOptions): BuiltExtensions {
@@ -264,6 +269,7 @@ export function buildExtensions({
     }),
     keymap.of([...defaultKeymap, ...historyKeymap]),
     hostsHighlighter,
+    commentLinks(isMac, onOpenUrl),
     selectedText,
     hostsTheme,
     EditorView.updateListener.of((u) => {
