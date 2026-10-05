@@ -272,6 +272,91 @@ fn reads_v3_v4_and_persisted_v5_shapes() {
 }
 
 #[test]
+fn v4_empty_configs_without_content_records_remain_importable() {
+    // Legacy content records are created on first edit/refresh, not when the
+    // tree node is created. A valid backup may therefore contain empty nodes.
+    let data = json!({"version":[4],"data":{
+        "list":{"tree":[
+            {"id":"filled","type":"local"},
+            {"id":"folder","type":"folder","children":[
+                {"id":"empty","type":"local"},
+                {"id":"pending","type":"remote","url":"https://example.test/hosts"}
+            ]}
+        ]},
+        "collection":{"hosts":{"data":[{"id":"filled","content":"127.0.0.1 example.test"}]}}
+    }});
+    let f = Fixture::new();
+    let imported = replace_for_test(&data, &f.0);
+    let mut ids = Vec::new();
+    manifest::collect_content_ids(&imported, &mut ids);
+    assert_eq!(ids.len(), 3);
+    assert_eq!(
+        entries::read_entry(&f.0.entries_dir, &ids[0]).unwrap(),
+        "127.0.0.1 example.test"
+    );
+    for key in &ids[1..] {
+        assert!(entries::entry_path(&f.0.entries_dir, key).unwrap().exists());
+        assert_eq!(entries::read_entry(&f.0.entries_dir, key).unwrap(), "");
+    }
+}
+
+#[test]
+fn v4_malformed_content_collections_are_not_treated_as_empty_configs() {
+    for collection in [
+        json!(false),
+        json!({"hosts": []}),
+        json!({"hosts": {"data": {}}}),
+        json!({"hosts": {"data": [{"id":"empty", "content":null}]}}),
+    ] {
+        let data = json!({"version":[4],"data":{
+            "list":{"tree":[{"id":"empty","type":"local"}]},
+            "collection":collection
+        }});
+        assert!(parse(&serde_json::to_vec(&data).unwrap()).is_err());
+    }
+}
+
+#[test]
+fn v4_missing_content_collection_is_not_treated_as_an_empty_record() {
+    for collection in [None, Some(json!({})), Some(json!({"hosts": {}}))] {
+        let mut data = json!({"version":[4],"data":{
+            "list":{"tree":[{"id":"folder","type":"folder","children":[
+                {"id":"local","type":"local"}
+            ]}]}
+        }});
+        if let Some(collection) = collection {
+            data["data"]["collection"] = collection;
+        }
+        assert!(parse(&serde_json::to_vec(&data).unwrap()).is_err());
+        data["data"]["collection"] = json!({"hosts":{"data":[]}});
+        let draft = parse(&serde_json::to_vec(&data).unwrap()).unwrap();
+        assert_eq!(draft.contents["local"], "");
+    }
+    let folders_only = json!({"version":[4],"data":{
+        "list":{"tree":[{"id":"folder","type":"folder","children":[]}]}
+    }});
+    assert!(parse(&serde_json::to_vec(&folders_only).unwrap()).is_ok());
+}
+
+#[test]
+fn group_reference_depth_limit_does_not_depend_on_node_order() {
+    for depth in [60, 61] {
+        let mut root = vec![json!({"id":"g0","type":"group","include":[]})];
+        for i in 1..=depth {
+            root.push(json!({"id":format!("g{i}"),"type":"group","include":[format!("g{}", i-1)]}));
+        }
+        for _ in 0..2 {
+            let data = json!({"format":"switchhosts-backup","manifest":{"root":root},"entries":{}});
+            assert_eq!(
+                parse(&serde_json::to_vec(&data).unwrap()).is_ok(),
+                depth == 60
+            );
+            root.reverse();
+        }
+    }
+}
+
+#[test]
 fn wrapper_name_collision_and_root_name_collision_keep_both() {
     let f = Fixture::new();
     let sessions = Sessions::default();
@@ -354,6 +439,26 @@ fn export_and_reimport_preserves_contents_hierarchy_and_remote_metadata_with_fre
         entries::read_entry(&f.0.entries_dir, local).unwrap(),
         "new content\n"
     );
+}
+
+#[test]
+fn reimport_preserves_exported_node_metadata() {
+    let f = Fixture::new();
+    let mut manifest = Manifest::load(&f.0).unwrap();
+    manifest.root[0]["description"] = json!("Keep this note");
+    manifest.root.push(json!({
+        "id":"folder", "type":"folder", "title":"Folder", "is_collapsed":true,
+        "children":[{"id":"child", "type":"local", "description":"Nested note"}]
+    }));
+    manifest.save(&f.0).unwrap();
+    entries::write_entry(&f.0.entries_dir, "child", "127.0.0.1 child.test").unwrap();
+    let path = f.0.root.join("export.json");
+    crate::import_export::export_to_file(&path, &f.0).unwrap();
+    let data: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    let imported = replace_for_test(&data, &f.0);
+    assert_eq!(imported[0]["description"], "Keep this note");
+    assert_eq!(imported[1]["is_collapsed"], true);
+    assert_eq!(imported[1]["children"][0]["description"], "Nested note");
 }
 
 #[test]

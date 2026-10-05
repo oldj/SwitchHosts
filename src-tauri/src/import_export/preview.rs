@@ -40,6 +40,15 @@ pub struct Draft {
     pub contents: BTreeMap<String, String>,
 }
 
+#[derive(Clone, Copy, PartialEq)]
+enum BackupVersion {
+    V3,
+    V4,
+    V5,
+}
+
+const MAX_IMPORT_DEPTH: usize = 60;
+
 fn children(node: &Value) -> &[Value] {
     node.get("children")
         .and_then(Value::as_array)
@@ -63,7 +72,7 @@ fn flatten<'a>(nodes: &'a [Value], out: &mut Vec<&'a Value>) {
 pub fn parse(bytes: &[u8]) -> Result<Draft, ImportError> {
     let data: Value = serde_json::from_slice(bytes).map_err(|_| invalid("parse_error"))?;
     let mut contents = BTreeMap::new();
-    let (root, v3) = if data["format"] == "switchhosts-backup" {
+    let (root, version) = if data["format"] == "switchhosts-backup" {
         if data.get("schemaVersion").is_some_and(|v| v != 1)
             || data["manifest"]
                 .get("schemaVersion")
@@ -87,7 +96,7 @@ pub fn parse(bytes: &[u8]) -> Result<Draft, ImportError> {
                     .into(),
             );
         }
-        (tree_format::v5_root_to_legacy(root, &[]), false)
+        (import_v5_root(root), BackupVersion::V5)
     } else {
         match data["version"][0].as_u64() {
             Some(3) => (
@@ -95,7 +104,7 @@ pub fn parse(bytes: &[u8]) -> Result<Draft, ImportError> {
                     .as_array()
                     .ok_or_else(|| invalid("invalid_v3_data"))?
                     .clone(),
-                true,
+                BackupVersion::V3,
             ),
             Some(4) => {
                 let inner = data["data"]
@@ -107,12 +116,36 @@ pub fn parse(bytes: &[u8]) -> Result<Draft, ImportError> {
                     .and_then(Value::as_array)
                     .ok_or_else(|| invalid("invalid_data"))?
                     .clone();
-                if let Some(rows) = inner
+                let collection = inner
                     .get("collection")
+                    .map(|v| v.as_object().ok_or_else(|| invalid("invalid_data")))
+                    .transpose()?;
+                let hosts = collection
                     .and_then(|v| v.get("hosts"))
+                    .map(|v| v.as_object().ok_or_else(|| invalid("invalid_data")))
+                    .transpose()?;
+                let rows = hosts
                     .and_then(|v| v.get("data"))
-                    .and_then(Value::as_array)
-                {
+                    .map(|v| v.as_array().ok_or_else(|| invalid("invalid_data")))
+                    .transpose()?;
+                if rows.is_none() {
+                    // Sparse records represent untouched empty configurations;
+                    // a missing collection cannot establish that their content
+                    // was exported at all. Do not turn a truncated backup into
+                    // empty files, especially for replacement imports.
+                    let mut nodes = Vec::new();
+                    flatten(&tree, &mut nodes);
+                    if nodes.iter().any(|node| {
+                        ["local", "remote"].contains(&kind(node))
+                            && node["id"] != "0"
+                            && node["id"] != 0
+                            && node["is_sys"] != true
+                            && node["isSys"] != true
+                    }) {
+                        return Err(invalid("missing_content"));
+                    }
+                }
+                if let Some(rows) = rows {
                     for entry in rows {
                         let key = string_id(&entry["id"])?;
                         let content = entry["content"]
@@ -123,14 +156,14 @@ pub fn parse(bytes: &[u8]) -> Result<Draft, ImportError> {
                         }
                     }
                 }
-                (tree, false)
+                (tree, BackupVersion::V4)
             }
             Some(n) if n > 4 => return Err(invalid("new_version")),
             _ => return Err(invalid("invalid_data")),
         }
     };
     let mut seen = HashSet::new();
-    let root = normalize(&root, v3, &mut contents, &mut seen, 0)?;
+    let root = normalize(&root, version, &mut contents, &mut seen, 0)?;
     if root.is_empty() {
         return Err(invalid("empty_import"));
     }
@@ -173,6 +206,44 @@ fn validate_v5_shape(nodes: &[Value]) -> Result<(), ImportError> {
     Ok(())
 }
 
+// Backups exported by this app contain renderer-shaped nodes; on-disk v5
+// nodes are accepted too. Translate their modeled fields without discarding
+// top-level extension fields or the exported folder collapse state.
+fn import_v5_root(nodes: &[Value]) -> Vec<Value> {
+    nodes
+        .iter()
+        .map(|raw| {
+            let fields: serde_json::Map<String, Value> = raw
+                .as_object()
+                .unwrap()
+                .iter()
+                .filter(|(key, _)| key.as_str() != "children")
+                .map(|(key, value)| (key.clone(), value.clone()))
+                .collect();
+            let mut node = tree_format::v5_root_to_legacy(&[json!(fields)], &[]).remove(0);
+            let out = node.as_object_mut().unwrap();
+            for (key, value) in fields {
+                if ![
+                    "source",
+                    "group",
+                    "folder",
+                    "extras",
+                    "isSys",
+                    "contentFile",
+                ]
+                .contains(&key.as_str())
+                {
+                    out.entry(key).or_insert(value);
+                }
+            }
+            if let Some(nested) = raw.get("children").and_then(Value::as_array) {
+                out.insert("children".into(), json!(import_v5_root(nested)));
+            }
+            node
+        })
+        .collect()
+}
+
 fn string_id(value: &Value) -> Result<String, ImportError> {
     match value {
         Value::String(s) if !s.is_empty() => Ok(s.clone()),
@@ -183,12 +254,12 @@ fn string_id(value: &Value) -> Result<String, ImportError> {
 
 fn normalize(
     nodes: &[Value],
-    v3: bool,
+    version: BackupVersion,
     contents: &mut BTreeMap<String, String>,
     seen: &mut HashSet<String>,
     depth: usize,
 ) -> Result<Vec<Value>, ImportError> {
-    if depth > 60 {
+    if depth > MAX_IMPORT_DEPTH {
         return Err(invalid("invalid_data"));
     }
     let mut result = Vec::new();
@@ -207,7 +278,7 @@ fn normalize(
         if seen.len() > 10_000 {
             return Err(invalid("invalid_data"));
         }
-        let type_field = if v3 {
+        let type_field = if version == BackupVersion::V3 {
             raw.get("where").or(raw.get("type"))
         } else {
             raw.get("type")
@@ -260,7 +331,7 @@ fn normalize(
                 return Err(invalid("invalid_data"));
             }
         }
-        if v3 {
+        if version == BackupVersion::V3 {
             if let Some(hours) = raw.get("refresh_interval") {
                 let seconds = hours
                     .as_u64()
@@ -277,7 +348,7 @@ fn normalize(
             };
             node.insert(
                 "children".into(),
-                json!(normalize(source, v3, contents, seen, depth + 1)?),
+                json!(normalize(source, version, contents, seen, depth + 1)?),
             );
         } else if raw
             .get("children")
@@ -298,7 +369,7 @@ fn normalize(
             node.remove("include");
         }
         if ["local", "remote"].contains(&node_kind) {
-            if v3 {
+            if version == BackupVersion::V3 {
                 contents.insert(
                     key.clone(),
                     raw.get("content")
@@ -307,6 +378,12 @@ fn normalize(
                         .unwrap_or("")
                         .into(),
                 );
+            }
+            // PotDb creates content records lazily, so untouched v4 nodes
+            // legitimately have no record. V5 exports always include every
+            // content-owning node; a missing v5 entry remains an error.
+            if version == BackupVersion::V4 {
+                contents.entry(key.clone()).or_default();
             }
             let content = contents
                 .get_mut(&key)
@@ -326,37 +403,50 @@ fn validate_references(draft: &Draft) -> Result<(), ImportError> {
         key: &'a str,
         nodes: &HashMap<&'a str, &'a Value>,
         visiting: &mut HashSet<&'a str>,
-        done: &mut HashSet<&'a str>,
+        heights: &mut HashMap<&'a str, usize>,
         depth: usize,
-    ) -> Result<(), ImportError> {
-        if done.contains(key) {
-            return Ok(());
+    ) -> Result<usize, ImportError> {
+        if depth > MAX_IMPORT_DEPTH {
+            return Err(invalid("invalid_data"));
         }
-        if depth > 60 || !visiting.insert(key) {
+        if let Some(&height) = heights.get(key) {
+            // Reusing a validated subgraph must account for its full depth,
+            // not just the single edge to it. Otherwise node ordering lets
+            // arbitrarily deep chains bypass the limit and overflow the UI.
+            return if depth + height <= MAX_IMPORT_DEPTH {
+                Ok(height)
+            } else {
+                Err(invalid("invalid_data"))
+            };
+        }
+        if !visiting.insert(key) {
             return Err(invalid("cyclic_reference"));
         }
         let node = nodes.get(key).ok_or_else(|| invalid("invalid_reference"))?;
+        let mut height = 0;
         for child in children(node) {
-            visit(id(child), nodes, visiting, done, depth + 1)?;
+            height = height.max(1 + visit(id(child), nodes, visiting, heights, depth + 1)?);
         }
         if kind(node) == "group" {
             for reference in node["include"].as_array().unwrap() {
-                visit(
-                    reference.as_str().unwrap(),
-                    nodes,
-                    visiting,
-                    done,
-                    depth + 1,
-                )?;
+                height = height.max(
+                    1 + visit(
+                        reference.as_str().unwrap(),
+                        nodes,
+                        visiting,
+                        heights,
+                        depth + 1,
+                    )?,
+                );
             }
         }
         visiting.remove(key);
-        done.insert(key);
-        Ok(())
+        heights.insert(key, height);
+        Ok(height)
     }
-    let mut done = HashSet::new();
+    let mut heights = HashMap::new();
     for node in nodes {
-        visit(id(node), &by_id, &mut HashSet::new(), &mut done, 0)?;
+        visit(id(node), &by_id, &mut HashSet::new(), &mut heights, 0)?;
     }
     Ok(())
 }
