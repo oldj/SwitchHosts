@@ -65,6 +65,7 @@ const TopBar = (props: IProps) => {
   return (
     <div
       className={clsx(styles.root, showAppBrand && styles.with_app_brand)}
+      data-window-titlebar
       data-tauri-drag-region
     >
       <div className={styles.left_cluster} data-tauri-drag-region>

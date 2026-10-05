@@ -22,6 +22,7 @@ import useResolvedTheme from '@renderer/models/useResolvedTheme'
 import IndexPage from '@renderer/pages'
 import FindPage from '@renderer/pages/find'
 import TrayPage from '@renderer/pages/tray'
+import { overlayWindowDragging } from '@renderer/utils/overlayWindowDragging'
 import { createRoot } from 'react-dom/client'
 import { createHashRouter, RouterProvider } from 'react-router'
 import './styles/global.scss'
@@ -76,6 +77,7 @@ const theme = createTheme({
       defaultProps: {
         offset: 8,
         radius: 'md',
+        overlayProps: overlayWindowDragging,
       },
     }),
     Select: Select.extend({
@@ -94,6 +96,9 @@ const theme = createTheme({
     // Mantine renders modal titles at regular weight; make them semibold so
     // the title stands out from the body text.
     Modal: Modal.extend({
+      defaultProps: {
+        overlayProps: overlayWindowDragging,
+      },
       styles: {
         title: {
           fontWeight: 600,
