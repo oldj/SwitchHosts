@@ -165,6 +165,12 @@ test.describe('data transfer', () => {
     await expect(
       dialog.getByRole('button', { name: 'Replace all configurations', exact: true }),
     ).toBeDisabled()
+    await page.evaluate(() => window.__SWITCHHOSTS_E2E__.failNextImportOperation('rebase_import'))
+    await dialog.getByRole('button', { name: 'Refresh preview' }).click()
+    await expect(dialog.getByRole('alert')).toContainText('Temporary storage failure')
+    await expect(
+      dialog.getByRole('button', { name: 'Replace all configurations', exact: true }),
+    ).toBeDisabled()
     await dialog.getByRole('button', { name: 'Refresh preview' }).click()
     await expect(dialog.getByText('Import preview', { exact: true })).toBeVisible()
     await expect(dialog.getByRole('button', { name: 'Next' })).toBeEnabled()
@@ -242,6 +248,36 @@ test.describe('data transfer', () => {
     await page.screenshot({ path: testInfo.outputPath('import-confirm-400.png') })
   })
 
+  test('a failed import is visible after scrolling and can be retried without losing selection', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 600, height: 400 })
+    const before = await getMockState(page)
+    const dialog = await previewFile(page)
+    await dialog.getByRole('checkbox', { name: 'Select Nested B', exact: true }).uncheck()
+    const scroll = dialog.getByTestId('import-scroll')
+    await scroll.evaluate((element) => {
+      element.scrollTop = element.scrollHeight
+    })
+    await page.evaluate(() => window.__SWITCHHOSTS_E2E__.failNextImportOperation('commit_import'))
+    const submit = dialog.getByRole('button', { name: 'Append selected' })
+    await submit.click()
+    await expect(dialog.getByRole('alert')).toBeInViewport()
+    await expect(submit).toBeEnabled()
+    expect((await getMockState(page)).list).toEqual(before.list)
+    await expect(
+      dialog.getByRole('checkbox', { name: 'Select Nested B', exact: true }),
+    ).not.toBeChecked()
+    await submit.click()
+    await expect(page.getByText('The import is complete.')).toBeVisible()
+    const imported = (await getMockState(page)).list.at(-1)!
+    const nested = imported.children?.[1].children?.find((node) => node.title === 'Nested Folder')
+    expect(nested?.children?.map((node) => node.title)).toEqual(['Nested A'])
+    const calls = (await getMockCalls(page)).filter((call) => call.cmd === 'commit_import')
+    expect(calls).toHaveLength(2)
+    expect(firstInvokeArg(calls[0])).toEqual(firstInvokeArg(calls[1]))
+  })
+
   test('file picker cancellation is silent', async ({ page }) => {
     await page.evaluate(() => window.__SWITCHHOSTS_E2E__.failNextImport(null))
     await page.getByLabel('Settings').click()
@@ -287,6 +323,37 @@ test.describe('data transfer', () => {
     await expect(page.getByText('Import failed! [mock_url_error]')).toBeVisible()
     await expect(dialog.locator('input')).toHaveValue('https://example.test/swh_data.json')
     await expect(dialog.getByRole('button', { name: 'OK' })).toBeEnabled()
+  })
+
+  test('URL validation is shared by the button and Enter and accepts padded IPv6 URLs', async ({
+    page,
+  }) => {
+    await page.getByLabel('Settings').click()
+    await page.getByRole('menuitem', { name: 'Import from URL' }).click()
+    const dialog = page.getByRole('dialog')
+    const input = dialog.locator('input')
+    const submit = dialog.getByRole('button', { name: 'OK' })
+    await input.fill('https://')
+    await expect(submit).toBeDisabled()
+    await clearMockCalls(page)
+    await input.press('Enter')
+    await expect(input).toBeVisible()
+    expect((await getMockCalls(page)).some((call) => call.cmd === 'import_data_from_url')).toBe(
+      false,
+    )
+    await input.fill('ftp://example.test/backup.json')
+    await expect(submit).toBeDisabled()
+    await input.press('Enter')
+    expect((await getMockCalls(page)).some((call) => call.cmd === 'import_data_from_url')).toBe(
+      false,
+    )
+    const url = 'http://[::1]:8080/backup.json'
+    await input.fill(`  ${url}  `)
+    await expect(submit).toBeEnabled()
+    await submit.click()
+    await expect(dialog.getByText('Import preview', { exact: true })).toBeVisible()
+    const call = (await getMockCalls(page)).find((call) => call.cmd === 'import_data_from_url')!
+    expect(firstInvokeArg(call)).toBe(url)
   })
 })
 

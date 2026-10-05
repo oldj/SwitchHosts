@@ -78,12 +78,19 @@ export default function ImportPreview({ preview: initial, onClose }: Props) {
   const [notice, setNotice] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  const [refreshRequired, setRefreshRequired] = useState(false)
   const submitting = useRef(false)
   const backButton = useRef<HTMLButtonElement>(null)
+  const scroll = useRef<HTMLDivElement>(null)
   const modeId = useId()
   useEffect(() => {
     if (confirm) backButton.current?.focus()
   }, [confirm])
+  useEffect(() => {
+    if (error) scroll.current?.scrollTo({ top: 0 })
+  }, [error])
+  const errorKind = (error as { kind?: string } | null)?.kind
+  const expired = errorKind === 'expired'
   const existing = importCounts(preview.existing_list)
   const counts = importCounts(preview.list, mode === 'append' ? selected : undefined)
   const all = preview.list.flatMap(importLeaves)
@@ -124,6 +131,7 @@ export default function ImportPreview({ preview: initial, onClose }: Props) {
       })
     } catch (e) {
       setError(e)
+      if ((e as { kind?: string })?.kind === 'changed') setRefreshRequired(true)
       submitting.current = false
       setBusy(false)
       return
@@ -145,6 +153,7 @@ export default function ImportPreview({ preview: initial, onClose }: Props) {
     try {
       setPreview(await actions.rebaseImport(preview.id))
       setConfirm(false)
+      setRefreshRequired(false)
       setError(null)
     } catch (e) {
       setError(e)
@@ -356,6 +365,7 @@ export default function ImportPreview({ preview: initial, onClose }: Props) {
         </div>
       )}
       <div
+        ref={scroll}
         key={confirm ? 'confirm' : detail?.id || 'list'}
         className={clsx(
           styles.scroll,
@@ -366,7 +376,7 @@ export default function ImportPreview({ preview: initial, onClose }: Props) {
         {error ? (
           <div role="alert" className={styles.error}>
             {importErrorMessage(error, lang)}
-            {(error as { kind?: string }).kind === 'changed' && (
+            {refreshRequired && !expired && (
               <Button mt="xs" size="xs" onClick={rebase} loading={busy}>
                 {lang.import_refresh_preview}
               </Button>
@@ -391,9 +401,7 @@ export default function ImportPreview({ preview: initial, onClose }: Props) {
             </details>
           </div>
         ) : detail ? (
-          <div
-            className={clsx(styles.detail, detail.type !== 'group' && styles.contentDetail)}
-          >
+          <div className={clsx(styles.detail, detail.type !== 'group' && styles.contentDetail)}>
             <div className={styles.detailHeading}>
               <Text size="sm" fw={600}>
                 {title(detail)}
@@ -442,7 +450,7 @@ export default function ImportPreview({ preview: initial, onClose }: Props) {
             size="xs"
             color={mode === 'replace' ? 'red' : undefined}
             loading={busy}
-            disabled={!!error || (mode === 'append' && selected.size === 0)}
+            disabled={refreshRequired || expired || (mode === 'append' && selected.size === 0)}
             onClick={(event) => {
               if (confirm && event.detail > 1) return
               if (mode === 'replace' && !confirm) {

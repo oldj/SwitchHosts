@@ -22,12 +22,22 @@ interface Props {
   onPreview: (preview: ImportPreview) => void
 }
 
+function parseImportUrl(input: string): string | null {
+  try {
+    const url = new URL(input.trim())
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null
+  } catch {
+    return null
+  }
+}
+
 const ImportFromUrl = (props: Props) => {
   const { isShow: opened, setIsShow, onPreview } = props
   const { lang } = useI18n()
   const [loading, setLoading] = useState(false)
   const pending = React.useRef(false)
   const [url, setUrl] = useState('')
+  const importUrl = parseImportUrl(url)
   const iptRef = React.useRef<HTMLInputElement>(null)
 
   const onCancel = () => {
@@ -37,7 +47,7 @@ const ImportFromUrl = (props: Props) => {
   }
 
   const onOk = async () => {
-    if (pending.current || !/^https?:\/\//i.test(url)) return
+    if (pending.current || !importUrl) return
     pending.current = true
     setLoading(true)
     const notificationId = showLoadingNotification({
@@ -45,7 +55,7 @@ const ImportFromUrl = (props: Props) => {
       message: lang.loading,
     })
     try {
-      const data = await actions.importDataFromUrl(url.trim())
+      const data = await actions.importDataFromUrl(importUrl)
       if (!data || typeof data !== 'object' || !Array.isArray(data.list)) throw data
       hideAppNotification(notificationId)
       setIsShow(false)
@@ -101,11 +111,7 @@ const ImportFromUrl = (props: Props) => {
           <Button variant="outline" onClick={onCancel} disabled={loading}>
             {lang.btn_cancel}
           </Button>
-          <Button
-            onClick={onOk}
-            loading={loading}
-            disabled={!url || !url.match(/^https?:\/\/\w+/i)}
-          >
+          <Button onClick={onOk} loading={loading} disabled={!importUrl}>
             {lang.btn_ok}
           </Button>
         </Group>

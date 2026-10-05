@@ -77,6 +77,7 @@ declare global {
       failNextRefresh: (result?: { code?: string; message?: string }) => void
       setNextDomainRefreshFailures: (failures?: Record<string, string>) => void
       editDuringImport: () => void
+      failNextImportOperation: (command: 'commit_import' | 'rebase_import') => void
       delayNextImport: (ms?: number) => void
       failNextImport: (result?: string | false | null) => void
       delayNextImportFromUrl: (ms?: number) => void

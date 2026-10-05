@@ -430,6 +430,9 @@
     editDuringImport: () => {
       state.contents['local-dev'] += '# concurrent edit\n'
     },
+    failNextImportOperation: (command) => {
+      state.nextImportOperationFailure = command
+    },
     delayNextImport: (ms = 300) => {
       state.nextImportDelayMs = ms
     },
@@ -483,6 +486,14 @@
     },
     async invoke(cmd, args = {}) {
       state.calls.push({ cmd, args: clone(args) })
+
+      if (state.nextImportOperationFailure === cmd) {
+        delete state.nextImportOperationFailure
+        throw {
+          kind: 'storage',
+          detail: { kind: 'io', path: 'manifest.json', reason: 'Temporary storage failure' },
+        }
+      }
 
       if (cmd === 'plugin:event|listen') {
         const eventId = `event-${nextEventId++}`
