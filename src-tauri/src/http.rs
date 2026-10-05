@@ -12,6 +12,9 @@ use std::time::Duration;
 
 use crate::storage::{AppConfig, AppState};
 
+mod error;
+pub use error::request_error_message;
+
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 pub const MAX_REMOTE_HOSTS_BYTES: usize = 32 * 1024 * 1024;
 pub const MAX_IMPORT_BACKUP_BYTES: usize = 64 * 1024 * 1024;
@@ -40,12 +43,13 @@ pub fn build_client(state: &AppState) -> Result<reqwest::Client, String> {
     let proxy_url = configured_proxy_url_from_state(state);
 
     if let Some(proxy_url) = proxy_url {
-        let proxy = reqwest::Proxy::all(&proxy_url)
-            .map_err(|e| format!("invalid proxy {proxy_url}: {e}"))?;
+        let proxy = reqwest::Proxy::all(&proxy_url).map_err(|_| {
+            "Invalid proxy settings. Check the proxy protocol, host and port.".to_string()
+        })?;
         builder = builder.proxy(proxy);
     }
 
-    builder.build().map_err(|e| e.to_string())
+    builder.build().map_err(request_error_message)
 }
 
 pub async fn response_text_with_limit(
@@ -67,7 +71,7 @@ pub async fn response_bytes_with_limit(
     }
 
     let mut body = Vec::new();
-    while let Some(chunk) = response.chunk().await.map_err(|e| e.to_string())? {
+    while let Some(chunk) = response.chunk().await.map_err(request_error_message)? {
         extend_body_with_limit(&mut body, &chunk, max_bytes)?;
     }
 

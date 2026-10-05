@@ -1655,7 +1655,11 @@ pub async fn commit_import<R: Runtime>(
 }
 
 async fn fetch_url(client: &reqwest::Client, url: &str) -> Result<Vec<u8>, String> {
-    let response = client.get(url).send().await.map_err(|e| e.to_string())?;
+    let response = client
+        .get(url)
+        .send()
+        .await
+        .map_err(http::request_error_message)?;
     let status = response.status();
     if !status.is_success() {
         return Err(format!("error_{}", status.as_u16()));

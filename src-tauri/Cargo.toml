@@ -44,6 +44,8 @@ log = "0.4.34"
 # Share reqwest 0.13 with tauri-plugin-updater so SOCKS support is enabled
 # for both subscriptions and update downloads through feature unification.
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls", "gzip", "brotli", "socks"] }
+# Inspect typed TLS errors from reqwest without changing its TLS configuration.
+rustls = { version = "0.23.45", default-features = false, features = ["std"] }
 chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 tokio = { version = "1.53.2", features = ["process", "time", "rt", "macros", "net"] }
 regex = "1.13.1"

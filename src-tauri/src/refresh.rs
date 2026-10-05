@@ -506,7 +506,7 @@ async fn fetch_remote(url: &str, state: &AppState) -> Result<String, RefreshErro
         .send()
         .await
         .map_err(|e| RefreshError::Fetch {
-            message: e.to_string(),
+            message: http::request_error_message(e),
         })?;
     let status = response.status();
     if !status.is_success() {
