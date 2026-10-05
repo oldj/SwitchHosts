@@ -68,6 +68,9 @@ fn apply_at(
     write_mode: &str,
     backup_dir: &Path,
 ) -> Result<ApplyOutcome, HostsApplyError> {
+    hosts_text::validate_system_text(aggregated_content).map_err(|e| HostsApplyError::Io {
+        message: format!("invalid hosts content: {e}"),
+    })?;
     let content_lf = hosts_text::normalize(aggregated_content);
 
     // Compensation needs a trustworthy pre-write snapshot. An unreadable file
@@ -210,12 +213,7 @@ fn backup_before_conversion(dir: &Path, bytes: &[u8]) -> Result<(), HostsApplyEr
     ));
     let result = (|| -> std::io::Result<()> {
         std::fs::create_dir_all(dir)?;
-        let mut file = std::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&path)?;
-        file.write_all(bytes)?;
-        file.sync_all()
+        persist_encoding_backup(&path, bytes)
     })();
     result.map_err(|e| HostsApplyError::Io {
         message: format!(
@@ -223,6 +221,23 @@ fn backup_before_conversion(dir: &Path, bytes: &[u8]) -> Result<(), HostsApplyEr
             path.display()
         ),
     })
+}
+
+/// Only publish a .bin snapshot once every byte has been flushed. A disk-full
+/// error must not leave a truncated file that looks like a usable backup.
+fn persist_encoding_backup(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    let temporary = path.with_extension("tmp");
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&temporary)?;
+    let result = file.write_all(bytes).and_then(|()| file.sync_all());
+    drop(file);
+    let result = result.and_then(|()| std::fs::rename(&temporary, path));
+    if result.is_err() {
+        let _ = std::fs::remove_file(&temporary);
+    }
+    result
 }
 
 fn is_permission_denied(e: &std::io::Error) -> bool {

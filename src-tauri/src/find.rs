@@ -1104,6 +1104,39 @@ mod tests {
     }
 
     #[test]
+    fn saved_bom_keeps_find_and_replace_offsets_aligned_with_open_editor() {
+        let state = temp_state("find-bom");
+        let manifest = Manifest {
+            root: vec![json!({"id": "local-one", "title": "Local", "type": "local"})],
+            ..Manifest::default()
+        };
+        manifest.save(&state.paths).unwrap();
+        let text = "\u{feff}127.0.0.1 target.test\n";
+        // Pasting a BOM into an open editor preserves it in the document. A
+        // save must not silently remove it only from the backend's text.
+        entries::write_entry(&state.paths.entries_dir, "local-one", text).unwrap();
+        let found = find_in_manifest(&state, "target", &FindOptions::default()).unwrap();
+        let position = &found[0].positions[0];
+        assert_eq!(position.start, 11);
+        assert_eq!(position.end, 17);
+        assert!(replace_one_in_manifest(
+            &state,
+            FindReplaceOneArgs {
+                item_id: "local-one".into(),
+                start: 11,
+                end: 17,
+                expected: "target".into(),
+                replace_to: "updated".into(),
+            }
+        )
+        .unwrap());
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "local-one").unwrap(),
+            "\u{feff}127.0.0.1 updated.test\n"
+        );
+    }
+
+    #[test]
     fn find_offsets_match_lf_view_when_disk_has_crlf() {
         // Regression for plan.md §1: a v4-migrated or hand-written
         // entry file may still hold CRLF on disk. The renderer feeds

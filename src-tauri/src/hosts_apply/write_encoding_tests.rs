@@ -128,6 +128,30 @@ fn backup_failure_and_invalid_unicode_leave_system_file_untouched() {
 }
 
 #[test]
+fn failed_backup_publication_cleans_up_the_temporary_snapshot() {
+    let f = Fixture::new();
+    // Force finalization to fail after bytes have been written and flushed.
+    let path = f.root.join("blocked.bin");
+    std::fs::create_dir(&path).unwrap();
+    assert!(persist_encoding_backup(&path, b"original hosts bytes").is_err());
+    assert!(path.is_dir());
+    assert!(!path.with_extension("tmp").exists());
+}
+
+#[test]
+fn nul_input_is_rejected_before_touching_hosts_or_creating_a_backup() {
+    let f = Fixture::new();
+    let original = utf16("# 中文\n127.0.0.1 localhost\n");
+    std::fs::write(&f.target, &original).unwrap();
+    for mode in ["overwrite", "append"] {
+        let result = apply_at(&f.target, "192.0.2.1 a.test\0\n", mode, &f.backups);
+        assert!(matches!(result, Err(HostsApplyError::Io { message }) if message.contains("NUL")));
+        assert_eq!(std::fs::read(&f.target).unwrap(), original);
+        assert!(!f.backups.exists());
+    }
+}
+
+#[test]
 fn compensation_rejects_mismatched_bytes_and_external_changes() {
     let f = Fixture::new();
     std::fs::write(&f.target, b"127.0.0.1 localhost\n").unwrap();

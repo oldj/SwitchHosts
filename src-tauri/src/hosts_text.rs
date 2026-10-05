@@ -65,10 +65,17 @@ pub(crate) fn decode_system(bytes: &[u8]) -> io::Result<String> {
             }
         }
     };
+    validate_system_text(&text)?;
+    Ok(text)
+}
+
+/// Apply the same invariant to incoming content and decoded system files, so
+/// a successful write can always be read back and compensated.
+pub(crate) fn validate_system_text(text: &str) -> io::Result<()> {
     if text.contains('\0') {
         return Err(invalid("hosts file contains NUL characters"));
     }
-    Ok(text)
+    Ok(())
 }
 
 #[cfg(target_os = "windows")]

@@ -54,7 +54,9 @@ fn collect_selected(
         if is_on(node) {
             if let Some(id) = node.get("id").and_then(Value::as_str) {
                 let content = entries::read_entry(&paths.entries_dir, id)?;
-                out.push(content);
+                // Keep source text intact for the editor/find offsets; remove
+                // BOMs only from the content being aggregated for application.
+                out.push(crate::hosts_text::normalize(&content));
             }
         }
         if let Some(children) = node.get("children").and_then(Value::as_array) {
@@ -209,6 +211,16 @@ mod tests {
                 "192.0.2.2 a.test b.test"
             }));
         }
+        // Applying must not silently change the source that is still open in
+        // an editor, including its invisible BOM and the resulting offsets.
+        assert_eq!(
+            entries::read_entry(&paths.entries_dir, "a").unwrap(),
+            "\u{feff}192.0.2.1 a.test\n"
+        );
+        assert_eq!(
+            std::fs::read_to_string(paths.entries_dir.join("a.hosts")).unwrap(),
+            "\u{feff}192.0.2.1 a.test\r\n"
+        );
         std::fs::remove_dir_all(root).unwrap();
     }
 }
