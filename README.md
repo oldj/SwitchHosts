@@ -66,6 +66,8 @@ path on Windows). In the v5 data layout:
 
 For a complete manual backup, copy the whole `~/.SwitchHosts` folder. The in-app export creates a hosts data backup JSON; it does not include preferences or histories.
 
+System hosts are written as UTF-8 without a BOM. Before converting an existing Windows ANSI or BOM-marked UTF-16 file, SwitchHosts saves its original bytes in `internal/histories/hosts-encoding-backups/` under the active data directory, even when history recording is disabled. These `.bin` backups are not removed by the history limit or included in the in-app JSON export.
+
 ## Develop and build
 
 ### Prerequisites

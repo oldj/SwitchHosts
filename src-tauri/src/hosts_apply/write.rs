@@ -13,7 +13,7 @@
 //!    on rewrite.
 //! 3. Convert to platform-native line endings for the on-disk content.
 //! 4. Read the current system hosts file. If the new payload is
-//!    byte-identical (compared via stable hash), short-circuit with
+//!    byte-identical, short-circuit with
 //!    success — avoids triggering an OS auth prompt for a no-op.
 //! 5. Try a direct write. On `PermissionDenied`, fall through to the
 //!    elevation helper. The renderer's password dialog flow is
@@ -21,16 +21,16 @@
 //! 6. On success, return both the previous and the new content so the
 //!    calling command can append two history entries (matches Electron).
 
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 // Serialize our read/write pairs, including compensation, across app entry points.
 static SYSTEM_WRITE_LOCK: Mutex<()> = Mutex::new(());
 
-use super::elevation::write_privileged;
+use super::elevation::{write_privileged, write_privileged_bytes};
 use super::error::HostsApplyError;
+use crate::hosts_text;
 
 const CONTENT_START_MARKER: &str = "# --- SWITCHHOSTS_CONTENT_START ---";
 const CONTENT_END_MARKER: &str = "# --- SWITCHHOSTS_CONTENT_END ---";
@@ -40,6 +40,8 @@ const UNIX_SYSTEM_HOSTS_PATH: &str = "/etc/hosts";
 
 pub struct ApplyOutcome {
     pub previous_content: String,
+    /// Original bytes for compensation, including encoding, BOM and newlines.
+    pub previous_bytes: Vec<u8>,
     pub new_content: String,
     /// True when the file was already up-to-date and no write happened.
     /// Renderer-visible result is still success in that case, but the
@@ -53,43 +55,55 @@ pub struct ApplyOutcome {
 pub fn apply_to_system_hosts(
     aggregated_content: &str,
     write_mode: &str,
+    backup_dir: &Path,
 ) -> Result<ApplyOutcome, HostsApplyError> {
     let _guard = SYSTEM_WRITE_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     let target = system_hosts_path()?;
-    apply_at(&target, aggregated_content, write_mode)
+    apply_at(&target, aggregated_content, write_mode, backup_dir)
 }
 
 fn apply_at(
     target: &Path,
     aggregated_content: &str,
     write_mode: &str,
+    backup_dir: &Path,
 ) -> Result<ApplyOutcome, HostsApplyError> {
-    let content_lf = normalize_line_endings(aggregated_content);
+    let content_lf = hosts_text::normalize(aggregated_content);
 
     // Compensation needs a trustworthy pre-write snapshot. An unreadable file
     // must not be mistaken for an empty file and later "restored" to empty.
-    let previous_raw = read_system_hosts(target)?;
+    let previous_bytes = read_system_hosts_bytes(target)?;
+    let previous_raw = decode_system_hosts(target, &previous_bytes)?;
     let previous_lf = normalize_line_endings(&previous_raw);
 
     let final_content_lf = if write_mode == "append" {
-        make_append_content(&previous_lf, &content_lf)
+        make_append_content(&hosts_text::normalize(&previous_lf), &content_lf)
     } else {
         content_lf.clone()
     };
 
     let disk_content = restore_line_endings(&final_content_lf);
 
-    if hash_str(&previous_raw) == hash_str(&disk_content) {
+    if previous_bytes == disk_content.as_bytes() {
         return Ok(ApplyOutcome {
             previous_content: previous_lf,
+            previous_bytes,
             new_content: final_content_lf,
             unchanged: true,
         });
     }
 
+    // A text-only history cannot recover the original encoding. Persist an
+    // exact snapshot before converting a legacy/UTF-16 file, even when history
+    // is disabled. If the backup fails, leave system hosts untouched.
+    if previous_bytes != previous_raw.as_bytes() {
+        backup_before_conversion(backup_dir, &previous_bytes)?;
+    }
+
     match std::fs::write(target, disk_content.as_bytes()) {
         Ok(()) => Ok(ApplyOutcome {
             previous_content: previous_lf,
+            previous_bytes,
             new_content: final_content_lf,
             unchanged: false,
         }),
@@ -100,6 +114,7 @@ fn apply_at(
             write_privileged(target, &disk_content)?;
             Ok(ApplyOutcome {
                 previous_content: previous_lf,
+                previous_bytes,
                 new_content: final_content_lf,
                 unchanged: false,
             })
@@ -111,23 +126,41 @@ fn apply_at(
 }
 
 /// Restore the exact pre-apply file only while our write is still current.
-pub fn restore_system_hosts(previous: &str, expected: &str) -> Result<(), HostsApplyError> {
+pub fn restore_system_hosts(
+    previous: &str,
+    expected: &str,
+    previous_bytes: Option<&[u8]>,
+) -> Result<(), HostsApplyError> {
     let _guard = SYSTEM_WRITE_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    restore_at(&system_hosts_path()?, previous, expected)
+    restore_at(&system_hosts_path()?, previous, expected, previous_bytes)
 }
 
-fn restore_at(target: &Path, previous: &str, expected: &str) -> Result<(), HostsApplyError> {
-    let current = read_system_hosts(target)?;
+fn restore_at(
+    target: &Path,
+    previous: &str,
+    expected: &str,
+    previous_bytes: Option<&[u8]>,
+) -> Result<(), HostsApplyError> {
+    let current_bytes = read_system_hosts_bytes(target)?;
+    let current = decode_system_hosts(target, &current_bytes)?;
     if normalize_line_endings(&current) != normalize_line_endings(expected) {
         return Err(HostsApplyError::ContentChanged);
     }
-    let content = restore_line_endings(&normalize_line_endings(previous));
-    if current == content {
+    let fallback = restore_line_endings(&normalize_line_endings(previous));
+    let content = previous_bytes.unwrap_or(fallback.as_bytes());
+    if normalize_line_endings(&decode_system_hosts(target, content)?)
+        != normalize_line_endings(previous)
+    {
+        return Err(HostsApplyError::Io {
+            message: "restore snapshot does not match previous hosts content".into(),
+        });
+    }
+    if current_bytes == content {
         return Ok(());
     }
-    match std::fs::write(target, content.as_bytes()) {
+    match std::fs::write(target, content) {
         Ok(()) => Ok(()),
-        Err(e) if is_permission_denied(&e) => write_privileged(target, &content),
+        Err(e) if is_permission_denied(&e) => write_privileged_bytes(target, content),
         Err(e) => Err(HostsApplyError::Io {
             message: format!("restore {}: {e}", target.display()),
         }),
@@ -143,14 +176,53 @@ pub fn system_hosts_matches(expected: &str) -> bool {
         .unwrap_or(false)
 }
 
-fn read_system_hosts(target: &Path) -> Result<String, HostsApplyError> {
-    match std::fs::read_to_string(target) {
+pub(crate) fn read_system_hosts(target: &Path) -> Result<String, HostsApplyError> {
+    decode_system_hosts(target, &read_system_hosts_bytes(target)?)
+}
+
+fn decode_system_hosts(target: &Path, bytes: &[u8]) -> Result<String, HostsApplyError> {
+    hosts_text::decode_system(bytes).map_err(|e| HostsApplyError::Io {
+        message: format!("read {}: {e}", target.display()),
+    })
+}
+
+fn read_system_hosts_bytes(target: &Path) -> Result<Vec<u8>, HostsApplyError> {
+    match std::fs::read(target) {
         Ok(s) => Ok(s),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
         Err(e) => Err(HostsApplyError::Io {
             message: format!("read {}: {e}", target.display()),
         }),
     }
+}
+
+fn backup_before_conversion(dir: &Path, bytes: &[u8]) -> Result<(), HostsApplyError> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static SEQUENCE: AtomicU64 = AtomicU64::new(0);
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let path = dir.join(format!(
+        "hosts-before-utf8-{stamp}-{}-{}.bin",
+        std::process::id(),
+        SEQUENCE.fetch_add(1, Ordering::Relaxed)
+    ));
+    let result = (|| -> std::io::Result<()> {
+        std::fs::create_dir_all(dir)?;
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)?;
+        file.write_all(bytes)?;
+        file.sync_all()
+    })();
+    result.map_err(|e| HostsApplyError::Io {
+        message: format!(
+            "backup hosts before encoding conversion {}: {e}",
+            path.display()
+        ),
+    })
 }
 
 fn is_permission_denied(e: &std::io::Error) -> bool {
@@ -251,7 +323,7 @@ fn restore_line_endings(s: &str) -> String {
 ///
 /// The seams are normalised (head trimmed at its end, tail at both
 /// ends, fixed blank lines around the markers) so that re-applying the
-/// same content is byte-identical — the caller's hash short-circuit
+/// same content is byte-identical — the caller's byte comparison
 /// depends on that to avoid needless privileged writes.
 fn make_append_content(previous_lf: &str, new_content_lf: &str) -> String {
     let (head, tail) = split_around_managed_section(previous_lf);
@@ -343,17 +415,6 @@ fn strip_marker_lines(content_lf: &str) -> String {
         .join("\n")
 }
 
-// ---- comparison hash --------------------------------------------------------
-
-/// Stable in-process content hash. We don't need cryptographic
-/// strength — only "are these two byte sequences the same" — so a
-/// `DefaultHasher` is plenty and avoids pulling md5/sha into Cargo.toml.
-fn hash_str(s: &str) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    s.hash(&mut hasher);
-    hasher.finish()
-}
-
 #[cfg(test)]
 mod tests {
     use std::path::Path;
@@ -432,10 +493,22 @@ mod compensation_tests {
             std::env::temp_dir().join(format!("switchhosts-restore-{}", std::process::id()));
         let old = "127.0.0.1 localhost\n# --- SWITCHHOSTS_CONTENT_START ---\n10.0.0.2 old.test\n# --- SWITCHHOSTS_CONTENT_END ---\n# user-managed tail\n";
         std::fs::write(&target, restore_line_endings(old)).unwrap();
-        let applied = apply_at(&target, "10.0.0.1 dev.test\n", "append").unwrap();
+        let applied = apply_at(
+            &target,
+            "10.0.0.1 dev.test\n",
+            "append",
+            &target.with_extension("backups"),
+        )
+        .unwrap();
         assert!(applied.new_content.contains("dev.test"));
         assert!(applied.new_content.contains("# user-managed tail"));
-        restore_at(&target, &applied.previous_content, &applied.new_content).unwrap();
+        restore_at(
+            &target,
+            &applied.previous_content,
+            &applied.new_content,
+            Some(&applied.previous_bytes),
+        )
+        .unwrap();
         assert_eq!(
             std::fs::read_to_string(&target).unwrap(),
             restore_line_endings(old)
@@ -443,7 +516,7 @@ mod compensation_tests {
         // A later write must survive a delayed compensation attempt.
         std::fs::write(&target, "newer external content\n").unwrap();
         assert!(matches!(
-            restore_at(&target, old, &applied.new_content),
+            restore_at(&target, old, &applied.new_content, None),
             Err(HostsApplyError::ContentChanged)
         ));
         assert_eq!(
@@ -458,9 +531,19 @@ mod compensation_tests {
         let target =
             std::env::temp_dir().join(format!("switchhosts-unreadable-{}", std::process::id()));
         std::fs::create_dir_all(&target).unwrap();
-        assert!(apply_at(&target, "new content", "overwrite").is_err());
-        assert!(restore_at(&target, "old content", "new content").is_err());
+        assert!(apply_at(
+            &target,
+            "new content",
+            "overwrite",
+            &target.with_extension("backups")
+        )
+        .is_err());
+        assert!(restore_at(&target, "old content", "new content", None).is_err());
         assert!(target.is_dir());
         std::fs::remove_dir(target).unwrap();
     }
 }
+
+#[cfg(test)]
+#[path = "write_encoding_tests.rs"]
+mod encoding_tests;

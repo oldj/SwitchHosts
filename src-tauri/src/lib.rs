@@ -7,6 +7,7 @@ mod find;
 // it via `switchhosts_lib::helper_proto`.
 pub mod helper_proto;
 mod hosts_apply;
+mod hosts_text;
 mod http;
 mod http_api;
 mod i18n;

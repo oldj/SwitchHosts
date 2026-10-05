@@ -174,3 +174,41 @@ fn line_ending() -> &'static str {
 fn line_ending() -> &'static str {
     "\n"
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bom_is_removed_from_each_source_before_joining_and_deduplication() {
+        let root = std::env::temp_dir().join(format!("swh-bom-aggregate-{}", std::process::id()));
+        let paths = V5Paths::under(root.clone());
+        paths.ensure_dirs().unwrap();
+        // Simulate existing/imported entries, bypassing write_entry normalization.
+        std::fs::write(
+            paths.entries_dir.join("a.hosts"),
+            "\u{feff}192.0.2.1 a.test\r\n",
+        )
+        .unwrap();
+        std::fs::write(
+            paths.entries_dir.join("b.hosts"),
+            "\u{feff}192.0.2.2 a.test b.test\r\n",
+        )
+        .unwrap();
+        let list = vec![
+            serde_json::json!({"id":"a", "on":true}),
+            serde_json::json!({"id":"b", "on":true}),
+        ];
+        for dedup in [false, true] {
+            let content = aggregate_selected_content(&list, &paths, dedup).unwrap();
+            assert!(!content.contains('\u{feff}'));
+            assert!(content.contains("192.0.2.1 a.test"));
+            assert!(content.contains(if dedup {
+                "192.0.2.2 b.test"
+            } else {
+                "192.0.2.2 a.test b.test"
+            }));
+        }
+        std::fs::remove_dir_all(root).unwrap();
+    }
+}

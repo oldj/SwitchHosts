@@ -4,7 +4,8 @@
 //! are `<node-id>.hosts`; moves and renames of the node never rename
 //! the file.
 //!
-//! Content is **always normalized to LF on read and write**. CRLF / lone
+//! Content is **always normalized to LF on read and write**, with BOMs before
+//! records removed. CRLF / lone
 //! CR coming from imported backups, remote-hosts refresh, or v4
 //! migration is collapsed at this boundary so downstream consumers
 //! (Find offsets, the renderer's CodeMirror view, aggregation for
@@ -18,12 +19,11 @@ use std::path::{Path, PathBuf};
 use super::atomic::atomic_write;
 use super::error::StorageError;
 
-/// Collapse CRLF / lone CR to LF. Order matters: handle CRLF first so
-/// the `\r` half doesn't trip the lone-CR pass. Exposed at crate scope
+/// Normalize line endings and strip BOMs before hosts records. Exposed at crate scope
 /// so callers (e.g. `refresh::refresh_one`) can compare normalized
 /// content against the on-disk LF view without duplicating the logic.
 pub(crate) fn normalize_to_lf(s: &str) -> String {
-    s.replace("\r\n", "\n").replace('\r', "\n")
+    crate::hosts_text::normalize(s)
 }
 
 /// Resolve the path for a node's content file. `id` is expected to be
@@ -149,6 +149,21 @@ mod tests {
         assert_eq!(read_back, original);
         assert_eq!(on_disk, original.as_bytes());
         std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn write_removes_source_bom_before_persisting_and_reading() {
+        let dir = temp_entries_dir("write-bom");
+        write_entry(&dir, "node-1", "\u{feff}127.0.0.1 example.test\r\n").unwrap();
+        assert_eq!(
+            std::fs::read(entry_path(&dir, "node-1").unwrap()).unwrap(),
+            b"127.0.0.1 example.test\n"
+        );
+        assert_eq!(
+            read_entry(&dir, "node-1").unwrap(),
+            "127.0.0.1 example.test\n"
+        );
+        std::fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

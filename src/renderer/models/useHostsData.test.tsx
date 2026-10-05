@@ -86,7 +86,8 @@ beforeEach(() => {
     recovery = { status: 'unknown' }
     return {
       success: true,
-      old_content: 'original system file',
+      old_content: '# 中文\n',
+      old_content_bytes: [35, 32, 214, 208, 206, 196, 13, 10],
       new_content: 'applied system file',
     }
   })
@@ -383,9 +384,10 @@ it('restores the exact pre-apply system file before reporting a reverted switch'
   })
   expect(mocks.setSystemHosts).toHaveBeenCalledWith('new managed content')
   expect(mocks.restoreSystemHosts).toHaveBeenCalledWith(
-    'original system file',
+    '# 中文\n',
     'applied system file',
     [{ ...list('original')[0], on: true }],
+    [35, 32, 214, 208, 206, 196, 13, 10],
   )
   expect(done).toBe(false)
   await act(async () => {
