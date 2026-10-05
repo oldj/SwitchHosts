@@ -50,6 +50,9 @@ interface MockState {
     proxy_port: number
     refresh_remote_hosts_on_startup: boolean
     auto_check_update: boolean
+    http_api_on: boolean
+    http_api_only_local: boolean
+    http_api_port: number
   }
   contents: Record<string, string>
   systemHosts: string
@@ -67,6 +70,9 @@ interface MockCall {
 declare global {
   interface Window {
     __SWITCHHOSTS_E2E__: {
+      failNextHttpApiSave: (code: 'address_in_use' | 'permission_denied') => void
+      holdNextHttpApiSave: () => void
+      releaseHttpApiSave: () => void
       seedHistory: (count: number) => void
       failNextHistoryOperation: (command: string) => void
       getState: () => MockState

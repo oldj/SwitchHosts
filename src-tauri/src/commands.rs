@@ -162,10 +162,7 @@ pub async fn config_set(
     let value = args.get(1).cloned().unwrap_or(Value::Null);
 
     let patch = json!({ key: value });
-    let touched = commit_config_patch(&app, state.inner(), &patch)?;
-    let touched_refs: Vec<&str> = touched.iter().map(String::as_str).collect();
-    apply_side_effects(&app, state.inner(), &touched_refs);
-    Ok(Value::Null)
+    save_config_patch(app, patch).await
 }
 
 #[tauri::command]
@@ -182,10 +179,31 @@ pub async fn config_update(
             reason: "config_update requires a partial object as the first argument".into(),
         });
     }
-    let touched = commit_config_patch(&app, state.inner(), &patch)?;
-    let touched_refs: Vec<&str> = touched.iter().map(String::as_str).collect();
-    apply_side_effects(&app, state.inner(), &touched_refs);
-    Ok(Value::Null)
+    save_config_patch(app, patch).await
+}
+
+#[tauri::command]
+pub async fn http_api_status(_args: Args) -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(|| json!(http_api::status()))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+async fn save_config_patch(app: AppHandle<Wry>, patch: Value) -> Result<Value, StorageError> {
+    // Disk I/O and waiting for an old HTTP listener to close must not block
+    // tokio's async workers. The config writer lock serializes the transaction.
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<AppState>();
+        let touched = commit_config_patch(&app, state.inner(), &patch)?;
+        let touched_refs: Vec<&str> = touched.iter().map(String::as_str).collect();
+        apply_side_effects(&app, state.inner(), &touched_refs);
+        Ok(Value::Null)
+    })
+    .await
+    .map_err(|e| StorageError::SideEffect {
+        key: "config".into(),
+        reason: e.to_string(),
+    })?
 }
 
 fn commit_config_patch(
@@ -218,7 +236,6 @@ fn commit_config_patch(
         .config_write_lock
         .lock()
         .expect("config write lock poisoned");
-    let _store_guard = state.lock_store()?;
 
     // Step 1: under a short cfg lock, derive the proposed `next` value
     // and remember whether launch_at_login is changing. We deliberately
@@ -235,25 +252,39 @@ fn commit_config_patch(
         (next, cfg.launch_at_login, changed)
     };
 
-    // Step 2: apply the OS-side change first, then persist to disk. If
-    // disk persistence fails, roll the OS change back so the user-visible
-    // state matches what got stored.
-    if launch_at_login_changed {
-        apply_launch_at_login(app, next.launch_at_login)?;
-    }
-    if let Err(e) = next.save(&state.paths.config_file) {
+    // Reserve the HTTP socket before saving. The closure publishes only a
+    // successfully persisted snapshot; errors leave the old service/config
+    // intact. Also serialize same-port scope changes and their rollback here.
+    let persist = || {
+        // HTTP handlers also acquire the store lock. Release it before
+        // configure waits for the old listener task to stop, or busy handlers
+        // can block all async workers needed to complete that stop.
+        // lock_store still recovers pending transactions before writing.
+        let _store_guard = state.lock_store()?;
         if launch_at_login_changed {
-            if let Err(rollback_err) = apply_launch_at_login(app, previous_launch_at_login) {
-                log::warn!(
-                    "failed to roll back launch_at_login after config save failed: {rollback_err}"
-                );
-            }
+            apply_launch_at_login(app, next.launch_at_login)?;
         }
-        return Err(e);
+        if let Err(e) = next.save(&state.paths.config_file) {
+            if launch_at_login_changed {
+                if let Err(rollback_err) = apply_launch_at_login(app, previous_launch_at_login) {
+                    log::warn!("failed to roll back launch_at_login: {rollback_err}");
+                }
+            }
+            return Err(e);
+        }
+        *state.config.lock().expect("config mutex poisoned") = next.clone();
+        Ok(())
+    };
+    if touched.iter().any(|key| {
+        matches!(
+            key.as_str(),
+            "http_api_on" | "http_api_only_local" | "http_api_port"
+        )
+    }) {
+        http_api::configure(app.clone(), &next, persist)?;
+    } else {
+        persist()?;
     }
-
-    // Step 3: re-acquire the lock briefly to publish the new value.
-    *state.config.lock().expect("config mutex poisoned") = next;
 
     Ok(touched)
 }
@@ -280,23 +311,14 @@ fn apply_launch_at_login(app: &AppHandle<Wry>, enabled: bool) -> Result<(), Stor
 /// Run any out-of-process side effects that depend on a config key
 /// just changing. Currently:
 ///
-/// - `http_api_on` / `http_api_only_local` → start, stop or rebind
-///   the local HTTP API server.
 /// - `locale` → rebuild native application and tray menus.
 /// - `show_title_on_tray` → refresh or clear the tray title text.
 /// - `hide_dock_icon` → apply the macOS Dock policy and update the tray
 ///   toggle label.
 ///
-/// Always reads the *fresh* config snapshot rather than trusting the
-/// patch, so a rebind picks up both keys even if only one of them was
-/// in the patch.
-///
 /// Pinned to `Wry` because the HTTP API server is itself pinned to
 /// `Wry` (see the comment in `http_api.rs`).
 fn apply_side_effects(app: &AppHandle<Wry>, state: &AppState, touched_keys: &[&str]) {
-    let touches_http_api = touched_keys
-        .iter()
-        .any(|k| *k == "http_api_on" || *k == "http_api_only_local");
     let touches_locale = touched_keys.iter().any(|k| *k == "locale");
     let touches_tray_title = touched_keys.iter().any(|k| *k == "show_title_on_tray");
     let touches_auto_update = touched_keys.iter().any(|k| *k == "auto_check_update");
@@ -325,40 +347,6 @@ fn apply_side_effects(app: &AppHandle<Wry>, state: &AppState, touched_keys: &[&s
             };
             lifecycle::apply_dock_icon_policy(app, hide);
             tray::refresh_menu(app);
-        }
-    }
-
-    if touches_http_api {
-        let (on, only_local) = {
-            let cfg = state.config.lock().expect("config mutex poisoned");
-            (cfg.http_api_on, cfg.http_api_only_local)
-        };
-        if on {
-            if let Err(e) = http_api::start(app.clone(), only_local) {
-                log::warn!("http_api start failed: {e}");
-                // Roll back the in-memory config + persist, otherwise
-                // the preferences pane keeps reporting "API on" against
-                // a dead listener. Acquire the writer guard so this
-                // rollback doesn't race a concurrent `commit_config_patch`
-                // — `apply_side_effects` runs after the commit guard has
-                // already been released, so without this we could lose
-                // each other's writes. Lock scope ends before
-                // persist_config because that helper takes config mutex.
-                let _commit_guard = state
-                    .config_write_lock
-                    .lock()
-                    .expect("config write lock poisoned");
-                {
-                    let mut cfg = state.config.lock().expect("config mutex poisoned");
-                    cfg.http_api_on = false;
-                }
-                if let Err(save_err) = state.persist_config() {
-                    log::warn!("failed to persist http_api_on rollback: {save_err}");
-                }
-                let _ = app.emit("http_api_start_failed", json!({ "_args": [e] }));
-            }
-        } else {
-            http_api::stop();
         }
     }
 

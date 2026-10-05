@@ -5,6 +5,7 @@
 
 import { ConfigsType } from '@common/default_configs'
 import { actions } from '@renderer/core/agent'
+import { invalidateConfigSnapshot, loadConfigSnapshot } from '@renderer/core/configSnapshot'
 import { getErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import { configsAtom } from '@renderer/stores/configs'
 import { useAtom } from 'jotai'
@@ -12,17 +13,23 @@ import { useAtom } from 'jotai'
 export default function useConfigs() {
   const [configs, setConfigs] = useAtom(configsAtom)
 
-  const loadConfigs = async () => {
-    const next = await actions.configAll()
-    setConfigs(next)
-    return next
-  }
+  const loadConfigs = (onLoad?: (snapshot: ConfigsType) => void) =>
+    loadConfigSnapshot((next) => {
+      setConfigs(next)
+      onLoad?.(next)
+    })
 
-  const updateConfigs = async (kv: Partial<ConfigsType>) => {
-    setConfigs((prev) => (prev ? { ...prev, ...kv } : prev))
+  const updateConfigs = async (
+    kv: Partial<ConfigsType>,
+    { notifyError = true, optimistic = true }: { notifyError?: boolean; optimistic?: boolean } = {},
+  ) => {
+    if (optimistic) setConfigs((prev) => (prev ? { ...prev, ...kv } : prev))
     try {
       await actions.configUpdate(kv)
+      invalidateConfigSnapshot()
+      if (!optimistic) setConfigs((prev) => (prev ? { ...prev, ...kv } : prev))
     } catch (e) {
+      invalidateConfigSnapshot()
       console.error('configUpdate failed', kv, e)
       // Optimistic merge above means atom is now showing values the
       // backend rejected. Pull the disk snapshot back so every
@@ -33,10 +40,12 @@ export default function useConfigs() {
       } catch (reloadError) {
         console.error('failed to reload configs after configUpdate failed', reloadError)
       }
-      showErrorNotification({
-        title: 'Failed to save configuration',
-        message: getErrorMessage(e, 'Unknown error'),
-      })
+      if (notifyError) {
+        showErrorNotification({
+          title: 'Failed to save configuration',
+          message: getErrorMessage(e, 'Unknown error'),
+        })
+      }
       throw e
     }
   }

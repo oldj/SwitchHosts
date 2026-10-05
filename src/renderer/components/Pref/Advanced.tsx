@@ -3,7 +3,6 @@
  * @homepage: https://oldj.net
  */
 
-import { httpApiPort } from '@common/constants'
 import { ConfigsType } from '@common/default_configs'
 import { DNS_PROVIDERS } from '@common/dns'
 import { Box, Button, Checkbox, Group, Select, Stack, TextInput, Tooltip } from '@mantine/core'
@@ -16,10 +15,12 @@ import useI18n from '@renderer/models/useI18n'
 import { IconFile, IconFolder } from '@tabler/icons-react'
 import React, { useEffect, useState } from 'react'
 import styles from './styles.module.scss'
+import HttpApi from './HttpApi'
 
 interface IProps {
   data: ConfigsType
   onChange: (kv: Partial<ConfigsType>) => void
+  onSaveHttpApi: (kv: Partial<ConfigsType>) => Promise<void>
 }
 
 const PathLink = (props: { link: string; icon?: React.ReactNode }) => {
@@ -53,7 +54,7 @@ const PathLink = (props: { link: string; icon?: React.ReactNode }) => {
 }
 
 const Advanced = (props: IProps) => {
-  const { data, onChange } = props
+  const { data, onChange, onSaveHttpApi } = props
   const { i18n, lang } = useI18n()
   const { platform } = agent
   const [hostsPath, setHostsPath] = useState('')
@@ -171,23 +172,7 @@ const Advanced = (props: IProps) => {
         </Box>
 
         <Box w="100%">
-          <Stack gap="8px">
-            <Checkbox
-              checked={data.http_api_on}
-              onChange={(e) => onChange({ http_api_on: e.target.checked })}
-              label={lang.http_api_on}
-              description={i18n.trans('http_api_on_desc', [httpApiPort.toString()])}
-              styles={checkboxDescriptionStyles}
-            />
-            <Box pl="28px">
-              <Checkbox
-                disabled={!data.http_api_on}
-                checked={data.http_api_only_local}
-                onChange={(e) => onChange({ http_api_only_local: e.target.checked })}
-                label={lang.http_api_only_local}
-              />
-            </Box>
-          </Stack>
+          <HttpApi data={data} onSave={onSaveHttpApi} />
         </Box>
       </Stack>
 

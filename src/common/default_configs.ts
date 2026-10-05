@@ -1,5 +1,6 @@
 import { LocaleName } from '@common/i18n'
 import { FolderModeType } from './data.d'
+import { defaultHttpApiPort } from './constants'
 
 export type WriteModeType = null | 'overwrite' | 'append'
 export type ThemeType = 'light' | 'dark' | 'system'
@@ -37,6 +38,7 @@ const configs = {
   dns_custom_url: '',
   http_api_on: false,
   http_api_only_local: true,
+  http_api_port: defaultHttpApiPort,
   tray_mini_window: true,
   multi_chose_folder_switch_all: false,
   auto_check_update: true,

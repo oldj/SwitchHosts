@@ -1,3 +1,4 @@
+import { httpApiEnglish } from '../httpApi'
 import { importEnglish } from '../import'
 /**
  * @author: Aktilor
@@ -7,6 +8,7 @@ import { importEnglish } from '../import'
 import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
+  ...httpApiEnglish,
   ...importEnglish,
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Début géré',

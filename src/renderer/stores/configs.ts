@@ -4,10 +4,10 @@
  */
 
 import { ConfigsType } from '@common/default_configs'
-import { actions } from '@renderer/core/agent'
+import { loadConfigSnapshot } from '@renderer/core/configSnapshot'
 import { atom } from 'jotai'
 
 export const configsAtom = atom<ConfigsType | null>(null)
 configsAtom.onMount = (setAtom) => {
-  actions.configAll().then(setAtom)
+  void loadConfigSnapshot(setAtom)
 }

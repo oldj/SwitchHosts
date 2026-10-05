@@ -16,9 +16,7 @@ describe('mergeConfigUpdateIntoDraft', () => {
       hide_dock_icon: true,
     }
 
-    expect(
-      mergeConfigUpdateIntoDraft(draft, snapshot, { hide_dock_icon: true }),
-    ).toMatchObject({
+    expect(mergeConfigUpdateIntoDraft(draft, snapshot, { hide_dock_icon: true })).toMatchObject({
       cmd_after_hosts_apply: 'unsaved command',
       hide_dock_icon: true,
     })
@@ -37,5 +35,20 @@ describe('mergeConfigUpdateIntoDraft', () => {
     }
 
     expect(mergeConfigUpdateIntoDraft(draft, snapshot, undefined)).toBe(snapshot)
+  })
+
+  it('uses the current backend value when an older HTTP settings event arrives late', () => {
+    const draft = { ...defaultConfigs, http_api_port: 40761, cmd_after_hosts_apply: 'unsaved' }
+    const snapshot = { ...defaultConfigs, http_api_port: 40762, http_api_on: true }
+    expect(
+      mergeConfigUpdateIntoDraft(draft, snapshot, {
+        http_api_port: 50761,
+        http_api_on: false,
+      }),
+    ).toMatchObject({
+      http_api_port: 40762,
+      http_api_on: true,
+      cmd_after_hosts_apply: 'unsaved',
+    })
   })
 })

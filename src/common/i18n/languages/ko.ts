@@ -1,9 +1,11 @@
+import { httpApiEnglish } from '../httpApi'
 import { importEnglish } from '../import'
 /**
  * @author: wooklab
  */
 
 export default {
+  ...httpApiEnglish,
   ...importEnglish,
   _app_name: 'SwitchHosts',
   hosts_managed_start: '관리 영역 시작',

@@ -31,6 +31,13 @@ pub enum StorageError {
     #[error("failed to apply {key} to the OS: {reason}")]
     SideEffect { key: String, reason: String },
 
+    #[error("HTTP API port {port}: {reason}")]
+    HttpApi {
+        code: String,
+        port: u16,
+        reason: String,
+    },
+
     #[error("invalid data directory choice: {reason}")]
     InvalidDataDirChoice { reason: String },
 }

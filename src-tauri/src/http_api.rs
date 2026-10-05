@@ -24,21 +24,9 @@
 //! `apply failed.`. All replies are 200 with a terse body, matching
 //! the existing ones.
 //!
-//! Lifecycle:
-//!
-//! - `start(app, only_local)` binds to `127.0.0.1:50761` (only_local =
-//!   true) or `0.0.0.0:50761` (only_local = false), spawns a tokio
-//!   task that runs the axum router, and stores the join handle in a
-//!   process-wide `Mutex`. Subsequent `start` calls with the same
-//!   `only_local` are no-ops; calls with a different value tear down
-//!   and rebind.
-//! - `stop()` aborts the join handle and clears the slot.
-//! - The bootstrap path in `lib.rs::run` calls `start` once at startup
-//!   if `config.http_api_on == true`. The `config_set` /
-//!   `config_update` commands call `start` / `stop` whenever the
-//!   `http_api_on` or `http_api_only_local` keys change so the server
-//!   stays in sync with the renderer's preferences pane without a
-//!   restart.
+//! Lifecycle: the configured port defaults to 50761. Config commits reserve
+//! a new listener before persisting, then replace the previous server. Runtime
+//! status is queried independently of the user's enabled preference.
 //!
 //! Toggle behaviour: with a main window alive this matches the
 //! Electron implementation byte for byte — the handler emits
@@ -67,7 +55,6 @@
 //! way: `refresh_one` emits `hosts_content_changed`, and List's
 //! subscriber re-applies when the node is switched on.
 
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Mutex;
 
 use axum::extract::{Query, State};
@@ -82,7 +69,7 @@ use crate::commands;
 use crate::hosts_apply::{self, HostsApplyError};
 use crate::lifecycle::MAIN_WINDOW_LABEL;
 use crate::refresh::{self, RefreshError, RefreshOutcome};
-use crate::storage::{manifest, manifest::Manifest, AppState};
+use crate::storage::{manifest, manifest::Manifest, AppConfig, AppState, StorageError};
 use crate::tray;
 
 // We pin the HTTP API to the default `Wry` runtime instead of staying
@@ -93,86 +80,43 @@ use crate::tray;
 // it's the only runtime we ship, the test runtime never reaches this
 // code path.
 
-pub const HTTP_API_PORT: u16 = 50761;
+mod server;
 
-struct ServerHandle {
-    task: tauri::async_runtime::JoinHandle<()>,
-    only_local: bool,
-}
+static SERVER: Mutex<server::Server> = Mutex::new(server::Server::new());
 
-static SERVER: Mutex<Option<ServerHandle>> = Mutex::new(None);
-
-/// Start the HTTP server. Idempotent: a second call with the same
-/// `only_local` value is a no-op; with a different value the existing
-/// server is stopped and a new one is bound.
-pub fn start(app: AppHandle<Wry>, only_local: bool) -> Result<(), String> {
-    let mut guard = SERVER.lock().expect("http server mutex poisoned");
-    if let Some(existing) = guard.as_ref() {
-        if existing.only_local == only_local {
-            return Ok(());
-        }
-    }
-    if let Some(prev) = guard.take() {
-        prev.task.abort();
-    }
-
-    let ip = if only_local {
-        IpAddr::V4(Ipv4Addr::LOCALHOST)
-    } else {
-        IpAddr::V4(Ipv4Addr::UNSPECIFIED)
-    };
-    let addr = SocketAddr::new(ip, HTTP_API_PORT);
-
-    // Bind synchronously so port-conflict errors surface to the caller
-    // (and through it the renderer / config-update flow). Doing the
-    // bind inside the spawned task would only log the failure while
-    // `start()` returned `Ok`, leaving the preferences pane reporting
-    // "HTTP API on" against a dead listener and blocking later
-    // same-`only_local` calls via the early-return above. The std
-    // listener is handed off to tokio inside `serve()`.
-    let std_listener =
-        std::net::TcpListener::bind(addr).map_err(|e| format!("bind {addr}: {e}"))?;
-    std_listener
-        .set_nonblocking(true)
-        .map_err(|e| format!("set_nonblocking {addr}: {e}"))?;
-
-    let app_for_task = app.clone();
-    let task = tauri::async_runtime::spawn(async move {
-        if let Err(e) = serve(app_for_task, std_listener).await {
-            log::error!("serve error: {e}");
-        }
+/// Called at startup or from the blocking config writer. Persistence runs
+/// while the server mutex is held, so a status query never sees a half-commit.
+pub fn configure(
+    app: AppHandle<Wry>,
+    config: &AppConfig,
+    persist: impl FnOnce() -> Result<(), StorageError>,
+) -> Result<(), StorageError> {
+    let endpoint = config.http_api_on.then_some(server::Endpoint {
+        port: config.http_api_port,
+        only_local: config.http_api_only_local,
     });
-
-    *guard = Some(ServerHandle { task, only_local });
-    log::info!("listening on http://{addr}");
-    Ok(())
+    let result = SERVER
+        .lock()
+        .expect("http server mutex poisoned")
+        .configure(router(app.clone()), endpoint, persist);
+    let _ = app.emit("http_api_status_changed", json!({ "_args": [] }));
+    result
 }
 
-/// Stop the HTTP server if it's running.
-pub fn stop() {
-    let mut guard = SERVER.lock().expect("http server mutex poisoned");
-    if let Some(handle) = guard.take() {
-        handle.task.abort();
-        log::info!("stopped");
-    }
+pub fn status() -> server::Status {
+    SERVER.lock().expect("http server mutex poisoned").status()
 }
 
 // ---- routes ----------------------------------------------------------------
 
-async fn serve(app: AppHandle<Wry>, std_listener: std::net::TcpListener) -> Result<(), String> {
-    let router = Router::new()
+fn router(app: AppHandle<Wry>) -> Router {
+    Router::new()
         .route("/", get(home))
         .route("/remote-test", get(remote_test))
         .route("/api/list", get(api_list))
         .route("/api/toggle", get(api_toggle))
         .route("/api/refresh", get(api_refresh))
-        .with_state(AppRouterState { app });
-
-    let listener = tokio::net::TcpListener::from_std(std_listener)
-        .map_err(|e| format!("tokio listener from_std: {e}"))?;
-    axum::serve(listener, router)
-        .await
-        .map_err(|e| e.to_string())
+        .with_state(AppRouterState { app })
 }
 
 #[derive(Clone)]

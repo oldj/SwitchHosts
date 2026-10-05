@@ -17,6 +17,7 @@ use super::error::StorageError;
 pub const CONFIG_FORMAT: &str = "switchhosts-config";
 pub const CONFIG_SCHEMA_VERSION: u32 = 1;
 const MAX_PROXY_PORT: u32 = 65535;
+pub const DEFAULT_HTTP_API_PORT: u16 = 50761;
 
 /// User-facing config. Field names match ConfigsType in TypeScript, so a
 /// round-trip through `serde_json::Value` preserves renderer contract.
@@ -70,9 +71,26 @@ pub struct AppConfig {
     // http api
     pub http_api_on: bool,
     pub http_api_only_local: bool,
+    #[serde(deserialize_with = "deserialize_http_api_port")]
+    pub http_api_port: u16,
 
     // update
     pub auto_check_update: bool,
+}
+
+// A hand-edited or invalid port must not make load() discard every other
+// preference. IPC writes remain strict in apply_partial below.
+fn deserialize_http_api_port<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<u16, D::Error> {
+    let value = Value::deserialize(deserializer)?;
+    match value.as_u64() {
+        Some(port @ 1..=65535) => Ok(port as u16),
+        _ => {
+            log::warn!("invalid stored HTTP API port; using {DEFAULT_HTTP_API_PORT}");
+            Ok(DEFAULT_HTTP_API_PORT)
+        }
+    }
 }
 
 impl Default for AppConfig {
@@ -118,6 +136,7 @@ impl Default for AppConfig {
 
             http_api_on: false,
             http_api_only_local: true,
+            http_api_port: DEFAULT_HTTP_API_PORT,
 
             auto_check_update: true,
         }
@@ -126,6 +145,9 @@ impl Default for AppConfig {
 
 impl AppConfig {
     fn normalize(&mut self) {
+        if self.http_api_port == 0 {
+            self.http_api_port = DEFAULT_HTTP_API_PORT;
+        }
         if !matches!(self.theme.as_str(), "light" | "dark" | "system") {
             self.theme = "system".to_string();
         }
@@ -215,6 +237,15 @@ impl AppConfig {
                 reason: "expected a JSON object".into(),
             })?;
 
+        if let Some(port) = patch_obj.get("http_api_port") {
+            if !matches!(port.as_u64(), Some(1..=65535)) {
+                return Err(StorageError::InvalidConfigValue {
+                    key: "http_api_port".into(),
+                    reason: "expected an integer between 1 and 65535".into(),
+                });
+            }
+        }
+
         let mut merged = self.to_flat_value();
         let merged_obj = merged
             .as_object_mut()
@@ -241,6 +272,83 @@ impl AppConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn http_api_port_defaults_for_old_configs_and_rejects_invalid_patches() {
+        let mut cfg: AppConfig = serde_json::from_value(json!({ "theme": "dark" })).unwrap();
+        assert_eq!(cfg.http_api_port, 50761);
+        for invalid in [
+            json!(0),
+            json!(-1),
+            json!(65536),
+            json!(1.5),
+            json!("40761"),
+            Value::Null,
+        ] {
+            assert!(cfg
+                .apply_partial(&json!({ "http_api_port": invalid }))
+                .is_err());
+            assert_eq!(cfg.http_api_port, 50761);
+        }
+        for valid in [1, 40761, 65535] {
+            cfg.apply_partial(&json!({ "http_api_port": valid }))
+                .unwrap();
+            assert_eq!(cfg.http_api_port, valid);
+        }
+    }
+
+    #[test]
+    fn http_api_port_is_persisted_for_next_launch() {
+        let path = std::env::temp_dir().join(format!("switchhosts-port-{}.json", uuid_for_test()));
+        let mut cfg = AppConfig::default();
+        cfg.apply_partial(&json!({ "http_api_port": 40761, "http_api_on": true }))
+            .unwrap();
+        cfg.save(&path).unwrap();
+        let loaded = AppConfig::load_checked(&path).unwrap();
+        std::fs::remove_file(&path).unwrap();
+        assert_eq!(loaded.http_api_port, 40761);
+        assert!(loaded.http_api_on);
+    }
+
+    #[test]
+    fn invalid_stored_http_api_port_preserves_other_preferences() {
+        let path = std::env::temp_dir().join(format!("switchhosts-port-{}.json", uuid_for_test()));
+        for invalid in [
+            json!(0),
+            json!(65536),
+            json!(-1),
+            json!(1.5),
+            json!("bad"),
+            Value::Null,
+        ] {
+            std::fs::write(
+                &path,
+                serde_json::to_vec(&json!({
+                    "http_api_port": invalid, "theme": "dark", "http_api_on": true,
+                    "proxy_host": "proxy.local"
+                }))
+                .unwrap(),
+            )
+            .unwrap();
+            let loaded = AppConfig::load(&path);
+            assert_eq!(loaded.http_api_port, DEFAULT_HTTP_API_PORT);
+            assert_eq!(loaded.theme, "dark");
+            assert_eq!(loaded.proxy_host, "proxy.local");
+            assert!(loaded.http_api_on);
+        }
+        std::fs::remove_file(path).unwrap();
+    }
+
+    fn uuid_for_test() -> String {
+        format!(
+            "{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        )
+    }
 
     #[test]
     fn load_normalizes_invalid_theme_to_system() {

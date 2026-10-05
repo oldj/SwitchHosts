@@ -417,18 +417,12 @@ pub fn run() {
                 // Wakes every 60s, replaces `src/main/libs/cron.ts`.
                 refresh::start_background_scanner(app_handle.clone());
 
-                // Local HTTP API on port 50761. Only started if the user
-                // turned it on in the preferences pane; the config_set /
-                // config_update commands also call start/stop on the fly
-                // when the renderer flips the toggle.
-                let (http_on, only_local) = {
-                    let cfg = app_state.config.lock().expect("config mutex poisoned");
-                    (cfg.http_api_on, cfg.http_api_only_local)
-                };
-                if http_on {
-                    if let Err(e) = http_api::start(app_handle.clone(), only_local) {
-                        log::warn!("http_api startup failed: {e}");
-                    }
+                // Preserve the enabled preference on startup failure; the
+                // preferences pane reads runtime status and lets users fix the
+                // port without losing their intent to run the API.
+                let config = app_state.config.lock().expect("config mutex poisoned").clone();
+                if let Err(e) = http_api::configure(app_handle.clone(), &config, || Ok(())) {
+                    log::warn!("http_api startup failed: {e}");
                 }
             } else {
                 log::warn!(
@@ -490,6 +484,7 @@ pub fn run() {
             commands::dark_mode_toggle,
             // config
             commands::config_all,
+            commands::http_api_status,
             commands::config_get,
             commands::config_set,
             commands::config_update,

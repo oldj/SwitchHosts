@@ -1,3 +1,4 @@
+import { httpApiChinese } from '../httpApi'
 import { importChinese } from '../import'
 /**
  * @author: oldj
@@ -7,6 +8,7 @@ import { importChinese } from '../import'
 import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
+  ...httpApiChinese,
   ...importChinese,
   _app_name: 'SwitchHosts',
   hosts_managed_start: '托管开始',

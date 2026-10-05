@@ -1,3 +1,4 @@
+import { httpApiEnglish } from '../httpApi'
 import { importEnglish } from '../import'
 /**
  * @author: oldj
@@ -5,6 +6,7 @@ import { importEnglish } from '../import'
  */
 
 export default {
+  ...httpApiEnglish,
   ...importEnglish,
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Managed start',

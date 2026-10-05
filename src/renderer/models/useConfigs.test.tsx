@@ -125,4 +125,120 @@ describe('useConfigs', () => {
     expect(args?.message).toBe('disk full')
     expect(errorSpy).toHaveBeenCalledTimes(1)
   })
+
+  it('publishes HTTP settings only after commit even if configs reload during the save', async () => {
+    let resolveUpdate!: () => void
+    mocks.actions.configUpdate.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveUpdate = resolve
+      }),
+    )
+    mocks.actions.configAll.mockResolvedValue({ theme: 'dark', http_api_on: false })
+    const { result } = renderHook(() => useConfigs())
+    let update!: Promise<void>
+    act(() => {
+      update = result.current.updateConfigs(
+        { http_api_on: true },
+        { optimistic: false, notifyError: false },
+      )
+    })
+    expect(mocks.configsState.current?.http_api_on).toBe(false)
+    await act(async () => {
+      await result.current.loadConfigs()
+    })
+    await act(async () => {
+      resolveUpdate()
+      await update
+    })
+    expect(mocks.configsState.current).toEqual({ theme: 'dark', http_api_on: true })
+  })
+
+  it('keeps rejected HTTP settings out of shared state and lets the caller show the error', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    mocks.actions.configUpdate.mockRejectedValue(new Error('port occupied'))
+    mocks.actions.configAll.mockResolvedValue({ theme: 'system', http_api_on: false })
+    const { result } = renderHook(() => useConfigs())
+    await expect(
+      act(async () => {
+        await result.current.updateConfigs(
+          { http_api_on: true },
+          { optimistic: false, notifyError: false },
+        )
+      }),
+    ).rejects.toThrow('port occupied')
+    expect(mocks.setConfigs.mock.calls.every(([value]) => value.http_api_on === false)).toBe(true)
+    expect(mocks.notify.showErrorNotification).not.toHaveBeenCalled()
+  })
+
+  it('does not let a delayed read overwrite a committed HTTP port', async () => {
+    let resolveRead!: (value: unknown) => void
+    mocks.actions.configAll
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveRead = resolve
+        }),
+      )
+      .mockResolvedValue({ theme: 'system', http_api_port: 40761 })
+    mocks.actions.configUpdate.mockResolvedValue(undefined)
+    const { result } = renderHook(() => useConfigs())
+    let read!: ReturnType<typeof result.current.loadConfigs>
+    act(() => {
+      read = result.current.loadConfigs()
+    })
+    await act(async () => {
+      await result.current.updateConfigs({ http_api_port: 40761 }, { optimistic: false })
+      resolveRead({ theme: 'system', http_api_port: 50761 })
+      expect((await read).http_api_port).toBe(40761)
+    })
+    expect(mocks.configsState.current?.http_api_port).toBe(40761)
+  })
+
+  it('uses the newest read when requests from separate hook instances finish out of order', async () => {
+    let resolveRead!: (value: unknown) => void
+    mocks.actions.configAll
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveRead = resolve
+        }),
+      )
+      .mockResolvedValue({ http_api_port: 40762 })
+    const first = renderHook(() => useConfigs())
+    const second = renderHook(() => useConfigs())
+    let read!: ReturnType<typeof first.result.current.loadConfigs>
+    act(() => {
+      read = first.result.current.loadConfigs()
+    })
+    await act(async () => {
+      await second.result.current.loadConfigs()
+      resolveRead({ http_api_port: 50761 })
+      expect((await read).http_api_port).toBe(40762)
+    })
+    expect(mocks.configsState.current?.http_api_port).toBe(40762)
+  })
+
+  it('keeps a committed port when a read and write resolve in the same turn', async () => {
+    let resolveRead!: (value: unknown) => void
+    let resolveUpdate!: () => void
+    mocks.actions.configAll
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveRead = resolve
+        }),
+      )
+      .mockResolvedValue({ http_api_port: 40761 })
+    mocks.actions.configUpdate.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveUpdate = resolve
+      }),
+    )
+    const { result } = renderHook(() => useConfigs())
+    await act(async () => {
+      const read = result.current.loadConfigs()
+      const update = result.current.updateConfigs({ http_api_port: 40761 }, { optimistic: false })
+      resolveRead({ http_api_port: 50761 })
+      resolveUpdate()
+      await Promise.all([read, update])
+    })
+    expect(mocks.configsState.current?.http_api_port).toBe(40761)
+  })
 })

@@ -16,7 +16,7 @@ import { IconAdjustments, IconCheck, IconDeviceFloppy } from '@tabler/icons-reac
 import { useEffect, useRef, useState } from 'react'
 import Advanced from './Advanced'
 import Commands from './Commands'
-import { isConfigPatch, mergeConfigUpdateIntoDraft } from './configSync'
+import { mergeConfigUpdateIntoDraft } from './configSync'
 import General from './General'
 import styles from './styles.module.scss'
 
@@ -63,7 +63,7 @@ const PreferencePanel = () => {
       await updateConfigs(kv)
     } catch {
       try {
-        setData(await loadConfigs())
+        await loadConfigs(setData)
       } catch (e) {
         console.error('loadConfigs failed after immediate save failure', e)
         if (configs) setData(configs)
@@ -98,7 +98,7 @@ const PreferencePanel = () => {
       // local Commands/Proxy draft back to whatever the backend really
       // accepted (useConfigs already reset the atom).
       try {
-        setData(await loadConfigs())
+        await loadConfigs(setData)
       } catch (e) {
         console.error('loadConfigs failed after onSave failure', e)
         if (configs) setData(configs)
@@ -115,6 +115,16 @@ const PreferencePanel = () => {
     }, 1800)
   }
 
+  const onSaveHttpApi = async (patch: Partial<ConfigsType>) => {
+    // HTTP settings report errors inline and keep the rejected port draft.
+    // The HTTP component provides local optimistic feedback. Publish global
+    // settings only after the backend commits, including when this drawer is
+    // closed or another setting refreshes configs while the save is in flight.
+    await updateConfigs(patch, { notifyError: false, optimistic: false })
+    setData((prev) => (prev ? { ...prev, ...patch } : prev))
+    agent.broadcast(events.config_updated, patch)
+  }
+
   useEffect(() => {
     if (data === null && configs !== null) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time draft init when configs first loads; subsequent configs changes from immediate-save must not clobber unsaved Commands/Proxy drafts
@@ -129,7 +139,7 @@ const PreferencePanel = () => {
     async () => {
       setIsOpen(true)
       try {
-        setData(await loadConfigs())
+        await loadConfigs(setData)
       } catch (e) {
         console.error('loadConfigs failed before opening preferences', e)
         setData(configs)
@@ -140,13 +150,13 @@ const PreferencePanel = () => {
 
   useOnBroadcast(events.config_updated, async (patch?: unknown) => {
     try {
-      const snapshot = await loadConfigs()
-      setData((prev) => mergeConfigUpdateIntoDraft(prev, snapshot, patch))
+      await loadConfigs((snapshot) => {
+        setData((prev) => mergeConfigUpdateIntoDraft(prev, snapshot, patch))
+      })
     } catch (e) {
       console.error('loadConfigs failed after config_updated', e)
-      if (isConfigPatch(patch)) {
-        setData((prev) => (prev ? { ...prev, ...patch } : prev))
-      }
+      // Keep the last known state; event values can be older than a save
+      // that completed while this read was pending.
     }
   })
 
@@ -224,7 +234,7 @@ const PreferencePanel = () => {
             <Tabs.Panel value="advanced" className={styles.tab_panel}>
               <ScrollArea className={styles.scroll_area} offsetScrollbars="y" scrollbars="y">
                 <div className={styles.tab_panel_content}>
-                  <Advanced data={data} onChange={onSaveImmediate} />
+                  <Advanced data={data} onChange={onSaveImmediate} onSaveHttpApi={onSaveHttpApi} />
                 </div>
               </ScrollArea>
             </Tabs.Panel>

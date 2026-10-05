@@ -9,4 +9,4 @@ export const homepageUrl = 'https://switchhosts.app'
 export const downloadUrl = `${serverUrl}/download/`
 export const sourceUrl = 'https://github.com/oldj/SwitchHosts'
 export const feedbackUrl = 'https://github.com/oldj/SwitchHosts/issues'
-export const httpApiPort = 50761
+export const defaultHttpApiPort = 50761

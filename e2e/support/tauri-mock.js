@@ -55,6 +55,7 @@
     refresh_remote_hosts_on_startup: false,
     http_api_on: false,
     http_api_only_local: true,
+    http_api_port: 50761,
     tray_mini_window: true,
     multi_chose_folder_switch_all: false,
     auto_check_update: true,
@@ -66,6 +67,8 @@
 
   const state = {
     configs,
+    httpApiError: null,
+    nextHttpApiError: null,
     applicationRecovery: null,
     nextSaveError: false,
     nextRestoreFailure: null,
@@ -176,6 +179,10 @@
   }
 
   const searchParams = new URLSearchParams(window.location.search)
+  if (searchParams.get('e2eHttpApiStartupFailure') === 'true') {
+    configs.http_api_on = true
+    state.httpApiError = { code: 'permission_denied', port: 50761, reason: 'Access denied' }
+  }
 
   if (searchParams.get('e2eWriteMode') === 'null') {
     state.configs.write_mode = null
@@ -386,8 +393,21 @@
     return clone(pendingImport)
   }
 
+  let pendingHttpApiSave = null
+  let releaseHttpApiSave = null
+
   window.__SWITCHHOSTS_E2E__ = {
     state,
+    holdNextHttpApiSave: () => {
+      pendingHttpApiSave = new Promise((resolve) => { releaseHttpApiSave = resolve })
+    },
+    releaseHttpApiSave: () => {
+      releaseHttpApiSave?.()
+      releaseHttpApiSave = null
+    },
+    failNextHttpApiSave: (code) => {
+      state.nextHttpApiError = code
+    },
     getState: () => clone(state),
     getCalls: () => clone(state.calls),
     seedHistory: (count) => {
@@ -524,7 +544,25 @@
       switch (cmd) {
         case 'config_all':
           return clone(state.configs)
+        case 'http_api_status':
+          return {
+            running: state.configs.http_api_on && !state.httpApiError,
+            address: state.configs.http_api_on && !state.httpApiError
+              ? `http://${state.configs.http_api_only_local ? '127.0.0.1' : '0.0.0.0'}:${state.configs.http_api_port}` : null,
+            error: state.httpApiError,
+          }
         case 'config_update':
+          if (pendingHttpApiSave && Object.keys(params[0] || {}).some((key) => key.startsWith('http_api_'))) {
+            const pending = pendingHttpApiSave
+            pendingHttpApiSave = null
+            await pending
+          }
+          if (state.nextHttpApiError && Object.keys(params[0] || {}).some((key) => key.startsWith('http_api_'))) {
+            const code = state.nextHttpApiError
+            state.nextHttpApiError = null
+            throw { kind: 'http_api', code, port: params[0].http_api_port || state.configs.http_api_port, reason: 'Mock API error' }
+          }
+          if (Object.keys(params[0] || {}).some((key) => key.startsWith('http_api_'))) state.httpApiError = null
           Object.assign(state.configs, params[0] || {})
           return null
         case 'get_basic_data':

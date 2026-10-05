@@ -1,6 +1,8 @@
+import { httpApiEnglish } from '../httpApi'
 import type { LanguageDict } from '@common/types'
 
 export default {
+  ...httpApiEnglish,
   import_preview: 'Prévia da importação',
   import_next_step: 'Avançar',
   import_append: 'Adicionar',

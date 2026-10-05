@@ -13,7 +13,15 @@ export function mergeConfigUpdateIntoDraft(
     return snapshot
   }
   if (isConfigPatch(patch)) {
-    return { ...draft, ...patch }
+    // Events identify the changed fields. Their values can be stale by the
+    // time configAll resolves; use the authoritative snapshot for those fields
+    // while preserving unrelated, unsaved drafts.
+    const updates = Object.fromEntries(
+      Object.keys(patch)
+        .filter((key) => Object.hasOwn(snapshot, key))
+        .map((key) => [key, snapshot[key as keyof ConfigsType]]),
+    )
+    return { ...draft, ...updates }
   }
   return snapshot
 }

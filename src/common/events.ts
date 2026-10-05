@@ -15,7 +15,7 @@ export default {
   hosts_content_changed_batch: 'hosts_content_changed_batch',
   hosts_refreshed: 'hosts_refreshed',
   hosts_refreshed_by_id: 'hosts_refreshed_by_id',
-  http_api_start_failed: 'http_api_start_failed',
+  http_api_status_changed: 'http_api_status_changed',
   main_window_ready: 'main_window_ready',
   move_to_trashcan: 'move_to_trashcan',
   new_version: 'new_version',
