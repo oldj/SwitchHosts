@@ -63,6 +63,8 @@ v5 数据结构如下：
 
 如需完整手动备份，请复制整个 `~/.SwitchHosts` 文件夹。应用内导出会生成 hosts 数据备份 JSON，不包含偏好设置或历史记录。
 
+系统 hosts 使用无 BOM 的 UTF-8 写入。转换已有的 Windows ANSI 或带 BOM 的 UTF-16 文件前，SwitchHosts 会将原始字节保存到当前数据目录的 `internal/histories/hosts-encoding-backups/`，即使关闭历史记录也会备份。这些 `.bin` 备份不受历史条数限制影响，也不包含在应用内导出的 JSON 中。
+
 ## 开发以及构建
 
 ### 前置要求

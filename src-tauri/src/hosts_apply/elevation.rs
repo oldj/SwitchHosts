@@ -37,13 +37,25 @@ pub(crate) const ELEVATION_HELPER_ARG: &str = "--swh-elevated-apply-hosts";
 /// Write `content` to `target` using OS-native elevation. The caller
 /// is responsible for falling back here only after a direct write
 /// has failed with a permission error.
-pub fn write_with_elevation(target: &Path, content: &str) -> Result<(), HostsApplyError> {
+pub fn write_with_elevation(
+    target: &Path,
+    content: impl AsRef<[u8]>,
+) -> Result<(), HostsApplyError> {
     let tmp_path = stage_temp_file(content)?;
     let result = elevate_copy(&tmp_path, target);
     // Best-effort cleanup; ignore failures because the temp directory
     // is OS-managed and the file is small.
     let _ = std::fs::remove_file(&tmp_path);
     result
+}
+
+/// Compensation must preserve the original file's encoding byte for byte.
+/// UTF-8 can use the macOS helper; other encodings use the OS copy path.
+pub fn write_privileged_bytes(target: &Path, content: &[u8]) -> Result<(), HostsApplyError> {
+    match std::str::from_utf8(content) {
+        Ok(text) => write_privileged(target, text),
+        Err(_) => write_with_elevation(target, content),
+    }
 }
 
 // ---- privileged-write strategy ---------------------------------------------
@@ -187,7 +199,7 @@ fn try_helper(content: &str, status: HelperStatus) -> Option<Result<(), HostsApp
     }
 }
 
-fn stage_temp_file(content: &str) -> Result<PathBuf, HostsApplyError> {
+fn stage_temp_file(content: impl AsRef<[u8]>) -> Result<PathBuf, HostsApplyError> {
     let mut path = std::env::temp_dir();
     let stamp = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
     path.push(format!("swh_apply_{stamp}.hosts"));
@@ -795,6 +807,18 @@ mod tests {
     use super::{choose_elevation_strategy, ElevationStrategy, Platform};
     use crate::hosts_apply::helper_admin::HelperStatus;
     use crate::hosts_apply::write::windows_hosts_path_from_windows_dir;
+
+    #[test]
+    fn stages_original_encoding_bytes_for_privileged_compensation() {
+        for bytes in [
+            b"# \xd6\xd0\xce\xc4\r\n".as_slice(),
+            b"\xff\xfe#\0 \0\x2d\x4e",
+        ] {
+            let path = super::stage_temp_file(bytes).unwrap();
+            assert_eq!(std::fs::read(&path).unwrap(), bytes);
+            std::fs::remove_file(path).unwrap();
+        }
+    }
 
     #[test]
     fn linux_and_windows_ignore_helper_state() {

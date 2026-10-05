@@ -11,7 +11,7 @@
 //! storage access.
 
 use std::path::PathBuf;
-use std::sync::atomic::Ordering;
+use std::sync::{atomic::Ordering, Arc};
 use std::time::Duration;
 
 use serde_json::{json, Value};
@@ -688,11 +688,12 @@ pub async fn set_hosts_content(
 #[tauri::command]
 pub async fn get_system_hosts(_args: Args) -> Result<Value, StorageError> {
     let path = system_hosts_path()?;
-    match std::fs::read_to_string(&path) {
-        Ok(s) => Ok(json!(s)),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(json!("")),
-        Err(e) => Err(StorageError::io(path.display().to_string(), e)),
-    }
+    hosts_apply::write::read_system_hosts(&path)
+        .map(|s| json!(s))
+        .map_err(|e| StorageError::Io {
+            path: path.display().to_string(),
+            reason: e.to_string(),
+        })
 }
 
 #[tauri::command]
@@ -746,6 +747,7 @@ pub async fn apply_hosts_selection<R: Runtime>(
             Ok(json!({
                 "success": true,
                 "old_content": outcome.previous_content,
+                "old_content_bytes": outcome.previous_bytes,
                 "new_content": outcome.new_content,
             }))
         }
@@ -842,8 +844,20 @@ pub async fn restore_system_hosts<R: Runtime>(
         .clone();
     let expected_for_write = expected.clone();
     let previous_for_write = previous.clone();
+    let previous_bytes = args
+        .get(3)
+        .filter(|v| !v.is_null())
+        .map(|v| serde_json::from_value::<Vec<u8>>(v.clone()))
+        .transpose()
+        .map_err(|e| format!("invalid hosts snapshot bytes: {e}"))?
+        .map(Arc::<[u8]>::from);
+    let previous_bytes_for_write = previous_bytes.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
-        hosts_apply::write::restore_system_hosts(&previous_for_write, &expected_for_write)
+        hosts_apply::write::restore_system_hosts(
+            &previous_for_write,
+            &expected_for_write,
+            previous_bytes_for_write.as_deref(),
+        )
     })
     .await
     .unwrap_or_else(|e| {
@@ -853,9 +867,13 @@ pub async fn restore_system_hosts<R: Runtime>(
     });
     match result {
         Ok(()) => {
-            let recovery = state.application_recovery.restored(&previous, || {
-                let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
-            });
+            let recovery = state.application_recovery.restored(
+                &previous,
+                previous_bytes.as_deref(),
+                || {
+                    let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+                },
+            );
             let _ = tray::refresh_title(&app, &state);
             let _ = app.emit("system_hosts_updated", json!({ "_args": [] }));
             let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
@@ -904,8 +922,9 @@ pub(crate) async fn apply_aggregated_content<R: Runtime>(
     let write_result = {
         let content = content.to_string();
         let write_mode = write_mode.clone();
+        let backup_dir = state.paths.histories_dir.join("hosts-encoding-backups");
         tauri::async_runtime::spawn_blocking(move || {
-            hosts_apply::apply_to_system_hosts(&content, &write_mode)
+            hosts_apply::apply_to_system_hosts(&content, &write_mode, &backup_dir)
         })
         .await
     };

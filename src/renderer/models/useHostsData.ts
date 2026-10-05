@@ -183,6 +183,7 @@ export default function useHostsData() {
             result.old_content,
             result.new_content,
             list,
+            result.old_content_bytes,
           )
           if (restored.success) {
             setApplicationRecovery(restored.application_recovery ?? null)
