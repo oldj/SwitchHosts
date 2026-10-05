@@ -8,7 +8,7 @@
  *   - history + default keymap, no Tab binding (preserves accessibility focus nav)
  */
 
-import { Compartment, EditorState, type Extension, RangeSetBuilder } from '@codemirror/state'
+import { Compartment, EditorState, type Extension, Facet, RangeSetBuilder } from '@codemirror/state'
 import {
   Decoration,
   type DecorationSet,
@@ -19,10 +19,37 @@ import {
   lineNumbers,
   rectangularSelection,
   ViewPlugin,
+  WidgetType,
   type ViewUpdate,
 } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
-import { isHostsCommentLine, isValidHostsLine } from './hosts_highlight'
+import { getHostsBoundary, isHostsCommentLine, isValidHostsLine } from './hosts_highlight'
+
+export interface BoundaryLabels {
+  start: string
+  end: string
+}
+
+export const boundaryLabels = Facet.define<BoundaryLabels, BoundaryLabels>({
+  combine: (values) => values[0] ?? { start: 'Managed start', end: 'Managed end' },
+})
+
+class BoundaryLabel extends WidgetType {
+  constructor(readonly label: string) {
+    super()
+  }
+
+  eq(other: BoundaryLabel) {
+    return this.label === other.label
+  }
+
+  toDOM() {
+    const span = document.createElement('span')
+    span.className = 'swh-boundary-label'
+    span.textContent = this.label
+    return span
+  }
+}
 
 const IP_RE = /^(\s*)([\w.:%]+)/
 
@@ -41,7 +68,24 @@ function buildDecorations(view: EditorView): DecorationSet {
       const text = line.text
 
       if (text.length > 0) {
-        if (isHostsCommentLine(text)) {
+        const boundary = getHostsBoundary(text)
+        if (boundary) {
+          builder.add(
+            line.from,
+            line.from,
+            Decoration.line({
+              class: `swh-boundary swh-boundary-${boundary}`,
+            }),
+          )
+          builder.add(
+            line.to,
+            line.to,
+            Decoration.widget({
+              widget: new BoundaryLabel(view.state.facet(boundaryLabels)[boundary]),
+              side: 1,
+            }),
+          )
+        } else if (isHostsCommentLine(text)) {
           builder.add(line.from, line.from, commentLineDeco)
         } else if (!isValidHostsLine(text)) {
           builder.add(line.from, line.from, errorLineDeco)
@@ -72,7 +116,11 @@ export const hostsHighlighter = ViewPlugin.fromClass(
     }
 
     update(u: ViewUpdate) {
-      if (u.docChanged || u.viewportChanged) {
+      if (
+        u.docChanged ||
+        u.viewportChanged ||
+        u.startState.facet(boundaryLabels) !== u.state.facet(boundaryLabels)
+      ) {
         this.decorations = buildDecorations(u.view)
       }
     }
@@ -128,6 +176,37 @@ const hostsTheme = EditorView.theme({
     padding: '8px 0',
     caretColor: 'transparent',
   },
+  '.cm-line.swh-boundary': {
+    color: 'var(--swh-editor-boundary-color)',
+    boxShadow:
+      'inset 0 1px var(--swh-editor-boundary-rule), inset 0 -1px var(--swh-editor-boundary-rule)',
+    paddingRight: '8px',
+    minWidth: 'max-content',
+  },
+  '.cm-line.swh-boundary-start': {
+    boxShadow: 'inset 0 1px var(--swh-primary-color), inset 0 -1px var(--swh-editor-boundary-rule)',
+  },
+  '.cm-line.swh-boundary-end': {
+    boxShadow: 'inset 0 1px var(--swh-editor-boundary-rule), inset 0 -1px var(--swh-primary-color)',
+  },
+  '.swh-boundary-label': {
+    // Stick to the scrollport edge, rather than the end of the widest code line.
+    position: 'sticky',
+    right: '8px',
+    zIndex: '1',
+    float: 'right',
+    marginLeft: '24px',
+    marginTop: '0.15em',
+    padding: '0 8px',
+    borderRadius: '4px',
+    backgroundColor: 'var(--swh-accent-soft-bg)',
+    color: 'var(--swh-accent-soft-color)',
+    fontFamily: 'var(--mantine-font-family)',
+    fontSize: '0.8em',
+    lineHeight: '1.4em',
+    userSelect: 'none',
+  },
+  '.swh-boundary .hl-selection': { color: '#fff' },
   '.cm-cursor': {
     borderLeftColor: 'var(--swh-editor-text-color)',
   },

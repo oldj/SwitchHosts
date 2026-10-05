@@ -8,15 +8,21 @@ import events from '@common/events'
 import { normalizeLineEndings } from '@common/newlines'
 import { IFindShowSourceParam } from '@common/types'
 import StatusBar from '@renderer/components/StatusBar'
+import useI18n from '@renderer/models/useI18n'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useHostsData from '@renderer/models/useHostsData'
-import { EditorState } from '@codemirror/state'
+import { Compartment, EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useDebounceFn } from 'ahooks'
 import clsx from 'clsx'
 import { useEffect, useRef, useState } from 'react'
-import { buildExtensions, type BuiltExtensions, readOnlyExtensions } from './hosts_cm'
+import {
+  boundaryLabels,
+  buildExtensions,
+  type BuiltExtensions,
+  readOnlyExtensions,
+} from './hosts_cm'
 import {
   toggleCommentByLine,
   toggleCommentBySelection,
@@ -29,6 +35,13 @@ const HostsEditor = () => {
   const hostsId = currentHosts?.id || '0'
   const readOnly = isReadOnly(currentHosts)
   const [content, setContent] = useState('')
+
+  const { lang } = useI18n()
+  const labelsCompartment = useRef(new Compartment())
+  const refLang = useRef(lang)
+  useEffect(() => {
+    refLang.current = lang
+  }, [lang])
 
   const refMount = useRef<HTMLDivElement>(null)
   const refView = useRef<EditorView | null>(null)
@@ -191,7 +204,18 @@ const HostsEditor = () => {
 
     const built = rebuildExtensions()
     const view = new EditorView({
-      state: EditorState.create({ doc, extensions: built.extensions }),
+      state: EditorState.create({
+        doc,
+        extensions: [
+          ...built.extensions,
+          labelsCompartment.current.of(
+            boundaryLabels.of({
+              start: refLang.current.hosts_managed_start,
+              end: refLang.current.hosts_managed_end,
+            }),
+          ),
+        ],
+      }),
       parent: mount,
     })
 
@@ -312,6 +336,17 @@ const HostsEditor = () => {
     },
     [hostsId],
   )
+
+  useEffect(() => {
+    refView.current?.dispatch({
+      effects: labelsCompartment.current.reconfigure(
+        boundaryLabels.of({
+          start: refLang.current.hosts_managed_start,
+          end: refLang.current.hosts_managed_end,
+        }),
+      ),
+    })
+  }, [lang])
 
   return (
     <div className={styles.root}>

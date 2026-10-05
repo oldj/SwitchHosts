@@ -9,6 +9,8 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...importTraditionalChinese,
   _app_name: 'SwitchHosts',
+  hosts_managed_start: '託管開始',
+  hosts_managed_end: '託管結束',
   domain_list: '網域列表',
   domain_list_hint: '每行一個網域，也可貼上網址，自動擷取網域',
   domain_count: '{0} / {1} 個網域',

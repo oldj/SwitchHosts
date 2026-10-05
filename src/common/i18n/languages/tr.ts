@@ -7,6 +7,8 @@ import { importEnglish } from '../import'
 export default {
   ...importEnglish,
   _app_name: 'SwitchHosts',
+  hosts_managed_start: 'Yönetilen başlangıç',
+  hosts_managed_end: 'Yönetilen bitiş',
   domain_list: 'Alan adı listesi',
   domain_list_hint: 'Her satıra bir alan adı girin. Yapıştırılan URL’lerden alan adları alınır.',
   domain_count: '{0} / {1} alan adı',

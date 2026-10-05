@@ -4,11 +4,12 @@
  */
 
 import StatusBar from '@renderer/components/StatusBar'
-import { EditorState } from '@codemirror/state'
+import useI18n from '@renderer/models/useI18n'
+import { Compartment, EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import clsx from 'clsx'
 import { useEffect, useRef } from 'react'
-import { buildExtensions } from './Editor/hosts_cm'
+import { boundaryLabels, buildExtensions } from './Editor/hosts_cm'
 import styles from './HostsViewer.module.scss'
 
 interface Props {
@@ -18,6 +19,9 @@ interface Props {
 
 const HostsViewer = (props: Props) => {
   const { content, showStatusBar = true } = props
+  const { lang } = useI18n()
+  const labelsCompartment = useRef(new Compartment())
+
   const refMount = useRef<HTMLDivElement>(null)
   const refView = useRef<EditorView | null>(null)
 
@@ -31,7 +35,18 @@ const HostsViewer = (props: Props) => {
       onGutterClick: () => {},
     })
     const view = new EditorView({
-      state: EditorState.create({ doc: content, extensions: built.extensions }),
+      state: EditorState.create({
+        doc: content,
+        extensions: [
+          ...built.extensions,
+          labelsCompartment.current.of(
+            boundaryLabels.of({
+              start: lang.hosts_managed_start,
+              end: lang.hosts_managed_end,
+            }),
+          ),
+        ],
+      }),
       parent: mount,
     })
     refView.current = view
@@ -51,19 +66,24 @@ const HostsViewer = (props: Props) => {
     view.dispatch({ changes: { from: 0, to: current.length, insert: content } })
   }, [content])
 
+  useEffect(() => {
+    refView.current?.dispatch({
+      effects: labelsCompartment.current.reconfigure(
+        boundaryLabels.of({
+          start: lang.hosts_managed_start,
+          end: lang.hosts_managed_end,
+        }),
+      ),
+    })
+  }, [lang])
+
   return (
     <div className={styles.root}>
-      <div
-        className={clsx(styles.editor, styles.read_only, !showStatusBar && styles.fullHeight)}
-      >
+      <div className={clsx(styles.editor, styles.read_only, !showStatusBar && styles.fullHeight)}>
         <div ref={refMount} className={styles.mount} />
       </div>
       {showStatusBar && (
-        <StatusBar
-          lineCount={content.split('\n').length}
-          bytes={content.length}
-          readOnly={true}
-        />
+        <StatusBar lineCount={content.split('\n').length} bytes={content.length} readOnly={true} />
       )}
     </div>
   )

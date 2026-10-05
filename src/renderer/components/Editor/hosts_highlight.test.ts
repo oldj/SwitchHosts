@@ -6,6 +6,7 @@
 
 import { EditorState } from '@codemirror/state'
 import {
+  getHostsBoundary,
   toggleCommentByLine,
   toggleCommentBySelection,
   toggleCommentBySelections,
@@ -105,5 +106,22 @@ describe('hosts_highlight', () => {
       { from: doc.length, to: doc.length },
     ])
     expect(state.update({ changes }).newDoc.toString()).toBe('# first\nsecond\n\n# last')
+  })
+})
+
+describe('managed hosts boundaries', () => {
+  it('recognizes complete marker lines with surrounding whitespace', () => {
+    expect(getHostsBoundary('  # --- SWITCHHOSTS_CONTENT_START ---\t')).toBe('start')
+    expect(getHostsBoundary('# --- SWITCHHOSTS_CONTENT_END ---')).toBe('end')
+  })
+
+  it.each([
+    '# ordinary comment',
+    '# --- SWITCHHOSTS_CONTENT_START --- extra',
+    '127.0.0.1 localhost # --- SWITCHHOSTS_CONTENT_END ---',
+    '# --- switchhosts_content_start ---',
+    '# --- SWITCHHOSTS_CONTENT_START --',
+  ])('does not decorate lookalikes or inline comments: %s', (text) => {
+    expect(getHostsBoundary(text)).toBeNull()
   })
 })

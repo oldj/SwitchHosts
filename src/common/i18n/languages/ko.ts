@@ -6,6 +6,8 @@ import { importEnglish } from '../import'
 export default {
   ...importEnglish,
   _app_name: 'SwitchHosts',
+  hosts_managed_start: '관리 영역 시작',
+  hosts_managed_end: '관리 영역 끝',
   domain_list: '도메인 목록',
   domain_list_hint: '한 줄에 도메인 하나를 입력하세요. 붙여 넣은 URL에서 도메인을 추출합니다.',
   domain_count: '도메인 {0} / {1}개',
