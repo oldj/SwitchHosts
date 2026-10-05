@@ -4,6 +4,7 @@
  */
 
 import StatusBar from '@renderer/components/StatusBar'
+import { actions, agent } from '@renderer/core/agent'
 import useI18n from '@renderer/models/useI18n'
 import { Compartment, EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
@@ -31,6 +32,10 @@ const HostsViewer = (props: Props) => {
 
     const built = buildExtensions({
       initialReadOnly: true,
+      isMac: agent.platform === 'darwin',
+      onOpenUrl: (url) => {
+        actions.openUrl(url).catch((e) => console.error(e))
+      },
       onDocChange: () => {},
       onGutterClick: () => {},
     })

@@ -5,25 +5,30 @@ test.describe('title bar', () => {
     const handle = page.getByRole('separator').first()
     await expect(handle).toBeVisible()
 
-    const box = await handle.boundingBox()
-    expect(box).not.toBeNull()
-
-    const hitsHandle = await page.evaluate(
-      ({ x, y }) => !!document.elementFromPoint(x, y)?.closest('[role="separator"]'),
-      {
-        x: box!.x + box!.width - 1,
-        y: box!.y + box!.height / 2,
-      },
-    )
-    expect(hitsHandle).toBe(true)
+    // Read and hit-test in one frame: the opening sidebar transition can move
+    // this narrow handle between separate boundingBox/evaluate calls.
+    await expect
+      .poll(() =>
+        handle.evaluate((element) => {
+          const box = element.getBoundingClientRect()
+          return (
+            document
+              .elementFromPoint(box.x + box.width - 1, box.y + box.height / 2)
+              ?.closest('[role="separator"]') === element
+          )
+        }),
+      )
+      .toBe(true)
   })
 
   test('shows the app brand on Windows/Linux and aligns its logo to the sidebar', async ({
     page,
   }) => {
-    const platformClass = await page.locator('body').evaluate((body) =>
-      [...body.classList].find((className) => className.startsWith('platform-')),
-    )
+    const platformClass = await page
+      .locator('body')
+      .evaluate((body) =>
+        [...body.classList].find((className) => className.startsWith('platform-')),
+      )
     const brand = page.getByTestId('titlebar-brand')
 
     if (platformClass === 'platform-darwin') {

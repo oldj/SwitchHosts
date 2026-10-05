@@ -178,6 +178,10 @@ const HostsEditor = () => {
   const rebuildExtensions = () =>
     buildExtensions({
       initialReadOnly: refReadOnly.current,
+      isMac: agent.platform === 'darwin',
+      onOpenUrl: (url) => {
+        actions.openUrl(url).catch((e) => console.error(e))
+      },
       onDocChange,
       onGutterClick,
     })
