@@ -32,6 +32,12 @@ pub struct ApplicationRecovery {
 }
 
 impl ApplicationRecovery {
+    /// Backend callers keep this guard through snapshot, apply and commit (or
+    /// compensation). Renderer applies use the same lock in track_apply.
+    pub(crate) async fn lock_apply(&self) -> tokio::sync::MutexGuard<'_, ()> {
+        self.apply_lock.lock().await
+    }
+
     /// Cover the write and its post-apply work with one pending state. In
     /// particular, a destroyed renderer's delayed command must not register
     /// another pending state after a newer renderer has completed recovery.
@@ -39,16 +45,20 @@ impl ApplicationRecovery {
         &self,
         apply: impl std::future::Future<Output = Result<T, E>>,
     ) -> Result<T, E> {
-        let _serial = self.apply_lock.lock().await;
+        let _serial = self.lock_apply().await;
         self.begin();
         let result = apply.await;
         if result.is_err() {
             // No successful apply to acknowledge. Restore the prior view;
             // the caller revalidates it before publishing the error.
-            let mut state = self.state.lock().unwrap();
-            state.pending = state.before_apply.take();
+            self.apply_failed();
         }
         result
+    }
+
+    pub(crate) fn apply_failed(&self) {
+        let mut state = self.state.lock().unwrap();
+        state.pending = state.before_apply.take();
     }
 
     /// Save the previous view before any write or snapshot can change it.
@@ -95,7 +105,7 @@ impl ApplicationRecovery {
         self.inspect_and_notify(write::system_hosts_matches, on_change)
     }
 
-    fn inspect_and_notify(
+    pub(crate) fn inspect_and_notify(
         &self,
         matches: impl FnOnce(&str) -> bool,
         on_change: impl FnOnce(),
@@ -143,7 +153,7 @@ impl ApplicationRecovery {
         self.snapshot(on_change)
     }
 
-    fn restored_with(&self, current: bool) {
+    pub(crate) fn restored_with(&self, current: bool) {
         let mut state = self.state.lock().unwrap();
         let previous = state.before_apply.take();
         state.pending = if current {
@@ -153,7 +163,7 @@ impl ApplicationRecovery {
         };
     }
 
-    fn finish_with(&self, current: bool) -> Option<RecoveryView> {
+    pub(crate) fn finish_with(&self, current: bool) -> Option<RecoveryView> {
         let mut state = self.state.lock().unwrap();
         state.before_apply = None;
         state.pending = if current { None } else { Some(Self::unknown()) };

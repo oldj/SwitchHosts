@@ -5,6 +5,7 @@
 
 import logo from '@/assets/logo@4x.png'
 import events from '@common/events'
+import { findItemById } from '@common/hostsFn'
 import { ActionIcon, Badge, Box, Divider, Flex } from '@mantine/core'
 import ItemIcon from '@renderer/components/ItemIcon'
 import ApplicationRecoveryNotice from '@renderer/components/ApplicationRecoveryNotice'
@@ -37,8 +38,11 @@ interface IProps {
 const TopBar = (props: IProps) => {
   const { showLeftPanel, showRightPanel } = props
   const { lang } = useI18n()
-  const { isHostsInTrashcan, currentHosts, isReadOnly, applicationRecovery } = useHostsData()
-  const [isOn, setIsOn] = useState(!!currentHosts?.on)
+  const { isHostsInTrashcan, currentHosts, hostsData, isReadOnly, applicationRecovery } =
+    useHostsData()
+  const selectedHosts = currentHosts && findItemById(hostsData.list, currentHosts.id)
+  const savedOn = !!(selectedHosts || currentHosts)?.on
+  const [isOn, setIsOn] = useState(savedOn)
   const iconSize = 20
   const iconStroke = 1.5
 
@@ -48,9 +52,11 @@ const TopBar = (props: IProps) => {
   const currentTitle = currentHosts ? currentHosts.title || lang.untitled : lang.system_hosts
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror prop into local optimistic state; also set by useOnBroadcast
-    setIsOn(!!currentHosts?.on)
-  }, [currentHosts, applicationRecovery])
+    // Refresh metadata can replace currentHosts while its `on` is stale.
+    // Follow the saved (or recovery) list without resetting on metadata updates.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirror saved state into local optimistic state; also set by useOnBroadcast
+    setIsOn(savedOn)
+  }, [currentHosts?.id, savedOn, applicationRecovery])
 
   useOnBroadcast(
     events.set_hosts_on_status,

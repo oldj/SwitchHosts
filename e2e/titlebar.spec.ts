@@ -1,6 +1,30 @@
-import { expect, test } from './support/test'
+import { expect, getMockState, test } from './support/test'
 
 test.describe('title bar', () => {
+  for (const id of ['local-dev', 'remote-blocklist']) {
+    test(`toggles ${id} on and off with the sidebar collapsed`, async ({ page }) => {
+      await page.locator(`[data-id="${id}"]`).click()
+      await page.getByLabel('Toggle sidebar', { exact: true }).click()
+      const toggle = page.getByRole('switch', { name: 'Toggle current hosts' })
+      await expect(toggle).toHaveAttribute('aria-checked', 'false')
+      const content = (await getMockState(page)).contents[id].trim()
+
+      for (const on of [true, false]) {
+        await toggle.click()
+        await expect
+          .poll(async () => {
+            const state = await getMockState(page)
+            return {
+              savedOn: state.list.find((item) => item.id === id)?.on,
+              applied: state.systemHosts.includes(content),
+            }
+          })
+          .toEqual({ savedOn: on, applied: on })
+        await expect(toggle).toHaveAttribute('aria-checked', String(on))
+      }
+    })
+  }
+
   test('keeps the left resize handle above the editor', async ({ page }) => {
     const handle = page.getByRole('separator').first()
     await expect(handle).toBeVisible()
