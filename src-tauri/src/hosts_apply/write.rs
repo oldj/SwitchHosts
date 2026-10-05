@@ -145,8 +145,7 @@ fn restore_at(
     previous_bytes: Option<&[u8]>,
 ) -> Result<(), HostsApplyError> {
     let current_bytes = read_system_hosts_bytes(target)?;
-    let current = decode_system_hosts(target, &current_bytes)?;
-    if normalize_line_endings(&current) != normalize_line_endings(expected) {
+    if !hosts_bytes_match(&current_bytes, expected, None) {
         return Err(HostsApplyError::ContentChanged);
     }
     let fallback = restore_line_endings(&normalize_line_endings(previous));
@@ -172,11 +171,26 @@ fn restore_at(
 
 /// Only a verified readable match can be presented as a known applied state.
 pub fn system_hosts_matches(expected: &str) -> bool {
+    system_hosts_matches_snapshot(expected, None)
+}
+
+/// Compensation may restore a legacy encoding or non-native line endings.
+/// Verify its original bytes instead of treating it as a fresh UTF-8 apply.
+pub(crate) fn system_hosts_matches_snapshot(expected: &str, snapshot: Option<&[u8]>) -> bool {
     let _guard = SYSTEM_WRITE_LOCK.lock().unwrap_or_else(|e| e.into_inner());
     system_hosts_path()
-        .and_then(|path| read_system_hosts(&path))
-        .map(|current| normalize_line_endings(&current) == normalize_line_endings(expected))
+        .and_then(|path| read_system_hosts_bytes(&path))
+        .map(|current| hosts_bytes_match(&current, expected, snapshot))
         .unwrap_or(false)
+}
+
+fn hosts_bytes_match(current: &[u8], expected: &str, snapshot: Option<&[u8]>) -> bool {
+    // Our applied output is always UTF-8 with native line endings. Decoding
+    // before comparing would hide external encoding-only changes.
+    match snapshot {
+        Some(bytes) => current == bytes,
+        None => current == restore_line_endings(&normalize_line_endings(expected)).as_bytes(),
+    }
 }
 
 pub(crate) fn read_system_hosts(target: &Path) -> Result<String, HostsApplyError> {

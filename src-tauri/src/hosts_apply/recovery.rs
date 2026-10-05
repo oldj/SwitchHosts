@@ -133,9 +133,13 @@ impl ApplicationRecovery {
     pub fn restored(
         &self,
         previous_content: &str,
+        previous_bytes: Option<&[u8]>,
         on_change: impl FnOnce(),
     ) -> Option<RecoveryView> {
-        self.restored_with(write::system_hosts_matches(previous_content));
+        self.restored_with(write::system_hosts_matches_snapshot(
+            previous_content,
+            previous_bytes,
+        ));
         self.snapshot(on_change)
     }
 

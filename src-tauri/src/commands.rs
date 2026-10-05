@@ -11,7 +11,7 @@
 //! storage access.
 
 use std::path::PathBuf;
-use std::sync::atomic::Ordering;
+use std::sync::{atomic::Ordering, Arc};
 use std::time::Duration;
 
 use serde_json::{json, Value};
@@ -849,12 +849,14 @@ pub async fn restore_system_hosts<R: Runtime>(
         .filter(|v| !v.is_null())
         .map(|v| serde_json::from_value::<Vec<u8>>(v.clone()))
         .transpose()
-        .map_err(|e| format!("invalid hosts snapshot bytes: {e}"))?;
+        .map_err(|e| format!("invalid hosts snapshot bytes: {e}"))?
+        .map(Arc::<[u8]>::from);
+    let previous_bytes_for_write = previous_bytes.clone();
     let result = tauri::async_runtime::spawn_blocking(move || {
         hosts_apply::write::restore_system_hosts(
             &previous_for_write,
             &expected_for_write,
-            previous_bytes.as_deref(),
+            previous_bytes_for_write.as_deref(),
         )
     })
     .await
@@ -865,9 +867,13 @@ pub async fn restore_system_hosts<R: Runtime>(
     });
     match result {
         Ok(()) => {
-            let recovery = state.application_recovery.restored(&previous, || {
-                let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
-            });
+            let recovery = state.application_recovery.restored(
+                &previous,
+                previous_bytes.as_deref(),
+                || {
+                    let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+                },
+            );
             let _ = tray::refresh_title(&app, &state);
             let _ = app.emit("system_hosts_updated", json!({ "_args": [] }));
             let _ = app.emit("tray_list_updated", json!({ "_args": [] }));

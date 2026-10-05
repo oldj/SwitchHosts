@@ -80,6 +80,7 @@ fn conversion_round_trip(original: &[u8], text: &str) {
             .all(|entry| { std::fs::read(entry.unwrap().path()).unwrap() == original }));
         assert!(std::fs::read_dir(&f.backups).unwrap().count() > 0);
         assert!(f.apply(text, mode).unchanged);
+        assert!(hosts_bytes_match(&disk, &applied.new_content, None));
         restore_at(
             &f.target,
             &applied.previous_content,
@@ -87,7 +88,18 @@ fn conversion_round_trip(original: &[u8], text: &str) {
             Some(&applied.previous_bytes),
         )
         .unwrap();
-        assert_eq!(std::fs::read(&f.target).unwrap(), original);
+        let restored = std::fs::read(&f.target).unwrap();
+        assert_eq!(restored, original);
+        assert!(hosts_bytes_match(
+            &restored,
+            &applied.previous_content,
+            Some(&applied.previous_bytes),
+        ));
+        assert!(!hosts_bytes_match(
+            &restored,
+            &applied.previous_content,
+            None
+        ));
     }
 }
 
@@ -148,6 +160,38 @@ fn nul_input_is_rejected_before_touching_hosts_or_creating_a_backup() {
         assert!(matches!(result, Err(HostsApplyError::Io { message }) if message.contains("NUL")));
         assert_eq!(std::fs::read(&f.target).unwrap(), original);
         assert!(!f.backups.exists());
+    }
+}
+
+#[test]
+fn compensation_preserves_external_encoding_and_line_ending_changes() {
+    let f = Fixture::new();
+    std::fs::write(&f.target, b"127.0.0.1 localhost\n").unwrap();
+    let applied = f.apply("192.0.2.1 a.test\n", "overwrite");
+    // Same text, different bytes: this is no longer the file we applied.
+    let disk = restore_line_endings(&applied.new_content);
+    let other_line_endings = if disk.contains("\r\n") {
+        disk.replace("\r\n", "\n")
+    } else {
+        disk.replace('\n', "\r\n")
+    };
+    for external in [
+        utf16(&disk),
+        format!("\u{feff}{disk}").into_bytes(),
+        other_line_endings.into_bytes(),
+    ] {
+        std::fs::write(&f.target, &external).unwrap();
+        assert!(!hosts_bytes_match(&external, &applied.new_content, None));
+        assert!(matches!(
+            restore_at(
+                &f.target,
+                &applied.previous_content,
+                &applied.new_content,
+                Some(&applied.previous_bytes)
+            ),
+            Err(HostsApplyError::ContentChanged)
+        ));
+        assert_eq!(std::fs::read(&f.target).unwrap(), external);
     }
 }
 
