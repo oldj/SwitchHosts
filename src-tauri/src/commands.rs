@@ -1455,18 +1455,8 @@ pub async fn show_item_in_folder(args: Args) -> Value {
 
 // ---- import / export -------------------------------------------------------
 //
-// All three commands preserve the Electron-era return shape so the
-// existing renderer error handling in TopBar/ConfigMenu and
-// TopBar/ImportFromUrl keeps working without changes:
-//
-//   exportData()            -> null (cancelled) | false (failed) | string (path)
-//   importData()            -> null (cancelled) | true (ok)       | string (error_code)
-//   importDataFromUrl(url)  -> null (error?)    | true (ok)       | string (error_code or msg)
-//
-// Hard filesystem / Tauri errors bubble up as Err(String) so the
-// invoke promise rejects; soft errors (parse failure, invalid shape)
-// come back as Ok(Value::String("error_code")) the renderer can
-// display.
+// Export returns a saved path or null when the file picker is cancelled.
+// Import returns a preview or null on cancel; failures reject with ImportError.
 
 fn export_file_name_for(now: chrono::DateTime<chrono::Local>) -> String {
     format!("switchhosts_{}.json", now.format("%Y%m%d_%H%M%S%.3f"))
@@ -1535,66 +1525,114 @@ mod export_file_name_tests {
 #[cfg(test)]
 mod storage_tests;
 
+// Import reads only prepare an in-memory preview. Only commit_import writes data.
 #[tauri::command]
 pub async fn import_data<R: Runtime>(
     app: AppHandle<R>,
     state: State<'_, AppState>,
+    sessions: State<'_, import_export::preview::Sessions>,
     _args: Args,
-) -> Result<Value, String> {
-    state.require_data_dir_usable().map_err(|e| e.to_string())?;
+) -> Result<Value, import_export::preview::ImportError> {
+    state.require_data_dir_usable()?;
     let picked = app
         .dialog()
         .file()
         .add_filter("JSON", &["json"])
         .blocking_pick_file();
-
     let Some(src) = picked else {
         return Ok(Value::Null);
     };
-
-    let src_path = match src.into_path() {
-        Ok(p) => p,
-        Err(e) => return Err(format!("invalid pick path: {e}")),
-    };
-
-    let bytes = match http::read_file_with_limit(&src_path, http::MAX_IMPORT_BACKUP_BYTES) {
-        Ok(b) => b,
-        Err(e) => {
-            log::warn!("import read failed: {e}");
-            return Ok(Value::String(import_export::ERR_PARSE.into()));
-        }
-    };
-
-    let _guard = state.lock_store().map_err(|e| e.to_string())?;
-    match import_export::import_backup_bytes(&bytes, &state.paths) {
-        Ok(result) => Ok(result),
-        Err(e) => Err(format!("import failed: {e}")),
-    }
+    let src_path = src
+        .into_path()
+        .map_err(|_| import_export::preview::ImportError::Invalid("invalid_data".into()))?;
+    let bytes = http::read_file_with_limit(&src_path, http::MAX_IMPORT_BACKUP_BYTES)
+        .map_err(|e| import_export::preview::ImportError::Invalid(e.to_string()))?;
+    let draft = import_export::preview::parse(&bytes)?;
+    let name = src_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("import")
+        .to_string();
+    let _guard = state.lock_store()?;
+    Ok(json!(sessions.prepare(draft, name, &state.paths)?))
 }
 
 #[tauri::command]
-pub async fn import_data_from_url(state: State<'_, AppState>, args: Args) -> Result<Value, String> {
-    state.require_data_dir_usable().map_err(|e| e.to_string())?;
-    let url = arg_str(&args, 0, "url").map_err(|e| format!("{e:?}"))?;
+pub async fn import_data_from_url(
+    state: State<'_, AppState>,
+    sessions: State<'_, import_export::preview::Sessions>,
+    args: Args,
+) -> Result<Value, import_export::preview::ImportError> {
+    state.require_data_dir_usable()?;
+    let url = arg_str(&args, 0, "url")?;
+    let client = http::build_client(state.inner())
+        .map_err(|e| import_export::preview::ImportError::Invalid(e.to_string()))?;
+    let bytes = fetch_url(&client, url)
+        .await
+        .map_err(import_export::preview::ImportError::Invalid)?;
+    let draft = import_export::preview::parse(&bytes)?;
+    let name = reqwest::Url::parse(url)
+        .ok()
+        .and_then(|u| {
+            u.path_segments()
+                .and_then(|mut p| p.next_back())
+                .map(str::to_string)
+        })
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "import".into());
+    let name = name.strip_suffix(".json").unwrap_or(&name).to_string();
+    let _guard = state.lock_store()?;
+    Ok(json!(sessions.prepare(draft, name, &state.paths)?))
+}
 
-    // Build the HTTP client outside of any lock so the proxy snapshot
-    // doesn't pin store_lock during the network round trip. The
-    // shared `http::build_client` honours `use_proxy` config — this
-    // clears implementation-notes D8.
-    let client = http::build_client(state.inner())?;
-    let bytes = match fetch_url(&client, url).await {
-        Ok(b) => b,
-        Err(e) => {
-            log::warn!("import-from-url fetch failed: {e}");
-            return Ok(Value::String(e));
+#[tauri::command]
+pub async fn discard_import(
+    sessions: State<'_, import_export::preview::Sessions>,
+    args: Args,
+) -> Result<(), StorageError> {
+    sessions.discard(arg_str(&args, 0, "id")?);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn rebase_import(
+    state: State<'_, AppState>,
+    sessions: State<'_, import_export::preview::Sessions>,
+    args: Args,
+) -> Result<Value, import_export::preview::ImportError> {
+    state.require_data_dir_usable()?;
+    let _guard = state.lock_store()?;
+    Ok(json!(
+        sessions.rebase(arg_str(&args, 0, "id")?, &state.paths)?
+    ))
+}
+
+#[tauri::command]
+pub async fn commit_import<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    sessions: State<'_, import_export::preview::Sessions>,
+    args: Args,
+) -> Result<Value, import_export::preview::ImportError> {
+    state.require_data_dir_usable()?;
+    let request = serde_json::from_value(args.first().cloned().unwrap_or(Value::Null))
+        .map_err(|_| import_export::preview::ImportError::Invalid("invalid_data".into()))?;
+    let result = {
+        let _guard = state.lock_store()?;
+        if state.application_recovery.is_pending() {
+            return Err(import_export::preview::ImportError::Invalid(
+                "application_recovery".into(),
+            ));
         }
+        sessions.commit(request, &state.paths)?
     };
-
-    let _guard = state.lock_store().map_err(|e| e.to_string())?;
-    match import_export::import_backup_bytes(&bytes, &state.paths) {
-        Ok(result) => Ok(result),
-        Err(e) => Err(format!("import failed: {e}")),
+    let _ = app.emit("reload_list", json!({"_args": []}));
+    let _ = app.emit("tray_list_updated", json!({"_args": []}));
+    // An import is already committed even if refreshing native UI fails.
+    if let Err(error) = tray::refresh_title(&app, &state) {
+        log::warn!("failed to refresh tray title after import: {error}");
     }
+    Ok(result)
 }
 
 async fn fetch_url(client: &reqwest::Client, url: &str) -> Result<Vec<u8>, String> {

@@ -1,3 +1,4 @@
+import { importEnglish } from '../import'
 /**
  * @author: Aktilor
  * @homepage: https://github.com/Aktilor
@@ -6,6 +7,7 @@
 import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
+  ...importEnglish,
   _app_name: 'SwitchHosts',
   domain_list: 'Liste des domaines',
   domain_list_hint: 'Un domaine par ligne. Les URL collées sont converties en domaines.',

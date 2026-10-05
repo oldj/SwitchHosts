@@ -75,6 +75,10 @@
   height: 100%;
 }
 
+.fullHeight {
+  height: 100%;
+}
+
 :global(.theme-dark) {
   .editor.read_only {
     :global(.cm-content) {

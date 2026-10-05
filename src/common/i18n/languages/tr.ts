@@ -1,9 +1,11 @@
+import { importEnglish } from '../import'
 /**
  * @author: baris
  * @homepage: https://barisuzun.com.tr
  */
 
 export default {
+  ...importEnglish,
   _app_name: 'SwitchHosts',
   domain_list: 'Alan adı listesi',
   domain_list_hint: 'Her satıra bir alan adı girin. Yapıştırılan URL’lerden alan adları alınır.',

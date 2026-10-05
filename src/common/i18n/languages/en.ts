@@ -1,9 +1,11 @@
+import { importEnglish } from '../import'
 /**
  * @author: oldj
  * @homepage: https://oldj.net
  */
 
 export default {
+  ...importEnglish,
   _app_name: 'SwitchHosts',
   domain_list: 'Domain list',
   domain_list_hint: 'One domain per line. Pasted URLs are converted to domains.',

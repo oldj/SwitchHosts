@@ -1,3 +1,4 @@
+import { importEnglish } from '../import'
 /**
  * @author: kamatte
  * @homepage: https://kamatte.me
@@ -6,6 +7,7 @@
 import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
+  ...importEnglish,
   _app_name: 'SwitchHosts',
   domain_list: 'ドメイン一覧',
   domain_list_hint: '1行に1ドメイン。貼り付けたURLからドメインを抽出します。',

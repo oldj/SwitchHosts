@@ -1,9 +1,11 @@
+import { importEnglish } from '../import'
 /**
  * @author: piteriuz
  * @homepage: https://piotr.pienkowski.pl/
  */
 
 export default {
+  ...importEnglish,
   _app_name: 'SwitchHosts',
   domain_list: 'Lista domen',
   domain_list_hint: 'Jedna domena w wierszu. Z wklejonych adresów URL zostaną wyodrębnione domeny.',

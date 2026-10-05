@@ -235,6 +235,7 @@ pub fn run() {
             // Only the owning instance may clean temporary files or recover
             // an undo journal; a second launch must not roll back its work.
             app.manage(AppState::bootstrap()?);
+            app.manage(import_export::preview::Sessions::default());
 
             // We build the main window programmatically (rather than
             // declaring it in tauri.conf.json) so saved geometry can be
@@ -554,6 +555,9 @@ pub fn run() {
             commands::export_data,
             commands::import_data,
             commands::import_data_from_url,
+            commands::commit_import,
+            commands::discard_import,
+            commands::rebase_import,
             // updater
             commands::check_update,
             commands::download_update,
