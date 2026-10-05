@@ -48,31 +48,6 @@ const LeftSidebar = (props: IProps) => {
             <IconList size={18} stroke={1.5} />
           </ActionIcon>
         </Tooltip>
-        <Tooltip label={lang.trashcan} position="right">
-          <Indicator
-            label={hostsData.trashcan.length}
-            size={14}
-            disabled={hostsData.trashcan.length === 0}
-            color="gray"
-            offset={4}
-          >
-            <ActionIcon
-              className={view === 'trashcan' ? styles.active : undefined}
-              variant={view === 'trashcan' ? 'light' : 'subtle'}
-              color={view === 'trashcan' ? undefined : 'gray'}
-              size={28}
-              onClick={() => handleClick('trashcan')}
-              aria-label={lang.trashcan}
-            >
-              <IconTrash size={18} stroke={1.5} />
-            </ActionIcon>
-          </Indicator>
-        </Tooltip>
-      </Stack>
-
-      <div className={styles.spacer} />
-
-      <Stack gap={20} align="center">
         <Tooltip label={lang.search} position="right">
           <ActionIcon
             variant="subtle"
@@ -94,6 +69,30 @@ const LeftSidebar = (props: IProps) => {
           >
             <IconHistory size={18} stroke={1.5} />
           </ActionIcon>
+        </Tooltip>
+      </Stack>
+
+      <div className={styles.spacer} />
+
+      <Stack gap={20} align="center">
+        <Tooltip label={lang.trashcan} position="right">
+          <Indicator
+            size={6}
+            disabled={hostsData.trashcan.length === 0}
+            position="top-end"
+            offset={4}
+          >
+            <ActionIcon
+              className={view === 'trashcan' ? styles.active : undefined}
+              variant={view === 'trashcan' ? 'light' : 'subtle'}
+              color={view === 'trashcan' ? undefined : 'gray'}
+              size={28}
+              onClick={() => handleClick('trashcan')}
+              aria-label={lang.trashcan}
+            >
+              <IconTrash size={18} stroke={1.5} />
+            </ActionIcon>
+          </Indicator>
         </Tooltip>
         <ConfigMenu
           size={28}

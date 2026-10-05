@@ -87,6 +87,8 @@ pub enum RefreshError {
     NotRemote,
     /// Node has no URL set.
     NoUrl,
+    /// A URL subscription needs an absolute HTTP(S) or file URL.
+    InvalidUrl,
     /// The target or its cached data changed while a request was outstanding.
     SourceChanged,
     /// HTTP / network failure, file:// read failure, etc.
@@ -101,6 +103,10 @@ impl RefreshError {
             RefreshError::InvalidId => ("invalid_id", "node not found".to_string()),
             RefreshError::NotRemote => ("not_remote", "node is not a remote hosts".to_string()),
             RefreshError::NoUrl => ("no_url", "remote node has no URL".to_string()),
+            RefreshError::InvalidUrl => (
+                "invalid_url",
+                "Invalid remote URL. Use http://, https:// or file://. For a domain name, select the domain source type in Edit.".to_string(),
+            ),
             RefreshError::SourceChanged => (
                 "source_changed",
                 "Remote source or cached content changed during refresh; its old result was discarded.".to_string(),
@@ -490,6 +496,10 @@ async fn fetch_remote(url: &str, state: &AppState) -> Result<String, RefreshErro
         return read_file_url(stripped, url);
     }
 
+    let url = reqwest::Url::parse(url)
+        .ok()
+        .filter(|url| matches!(url.scheme(), "http" | "https") && url.host_str().is_some())
+        .ok_or(RefreshError::InvalidUrl)?;
     let client = http::build_client(state).map_err(|message| RefreshError::Fetch { message })?;
     let response = client
         .get(url)
@@ -777,6 +787,39 @@ mod tests {
         fn drop(&mut self) {
             let _ = std::fs::remove_dir_all(&self.0.paths.root);
         }
+    }
+
+    #[tokio::test]
+    async fn invalid_remote_urls_report_actionable_errors_without_changing_cached_data() {
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        let node = json!({"id":"legacy-domain", "type":"remote", "url":"github.com", "last_refresh_ms":100});
+        Manifest {
+            root: vec![node],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        let cached = "# Source: domain github.com\n1.2.3.4 github.com\n";
+        entries::write_entry(&state.paths.entries_dir, "legacy-domain", cached).unwrap();
+        let before = std::fs::read(&state.paths.manifest_file).unwrap();
+
+        for url in ["github.com", "/hosts", "ftp://example.test/hosts", "https://"] {
+            let error = fetch_remote(url, state)
+                .await
+                .unwrap_err()
+                .into_renderer_value();
+            assert_eq!(error["code"], "invalid_url");
+            assert!(error["message"]
+                .as_str()
+                .unwrap()
+                .contains("domain source type"));
+        }
+        assert_eq!(std::fs::read(&state.paths.manifest_file).unwrap(), before);
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "legacy-domain").unwrap(),
+            cached
+        );
     }
 
     #[test]

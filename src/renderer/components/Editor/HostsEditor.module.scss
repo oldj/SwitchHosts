@@ -12,11 +12,8 @@
   background: var(--swh-main-bg);
   overflow: hidden;
   border: 1px solid var(--swh-border-color-0);
-  border-radius:
-    var(--editor-radius-left, 0)
-    var(--editor-radius-right, 0)
-    var(--editor-radius-right, 0)
-    var(--editor-radius-left, 0);
+  border-radius: var(--editor-radius-left, 0) var(--editor-radius-right, 0)
+    var(--editor-radius-right, 0) var(--editor-radius-left, 0);
 
   :global {
     .cm-editor {
@@ -57,11 +54,13 @@
 
     .hl-ip {
       color: var(--swh-editor-ip);
-      font-weight: bold;
+      font-weight: 600;
     }
 
     .hl-error {
       color: var(--swh-editor-error);
+      text-decoration: underline wavy;
+      text-underline-offset: 4px;
     }
 
     .hl-selection {
@@ -73,7 +72,8 @@
     }
 
     .hl-ip .hl-selection,
-    .hl-selection .hl-ip {
+    .hl-selection .hl-ip,
+    .hl-ip.hl-selection {
       color: hsl(var(--swh-editor-ip-hs), 92%);
     }
 
@@ -103,7 +103,7 @@
 :global(.theme-dark) {
   .editor {
     :global(.cm-cursor) {
-      border-left-color: #39c;
+      border-left-color: var(--swh-editor-ip);
     }
 
     &.read_only {

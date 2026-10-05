@@ -12,6 +12,7 @@ import useI18n from '@renderer/models/useI18n'
 import { normalizeTheme } from '@renderer/utils/theme'
 import { type CSSProperties, useEffect, useState } from 'react'
 import { languageOptions, resolveLanguageSelectValue } from './languageOptions'
+import styles from './styles.module.scss'
 
 interface IProps {
   data: ConfigsType
@@ -120,11 +121,27 @@ const General = (props: IProps) => {
       >
         <Box>{lang.language}</Box>
         <Select
+          aria-label={lang.language}
           value={resolveLanguageSelectValue(data.locale, locale)}
           onChange={(v) => v && onChange({ locale: v as LocaleName })}
           data={languageOptions}
           w={200}
           allowDeselect={false}
+          checkIconPosition="left"
+          withAlignedLabels
+          withScrollArea={false}
+          comboboxProps={{ width: 460, position: 'bottom-start', shadow: 'md' }}
+          classNames={{
+            dropdown: styles.language_dropdown,
+            options: styles.language_options,
+            option: styles.language_option,
+          }}
+          styles={{
+            options: {
+              '--language-rows': Math.ceil(languageOptions.length / 3),
+              '--language-narrow-rows': Math.ceil(languageOptions.length / 2),
+            },
+          }}
         />
 
         <Box>{lang.theme}</Box>

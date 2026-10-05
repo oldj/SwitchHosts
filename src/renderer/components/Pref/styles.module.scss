@@ -3,6 +3,39 @@
   color: inherit;
 }
 
+.language_dropdown {
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+
+  // Mantine removes end padding for composed dropdowns to accommodate a scrollbar.
+  &[data-composed] {
+    padding-inline-end: 8px;
+  }
+}
+
+.language_options {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(var(--language-rows), auto);
+  gap: 4px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(var(--language-narrow-rows), auto);
+  }
+}
+
+.language_option {
+  min-height: 40px;
+  white-space: nowrap;
+
+  &[data-checked] {
+    background-color: var(--mantine-primary-color-light);
+    color: var(--mantine-primary-color-light-color);
+  }
+}
+
 .tabs {
   display: flex;
   flex: 1;

@@ -9,6 +9,8 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...importEnglish,
   _app_name: 'SwitchHosts',
+  hosts_managed_start: 'Début géré',
+  hosts_managed_end: 'Fin gérée',
   domain_list: 'Liste des domaines',
   domain_list_hint: 'Un domaine par ligne. Les URL collées sont converties en domaines.',
   domain_count: '{0} / {1} domaines',

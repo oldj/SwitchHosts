@@ -9,6 +9,8 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...importEnglish,
   _app_name: 'SwitchHosts',
+  hosts_managed_start: '管理範囲の開始',
+  hosts_managed_end: '管理範囲の終了',
   domain_list: 'ドメイン一覧',
   domain_list_hint: '1行に1ドメイン。貼り付けたURLからドメインを抽出します。',
   domain_count: '{0} / {1} 個のドメイン',

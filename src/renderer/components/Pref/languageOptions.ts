@@ -1,22 +1,27 @@
 import type { LocaleName } from '@common/i18n'
 
 export const languageOptions = [
+  { value: 'de', label: 'Deutsch' },
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'fr', label: 'Français' },
+  { value: 'it', label: 'Italiano' },
+  { value: 'nl', label: 'Nederlands' },
+  { value: 'pl', label: 'Polski' },
+  { value: 'pt', label: 'Português' },
+  { value: 'vi', label: 'Tiếng Việt' },
+  { value: 'tr', label: 'Türkçe' },
+  { value: 'ru', label: 'Русский' },
+  { value: 'th', label: 'ไทย' },
+  { value: 'ja', label: '日本語' },
+  { value: 'ko', label: '한국어' },
   { value: 'zh', label: '简体中文' },
   { value: 'zh_hant', label: '繁體中文' },
-  { value: 'en', label: 'English' },
-  { value: 'fr', label: 'Français' },
-  { value: 'de', label: 'Deutsch' },
-  { value: 'ja', label: '日本語' },
-  { value: 'tr', label: 'Türkçe' },
-  { value: 'ko', label: '한국어' },
-  { value: 'pl', label: 'Polski' },
 ] as const satisfies ReadonlyArray<{ value: LocaleName; label: string }>
 
 type LanguageOptionValue = (typeof languageOptions)[number]['value']
 
-const languageOptionValues = new Set<LocaleName>(
-  languageOptions.map(({ value }) => value),
-)
+const languageOptionValues = new Set<LocaleName>(languageOptions.map(({ value }) => value))
 
 const localeAliases: Partial<Record<LocaleName, LanguageOptionValue>> = {
   cn: 'zh',
@@ -24,9 +29,7 @@ const localeAliases: Partial<Record<LocaleName, LanguageOptionValue>> = {
   'zh-TW': 'zh_hant',
 }
 
-export function normalizeLanguageOptionValue(
-  locale?: LocaleName,
-): LanguageOptionValue | undefined {
+export function normalizeLanguageOptionValue(locale?: LocaleName): LanguageOptionValue | undefined {
   if (!locale) return undefined
 
   const alias = localeAliases[locale]
@@ -40,8 +43,6 @@ export function resolveLanguageSelectValue(
   activeLocale: LocaleName,
 ): LanguageOptionValue {
   return (
-    normalizeLanguageOptionValue(configLocale) ??
-    normalizeLanguageOptionValue(activeLocale) ??
-    'en'
+    normalizeLanguageOptionValue(configLocale) ?? normalizeLanguageOptionValue(activeLocale) ?? 'en'
   )
 }

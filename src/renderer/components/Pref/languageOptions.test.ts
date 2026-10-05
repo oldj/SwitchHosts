@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { languages } from '@common/i18n'
 
 import {
   languageOptions,
@@ -21,17 +22,27 @@ describe('language preference options', () => {
     expect(resolveLanguageSelectValue('de', 'zh-CN')).toBe('de')
   })
 
-  it('lists every canonical bundled language', () => {
+  it('lists every canonical bundled language alphabetically, with non-Latin names last', () => {
     expect(languageOptions.map(({ value }) => value)).toEqual([
+      'de',
+      'en',
+      'es',
+      'fr',
+      'it',
+      'nl',
+      'pl',
+      'pt',
+      'vi',
+      'tr',
+      'ru',
+      'th',
+      'ja',
+      'ko',
       'zh',
       'zh_hant',
-      'en',
-      'fr',
-      'de',
-      'ja',
-      'tr',
-      'ko',
-      'pl',
     ])
+    expect(new Set(languageOptions.map(({ value }) => languages[value]))).toEqual(
+      new Set(Object.values(languages)),
+    )
   })
 })

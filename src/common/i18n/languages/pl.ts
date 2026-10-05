@@ -7,6 +7,8 @@ import { importEnglish } from '../import'
 export default {
   ...importEnglish,
   _app_name: 'SwitchHosts',
+  hosts_managed_start: 'Początek zarządzania',
+  hosts_managed_end: 'Koniec zarządzania',
   domain_list: 'Lista domen',
   domain_list_hint: 'Jedna domena w wierszu. Z wklejonych adresów URL zostaną wyodrębnione domeny.',
   domain_count: 'Domeny: {0} / {1}',

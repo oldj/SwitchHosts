@@ -56,6 +56,14 @@ interface ToggleLineResult {
   transform?: Transform
 }
 
+/** Match the same complete, trimmed boundary lines as the hosts writer. */
+export function getHostsBoundary(line: string): 'start' | 'end' | null {
+  const text = line.trim()
+  if (text === '# --- SWITCHHOSTS_CONTENT_START ---') return 'start'
+  if (text === '# --- SWITCHHOSTS_CONTENT_END ---') return 'end'
+  return null
+}
+
 export function isHostsCommentLine(line: string): boolean {
   return /^\s*#/.test(line)
 }
