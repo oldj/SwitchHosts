@@ -136,6 +136,12 @@ const General = (props: IProps) => {
             options: styles.language_options,
             option: styles.language_option,
           }}
+          styles={{
+            options: {
+              '--language-rows': Math.ceil(languageOptions.length / 3),
+              '--language-narrow-rows': Math.ceil(languageOptions.length / 2),
+            },
+          }}
         />
 
         <Box>{lang.theme}</Box>

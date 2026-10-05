@@ -13,6 +13,13 @@ import ja from './languages/ja'
 import tr from './languages/tr'
 import ko from './languages/ko'
 import pl from './languages/pl'
+import es from './languages/es'
+import it from './languages/it'
+import nl from './languages/nl'
+import pt from './languages/pt'
+import vi from './languages/vi'
+import ru from './languages/ru'
+import th from './languages/th'
 import { LanguageDict, LanguageKey } from '@common/types'
 
 export const languages = {
@@ -28,6 +35,13 @@ export const languages = {
   tr,
   ko,
   pl,
+  es,
+  it,
+  nl,
+  pt,
+  vi,
+  ru,
+  th,
 }
 
 export type LocaleName = keyof typeof languages
