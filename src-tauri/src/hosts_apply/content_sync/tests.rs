@@ -275,7 +275,33 @@ async fn missing_write_mode_never_falls_back_to_overwrite() {
     f.save("local", "192.0.2.11 local.test");
     assert!(f.sync().await.is_err());
     assert!(f.system.writes.lock().unwrap().is_empty());
+    assert!(f.state.application_recovery.is_pending());
     f.state.config.lock().unwrap().write_mode = "overwrite".into();
+    f.state.application_recovery.finish_with(true);
     f.sync().await.unwrap();
     assert_eq!(f.system.writes.lock().unwrap().len(), 1);
+}
+
+#[tokio::test]
+async fn unreadable_group_member_keeps_recovery_visible_after_acknowledgement() {
+    let f = Fixture::new();
+    f.state.application_recovery.begin();
+    f.save("local", "192.0.2.12 latest.test");
+    let remote = entries::entry_path(&f.state.paths.entries_dir, "remote").unwrap();
+    std::fs::remove_file(&remote).unwrap();
+    std::fs::create_dir(&remote).unwrap();
+    // The renderer acknowledges its earlier write while a newer source needs
+    // applying. Failing to read a group member must not claim synchronization.
+    f.state.application_recovery.finish_with(true);
+    f.state.content_sync.mark_all();
+    assert!(f.sync().await.is_err());
+    assert!(f.state.application_recovery.is_pending());
+    assert!(f.state.content_sync.is_pending());
+    assert!(f.system.writes.lock().unwrap().is_empty());
+    std::fs::remove_dir(remote).unwrap();
+    f.remote_commit("127.0.0.1 remote.test");
+    f.state.application_recovery.finish_with(true);
+    f.sync().await.unwrap();
+    assert!(f.system.content.lock().unwrap().contains("192.0.2.12"));
+    assert!(!f.state.application_recovery.is_pending());
 }

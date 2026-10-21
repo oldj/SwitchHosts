@@ -194,6 +194,21 @@ test.describe('hosts entry management', () => {
     )
   })
 
+  test('updates the selected group preview after its included entries change', async ({ page }) => {
+    await page.locator('[data-id="group-work"]').click()
+    const editor = page.locator('.cm-content')
+    await expect(editor).toContainText('api.local')
+    await expect(editor).not.toContainText('dev.local')
+    await showRightPanel(page)
+    await page.getByRole('button', { name: 'Edit', exact: true }).click()
+    const drawer = page.getByRole('dialog')
+    await drawer.getByText('Development', { exact: true }).click()
+    await drawer.getByRole('button', { name: 'Move to right' }).click()
+    await drawer.getByRole('button', { name: 'OK' }).click()
+    await expect(editor).toContainText('dev.local')
+    await expect(editor).toContainText('api.local')
+  })
+
   test('creates a folder hosts entry with single choice mode', async ({ page }) => {
     await clearMockCalls(page)
 

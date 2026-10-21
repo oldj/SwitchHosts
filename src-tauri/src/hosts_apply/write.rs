@@ -89,6 +89,11 @@ fn apply_at(
     write_mode: &str,
     backup_dir: &Path,
 ) -> Result<ApplyOutcome, HostsApplyError> {
+    if !matches!(write_mode, "append" | "overwrite") {
+        return Err(HostsApplyError::Io {
+            message: "select a valid write mode before applying hosts".into(),
+        });
+    }
     hosts_text::validate_system_text(aggregated_content).map_err(|e| HostsApplyError::Io {
         message: format!("invalid hosts content: {e}"),
     })?;
@@ -536,6 +541,25 @@ mod tests {
 #[cfg(test)]
 mod compensation_tests {
     use super::*;
+
+    #[test]
+    fn recovery_cannot_overwrite_hosts_without_a_valid_write_mode() {
+        let target =
+            std::env::temp_dir().join(format!("switchhosts-unset-mode-{}", std::process::id()));
+        let original = "127.0.0.1 localhost\n# preserve user content\n";
+        std::fs::write(&target, original).unwrap();
+        for mode in ["", "invalid"] {
+            assert!(apply_at(
+                &target,
+                "192.0.2.1 new.test",
+                mode,
+                &target.with_extension("backups")
+            )
+            .is_err());
+            assert_eq!(std::fs::read_to_string(&target).unwrap(), original);
+        }
+        std::fs::remove_file(target).unwrap();
+    }
 
     #[test]
     fn restores_complete_file_without_reappending_managed_or_unmanaged_content() {

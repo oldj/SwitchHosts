@@ -473,8 +473,8 @@ describe('FindPage search state', () => {
     })
 
     expect(replaceAll.disabled).toBe(true)
-    expect(mocks.broadcast).toHaveBeenCalledWith('hosts_refreshed_by_id', 'first-title')
-    expect(mocks.broadcast).toHaveBeenCalledWith('hosts_content_changed', 'first-title')
+    expect(mocks.broadcast).not.toHaveBeenCalledWith('hosts_refreshed_by_id', 'first-title')
+    expect(mocks.broadcast).not.toHaveBeenCalledWith('hosts_content_changed', 'first-title')
   })
 
   it('disables replacement actions for read-only remote results', async () => {
@@ -493,7 +493,7 @@ describe('FindPage search state', () => {
     expect((screen.getByText('Replace') as HTMLButtonElement).disabled).toBe(true)
   })
 
-  it('notifies content changes when replacing one result', async () => {
+  it('leaves content notifications to the backend when replacing one result', async () => {
     mocks.actions.findBy.mockResolvedValueOnce(result('first-title', 'abc'))
     mocks.actions.findReplaceOne.mockResolvedValueOnce(true)
     render(<FindPage />)
@@ -511,8 +511,8 @@ describe('FindPage search state', () => {
       await Promise.resolve()
     })
 
-    expect(mocks.broadcast).toHaveBeenCalledWith('hosts_refreshed_by_id', 'first-title')
-    expect(mocks.broadcast).toHaveBeenCalledWith('hosts_content_changed', 'first-title')
+    expect(mocks.broadcast).not.toHaveBeenCalledWith('hosts_refreshed_by_id', 'first-title')
+    expect(mocks.broadcast).not.toHaveBeenCalledWith('hosts_content_changed', 'first-title')
   })
 
   it('disables search inputs and options while replacing', async () => {
@@ -609,7 +609,7 @@ describe('FindPage search state', () => {
 
     expect(screen.getByText('new')).toBeTruthy()
     expect((screen.getByText('Replace') as HTMLButtonElement).disabled).toBe(false)
-    expect(mocks.broadcast).toHaveBeenCalledWith('hosts_content_changed', 'same-title')
+    expect(mocks.broadcast).not.toHaveBeenCalledWith('hosts_content_changed', 'same-title')
   })
 
   it('refreshes displayed results when replace all fails', async () => {
@@ -706,7 +706,7 @@ describe('FindPage search state', () => {
 
     expect(screen.getByText('new')).toBeTruthy()
     expect((screen.getByText('Replace all') as HTMLButtonElement).disabled).toBe(false)
-    expect(mocks.broadcast).toHaveBeenCalledWith('hosts_content_changed', 'same-title')
+    expect(mocks.broadcast).not.toHaveBeenCalledWith('hosts_content_changed', 'same-title')
   })
 
   it('can scroll rendered search results without reading from a released event', async () => {

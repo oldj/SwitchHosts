@@ -133,9 +133,16 @@ impl ApplicationRecovery {
         (Some(pending.view.clone()), changed)
     }
 
-    pub fn finish(&self, expected_content: &str) -> Option<RecoveryView> {
-        let current = write::system_hosts_matches(expected_content);
-        self.finish_with(current)
+    pub async fn finish(&self, expected_content: &str) -> Option<RecoveryView> {
+        self.finish_checked(|| write::system_hosts_matches(expected_content))
+            .await
+    }
+
+    async fn finish_checked(&self, verify: impl FnOnce() -> bool) -> Option<RecoveryView> {
+        // A delayed acknowledgement from another window must not clear the
+        // pending state of a native write whose post-apply work is still running.
+        let _serial = self.lock_apply().await;
+        self.finish_with(verify())
     }
 
     /// A successful compensation restores the recovery state from before
@@ -266,6 +273,47 @@ mod tests {
         recovery.request();
         recovery.finish_with(true);
         assert!(!recovery.take_request());
+        assert!(!recovery.is_pending());
+    }
+
+    #[tokio::test]
+    async fn acknowledgement_waits_for_native_apply_before_verifying_and_clearing_recovery() {
+        use std::sync::{
+            atomic::{AtomicBool, Ordering},
+            Arc,
+        };
+        let recovery = Arc::new(ApplicationRecovery::default());
+        let (entered_tx, entered_rx) = tokio::sync::oneshot::channel();
+        let (release_tx, release_rx) = tokio::sync::oneshot::channel();
+        let writing = recovery.clone();
+        let apply = tokio::spawn(async move {
+            writing
+                .track_apply(async {
+                    entered_tx.send(()).unwrap();
+                    release_rx.await.unwrap();
+                    Ok::<_, ()>(())
+                })
+                .await
+        });
+        entered_rx.await.unwrap();
+        let verified = AtomicBool::new(false);
+        let mut acknowledgement = Box::pin(recovery.finish_checked(|| {
+            verified.store(true, Ordering::SeqCst);
+            true
+        }));
+        assert!(matches!(
+            std::future::Future::poll(
+                acknowledgement.as_mut(),
+                &mut std::task::Context::from_waker(std::task::Waker::noop()),
+            ),
+            std::task::Poll::Pending
+        ));
+        assert!(!verified.load(Ordering::SeqCst));
+        assert!(recovery.is_pending());
+        release_tx.send(()).unwrap();
+        apply.await.unwrap().unwrap();
+        assert_eq!(acknowledgement.await, None);
+        assert!(verified.load(Ordering::SeqCst));
         assert!(!recovery.is_pending());
     }
 

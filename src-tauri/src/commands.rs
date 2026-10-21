@@ -844,7 +844,7 @@ pub async fn finish_hosts_application<R: Runtime>(
     args: Args,
 ) -> Result<Value, String> {
     let expected = arg_str(&args, 0, "expected").map_err(|e| e.to_string())?;
-    let mut recovery = state.application_recovery.finish(expected);
+    let mut recovery = state.application_recovery.finish(expected).await;
     if recovery.is_none() {
         state.content_sync.mark_all();
         let _ = hosts_apply::content_sync::apply_pending(&app, &state).await;
@@ -884,6 +884,9 @@ pub async fn restore_system_hosts<R: Runtime>(
         .map_err(|e| format!("invalid hosts snapshot bytes: {e}"))?
         .map(Arc::<[u8]>::from);
     let previous_bytes_for_write = previous_bytes.clone();
+    // Compensation and its recovery-state update belong to the same serialized
+    // operation as ordinary writes. Release before draining deferred changes.
+    let apply_guard = state.application_recovery.lock_apply().await;
     let result = tauri::async_runtime::spawn_blocking(move || {
         hosts_apply::write::restore_system_hosts(
             &previous_for_write,
@@ -905,6 +908,7 @@ pub async fn restore_system_hosts<R: Runtime>(
                     .restored(&previous, previous_bytes.as_deref(), || {
                         let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
                     });
+            drop(apply_guard);
             if recovery.is_none() {
                 let _ = hosts_apply::content_sync::apply_pending(&app, &state).await;
                 recovery = read_application_recovery(&app, &state);
@@ -1280,7 +1284,9 @@ pub async fn find_replace_one<R: Runtime>(
         .and_then(|v| {
             serde_json::from_value(v).map_err(|e| format!("find_replace_one: invalid request: {e}"))
         })?;
-    let replaced = find::replace_one_in_manifest(state.inner(), request)?;
+    let replaced = find::replace_one_in_manifest(state.inner(), request, |id| {
+        emit_replaced_content(&app, id);
+    })?;
     // Report the committed replacement so the find window can refresh its
     // offsets. Application failures are exposed through the recovery notice.
     let _ = crate::hosts_apply::content_sync::apply_pending(&app, state.inner()).await;
@@ -1310,12 +1316,21 @@ pub async fn find_replace_all<R: Runtime>(
         .ok_or_else(|| "find_replace_all: args[2] must be a string replacement".to_string())?
         .to_string();
 
-    let outcome = find::replace_all_in_manifest(state.inner(), &keyword, &options, &replace_to);
+    let outcome =
+        find::replace_all_in_manifest(state.inner(), &keyword, &options, &replace_to, |id| {
+            emit_replaced_content(&app, id);
+        });
     // A later entry write can fail after earlier replacements were saved.
     // Reconcile those committed changes even when the batch reports an error.
     let _ = crate::hosts_apply::content_sync::apply_pending(&app, state.inner()).await;
     let outcome = outcome?;
     serde_json::to_value(outcome).map_err(|e| e.to_string())
+}
+
+fn emit_replaced_content<R: Runtime>(app: &AppHandle<R>, id: &str) {
+    for event in ["hosts_refreshed_by_id", "hosts_content_changed"] {
+        let _ = app.emit(event, json!({"_args": [id]}));
+    }
 }
 
 #[tauri::command]

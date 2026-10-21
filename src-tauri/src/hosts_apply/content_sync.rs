@@ -140,6 +140,10 @@ async fn synchronize(state: &AppState, system: &impl SystemHosts) -> Result<(), 
             Ok(None) => continue,
             Err(error) => {
                 state.content_sync.restore(changes);
+                // Acknowledgement may have just cleared an older apply. The
+                // saved sources still need synchronization even if preparing
+                // their content failed before we reached the native writer.
+                recovery.finish_with(false);
                 return Err(error);
             }
         };

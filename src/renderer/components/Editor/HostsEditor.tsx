@@ -5,6 +5,7 @@
 
 import { IHostsListObject } from '@common/data'
 import events from '@common/events'
+import { flatten } from '@common/hostsFn'
 import { normalizeLineEndings } from '@common/newlines'
 import { IFindShowSourceParam } from '@common/types'
 import StatusBar from '@renderer/components/StatusBar'
@@ -32,9 +33,17 @@ import {
 import styles from './HostsEditor.module.scss'
 
 const HostsEditor = () => {
-  const { currentHosts, isReadOnly } = useHostsData()
+  const { currentHosts, hostsData, isReadOnly } = useHostsData()
   const hostsId = currentHosts?.id || '0'
   const readOnly = isReadOnly(currentHosts)
+  const groupMembers =
+    currentHosts?.type === 'group' ? JSON.stringify(currentHosts.include ?? []) : null
+  // References can also change through import, deletion, or nested groups.
+  // Ignore metadata-only refreshes so they do not reset the preview selection.
+  const groupStructure =
+    currentHosts?.type === 'group'
+      ? JSON.stringify(flatten(hostsData.list).map(({ id, type, include }) => [id, type, include]))
+      : null
   const [content, setContent] = useState('')
 
   const { lang } = useI18n()
@@ -46,6 +55,7 @@ const HostsEditor = () => {
 
   const refMount = useRef<HTMLDivElement>(null)
   const refView = useRef<EditorView | null>(null)
+  const refContentRequest = useRef(0)
   const refBuilt = useRef<BuiltExtensions | null>(null)
   const refMeasureFrame = useRef<number | null>(null)
   // Refs mirror React state so that callbacks captured by EditorView extensions
@@ -99,6 +109,9 @@ const HostsEditor = () => {
   )
 
   const onDocChange = (nextContent: string) => {
+    // An outstanding read describes an older document. It must not replace
+    // edits made since that read started, including the editor's undo history.
+    refContentRequest.current += 1
     const normalizedContent = normalizeLineEndings(nextContent)
     setContent(normalizedContent)
     toSave(refHostsId.current, normalizedContent)
@@ -233,13 +246,14 @@ const HostsEditor = () => {
 
   /** Fetch hosts content and replace the editor state (clears undo history). */
   const loadContent = async (targetHostsId = hostsId) => {
+    const request = ++refContentRequest.current
     const nextContent = normalizeLineEndings(
       targetHostsId === '0'
         ? await actions.getSystemHosts()
         : await actions.getHostsContent(targetHostsId),
     )
 
-    if (refHostsId.current !== targetHostsId) return
+    if (refHostsId.current !== targetHostsId || request !== refContentRequest.current) return
 
     setContent(nextContent)
     const view = createEditorView(nextContent)
@@ -261,6 +275,7 @@ const HostsEditor = () => {
     createEditorView('')
 
     return () => {
+      refContentRequest.current += 1
       refView.current?.destroy()
       refView.current = null
       refBuilt.current = null
@@ -268,11 +283,11 @@ const HostsEditor = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load content when the active hosts changes.
+  // A group preview also changes when its references are edited in place.
   useEffect(() => {
     loadContent(hostsId).catch((e) => console.error(e))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hostsId])
+  }, [hostsId, groupMembers, groupStructure])
 
   // Reconfigure read-only state via the compartment without rebuilding the editor.
   useEffect(() => {

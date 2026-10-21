@@ -699,12 +699,6 @@ const FindPage = () => {
     )
   }
 
-  const broadcastHostsContentUpdate = (itemId: string) => {
-    for (const eventName of [events.hosts_refreshed_by_id, events.hosts_content_changed]) {
-      Promise.resolve(agent.broadcast(eventName, itemId)).catch((e) => console.error(e))
-    }
-  }
-
   const replaceOne = async () => {
     if (!areResultsCurrent()) return
     const replaceIndex = currentResultIdx
@@ -741,13 +735,11 @@ const FindPage = () => {
         return
       }
 
-      broadcastHostsContentUpdate(pos.item_id)
-
       if (replaceTo) {
         actions.findAddReplaceHistory(replaceTo).catch((e) => console.error(e))
       }
 
-      // The content mutation has already happened and was broadcast above.
+      // The backend has already saved the content and notified other windows.
       // If the user has moved to another query, leave that newer list alone.
       if (!isCurrentSearchState(replaceKeyword, replaceOptions)) return
 
@@ -807,15 +799,11 @@ const FindPage = () => {
         return
       }
 
-      for (const itemId of outcome.item_ids ?? []) {
-        broadcastHostsContentUpdate(itemId)
-      }
-
       if (replaceTo) {
         actions.findAddReplaceHistory(replaceTo).catch((e) => console.error(e))
       }
 
-      // Keep the mutation and broadcasts, but do not mark rows in a newer query
+      // Keep the mutation, but do not mark rows in a newer query
       // as replaced when this older request finally resolves.
       if (!isCurrentSearchState(replaceKeyword, replaceOptions)) return
 
