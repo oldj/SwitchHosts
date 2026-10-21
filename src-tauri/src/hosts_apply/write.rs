@@ -62,6 +62,27 @@ pub fn apply_to_system_hosts(
     apply_at(&target, aggregated_content, write_mode, backup_dir)
 }
 
+/// Check the exact bytes that the ordinary write pipeline would produce.
+/// Used to avoid rerunning post-apply hooks for an already synchronized source.
+pub(crate) fn applied_content_matches(content: &str, write_mode: &str) -> bool {
+    let Ok(target) = system_hosts_path() else {
+        return false;
+    };
+    let Ok(bytes) = read_system_hosts_bytes(&target) else {
+        return false;
+    };
+    let Ok(previous) = decode_system_hosts(&target, &bytes) else {
+        return false;
+    };
+    let content = hosts_text::normalize(content);
+    let expected = if write_mode == "append" {
+        make_append_content(&hosts_text::normalize(&previous), &content)
+    } else {
+        content
+    };
+    bytes == restore_line_endings(&expected).as_bytes()
+}
+
 fn apply_at(
     target: &Path,
     aggregated_content: &str,

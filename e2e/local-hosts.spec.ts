@@ -11,6 +11,36 @@ import {
 } from './support/test'
 
 test.describe('local hosts', () => {
+  test('saves a disabled group member and updates the active group without retoggling', async ({
+    page,
+  }) => {
+    const member = page.locator('[data-id="local-api"]')
+    await member.getByRole('switch').click()
+    await expect(member.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
+    const group = page.locator('[data-id="group-work"]')
+    await group.getByRole('switch').click()
+    await expect(group.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
+    await member.click()
+    const editor = page.locator('.cm-content')
+    await expect(editor).toContainText('api.local')
+    await clearMockCalls(page)
+    await editor.click()
+    await page.keyboard.press(`${selectAllModifier}+A`)
+    await page.keyboard.type('192.0.2.42 updated-group.local\n')
+    // Switch to the preview before the debounced save completes. The backend
+    // event must refresh it even though the edited member's switch stays off.
+    await group.click()
+    await expect(editor).toContainText('updated-group.local')
+    await expect(editor).toContainText('ads.example.test')
+    await expect
+      .poll(async () => (await getMockState(page)).systemHosts)
+      .toContain('192.0.2.42 updated-group.local')
+    await expect(member.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'set_hosts_content')).toBe(true)
+    expect(calls.some((call) => call.cmd === 'apply_hosts_selection')).toBe(false)
+  })
+
   test('selects a local hosts entry and saves editor changes', async ({ page }) => {
     await page.locator('[data-id="local-dev"]').click()
 

@@ -384,6 +384,7 @@ pub fn replace_one_in_manifest(state: &AppState, args: FindReplaceOneArgs) -> Re
     content.replace_range(start..end, &args.replace_to);
     entries::write_entry(&state.paths.entries_dir, &args.item_id, &content)
         .map_err(|e| e.to_string())?;
+    state.content_sync.mark(&args.item_id);
     Ok(true)
 }
 
@@ -437,6 +438,7 @@ pub fn replace_all_in_manifest(
     for (id, next_content, count) in pending_writes {
         entries::write_entry(&state.paths.entries_dir, &id, &next_content)
             .map_err(|e| format!("write {id}: {e}"))?;
+        state.content_sync.mark(&id);
         item_ids.push(id);
         replaced_count += count;
     }
@@ -819,6 +821,7 @@ mod tests {
             config: Mutex::new(AppConfig::default()),
             store_lock: Mutex::new(()),
             application_recovery: Default::default(),
+            content_sync: Default::default(),
             config_write_lock: Mutex::new(()),
             update_check_lock: tokio::sync::Mutex::new(()),
             is_will_quit: AtomicBool::new(false),
@@ -912,6 +915,7 @@ mod tests {
         .unwrap();
 
         assert!(replaced);
+        assert!(state.content_sync.is_pending());
         assert_eq!(
             entries::read_entry(&state.paths.entries_dir, "local-one").unwrap(),
             "前缀😀done tail"
@@ -1043,6 +1047,7 @@ mod tests {
 
         assert_eq!(outcome.item_ids, vec!["local-one"]);
         assert_eq!(outcome.replaced_count, 1);
+        assert!(state.content_sync.is_pending());
         assert_eq!(
             entries::read_entry(&state.paths.entries_dir, "local-one").unwrap(),
             "bar local"

@@ -31,6 +31,7 @@ impl Fixture {
                 config: Mutex::new(AppConfig::default()),
                 store_lock: Mutex::new(()),
                 application_recovery: Default::default(),
+                content_sync: Default::default(),
                 config_write_lock: Mutex::new(()),
                 update_check_lock: tokio::sync::Mutex::new(()),
                 is_will_quit: AtomicBool::new(false),

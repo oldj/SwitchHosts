@@ -25,6 +25,10 @@ pub(super) async fn apply_toggle_in_backend(
 ) -> Result<(), ToggleError> {
     let state = app.state::<AppState>();
     let result = toggle(&state, id, &NativeHosts { app, state: &state }).await;
+    // A refresh may have committed while this toggle was awaiting elevation.
+    if !state.application_recovery.is_pending() {
+        let _ = hosts_apply::content_sync::apply_pending(app, &state).await;
+    }
     // Publish failures too: compensation may restore the old file or leave a
     // recovery notice that a lazily created tray/main window must display.
     if let Err(error) = tray::refresh_title(app, &state) {

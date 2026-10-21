@@ -1,73 +1,114 @@
-//! Selected-content aggregation.
-//!
-//! Mirrors `src/main/actions/list/getContentOfList.ts` from the
-//! Electron build:
-//!
-//! 1. Recursively flatten the manifest tree.
-//! 2. Keep nodes whose `on` flag is true.
-//! 3. For each kept node, read its `entries/<id>.hosts` file (system
-//!    nodes and folder/group nodes contribute empty content).
-//! 4. Join with `"\n\n"`.
-//! 5. If `remove_duplicate_records` is enabled, run the same
-//!    domain/IP dedup pass `src/common/normalize.ts` does.
-//!
-//! Group/folder semantics: the renderer is responsible for propagating
-//! `on` to a folder's children before calling apply (see
-//! `setOnStateOfItem` in `src/common/hostsFn.ts`). We mirror Electron's
-//! aggregation step exactly, so any changes to that propagation logic
-//! land naturally without touching the Rust side.
-//!
-//! System nodes (`isSys === true`) have no `entries/<id>.hosts` file —
-//! `entries::read_entry` returns empty for missing files, so they
-//! gracefully contribute nothing. The system file itself is the
-//! destination, not a source.
+//! Resolve selected sources, including references from enabled groups.
+//! Group references are evaluated from the current manifest and entry files;
+//! their own `on` flags do not affect an enabled group's content. Folders keep
+//! the existing selection semantics (their children's flags select sources).
+
+use std::collections::{HashMap, HashSet};
 
 use serde_json::Value;
 
 use crate::storage::{entries, error::StorageError, paths::V5Paths};
 
-/// Aggregate the content of every selected node in `list`, returning
-/// the final string the renderer wants to write to `/etc/hosts`.
-///
-/// `list` is the manifest root in renderer-facing legacy shape (the
-/// same shape `get_list` returns to the front end).
+fn flatten<'a>(nodes: &'a [Value], out: &mut Vec<&'a Value>) {
+    for node in nodes {
+        out.push(node);
+        if let Some(children) = node.get("children").and_then(Value::as_array) {
+            flatten(children, out);
+        }
+    }
+}
+
+/// Ordered, unique leaf sources used by the selected configuration. Shared
+/// by aggregation and change detection so disabled group members still sync.
+pub(crate) fn selected_source_ids(list: &[Value]) -> Vec<String> {
+    source_ids(list, None)
+}
+
+fn source_ids(list: &[Value], target: Option<&str>) -> Vec<String> {
+    let mut nodes = Vec::new();
+    flatten(list, &mut nodes);
+    let by_id: HashMap<&str, &Value> = nodes
+        .iter()
+        .filter_map(|node| node.get("id").and_then(Value::as_str).map(|id| (id, *node)))
+        .collect();
+    let mut visited = HashSet::new();
+    let mut ids = Vec::new();
+    fn visit<'a>(
+        id: &'a str,
+        by_id: &HashMap<&'a str, &'a Value>,
+        visited: &mut HashSet<&'a str>,
+        ids: &mut Vec<String>,
+    ) {
+        if !visited.insert(id) {
+            return;
+        }
+        let Some(node) = by_id.get(id) else {
+            return;
+        };
+        if id == "0" || node.get("is_sys").and_then(Value::as_bool) == Some(true) {
+            return;
+        }
+        match node.get("type").and_then(Value::as_str).unwrap_or("local") {
+            "group" => {
+                if let Some(include) = node.get("include").and_then(Value::as_array) {
+                    for id in include.iter().filter_map(Value::as_str) {
+                        visit(id, by_id, visited, ids);
+                    }
+                }
+            }
+            "local" | "remote" => ids.push(id.to_string()),
+            _ => {}
+        }
+    }
+    if let Some(target) = target {
+        if let Some((id, _)) = by_id.get_key_value(target) {
+            visit(id, &by_id, &mut visited, &mut ids);
+        }
+    } else {
+        for node in nodes {
+            if node.get("on").and_then(Value::as_bool).unwrap_or(false) {
+                if let Some(id) = node.get("id").and_then(Value::as_str) {
+                    visit(id, &by_id, &mut visited, &mut ids);
+                }
+            }
+        }
+    }
+    ids
+}
+
 pub fn aggregate_selected_content(
     list: &[Value],
     paths: &V5Paths,
     remove_duplicate_records: bool,
 ) -> Result<String, StorageError> {
-    let mut chunks: Vec<String> = Vec::new();
-    collect_selected(list, paths, &mut chunks)?;
-    let mut content = chunks.join("\n\n");
+    let mut content = read_sources(&selected_source_ids(list), paths, true)?;
     if remove_duplicate_records {
         content = remove_duplicate_records_pass(&content);
     }
     Ok(content)
 }
 
-fn collect_selected(
-    nodes: &[Value],
+/// Read a group's live sources for previews, without changing member switches.
+pub(crate) fn group_content(
+    list: &[Value],
+    id: &str,
     paths: &V5Paths,
-    out: &mut Vec<String>,
-) -> Result<(), StorageError> {
-    for node in nodes {
-        if is_on(node) {
-            if let Some(id) = node.get("id").and_then(Value::as_str) {
-                let content = entries::read_entry(&paths.entries_dir, id)?;
-                // Keep source text intact for the editor/find offsets; remove
-                // BOMs only from the content being aggregated for application.
-                out.push(crate::hosts_text::normalize(&content));
-            }
-        }
-        if let Some(children) = node.get("children").and_then(Value::as_array) {
-            collect_selected(children, paths, out)?;
-        }
-    }
-    Ok(())
+) -> Result<String, StorageError> {
+    read_sources(&source_ids(list, Some(id)), paths, false)
 }
 
-fn is_on(node: &Value) -> bool {
-    node.get("on").and_then(Value::as_bool).unwrap_or(false)
+fn read_sources(ids: &[String], paths: &V5Paths, normalize: bool) -> Result<String, StorageError> {
+    ids.iter()
+        .map(|id| {
+            let content = entries::read_entry(&paths.entries_dir, id)?;
+            Ok(if normalize {
+                crate::hosts_text::normalize(&content)
+            } else {
+                content
+            })
+        })
+        .collect::<Result<Vec<_>, StorageError>>()
+        .map(|chunks| chunks.join("\n\n"))
 }
 
 // ---- duplicate-record removal ---------------------------------------------
@@ -180,6 +221,27 @@ fn line_ending() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn groups_resolve_disabled_sources_once_in_reference_order_and_break_cycles() {
+        let list = vec![
+            serde_json::json!({"id":"folder", "type":"folder", "children":[
+                {"id":"a", "type":"local", "on":false},
+                {"id":"b", "type":"remote", "on":false}
+            ]}),
+            serde_json::json!({"id":"g", "type":"group", "on":true, "include":["b","a","nested","missing","0"]}),
+            serde_json::json!({"id":"nested", "type":"group", "include":["g","a"]}),
+            serde_json::json!({"id":"0", "is_sys":true, "on":true}),
+            serde_json::json!({"id":"unused", "type":"local", "on":false}),
+        ];
+        assert_eq!(selected_source_ids(&list), ["b", "a"]);
+        assert_eq!(source_ids(&list, Some("g")), ["b", "a"]);
+        let mut disabled = list.clone();
+        disabled[1]["on"] = serde_json::json!(false);
+        assert!(selected_source_ids(&disabled).is_empty());
+        disabled[0]["children"][0]["on"] = serde_json::json!(true);
+        assert_eq!(selected_source_ids(&disabled), ["a"]);
+    }
 
     #[test]
     fn bom_is_removed_from_each_source_before_joining_and_deduplication() {

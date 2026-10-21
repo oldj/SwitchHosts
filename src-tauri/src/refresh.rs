@@ -92,9 +92,16 @@ pub enum RefreshError {
     /// The target or its cached data changed while a request was outstanding.
     SourceChanged,
     /// HTTP / network failure, file:// read failure, etc.
-    Fetch { message: String },
+    Fetch {
+        message: String,
+    },
     /// Filesystem failure during the write or manifest update.
-    Storage { message: String },
+    Storage {
+        message: String,
+    },
+    Apply {
+        message: String,
+    },
 }
 
 impl RefreshError {
@@ -113,6 +120,7 @@ impl RefreshError {
             ),
             RefreshError::Fetch { message } => ("fetch_failed", message),
             RefreshError::Storage { message } => ("storage_failed", message),
+            RefreshError::Apply { message } => ("apply_failed", message),
         };
         json!({
             "success": false,
@@ -218,6 +226,16 @@ async fn refresh_one_inner<R: Runtime>(
         let _ = app.emit("hosts_content_changed", json!({ "_args": [id] }));
     }
 
+    // Do not hold the per-source fetch lock while awaiting system writes.
+    drop(_serialised);
+    if emit_content_changed {
+        crate::hosts_apply::content_sync::apply_pending(app, state)
+            .await
+            .map_err(|error| RefreshError::Apply {
+                message: error.to_string(),
+            })?;
+    }
+
     if content_changed {
         Ok(RefreshOutcome::Updated {
             node: updated_snapshot,
@@ -305,6 +323,9 @@ fn commit_refresh(
         manifest.save(&state.paths)
     })
     .map_err(storage_error)?;
+    if content_changed {
+        state.content_sync.mark(id);
+    }
     Ok((
         find_node(&manifest.root, id).expect("committed node exists"),
         content_changed,
@@ -344,6 +365,17 @@ async fn refresh_many<R: Runtime>(
         results.push((id, outcome));
     }
     emit_content_changed_batch(app, &changed_ids);
+    if let Err(error) = crate::hosts_apply::content_sync::apply_pending(app, state).await {
+        // Fetches have already committed. Report the application failure to
+        // callers as well, without discarding the saved sources or retry queue.
+        for (_, outcome) in &mut results {
+            if outcome.is_ok() {
+                *outcome = Err(RefreshError::Apply {
+                    message: error.to_string(),
+                });
+            }
+        }
+    }
     results
 }
 
@@ -774,6 +806,7 @@ mod tests {
                 config: Mutex::new(crate::storage::AppConfig::default()),
                 store_lock: Mutex::new(()),
                 application_recovery: Default::default(),
+                content_sync: Default::default(),
                 config_write_lock: Mutex::new(()),
                 update_check_lock: tokio::sync::Mutex::new(()),
                 is_will_quit: AtomicBool::new(false),
@@ -787,6 +820,30 @@ mod tests {
         fn drop(&mut self) {
             let _ = std::fs::remove_dir_all(&self.0.paths.root);
         }
+    }
+
+    #[test]
+    fn refresh_commit_queues_sync_only_after_a_successful_content_change() {
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        Manifest { root: vec![json!({"id":"remote", "type":"remote", "url":"https://example.test/hosts", "on":false})], ..Default::default() }.save(&state.paths).unwrap();
+        entries::write_entry(&state.paths.entries_dir, "remote", "old").unwrap();
+        let snapshot = read_refresh_snapshot(state, "remote").unwrap();
+        commit_refresh(state, "remote", &snapshot, "old", None).unwrap();
+        assert!(!state.content_sync.is_pending());
+        let snapshot = read_refresh_snapshot(state, "remote").unwrap();
+        let blocker = state
+            .paths
+            .manifest_file
+            .with_file_name("manifest.json.tmp");
+        std::fs::create_dir(&blocker).unwrap();
+        assert!(commit_refresh(state, "remote", &snapshot, "new", None).is_err());
+        assert!(!state.content_sync.is_pending());
+        std::fs::remove_dir(&blocker).unwrap();
+        let snapshot = read_refresh_snapshot(state, "remote").unwrap();
+        commit_refresh(state, "remote", &snapshot, "new", None).unwrap();
+        // Its own switch is off, but it can be referenced by an enabled group.
+        assert!(state.content_sync.is_pending());
     }
 
     #[tokio::test]
@@ -804,7 +861,12 @@ mod tests {
         entries::write_entry(&state.paths.entries_dir, "legacy-domain", cached).unwrap();
         let before = std::fs::read(&state.paths.manifest_file).unwrap();
 
-        for url in ["github.com", "/hosts", "ftp://example.test/hosts", "https://"] {
+        for url in [
+            "github.com",
+            "/hosts",
+            "ftp://example.test/hosts",
+            "https://",
+        ] {
             let error = fetch_remote(url, state)
                 .await
                 .unwrap_err()

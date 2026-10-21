@@ -11,6 +11,7 @@ import StatusBar from '@renderer/components/StatusBar'
 import useI18n from '@renderer/models/useI18n'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
+import { getErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import useHostsData from '@renderer/models/useHostsData'
 import { Compartment, EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
@@ -87,10 +88,12 @@ const HostsEditor = () => {
 
   const { run: toSave } = useDebounceFn(
     (id: string, nextContent: string) => {
-      actions
-        .setHostsContent(id, nextContent)
-        .then(() => agent.broadcast(events.hosts_content_changed, id))
-        .catch((e) => console.error(e))
+      actions.setHostsContent(id, nextContent).catch((error) =>
+        showErrorNotification({
+          title: refLang.current.fail,
+          message: getErrorMessage(error, refLang.current.fail),
+        }),
+      )
     },
     { wait: 1000 },
   )
@@ -281,6 +284,23 @@ const HostsEditor = () => {
       effects: built.readOnlyCompartment.reconfigure(readOnlyExtensions(readOnly)),
     })
   }, [readOnly])
+
+  // A group has no cached entry file: reload its live referenced content when
+  // any member changes. Do not reset an editable source's undo/caret on save.
+  useOnBroadcast(
+    events.hosts_content_changed,
+    () => {
+      if (currentHosts?.type === 'group') loadContent().catch(console.error)
+    },
+    [hostsId, currentHosts?.type],
+  )
+  useOnBroadcast(
+    events.hosts_content_changed_batch,
+    () => {
+      if (currentHosts?.type === 'group') loadContent().catch(console.error)
+    },
+    [hostsId, currentHosts?.type],
+  )
 
   useOnBroadcast(
     events.hosts_refreshed,

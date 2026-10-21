@@ -238,96 +238,18 @@ describe('List tray synchronization', () => {
     spy.mockRestore()
   })
 
-  it('applies system hosts when a changed remote hosts entry is enabled', async () => {
-    const list = [
-      { id: 'remote-on', title: 'Remote On', type: 'remote', on: true },
-      { id: 'remote-off', title: 'Remote Off', type: 'remote', on: false },
-    ]
-    mocks.hostsData = { list, trashcan: [], version: 'test' }
-    mocks.actions.getList.mockResolvedValue(list)
-
-    render(<List />)
-
-    await act(async () => {
-      await Promise.resolve(latestHandler(events.hosts_content_changed)('remote-on'))
-    })
-
-    await waitFor(() => expect(mocks.applyList).toHaveBeenCalledTimes(1))
-    expect(mocks.applyList).toHaveBeenCalledWith()
-  })
-
-  it('applies system hosts once for a batch with multiple enabled remote changes', async () => {
-    const list = [
-      { id: 'remote-one', title: 'Remote One', type: 'remote', on: true },
-      { id: 'remote-two', title: 'Remote Two', type: 'remote', on: true },
-    ]
-    mocks.hostsData = { list, trashcan: [], version: 'test' }
-    mocks.actions.getList.mockResolvedValue(list)
-
-    render(<List />)
-
-    await act(async () => {
-      await Promise.resolve(
-        latestHandler(events.hosts_content_changed_batch)(['remote-one', 'remote-two']),
-      )
-    })
-
-    await waitFor(() => expect(mocks.applyList).toHaveBeenCalledTimes(1))
-    expect(mocks.applyList).toHaveBeenCalledWith()
-  })
-
-  it('does not apply system hosts when a batch only changes disabled remote entries', async () => {
-    const list = [
-      { id: 'remote-one', title: 'Remote One', type: 'remote', on: false },
-      { id: 'remote-two', title: 'Remote Two', type: 'remote', on: false },
-    ]
-    mocks.hostsData = { list, trashcan: [], version: 'test' }
-    mocks.actions.getList.mockResolvedValue(list)
-
-    render(<List />)
-
-    await act(async () => {
-      await Promise.resolve(
-        latestHandler(events.hosts_content_changed_batch)(['remote-one', 'remote-two']),
-      )
-    })
-
-    expect(mocks.actions.getList).toHaveBeenCalledTimes(1)
-    expect(mocks.applyList).not.toHaveBeenCalled()
-  })
-
-  it('queues remote content changes while a system hosts apply is in progress', async () => {
-    const list = [
-      { id: 'remote-one', title: 'Remote One', type: 'remote', on: true },
-      { id: 'remote-two', title: 'Remote Two', type: 'remote', on: true },
-    ]
-    const firstApply = deferred<boolean>()
-    mocks.hostsData = { list, trashcan: [], version: 'test' }
-    mocks.actions.getList.mockResolvedValue(list)
-    mocks.applyList.mockReturnValueOnce(firstApply.promise).mockResolvedValue(true)
-
-    render(<List />)
-    const handler = latestHandler(events.hosts_content_changed)
-
-    let firstHandlerPromise!: Promise<unknown>
-    act(() => {
-      firstHandlerPromise = Promise.resolve(handler('remote-one'))
-    })
-
-    await waitFor(() => expect(mocks.applyList).toHaveBeenCalledTimes(1))
-
-    await act(async () => {
-      await Promise.resolve(handler('remote-two'))
-    })
-
-    expect(mocks.applyList).toHaveBeenCalledTimes(1)
-
-    await act(async () => {
-      firstApply.resolve(true)
-      await firstApply.promise
-      await firstHandlerPromise
-    })
-
-    await waitFor(() => expect(mocks.applyList).toHaveBeenCalledTimes(2))
-  })
+  it.each([events.hosts_content_changed, events.hosts_content_changed_batch])(
+    'reloads UI data without applying a second time on %s',
+    async (event) => {
+      render(<List />)
+      await act(async () => {
+        await latestHandler(event)(
+          event === events.hosts_content_changed ? 'local-api' : ['local-api'],
+        )
+      })
+      expect(mocks.loadHostsData).toHaveBeenCalledTimes(1)
+      expect(mocks.applyList).not.toHaveBeenCalled()
+      expect(mocks.actions.setSystemHosts).not.toHaveBeenCalled()
+    },
+  )
 })

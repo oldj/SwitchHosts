@@ -2,9 +2,9 @@
 //!
 //! Submodules:
 //!
-//! - `aggregate` — walk the manifest tree, collect every node whose
-//!   `on === true`, concatenate `entries/<id>.hosts` files, optionally
-//!   dedup repeated host records.
+//! - `aggregate` — resolve enabled entries and group references, concatenate
+//!   their source files, optionally dedup repeated host records.
+//! - `content_sync` — reconcile saved content with system hosts without a webview.
 //! - `error` — `HostsApplyError` enum + renderer-facing translation.
 //! - `elevation` — OS-native privileged write helpers (osascript on
 //!   macOS today; pkexec / UAC land in P2.E.4).
@@ -15,6 +15,7 @@
 
 pub mod aggregate;
 pub mod cmd_runner;
+pub mod content_sync;
 pub mod elevation;
 pub mod error;
 pub mod helper_admin;

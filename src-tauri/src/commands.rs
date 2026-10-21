@@ -649,28 +649,67 @@ pub async fn get_hosts_content(
 ) -> Result<Value, StorageError> {
     let _guard = state.lock_store()?;
     let id = arg_str(&args, 0, "id")?;
-    let content = entries::read_entry(&state.paths.entries_dir, id)?;
+    let manifest = load_manifest(&state)?;
+    let node = manifest::find_node(&manifest.root, id);
+    let content = if node
+        .as_ref()
+        .and_then(|n| n.get("type"))
+        .and_then(Value::as_str)
+        == Some("group")
+    {
+        hosts_apply::aggregate::group_content(&manifest.root, id, &state.paths)?
+    } else {
+        entries::read_entry(&state.paths.entries_dir, id)?
+    };
     Ok(json!(content))
 }
 
 #[tauri::command]
-pub async fn set_hosts_content(
+pub async fn set_hosts_content<R: Runtime>(
+    app: AppHandle<R>,
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    let id = arg_str(&args, 0, "id")?.to_string();
+    let content = arg_str(&args, 1, "content")?;
+    let changed = save_hosts_content(&state, &id, content)?;
+    if changed {
+        let _ = app.emit("hosts_content_changed", json!({"_args": [&id]}));
+    }
+    hosts_apply::content_sync::apply_pending(&app, &state).await?;
+    Ok(Value::Null)
+}
+
+pub(crate) fn save_hosts_content(
+    state: &AppState,
+    id: &str,
+    content: &str,
+) -> Result<bool, StorageError> {
     state.require_data_dir_usable()?;
     let _guard = state.lock_store()?;
-    let id = arg_str(&args, 0, "id")?.to_string();
-    let content = args
-        .get(1)
-        .and_then(Value::as_str)
-        .ok_or_else(|| StorageError::InvalidConfigValue {
-            key: "set_hosts_content.args[1]".into(),
-            reason: "expected a string content at args[1]".into(),
-        })?
-        .to_string();
-    entries::write_entry(&state.paths.entries_dir, &id, &content)?;
-    Ok(Value::Null)
+    let manifest = load_manifest(state)?;
+    let node = manifest::find_node(&manifest.root, id).ok_or_else(|| {
+        StorageError::InvalidConfigValue {
+            key: "id".into(),
+            reason: "hosts entry no longer exists".into(),
+        }
+    })?;
+    if !matches!(
+        node.get("type").and_then(Value::as_str),
+        None | Some("local")
+    ) {
+        return Err(StorageError::InvalidConfigValue {
+            key: "id".into(),
+            reason: "only local hosts entries are editable".into(),
+        });
+    }
+    let changed =
+        entries::read_entry(&state.paths.entries_dir, id)? != entries::normalize_to_lf(content);
+    if changed {
+        entries::write_entry(&state.paths.entries_dir, id, content)?;
+        state.content_sync.mark(id);
+    }
+    Ok(changed)
 }
 
 #[tauri::command]
@@ -805,7 +844,12 @@ pub async fn finish_hosts_application<R: Runtime>(
     args: Args,
 ) -> Result<Value, String> {
     let expected = arg_str(&args, 0, "expected").map_err(|e| e.to_string())?;
-    let recovery = state.application_recovery.finish(expected);
+    let mut recovery = state.application_recovery.finish(expected);
+    if recovery.is_none() {
+        state.content_sync.mark_all();
+        let _ = hosts_apply::content_sync::apply_pending(&app, &state).await;
+        recovery = read_application_recovery(&app, &state);
+    }
     let _ = tray::refresh_title(&app, &state);
     let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
     Ok(json!(recovery))
@@ -855,13 +899,16 @@ pub async fn restore_system_hosts<R: Runtime>(
     });
     match result {
         Ok(()) => {
-            let recovery = state.application_recovery.restored(
-                &previous,
-                previous_bytes.as_deref(),
-                || {
-                    let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
-                },
-            );
+            let mut recovery =
+                state
+                    .application_recovery
+                    .restored(&previous, previous_bytes.as_deref(), || {
+                        let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+                    });
+            if recovery.is_none() {
+                let _ = hosts_apply::content_sync::apply_pending(&app, &state).await;
+                recovery = read_application_recovery(&app, &state);
+            }
             let _ = tray::refresh_title(&app, &state);
             let _ = app.emit("system_hosts_updated", json!({ "_args": [] }));
             let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
@@ -1220,7 +1267,11 @@ pub async fn find_by(state: State<'_, AppState>, args: Args) -> Result<Value, St
 }
 
 #[tauri::command]
-pub async fn find_replace_one(state: State<'_, AppState>, args: Args) -> Result<Value, String> {
+pub async fn find_replace_one<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    args: Args,
+) -> Result<Value, String> {
     state.require_data_dir_usable().map_err(|e| e.to_string())?;
     let request = args
         .into_iter()
@@ -1230,11 +1281,18 @@ pub async fn find_replace_one(state: State<'_, AppState>, args: Args) -> Result<
             serde_json::from_value(v).map_err(|e| format!("find_replace_one: invalid request: {e}"))
         })?;
     let replaced = find::replace_one_in_manifest(state.inner(), request)?;
+    // Report the committed replacement so the find window can refresh its
+    // offsets. Application failures are exposed through the recovery notice.
+    let _ = crate::hosts_apply::content_sync::apply_pending(&app, state.inner()).await;
     Ok(json!(replaced))
 }
 
 #[tauri::command]
-pub async fn find_replace_all(state: State<'_, AppState>, args: Args) -> Result<Value, String> {
+pub async fn find_replace_all<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, AppState>,
+    args: Args,
+) -> Result<Value, String> {
     state.require_data_dir_usable().map_err(|e| e.to_string())?;
     let keyword = args
         .first()
@@ -1252,7 +1310,11 @@ pub async fn find_replace_all(state: State<'_, AppState>, args: Args) -> Result<
         .ok_or_else(|| "find_replace_all: args[2] must be a string replacement".to_string())?
         .to_string();
 
-    let outcome = find::replace_all_in_manifest(state.inner(), &keyword, &options, &replace_to)?;
+    let outcome = find::replace_all_in_manifest(state.inner(), &keyword, &options, &replace_to);
+    // A later entry write can fail after earlier replacements were saved.
+    // Reconcile those committed changes even when the batch reports an error.
+    let _ = crate::hosts_apply::content_sync::apply_pending(&app, state.inner()).await;
+    let outcome = outcome?;
     serde_json::to_value(outcome).map_err(|e| e.to_string())
 }
 
