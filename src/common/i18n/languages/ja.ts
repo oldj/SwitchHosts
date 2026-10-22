@@ -10,6 +10,13 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_pending: '適用待ち',
+  editor_draft_apply: '適用',
+  editor_draft_discard: '下書きを破棄',
+  editor_draft_apply_hint:
+    '変更は下書きとして保持されており、元のファイルにはまだ保存されていません。「適用」をクリックするか {0} を押すと、保存して適用します。このウィンドウ内でエディターからフォーカスを移す、別の項目を選ぶ、hosts またはグループのスイッチを切り替える場合も自動的に適用されます。',
+  editor_draft_discard_confirm:
+    '下書きを破棄して保存済みの内容に戻しますか？下書きの変更は失われます。',
   _app_name: 'SwitchHosts',
   hosts_managed_start: '管理範囲の開始',
   hosts_managed_end: '管理範囲の終了',

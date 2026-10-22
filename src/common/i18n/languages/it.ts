@@ -48,6 +48,13 @@ export default {
   import_dependency_error: 'Seleziona le configurazioni referenziate dai gruppi selezionati.',
   import_application_recovery:
     'Risolvi l’operazione in sospeso sul file hosts di sistema prima di importare.',
+  editor_draft_pending: 'In attesa di applicazione',
+  editor_draft_apply: 'Applica',
+  editor_draft_discard: 'Scarta bozza',
+  editor_draft_apply_hint:
+    'Le modifiche sono conservate come bozza e non sono ancora salvate nel file sorgente. Fai clic su Applica o premi {0} per salvarle e applicarle. Vengono applicate anche spostando il focus fuori dall’editor in questa finestra, selezionando un’altra voce o attivando o disattivando un hosts o un gruppo.',
+  editor_draft_discard_confirm:
+    'Scartare questa bozza e ripristinare il contenuto salvato? Le modifiche nella bozza andranno perse.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Inizio blocco gestito',
   hosts_managed_end: 'Fine blocco gestito',

@@ -7,6 +7,13 @@ import { importEnglish } from '../import'
 export default {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_pending: '적용 대기 중',
+  editor_draft_apply: '적용',
+  editor_draft_discard: '초안 버리기',
+  editor_draft_apply_hint:
+    '변경 사항은 초안으로 보관되며 아직 원본 파일에 저장되지 않았습니다. 적용을 클릭하거나 {0}를 누르면 저장하고 적용합니다. 이 창 안에서 편집기 밖으로 포커스를 옮기거나 다른 항목을 선택하거나 hosts 또는 그룹 스위치를 전환할 때도 자동으로 적용됩니다.',
+  editor_draft_discard_confirm:
+    '초안을 버리고 저장된 내용으로 복원할까요? 초안의 변경 사항은 사라집니다.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: '관리 영역 시작',
   hosts_managed_end: '관리 영역 끝',

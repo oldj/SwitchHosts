@@ -48,6 +48,13 @@ export default {
     'Selecteer de configuraties waarnaar de geselecteerde groepen verwijzen.',
   import_application_recovery:
     'Rond de wachtende bewerking op het systeemhostsbestand af voordat je importeert.',
+  editor_draft_pending: 'Nog niet toegepast',
+  editor_draft_apply: 'Toepassen',
+  editor_draft_discard: 'Concept verwerpen',
+  editor_draft_apply_hint:
+    'Wijzigingen worden als concept bewaard en zijn nog niet in het bronbestand opgeslagen. Klik op Toepassen of druk op {0} om ze op te slaan en toe te passen. Dit gebeurt ook wanneer je binnen dit venster de editor verlaat, een ander item selecteert of een hosts- of groepsschakelaar omzet.',
+  editor_draft_discard_confirm:
+    'Dit concept verwerpen en de opgeslagen inhoud herstellen? Wijzigingen in het concept gaan verloren.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Begin beheerd blok',
   hosts_managed_end: 'Einde beheerd blok',

@@ -10,6 +10,12 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...httpApiTraditionalChinese,
   ...importTraditionalChinese,
+  editor_draft_pending: '待套用',
+  editor_draft_apply: '套用',
+  editor_draft_discard: '捨棄草稿',
+  editor_draft_apply_hint:
+    '修改已暫存為草稿，尚未正式儲存。點擊「套用」或按 {0} 可儲存並套用；在本視窗內離開編輯器、切換項目或切換 hosts／群組開關時，也會自動套用。',
+  editor_draft_discard_confirm: '確定捨棄草稿並還原已儲存的內容嗎？草稿中的修改將遺失。',
   _app_name: 'SwitchHosts',
   hosts_managed_start: '託管開始',
   hosts_managed_end: '託管結束',

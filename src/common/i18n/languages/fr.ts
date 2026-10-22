@@ -10,6 +10,13 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_pending: 'En attente d’application',
+  editor_draft_apply: 'Appliquer',
+  editor_draft_discard: 'Abandonner le brouillon',
+  editor_draft_apply_hint:
+    'Les modifications sont conservées comme brouillon et ne sont pas encore enregistrées dans le fichier source. Cliquez sur Appliquer ou appuyez sur {0} pour les enregistrer et les appliquer. Elles sont aussi appliquées lorsque vous quittez l’éditeur dans cette fenêtre, sélectionnez une autre entrée ou activez ou désactivez un hosts ou un groupe.',
+  editor_draft_discard_confirm:
+    'Abandonner ce brouillon et restaurer le contenu enregistré ? Les modifications du brouillon seront perdues.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Début géré',
   hosts_managed_end: 'Fin gérée',

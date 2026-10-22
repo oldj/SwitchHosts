@@ -44,6 +44,13 @@ export default {
   import_reference_error: 'Bản sao lưu chứa tham chiếu nhóm bị thiếu hoặc vòng lặp.',
   import_dependency_error: 'Hãy chọn các cấu hình được các nhóm đã chọn tham chiếu.',
   import_application_recovery: 'Hãy xử lý thao tác hosts hệ thống đang chờ trước khi nhập.',
+  editor_draft_pending: 'Chờ áp dụng',
+  editor_draft_apply: 'Áp dụng',
+  editor_draft_discard: 'Bỏ bản nháp',
+  editor_draft_apply_hint:
+    'Các thay đổi được giữ dưới dạng bản nháp và chưa được lưu vào tệp nguồn. Nhấn Áp dụng hoặc {0} để lưu và áp dụng. Thay đổi cũng tự động được áp dụng khi chuyển tiêu điểm ra khỏi trình chỉnh sửa trong cửa sổ này, chọn mục khác hoặc bật/tắt hosts hay nhóm.',
+  editor_draft_discard_confirm:
+    'Bỏ bản nháp này và khôi phục nội dung đã lưu? Các thay đổi trong bản nháp sẽ bị mất.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Bắt đầu phần được quản lý',
   hosts_managed_end: 'Kết thúc phần được quản lý',

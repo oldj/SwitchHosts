@@ -9,6 +9,7 @@ import { flatten } from '@common/hostsFn'
 import { normalizeLineEndings } from '@common/newlines'
 import { IFindShowSourceParam } from '@common/types'
 import StatusBar from '@renderer/components/StatusBar'
+import ConfirmModal from '@renderer/components/ConfirmModal'
 import useI18n from '@renderer/models/useI18n'
 import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
@@ -31,9 +32,17 @@ import {
   toggleCommentBySelections,
 } from './hosts_highlight'
 import styles from './HostsEditor.module.scss'
+import {
+  getEditorDrafts,
+  type EditorDrafts,
+  type Draft,
+  draftsChanged,
+  scheduleDraftApplication,
+  cancelDraftApplication,
+} from './editorDrafts'
 
 const HostsEditor = () => {
-  const { currentHosts, hostsData, isReadOnly } = useHostsData()
+  const { currentHosts, hostsData, isReadOnly, applyDrafts, isApplying } = useHostsData()
   const hostsId = currentHosts?.id || '0'
   const readOnly = isReadOnly(currentHosts)
   const groupMembers =
@@ -46,6 +55,19 @@ const HostsEditor = () => {
       : null
   const [content, setContent] = useState('')
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [pendingDraft, setPendingDraft] = useState(false)
+  const [discardOpen, setDiscardOpen] = useState(false)
+  const [isDiscarding, setIsDiscarding] = useState(false)
+  const refDiscard = useRef<{
+    id: string
+    draft: Draft
+    drafts: EditorDrafts
+    view: EditorView
+    restoring: boolean
+  } | null>(null)
+  const refBaseContent = useRef('')
+  const refBlurAction = useRef<string | null>(null)
+  const refPreviousId = useRef(hostsId)
 
   const { lang } = useI18n()
   const labelsCompartment = useRef(new Compartment())
@@ -64,6 +86,7 @@ const HostsEditor = () => {
   // (which are created once on mount) can always read the latest values.
   const refHostsId = useRef(hostsId)
   const refReadOnly = useRef(readOnly)
+  const refDrafts = useRef<EditorDrafts | null>(null)
   // Pending find: when a show_source event arrives before the target hosts is loaded
   // (List broadcasts select_hosts then show_source synchronously, but hostsId only
   // updates on the next render), we stash the params here and apply them once
@@ -97,35 +120,101 @@ const HostsEditor = () => {
     refReadOnly.current = readOnly
   }, [readOnly])
 
-  const { run: toSave, flush: flushSave } = useDebounceFn(
-    (id: string, nextContent: string) => {
-      actions.setHostsContent(id, nextContent).catch((error) =>
-        showErrorNotification({
-          title: refLang.current.fail,
-          message: getErrorMessage(error, refLang.current.fail),
-        }),
-      )
-    },
-    { wait: 1000 },
-  )
+  const reportSaveError = (error: unknown) => {
+    showErrorNotification({
+      title: refLang.current.fail,
+      message: getErrorMessage(error, refLang.current.fail),
+    })
+  }
+  const cancelDiscard = () => {
+    if (!refDiscard.current) return false
+    refDiscard.current = null
+    setDiscardOpen(false)
+    setIsDiscarding(false)
+    return true
+  }
+  const savePending = (isCurrent?: () => boolean) => {
+    if (refDiscard.current) return
+    if (!isCurrent) cancelDraftApplication()
+    void applyDrafts(isCurrent).catch(reportSaveError)
+  }
+  const refSavePending = useRef(savePending)
+  useLayoutEffect(() => {
+    refSavePending.current = savePending
+  })
 
-  // Flush the previous document's debounced save before another document can
-  // replace its arguments, and before the editor is unmounted.
-  useLayoutEffect(
-    () => () => {
-      flushSave()
-    },
-    [hostsId, flushSave],
-  )
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      refBlurAction.current =
+        event.target instanceof Element
+          ? (event.target.closest('[data-draft-action]')?.getAttribute('data-draft-action') ?? null)
+          : null
+    }
+    const onPointerEnd = () => {
+      refBlurAction.current = null
+    }
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') cancelDraftApplication()
+    }
+    const onDraftChange = () => {
+      const target = refDiscard.current
+      if (target && target.drafts.read(target.id) !== target.draft) cancelDiscard()
+      const id = refDocumentId.current
+      const draft = id ? refDrafts.current?.read(id) : undefined
+      setPendingDraft(!!draft)
+      if (id && !draft && refView.current)
+        refBaseContent.current = refView.current.state.doc.toString()
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    document.addEventListener('pointerup', onPointerEnd, true)
+    document.addEventListener('pointercancel', onPointerEnd, true)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    window.addEventListener('blur', cancelDraftApplication)
+    window.addEventListener('pagehide', cancelDraftApplication)
+    window.addEventListener(draftsChanged, onDraftChange)
+    return () => {
+      cancelDraftApplication()
+      document.removeEventListener('pointerdown', onPointerDown, true)
+      document.removeEventListener('pointerup', onPointerEnd, true)
+      document.removeEventListener('pointercancel', onPointerEnd, true)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener('blur', cancelDraftApplication)
+      window.removeEventListener('pagehide', cancelDraftApplication)
+      window.removeEventListener(draftsChanged, onDraftChange)
+    }
+  }, [])
+
+  // A selection change can come from a keyboard/menu event without DOM blur.
+  // This is deliberately not an unmount cleanup: exit only retains the journal.
+  useLayoutEffect(() => {
+    if (refPreviousId.current !== hostsId) {
+      refPreviousId.current = hostsId
+      const hadDiscard = cancelDiscard()
+      const previous = refDocumentId.current
+      if (!hadDiscard && !refBlurAction.current && previous && refDrafts.current?.read(previous)) {
+        scheduleDraftApplication((isCurrent) => refSavePending.current(isCurrent))
+      }
+    }
+  }, [hostsId])
+
+  useLayoutEffect(() => {
+    if (isApplying || readOnly) cancelDiscard()
+  }, [isApplying, readOnly])
 
   const onDocChange = (nextContent: string) => {
     if (refReadOnly.current || refDocumentId.current !== refHostsId.current) return
+    // New intent releases the old read immediately, even if it never returns.
+    cancelDiscard()
     // An outstanding read describes an older document. It must not replace
     // edits made since that read started, including the editor's undo history.
     refContentRequest.current += 1
     const normalizedContent = normalizeLineEndings(nextContent)
     setContent(normalizedContent)
-    toSave(refHostsId.current, normalizedContent)
+    try {
+      refDrafts.current?.edit(refHostsId.current, normalizedContent, refBaseContent.current)
+    } catch (error) {
+      reportSaveError(error)
+    }
   }
 
   const onGutterClick = (lineIndex: number) => {
@@ -226,19 +315,37 @@ const HostsEditor = () => {
     })
   }
 
-  const createEditorView = (doc: string) => {
-    const mount = refMount.current
-    if (!mount) return null
-
-    refView.current?.destroy()
-    mount.replaceChildren()
-
+  const buildEditorState = (doc: string) => {
     const built = rebuildExtensions()
-    const view = new EditorView({
+    return {
+      built,
       state: EditorState.create({
         doc,
         extensions: [
           ...built.extensions,
+          EditorView.domEventHandlers({
+            blur: (event, view) => {
+              if (refView.current !== view || refDiscard.current) return
+              const id = refDocumentId.current
+              if (!id || !refDrafts.current?.read(id)) return
+              const target = event.relatedTarget
+              if (
+                refBlurAction.current ||
+                (target instanceof Element && target.closest('[data-draft-action]'))
+              )
+                return
+              scheduleDraftApplication((isCurrent) => refSavePending.current(isCurrent))
+            },
+            keydown: (event) => {
+              const modifier = agent.platform === 'darwin' ? event.metaKey : event.ctrlKey
+              if (modifier && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 's') {
+                event.preventDefault()
+                refSavePending.current()
+                return true
+              }
+              return false
+            },
+          }),
           labelsCompartment.current.of(
             boundaryLabels.of({
               start: refLang.current.hosts_managed_start,
@@ -247,12 +354,62 @@ const HostsEditor = () => {
           ),
         ],
       }),
-      parent: mount,
-    })
+    }
+  }
+
+  const createEditorView = (doc: string) => {
+    const mount = refMount.current
+    if (!mount) return null
+
+    refView.current?.destroy()
+    mount.replaceChildren()
+
+    const { built, state } = buildEditorState(doc)
+    const view = new EditorView({ state, parent: mount })
 
     refBuilt.current = built
     refView.current = view
     return view
+  }
+
+  const confirmDiscard = async () => {
+    const target = refDiscard.current
+    if (!target || target.restoring || target.id !== refHostsId.current) return
+    target.restoring = true
+    setIsDiscarding(true)
+    cancelDraftApplication()
+    const request = ++refContentRequest.current
+    try {
+      // Keep the draft visible and durable until the replacement is available.
+      const saved = normalizeLineEndings(await actions.getHostsContent(target.id))
+      if (
+        refDiscard.current !== target ||
+        refView.current !== target.view ||
+        refDocumentId.current !== target.id ||
+        refHostsId.current !== target.id ||
+        request !== refContentRequest.current ||
+        target.drafts.read(target.id) !== target.draft
+      )
+        return
+      const { built, state } = buildEditorState(saved)
+      target.drafts.discard(target.id)
+      refBaseContent.current = saved
+      refBuilt.current = built
+      const { scrollTop, scrollLeft } = target.view.scrollDOM
+      // Replace state in the existing view, without an empty intermediate
+      // document or DOM teardown. Reset undo so discarded text stays discarded.
+      target.view.setState(state)
+      target.view.scrollDOM.scrollTop = scrollTop
+      target.view.scrollDOM.scrollLeft = scrollLeft
+      setContent(saved)
+      setLoadError(null)
+      refreshEditorLayout(target.view)
+    } catch (error) {
+      if (refDiscard.current === target) reportSaveError(error)
+    } finally {
+      // An obsolete completion must not unlock a newer confirmation/read.
+      if (refDiscard.current === target) cancelDiscard()
+    }
   }
 
   /** Fetch hosts content and replace the editor state (clears undo history). */
@@ -260,22 +417,35 @@ const HostsEditor = () => {
     // An unlisten can still be pending after a selection change. Obsolete
     // handlers must not mutate the current document or invalidate its read.
     if (refHostsId.current !== targetHostsId) return
+    // A delayed refresh must not discard an uncommitted draft.
+    if (refDocumentId.current === targetHostsId && refDrafts.current?.read(targetHostsId)) return
     const request = ++refContentRequest.current
     setLoadError(null)
     if (refDocumentId.current !== targetHostsId) {
       // A different entry must never display the previous entry's document,
       // including when the new read fails. Keep this placeholder read-only.
       refDocumentId.current = null
+      refDrafts.current = null
       setContent('')
       createEditorView('')
     }
     let nextContent: string
+    let drafts: EditorDrafts | null = null
     try {
-      nextContent = normalizeLineEndings(
-        targetHostsId === '0'
-          ? await actions.getSystemHosts()
-          : await actions.getHostsContent(targetHostsId),
-      )
+      if (!refReadOnly.current && targetHostsId !== '0') {
+        drafts = await getEditorDrafts()
+      }
+      const draft = drafts?.read(targetHostsId)
+      const savedContent =
+        draft?.base_content ??
+        normalizeLineEndings(
+          targetHostsId === '0'
+            ? await actions.getSystemHosts()
+            : await actions.getHostsContent(targetHostsId),
+        )
+      nextContent = draft ? draft.content : savedContent
+      if (request === refContentRequest.current && refHostsId.current === targetHostsId)
+        refBaseContent.current = savedContent
     } catch (error) {
       if (refHostsId.current === targetHostsId && request === refContentRequest.current) {
         setLoadError(getErrorMessage(error, refLang.current.fail))
@@ -286,6 +456,8 @@ const HostsEditor = () => {
     if (refHostsId.current !== targetHostsId || request !== refContentRequest.current) return
 
     refDocumentId.current = targetHostsId
+    refDrafts.current = drafts
+    setPendingDraft(!!drafts?.read(targetHostsId))
     setContent(nextContent)
     const view = createEditorView(nextContent)
     if (!view) return
@@ -306,6 +478,7 @@ const HostsEditor = () => {
     createEditorView('')
 
     return () => {
+      refDiscard.current = null
       refContentRequest.current += 1
       refView.current?.destroy()
       refView.current = null
@@ -463,6 +636,45 @@ const HostsEditor = () => {
         lineCount={content.split('\n').length}
         bytes={content.length}
         readOnly={readOnly}
+        pendingDraft={pendingDraft && !readOnly}
+        isApplying={isApplying}
+        isDiscarding={isDiscarding}
+        onApply={() => savePending()}
+        onDiscard={() => {
+          try {
+            cancelDraftApplication()
+            const drafts = refDrafts.current
+            const draft = drafts?.read(hostsId)
+            const view = refView.current
+            if (
+              refDiscard.current ||
+              isApplying ||
+              !draft ||
+              !drafts ||
+              !view ||
+              refDocumentId.current !== hostsId
+            )
+              return
+            refDiscard.current = { id: hostsId, draft, drafts, view, restoring: false }
+            setDiscardOpen(true)
+          } catch (error) {
+            reportSaveError(error)
+          }
+        }}
+      />
+      <ConfirmModal
+        opened={discardOpen}
+        title={lang.editor_draft_discard}
+        message={lang.editor_draft_discard_confirm}
+        confirmLabel={lang.editor_draft_discard}
+        danger
+        onConfirm={() => {
+          void confirmDiscard()
+        }}
+        onClose={() => {
+          setDiscardOpen(false)
+          if (!refDiscard.current?.restoring) refDiscard.current = null
+        }}
       />
     </div>
   )

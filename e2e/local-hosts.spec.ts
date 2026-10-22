@@ -37,8 +37,8 @@ test.describe('local hosts', () => {
       .toContain('192.0.2.42 updated-group.local')
     await expect(member.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
     const calls = await getMockCalls(page)
-    expect(calls.some((call) => call.cmd === 'set_hosts_content')).toBe(true)
-    expect(calls.some((call) => call.cmd === 'apply_hosts_selection')).toBe(false)
+    expect(calls.some((call) => call.cmd === 'set_list' && call.args?.args?.[3])).toBe(true)
+    expect(calls.filter((call) => call.cmd === 'apply_hosts_selection')).toHaveLength(1)
   })
 
   test('selects a local hosts entry and saves editor changes', async ({ page }) => {
@@ -51,6 +51,8 @@ test.describe('local hosts', () => {
     await editor.click()
     await page.keyboard.press(`${selectAllModifier}+A`)
     await page.keyboard.type('127.0.0.1 edited.local\n')
+    // All platforms apply on blur rather than after a typing pause.
+    await editor.evaluate((element: HTMLElement) => element.blur())
 
     await expect
       .poll(async () => {
@@ -60,7 +62,7 @@ test.describe('local hosts', () => {
       .toBe('127.0.0.1 edited.local\n')
 
     const calls = await getMockCalls(page)
-    expect(calls.some((call) => call.cmd === 'set_hosts_content')).toBe(true)
+    expect(calls.some((call) => call.cmd === 'set_list' && call.args?.args?.[3])).toBe(true)
   })
 
   test('clears the editor cursor when switching hosts entries', async ({ page }) => {

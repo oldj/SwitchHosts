@@ -53,6 +53,14 @@ You can also install the built version using the [package manager Chocolatey](ht
 choco install switchhosts
 ```
 
+## Editing and applying hosts
+
+All platforms automatically keep local edits as drafts. Drafts are separate from committed source files, so background remote updates cannot apply unfinished edits. The status bar shows **Pending application**, with **Apply** and **Discard draft** actions.
+
+Leaving the editor for another control or entry applies pending drafts; **Ctrl+S** (Windows/Linux) or **Cmd+S** (macOS) applies them explicitly. Clicking a hosts/group switch combines the draft and selection into one application. The source files and selection are committed together after system application succeeds. A failed application keeps the drafts; a failed source/configuration commit uses the existing system-hosts compensation flow.
+
+Closing or leaving the application keeps drafts pending without starting an application. Reopening an entry restores its draft without applying it. Drafts are stored locally per data directory and entry, outside the exported hosts backup. If the committed source changes elsewhere during editing, application is rejected rather than overwriting it; keep/copy the draft or discard it to reload the saved source.
+
 ## Backup
 
 SwitchHosts stores data at `~/.SwitchHosts` (Or folder `.SwitchHosts` under the current user's home

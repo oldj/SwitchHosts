@@ -701,12 +701,23 @@
           }
           if (params[2] !== undefined && params[2] !== state.applicationGeneration)
             throw { kind: 'conflict' }
-          if (JSON.stringify(params[0]) === JSON.stringify(state.list)) return true
+          if (
+            JSON.stringify(params[0]) === JSON.stringify(state.list) &&
+            !Object.keys(params[3] || {}).length
+          )
+            return true
           if (state.storageReadOnly) throw new Error('storage is read-only')
           if (state.nextSaveError) {
             state.nextSaveError = false
             throw new Error('disk full')
           }
+          for (const [id, draft] of Object.entries(params[3] || {})) {
+            const current = state.contents[id] || ''
+            if (current !== draft.base_content && current !== draft.content)
+              throw { kind: 'conflict' }
+          }
+          for (const [id, draft] of Object.entries(params[3] || {}))
+            state.contents[id] = draft.content
           state.list = clone(params[0] || [])
           for (const item of flatten(state.list)) {
             if (!state.contents[item.id]) state.contents[item.id] = ''
@@ -753,11 +764,32 @@
           dispatchEvent('hosts_content_changed', { _args: [params[0]] })
           syncChangedContent(params[0])
           return true
-        case 'get_content_of_list':
-          return aggregateContent(params[0] || state.list)
+        case 'get_content_of_list': {
+          const originals = state.contents
+          try {
+            const overlay = { ...originals }
+            for (const [id, draft] of Object.entries(params[1] || {})) {
+              if (
+                (originals[id] || '') !== draft.base_content &&
+                (originals[id] || '') !== draft.content
+              )
+                throw { kind: 'conflict' }
+              overlay[id] = draft.content
+            }
+            state.contents = overlay
+            return aggregateContent(params[0] || state.list)
+          } finally {
+            state.contents = originals
+          }
+        }
         case 'apply_hosts_selection': {
           const oldContent = state.systemHosts
-          if (params[1]?.saved_list && selectedSources(state.list).length === 0) {
+          if (
+            params[1]?.saved_list &&
+            (selectedSources(state.list).length === 0 ||
+              (params[1].draft_ids &&
+                !selectedSources(state.list).some((id) => params[1].draft_ids.includes(id))))
+          ) {
             return {
               success: true,
               old_content: oldContent,

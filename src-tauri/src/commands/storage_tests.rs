@@ -632,3 +632,180 @@ fn group_content_command_reads_live_raw_sources_and_propagates_read_failures() {
     assert!(read_hosts_content(&f.state, "g").is_err());
     assert!(read_hosts_content(&f.state, "../invalid").is_err());
 }
+
+fn editor_draft_payload() -> Value {
+    json!({"live": {"content":"192.0.2.55 drafted.test\n", "base_content":"127.0.0.1 live.test\n"}})
+}
+
+#[test]
+fn draft_overlay_aggregates_group_references_without_publishing_to_background_reads() {
+    let f = Fixture::populated();
+    let mut list = f.state.read_manifest().unwrap().root;
+    list.push(json!({"id":"group", "type":"group", "on":true,"include":["live"]}));
+    let drafts = parse_editor_drafts(Some(&editor_draft_payload())).unwrap();
+    validate_editor_drafts(&f.state, &list, &drafts).unwrap();
+    let overrides = drafts
+        .into_iter()
+        .map(|(id, draft)| (id, draft.content))
+        .collect();
+    let before = f.snapshot();
+    assert!(hosts_apply::aggregate::aggregate_with_overrides(
+        &list,
+        &f.state.paths,
+        true,
+        &overrides
+    )
+    .unwrap()
+    .contains("drafted.test"));
+    assert!(
+        hosts_apply::aggregate_selected_content(&list, &f.state.paths, true)
+            .unwrap()
+            .contains("live.test")
+    );
+    assert_eq!(f.snapshot(), before);
+    assert!(!f.state.content_sync.is_pending());
+}
+
+#[tokio::test]
+async fn draft_commit_updates_source_and_selection_together_and_accepts_content_only_changes() {
+    for toggle in [false, true] {
+        let f = Fixture::populated();
+        let old = f.state.read_manifest().unwrap().root;
+        let mut new = old.clone();
+        if toggle {
+            new[0]["on"] = json!(true);
+        }
+        let generation = f.state.application_recovery.generation();
+        set_list_serialized(
+            &f.state,
+            vec![
+                json!(new),
+                json!(old),
+                json!(generation),
+                editor_draft_payload(),
+            ],
+        )
+        .await
+        .unwrap();
+        assert!(entries::read_entry(&f.state.paths.entries_dir, "live")
+            .unwrap()
+            .contains("drafted.test"));
+        assert_eq!(
+            f.state.read_manifest().unwrap().root[0]
+                .get("on")
+                .and_then(Value::as_bool)
+                .unwrap_or(false),
+            toggle
+        );
+        assert!(!f.state.content_sync.is_pending());
+    }
+}
+
+#[tokio::test]
+async fn failed_draft_commit_rolls_back_every_source_and_the_manifest() {
+    let f = Fixture::populated();
+    let old = f.state.read_manifest().unwrap().root;
+    let mut new = old.clone();
+    new[0]["on"] = json!(true);
+    // Force metadata publication to fail after the source entry has been written.
+    std::fs::create_dir(
+        f.state
+            .paths
+            .manifest_file
+            .with_file_name("manifest.json.tmp"),
+    )
+    .unwrap();
+    let original_source = entries::read_entry(&f.state.paths.entries_dir, "live").unwrap();
+    let generation = f.state.application_recovery.generation();
+    assert!(set_list_serialized(
+        &f.state,
+        vec![
+            json!(new),
+            json!(old),
+            json!(generation),
+            editor_draft_payload()
+        ]
+    )
+    .await
+    .is_err());
+    assert_eq!(
+        entries::read_entry(&f.state.paths.entries_dir, "live").unwrap(),
+        original_source
+    );
+    assert_eq!(f.state.read_manifest().unwrap().root, old);
+}
+
+#[tokio::test]
+async fn draft_commit_rejects_stale_generation_and_concurrently_changed_source() {
+    for stale_generation in [false, true] {
+        let f = Fixture::populated();
+        let old = f.state.read_manifest().unwrap().root;
+        let generation = f.state.application_recovery.generation();
+        if stale_generation {
+            f.state.application_recovery.begin();
+        } else {
+            entries::write_entry(&f.state.paths.entries_dir, "live", "changed elsewhere").unwrap();
+        }
+        let before = f.snapshot();
+        assert!(matches!(
+            set_list_serialized(
+                &f.state,
+                vec![
+                    json!(old),
+                    json!(old),
+                    json!(generation),
+                    editor_draft_payload()
+                ]
+            )
+            .await,
+            Err(StorageError::Conflict { .. })
+        ));
+        assert_eq!(f.snapshot(), before);
+    }
+}
+
+#[test]
+fn draft_validation_rejects_missing_remote_and_unversioned_payloads() {
+    let f = Fixture::populated();
+    let old = f.state.read_manifest().unwrap().root;
+    let drafts = parse_editor_drafts(Some(&editor_draft_payload())).unwrap();
+    assert!(validate_editor_drafts(&f.state, &[], &drafts).is_err());
+    assert!(
+        validate_editor_drafts(&f.state, &[json!({"id":"live","type":"remote"})], &drafts).is_err()
+    );
+    assert!(set_list_inner(
+        &f.state,
+        vec![json!(old), json!(old), Value::Null, editor_draft_payload()]
+    )
+    .is_err());
+}
+
+#[test]
+fn applying_unselected_drafts_preserves_system_hosts_even_with_other_enabled_sources() {
+    let f = Fixture::populated();
+    let mut manifest = f.state.read_manifest().unwrap();
+    manifest.root[0]["on"] = json!(true);
+    manifest
+        .root
+        .push(json!({"id":"unused", "type":"local", "on":false}));
+    manifest.save(&f.state.paths).unwrap();
+    let saved = json!(manifest.root);
+    assert!(
+        preserve_system_for_editor_apply(&f.state, Some(&saved), Some(&json!(["unused"]))).unwrap()
+    );
+    assert!(
+        !preserve_system_for_editor_apply(&f.state, Some(&saved), Some(&json!(["live"]))).unwrap()
+    );
+    assert!(preserve_system_for_editor_apply(&f.state, Some(&saved), Some(&json!(true))).is_err());
+    manifest.root[0]["on"] = json!(false);
+    manifest
+        .root
+        .push(json!({"id":"group","type":"group","on":true,"include":["live"]}));
+    manifest.save(&f.state.paths).unwrap();
+    assert!(!preserve_system_for_editor_apply(
+        &f.state,
+        Some(&json!(manifest.root)),
+        Some(&json!(["live"]))
+    )
+    .unwrap());
+}
