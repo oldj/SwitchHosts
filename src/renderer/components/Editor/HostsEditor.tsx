@@ -18,7 +18,7 @@ import { Compartment, EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { useDebounceFn } from 'ahooks'
 import clsx from 'clsx'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   boundaryLabels,
   buildExtensions,
@@ -45,6 +45,7 @@ const HostsEditor = () => {
       ? JSON.stringify(flatten(hostsData.list).map(({ id, type, include }) => [id, type, include]))
       : null
   const [content, setContent] = useState('')
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const { lang } = useI18n()
   const labelsCompartment = useRef(new Compartment())
@@ -56,6 +57,7 @@ const HostsEditor = () => {
   const refMount = useRef<HTMLDivElement>(null)
   const refView = useRef<EditorView | null>(null)
   const refContentRequest = useRef(0)
+  const refDocumentId = useRef<string | null>(null)
   const refBuilt = useRef<BuiltExtensions | null>(null)
   const refMeasureFrame = useRef<number | null>(null)
   // Refs mirror React state so that callbacks captured by EditorView extensions
@@ -66,15 +68,14 @@ const HostsEditor = () => {
   // (List broadcasts select_hosts then show_source synchronously, but hostsId only
   // updates on the next render), we stash the params here and apply them once
   // loadContent finishes (with a 3s timeout to avoid stale state).
-  const refPendingFind = useRef<IFindShowSourceParam | null>(null)
-  const refPendingFindTimer = useRef<number | null>(null)
+  const refPendingFind = useRef(new Map<string, { params: IFindShowSourceParam; timer: number }>())
 
-  const clearPendingFind = () => {
-    if (refPendingFindTimer.current) {
-      window.clearTimeout(refPendingFindTimer.current)
-      refPendingFindTimer.current = null
+  const clearPendingFind = (id?: string) => {
+    for (const [target, pending] of refPendingFind.current) {
+      if (id !== undefined && target !== id) continue
+      window.clearTimeout(pending.timer)
+      refPendingFind.current.delete(target)
     }
-    refPendingFind.current = null
   }
 
   useEffect(
@@ -88,15 +89,15 @@ const HostsEditor = () => {
     [],
   )
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     refHostsId.current = hostsId
   }, [hostsId])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     refReadOnly.current = readOnly
   }, [readOnly])
 
-  const { run: toSave } = useDebounceFn(
+  const { run: toSave, flush: flushSave } = useDebounceFn(
     (id: string, nextContent: string) => {
       actions.setHostsContent(id, nextContent).catch((error) =>
         showErrorNotification({
@@ -108,7 +109,17 @@ const HostsEditor = () => {
     { wait: 1000 },
   )
 
+  // Flush the previous document's debounced save before another document can
+  // replace its arguments, and before the editor is unmounted.
+  useLayoutEffect(
+    () => () => {
+      flushSave()
+    },
+    [hostsId, flushSave],
+  )
+
   const onDocChange = (nextContent: string) => {
+    if (refReadOnly.current || refDocumentId.current !== refHostsId.current) return
     // An outstanding read describes an older document. It must not replace
     // edits made since that read started, including the editor's undo history.
     refContentRequest.current += 1
@@ -118,7 +129,7 @@ const HostsEditor = () => {
   }
 
   const onGutterClick = (lineIndex: number) => {
-    if (refReadOnly.current) return
+    if (refReadOnly.current || refDocumentId.current !== refHostsId.current) return
     const view = refView.current
     if (!view) return
     if (view.composing) return
@@ -137,7 +148,7 @@ const HostsEditor = () => {
   }
 
   const toggleComment = () => {
-    if (refReadOnly.current) return
+    if (refReadOnly.current || refDocumentId.current !== refHostsId.current) return
     const view = refView.current
     if (!view) return
     // Skip while an IME composition is active to avoid dropping characters.
@@ -193,7 +204,7 @@ const HostsEditor = () => {
    */
   const rebuildExtensions = () =>
     buildExtensions({
-      initialReadOnly: refReadOnly.current,
+      initialReadOnly: refReadOnly.current || refDocumentId.current !== refHostsId.current,
       isMac: agent.platform === 'darwin',
       onOpenUrl: (url) => {
         actions.openUrl(url).catch((e) => console.error(e))
@@ -246,23 +257,43 @@ const HostsEditor = () => {
 
   /** Fetch hosts content and replace the editor state (clears undo history). */
   const loadContent = async (targetHostsId = hostsId) => {
+    // An unlisten can still be pending after a selection change. Obsolete
+    // handlers must not mutate the current document or invalidate its read.
+    if (refHostsId.current !== targetHostsId) return
     const request = ++refContentRequest.current
-    const nextContent = normalizeLineEndings(
-      targetHostsId === '0'
-        ? await actions.getSystemHosts()
-        : await actions.getHostsContent(targetHostsId),
-    )
+    setLoadError(null)
+    if (refDocumentId.current !== targetHostsId) {
+      // A different entry must never display the previous entry's document,
+      // including when the new read fails. Keep this placeholder read-only.
+      refDocumentId.current = null
+      setContent('')
+      createEditorView('')
+    }
+    let nextContent: string
+    try {
+      nextContent = normalizeLineEndings(
+        targetHostsId === '0'
+          ? await actions.getSystemHosts()
+          : await actions.getHostsContent(targetHostsId),
+      )
+    } catch (error) {
+      if (refHostsId.current === targetHostsId && request === refContentRequest.current) {
+        setLoadError(getErrorMessage(error, refLang.current.fail))
+      }
+      return
+    }
 
     if (refHostsId.current !== targetHostsId || request !== refContentRequest.current) return
 
+    refDocumentId.current = targetHostsId
     setContent(nextContent)
     const view = createEditorView(nextContent)
     if (!view) return
 
-    const pendingFind = refPendingFind.current
-    if (pendingFind && pendingFind.item_id === targetHostsId) {
-      setSelection(pendingFind)
-      clearPendingFind()
+    const pendingFind = refPendingFind.current.get(targetHostsId)
+    if (pendingFind) {
+      setSelection(pendingFind.params)
+      clearPendingFind(targetHostsId)
     } else {
       view.contentDOM.blur()
     }
@@ -285,37 +316,51 @@ const HostsEditor = () => {
 
   // A group preview also changes when its references are edited in place.
   useEffect(() => {
+    // Reset the external editor and its error/status display for the selected document.
     loadContent(hostsId).catch((e) => console.error(e))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hostsId, groupMembers, groupStructure])
 
-  // Reconfigure read-only state via the compartment without rebuilding the editor.
-  useEffect(() => {
+  // Reconfigure before paint so the previous document cannot receive input
+  // under the newly selected id while its content is still loading.
+  useLayoutEffect(() => {
     const view = refView.current
     const built = refBuilt.current
     if (!view || !built) return
 
     view.dispatch({
-      effects: built.readOnlyCompartment.reconfigure(readOnlyExtensions(readOnly)),
+      effects: built.readOnlyCompartment.reconfigure(
+        readOnlyExtensions(readOnly || refDocumentId.current !== hostsId),
+      ),
     })
-  }, [readOnly])
+  }, [readOnly, hostsId])
+
+  const { run: refreshGroup, cancel: cancelGroupRefresh } = useDebounceFn(
+    (id: string) => {
+      if (refHostsId.current === id) loadContent(id).catch(console.error)
+    },
+    { wait: 50 },
+  )
+  useEffect(
+    () => () => {
+      cancelGroupRefresh()
+    },
+    [hostsId, cancelGroupRefresh],
+  )
+  const queueGroupRefresh = () => {
+    if (refHostsId.current !== hostsId || currentHosts?.type !== 'group') return
+    // Invalidate a read as soon as its sources change, before the debounce runs.
+    refContentRequest.current += 1
+    refreshGroup(hostsId)
+  }
 
   // A group has no cached entry file: reload its live referenced content when
   // any member changes. Do not reset an editable source's undo/caret on save.
-  useOnBroadcast(
-    events.hosts_content_changed,
-    () => {
-      if (currentHosts?.type === 'group') loadContent().catch(console.error)
-    },
-    [hostsId, currentHosts?.type],
-  )
-  useOnBroadcast(
-    events.hosts_content_changed_batch,
-    () => {
-      if (currentHosts?.type === 'group') loadContent().catch(console.error)
-    },
-    [hostsId, currentHosts?.type],
-  )
+  useOnBroadcast(events.hosts_content_changed, queueGroupRefresh, [hostsId, currentHosts?.type])
+  useOnBroadcast(events.hosts_content_changed_batch, queueGroupRefresh, [
+    hostsId,
+    currentHosts?.type,
+  ])
 
   useOnBroadcast(
     events.hosts_refreshed,
@@ -363,14 +408,22 @@ const HostsEditor = () => {
       // Cross-host jump: List broadcasts select_hosts to switch the active hosts,
       // but hostsId only updates on the next render. Stash params and let
       // loadContent apply them after setState.
-      if (params.item_id !== hostsId || !refView.current) {
-        clearPendingFind()
-        refPendingFind.current = params
-        refPendingFindTimer.current = window.setTimeout(clearPendingFind, 3000)
+      if (
+        params.item_id !== refHostsId.current ||
+        refDocumentId.current !== refHostsId.current ||
+        !refView.current
+      ) {
+        // Independent targets must not overwrite one another while their
+        // selection/load events cross. Each pending jump expires separately.
+        clearPendingFind(params.item_id)
+        refPendingFind.current.set(params.item_id, {
+          params,
+          timer: window.setTimeout(() => clearPendingFind(params.item_id), 3000),
+        })
         return
       }
 
-      clearPendingFind()
+      clearPendingFind(params.item_id)
       setSelection(params)
     },
     [hostsId],
@@ -390,6 +443,19 @@ const HostsEditor = () => {
   return (
     <div className={styles.root}>
       <div className={clsx(styles.editor, readOnly && styles.read_only)}>
+        {loadError && (
+          <div role="alert" className={styles.load_error}>
+            <span>{loadError}</span>
+            <button
+              type="button"
+              onClick={() => {
+                void loadContent()
+              }}
+            >
+              {lang.history_retry}
+            </button>
+          </div>
+        )}
         <div ref={refMount} className={styles.mount} />
       </div>
 

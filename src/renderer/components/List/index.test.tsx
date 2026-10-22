@@ -211,6 +211,27 @@ describe('List tray synchronization', () => {
     expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', false)
   })
 
+  it('does not invert a newer switch state after its own application was superseded', async () => {
+    const pending = deferred<string>()
+    mocks.applyList.mockReturnValue(pending.promise)
+    const view = render(<List />)
+    let toggle!: Promise<unknown>
+    await act(async () => {
+      toggle = Promise.resolve(latestHandler(events.toggle_item)('local-dev', true))
+    })
+    mocks.hostsData = {
+      ...mocks.hostsData,
+      list: mocks.hostsList.map((item) => ({ ...item, on: true })),
+    }
+    view.rerender(<List />)
+    await act(async () => {
+      pending.resolve('superseded')
+      await toggle
+    })
+    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', false)
+    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'local-dev', true)
+  })
+
   it('reports move failures without reloading or changing selection', async () => {
     mocks.actions.moveManyToTrashcan.mockRejectedValue({ reason: 'Corrupt trashcan' })
     render(<List />)

@@ -386,8 +386,10 @@ pub fn replace_one_in_manifest(
     }
 
     content.replace_range(start..end, &args.replace_to);
-    entries::write_entry(&state.paths.entries_dir, &args.item_id, &content)
+    let added = crate::hosts_apply::content_sync::persist_find_changes(state, [&*args.item_id])
         .map_err(|e| e.to_string())?;
+    entries::write_entry(&state.paths.entries_dir, &args.item_id, &content)
+        .map_err(|error| discard_failed_find_intents(state, &added, &[], error.to_string()))?;
     state.content_sync.mark(&args.item_id);
     drop(_guard);
     on_change(&args.item_id);
@@ -439,6 +441,11 @@ pub fn replace_all_in_manifest(
         return Err(error);
     }
 
+    let added = crate::hosts_apply::content_sync::persist_find_changes(
+        state,
+        pending_writes.iter().map(|(id, _, _)| id.as_str()),
+    )
+    .map_err(|e| e.to_string())?;
     let mut item_ids = Vec::new();
     let mut replaced_count = 0;
 
@@ -451,7 +458,8 @@ pub fn replace_all_in_manifest(
             replaced_count += count;
         }
         Ok::<_, String>(())
-    })();
+    })()
+    .map_err(|error| discard_failed_find_intents(state, &added, &item_ids, error));
     drop(_guard);
     // Publish every committed change, including a partial batch, before any
     // slow system apply or a destroyed find window can lose the notification.
@@ -464,6 +472,19 @@ pub fn replace_all_in_manifest(
         item_ids,
         replaced_count,
     })
+}
+
+fn discard_failed_find_intents(
+    state: &AppState,
+    added: &std::collections::HashSet<String>,
+    committed: &[String],
+    error: String,
+) -> String {
+    match crate::hosts_apply::content_sync::discard_unwritten_find_changes(state, added, committed)
+    {
+        Ok(()) => error,
+        Err(cleanup) => format!("{error}; could not remove unwritten sync intents: {cleanup}"),
+    }
 }
 
 fn replace_all_in_content(content: &str, regex: &Regex, replace_to: &str) -> (String, usize) {

@@ -417,11 +417,46 @@ pub async fn get_content_of_list(
 
 #[tauri::command]
 pub async fn set_list(state: State<'_, AppState>, args: Args) -> Result<Value, StorageError> {
-    set_list_inner(&state, args)
+    set_list_serialized(&state, args).await
+}
+
+async fn set_list_serialized(state: &AppState, args: Args) -> Result<Value, StorageError> {
+    let _apply = if let Some(generation) = list_application_generation(&args)? {
+        Some(
+            state
+                .application_recovery
+                .lock_generation(generation)
+                .await
+                .ok_or_else(stale_application)?,
+        )
+    } else {
+        None
+    };
+    set_list_inner(state, args)
+}
+
+fn list_application_generation(args: &Args) -> Result<Option<u64>, StorageError> {
+    args.get(2)
+        .map(|value| {
+            value
+                .as_u64()
+                .ok_or_else(|| StorageError::InvalidConfigValue {
+                    key: "set_list.args[2]".into(),
+                    reason: "expected an application generation (unsigned integer)".into(),
+                })
+        })
+        .transpose()
+}
+
+fn stale_application() -> StorageError {
+    StorageError::Conflict {
+        reason: "A newer hosts application superseded this operation. Reload and retry.".into(),
+    }
 }
 
 fn set_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
+    let generation = list_application_generation(&args)?;
     let mut args = args.into_iter();
     let list = args.next().unwrap_or(Value::Null);
     let expected = args.next();
@@ -436,6 +471,9 @@ fn set_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
         }
     };
     let _guard = state.lock_store()?;
+    if generation.is_some_and(|generation| generation != state.application_recovery.generation()) {
+        return Err(stale_application());
+    }
     let mut m = load_manifest(&state)?;
     if let Some(expected) = expected {
         let expected = expected
@@ -647,9 +685,13 @@ pub async fn get_hosts_content(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
-    let _guard = state.lock_store()?;
     let id = arg_str(&args, 0, "id")?;
-    let manifest = load_manifest(&state)?;
+    read_hosts_content(&state, id).map(|content| json!(content))
+}
+
+fn read_hosts_content(state: &AppState, id: &str) -> Result<String, StorageError> {
+    let _guard = state.lock_store()?;
+    let manifest = load_manifest(state)?;
     let node = manifest::find_node(&manifest.root, id);
     let content = if node
         .as_ref()
@@ -661,7 +703,7 @@ pub async fn get_hosts_content(
     } else {
         entries::read_entry(&state.paths.entries_dir, id)?
     };
-    Ok(json!(content))
+    Ok(content)
 }
 
 #[tauri::command]
@@ -745,9 +787,9 @@ pub async fn apply_hosts_selection<R: Runtime>(
 ) -> Result<Value, String> {
     state.require_data_dir_usable().map_err(|e| e.to_string())?;
     // args[0] = content (string, already aggregated by get_content_of_list).
-    // No further args are read — OS-native elevation handles credentials,
-    // so the legacy `{ sudo_pswd }` options object from the Electron port
-    // has been removed renderer-side.
+    // args[1] optionally identifies the saved list being explicitly recovered.
+    // An empty recovery selection preserves the existing system hosts file;
+    // an ordinary toggle to an empty selection still applies that selection.
     let content = match args.first().and_then(Value::as_str) {
         Some(s) => s.to_string(),
         None => {
@@ -759,16 +801,30 @@ pub async fn apply_hosts_selection<R: Runtime>(
         }
     };
 
-    let result = state
-        .application_recovery
-        .track_apply(async {
-            let _ = tray::refresh_title(&app, &state);
-            let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
-            apply_aggregated_content(&app, state.inner(), &content).await
-        })
-        .await;
+    let preserved = preserve_system_for_reapply(
+        state.inner(),
+        args.get(1).and_then(|options| options.get("saved_list")),
+    )
+    .map_err(|e| e.to_string())?;
+    let result = if preserved {
+        match hosts_apply::write::system_hosts_path() {
+            Ok(path) => preserve_hosts_selection(state.inner(), &path)
+                .await
+                .map_err(ApplyPipelineError::Apply),
+            Err(error) => Err(ApplyPipelineError::Apply(error)),
+        }
+    } else {
+        state
+            .application_recovery
+            .track_apply_with_generation(async {
+                let _ = tray::refresh_title(&app, &state);
+                let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
+                apply_aggregated_content(&app, state.inner(), &content).await
+            })
+            .await
+    };
     match result {
-        Ok(outcome) => {
+        Ok((outcome, generation)) => {
             let _ = tray::refresh_title(&app, &state);
             let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
             Ok(json!({
@@ -776,6 +832,8 @@ pub async fn apply_hosts_selection<R: Runtime>(
                 "old_content": outcome.previous_content,
                 "old_content_bytes": outcome.previous_bytes,
                 "new_content": outcome.new_content,
+                "preserved": preserved,
+                "generation": generation,
             }))
         }
         Err(ApplyPipelineError::Apply(e)) => {
@@ -785,6 +843,43 @@ pub async fn apply_hosts_selection<R: Runtime>(
             Ok(e.into_renderer_value())
         }
     }
+}
+
+pub(crate) async fn preserve_hosts_selection(
+    state: &AppState,
+    target: &std::path::Path,
+) -> Result<(hosts_apply::write::ApplyOutcome, u64), HostsApplyError> {
+    // Serialize the snapshot with writes, but do not begin an apply: this path
+    // changes neither the system file nor the pending/compensation state. If
+    // the subsequent metadata CAS fails, there is nothing to roll back here.
+    let _serial = state.application_recovery.lock_apply().await;
+    hosts_apply::write::preserve_system_hosts(target)
+        .map(|outcome| (outcome, state.application_recovery.generation()))
+}
+
+fn preserve_system_for_reapply(
+    state: &AppState,
+    saved_list: Option<&Value>,
+) -> Result<bool, StorageError> {
+    let Some(saved_list) = saved_list else {
+        return Ok(false);
+    };
+    let expected = saved_list
+        .as_array()
+        .ok_or_else(|| StorageError::InvalidConfigValue {
+            key: "saved_list".into(),
+            reason: "expected the saved array of host nodes".into(),
+        })?;
+    let _store = state.lock_store()?;
+    let manifest = load_manifest(state)?;
+    if crate::storage::tree_format::legacy_root_to_v5(expected)
+        != crate::storage::tree_format::legacy_root_to_v5(&manifest.root)
+    {
+        return Err(StorageError::Conflict {
+            reason: "The saved hosts list changed; retry recovery.".into(),
+        });
+    }
+    Ok(hosts_apply::aggregate::selected_source_ids(&manifest.root).is_empty())
 }
 
 fn read_application_recovery<R: Runtime>(
@@ -844,15 +939,35 @@ pub async fn finish_hosts_application<R: Runtime>(
     args: Args,
 ) -> Result<Value, String> {
     let expected = arg_str(&args, 0, "expected").map_err(|e| e.to_string())?;
-    let mut recovery = state.application_recovery.finish(expected).await;
-    if recovery.is_none() {
-        state.content_sync.mark_all();
-        let _ = hosts_apply::content_sync::apply_pending(&app, &state).await;
-        recovery = read_application_recovery(&app, &state);
-    }
+    let generation = args
+        .get(3)
+        .and_then(Value::as_u64)
+        .ok_or_else(|| "finish_hosts_application: missing application generation".to_string())?;
+    let applied_selection = args.get(1).and_then(Value::as_bool).unwrap_or(true);
+    let preserved_bytes = if applied_selection {
+        None
+    } else {
+        args.get(2)
+            .filter(|value| !value.is_null())
+            .map(|value| serde_json::from_value::<Vec<u8>>(value.clone()))
+            .transpose()
+            .map_err(|error| format!("invalid preserved hosts bytes: {error}"))?
+    };
+    let result = state
+        .application_recovery
+        .finish(expected, preserved_bytes.as_deref(), generation, async {
+            if applied_selection {
+                state.content_sync.mark_after_apply();
+            } else {
+                state.content_sync.mark_all();
+            }
+            let _ = hosts_apply::content_sync::apply_pending(&app, &state).await;
+            read_application_recovery(&app, &state)
+        })
+        .await;
     let _ = tray::refresh_title(&app, &state);
     let _ = app.emit("tray_list_updated", json!({ "_args": [] }));
-    Ok(json!(recovery))
+    Ok(json!(result))
 }
 
 /// Compensate an apply whose metadata could not be saved. Do not run the
@@ -886,7 +1001,16 @@ pub async fn restore_system_hosts<R: Runtime>(
     let previous_bytes_for_write = previous_bytes.clone();
     // Compensation and its recovery-state update belong to the same serialized
     // operation as ordinary writes. Release before draining deferred changes.
-    let apply_guard = state.application_recovery.lock_apply().await;
+    let generation = args
+        .get(4)
+        .and_then(Value::as_u64)
+        .ok_or_else(|| "restore_system_hosts: missing application generation".to_string())?;
+    let Some(apply_guard) = state.application_recovery.lock_generation(generation).await else {
+        return Ok(json!({
+            "success": false, "superseded": true,
+            "application_recovery": read_application_recovery(&app, &state),
+        }));
+    };
     let result = tauri::async_runtime::spawn_blocking(move || {
         hosts_apply::write::restore_system_hosts(
             &previous_for_write,
@@ -1286,10 +1410,11 @@ pub async fn find_replace_one<R: Runtime>(
         })?;
     let replaced = find::replace_one_in_manifest(state.inner(), request, |id| {
         emit_replaced_content(&app, id);
-    })?;
+    });
     // Report the committed replacement so the find window can refresh its
     // offsets. Application failures are exposed through the recovery notice.
-    let _ = crate::hosts_apply::content_sync::apply_pending(&app, state.inner()).await;
+    crate::hosts_apply::content_sync::schedule(&app);
+    let replaced = replaced?;
     Ok(json!(replaced))
 }
 
@@ -1322,7 +1447,7 @@ pub async fn find_replace_all<R: Runtime>(
         });
     // A later entry write can fail after earlier replacements were saved.
     // Reconcile those committed changes even when the batch reports an error.
-    let _ = crate::hosts_apply::content_sync::apply_pending(&app, state.inner()).await;
+    crate::hosts_apply::content_sync::schedule(&app);
     let outcome = outcome?;
     serde_json::to_value(outcome).map_err(|e| e.to_string())
 }

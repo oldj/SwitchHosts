@@ -68,10 +68,17 @@ pub(crate) fn applied_content_matches(content: &str, write_mode: &str) -> bool {
     let Ok(target) = system_hosts_path() else {
         return false;
     };
-    let Ok(bytes) = read_system_hosts_bytes(&target) else {
+    applied_content_matches_at(&target, content, write_mode)
+}
+
+pub(super) fn applied_content_matches_at(target: &Path, content: &str, write_mode: &str) -> bool {
+    if !matches!(write_mode, "append" | "overwrite") {
+        return false;
+    }
+    let Ok(bytes) = read_system_hosts_bytes(target) else {
         return false;
     };
-    let Ok(previous) = decode_system_hosts(&target, &bytes) else {
+    let Ok(previous) = decode_system_hosts(target, &bytes) else {
         return false;
     };
     let content = hosts_text::normalize(content);
@@ -83,7 +90,7 @@ pub(crate) fn applied_content_matches(content: &str, write_mode: &str) -> bool {
     bytes == restore_line_endings(&expected).as_bytes()
 }
 
-fn apply_at(
+pub(super) fn apply_at(
     target: &Path,
     aggregated_content: &str,
     write_mode: &str,
@@ -221,6 +228,19 @@ fn hosts_bytes_match(current: &[u8], expected: &str, snapshot: Option<&[u8]>) ->
 
 pub(crate) fn read_system_hosts(target: &Path) -> Result<String, HostsApplyError> {
     decode_system_hosts(target, &read_system_hosts_bytes(target)?)
+}
+
+/// A recovery with no selected sources acknowledges the existing file without
+/// running a write, history entry, elevation prompt or post-apply command.
+pub(crate) fn preserve_system_hosts(target: &Path) -> Result<ApplyOutcome, HostsApplyError> {
+    let previous_bytes = read_system_hosts_bytes(target)?;
+    let content = decode_system_hosts(target, &previous_bytes)?;
+    Ok(ApplyOutcome {
+        previous_content: content.clone(),
+        previous_bytes,
+        new_content: content,
+        unchanged: true,
+    })
 }
 
 fn decode_system_hosts(target: &Path, bytes: &[u8]) -> Result<String, HostsApplyError> {
@@ -474,6 +494,18 @@ fn strip_marker_lines(content_lf: &str) -> String {
 mod tests {
     use std::path::Path;
 
+    #[test]
+    fn preserved_recovery_verifies_original_bytes_including_bom_and_crlf() {
+        let bytes = b"\xef\xbb\xbf127.0.0.1 user.test\r\n";
+        let expected = super::hosts_text::decode_system(bytes).unwrap();
+        assert!(super::hosts_bytes_match(bytes, &expected, Some(bytes)));
+        assert!(!super::hosts_bytes_match(
+            b"changed",
+            &expected,
+            Some(bytes)
+        ));
+    }
+
     use super::{make_append_content, windows_hosts_path_from_windows_dir};
 
     /// Behaviour cases live in a fixture shared with the Playwright
@@ -540,6 +572,52 @@ mod tests {
 
 #[cfg(test)]
 mod compensation_tests {
+    #[test]
+    fn exact_match_check_agrees_with_native_writer_for_append_overwrite_and_encodings() {
+        let root = std::env::temp_dir().join(format!("swh-match-{}", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        let target = root.join("hosts");
+        for mode in ["append", "overwrite"] {
+            for original in [
+                "127.0.0.1 localhost\n",
+                "127.0.0.1 localhost\r\n",
+                "\u{feff}127.0.0.1 localhost\r\n",
+                "127.0.0.1 localhost\n# --- SWITCHHOSTS_CONTENT_START ---\nold\n# --- SWITCHHOSTS_CONTENT_END ---\n# external tail\n",
+            ] {
+                std::fs::write(&target, original).unwrap();
+                let content = "\u{feff}192.0.2.1 new.test\r\n";
+                assert!(!applied_content_matches_at(&target, content, mode));
+                let first = apply_at(&target, content, mode, &root.join("backups")).unwrap();
+                assert!(!first.unchanged);
+                assert!(applied_content_matches_at(&target, content, mode));
+                assert!(apply_at(&target, content, mode, &root.join("backups")).unwrap().unchanged);
+                if mode == "append" && original.contains("external tail") {
+                    assert!(std::fs::read_to_string(&target).unwrap().contains("external tail"));
+                }
+                // An external/post-apply change to the managed payload is not current.
+                let changed = std::fs::read_to_string(&target).unwrap().replace("new.test", "external.test");
+                std::fs::write(&target, changed).unwrap();
+                assert!(!applied_content_matches_at(&target, content, mode));
+            }
+        }
+        assert!(!applied_content_matches_at(&target, "", "invalid"));
+        // The existing writer treats an absent file as empty; its no-op check
+        // must use the same rule rather than inventing different semantics.
+        assert!(applied_content_matches_at(
+            &root.join("missing"),
+            "",
+            "overwrite"
+        ));
+        // NUL is an invalid path on every supported OS, unlike directory reads
+        // or permission bits which have platform/user-dependent behavior.
+        assert!(!applied_content_matches_at(
+            std::path::Path::new("invalid\0path"),
+            "",
+            "overwrite"
+        ));
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
     use super::*;
 
     #[test]

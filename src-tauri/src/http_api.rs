@@ -418,6 +418,20 @@ mod tests {
     }
 
     #[test]
+    fn refresh_apply_failure_keeps_committed_node_in_http_response() {
+        let node = json!({"id":"remote", "last_refresh_ms":123});
+        let value = refresh_result_value(Err(RefreshError::Apply {
+            message: "authorization cancelled".into(),
+            outcome: Box::new(RefreshOutcome::Updated { node: node.clone() }),
+        }));
+        assert_eq!(value["success"], false);
+        assert_eq!(value["code"], "apply_failed");
+        assert_eq!(value["changed"], true);
+        assert_eq!(value["data"], node);
+        assert_eq!(value["message"], "authorization cancelled");
+    }
+
+    #[test]
     fn refresh_result_value_passes_error_codes_through() {
         for (err, code) in [
             (RefreshError::InvalidId, "invalid_id"),

@@ -7,6 +7,7 @@
 }
 
 .editor {
+  position: relative;
   height: calc(100% - var(--swh-status-bar-height));
   box-sizing: border-box;
   background: var(--swh-main-bg);
@@ -111,5 +112,28 @@
         caret-color: transparent;
       }
     }
+  }
+}
+
+
+.load_error {
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  background: var(--swh-main-bg);
+  border-bottom: 1px solid var(--swh-border-color-0);
+
+  span {
+    overflow-wrap: anywhere;
+  }
+
+  button {
+    flex-shrink: 0;
+    cursor: pointer;
   }
 }

@@ -76,6 +76,7 @@ declare global {
       seedHistory: (count: number) => void
       failNextHistoryOperation: (command: string) => void
       getState: () => MockState
+      seedEmptySelectionRecovery: () => void
       getCalls: () => MockCall[]
       clearCalls: () => void
       failNextSaveAndRestore: (failure?: 'cancelled' | 'content_changed' | 'transport') => void

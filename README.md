@@ -68,6 +68,14 @@ For a complete manual backup, copy the whole `~/.SwitchHosts` folder. The in-app
 
 System hosts are written as UTF-8 without a BOM. Before converting an existing Windows ANSI or BOM-marked UTF-16 file, SwitchHosts saves its original bytes in `internal/histories/hosts-encoding-backups/` under the active data directory, even when history recording is disabled. These `.bin` backups are not removed by the history limit or included in the in-app JSON export.
 
+## HTTP refresh completion
+
+`GET /api/refresh?id=<entry-id>` waits for fetching and saving the remote entry and, when its content changes, for the backend to synchronize the active hosts configuration. Applying may require an OS authorization dialog. The request has no overall authorization timeout: it can remain pending until the user responds. A configured post-apply command can add up to 30 seconds.
+
+Script clients should set their own request timeout. A client timeout does not cancel backend work or prove that the refresh failed; inspect the entry and application recovery state in SwitchHosts before retrying. An `apply_failed` response can include `changed: true` and the refreshed node in `data`: the source was saved, but system application failed. If another application is already awaiting confirmation/recovery, content synchronization is deferred; refresh success is not a guarantee that deferred content is already active.
+
+Find replacements return after saving their source files. Pending find changes are recorded in `internal/pending-content-sync.json` before the source writes, retried against the saved configuration on startup, and cleared after successful reconciliation. This also works when no main window is open. If this pending record is malformed or has been replaced by a directory, use **Reapply Saved Settings** to reconcile the saved configuration; after successful reconciliation, the invalid record is preserved as `pending-content-sync.invalid-*` and find becomes available again. When the saved configuration has no selected sources, recovery first reads and preserves the current system hosts file without changing the existing recovery state. After acknowledgement, it still retries any outstanding reconciliation from an earlier confirmed selection apply, including clearing content after a concurrent deselection. A damaged dirty record alone cannot authorize that empty write. An ordinary toggle that disables the last source still applies the empty selection. Permission and transient I/O errors retain the original record until access is restored.
+
 ## Develop and build
 
 ### Prerequisites

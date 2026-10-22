@@ -35,7 +35,7 @@ vi.mock('@renderer/core/notify', () => ({
   showErrorNotification: mocks.notify,
   getErrorMessage: (error: any, fallback: string) => error.reason || error.message || fallback,
 }))
-import useHostsData from './useHostsData'
+import useHostsData, { ApplyResult } from './useHostsData'
 
 let disk: IHostsListObject[]
 let recovery: IApplicationRecovery | null
@@ -67,7 +67,7 @@ beforeEach(() => {
   mocks.getApplicationRecovery.mockImplementation(async () => structuredClone(recovery))
   mocks.finishHostsApplication.mockImplementation(async () => {
     recovery = null
-    return null
+    return { confirmed: true, application_recovery: null }
   })
   mocks.getList.mockImplementation(async () => structuredClone(disk))
   mocks.getBasicData.mockImplementation(async () => ({
@@ -89,6 +89,7 @@ beforeEach(() => {
       old_content: '# 中文\n',
       old_content_bytes: [35, 32, 214, 208, 206, 196, 13, 10],
       new_content: 'applied system file',
+      generation: 1,
     }
   })
   mocks.getContentOfList.mockResolvedValue('new managed content')
@@ -103,6 +104,116 @@ afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
 })
+
+it('recovers an empty saved selection without requesting an empty-system reconciliation', async () => {
+  recovery = { status: 'unknown' }
+  disk = [{ id: 'off', type: 'local', on: false }]
+  mocks.getContentOfList.mockResolvedValue('')
+  mocks.setSystemHosts.mockResolvedValue({
+    success: true,
+    preserved: true,
+    old_content: 'user hosts',
+    new_content: 'user hosts',
+    old_content_bytes: [1, 2, 3],
+    generation: 9,
+  })
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.reapplySavedList()).toBe(true)
+  })
+  expect(mocks.setSystemHosts).toHaveBeenCalledWith('', { saved_list: disk })
+  expect(mocks.finishHostsApplication).toHaveBeenCalledWith('user hosts', false, [1, 2, 3], 9)
+  expect(result.current.first.applicationRecovery).toBeNull()
+})
+
+it('allows finish to reconcile a confirmed ordinary selection apply', async () => {
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.applyList()).toBe(true)
+  })
+  expect(mocks.setSystemHosts).toHaveBeenCalledWith('new managed content')
+  expect(mocks.finishHostsApplication).toHaveBeenCalledWith('applied system file', true, null, 1)
+})
+
+it('does not downgrade an apply with a missing generation into an unguarded list save', async () => {
+  mocks.setSystemHosts.mockResolvedValue({
+    success: true,
+    old_content: 'before',
+    new_content: 'after',
+  })
+  mocks.setList.mockRejectedValue({ kind: 'invalid_config_value' })
+  mocks.restoreSystemHosts.mockRejectedValue(new Error('missing application generation'))
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.applyList()).toBeNull()
+  })
+  expect(mocks.setList.mock.calls[0]).toHaveLength(3)
+  expect(mocks.setList.mock.calls[0][2]).toBeUndefined()
+  expect(mocks.finishHostsApplication).not.toHaveBeenCalled()
+})
+
+it.each(['finish', 'restore'])(
+  'reloads the newer state when an old %s is superseded',
+  async (phase) => {
+    const newer = [{ ...list('original')[0], on: true }]
+    if (phase === 'finish') {
+      mocks.finishHostsApplication.mockImplementation(async () => {
+        disk = newer
+        recovery = null
+        return { confirmed: false, superseded: true, application_recovery: null }
+      })
+    } else {
+      mocks.setList.mockImplementation(async () => {
+        disk = newer
+        recovery = { status: 'applied', list: newer }
+        throw { kind: 'conflict' }
+      })
+      mocks.restoreSystemHosts.mockResolvedValue({ success: false, superseded: true })
+    }
+    const { result } = setup()
+    await act(async () => {
+      expect(await result.current.first.applyList()).toBe('superseded')
+    })
+    expect(result.current.first.hostsData.list).toEqual(newer)
+    expect(result.current.first.applicationRecovery).toEqual(recovery)
+    expect(
+      mocks.notify.mock.calls.some(
+        ([notification]) => notification.message === 'Application state unknown',
+      ),
+    ).toBe(false)
+    expect(mocks.broadcast).toHaveBeenCalledWith(events.set_hosts_on_status, 'original', true)
+    expect(mocks.broadcast).not.toHaveBeenCalledWith(events.set_hosts_on_status, 'original', false)
+  },
+)
+
+it.each<{ label: string; prior: IApplicationRecovery | null }>([
+  { label: 'none', prior: null },
+  { label: 'unknown', prior: { status: 'unknown' } },
+  {
+    label: 'applied',
+    prior: { status: 'applied', list: [{ id: 'earlier', type: 'local', on: true }] },
+  },
+])(
+  'preserves $label recovery when a read-only preservation encounters a list conflict',
+  async ({ prior }) => {
+    recovery = structuredClone(prior)
+    mocks.setSystemHosts.mockResolvedValue({
+      success: true,
+      preserved: true,
+      old_content: 'user hosts',
+      new_content: 'user hosts',
+    })
+    mocks.setList.mockRejectedValue({ kind: 'conflict' })
+    const { result } = setup()
+    await act(async () => {
+      expect(await result.current.first.reapplySavedList()).toBe(false)
+    })
+    expect(mocks.restoreSystemHosts).not.toHaveBeenCalled()
+    expect(mocks.finishHostsApplication).not.toHaveBeenCalled()
+    expect(result.current.first.applicationRecovery).toEqual(prior)
+  },
+)
 
 it('keeps the saved list visible until persistence succeeds and preserves concurrent trashcan updates', async () => {
   const pending = deferred()
@@ -350,7 +461,7 @@ it('waits for persistence before announcing a successful apply', async () => {
   const pending = deferred()
   mocks.setList.mockReturnValue(pending.promise)
   const { result } = setup()
-  let apply!: Promise<boolean | null>
+  let apply!: Promise<ApplyResult>
   await act(async () => {
     apply = result.current.first.applyList((items) => {
       items[0].on = true
@@ -371,7 +482,7 @@ it('restores the exact pre-apply system file before reporting a reverted switch'
   mocks.setList.mockRejectedValue(new Error('disk full'))
   mocks.restoreSystemHosts.mockReturnValue(restored.promise)
   const { store, result } = setup()
-  let apply!: Promise<boolean | null>
+  let apply!: Promise<ApplyResult>
   let done = false
   await act(async () => {
     apply = result.current.first.applyList((items) => {
@@ -388,6 +499,7 @@ it('restores the exact pre-apply system file before reporting a reverted switch'
     'applied system file',
     [{ ...list('original')[0], on: true }],
     [35, 32, 214, 208, 206, 196, 13, 10],
+    1,
   )
   expect(done).toBe(false)
   await act(async () => {
@@ -554,7 +666,7 @@ it('serializes a toggle and an independent edit using the newly saved selection'
   const pending = deferred<any>()
   mocks.setSystemHosts.mockReturnValue(pending.promise)
   const { result } = setup()
-  let apply!: Promise<boolean | null>, edit!: Promise<void>
+  let apply!: Promise<ApplyResult>, edit!: Promise<void>
   await act(async () => {
     apply = result.current.first.applyList((items) => {
       items[0].on = true
@@ -609,7 +721,7 @@ it('rejects an already queued tree snapshot after compensation fails', async () 
 it('keeps the application unknown if system hosts change between persistence and acknowledgement', async () => {
   mocks.finishHostsApplication.mockImplementation(async () => {
     recovery = { status: 'unknown' }
-    return recovery
+    return { confirmed: false, application_recovery: recovery }
   })
   const { result } = setup()
   await act(async () => {
@@ -641,8 +753,40 @@ it('keeps earlier recovery when a failed explicit reapply is compensated', async
   })
   const { result } = setup()
   await act(async () => {
-    expect(await result.current.first.reapplySavedList()).toBeNull()
+    expect(await result.current.first.reapplySavedList()).toBe(false)
   })
   expect(result.current.first.applicationRecovery).toEqual(previous)
   expect(result.current.first.hostsData.list[0].on).toBe(true)
+})
+
+it('reports a compensated selection as reverted even if content sync needs recovery', async () => {
+  mocks.setList.mockRejectedValue(new Error('disk full'))
+  mocks.restoreSystemHosts.mockImplementation(async () => {
+    recovery = { status: 'unknown' }
+    return { success: true, application_recovery: recovery }
+  })
+  const { result } = setup()
+  await act(async () => {
+    expect(
+      await result.current.first.applyList((items) => {
+        items[0].on = true
+        return items
+      }),
+    ).toBe(false)
+  })
+  expect(result.current.first.applicationRecovery?.status).toBe('unknown')
+  expect(result.current.first.hostsData.list).toEqual(list('original'))
+})
+
+it('keeps a confirmed toggle successful when only subsequent content sync fails', async () => {
+  mocks.finishHostsApplication.mockImplementation(async () => {
+    recovery = { status: 'unknown' }
+    return { confirmed: true, application_recovery: recovery }
+  })
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.applyList()).toBe(true)
+  })
+  expect(result.current.first.applicationRecovery?.status).toBe('unknown')
+  expect(mocks.notify).not.toHaveBeenCalled()
 })

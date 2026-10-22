@@ -70,6 +70,7 @@
     httpApiError: null,
     nextHttpApiError: null,
     applicationRecovery: null,
+    applicationGeneration: 0,
     nextSaveError: false,
     nextRestoreFailure: null,
     list: [
@@ -276,14 +277,25 @@
       .join('\n\n')
 
   // Simulate the backend's content-commit side effect. Events only update UI.
-  const syncChangedContent = (id) => {
-    if (state.applicationRecovery || !selectedSources(state.list).includes(id)) return
+  const pendingContentIds = new Set()
+  const drainContentChanges = (all = false, afterApply = false) => {
+    if (state.applicationRecovery) return
+    const selected = selectedSources(state.list)
+    const relevant = all || selected.some((id) => pendingContentIds.has(id))
+    pendingContentIds.clear()
+    if (!selected.length && !afterApply) return
+    if (!relevant) return
     const content = aggregateContent(state.list)
+    state.applicationGeneration++
     state.systemHosts =
       state.configs.write_mode === 'append'
         ? makeAppendContent(state.systemHosts, content)
         : normalizeLineEndings(content)
     dispatchEvent('system_hosts_updated', { _args: [] })
+  }
+  const syncChangedContent = (id) => {
+    pendingContentIds.add(id)
+    drainContentChanges()
   }
 
   // Mirrors `make_append_content` in src-tauri/src/hosts_apply/write.rs:
@@ -440,6 +452,12 @@
       state.nextHttpApiError = code
     },
     getState: () => clone(state),
+    seedEmptySelectionRecovery: () => {
+      for (const item of flatten(state.list)) item.on = false
+      state.applicationRecovery = { status: 'unknown' }
+      state.applicationGeneration++
+      dispatchEvent('tray_list_updated', { _args: [] })
+    },
     getCalls: () => clone(state.calls),
     seedHistory: (count) => {
       state.history = Array.from({ length: count }, (_, index) => ({
@@ -628,14 +646,33 @@
         }
         case 'get_application_recovery':
           return clone(state.applicationRecovery)
-        case 'finish_hosts_application':
-          state.applicationRecovery = state.systemHosts === params[0] ? null : { status: 'unknown' }
+        case 'finish_hosts_application': {
+          if (params[3] !== state.applicationGeneration) {
+            return {
+              confirmed: false,
+              superseded: true,
+              application_recovery: clone(state.applicationRecovery),
+            }
+          }
+          state.applicationGeneration++
+          const confirmed = state.systemHosts === params[0]
+          state.applicationRecovery = confirmed ? null : { status: 'unknown' }
+          if (confirmed) drainContentChanges(true, params[1] !== false)
           dispatchEvent('tray_list_updated', { _args: [] })
-          return clone(state.applicationRecovery)
+          return { confirmed, application_recovery: clone(state.applicationRecovery) }
+        }
         case 'restore_system_hosts': {
+          if (params[4] !== state.applicationGeneration) {
+            return {
+              success: false,
+              superseded: true,
+              application_recovery: clone(state.applicationRecovery),
+            }
+          }
           const failure = state.nextRestoreFailure
           state.nextRestoreFailure = null
           if (failure === 'transport') throw new Error('restore request did not reach backend')
+          state.applicationGeneration++
           if (failure === 'content_changed') state.systemHosts = '10.9.9.9 external.test\n'
           if (failure || state.systemHosts !== params[1]) {
             state.applicationRecovery =
@@ -652,12 +689,18 @@
           state.systemHosts = params[0]
           state.applicationRecovery = state.beforeApplyRecovery ?? null
           state.beforeApplyRecovery = null
+          drainContentChanges()
           dispatchEvent('tray_list_updated', { _args: [] })
           return { success: true, application_recovery: clone(state.applicationRecovery) }
         }
         case 'get_list':
           return clone(state.list)
         case 'set_list':
+          if (params.length > 2 && (!Number.isInteger(params[2]) || params[2] < 0)) {
+            throw { kind: 'invalid_config_value', key: 'set_list.args[2]' }
+          }
+          if (params[2] !== undefined && params[2] !== state.applicationGeneration)
+            throw { kind: 'conflict' }
           if (JSON.stringify(params[0]) === JSON.stringify(state.list)) return true
           if (state.storageReadOnly) throw new Error('storage is read-only')
           if (state.nextSaveError) {
@@ -714,7 +757,18 @@
           return aggregateContent(params[0] || state.list)
         case 'apply_hosts_selection': {
           const oldContent = state.systemHosts
+          if (params[1]?.saved_list && selectedSources(state.list).length === 0) {
+            return {
+              success: true,
+              old_content: oldContent,
+              new_content: oldContent,
+              preserved: true,
+              old_content_bytes: Array.from(new TextEncoder().encode(oldContent)),
+              generation: state.applicationGeneration,
+            }
+          }
           state.beforeApplyRecovery = clone(state.applicationRecovery)
+          state.applicationGeneration++
           state.applicationRecovery = { status: 'unknown' }
           dispatchEvent('tray_list_updated', { _args: [] })
           if (state.nextApplyResult) {
@@ -741,7 +795,12 @@
             if (state.configs.history_limit > 0)
               state.history = state.history.slice(-state.configs.history_limit)
           }
-          return { success: true, old_content: oldContent, new_content: state.systemHosts }
+          return {
+            success: true,
+            old_content: oldContent,
+            new_content: state.systemHosts,
+            generation: state.applicationGeneration,
+          }
         }
         case 'get_apply_history':
           return clone(state.history)

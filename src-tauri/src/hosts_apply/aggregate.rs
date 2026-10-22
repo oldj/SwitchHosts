@@ -88,7 +88,9 @@ pub fn aggregate_selected_content(
     Ok(content)
 }
 
-/// Read a group's live sources for previews, without changing member switches.
+/// Read a group's raw live sources for previews, without changing member switches.
+/// Like individual entry previews, this preserves source text. Normalization and
+/// duplicate-record removal belong to the final system-hosts application.
 pub(crate) fn group_content(
     list: &[Value],
     id: &str,

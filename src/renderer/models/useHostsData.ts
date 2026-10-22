@@ -16,6 +16,9 @@ import { useMemo } from 'react'
 import useI18n from './useI18n'
 
 export type ListChange = IHostsListObject[] | ((list: IHostsListObject[]) => IHostsListObject[])
+// Superseded operations reload authoritative state; callers must not roll back
+// their optimistic controls to values captured before a newer application.
+export type ApplyResult = boolean | null | 'superseded'
 // Cached only for rendering; the backend owns the session-wide recovery state.
 const applicationRecoveryAtom = atom<IApplicationRecovery | null>(null)
 
@@ -117,9 +120,32 @@ export default function useHostsData() {
     }
   }
 
-  const persist = async (list: IHostsListObject[], expected: IHostsListObject[]) => {
+  const reloadApplicationState = async () => {
+    const data = await actions.getBasicData()
+    setHostsData(data)
+    setApplicationRecovery(data.application_recovery ?? null)
+    // A memoized tree node may retain an optimistic switch even when its saved
+    // value is unchanged. Reset it from the new snapshot, never from !requested.
+    if (data.application_recovery?.status !== 'unknown') {
+      const list =
+        data.application_recovery?.status === 'applied' ? data.application_recovery.list : data.list
+      for (const item of flatten(list)) {
+        await Promise.resolve(agent.broadcast(events.set_hosts_on_status, item.id, item.on)).catch(
+          notify,
+        )
+      }
+    }
+  }
+
+  const persist = async (
+    list: IHostsListObject[],
+    expected: IHostsListObject[],
+    ...generation: [] | [number]
+  ) => {
     try {
-      await actions.setList(list, expected)
+      // Only metadata-only callers omit the argument. If an apply response is
+      // missing its generation, forward that invalid argument for rejection.
+      await actions.setList(list, expected, ...generation)
     } catch (error) {
       notify(error)
       // A delete/restore/import may have bypassed this window's queue. The
@@ -148,7 +174,7 @@ export default function useHostsData() {
     })
   }
 
-  const apply = (change: ListChange, resolving = false): Promise<boolean | null> => {
+  const apply = (change: ListChange, resolving = false): Promise<ApplyResult> => {
     const resolve = prepare(change, resolving)
     return enqueue(async () => {
       // Fail before changing the system file when the latest list cannot be
@@ -159,7 +185,9 @@ export default function useHostsData() {
       let result
       try {
         const content: string = await actions.getContentOfList(list)
-        result = await actions.setSystemHosts(content)
+        result = resolving
+          ? await actions.setSystemHosts(content, { saved_list: expected })
+          : await actions.setSystemHosts(content)
       } catch (error) {
         notify(error)
         return false
@@ -175,8 +203,13 @@ export default function useHostsData() {
         return false
       }
       try {
-        await persist(list, expected)
+        await persist(list, expected, result.generation)
       } catch {
+        if (result.preserved) {
+          // No system write occurred. A stale saved-list snapshot must not
+          // compensate (rewrite) the user's unchanged system file.
+          return false
+        }
         let recovery: IApplicationRecovery | null
         try {
           const restored = await actions.restoreSystemHosts(
@@ -184,10 +217,17 @@ export default function useHostsData() {
             result.new_content,
             list,
             result.old_content_bytes,
+            result.generation,
           )
+          if (restored.superseded) {
+            await reloadApplicationState()
+            return 'superseded'
+          }
           if (restored.success) {
             setApplicationRecovery(restored.application_recovery ?? null)
-            return restored.application_recovery ? null : false
+            // Compensation reverted this operation. A separate content-sync
+            // recovery must not keep its optimistic tree visible.
+            return false
           }
           // The backend re-reads system hosts before returning this view. In
           // particular, content_changed must never be presented as our apply.
@@ -209,15 +249,31 @@ export default function useHostsData() {
       }
       // Verifies the system content before clearing any prior pending state.
       // A metadata-only save never reaches this acknowledgement.
+      let confirmed = false
       let recovery: IApplicationRecovery | null
       try {
-        recovery = await actions.finishHostsApplication(result.new_content)
+        const finished: {
+          confirmed: boolean
+          superseded?: boolean
+          application_recovery: IApplicationRecovery | null
+        } = await actions.finishHostsApplication(
+          result.new_content,
+          !result.preserved,
+          result.preserved ? result.old_content_bytes : null,
+          result.generation,
+        )
+        if (finished.superseded) {
+          await reloadApplicationState()
+          return 'superseded'
+        }
+        confirmed = finished.confirmed
+        recovery = finished.application_recovery
       } catch (error) {
         notify(error)
         recovery = { status: 'unknown' }
       }
       setApplicationRecovery(recovery)
-      if (recovery) {
+      if (!confirmed) {
         showErrorNotification({ title: lang.fail, message: lang.hosts_application_unknown })
         return null
       }

@@ -413,6 +413,16 @@ pub fn run() {
             // expose hosts operations on it) — until the user resolves the
             // data location and the app restarts.
             if app_state.data_dir_recovery.is_none() {
+                // Find may have committed just before the previous process exited.
+                // This also runs with no main webview in lightweight mode.
+                match hosts_apply::content_sync::resume_saved_changes(&app_state) {
+                    Ok(()) => hosts_apply::content_sync::schedule(&app_handle),
+                    Err(error) => {
+                        log::warn!("pending content synchronization could not be read: {error}");
+                        app_state.content_sync.mark_all();
+                        app_state.application_recovery.finish_with(false);
+                    }
+                }
                 // Background scanner for remote-hosts auto refresh.
                 // Wakes every 60s, replaces `src/main/libs/cron.ts`.
                 refresh::start_background_scanner(app_handle.clone());
