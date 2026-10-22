@@ -13,6 +13,14 @@ pub enum RecoveryView {
     Unknown,
 }
 
+#[derive(Debug, Serialize)]
+pub struct FinishResult {
+    /// Whether the caller's apply was confirmed before reconciling newer content.
+    pub confirmed: bool,
+    pub superseded: bool,
+    pub application_recovery: Option<RecoveryView>,
+}
+
 struct Pending {
     view: RecoveryView,
     expected_content: String,
@@ -20,6 +28,7 @@ struct Pending {
 
 #[derive(Default)]
 struct RecoveryState {
+    generation: u64,
     pending: Option<Pending>,
     before_apply: Option<Pending>,
     requested: bool,
@@ -33,18 +42,29 @@ pub struct ApplicationRecovery {
 
 impl ApplicationRecovery {
     /// Backend callers keep this guard through snapshot, apply and commit (or
-    /// compensation). Renderer applies use the same lock in track_apply.
+    /// compensation). Renderer applies use the same lock in track_apply_with_generation.
     pub(crate) async fn lock_apply(&self) -> tokio::sync::MutexGuard<'_, ()> {
         self.apply_lock.lock().await
     }
 
-    /// Cover the write and its post-apply work with one pending state. In
-    /// particular, a destroyed renderer's delayed command must not register
-    /// another pending state after a newer renderer has completed recovery.
+    #[cfg(test)]
     pub async fn track_apply<T, E>(
         &self,
         apply: impl std::future::Future<Output = Result<T, E>>,
     ) -> Result<T, E> {
+        self.track_apply_with_generation(apply)
+            .await
+            .map(|(value, _)| value)
+    }
+
+    /// Cover the write and post-apply work with one pending state. Capture its
+    /// generation under the same lock so a delayed renderer can only persist,
+    /// acknowledge or compensate this application, even if a newer write has
+    /// identical content.
+    pub(crate) async fn track_apply_with_generation<T, E>(
+        &self,
+        apply: impl std::future::Future<Output = Result<T, E>>,
+    ) -> Result<(T, u64), E> {
         let _serial = self.lock_apply().await;
         self.begin();
         let result = apply.await;
@@ -53,17 +73,31 @@ impl ApplicationRecovery {
             // the caller revalidates it before publishing the error.
             self.apply_failed();
         }
-        result
+        result.map(|value| (value, self.generation()))
+    }
+
+    pub(crate) fn generation(&self) -> u64 {
+        self.state.lock().unwrap().generation
+    }
+
+    pub(crate) async fn lock_generation(
+        &self,
+        generation: u64,
+    ) -> Option<tokio::sync::MutexGuard<'_, ()>> {
+        let guard = self.lock_apply().await;
+        (self.generation() == generation).then_some(guard)
     }
 
     pub(crate) fn apply_failed(&self) {
         let mut state = self.state.lock().unwrap();
+        state.generation += 1;
         state.pending = state.before_apply.take();
     }
 
     /// Save the previous view before any write or snapshot can change it.
     pub fn begin(&self) {
         let mut state = self.state.lock().unwrap();
+        state.generation += 1;
         state.before_apply = state.pending.take();
         state.pending = Some(Self::unknown());
     }
@@ -77,6 +111,7 @@ impl ApplicationRecovery {
 
     pub fn record(&self, list: Vec<Value>, expected_content: String) {
         let mut state = self.state.lock().unwrap();
+        state.generation += 1;
         state.before_apply = None;
         state.pending = Some(Pending {
             view: RecoveryView::Applied { list },
@@ -99,6 +134,16 @@ impl ApplicationRecovery {
 
     pub fn is_pending(&self) -> bool {
         self.state.lock().unwrap().pending.is_some()
+    }
+
+    /// A storage failure needs a recovery entry point, but must not replace
+    /// another apply's snapshot or compensation state.
+    pub(crate) fn require_reconciliation(&self) {
+        let mut state = self.state.lock().unwrap();
+        if state.pending.is_none() {
+            state.generation += 1;
+            state.pending = Some(Self::unknown());
+        }
     }
 
     pub fn snapshot(&self, on_change: impl FnOnce()) -> Option<RecoveryView> {
@@ -133,9 +178,80 @@ impl ApplicationRecovery {
         (Some(pending.view.clone()), changed)
     }
 
-    pub fn finish(&self, expected_content: &str) -> Option<RecoveryView> {
-        let current = write::system_hosts_matches(expected_content);
-        self.finish_with(current)
+    pub async fn finish(
+        &self,
+        expected_content: &str,
+        preserved_bytes: Option<&[u8]>,
+        generation: u64,
+        reconcile: impl std::future::Future<Output = Option<RecoveryView>>,
+    ) -> FinishResult {
+        self.finish_generation_and_reconcile(
+            generation,
+            || write::system_hosts_matches_snapshot(expected_content, preserved_bytes),
+            reconcile,
+        )
+        .await
+    }
+
+    #[cfg(test)]
+    pub(super) async fn finish_and_reconcile(
+        &self,
+        verify: impl FnOnce() -> bool,
+        reconcile: impl std::future::Future<Output = Option<RecoveryView>>,
+    ) -> FinishResult {
+        self.finish_generation_and_reconcile(self.generation(), verify, reconcile)
+            .await
+    }
+
+    pub(super) async fn finish_generation_and_reconcile(
+        &self,
+        generation: u64,
+        verify: impl FnOnce() -> bool,
+        reconcile: impl std::future::Future<Output = Option<RecoveryView>>,
+    ) -> FinishResult {
+        let mut result = {
+            let _serial = self.lock_apply().await;
+            let mut state = self.state.lock().unwrap();
+            if state.generation != generation {
+                FinishResult {
+                    confirmed: false,
+                    superseded: true,
+                    application_recovery: state
+                        .pending
+                        .as_ref()
+                        .map(|pending| pending.view.clone()),
+                }
+            } else {
+                let confirmed = verify();
+                state.generation += 1;
+                state.before_apply = None;
+                state.pending = if confirmed {
+                    None
+                } else {
+                    Some(Self::unknown())
+                };
+                FinishResult {
+                    confirmed,
+                    superseded: false,
+                    application_recovery: state
+                        .pending
+                        .as_ref()
+                        .map(|pending| pending.view.clone()),
+                }
+            }
+        };
+        if result.confirmed {
+            result.application_recovery = reconcile.await;
+        }
+        result
+    }
+
+    #[cfg(test)]
+    async fn finish_checked(&self, verify: impl FnOnce() -> bool) -> Option<RecoveryView> {
+        // A delayed acknowledgement from another window must not clear the
+        // pending state of a native write whose post-apply work is still running.
+        let _serial = self.lock_apply().await;
+        self.finish_with(verify())
     }
 
     /// A successful compensation restores the recovery state from before
@@ -155,6 +271,7 @@ impl ApplicationRecovery {
 
     pub(crate) fn restored_with(&self, current: bool) {
         let mut state = self.state.lock().unwrap();
+        state.generation += 1;
         let previous = state.before_apply.take();
         state.pending = if current {
             previous
@@ -165,6 +282,7 @@ impl ApplicationRecovery {
 
     pub(crate) fn finish_with(&self, current: bool) -> Option<RecoveryView> {
         let mut state = self.state.lock().unwrap();
+        state.generation += 1;
         state.before_apply = None;
         state.pending = if current { None } else { Some(Self::unknown()) };
         state.pending.as_ref().map(|p| p.view.clone())
@@ -175,6 +293,77 @@ impl ApplicationRecovery {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[tokio::test]
+    async fn stale_finish_and_compensation_cannot_take_ownership_of_identical_newer_content() {
+        let recovery = ApplicationRecovery::default();
+        let (_, old) = recovery
+            .track_apply_with_generation(async { Ok::<_, ()>(()) })
+            .await
+            .unwrap();
+        let (_, newer) = recovery
+            .track_apply_with_generation(async { Ok::<_, ()>(()) })
+            .await
+            .unwrap();
+        assert_ne!(old, newer);
+        // Even if both operations wrote identical bytes, the earlier request
+        // must not verify/clear the newer pending state or run its reconciliation.
+        let finished = recovery
+            .finish_generation_and_reconcile(
+                old,
+                || panic!("stale acknowledgement must not inspect another apply's file"),
+                async { panic!("stale acknowledgement must not reconcile") },
+            )
+            .await;
+        assert!(finished.superseded);
+        assert!(!finished.confirmed);
+        assert!(recovery.is_pending());
+        assert!(recovery.lock_generation(old).await.is_none());
+        assert!(recovery.lock_generation(newer).await.is_some());
+        recovery
+            .finish_generation_and_reconcile(newer, || true, async { None })
+            .await;
+        let stale = recovery
+            .finish_generation_and_reconcile(old, || false, async { None })
+            .await;
+        assert!(stale.superseded);
+        assert!(stale.application_recovery.is_none());
+        assert!(!recovery.is_pending());
+    }
+
+    #[tokio::test]
+    async fn stale_finish_waits_for_newer_write_then_leaves_its_recovery_untouched() {
+        use std::sync::Arc;
+        let recovery = Arc::new(ApplicationRecovery::default());
+        let old = recovery.generation(); // read-only preservation
+        let (entered_tx, entered_rx) = tokio::sync::oneshot::channel();
+        let (resume_tx, resume_rx) = tokio::sync::oneshot::channel();
+        let writer = recovery.clone();
+        let writing = tokio::spawn(async move {
+            writer
+                .track_apply_with_generation(async {
+                    entered_tx.send(()).unwrap();
+                    resume_rx.await.unwrap();
+                    Ok::<_, ()>(())
+                })
+                .await
+                .unwrap()
+        });
+        entered_rx.await.unwrap();
+        let mut finish =
+            Box::pin(recovery.finish_generation_and_reconcile(old, || true, async { None }));
+        assert!(matches!(
+            std::future::Future::poll(
+                finish.as_mut(),
+                &mut std::task::Context::from_waker(std::task::Waker::noop())
+            ),
+            std::task::Poll::Pending
+        ));
+        resume_tx.send(()).unwrap();
+        writing.await.unwrap();
+        assert!(finish.await.superseded);
+        assert!(recovery.is_pending());
+    }
 
     #[tokio::test]
     async fn pending_precedes_pipeline_reads_and_preserves_compensation_snapshot() {
@@ -267,6 +456,65 @@ mod tests {
         recovery.finish_with(true);
         assert!(!recovery.take_request());
         assert!(!recovery.is_pending());
+    }
+
+    #[tokio::test]
+    async fn acknowledgement_waits_for_native_apply_before_verifying_and_clearing_recovery() {
+        use std::sync::{
+            atomic::{AtomicBool, Ordering},
+            Arc,
+        };
+        let recovery = Arc::new(ApplicationRecovery::default());
+        let (entered_tx, entered_rx) = tokio::sync::oneshot::channel();
+        let (release_tx, release_rx) = tokio::sync::oneshot::channel();
+        let writing = recovery.clone();
+        let apply = tokio::spawn(async move {
+            writing
+                .track_apply(async {
+                    entered_tx.send(()).unwrap();
+                    release_rx.await.unwrap();
+                    Ok::<_, ()>(())
+                })
+                .await
+        });
+        entered_rx.await.unwrap();
+        let verified = AtomicBool::new(false);
+        let mut acknowledgement = Box::pin(recovery.finish_checked(|| {
+            verified.store(true, Ordering::SeqCst);
+            true
+        }));
+        assert!(matches!(
+            std::future::Future::poll(
+                acknowledgement.as_mut(),
+                &mut std::task::Context::from_waker(std::task::Waker::noop()),
+            ),
+            std::task::Poll::Pending
+        ));
+        assert!(!verified.load(Ordering::SeqCst));
+        assert!(recovery.is_pending());
+        release_tx.send(()).unwrap();
+        apply.await.unwrap().unwrap();
+        assert_eq!(acknowledgement.await, None);
+        assert!(verified.load(Ordering::SeqCst));
+        assert!(!recovery.is_pending());
+    }
+
+    #[tokio::test]
+    async fn confirmed_apply_stays_successful_when_followup_sync_needs_recovery() {
+        let recovery = ApplicationRecovery::default();
+        recovery.begin();
+        let result = recovery
+            .finish_and_reconcile(|| true, async { recovery.finish_with(false) })
+            .await;
+        assert!(result.confirmed);
+        assert_eq!(result.application_recovery, Some(RecoveryView::Unknown));
+        let result = recovery
+            .finish_and_reconcile(|| false, async {
+                panic!("unconfirmed applications must not reconcile newer sources")
+            })
+            .await;
+        assert!(!result.confirmed);
+        assert_eq!(result.application_recovery, Some(RecoveryView::Unknown));
     }
 
     #[test]

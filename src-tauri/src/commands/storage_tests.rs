@@ -7,6 +7,175 @@ use std::sync::{
     Mutex,
 };
 
+#[test]
+fn empty_saved_recovery_preserves_system_but_an_explicit_empty_toggle_does_not() {
+    let f = Fixture::populated();
+    let saved = json!(f.state.read_manifest().unwrap().root);
+    assert!(preserve_system_for_reapply(&f.state, Some(&saved)).unwrap());
+    assert!(!preserve_system_for_reapply(&f.state, None).unwrap());
+    let target = f.state.paths.root.join("system-hosts-test");
+    let bytes = b"\xef\xbb\xbf127.0.0.1 custom.test\r\n";
+    std::fs::write(&target, bytes).unwrap();
+    let outcome = hosts_apply::write::preserve_system_hosts(&target).unwrap();
+    assert!(outcome.unchanged);
+    assert_eq!(outcome.previous_content, outcome.new_content);
+    assert_eq!(outcome.previous_bytes, bytes);
+    assert_eq!(std::fs::read(target).unwrap(), bytes);
+}
+
+#[test]
+fn recovery_checks_saved_sources_and_rejects_a_stale_list() {
+    let f = Fixture::populated();
+    let old = json!(f.state.read_manifest().unwrap().root);
+    let mut manifest = f.state.read_manifest().unwrap();
+    manifest
+        .root
+        .push(json!({"id":"group", "type":"group", "on":true, "include":["live"]}));
+    manifest.save(&f.state.paths).unwrap();
+    assert!(matches!(
+        preserve_system_for_reapply(&f.state, Some(&old)),
+        Err(StorageError::Conflict { .. })
+    ));
+    // A selected source with an empty file is still an intentional apply.
+    entries::write_entry(&f.state.paths.entries_dir, "live", "").unwrap();
+    assert!(!preserve_system_for_reapply(&f.state, Some(&json!(manifest.root))).unwrap());
+}
+
+#[tokio::test]
+async fn preserved_selection_keeps_recovery_when_metadata_save_conflicts() {
+    use crate::hosts_apply::recovery::RecoveryView;
+    for prior_applied in [false, true] {
+        let f = Fixture::populated();
+        let saved = f.state.read_manifest().unwrap().root;
+        let target = f.state.paths.root.join("preserved-hosts");
+        let original = "127.0.0.1 preserved.test\n";
+        std::fs::write(&target, original).unwrap();
+        let prior = if prior_applied {
+            let applied = vec![json!({"id":"earlier", "type":"local", "on":true})];
+            f.state
+                .application_recovery
+                .record(applied.clone(), original.into());
+            Some(RecoveryView::Applied { list: applied })
+        } else {
+            None
+        };
+        assert!(preserve_system_for_reapply(&f.state, Some(&json!(saved))).unwrap());
+        preserve_hosts_selection(&f.state, &target).await.unwrap();
+        // Another window changes metadata before the renderer persists its snapshot.
+        let mut newer = f.state.read_manifest().unwrap();
+        newer.root[0]["title"] = json!("Changed elsewhere");
+        newer.save(&f.state.paths).unwrap();
+        assert!(matches!(
+            set_list_inner(&f.state, vec![json!(saved), json!(saved)]),
+            Err(StorageError::Conflict { .. })
+        ));
+        assert_eq!(
+            f.state
+                .application_recovery
+                .inspect_and_notify(|expected| expected == original, || {}),
+            prior,
+        );
+        let unreadable = f.state.paths.root.join("directory-instead-of-hosts");
+        std::fs::create_dir(&unreadable).unwrap();
+        assert!(preserve_hosts_selection(&f.state, &unreadable)
+            .await
+            .is_err());
+        assert_eq!(
+            f.state
+                .application_recovery
+                .inspect_and_notify(|_| true, || {}),
+            prior
+        );
+        // A subsequent failed actual apply must still recover the same prior view.
+        let _: Result<(), ()> = f
+            .state
+            .application_recovery
+            .track_apply(async { Err(()) })
+            .await;
+        assert_eq!(
+            f.state
+                .application_recovery
+                .inspect_and_notify(|_| true, || {}),
+            prior
+        );
+        assert_eq!(std::fs::read_to_string(target).unwrap(), original);
+    }
+}
+
+#[tokio::test]
+async fn old_application_cannot_save_metadata_after_a_newer_apply_even_if_manifest_is_unchanged() {
+    let f = Fixture::populated();
+    let saved = f.state.read_manifest().unwrap().root;
+    f.state.application_recovery.begin();
+    let old = f.state.application_recovery.generation();
+    f.state.application_recovery.begin();
+    let newer = f.state.application_recovery.generation();
+    let mut proposed = saved.clone();
+    proposed[0]["on"] = json!(true);
+    assert!(matches!(
+        set_list_inner(&f.state, vec![json!(proposed), json!(saved), json!(old)]),
+        Err(StorageError::Conflict { .. })
+    ));
+    assert_eq!(f.state.read_manifest().unwrap().root, saved);
+    set_list_inner(&f.state, vec![json!(proposed), json!(saved), json!(newer)]).unwrap();
+    assert_eq!(f.state.read_manifest().unwrap().root[0]["on"], true);
+}
+
+#[tokio::test]
+async fn invalid_application_generation_never_falls_back_to_an_unguarded_metadata_save() {
+    let f = Fixture::populated();
+    let saved = f.state.read_manifest().unwrap().root;
+    let mut proposed = saved.clone();
+    proposed[0]["on"] = json!(true);
+    for invalid in [Value::Null, json!("1"), json!(-1), json!(1.5), json!(true)] {
+        assert!(matches!(
+            set_list_serialized(&f.state, vec![json!(proposed), json!(saved), invalid]).await,
+            Err(StorageError::InvalidConfigValue { .. })
+        ));
+        assert_eq!(f.state.read_manifest().unwrap().root, saved);
+    }
+    // Metadata-only callers omit the argument, as before.
+    set_list_inner(&f.state, vec![json!(proposed), json!(saved)]).unwrap();
+    assert_eq!(f.state.read_manifest().unwrap().root, proposed);
+}
+
+#[tokio::test]
+async fn queued_metadata_save_rechecks_generation_after_waiting_for_the_apply_lock() {
+    let f = Fixture::populated();
+    let saved = f.state.read_manifest().unwrap().root;
+    let mut proposed = saved.clone();
+    proposed[0]["on"] = json!(true);
+    f.state.application_recovery.begin();
+    let generation = f.state.application_recovery.generation();
+    let guard = f.state.application_recovery.lock_apply().await;
+    let mut save = Box::pin(set_list_serialized(
+        &f.state,
+        vec![json!(proposed), json!(saved), json!(generation)],
+    ));
+    assert!(matches!(
+        std::future::Future::poll(
+            save.as_mut(),
+            &mut std::task::Context::from_waker(std::task::Waker::noop())
+        ),
+        std::task::Poll::Pending
+    ));
+    f.state.application_recovery.begin();
+    drop(guard);
+    assert!(matches!(save.await, Err(StorageError::Conflict { .. })));
+    assert_eq!(f.state.read_manifest().unwrap().root, saved);
+    set_list_serialized(
+        &f.state,
+        vec![
+            json!(proposed),
+            json!(saved),
+            json!(f.state.application_recovery.generation()),
+        ],
+    )
+    .await
+    .unwrap();
+    assert_eq!(f.state.read_manifest().unwrap().root, proposed);
+}
+
 struct Fixture {
     state: AppState,
 }
@@ -31,6 +200,7 @@ impl Fixture {
                 config: Mutex::new(AppConfig::default()),
                 store_lock: Mutex::new(()),
                 application_recovery: Default::default(),
+                content_sync: Default::default(),
                 config_write_lock: Mutex::new(()),
                 update_check_lock: tokio::sync::Mutex::new(()),
                 is_will_quit: AtomicBool::new(false),
@@ -424,4 +594,41 @@ fn reapplying_saved_list_does_not_rewrite_unchanged_metadata() {
     edit[0]["title"] = json!("Changed");
     assert!(set_list_inner(&fixture.state, vec![json!(edit), json!(saved)]).is_err());
     assert_eq!(fixture.snapshot(), before);
+}
+
+#[test]
+fn group_content_command_reads_live_raw_sources_and_propagates_read_failures() {
+    let f = Fixture::empty();
+    f.state.config.lock().unwrap().remove_duplicate_records = true;
+    Manifest {
+        root: vec![
+            json!({"id":"a", "type":"local", "on":false}),
+            json!({"id":"b", "type":"remote", "on":false}),
+            json!({"id":"g", "type":"group", "include":["b","a","missing"]}),
+        ],
+        ..Default::default()
+    }
+    .save(&f.state.paths)
+    .unwrap();
+    for id in ["a", "b"] {
+        entries::write_entry(&f.state.paths.entries_dir, id, "127.0.0.1 repeated.test").unwrap();
+    }
+    // Preview describes source text, not the normalized/deduplicated system file.
+    assert_eq!(
+        read_hosts_content(&f.state, "g").unwrap(),
+        "127.0.0.1 repeated.test\n\n127.0.0.1 repeated.test"
+    );
+    assert_eq!(
+        read_hosts_content(&f.state, "a").unwrap(),
+        "127.0.0.1 repeated.test"
+    );
+    entries::write_entry(&f.state.paths.entries_dir, "b", "192.0.2.1 latest.test").unwrap();
+    assert!(read_hosts_content(&f.state, "g")
+        .unwrap()
+        .starts_with("192.0.2.1 latest.test"));
+    let path = entries::entry_path(&f.state.paths.entries_dir, "b").unwrap();
+    std::fs::remove_file(&path).unwrap();
+    std::fs::create_dir(path).unwrap();
+    assert!(read_hosts_content(&f.state, "g").is_err());
+    assert!(read_hosts_content(&f.state, "../invalid").is_err());
 }

@@ -39,6 +39,7 @@ pub struct AppState {
     pub paths: V5Paths,
     pub config: Mutex<AppConfig>,
     pub store_lock: Mutex<()>,
+    pub content_sync: crate::hosts_apply::content_sync::ContentSync,
     pub application_recovery: crate::hosts_apply::recovery::ApplicationRecovery,
     /// Serializes the entire `config_set` / `config_update` commit
     /// pipeline. Tauri runs `#[tauri::command] async fn`s concurrently
@@ -156,6 +157,7 @@ impl AppState {
             config: Mutex::new(config),
             store_lock: Mutex::new(()),
             application_recovery: Default::default(),
+            content_sync: Default::default(),
             config_write_lock: Mutex::new(()),
             update_check_lock: tokio::sync::Mutex::new(()),
             is_will_quit: AtomicBool::new(false),
@@ -228,6 +230,7 @@ mod tests {
             config: Mutex::new(AppConfig::default()),
             store_lock: Mutex::new(()),
             application_recovery: Default::default(),
+            content_sync: Default::default(),
             config_write_lock: Mutex::new(()),
             update_check_lock: tokio::sync::Mutex::new(()),
             is_will_quit: AtomicBool::new(false),

@@ -95,6 +95,11 @@ pub enum RefreshError {
     Fetch { message: String },
     /// Filesystem failure during the write or manifest update.
     Storage { message: String },
+    Apply {
+        message: String,
+        /// Fetch and storage succeeded; preserve their metadata for callers.
+        outcome: Box<RefreshOutcome>,
+    },
 }
 
 impl RefreshError {
@@ -113,6 +118,13 @@ impl RefreshError {
             ),
             RefreshError::Fetch { message } => ("fetch_failed", message),
             RefreshError::Storage { message } => ("storage_failed", message),
+            RefreshError::Apply { message, outcome } => {
+                let mut value = outcome.into_renderer_value();
+                value["success"] = json!(false);
+                value["code"] = json!("apply_failed");
+                value["message"] = json!(message);
+                return value;
+            }
         };
         json!({
             "success": false,
@@ -218,15 +230,42 @@ async fn refresh_one_inner<R: Runtime>(
         let _ = app.emit("hosts_content_changed", json!({ "_args": [id] }));
     }
 
-    if content_changed {
-        Ok(RefreshOutcome::Updated {
+    let outcome = if content_changed {
+        RefreshOutcome::Updated {
             node: updated_snapshot,
-        })
+        }
     } else {
-        Ok(RefreshOutcome::Unchanged {
+        RefreshOutcome::Unchanged {
             node: updated_snapshot,
-        })
+        }
+    };
+    // Do not hold the per-source fetch lock while awaiting system writes.
+    drop(_serialised);
+    // An unchanged fetch has no new application to report. Other producers
+    // own their pending sync; their failures must not relabel this refresh.
+    if emit_content_changed {
+        return apply_refreshed_content(
+            outcome,
+            crate::hosts_apply::content_sync::apply_pending(app, state),
+        )
+        .await;
     }
+    Ok(outcome)
+}
+
+async fn apply_refreshed_content(
+    outcome: RefreshOutcome,
+    apply: impl std::future::Future<Output = Result<(), crate::storage::StorageError>>,
+) -> Result<RefreshOutcome, RefreshError> {
+    if matches!(outcome, RefreshOutcome::Updated { .. }) {
+        if let Err(error) = apply.await {
+            return Err(RefreshError::Apply {
+                message: error.to_string(),
+                outcome: Box::new(outcome),
+            });
+        }
+    }
+    Ok(outcome)
 }
 
 struct RefreshSnapshot {
@@ -305,6 +344,9 @@ fn commit_refresh(
         manifest.save(&state.paths)
     })
     .map_err(storage_error)?;
+    if content_changed {
+        state.content_sync.mark(id);
+    }
     Ok((
         find_node(&manifest.root, id).expect("committed node exists"),
         content_changed,
@@ -344,7 +386,40 @@ async fn refresh_many<R: Runtime>(
         results.push((id, outcome));
     }
     emit_content_changed_batch(app, &changed_ids);
+    if changed_ids.is_empty() {
+        return results;
+    }
+    if let Err(error) = crate::hosts_apply::content_sync::apply_pending(app, state).await {
+        // Only sources participating in the selected configuration are affected.
+        // Keep successful fetch metadata, and never relabel unrelated disabled
+        // entries or existing fetch errors as failed applications.
+        let affected = state
+            .read_manifest()
+            .map(|manifest| crate::hosts_apply::aggregate::selected_source_ids(&manifest.root))
+            .ok();
+        // If selection cannot be read, its scope is unknown. Preserve the
+        // batch's apply failure on successful fetches instead of reporting success.
+        attach_apply_error(&mut results, affected.as_deref(), &error.to_string());
+    }
     results
+}
+
+fn attach_apply_error(
+    results: &mut [(String, Result<RefreshOutcome, RefreshError>)],
+    affected: Option<&[String]>,
+    message: &str,
+) {
+    for (id, result) in results {
+        if affected.is_none_or(|ids| ids.contains(id)) && result.is_ok() {
+            let Ok(outcome) = std::mem::replace(result, Err(RefreshError::InvalidId)) else {
+                unreachable!()
+            };
+            *result = Err(RefreshError::Apply {
+                message: message.to_string(),
+                outcome: Box::new(outcome),
+            });
+        }
+    }
 }
 
 fn emit_content_changed_batch<R: Runtime>(app: &AppHandle<R>, ids: &[String]) {
@@ -753,6 +828,85 @@ fn format_timestamp(ms: i64) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn batch_apply_failure_preserves_metadata_and_unrelated_successes() {
+        let node = serde_json::json!({"id":"active", "last_refresh_ms":123});
+        let mut results = vec![
+            (
+                "active".into(),
+                Ok(super::RefreshOutcome::Updated { node: node.clone() }),
+            ),
+            (
+                "disabled".into(),
+                Ok(super::RefreshOutcome::Unchanged {
+                    node: serde_json::json!({"id":"disabled"}),
+                }),
+            ),
+            ("failed".into(), Err(super::RefreshError::NoUrl)),
+        ];
+        super::attach_apply_error(
+            &mut results,
+            Some(&["active".into(), "failed".into()]),
+            "cancelled",
+        );
+        let (_, affected) = results.remove(0);
+        let value = affected.unwrap_err().into_renderer_value();
+        assert_eq!(value["data"], node);
+        assert_eq!(value["changed"], true);
+        assert_eq!(value["code"], "apply_failed");
+        assert!(results[0].1.is_ok());
+        assert!(matches!(results[1].1, Err(super::RefreshError::NoUrl)));
+    }
+
+    #[test]
+    fn batch_apply_error_is_not_lost_when_manifest_cannot_be_read() {
+        let fixture = Fixture::new();
+        std::fs::write(&fixture.0.paths.manifest_file, b"invalid json").unwrap();
+        let affected = fixture
+            .0
+            .read_manifest()
+            .map(|manifest| crate::hosts_apply::aggregate::selected_source_ids(&manifest.root))
+            .ok();
+        assert!(affected.is_none());
+        let mut results = vec![
+            (
+                "one".into(),
+                Ok(RefreshOutcome::Updated {
+                    node: json!({"id":"one"}),
+                }),
+            ),
+            (
+                "two".into(),
+                Ok(RefreshOutcome::Unchanged {
+                    node: json!({"id":"two"}),
+                }),
+            ),
+            ("bad".into(), Err(RefreshError::NoUrl)),
+        ];
+        attach_apply_error(&mut results, affected.as_deref(), "manifest unreadable");
+        for (_, result) in results.drain(..2) {
+            let value = result.unwrap_err().into_renderer_value();
+            assert_eq!(value["code"], "apply_failed");
+            assert!(value.get("data").is_some());
+        }
+        assert!(matches!(results[0].1, Err(RefreshError::NoUrl)));
+    }
+
+    #[tokio::test]
+    async fn unchanged_refresh_does_not_wait_for_or_inherit_other_pending_sync() {
+        let outcome = RefreshOutcome::Unchanged {
+            node: json!({"id":"unchanged"}),
+        };
+        let result = apply_refreshed_content(outcome, async {
+            panic!("an unchanged refresh must not run an unrelated apply")
+        })
+        .await
+        .unwrap()
+        .into_renderer_value();
+        assert_eq!(result["success"], true);
+        assert_eq!(result["changed"], false);
+    }
+
     use super::*;
 
     struct Fixture(AppState);
@@ -774,6 +928,7 @@ mod tests {
                 config: Mutex::new(crate::storage::AppConfig::default()),
                 store_lock: Mutex::new(()),
                 application_recovery: Default::default(),
+                content_sync: Default::default(),
                 config_write_lock: Mutex::new(()),
                 update_check_lock: tokio::sync::Mutex::new(()),
                 is_will_quit: AtomicBool::new(false),
@@ -787,6 +942,30 @@ mod tests {
         fn drop(&mut self) {
             let _ = std::fs::remove_dir_all(&self.0.paths.root);
         }
+    }
+
+    #[test]
+    fn refresh_commit_queues_sync_only_after_a_successful_content_change() {
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        Manifest { root: vec![json!({"id":"remote", "type":"remote", "url":"https://example.test/hosts", "on":false})], ..Default::default() }.save(&state.paths).unwrap();
+        entries::write_entry(&state.paths.entries_dir, "remote", "old").unwrap();
+        let snapshot = read_refresh_snapshot(state, "remote").unwrap();
+        commit_refresh(state, "remote", &snapshot, "old", None).unwrap();
+        assert!(!state.content_sync.is_pending());
+        let snapshot = read_refresh_snapshot(state, "remote").unwrap();
+        let blocker = state
+            .paths
+            .manifest_file
+            .with_file_name("manifest.json.tmp");
+        std::fs::create_dir(&blocker).unwrap();
+        assert!(commit_refresh(state, "remote", &snapshot, "new", None).is_err());
+        assert!(!state.content_sync.is_pending());
+        std::fs::remove_dir(&blocker).unwrap();
+        let snapshot = read_refresh_snapshot(state, "remote").unwrap();
+        commit_refresh(state, "remote", &snapshot, "new", None).unwrap();
+        // Its own switch is off, but it can be referenced by an enabled group.
+        assert!(state.content_sync.is_pending());
     }
 
     #[tokio::test]
@@ -804,7 +983,12 @@ mod tests {
         entries::write_entry(&state.paths.entries_dir, "legacy-domain", cached).unwrap();
         let before = std::fs::read(&state.paths.manifest_file).unwrap();
 
-        for url in ["github.com", "/hosts", "ftp://example.test/hosts", "https://"] {
+        for url in [
+            "github.com",
+            "/hosts",
+            "ftp://example.test/hosts",
+            "https://",
+        ] {
             let error = fetch_remote(url, state)
                 .await
                 .unwrap_err()

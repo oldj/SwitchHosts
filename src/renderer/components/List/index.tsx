@@ -53,10 +53,6 @@ const List = (props: Props) => {
   const [showList, setShowList] = useState<IHostsListObject[]>([])
   const latestHostsData = useRef(hostsData)
   const changeRevision = useRef(0)
-  const remoteContentApplyRef = useRef({
-    isApplying: false,
-    pendingIds: new Set<string>(),
-  })
 
   useEffect(() => {
     latestHostsData.current = hostsData
@@ -104,46 +100,6 @@ const List = (props: Props) => {
       agent.broadcast(events.set_hosts_on_status, id, on)
     } else if (success === false) {
       agent.broadcast(events.set_hosts_on_status, id, !on)
-    }
-  }
-
-  const applyChangedRemoteHostsToSystem = async (ids: string[]) => {
-    if (isTray) return
-
-    const applyState = remoteContentApplyRef.current
-    for (const id of ids) {
-      if (id) applyState.pendingIds.add(id)
-    }
-    if (applyState.pendingIds.size === 0 || applyState.isApplying) {
-      return
-    }
-
-    applyState.isApplying = true
-    try {
-      while (applyState.pendingIds.size > 0) {
-        const changedIds = Array.from(applyState.pendingIds)
-        applyState.pendingIds.clear()
-
-        const list: IHostsListObject[] = await actions.getList()
-        const hasEnabledChangedHosts = changedIds.some((id) => {
-          const hosts = findItemById(list, id)
-          return !!hosts?.on
-        })
-        if (!hasEnabledChangedHosts) continue
-
-        await applyList()
-      }
-    } catch (e) {
-      console.error(e)
-    } finally {
-      applyState.isApplying = false
-    }
-
-    // Race guard: an event arriving after `while` exits but before we
-    // clear `isApplying` would have early-returned (saw isApplying=true)
-    // and left ids stranded in pendingIds. Re-trigger if so.
-    if (applyState.pendingIds.size > 0) {
-      applyChangedRemoteHostsToSystem([]).catch((e) => console.error(e))
     }
   }
 
@@ -212,23 +168,10 @@ const List = (props: Props) => {
   useOnBroadcast(events.hosts_refreshed, () => {
     loadHostsData().catch((error: unknown) => console.error(error))
   })
-  useOnBroadcast(
-    events.hosts_content_changed,
-    (hostsId: string) => {
-      applyChangedRemoteHostsToSystem([hostsId]).catch((e) => console.error(e))
-    },
-    [currentHosts, hostsData, isTray, lang],
-  )
-
-  useOnBroadcast(
-    events.hosts_content_changed_batch,
-    (hostsIds: string[]) => {
-      applyChangedRemoteHostsToSystem(Array.isArray(hostsIds) ? hostsIds : []).catch((e) =>
-        console.error(e),
-      )
-    },
-    [currentHosts, hostsData, isTray, lang],
-  )
+  // Content persistence and application are backend-owned, including when
+  // lightweight mode destroys this window. Events only invalidate UI data.
+  useOnBroadcast(events.hosts_content_changed, () => loadHostsData().catch(console.error))
+  useOnBroadcast(events.hosts_content_changed_batch, () => loadHostsData().catch(console.error))
 
   useOnBroadcast(events.show_source, async (params: IFindShowSourceParam) => {
     agent.broadcast(events.select_hosts, params.item_id)

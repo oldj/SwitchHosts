@@ -356,7 +356,11 @@ impl MatchMetrics {
     }
 }
 
-pub fn replace_one_in_manifest(state: &AppState, args: FindReplaceOneArgs) -> Result<bool, String> {
+pub fn replace_one_in_manifest(
+    state: &AppState,
+    args: FindReplaceOneArgs,
+    on_change: impl FnOnce(&str),
+) -> Result<bool, String> {
     if args.start > args.end {
         return Err("find_replace_one: start must be <= end".to_string());
     }
@@ -382,8 +386,13 @@ pub fn replace_one_in_manifest(state: &AppState, args: FindReplaceOneArgs) -> Re
     }
 
     content.replace_range(start..end, &args.replace_to);
-    entries::write_entry(&state.paths.entries_dir, &args.item_id, &content)
+    let added = crate::hosts_apply::content_sync::persist_find_changes(state, [&*args.item_id])
         .map_err(|e| e.to_string())?;
+    entries::write_entry(&state.paths.entries_dir, &args.item_id, &content)
+        .map_err(|error| discard_failed_find_intents(state, &added, &[], error.to_string()))?;
+    state.content_sync.mark(&args.item_id);
+    drop(_guard);
+    on_change(&args.item_id);
     Ok(true)
 }
 
@@ -392,6 +401,7 @@ pub fn replace_all_in_manifest(
     keyword: &str,
     options: &FindOptions,
     replace_to: &str,
+    mut on_change: impl FnMut(&str),
 ) -> Result<FindReplaceAllOutcome, String> {
     if keyword.is_empty() {
         return Ok(FindReplaceAllOutcome {
@@ -431,20 +441,50 @@ pub fn replace_all_in_manifest(
         return Err(error);
     }
 
+    let added = crate::hosts_apply::content_sync::persist_find_changes(
+        state,
+        pending_writes.iter().map(|(id, _, _)| id.as_str()),
+    )
+    .map_err(|e| e.to_string())?;
     let mut item_ids = Vec::new();
     let mut replaced_count = 0;
 
-    for (id, next_content, count) in pending_writes {
-        entries::write_entry(&state.paths.entries_dir, &id, &next_content)
-            .map_err(|e| format!("write {id}: {e}"))?;
-        item_ids.push(id);
-        replaced_count += count;
+    let result = (|| {
+        for (id, next_content, count) in pending_writes {
+            entries::write_entry(&state.paths.entries_dir, &id, &next_content)
+                .map_err(|e| format!("write {id}: {e}"))?;
+            state.content_sync.mark(&id);
+            item_ids.push(id);
+            replaced_count += count;
+        }
+        Ok::<_, String>(())
+    })()
+    .map_err(|error| discard_failed_find_intents(state, &added, &item_ids, error));
+    drop(_guard);
+    // Publish every committed change, including a partial batch, before any
+    // slow system apply or a destroyed find window can lose the notification.
+    for id in &item_ids {
+        on_change(id);
     }
+    result?;
 
     Ok(FindReplaceAllOutcome {
         item_ids,
         replaced_count,
     })
+}
+
+fn discard_failed_find_intents(
+    state: &AppState,
+    added: &std::collections::HashSet<String>,
+    committed: &[String],
+    error: String,
+) -> String {
+    match crate::hosts_apply::content_sync::discard_unwritten_find_changes(state, added, committed)
+    {
+        Ok(()) => error,
+        Err(cleanup) => format!("{error}; could not remove unwritten sync intents: {cleanup}"),
+    }
 }
 
 fn replace_all_in_content(content: &str, regex: &Regex, replace_to: &str) -> (String, usize) {
@@ -799,6 +839,61 @@ mod tests {
 
     use crate::storage::{AppConfig, V5Paths};
 
+    fn replace_one_in_manifest(state: &AppState, args: FindReplaceOneArgs) -> Result<bool, String> {
+        super::replace_one_in_manifest(state, args, |_| {
+            assert!(state.content_sync.is_pending());
+            assert!(state.store_lock.try_lock().is_ok());
+        })
+    }
+
+    fn replace_all_in_manifest(
+        state: &AppState,
+        keyword: &str,
+        options: &FindOptions,
+        replace_to: &str,
+    ) -> Result<FindReplaceAllOutcome, String> {
+        super::replace_all_in_manifest(state, keyword, options, replace_to, |_| {
+            assert!(state.content_sync.is_pending());
+            assert!(state.store_lock.try_lock().is_ok());
+        })
+    }
+
+    #[test]
+    fn replace_all_publishes_committed_entries_even_if_a_later_write_fails() {
+        let state = temp_state("partial-replace-notification");
+        Manifest {
+            root: vec![
+                json!({"id":"first", "type":"local"}),
+                json!({"id":"second", "type":"local"}),
+            ],
+            ..Default::default()
+        }
+        .save(&state.paths)
+        .unwrap();
+        for id in ["first", "second"] {
+            entries::write_entry(&state.paths.entries_dir, id, "old.test").unwrap();
+        }
+        std::fs::create_dir(state.paths.entries_dir.join("second.hosts.tmp")).unwrap();
+        let mut notified = Vec::new();
+        let result =
+            super::replace_all_in_manifest(&state, "old", &FindOptions::default(), "new", |id| {
+                assert!(state.store_lock.try_lock().is_ok());
+                assert_eq!(
+                    entries::read_entry(&state.paths.entries_dir, id).unwrap(),
+                    "new.test"
+                );
+                notified.push(id.to_string());
+            });
+        assert!(result.is_err());
+        assert_eq!(notified, ["first"]);
+        assert!(state.content_sync.is_pending());
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "second").unwrap(),
+            "old.test"
+        );
+        std::fs::remove_dir_all(state.paths.root).unwrap();
+    }
+
     fn re(pattern: &str) -> Regex {
         Regex::new(pattern).unwrap()
     }
@@ -819,6 +914,7 @@ mod tests {
             config: Mutex::new(AppConfig::default()),
             store_lock: Mutex::new(()),
             application_recovery: Default::default(),
+            content_sync: Default::default(),
             config_write_lock: Mutex::new(()),
             update_check_lock: tokio::sync::Mutex::new(()),
             is_will_quit: AtomicBool::new(false),
@@ -912,6 +1008,7 @@ mod tests {
         .unwrap();
 
         assert!(replaced);
+        assert!(state.content_sync.is_pending());
         assert_eq!(
             entries::read_entry(&state.paths.entries_dir, "local-one").unwrap(),
             "前缀😀done tail"
@@ -1043,6 +1140,7 @@ mod tests {
 
         assert_eq!(outcome.item_ids, vec!["local-one"]);
         assert_eq!(outcome.replaced_count, 1);
+        assert!(state.content_sync.is_pending());
         assert_eq!(
             entries::read_entry(&state.paths.entries_dir, "local-one").unwrap(),
             "bar local"

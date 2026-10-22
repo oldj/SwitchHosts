@@ -34,7 +34,7 @@ export default {
   toggle_item: 'toggle_item',
   toggle_left_panel: 'toggle_left_panel',
   toggle_right_panel: 'toggle_right_panel',
-  tray_list_updated: 'tray:list_updated',
+  tray_list_updated: 'tray_list_updated',
   update_download_progress: 'update_download_progress',
   update_downloaded: 'update_downloaded',
 }

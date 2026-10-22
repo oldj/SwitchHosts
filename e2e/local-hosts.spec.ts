@@ -11,6 +11,36 @@ import {
 } from './support/test'
 
 test.describe('local hosts', () => {
+  test('saves a disabled group member and updates the active group without retoggling', async ({
+    page,
+  }) => {
+    const member = page.locator('[data-id="local-api"]')
+    await member.getByRole('switch').click()
+    await expect(member.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
+    const group = page.locator('[data-id="group-work"]')
+    await group.getByRole('switch').click()
+    await expect(group.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
+    await member.click()
+    const editor = page.locator('.cm-content')
+    await expect(editor).toContainText('api.local')
+    await clearMockCalls(page)
+    await editor.click()
+    await page.keyboard.press(`${selectAllModifier}+A`)
+    await page.keyboard.type('192.0.2.42 updated-group.local\n')
+    // Switch to the preview before the debounced save completes. The backend
+    // event must refresh it even though the edited member's switch stays off.
+    await group.click()
+    await expect(editor).toContainText('updated-group.local')
+    await expect(editor).toContainText('ads.example.test')
+    await expect
+      .poll(async () => (await getMockState(page)).systemHosts)
+      .toContain('192.0.2.42 updated-group.local')
+    await expect(member.getByRole('switch')).toHaveAttribute('aria-checked', 'false')
+    const calls = await getMockCalls(page)
+    expect(calls.some((call) => call.cmd === 'set_hosts_content')).toBe(true)
+    expect(calls.some((call) => call.cmd === 'apply_hosts_selection')).toBe(false)
+  })
+
   test('selects a local hosts entry and saves editor changes', async ({ page }) => {
     await page.locator('[data-id="local-dev"]').click()
 
@@ -226,6 +256,21 @@ test.describe('local hosts', () => {
   })
 })
 
+test('preserves system hosts when recovering an empty saved selection', async ({ page }) => {
+  const before = await getMockState(page)
+  await page.evaluate(() => window.__SWITCHHOSTS_E2E__.seedEmptySelectionRecovery())
+  const button = page.locator('#root').getByRole('button', { name: 'Reapply saved settings' })
+  await expect(button).toBeVisible()
+  await clearMockCalls(page)
+  await button.click()
+  await expect(button).toHaveCount(0)
+  const after = await getMockState(page)
+  expect(after.systemHosts).toBe(before.systemHosts)
+  expect(after.history).toEqual(before.history)
+  const finish = (await getMockCalls(page)).find((call) => call.cmd === 'finish_hosts_application')
+  expect(finish?.args?.args?.[1]).toBe(false)
+})
+
 test('keeps the applied snapshot until saved settings are explicitly reapplied', async ({
   page,
 }) => {
@@ -310,3 +355,110 @@ for (const failure of ['cancelled', 'transport'] as const) {
     )
   })
 }
+
+for (const finish of ['acknowledge', 'compensate'] as const) {
+  test(`mock retains saved content until pending apply can ${finish}`, async ({ page }) => {
+    const result = await page.evaluate(async (finish) => {
+      const invoke = (
+        window as unknown as {
+          __TAURI_INTERNALS__: { invoke: (cmd: string, args: { args: unknown[] }) => Promise<any> }
+        }
+      ).__TAURI_INTERNALS__.invoke
+      const before = window.__SWITCHHOSTS_E2E__.getState()
+      const applied = await invoke('apply_hosts_selection', { args: ['192.0.2.1 previous.test'] })
+      await invoke('set_hosts_content', { args: ['local-api', '192.0.2.99 deferred.test'] })
+      const pending = window.__SWITCHHOSTS_E2E__.getState().systemHosts
+      if (finish === 'acknowledge') {
+        await invoke('finish_hosts_application', {
+          args: [applied.new_content, true, null, applied.generation],
+        })
+      } else {
+        await invoke('restore_system_hosts', {
+          args: [applied.old_content, applied.new_content, before.list, null, applied.generation],
+        })
+      }
+      return { pending, after: window.__SWITCHHOSTS_E2E__.getState().systemHosts }
+    }, finish)
+    expect(result.pending).not.toContain('deferred.test')
+    expect(result.after).toContain('192.0.2.99 deferred.test')
+  })
+}
+
+test('rejects stale finish and compensation for identical newer applied content', async ({
+  page,
+}) => {
+  const result = await page.evaluate(async () => {
+    const invoke = (
+      window as unknown as {
+        __TAURI_INTERNALS__: { invoke: (cmd: string, args: { args: unknown[] }) => Promise<any> }
+      }
+    ).__TAURI_INTERNALS__.invoke
+    const before = window.__SWITCHHOSTS_E2E__.getState()
+    const content = '192.0.2.1 identical.test'
+    const first = await invoke('apply_hosts_selection', { args: [content] })
+    await invoke('apply_hosts_selection', { args: [content] })
+    const finished = await invoke('finish_hosts_application', {
+      args: [first.new_content, true, null, first.generation],
+    })
+    const restored = await invoke('restore_system_hosts', {
+      args: [first.old_content, first.new_content, before.list, null, first.generation],
+    })
+    return { finished, restored, content: window.__SWITCHHOSTS_E2E__.getState().systemHosts }
+  })
+  expect(result.finished.superseded).toBe(true)
+  expect(result.restored.superseded).toBe(true)
+  expect(result.content).toContain('identical.test')
+})
+
+test('keeps the newer enabled switch after a superseded finish reloads identical saved data', async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    const bridge = (
+      window as unknown as {
+        __TAURI_INTERNALS__: { invoke: (cmd: string, args: { args: unknown[] }) => Promise<any> }
+      }
+    ).__TAURI_INTERNALS__
+    const invoke = bridge.invoke.bind(bridge)
+    let replaced = false
+    bridge.invoke = async (cmd, args) => {
+      if (cmd === 'finish_hosts_application' && !replaced) {
+        replaced = true
+        // Another window reapplies the same saved selection before this
+        // window's acknowledgement reaches the backend.
+        const list = await invoke('get_list', { args: [] })
+        const content = await invoke('get_content_of_list', { args: [list] })
+        const newer = await invoke('apply_hosts_selection', { args: [content] })
+        await invoke('set_list', { args: [list, list, newer.generation] })
+        await invoke('finish_hosts_application', {
+          args: [newer.new_content, true, null, newer.generation],
+        })
+      }
+      return invoke(cmd, args)
+    }
+  })
+  const item = page.locator('[data-id="local-dev"]')
+  await item.getByRole('switch').click()
+  await expect
+    .poll(async () => {
+      const calls = await getMockCalls(page)
+      return calls.filter((call) => call.cmd === 'finish_hosts_application').length
+    })
+    .toBe(2)
+  await expect
+    .poll(async () => {
+      const calls = await getMockCalls(page)
+      const updates = calls
+        .filter(
+          (call) => call.cmd === 'plugin:event|emit' && call.args?.event === 'set_hosts_on_status',
+        )
+        .map((call) => (call.args?.payload as { _args: unknown[] })._args)
+        .filter((args) => args[0] === 'local-dev')
+      return updates.at(-1)?.[1]
+    })
+    .toBe(true)
+  await expect(item.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
+  expect((await getMockState(page)).list.find((item) => item.id === 'local-dev')?.on).toBe(true)
+  const calls = await getMockCalls(page)
+  expect(calls.some((call) => call.cmd === 'restore_system_hosts')).toBe(false)
+})

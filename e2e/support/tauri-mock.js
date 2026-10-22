@@ -70,6 +70,7 @@
     httpApiError: null,
     nextHttpApiError: null,
     applicationRecovery: null,
+    applicationGeneration: 0,
     nextSaveError: false,
     nextRestoreFailure: null,
     list: [
@@ -252,12 +253,50 @@
     }
   }
 
-  const aggregateContent = (items) =>
-    flatten(items)
-      .filter((item) => item.on && item.type !== 'group' && item.type !== 'folder')
-      .map((item) => state.contents[item.id] || '')
+  const selectedSources = (items, targetId) => {
+    const nodes = flatten(items)
+    const byId = new Map(nodes.map((node) => [node.id, node]))
+    const visited = new Set()
+    const sources = []
+    const visit = (id) => {
+      if (visited.has(id)) return
+      visited.add(id)
+      const item = byId.get(id)
+      if (!item || item.is_sys || id === '0') return
+      if (item.type === 'group') (item.include || []).forEach(visit)
+      else if (!item.type || ['local', 'remote'].includes(item.type)) sources.push(id)
+    }
+    if (targetId) visit(targetId)
+    else nodes.filter((item) => item.on).forEach((item) => visit(item.id))
+    return sources
+  }
+  const aggregateContent = (items, targetId) =>
+    selectedSources(items, targetId)
+      .map((id) => state.contents[id] || '')
       .filter(Boolean)
       .join('\n\n')
+
+  // Simulate the backend's content-commit side effect. Events only update UI.
+  const pendingContentIds = new Set()
+  const drainContentChanges = (all = false, afterApply = false) => {
+    if (state.applicationRecovery) return
+    const selected = selectedSources(state.list)
+    const relevant = all || selected.some((id) => pendingContentIds.has(id))
+    pendingContentIds.clear()
+    if (!selected.length && !afterApply) return
+    if (!relevant) return
+    const content = aggregateContent(state.list)
+    state.applicationGeneration++
+    state.systemHosts =
+      state.configs.write_mode === 'append'
+        ? makeAppendContent(state.systemHosts, content)
+        : normalizeLineEndings(content)
+    dispatchEvent('system_hosts_updated', { _args: [] })
+  }
+  const syncChangedContent = (id) => {
+    pendingContentIds.add(id)
+    drainContentChanges()
+  }
 
   // Mirrors `make_append_content` in src-tauri/src/hosts_apply/write.rs:
   // the managed section sits between the START/END markers; content after
@@ -349,6 +388,8 @@
         )
         .join('\n')
       if (state.contents[id]) state.contents[id] += '\n'
+      syncChangedContent(id)
+      dispatchEvent('hosts_content_changed', { _args: [id] })
       dispatchEvent('hosts_refreshed', { _args: [clone(item)] })
       return {
         success: item.domain_refresh_status === 'complete',
@@ -399,7 +440,9 @@
   window.__SWITCHHOSTS_E2E__ = {
     state,
     holdNextHttpApiSave: () => {
-      pendingHttpApiSave = new Promise((resolve) => { releaseHttpApiSave = resolve })
+      pendingHttpApiSave = new Promise((resolve) => {
+        releaseHttpApiSave = resolve
+      })
     },
     releaseHttpApiSave: () => {
       releaseHttpApiSave?.()
@@ -409,6 +452,12 @@
       state.nextHttpApiError = code
     },
     getState: () => clone(state),
+    seedEmptySelectionRecovery: () => {
+      for (const item of flatten(state.list)) item.on = false
+      state.applicationRecovery = { status: 'unknown' }
+      state.applicationGeneration++
+      dispatchEvent('tray_list_updated', { _args: [] })
+    },
     getCalls: () => clone(state.calls),
     seedHistory: (count) => {
       state.history = Array.from({ length: count }, (_, index) => ({
@@ -547,22 +596,36 @@
         case 'http_api_status':
           return {
             running: state.configs.http_api_on && !state.httpApiError,
-            address: state.configs.http_api_on && !state.httpApiError
-              ? `http://${state.configs.http_api_only_local ? '127.0.0.1' : '0.0.0.0'}:${state.configs.http_api_port}` : null,
+            address:
+              state.configs.http_api_on && !state.httpApiError
+                ? `http://${state.configs.http_api_only_local ? '127.0.0.1' : '0.0.0.0'}:${state.configs.http_api_port}`
+                : null,
             error: state.httpApiError,
           }
         case 'config_update':
-          if (pendingHttpApiSave && Object.keys(params[0] || {}).some((key) => key.startsWith('http_api_'))) {
+          if (
+            pendingHttpApiSave &&
+            Object.keys(params[0] || {}).some((key) => key.startsWith('http_api_'))
+          ) {
             const pending = pendingHttpApiSave
             pendingHttpApiSave = null
             await pending
           }
-          if (state.nextHttpApiError && Object.keys(params[0] || {}).some((key) => key.startsWith('http_api_'))) {
+          if (
+            state.nextHttpApiError &&
+            Object.keys(params[0] || {}).some((key) => key.startsWith('http_api_'))
+          ) {
             const code = state.nextHttpApiError
             state.nextHttpApiError = null
-            throw { kind: 'http_api', code, port: params[0].http_api_port || state.configs.http_api_port, reason: 'Mock API error' }
+            throw {
+              kind: 'http_api',
+              code,
+              port: params[0].http_api_port || state.configs.http_api_port,
+              reason: 'Mock API error',
+            }
           }
-          if (Object.keys(params[0] || {}).some((key) => key.startsWith('http_api_'))) state.httpApiError = null
+          if (Object.keys(params[0] || {}).some((key) => key.startsWith('http_api_')))
+            state.httpApiError = null
           Object.assign(state.configs, params[0] || {})
           return null
         case 'get_basic_data':
@@ -583,14 +646,33 @@
         }
         case 'get_application_recovery':
           return clone(state.applicationRecovery)
-        case 'finish_hosts_application':
-          state.applicationRecovery = state.systemHosts === params[0] ? null : { status: 'unknown' }
+        case 'finish_hosts_application': {
+          if (params[3] !== state.applicationGeneration) {
+            return {
+              confirmed: false,
+              superseded: true,
+              application_recovery: clone(state.applicationRecovery),
+            }
+          }
+          state.applicationGeneration++
+          const confirmed = state.systemHosts === params[0]
+          state.applicationRecovery = confirmed ? null : { status: 'unknown' }
+          if (confirmed) drainContentChanges(true, params[1] !== false)
           dispatchEvent('tray_list_updated', { _args: [] })
-          return clone(state.applicationRecovery)
+          return { confirmed, application_recovery: clone(state.applicationRecovery) }
+        }
         case 'restore_system_hosts': {
+          if (params[4] !== state.applicationGeneration) {
+            return {
+              success: false,
+              superseded: true,
+              application_recovery: clone(state.applicationRecovery),
+            }
+          }
           const failure = state.nextRestoreFailure
           state.nextRestoreFailure = null
           if (failure === 'transport') throw new Error('restore request did not reach backend')
+          state.applicationGeneration++
           if (failure === 'content_changed') state.systemHosts = '10.9.9.9 external.test\n'
           if (failure || state.systemHosts !== params[1]) {
             state.applicationRecovery =
@@ -607,12 +689,18 @@
           state.systemHosts = params[0]
           state.applicationRecovery = state.beforeApplyRecovery ?? null
           state.beforeApplyRecovery = null
+          drainContentChanges()
           dispatchEvent('tray_list_updated', { _args: [] })
           return { success: true, application_recovery: clone(state.applicationRecovery) }
         }
         case 'get_list':
           return clone(state.list)
         case 'set_list':
+          if (params.length > 2 && (!Number.isInteger(params[2]) || params[2] < 0)) {
+            throw { kind: 'invalid_config_value', key: 'set_list.args[2]' }
+          }
+          if (params[2] !== undefined && params[2] !== state.applicationGeneration)
+            throw { kind: 'conflict' }
           if (JSON.stringify(params[0]) === JSON.stringify(state.list)) return true
           if (state.storageReadOnly) throw new Error('storage is read-only')
           if (state.nextSaveError) {
@@ -657,15 +745,30 @@
         case 'get_data_dir':
           return state.dataDir
         case 'get_hosts_content':
-          return state.contents[params[0]] || ''
+          return flatten(state.list).find((item) => item.id === params[0])?.type === 'group'
+            ? aggregateContent(state.list, params[0])
+            : state.contents[params[0]] || ''
         case 'set_hosts_content':
           state.contents[params[0]] = params[1] || ''
+          dispatchEvent('hosts_content_changed', { _args: [params[0]] })
+          syncChangedContent(params[0])
           return true
         case 'get_content_of_list':
           return aggregateContent(params[0] || state.list)
         case 'apply_hosts_selection': {
           const oldContent = state.systemHosts
+          if (params[1]?.saved_list && selectedSources(state.list).length === 0) {
+            return {
+              success: true,
+              old_content: oldContent,
+              new_content: oldContent,
+              preserved: true,
+              old_content_bytes: Array.from(new TextEncoder().encode(oldContent)),
+              generation: state.applicationGeneration,
+            }
+          }
           state.beforeApplyRecovery = clone(state.applicationRecovery)
+          state.applicationGeneration++
           state.applicationRecovery = { status: 'unknown' }
           dispatchEvent('tray_list_updated', { _args: [] })
           if (state.nextApplyResult) {
@@ -692,7 +795,12 @@
             if (state.configs.history_limit > 0)
               state.history = state.history.slice(-state.configs.history_limit)
           }
-          return { success: true, old_content: oldContent, new_content: state.systemHosts }
+          return {
+            success: true,
+            old_content: oldContent,
+            new_content: state.systemHosts,
+            generation: state.applicationGeneration,
+          }
         }
         case 'get_apply_history':
           return clone(state.history)

@@ -51,9 +51,8 @@
 //! already — the cron scanner in refresh.rs drives exactly this path —
 //! so the handler can await the real outcome and report `changed` /
 //! `fetch_failed` back to the caller instead of a blind `ok`. Applying
-//! the new content to the system `hosts` file still happens the usual
-//! way: `refresh_one` emits `hosts_content_changed`, and List's
-//! subscriber re-applies when the node is switched on.
+//! the new content to the system hosts file is also backend-owned and works
+//! without a main window. Content-change events only refresh UI views.
 
 use std::sync::Mutex;
 
@@ -416,6 +415,20 @@ mod tests {
             unchanged,
             json!({ "success": true, "changed": false, "data": node })
         );
+    }
+
+    #[test]
+    fn refresh_apply_failure_keeps_committed_node_in_http_response() {
+        let node = json!({"id":"remote", "last_refresh_ms":123});
+        let value = refresh_result_value(Err(RefreshError::Apply {
+            message: "authorization cancelled".into(),
+            outcome: Box::new(RefreshOutcome::Updated { node: node.clone() }),
+        }));
+        assert_eq!(value["success"], false);
+        assert_eq!(value["code"], "apply_failed");
+        assert_eq!(value["changed"], true);
+        assert_eq!(value["data"], node);
+        assert_eq!(value["message"], "authorization cancelled");
     }
 
     #[test]
