@@ -8,7 +8,7 @@ let view: EditorView | undefined
 afterEach(() => view?.destroy())
 
 describe('comment URL recognition', () => {
-  it('limits links to comments, including inline comments, and keeps source offsets', () => {
+  it('limits links to hash comments, including inline comments, and keeps source offsets', () => {
     const line =
       '127.0.0.1 example.test # 文档 https://example.test/a?q=1&b=2#part http://localhost:8080/'
     const links = getCommentLinks(line)
@@ -19,6 +19,7 @@ describe('comment URL recognition', () => {
     for (const link of links) expect(line.slice(link.from, link.to)).toBe(link.url)
     expect(getCommentLinks('https://example.test/')).toEqual([])
     expect(getCommentLinks('https://example.test/#fragment')).toEqual([])
+    expect(getCommentLinks('127.0.0.1 localhost ; https://example.test/#fragment')).toEqual([])
     expect(getCommentLinks('# javascript:alert(1) file:///etc/hosts https://')).toEqual([])
   })
 

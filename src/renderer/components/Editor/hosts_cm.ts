@@ -55,17 +55,23 @@ class BoundaryLabel extends WidgetType {
 const IP_RE = /^(\s*)([\w.:%]+)/
 
 const commentLineDeco = Decoration.line({ class: 'hl-comment' })
+const commentMarkDeco = Decoration.mark({ class: 'hl-comment' })
 const errorLineDeco = Decoration.line({ class: 'hl-error' })
+const errorMarkDeco = Decoration.mark({ class: 'hl-error' })
 const ipMarkDeco = Decoration.mark({ class: 'hl-ip' })
 
 function buildDecorations(view: EditorView): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>()
   const doc = view.state.doc
 
+  let lastLine = 0
   for (const { from, to } of view.visibleRanges) {
-    let pos = from
-    while (pos <= to) {
+    for (let pos = from; pos <= to;) {
       const line = doc.lineAt(pos)
+      pos = line.to + 1
+      // CodeMirror may split one long line across multiple visible ranges.
+      if (line.number === lastLine) continue
+      lastLine = line.number
       const text = line.text
 
       if (text.length > 0) {
@@ -88,20 +94,23 @@ function buildDecorations(view: EditorView): DecorationSet {
           )
         } else if (isHostsCommentLine(text)) {
           builder.add(line.from, line.from, commentLineDeco)
-        } else if (!isValidHostsLine(text)) {
-          builder.add(line.from, line.from, errorLineDeco)
         } else {
-          const m = text.match(IP_RE)
-          if (m) {
-            const ipStart = line.from + m[1].length
-            const ipEnd = ipStart + m[2].length
+          const commentStart = text.search(/[#;]/)
+          const ipMatch = isValidHostsLine(text) && text.match(IP_RE)
+          if (ipMatch) {
+            const ipStart = line.from + ipMatch[1].length
+            const ipEnd = ipStart + ipMatch[2].length
             builder.add(ipStart, ipEnd, ipMarkDeco)
+          } else if (commentStart >= 0) {
+            builder.add(line.from, line.from + commentStart, errorMarkDeco)
+          } else {
+            builder.add(line.from, line.from, errorLineDeco)
+          }
+          if (commentStart >= 0) {
+            builder.add(line.from + commentStart, line.to, commentMarkDeco)
           }
         }
       }
-
-      if (line.to >= to) break
-      pos = line.to + 1
     }
   }
 
@@ -268,8 +277,9 @@ export function buildExtensions({
       },
     }),
     keymap.of([...defaultKeymap, ...historyKeymap]),
-    hostsHighlighter,
+    // Keep the link mark inside the comment mark so hover styles reach the URL text.
     commentLinks(isMac, onOpenUrl),
+    hostsHighlighter,
     selectedText,
     hostsTheme,
     EditorView.updateListener.of((u) => {

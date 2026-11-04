@@ -13,7 +13,7 @@ interface CommentLink {
   url: string
 }
 
-/** Offsets are relative to the line; only text after the first # is a comment. */
+/** Link offsets are relative to the line. Only hash comments support opening URLs. */
 export function getCommentLinks(line: string): CommentLink[] {
   const commentStart = line.indexOf('#')
   if (commentStart < 0) return []
