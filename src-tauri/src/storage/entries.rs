@@ -34,7 +34,7 @@ pub fn entry_path(entries_dir: &Path, id: &str) -> Result<PathBuf, StorageError>
     Ok(entries_dir.join(format!("{id}.hosts")))
 }
 
-fn validate_id(id: &str) -> Result<(), StorageError> {
+pub(crate) fn validate_id(id: &str) -> Result<(), StorageError> {
     if id.is_empty()
         || id.contains('/')
         || id.contains('\\')

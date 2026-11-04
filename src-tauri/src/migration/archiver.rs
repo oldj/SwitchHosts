@@ -50,17 +50,32 @@ pub fn add_if_exists(plan: &mut ArchivePlan, source: PathBuf, label: &str) {
     }
 }
 
-/// Execute the plan: move everything into the archive dir, then drop
+#[derive(Clone, Copy, serde::Serialize)]
+pub enum ArchiveMode {
+    #[serde(rename = "rename_or_copy")]
+    Move,
+    #[serde(rename = "copy")]
+    CopyFiles,
+}
+
+/// Archive the selected files or directories, then write
 /// an `archive-metadata.json` recording the operation. Returns the
 /// archive dir name (e.g. `migration-1775872800`) for the caller to
 /// log or return to the renderer.
-pub fn execute(plan: &ArchivePlan) -> Result<String, StorageError> {
+pub fn execute(plan: &ArchivePlan, mode: ArchiveMode) -> Result<String, StorageError> {
     std::fs::create_dir_all(&plan.archive_dir)
         .map_err(|e| StorageError::io(plan.archive_dir.display().to_string(), e))?;
 
     let mut metadata_sources = Vec::with_capacity(plan.entries.len());
     for entry in &plan.entries {
-        move_or_copy(&entry.source, &entry.dest)?;
+        match mode {
+            ArchiveMode::Move => move_or_copy(&entry.source, &entry.dest)?,
+            ArchiveMode::CopyFiles => {
+                let bytes = std::fs::read(&entry.source)
+                    .map_err(|e| StorageError::io(entry.source.display().to_string(), e))?;
+                atomic_write(&entry.dest, &bytes)?;
+            }
+        }
         metadata_sources.push(json!({
             "label": entry.label,
             "source_path": entry.source.display().to_string(),
@@ -71,7 +86,7 @@ pub fn execute(plan: &ArchivePlan) -> Result<String, StorageError> {
         "format": "switchhosts-archive-metadata",
         "schemaVersion": 1,
         "archived_at_ms": now_ms(),
-        "mode": "rename_or_copy",
+        "mode": mode,
         "sources": metadata_sources,
     });
     let bytes = serde_json::to_vec_pretty(&metadata)

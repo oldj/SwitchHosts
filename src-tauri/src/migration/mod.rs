@@ -6,7 +6,8 @@
 //! 1. If `~/.SwitchHosts/manifest.json` already exists, we assume v5 is
 //!    already live and do nothing.
 //! 2. Otherwise, look for legacy PotDb data at `~/.SwitchHosts/{data,
-//!    config}`. If none is found, this is a fresh v5 install.
+//!    config}`, respecting Electron’s separate data directory setting.
+//!    Settings alone do not commit the migration.
 //! 3. Otherwise, read the legacy store, write every v5 file in
 //!    dependency order, and only then archive the legacy directories
 //!    into `~/.SwitchHosts/v4/migration-<timestamp>/`.
@@ -23,6 +24,7 @@ pub mod archiver;
 pub mod potdb;
 
 use serde_json::Value;
+use std::path::Path;
 
 use crate::storage::{
     atomic::atomic_write, config::AppConfig, entries, manifest::Manifest, paths::V5Paths,
@@ -39,6 +41,8 @@ pub enum MigrationOutcome {
     AlreadyMigrated,
     /// No legacy PotDb data on disk. Fresh v5 install.
     FreshInstall,
+    /// The v4 data source is unavailable. Leave it eligible for a later startup.
+    Deferred,
     /// Migration ran successfully.
     Applied {
         entries_written: usize,
@@ -50,6 +54,17 @@ pub enum MigrationOutcome {
 /// Run migration if needed. Errors out if anything fails mid-flight —
 /// the caller (bootstrap) converts this into a top-level app error.
 pub fn run_if_needed(paths: &V5Paths) -> Result<MigrationOutcome, StorageError> {
+    // An explicitly selected v5 root has its own store. Only follow Electron's
+    // per-user preference when upgrading into the default v5 root.
+    let config_dir = if paths.root == crate::storage::paths::default_root()? {
+        dirs::config_dir()
+    } else {
+        None
+    };
+    migrate(paths, config_dir.as_deref())
+}
+
+fn migrate(paths: &V5Paths, config_dir: Option<&Path>) -> Result<MigrationOutcome, StorageError> {
     if paths.manifest_file.exists() {
         log::info!(
             "manifest.json already exists at {} — skipping PotDb migration",
@@ -58,23 +73,42 @@ pub fn run_if_needed(paths: &V5Paths) -> Result<MigrationOutcome, StorageError> 
         return Ok(MigrationOutcome::AlreadyMigrated);
     }
 
-    let layout = potdb::PotDbLayout::at(paths.root.clone());
-    if !layout.has_legacy_data() {
-        log::info!(
-            "no legacy PotDb data found under {} — fresh v5 install",
-            paths.root.display()
-        );
-        return Ok(MigrationOutcome::FreshInstall);
+    let mut layout = potdb::PotDbLayout::at(&paths.root);
+    if let Some(dir) = config_dir {
+        match potdb::electron_data_root(&dir.join("SwitchHosts/swh_local/dict/local.json")) {
+            Ok(Some(root)) => layout.swhdb = root.join("data"),
+            Ok(None) => {}
+            Err(e) => {
+                log::warn!("cannot determine the v4 data location: {e}; deferring migration");
+                return defer(paths, &layout);
+            }
+        }
     }
 
-    log::info!(
-        "legacy PotDb detected at {} — migrating to v5 format",
-        paths.root.display()
-    );
+    let external_store = layout.swhdb != paths.root.join("data");
+    let snapshot = match potdb::read_potdb(&layout) {
+        Err(e) if external_store => {
+            log::warn!("cannot read external v4 store: {e}; deferring migration");
+            return defer(paths, &layout);
+        }
+        result => result?,
+    };
+    let Some(snapshot) = snapshot else {
+        let has_preferences = layout.cfgdb.join("dict/cfg.json").is_file();
+        if !has_preferences && !external_store && !layout.swhdb.exists() {
+            return Ok(MigrationOutcome::FreshInstall);
+        }
+        log::warn!(
+            "v4 store missing or incomplete at {}; leaving migration pending",
+            layout.swhdb.display()
+        );
+        return defer(paths, &layout);
+    };
 
-    let snapshot = potdb::read_potdb(&layout)?;
+    log::info!("migrating legacy PotDb at {}", layout.swhdb.display());
+    let config = migrate_config(paths, &layout)?;
 
-    // ---- 1. entries/<id>.hosts ----
+    // ---- entries/<id>.hosts ----
     let mut entries_written = 0usize;
     for (id, content) in &snapshot.hosts_content {
         // The system node owns id "0" but never had a stored content
@@ -86,52 +120,55 @@ pub fn run_if_needed(paths: &V5Paths) -> Result<MigrationOutcome, StorageError> 
         entries_written += 1;
     }
 
-    // ---- 2. trashcan.json ----
+    // ---- trashcan.json ----
     let trashcan = Trashcan {
         items: snapshot.trashcan.clone(),
         ..Default::default()
     };
     trashcan.save(&paths.trashcan_file)?;
 
-    // ---- 3. internal/config.json ----
-    // Legacy cfg.json has `env: "PROD"` which isn't in our AppConfig —
-    // serde drops unknown keys by default, so that's fine. Fields we
-    // care about either survive the round-trip or fall back to their
-    // default via `#[serde(default)]` on AppConfig.
-    let config = match serde_json::from_value::<AppConfig>(snapshot.config.clone()) {
-        Ok(c) => c,
-        Err(e) => {
-            log::warn!(
-                "legacy config had unexpected shape ({e}); falling back to defaults for any missing keys."
-            );
-            AppConfig::default()
-        }
-    };
-    config.save(&paths.config_file)?;
-
-    // ---- 4. internal/histories/system-hosts.json ----
+    // ---- internal/histories/system-hosts.json ----
     let mut history = snapshot.history;
     crate::hosts_apply::history::trim(&mut history, config.history_limit);
-    let history_items = history.len();
-    if history_items > 0 {
-        let history_file = paths.histories_dir.join("system-hosts.json");
+    let history_file = paths.histories_dir.join("system-hosts.json");
+    // A deferred migration may resume after v5 has recorded history of its own.
+    let history_items = if history.is_empty()
+        || history_file
+            .try_exists()
+            .map_err(|e| StorageError::io(history_file.display().to_string(), e))?
+    {
+        0
+    } else {
         let payload = serde_json::to_vec_pretty(&history)
             .map_err(|e| StorageError::serialize(history_file.display().to_string(), e))?;
         atomic_write(&history_file, &payload)?;
-    }
+        history.len()
+    };
 
-    // ---- 5. manifest.json (commit marker) ----
+    // ---- manifest.json (commit marker) ----
     let manifest = Manifest {
         root: coerce_root(&snapshot.tree),
         ..Default::default()
     };
     manifest.save(paths)?;
 
-    // ---- 6. archive legacy directories ----
+    // ---- archive legacy directories ----
     let mut plan = archiver::new_plan(&paths.root);
-    archiver::add_if_exists(&mut plan, layout.swhdb.clone(), "data");
-    archiver::add_if_exists(&mut plan, layout.cfgdb.clone(), "config");
-    let archive_dir_name = archiver::execute(&plan)?;
+    let mode = if external_store {
+        // A v4 data path may traverse symlinks inside config/. Back up just
+        // the known preferences file without moving any part of that path.
+        archiver::add_if_exists(
+            &mut plan,
+            layout.cfgdb.join("dict/cfg.json"),
+            "config/dict/cfg.json",
+        );
+        archiver::ArchiveMode::CopyFiles
+    } else {
+        archiver::add_if_exists(&mut plan, layout.swhdb, "data");
+        archiver::add_if_exists(&mut plan, layout.cfgdb, "config");
+        archiver::ArchiveMode::Move
+    };
+    let archive_dir_name = archiver::execute(&plan, mode)?;
 
     log::info!(
         "done. wrote {entries_written} entries file(s), archived legacy to v4/{archive_dir_name}/"
@@ -144,6 +181,34 @@ pub fn run_if_needed(paths: &V5Paths) -> Result<MigrationOutcome, StorageError> 
     })
 }
 
+fn defer(paths: &V5Paths, layout: &potdb::PotDbLayout) -> Result<MigrationOutcome, StorageError> {
+    if layout.cfgdb.join("dict/cfg.json").is_file() && !paths.config_file.exists() {
+        migrate_config(paths, layout)?;
+    }
+    Ok(MigrationOutcome::Deferred)
+}
+
+/// Settings and hosts may arrive on different startups. Once the user has
+/// v5 settings, a retry must keep their edits (including the history limit).
+fn migrate_config(paths: &V5Paths, layout: &potdb::PotDbLayout) -> Result<AppConfig, StorageError> {
+    if paths
+        .config_file
+        .try_exists()
+        .map_err(|e| StorageError::io(paths.config_file.display().to_string(), e))?
+    {
+        return AppConfig::load_checked(&paths.config_file);
+    }
+    let config = match layout.read_config()? {
+        Some(value) => serde_json::from_value(value).unwrap_or_else(|e| {
+            log::warn!("legacy config had unexpected shape ({e}); using defaults");
+            AppConfig::default()
+        }),
+        None => AppConfig::default(),
+    };
+    config.save(&paths.config_file)?;
+    Ok(config)
+}
+
 /// Shallow sanity pass: strip values that aren't JSON objects (defensive
 /// — tree.json is normally well-formed but a hand-edited legacy file
 /// could smuggle in e.g. a stray `null`). Everything else is passed
@@ -152,3 +217,6 @@ pub fn run_if_needed(paths: &V5Paths) -> Result<MigrationOutcome, StorageError> 
 fn coerce_root(raw: &[Value]) -> Vec<Value> {
     raw.iter().filter(|v| v.is_object()).cloned().collect()
 }
+
+#[cfg(test)]
+mod tests;

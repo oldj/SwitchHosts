@@ -239,6 +239,8 @@ fn import_preserves_local_history_even_when_backup_contains_history() {
 fn migration_caps_active_history_but_preserves_original_archive() {
     let f = Fixture::new();
     let paths = &f.0.paths;
+    // Model a first upgrade; this fixture normally seeds a live v5 config.
+    std::fs::remove_file(&paths.config_file).unwrap();
     let legacy = paths.root.join("data/collection/history");
     std::fs::create_dir_all(legacy.join("data")).unwrap();
     std::fs::create_dir_all(paths.root.join("config/dict")).unwrap();
