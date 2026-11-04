@@ -81,7 +81,26 @@ pub fn aggregate_selected_content(
     paths: &V5Paths,
     remove_duplicate_records: bool,
 ) -> Result<String, StorageError> {
-    let mut content = read_sources(&selected_source_ids(list), paths, true)?;
+    aggregate_with_overrides(list, paths, remove_duplicate_records, &HashMap::new())
+}
+
+pub(crate) fn aggregate_with_overrides(
+    list: &[Value],
+    paths: &V5Paths,
+    remove_duplicate_records: bool,
+    overrides: &HashMap<String, String>,
+) -> Result<String, StorageError> {
+    let mut content = selected_source_ids(list)
+        .iter()
+        .map(|id| {
+            let source = match overrides.get(id) {
+                Some(content) => content.clone(),
+                None => entries::read_entry(&paths.entries_dir, id)?,
+            };
+            Ok(crate::hosts_text::normalize(&source))
+        })
+        .collect::<Result<Vec<_>, StorageError>>()?
+        .join("\n\n");
     if remove_duplicate_records {
         content = remove_duplicate_records_pass(&content);
     }

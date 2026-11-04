@@ -181,6 +181,15 @@ it.each(['success', 'failure'])(
   },
 )
 
+it('refreshes the selected entry’s rule count after its draft is committed in a batch', async () => {
+  const local = { id: 'local', type: 'local' as const }
+  mocks.actions.getHostsContent.mockResolvedValueOnce(content(1)).mockResolvedValue(content(2))
+  setup(local)
+  await waitFor(() => expect(readCount()).toBe('Rules1'))
+  await act(async () => mocks.handlers.get('hosts_content_changed_batch')?.(['other', local.id]))
+  expect(readCount()).toBe('Rules2')
+})
+
 it('ignores a pending count read after selecting a different item', async () => {
   const older = deferred<string>()
   const newer = deferred<string>()

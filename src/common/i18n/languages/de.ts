@@ -10,6 +10,15 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    'Diese Aktion wurde übersprungen, weil ein vorheriger Speichervorgang fehlgeschlagen ist. Prüfen Sie den Fehler und versuchen Sie es erneut.',
+  editor_draft_pending: 'Noch nicht angewendet',
+  editor_draft_apply: 'Anwenden',
+  editor_draft_discard: 'Entwurf verwerfen',
+  editor_draft_apply_hint:
+    'Änderungen sind als Entwurf vorgemerkt und noch nicht in der Quelldatei gespeichert. Mit Anwenden oder {0} werden sie gespeichert und angewendet. Das gilt auch beim Verlassen des Editors innerhalb dieses Fensters, beim Wechsel zu einem anderen Eintrag oder beim Umschalten eines Hosts- oder Gruppenschalters.',
+  editor_draft_discard_confirm:
+    'Diesen Entwurf verwerfen und den gespeicherten Inhalt wiederherstellen? Änderungen im Entwurf gehen verloren.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Verwalteter Anfang',
   hosts_managed_end: 'Verwaltetes Ende',

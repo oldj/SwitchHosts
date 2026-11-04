@@ -4,4 +4,9 @@
   line-height: var(--swh-status-bar-height);
   background: var(--swh-status-bar-bg);
   font-size: var(--swh-status-bar-font-size);
+  align-items: center;
+}
+
+.draftButton {
+  height: calc(var(--swh-status-bar-height) - 2px);
 }

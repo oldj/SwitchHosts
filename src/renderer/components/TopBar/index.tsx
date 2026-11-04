@@ -202,6 +202,7 @@ const TopBar = (props: IProps) => {
             <Divider orientation="vertical" my={6} mx={4} />
             <ActionIcon
               aria-label="Minimize"
+              data-draft-action="preserve"
               variant="subtle"
               color="gray"
               onClick={() => getCurrentWindow().minimize()}
@@ -218,6 +219,7 @@ const TopBar = (props: IProps) => {
             </ActionIcon>
             <ActionIcon
               aria-label="Close window"
+              data-draft-action="preserve"
               variant="subtle"
               color="gray"
               onClick={() => actions.closeMainWindow()}

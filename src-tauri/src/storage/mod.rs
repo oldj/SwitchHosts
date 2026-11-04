@@ -25,6 +25,14 @@ pub use trashcan::Trashcan;
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::{Mutex, MutexGuard};
 
+fn read_optional(path: &std::path::Path) -> Result<Option<Vec<u8>>, StorageError> {
+    match std::fs::read(path) {
+        Ok(bytes) => Ok(Some(bytes)),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(StorageError::io(path.display().to_string(), error)),
+    }
+}
+
 /// Process-wide shared state held by Tauri as `State<'_, AppState>`.
 ///
 /// `store_lock` serializes every read-modify-write cycle that touches

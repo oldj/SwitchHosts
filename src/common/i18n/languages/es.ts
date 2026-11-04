@@ -52,6 +52,15 @@ export default {
     'Selecciona las configuraciones referenciadas por los grupos seleccionados.',
   import_application_recovery:
     'Resuelve la operación pendiente del archivo hosts del sistema antes de importar.',
+  editor_draft_queue_skipped:
+    'Se omitió esta acción porque falló un guardado anterior. Revisa el error e inténtalo de nuevo.',
+  editor_draft_pending: 'Pendiente de aplicar',
+  editor_draft_apply: 'Aplicar',
+  editor_draft_discard: 'Descartar borrador',
+  editor_draft_apply_hint:
+    'Los cambios se conservan como borrador y aún no se han guardado en el archivo de origen. Haz clic en Aplicar o pulsa {0} para guardarlos y aplicarlos. También se aplican al salir del editor dentro de esta ventana, seleccionar otra entrada o activar o desactivar un hosts o grupo.',
+  editor_draft_discard_confirm:
+    '¿Descartar este borrador y restaurar el contenido guardado? Se perderán los cambios del borrador.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Inicio del bloque gestionado',
   hosts_managed_end: 'Fin del bloque gestionado',

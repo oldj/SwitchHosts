@@ -47,6 +47,15 @@ export default {
   import_reference_error: 'O backup contém referências a grupos ausentes ou circulares.',
   import_dependency_error: 'Selecione as configurações referenciadas pelos grupos selecionados.',
   import_application_recovery: 'Resolva a operação pendente no hosts do sistema antes de importar.',
+  editor_draft_queue_skipped:
+    'Esta ação foi ignorada porque uma gravação anterior falhou. Verifique o erro e tente novamente.',
+  editor_draft_pending: 'Pendente de aplicação',
+  editor_draft_apply: 'Aplicar',
+  editor_draft_discard: 'Descartar rascunho',
+  editor_draft_apply_hint:
+    'As alterações são mantidas como rascunho e ainda não foram salvas no arquivo de origem. Clique em Aplicar ou pressione {0} para salvar e aplicar. Elas também são aplicadas ao tirar o foco do editor nesta janela, selecionar outra entrada ou alternar um hosts ou grupo.',
+  editor_draft_discard_confirm:
+    'Descartar este rascunho e restaurar o conteúdo salvo? As alterações do rascunho serão perdidas.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Início do bloco gerenciado',
   hosts_managed_end: 'Fim do bloco gerenciado',

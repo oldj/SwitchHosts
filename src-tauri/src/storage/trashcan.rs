@@ -49,12 +49,15 @@ impl Default for Trashcan {
 
 impl Trashcan {
     pub fn load(path: &Path) -> Result<Self, StorageError> {
-        if !path.exists() {
-            return Ok(Self::default());
-        }
-        let bytes =
-            std::fs::read(path).map_err(|e| StorageError::io(path.display().to_string(), e))?;
+        Ok(Self::load_if_present(path)?.unwrap_or_default())
+    }
+
+    pub(crate) fn load_if_present(path: &Path) -> Result<Option<Self>, StorageError> {
+        let Some(bytes) = super::read_optional(path)? else {
+            return Ok(None);
+        };
         serde_json::from_slice::<Trashcan>(&bytes)
+            .map(Some)
             .map_err(|e| StorageError::parse(path.display().to_string(), e))
     }
 

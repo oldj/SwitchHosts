@@ -26,7 +26,7 @@ interface Props {
 const TrashcanItem = (props: Props) => {
   const { data } = props
   const { lang } = useI18n()
-  const { loadHostsData } = useHostsData()
+  const { loadHostsData, setCurrentHosts } = useHostsData({ manageDrafts: true })
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
 
   const doPermanentDelete = () => {
@@ -37,6 +37,7 @@ const TrashcanItem = (props: Props) => {
           showErrorNotification({ title: lang.hosts_delete, message: lang.fail })
           return
         }
+        setCurrentHosts((current) => (current?.id === data.id ? null : current))
         await loadHostsData()
         showSuccessNotification({ title: lang.hosts_delete, message: lang.success })
       })

@@ -47,6 +47,7 @@ const SwitchButton = (props: Props) => {
     <div
       className={clsx(styles.root, on && styles.on, disabled && styles.disabled)}
       role="switch"
+      data-draft-action={!disabled && onChange ? 'apply' : undefined}
       aria-label={ariaLabel}
       aria-checked={on}
       aria-disabled={disabled || undefined}

@@ -8,6 +8,15 @@ import { importEnglish } from '../import'
 export default {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    'Önceki kaydetme başarısız olduğu için bu işlem atlandı. Hatayı kontrol edip yeniden deneyin.',
+  editor_draft_pending: 'Uygulanmayı bekliyor',
+  editor_draft_apply: 'Uygula',
+  editor_draft_discard: 'Taslağı sil',
+  editor_draft_apply_hint:
+    'Değişiklikler taslak olarak tutulur ve henüz kaynak dosyaya kaydedilmemiştir. Kaydetmek ve uygulamak için Uygula düğmesine tıklayın veya {0} tuşlarına basın. Bu pencere içinde odağı düzenleyiciden çıkarmak, başka bir öğe seçmek ya da hosts veya grup anahtarını değiştirmek de değişiklikleri uygular.',
+  editor_draft_discard_confirm:
+    'Bu taslak silinsin ve kaydedilmiş içerik geri yüklensin mi? Taslaktaki değişiklikler kaybolacak.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Yönetilen başlangıç',
   hosts_managed_end: 'Yönetilen bitiş',

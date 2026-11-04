@@ -4,6 +4,7 @@ import {
   firstInvokeArg,
   getMockCalls,
   getMockState,
+  saveEditorDraft,
   selectAllModifier,
   test,
 } from './support/test'
@@ -103,6 +104,7 @@ test('underlines comment URLs and opens them only with the platform modifier', a
   const links = editor.locator('.hl-comment-link')
   await expect(links).toHaveText(['https://example.test/docs?q=1#intro', 'http://localhost:8080/'])
   await expect(links.first()).toHaveCSS('text-decoration-line', 'underline')
+  await saveEditorDraft(page)
   await expect.poll(async () => (await getMockState(page)).contents['local-dev']).toBe(content)
   await clearMockCalls(page)
 

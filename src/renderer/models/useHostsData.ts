@@ -4,6 +4,11 @@
  */
 
 import version from '@/version.json'
+import {
+  cancelDraftApplication,
+  getEditorDrafts,
+  type DraftSnapshot,
+} from '@renderer/components/Editor/editorDrafts'
 import { IApplicationRecovery, IHostsListObject } from '@common/data'
 import { flatten } from '@common/hostsFn'
 import events from '@common/events'
@@ -21,15 +26,23 @@ export type ListChange = IHostsListObject[] | ((list: IHostsListObject[]) => IHo
 export type ApplyResult = boolean | null | 'superseded'
 // Cached only for rendering; the backend owns the session-wide recovery state.
 const applicationRecoveryAtom = atom<IApplicationRecovery | null>(null)
+const applyingAtom = atom(false)
 
 // Share the queue across hook consumers in the same window/store. A failed
 // save must not poison subsequent saves or let responses publish out of order.
 const saves = new WeakMap<
   ReturnType<typeof useStore>,
-  { tail: Promise<void>; revision: number; loadGeneration: number }
+  {
+    tail: Promise<void>
+    revision: number
+    loadGeneration: number
+    applyFailures: number
+    draftAcknowledgementFailures: number
+  }
 >()
 
-export default function useHostsData() {
+export default function useHostsData({ manageDrafts = false } = {}) {
+  const [isApplying, setApplying] = useAtom(applyingAtom)
   const [savedHostsData, setHostsData] = useAtom(hostsDataAtom)
   const [savedCurrentHosts, setCurrentHosts] = useAtom(currentHostsAtom)
   const [applicationRecovery, setApplicationRecovery] = useAtom(applicationRecoveryAtom)
@@ -48,7 +61,13 @@ export default function useHostsData() {
   const store = useStore()
   const { lang } = useI18n()
   if (!saves.has(store)) {
-    saves.set(store, { tail: Promise.resolve(), revision: 0, loadGeneration: 0 })
+    saves.set(store, {
+      tail: Promise.resolve(),
+      revision: 0,
+      loadGeneration: 0,
+      applyFailures: 0,
+      draftAcknowledgementFailures: 0,
+    })
   }
   const queue = saves.get(store)!
 
@@ -56,6 +75,14 @@ export default function useHostsData() {
     // Background refreshes can trigger overlapping loads in separate consumers.
     // Only the latest load may publish; saves still make that load retry.
     const generation = ++queue.loadGeneration
+    // Main-window list/trash consumers maintain drafts; the tray must not create its own
+    // cache. Use a fresh, non-superseded backend snapshot before deleting keys.
+    const drafts = manageDrafts
+      ? await getEditorDrafts().catch((error) => {
+          notify(error)
+          return undefined
+        })
+      : undefined
     for (;;) {
       const revision = queue.revision
       await queue.tail
@@ -63,6 +90,11 @@ export default function useHostsData() {
       const data = await actions.getBasicData()
       if (generation !== queue.loadGeneration) return
       if (revision === queue.revision) {
+        try {
+          drafts?.prune(data)
+        } catch (error) {
+          notify(error)
+        }
         setHostsData(data)
         setApplicationRecovery(data.application_recovery ?? null)
         return
@@ -74,7 +106,7 @@ export default function useHostsData() {
     const conflict = (error as { kind?: string })?.kind === 'conflict'
     showErrorNotification({
       title: lang.fail,
-      message: conflict ? lang.storage_conflict : getErrorMessage(error, lang.fail),
+      message: getErrorMessage(error, conflict ? lang.storage_conflict : lang.fail),
     })
   }
 
@@ -88,7 +120,7 @@ export default function useHostsData() {
     return task
   }
 
-  const prepare = (change: ListChange, resolving = false) => {
+  const prepare = (change: ListChange, resolving = false, isCurrent?: () => boolean) => {
     // Snapshot array arguments and their base at submission. Updaters are run
     // inside the queue against a fresh backend read, never a render-time closure.
     const snapshot = typeof change === 'function' ? change : lodash.cloneDeep(change)
@@ -114,7 +146,7 @@ export default function useHostsData() {
         )
         return { list, expected }
       } catch (error) {
-        notify(error)
+        if (!isCurrent || isCurrent()) notify(error)
         throw error
       }
     }
@@ -140,7 +172,7 @@ export default function useHostsData() {
   const persist = async (
     list: IHostsListObject[],
     expected: IHostsListObject[],
-    ...generation: [] | [number]
+    ...generation: [] | [number] | [number, DraftSnapshot]
   ) => {
     try {
       // Only metadata-only callers omit the argument. If an apply response is
@@ -174,21 +206,54 @@ export default function useHostsData() {
     })
   }
 
-  const apply = (change: ListChange, resolving = false): Promise<ApplyResult> => {
-    const resolve = prepare(change, resolving)
-    return enqueue(async () => {
+  const apply = (
+    change: ListChange,
+    resolving = false,
+    draftsOnly = false,
+    isCurrent?: () => boolean,
+  ): Promise<ApplyResult> => {
+    if (!isCurrent) cancelDraftApplication()
+    const resolve = prepare(change, resolving, isCurrent)
+    const failures = queue.applyFailures
+    const draftAcknowledgementFailures = queue.draftAcknowledgementFailures
+    const run = async (): Promise<ApplyResult> => {
       // Fail before changing the system file when the latest list cannot be
       // read or aggregated. resolve() already reports its own read errors.
       const prepared = await resolve().catch(() => null)
+      if (isCurrent && !isCurrent()) return true
       if (!prepared) return store.get(applicationRecoveryAtom) ? null : false
       const { list, expected } = prepared
       let result
+      let drafts: Awaited<ReturnType<typeof getEditorDrafts>> | undefined
+      let snapshot: DraftSnapshot = {}
+      let applicationStarted = false
       try {
-        const content: string = await actions.getContentOfList(list)
-        result = resolving
-          ? await actions.setSystemHosts(content, { saved_list: expected })
-          : await actions.setSystemHosts(content)
+        if (!resolving) {
+          drafts = await getEditorDrafts()
+          snapshot = await drafts.capture(list)
+        }
+        if (draftsOnly && !Object.keys(snapshot).length) return true
+        const content: string = Object.keys(snapshot).length
+          ? await actions.getContentOfList(list, snapshot)
+          : await actions.getContentOfList(list)
+        // Window blur/exit or a selection apply can supersede an automatic
+        // blur save while its queued reads are still in flight.
+        if (isCurrent && !isCurrent()) return true
+        drafts?.begin(snapshot)
+        applicationStarted = true
+        result = draftsOnly
+          ? await actions.setSystemHosts(content, {
+              saved_list: expected,
+              draft_ids: Object.keys(snapshot),
+            })
+          : resolving
+            ? await actions.setSystemHosts(content, { saved_list: expected })
+            : await actions.setSystemHosts(content)
       } catch (error) {
+        // A superseded read must not report a new failure or invalidate the
+        // manual operation that superseded it. Once the native write starts,
+        // its outcome must still be handled, even if authorization blurs us.
+        if (!applicationStarted && isCurrent && !isCurrent()) return true
         notify(error)
         return false
       }
@@ -203,7 +268,11 @@ export default function useHostsData() {
         return false
       }
       try {
-        await persist(list, expected, result.generation)
+        if (Object.keys(snapshot).length) {
+          await persist(list, expected, result.generation, snapshot)
+        } else {
+          await persist(list, expected, result.generation)
+        }
       } catch {
         if (result.preserved) {
           // No system write occurred. A stale saved-list snapshot must not
@@ -247,6 +316,23 @@ export default function useHostsData() {
         await Promise.resolve(agent.broadcast(events.tray_list_updated)).catch(notify)
         return recovery?.status === 'applied' ? true : null
       }
+      if (Object.keys(snapshot).length) {
+        try {
+          drafts?.acknowledge(snapshot)
+        } catch (error) {
+          // The system/source commit succeeded, but its journal is still
+          // pending. Stop already queued retries from applying it again;
+          // complete confirmation and leave the draft available for recovery.
+          queue.draftAcknowledgementFailures += 1
+          notify(error)
+        }
+        await Promise.resolve(
+          agent.broadcast(events.hosts_content_changed_batch, Object.keys(snapshot)),
+        ).catch(notify)
+      }
+      // An unselected draft changed only source files. There is no system
+      // application to acknowledge, reconcile, or turn into recovery state.
+      if (draftsOnly && result.preserved) return true
       // Verifies the system content before clearing any prior pending state.
       // A metadata-only save never reaches this acknowledgement.
       let confirmed = false
@@ -286,6 +372,24 @@ export default function useHostsData() {
       }
       await Promise.resolve(agent.broadcast(events.tray_list_updated)).catch(notify)
       return true
+    }
+    return enqueue(async () => {
+      if (isCurrent && !isCurrent()) return true
+      if (
+        failures !== queue.applyFailures ||
+        (draftsOnly && draftAcknowledgementFailures !== queue.draftAcknowledgementFailures)
+      ) {
+        notify(new Error(lang.editor_draft_queue_skipped))
+        return false
+      }
+      setApplying(true)
+      try {
+        const result = await run()
+        if (result === false || result === null) queue.applyFailures += 1
+        return result
+      } finally {
+        setApplying(false)
+      }
     })
   }
 
@@ -324,6 +428,8 @@ export default function useHostsData() {
     setList,
     applyList: (change: ListChange = (list) => list) => apply(change),
     reapplySavedList: () => apply((list) => list, true),
+    applyDrafts: (isCurrent?: () => boolean) => apply((list) => list, false, true, isCurrent),
+    isApplying,
     applicationRecovery,
 
     currentHosts,

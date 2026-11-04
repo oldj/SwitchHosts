@@ -10,6 +10,13 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...httpApiChinese,
   ...importChinese,
+  editor_draft_queue_skipped: '前一次保存失败，本次排队操作已取消。请检查错误后重试。',
+  editor_draft_pending: '待应用',
+  editor_draft_apply: '应用',
+  editor_draft_discard: '放弃草稿',
+  editor_draft_apply_hint:
+    '修改已暂存为草稿，尚未正式保存。点击“应用”或按 {0} 可保存并应用；在本窗口内离开编辑器、切换条目或切换 hosts／组合开关时，也会自动应用。',
+  editor_draft_discard_confirm: '确定放弃草稿并恢复已保存的内容吗？草稿中的修改将丢失。',
   _app_name: 'SwitchHosts',
   hosts_managed_start: '托管开始',
   hosts_managed_end: '托管结束',

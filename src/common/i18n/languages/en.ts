@@ -8,6 +8,15 @@ import { importEnglish } from '../import'
 export default {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    'This action was skipped because an earlier save failed. Check the error and try again.',
+  editor_draft_pending: 'Pending application',
+  editor_draft_apply: 'Apply',
+  editor_draft_discard: 'Discard draft',
+  editor_draft_apply_hint:
+    'Changes are kept as a draft and have not been saved to the source file. Click Apply or press {0} to save and apply them. Moving focus out of the editor within this window, selecting another entry, or toggling a hosts or group switch also applies them.',
+  editor_draft_discard_confirm:
+    'Discard this draft and restore the saved content? Changes in the draft will be lost.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Managed start',
   hosts_managed_end: 'Managed end',

@@ -8,6 +8,8 @@ import { IApplicationRecovery, IHostsListObject } from '@common/data'
 import { ReactNode } from 'react'
 
 const mocks = vi.hoisted(() => ({
+  getDataDir: vi.fn(),
+  getHostsContent: vi.fn(),
   setList: vi.fn(),
   getApplicationRecovery: vi.fn(),
   finishHostsApplication: vi.fn(),
@@ -26,6 +28,7 @@ vi.mock('@renderer/models/useI18n', () => ({
     lang: {
       fail: 'Failed',
       storage_conflict: 'List changed; retry',
+      editor_draft_queue_skipped: 'Earlier save failed; action skipped',
       hosts_applied_save_failed: 'Applied but save and recovery failed',
       hosts_application_unknown: 'Application state unknown',
     },
@@ -36,6 +39,11 @@ vi.mock('@renderer/core/notify', () => ({
   getErrorMessage: (error: any, fallback: string) => error.reason || error.message || fallback,
 }))
 import useHostsData, { ApplyResult } from './useHostsData'
+import {
+  cancelDraftApplication,
+  getEditorDrafts,
+  scheduleDraftApplication,
+} from '@renderer/components/Editor/editorDrafts'
 
 let disk: IHostsListObject[]
 let recovery: IApplicationRecovery | null
@@ -49,7 +57,7 @@ function deferred<T = void>() {
   })
   return { promise, resolve, reject }
 }
-function setup() {
+function setup(manageDrafts = false) {
   const store = createStore()
   store.set(hostsDataAtom, { list: list('original'), trashcan: [], version: 'test' })
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -57,11 +65,17 @@ function setup() {
   )
   return {
     store,
-    ...renderHook(() => ({ first: useHostsData(), second: useHostsData() }), { wrapper }),
+    ...renderHook(() => ({ first: useHostsData({ manageDrafts }), second: useHostsData() }), {
+      wrapper,
+    }),
   }
 }
+let draftDirectory = 0
 beforeEach(() => {
   vi.resetAllMocks()
+  localStorage.clear()
+  mocks.getDataDir.mockResolvedValue(`/hook-drafts-${++draftDirectory}`)
+  mocks.getHostsContent.mockResolvedValue('base')
   disk = list('original')
   recovery = null
   mocks.getApplicationRecovery.mockImplementation(async () => structuredClone(recovery))
@@ -789,4 +803,367 @@ it('keeps a confirmed toggle successful when only subsequent content sync fails'
   })
   expect(result.current.first.applicationRecovery?.status).toBe('unknown')
   expect(mocks.notify).not.toHaveBeenCalled()
+})
+
+it('merges a toggle with pending drafts into one application and atomic source/list commit', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'new source', 'old source')
+  const { result } = setup()
+  await act(async () => {
+    expect(
+      await result.current.first.applyList((items) => items.map((item) => ({ ...item, on: true }))),
+    ).toBe(true)
+  })
+  const snapshot = { original: { content: 'new source', base_content: 'old source' } }
+  expect(mocks.getContentOfList).toHaveBeenCalledWith(expect.any(Array), snapshot)
+  expect(mocks.setList).toHaveBeenCalledWith(expect.any(Array), expect.any(Array), 1, snapshot)
+  expect(mocks.setSystemHosts).toHaveBeenCalledTimes(1)
+  expect(drafts.read('original')).toBeUndefined()
+})
+
+it('coalesces repeated draft applications and preserves newer edits made during application', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'first', 'base')
+  const gate = deferred<any>()
+  const realApply = mocks.setSystemHosts.getMockImplementation()!
+  mocks.setSystemHosts.mockImplementationOnce(() => gate.promise)
+  const { result } = setup()
+  let first!: Promise<ApplyResult>
+  let second!: Promise<ApplyResult>
+  let third!: Promise<ApplyResult>
+  await act(async () => {
+    first = result.current.first.applyDrafts()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    drafts.edit('original', 'latest', 'base')
+    second = result.current.second.applyDrafts()
+    third = result.current.first.applyDrafts()
+  })
+  expect(mocks.setSystemHosts).toHaveBeenCalledTimes(1)
+  await act(async () => {
+    gate.resolve(await realApply())
+    await Promise.all([first, second, third])
+  })
+  expect(mocks.setSystemHosts).toHaveBeenCalledTimes(2)
+  expect(mocks.setList.mock.calls[1][3].original).toEqual({
+    content: 'latest',
+    base_content: 'first',
+  })
+  expect(drafts.read('original')).toBeUndefined()
+})
+
+it('stops already queued draft applications after cancellation without discarding drafts', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'draft', 'base')
+  mocks.setSystemHosts.mockResolvedValue({ success: false, code: 'cancelled' })
+  const { result } = setup()
+  await act(async () => {
+    expect(
+      await Promise.all([result.current.first.applyDrafts(), result.current.second.applyDrafts()]),
+    ).toEqual([false, false])
+  })
+  expect(mocks.setSystemHosts).toHaveBeenCalledTimes(1)
+  expect(drafts.read('original')?.content).toBe('draft')
+  expect(mocks.notify).toHaveBeenCalledWith({
+    title: 'Failed',
+    message: 'Earlier save failed; action skipped',
+  })
+})
+
+it('explains a draft source conflict rather than mislabeling it as a list conflict', async () => {
+  const reason =
+    'The source changed while editing. Keep the draft or discard it and reload before retrying.'
+  mocks.getContentOfList.mockRejectedValue({ kind: 'conflict', reason })
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.applyDrafts()).toBe(true)
+  })
+  ;(await getEditorDrafts()).edit('original', 'draft', 'base')
+  await act(async () => {
+    expect(await result.current.first.applyDrafts()).toBe(false)
+  })
+  expect(mocks.notify).toHaveBeenCalledWith({ title: 'Failed', message: reason })
+  expect(mocks.setSystemHosts).not.toHaveBeenCalled()
+})
+
+it('does not prune drafts using a superseded main-list load', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'keep', 'base')
+  drafts.edit('deleted', 'remove', 'base')
+  const oldRead = deferred<any>()
+  mocks.getBasicData.mockReturnValueOnce(oldRead.promise).mockResolvedValueOnce({
+    can_prune_drafts: true,
+    list: disk,
+    trashcan: [],
+    version: 'test',
+  })
+  const { result } = setup(true)
+  let loading!: Promise<void>
+  await act(async () => {
+    loading = result.current.first.loadHostsData()
+  })
+  await act(async () => {
+    await result.current.first.loadHostsData()
+  })
+  await act(async () => {
+    oldRead.resolve({ can_prune_drafts: true, list: [], trashcan: [], version: 'test' })
+    await loading
+  })
+  expect(drafts.read('original')?.content).toBe('keep')
+  expect(drafts.read('deleted')).toBeUndefined()
+})
+
+it('retains drafts and compensates when the source/list transaction fails', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'draft', 'base')
+  mocks.setList.mockRejectedValue(new Error('disk full'))
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.applyDrafts()).toBe(false)
+  })
+  expect(mocks.restoreSystemHosts).toHaveBeenCalledTimes(1)
+  expect(drafts.read('original')?.content).toBe('draft')
+})
+
+it('explicit recovery applies saved settings without silently committing pending drafts', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'draft', 'base')
+  const { result } = setup()
+  await act(async () => {
+    await result.current.first.reapplySavedList()
+  })
+  expect(mocks.getContentOfList.mock.calls[0]).toHaveLength(1)
+  expect(drafts.read('original')?.content).toBe('draft')
+})
+
+it('confirms an unselected draft without asking finish to reconcile unrelated sources', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'draft', 'base')
+  mocks.setSystemHosts.mockResolvedValue({
+    success: true,
+    preserved: true,
+    old_content: 'external',
+    new_content: 'external',
+    old_content_bytes: [1],
+    generation: 9,
+  })
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.applyDrafts()).toBe(true)
+  })
+  expect(mocks.finishHostsApplication).not.toHaveBeenCalled()
+  expect(drafts.read('original')).toBeUndefined()
+})
+
+it('does not start system application if the commit journal cannot be saved', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'latest', 'base')
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    throw new Error('quota')
+  })
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.applyDrafts()).toBe(false)
+  })
+  expect(mocks.setSystemHosts).not.toHaveBeenCalled()
+  expect(mocks.setList).not.toHaveBeenCalled()
+  expect(drafts.read('original')?.content).toBe('latest')
+})
+
+it.each(['exit', 'toggle'] as const)(
+  'cancels a queued blur application when superseded by %s',
+  async (action) => {
+    const drafts = await getEditorDrafts()
+    drafts.edit('original', 'latest', 'base')
+    const read = deferred<IHostsListObject[]>()
+    mocks.getList.mockReturnValueOnce(read.promise)
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true)
+    const { result } = setup()
+    let automatic!: Promise<ApplyResult>
+    await act(async () => {
+      scheduleDraftApplication((isCurrent) => {
+        automatic = result.current.first.applyDrafts(isCurrent)
+      })
+      await new Promise((resolve) => setTimeout(resolve, 5))
+    })
+    expect(mocks.getList).toHaveBeenCalledTimes(1)
+    let manual: Promise<ApplyResult> | undefined
+    await act(async () => {
+      if (action === 'exit') cancelDraftApplication()
+      else
+        manual = result.current.second.applyList((items) =>
+          items.map((item) => ({ ...item, on: true })),
+        )
+      read.resolve(structuredClone(disk))
+      await automatic
+      await manual
+    })
+    expect(mocks.setSystemHosts).toHaveBeenCalledTimes(action === 'exit' ? 0 : 1)
+    if (action === 'exit') expect(drafts.read('original')?.content).toBe('latest')
+    else expect(drafts.read('original')).toBeUndefined()
+  },
+)
+
+it.each(['getList', 'getContentOfList', 'getHostsContent'] as const)(
+  'does not let a cancelled blur save poison the following toggle when %s rejects late',
+  async (command) => {
+    const drafts = await getEditorDrafts()
+    drafts.edit('original', 'latest', 'base')
+    if (command === 'getHostsContent') drafts.begin(await drafts.capture(disk))
+    const read = deferred<any>()
+    mocks[command].mockReturnValueOnce(read.promise)
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true)
+    const { result } = setup()
+    let automatic!: Promise<ApplyResult>
+    await act(async () => {
+      scheduleDraftApplication((isCurrent) => {
+        automatic = result.current.first.applyDrafts(isCurrent)
+      })
+      await new Promise((resolve) => setTimeout(resolve, 5))
+    })
+    expect(mocks[command]).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      const toggle = result.current.second.applyList((items) =>
+        items.map((item) => ({ ...item, on: true })),
+      )
+      read.reject(new Error('obsolete read failed'))
+      expect(await automatic).toBe(true)
+      expect(await toggle).toBe(true)
+    })
+    expect(mocks.notify).not.toHaveBeenCalled()
+    expect(mocks.setSystemHosts).toHaveBeenCalledTimes(1)
+    expect(disk[0].on).toBe(true)
+  },
+)
+
+it('does not repeat an already successful apply when its draft acknowledgement fails', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'latest', 'base')
+  const remove = vi.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
+    throw new Error('journal unavailable')
+  })
+  mocks.getHostsContent.mockResolvedValue('latest')
+  const { result } = setup()
+  await act(async () => {
+    expect(
+      await Promise.all([result.current.first.applyDrafts(), result.current.second.applyDrafts()]),
+    ).toEqual([true, false])
+  })
+  expect(remove).toHaveBeenCalledTimes(1)
+  expect(mocks.setSystemHosts).toHaveBeenCalledTimes(1)
+  expect(mocks.finishHostsApplication).toHaveBeenCalledTimes(1)
+  expect(mocks.restoreSystemHosts).not.toHaveBeenCalled()
+  expect(drafts.read('original')?.content).toBe('latest')
+})
+
+it('still performs a distinct queued toggle after a successful apply with failed draft cleanup', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'latest', 'base')
+  vi.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
+    throw new Error('journal unavailable')
+  })
+  mocks.getHostsContent.mockResolvedValue('latest')
+  const { result } = setup()
+  await act(async () => {
+    const first = result.current.first.applyDrafts()
+    const toggle = result.current.second.applyList((items) =>
+      items.map((item) => ({ ...item, on: true })),
+    )
+    expect(await first).toBe(true)
+    expect(await toggle).toBe(true)
+  })
+  expect(disk[0].on).toBe(true)
+  expect(mocks.setSystemHosts).toHaveBeenCalledTimes(2)
+  expect(drafts.read('original')).toBeUndefined()
+})
+
+it.each([false, true])(
+  'rejects a captured application after its draft was discarded (new draft: %s)',
+  async (editAgain) => {
+    const drafts = await getEditorDrafts()
+    drafts.edit('original', 'discarded text', 'base')
+    const aggregation = deferred<string>()
+    mocks.getContentOfList.mockReturnValueOnce(aggregation.promise)
+    const { result } = setup()
+    let applying!: Promise<ApplyResult>
+    await act(async () => {
+      applying = result.current.first.applyDrafts()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    expect(mocks.getContentOfList).toHaveBeenCalledTimes(1)
+    drafts.discard('original')
+    if (editAgain) drafts.edit('original', 'new draft', 'base')
+    await act(async () => {
+      aggregation.resolve('discarded text')
+      expect(await applying).toBe(false)
+    })
+    expect(mocks.setSystemHosts).not.toHaveBeenCalled()
+    expect(mocks.setList).not.toHaveBeenCalled()
+    expect(drafts.read('original')?.content).toBe(editAgain ? 'new draft' : undefined)
+  },
+)
+
+it.each(['success', 'cancelled', 'transport'] as const)(
+  'still handles %s after window blur when native application has already started',
+  async (outcome) => {
+    const drafts = await getEditorDrafts()
+    drafts.edit('original', 'latest', 'base')
+    const native = deferred<any>()
+    const realApply = mocks.setSystemHosts.getMockImplementation()!
+    mocks.setSystemHosts.mockReturnValueOnce(native.promise)
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true)
+    const { result } = setup()
+    let automatic!: Promise<ApplyResult>
+    await act(async () => {
+      scheduleDraftApplication((isCurrent) => {
+        automatic = result.current.first.applyDrafts(isCurrent)
+      })
+      await new Promise((resolve) => setTimeout(resolve, 5))
+    })
+    expect(mocks.setSystemHosts).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      cancelDraftApplication()
+      const queued = result.current.second.applyDrafts()
+      if (outcome === 'success') native.resolve(await realApply())
+      else if (outcome === 'cancelled') native.resolve({ success: false, code: 'cancelled' })
+      else native.reject(new Error('native transport failed'))
+      expect(await automatic).toBe(outcome === 'success')
+      expect(await queued).toBe(outcome === 'success')
+    })
+    expect(mocks.setSystemHosts).toHaveBeenCalledTimes(1)
+    expect(mocks.setList).toHaveBeenCalledTimes(outcome === 'success' ? 1 : 0)
+    expect(mocks.finishHostsApplication).toHaveBeenCalledTimes(outcome === 'success' ? 1 : 0)
+    expect(drafts.read('original')?.content).toBe(outcome === 'success' ? undefined : 'latest')
+  },
+)
+
+it('retains newer typing when acknowledgement rebasing fails and stops queued retries', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'submitted', 'base')
+  const native = deferred<any>()
+  const realApply = mocks.setSystemHosts.getMockImplementation()!
+  mocks.setSystemHosts.mockReturnValueOnce(native.promise)
+  const { result } = setup()
+  let first!: Promise<ApplyResult>
+  let second!: Promise<ApplyResult>
+  await act(async () => {
+    first = result.current.first.applyDrafts()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    drafts.edit('original', 'newer typing', 'base')
+    second = result.current.second.applyDrafts()
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new Error('journal unavailable')
+    })
+    native.resolve(await realApply())
+    expect(await first).toBe(true)
+    expect(await second).toBe(false)
+  })
+  expect(mocks.setSystemHosts).toHaveBeenCalledTimes(1)
+  expect(drafts.read('original')).toEqual({ content: 'newer typing', base_content: 'submitted' })
+  // The durable pending receipt still permits recovery after an immediate exit.
+  const persisted = Object.values(localStorage).map((value) => JSON.parse(value))
+  expect(persisted).toContainEqual({
+    content: 'newer typing',
+    base_content: 'base',
+    pending_content: 'submitted',
+  })
 })

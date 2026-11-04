@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, getMockState, selectAllModifier, test } from './support/test'
+import { expect, getMockState, saveEditorDraft, selectAllModifier, test } from './support/test'
 
 const original = '127.0.0.1 alpha.local\n127.0.0.1 bravo.local\n127.0.0.1 charlie.local'
 
@@ -15,6 +15,7 @@ async function setContent(page: Page, content = original) {
 
 async function expectSaved(page: Page, content: string) {
   await expect(page.locator('.cm-content .cm-line')).toHaveText(content.split('\n'))
+  await saveEditorDraft(page)
   await expect.poll(async () => (await getMockState(page)).contents['local-dev']).toBe(content)
 }
 

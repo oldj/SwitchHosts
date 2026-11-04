@@ -72,23 +72,25 @@ impl Manifest {
     ///   `tree_format::v5_root_to_legacy` is tolerant of nodes that
     ///   are already in renderer shape.
     pub fn load(paths: &V5Paths) -> Result<Self, StorageError> {
+        Ok(Self::load_if_present(paths)?.unwrap_or_default())
+    }
+
+    pub(crate) fn load_if_present(paths: &V5Paths) -> Result<Option<Self>, StorageError> {
         let path = &paths.manifest_file;
-        if !path.exists() {
-            return Ok(Self::default());
-        }
-        let bytes =
-            std::fs::read(path).map_err(|e| StorageError::io(path.display().to_string(), e))?;
+        let Some(bytes) = super::read_optional(path)? else {
+            return Ok(None);
+        };
         let raw: Manifest = serde_json::from_slice(&bytes)
             .map_err(|e| StorageError::parse(path.display().to_string(), e))?;
 
         let state = StateFile::load(&paths.state_file);
         let root = v5_root_to_legacy(&raw.root, &state.tree.collapsed_node_ids);
 
-        Ok(Self {
+        Ok(Some(Self {
             format: raw.format,
             schema_version: raw.schema_version,
             root,
-        })
+        }))
     }
 
     /// Write `manifest.json` (in v5 nested camelCase shape) and the

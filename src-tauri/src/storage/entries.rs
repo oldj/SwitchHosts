@@ -55,12 +55,11 @@ fn validate_id(id: &str) -> Result<(), StorageError> {
 /// file still has CRLF / CR from a v4 migration or a hand-edited file.
 pub fn read_entry(entries_dir: &Path, id: &str) -> Result<String, StorageError> {
     let path = entry_path(entries_dir, id)?;
-    if !path.exists() {
-        return Ok(String::new());
+    match std::fs::read_to_string(&path) {
+        Ok(raw) => Ok(normalize_to_lf(&raw)),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
+        Err(error) => Err(StorageError::io(path.display().to_string(), error)),
     }
-    let raw = std::fs::read_to_string(&path)
-        .map_err(|e| StorageError::io(path.display().to_string(), e))?;
-    Ok(normalize_to_lf(&raw))
 }
 
 /// Write a node's content. The input may use any line endings (e.g.
@@ -149,6 +148,14 @@ mod tests {
         assert_eq!(read_back, original);
         assert_eq!(on_disk, original.as_bytes());
         std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn unreadable_entry_is_not_reported_as_empty_content() {
+        let dir = temp_entries_dir("unreadable");
+        std::fs::create_dir(entry_path(&dir, "node-1").unwrap()).unwrap();
+        assert!(read_entry(&dir, "node-1").is_err());
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

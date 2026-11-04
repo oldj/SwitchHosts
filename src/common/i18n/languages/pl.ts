@@ -8,6 +8,15 @@ import { importEnglish } from '../import'
 export default {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    'Pominięto tę operację, ponieważ poprzedni zapis się nie powiódł. Sprawdź błąd i spróbuj ponownie.',
+  editor_draft_pending: 'Oczekuje na zastosowanie',
+  editor_draft_apply: 'Zastosuj',
+  editor_draft_discard: 'Odrzuć wersję roboczą',
+  editor_draft_apply_hint:
+    'Zmiany są zachowane jako wersja robocza i nie zostały jeszcze zapisane w pliku źródłowym. Kliknij Zastosuj lub naciśnij {0}, aby je zapisać i zastosować. Nastąpi to również po przeniesieniu fokusu poza edytor w tym oknie, wybraniu innego wpisu albo przełączeniu hosts lub grupy.',
+  editor_draft_discard_confirm:
+    'Odrzucić tę wersję roboczą i przywrócić zapisaną treść? Zmiany w wersji roboczej zostaną utracone.',
   _app_name: 'SwitchHosts',
   hosts_managed_start: 'Początek zarządzania',
   hosts_managed_end: 'Koniec zarządzania',
