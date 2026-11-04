@@ -651,8 +651,12 @@ mod tests {
         let address = listener.local_addr().unwrap();
         let server = tokio::spawn(async move {
             let (mut socket, _) = listener.accept().await.unwrap();
-            let mut request = [0; 4096];
-            socket.read(&mut request).await.unwrap();
+            let mut request = Vec::new();
+            let mut byte = [0];
+            while !request.ends_with(b"\r\n\r\n") {
+                socket.read_exact(&mut byte).await.unwrap();
+                request.push(byte[0]);
+            }
             // Truncate a declared body after the response headers succeeded.
             socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 10000\r\nConnection: close\r\n\r\nTEST_PRIVATE_RESPONSE").await.unwrap();
         });
