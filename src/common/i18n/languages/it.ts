@@ -48,6 +48,8 @@ export default {
   import_dependency_error: 'Seleziona le configurazioni referenziate dai gruppi selezionati.',
   import_application_recovery:
     'Risolvi l’operazione in sospeso sul file hosts di sistema prima di importare.',
+  editor_draft_queue_skipped:
+    'Questa azione è stata saltata perché un salvataggio precedente non è riuscito. Controlla l’errore e riprova.',
   editor_draft_pending: 'In attesa di applicazione',
   editor_draft_apply: 'Applica',
   editor_draft_discard: 'Scarta bozza',

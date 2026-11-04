@@ -8,6 +8,7 @@
 //! This protects against process interruption, not arbitrary disk corruption
 //! or multiple independent processes writing the same data directory.
 
+use super::read_optional;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
@@ -62,14 +63,6 @@ struct Journal {
 
 fn journal_path(paths: &V5Paths) -> PathBuf {
     paths.internal.join("storage-transaction.json")
-}
-
-fn read_optional(path: &std::path::Path) -> Result<Option<Vec<u8>>, StorageError> {
-    match std::fs::read(path) {
-        Ok(bytes) => Ok(Some(bytes)),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
-        Err(error) => Err(StorageError::io(path.display().to_string(), error)),
-    }
 }
 
 fn remove_file(path: &std::path::Path) -> Result<(), StorageError> {

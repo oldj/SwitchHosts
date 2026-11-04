@@ -8,6 +8,8 @@ import { importEnglish } from '../import'
 export default {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    'Pominięto tę operację, ponieważ poprzedni zapis się nie powiódł. Sprawdź błąd i spróbuj ponownie.',
   editor_draft_pending: 'Oczekuje na zastosowanie',
   editor_draft_apply: 'Zastosuj',
   editor_draft_discard: 'Odrzuć wersję roboczą',

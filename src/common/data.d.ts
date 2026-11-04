@@ -78,6 +78,7 @@ export type IApplicationRecovery =
   { status: 'applied'; list: IHostsListObject[] } | { status: 'unknown' }
 
 export interface IHostsBasicData {
+  can_prune_drafts?: boolean
   application_recovery?: IApplicationRecovery | null
   list: IHostsListObject[]
   trashcan: ITrashcanObject[]

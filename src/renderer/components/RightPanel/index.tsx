@@ -26,7 +26,7 @@ import SystemHostsPanel from './SystemHostsPanel'
 const RightPanel = () => {
   const { lang } = useI18n()
   const { currentHosts, hostsData, setCurrentHosts, isHostsInTrashcan, loadHostsData } =
-    useHostsData()
+    useHostsData({ manageDrafts: true })
   const [ruleCount, setRuleCount] = useState<{ id: string; value: number } | null>(null)
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(() => new Set())
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
@@ -82,6 +82,14 @@ const RightPanel = () => {
   )
 
   useOnBroadcast(
+    events.hosts_content_changed_batch,
+    (ids: string[]) => {
+      if (hosts && hasContent && ids.includes(hosts.id)) loadRuleCount(hosts.id)
+    },
+    [hosts?.id, hasContent],
+  )
+
+  useOnBroadcast(
     events.hosts_refreshed,
     (refreshed: IHostsListObject) => {
       if (!hosts || refreshed.id !== hosts.id) return
@@ -105,7 +113,7 @@ const RightPanel = () => {
           showErrorNotification({ title: lang.hosts_delete, message: lang.fail })
           return
         }
-        setCurrentHosts(null)
+        setCurrentHosts((current) => (current?.id === hosts.id ? null : current))
         await loadHostsData()
         showSuccessNotification({ title: lang.hosts_delete, message: lang.success })
       })

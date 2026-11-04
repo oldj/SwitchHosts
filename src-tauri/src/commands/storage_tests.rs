@@ -8,6 +8,29 @@ use std::sync::{
 };
 
 #[test]
+fn missing_indexes_are_distinct_from_persisted_empty_indexes() {
+    let f = Fixture::empty();
+    let paths = &f.state.paths;
+    assert!(Manifest::load_if_present(paths).unwrap().is_none());
+    assert!(Trashcan::load_if_present(&paths.trashcan_file)
+        .unwrap()
+        .is_none());
+
+    Manifest::default().save(paths).unwrap();
+    Trashcan::default().save(&paths.trashcan_file).unwrap();
+    assert!(Manifest::load_if_present(paths)
+        .unwrap()
+        .unwrap()
+        .root
+        .is_empty());
+    assert!(Trashcan::load_if_present(&paths.trashcan_file)
+        .unwrap()
+        .unwrap()
+        .items
+        .is_empty());
+}
+
+#[test]
 fn empty_saved_recovery_preserves_system_but_an_explicit_empty_toggle_does_not() {
     let f = Fixture::populated();
     let saved = json!(f.state.read_manifest().unwrap().root);
@@ -638,12 +661,50 @@ fn editor_draft_payload() -> Value {
 }
 
 #[test]
+fn content_command_rejects_external_source_changes_before_aggregation() {
+    let f = Fixture::populated();
+    let mut list = f.state.read_manifest().unwrap().root;
+    list[0]["on"] = json!(true);
+    let args = vec![json!(list), editor_draft_payload()];
+    assert!(get_content_of_list_inner(&f.state, args.clone())
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .contains("drafted.test"));
+    entries::write_entry(&f.state.paths.entries_dir, "live", "changed externally").unwrap();
+    let before = f.snapshot();
+    assert!(matches!(
+        get_content_of_list_inner(&f.state, args),
+        Err(StorageError::Conflict { .. })
+    ));
+    assert_eq!(f.snapshot(), before);
+}
+
+#[test]
+fn content_command_without_drafts_does_not_depend_on_the_saved_manifest() {
+    let f = Fixture::populated();
+    let mut list = f.state.read_manifest().unwrap().root;
+    list[0]["on"] = json!(true);
+    std::fs::write(&f.state.paths.manifest_file, "broken json").unwrap();
+    for args in [vec![json!(list)], vec![json!(list), json!({})]] {
+        assert!(get_content_of_list_inner(&f.state, args)
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .contains("live.test"));
+    }
+    assert!(
+        get_content_of_list_inner(&f.state, vec![json!(list), editor_draft_payload()]).is_err()
+    );
+}
+
+#[test]
 fn draft_overlay_aggregates_group_references_without_publishing_to_background_reads() {
     let f = Fixture::populated();
     let mut list = f.state.read_manifest().unwrap().root;
     list.push(json!({"id":"group", "type":"group", "on":true,"include":["live"]}));
     let drafts = parse_editor_drafts(Some(&editor_draft_payload())).unwrap();
-    validate_editor_drafts(&f.state, &list, &drafts).unwrap();
+    let drafts = changed_editor_drafts(&f.state, &[&list], drafts).unwrap();
     let overrides = drafts
         .into_iter()
         .map(|(id, draft)| (id, draft.content))
@@ -769,9 +830,11 @@ fn draft_validation_rejects_missing_remote_and_unversioned_payloads() {
     let f = Fixture::populated();
     let old = f.state.read_manifest().unwrap().root;
     let drafts = parse_editor_drafts(Some(&editor_draft_payload())).unwrap();
-    assert!(validate_editor_drafts(&f.state, &[], &drafts).is_err());
+    assert!(changed_editor_drafts(&f.state, &[&[]], drafts).is_err());
+    let drafts = parse_editor_drafts(Some(&editor_draft_payload())).unwrap();
     assert!(
-        validate_editor_drafts(&f.state, &[json!({"id":"live","type":"remote"})], &drafts).is_err()
+        changed_editor_drafts(&f.state, &[&[json!({"id":"live","type":"remote"})]], drafts)
+            .is_err()
     );
     assert!(set_list_inner(
         &f.state,

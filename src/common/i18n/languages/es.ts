@@ -52,6 +52,8 @@ export default {
     'Selecciona las configuraciones referenciadas por los grupos seleccionados.',
   import_application_recovery:
     'Resuelve la operación pendiente del archivo hosts del sistema antes de importar.',
+  editor_draft_queue_skipped:
+    'Se omitió esta acción porque falló un guardado anterior. Revisa el error e inténtalo de nuevo.',
   editor_draft_pending: 'Pendiente de aplicar',
   editor_draft_apply: 'Aplicar',
   editor_draft_discard: 'Descartar borrador',

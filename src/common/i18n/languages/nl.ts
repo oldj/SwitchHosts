@@ -48,6 +48,8 @@ export default {
     'Selecteer de configuraties waarnaar de geselecteerde groepen verwijzen.',
   import_application_recovery:
     'Rond de wachtende bewerking op het systeemhostsbestand af voordat je importeert.',
+  editor_draft_queue_skipped:
+    'Deze actie is overgeslagen omdat een eerdere opslag is mislukt. Controleer de fout en probeer het opnieuw.',
   editor_draft_pending: 'Nog niet toegepast',
   editor_draft_apply: 'Toepassen',
   editor_draft_discard: 'Concept verwerpen',

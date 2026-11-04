@@ -36,7 +36,7 @@ const List = (props: Props) => {
     applicationRecovery,
     currentHosts,
     setCurrentHosts,
-  } = useHostsData()
+  } = useHostsData({ manageDrafts: !isTray })
   const recoveryPending = !!applicationRecovery
   const nodeAttr = useCallback(
     (item: IHostsListObject) => ({

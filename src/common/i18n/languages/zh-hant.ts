@@ -10,6 +10,7 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...httpApiTraditionalChinese,
   ...importTraditionalChinese,
+  editor_draft_queue_skipped: '前一次儲存失敗，本次排隊操作已取消。請檢查錯誤後重試。',
   editor_draft_pending: '待套用',
   editor_draft_apply: '套用',
   editor_draft_discard: '捨棄草稿',

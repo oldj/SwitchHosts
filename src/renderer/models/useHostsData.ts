@@ -41,7 +41,7 @@ const saves = new WeakMap<
   }
 >()
 
-export default function useHostsData() {
+export default function useHostsData({ manageDrafts = false } = {}) {
   const [isApplying, setApplying] = useAtom(applyingAtom)
   const [savedHostsData, setHostsData] = useAtom(hostsDataAtom)
   const [savedCurrentHosts, setCurrentHosts] = useAtom(currentHostsAtom)
@@ -75,6 +75,14 @@ export default function useHostsData() {
     // Background refreshes can trigger overlapping loads in separate consumers.
     // Only the latest load may publish; saves still make that load retry.
     const generation = ++queue.loadGeneration
+    // Main-window list/trash consumers maintain drafts; the tray must not create its own
+    // cache. Use a fresh, non-superseded backend snapshot before deleting keys.
+    const drafts = manageDrafts
+      ? await getEditorDrafts().catch((error) => {
+          notify(error)
+          return undefined
+        })
+      : undefined
     for (;;) {
       const revision = queue.revision
       await queue.tail
@@ -82,6 +90,11 @@ export default function useHostsData() {
       const data = await actions.getBasicData()
       if (generation !== queue.loadGeneration) return
       if (revision === queue.revision) {
+        try {
+          drafts?.prune(data)
+        } catch (error) {
+          notify(error)
+        }
         setHostsData(data)
         setApplicationRecovery(data.application_recovery ?? null)
         return
@@ -93,7 +106,7 @@ export default function useHostsData() {
     const conflict = (error as { kind?: string })?.kind === 'conflict'
     showErrorNotification({
       title: lang.fail,
-      message: conflict ? lang.storage_conflict : getErrorMessage(error, lang.fail),
+      message: getErrorMessage(error, conflict ? lang.storage_conflict : lang.fail),
     })
   }
 
@@ -362,9 +375,13 @@ export default function useHostsData() {
     }
     return enqueue(async () => {
       if (isCurrent && !isCurrent()) return true
-      if (failures !== queue.applyFailures) return false
-      if (draftsOnly && draftAcknowledgementFailures !== queue.draftAcknowledgementFailures)
+      if (
+        failures !== queue.applyFailures ||
+        (draftsOnly && draftAcknowledgementFailures !== queue.draftAcknowledgementFailures)
+      ) {
+        notify(new Error(lang.editor_draft_queue_skipped))
         return false
+      }
       setApplying(true)
       try {
         const result = await run()

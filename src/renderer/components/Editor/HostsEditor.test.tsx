@@ -44,18 +44,25 @@ vi.mock('@renderer/models/useHostsData', () => ({
   }),
 }))
 vi.mock('@renderer/models/useI18n', () => ({
-  default: () => ({ lang: { fail: 'Read failed', history_retry: 'Retry' } }),
+  default: () => ({
+    lang: { fail: 'Read failed', history_retry: 'Retry', editor_draft_discard: 'Discard draft' },
+  }),
 }))
 vi.mock('@renderer/components/StatusBar', () => ({
   default: (props: any) =>
     props.pendingDraft ? (
-      <button
-        data-draft-action="apply"
-        disabled={props.isApplying || props.isDiscarding}
-        onClick={props.onDiscard}
-      >
-        Discard draft
-      </button>
+      <>
+        <button data-draft-action="apply" onClick={props.onApply}>
+          Apply draft
+        </button>
+        <button
+          data-draft-action="apply"
+          disabled={props.isApplying || props.isDiscarding}
+          onClick={props.onDiscard}
+        >
+          Discard draft
+        </button>
+      </>
     ) : null,
 }))
 vi.mock('@renderer/components/ConfirmModal', () => ({
@@ -246,6 +253,30 @@ it('keeps the original draft and requests application when switching documents',
   })
   expect(mocks.applyDrafts).toHaveBeenCalledTimes(1)
   expect((await getEditorDrafts()).read('local')?.content).toBe('saved.test')
+})
+
+it('hides the previous draft controls while another entry is loading or fails to load', async () => {
+  const ui = await renderEditor()
+  await editDocument('pending.test')
+  expect(ui.getByText('Apply draft')).toBeTruthy()
+  const nextRead = deferred()
+  mocks.getHostsContent.mockReturnValueOnce(nextRead.promise)
+  mocks.current = { id: 'next', type: 'local' }
+  await act(async () => {
+    ui.rerender(<HostsEditor />)
+  })
+  expect(ui.queryByText('Apply draft')).toBeNull()
+  expect(ui.queryByText('Discard draft')).toBeNull()
+  await act(async () => nextRead.reject(new Error('disk unavailable')))
+  expect(ui.getByRole('alert')).toBeTruthy()
+  expect(ui.queryByText('Apply draft')).toBeNull()
+  expect((await getEditorDrafts()).read('local')?.content).toBe('pending.test')
+  mocks.current = { id: 'local', type: 'local' }
+  await act(async () => {
+    ui.rerender(<HostsEditor />)
+  })
+  expect(content()).toBe('pending.test')
+  expect(ui.getByText('Apply draft')).toBeTruthy()
 })
 
 it('retains the draft on unmount without requesting application', async () => {
@@ -723,3 +754,101 @@ it.each(['switch away and back', 'unmount and remount'])(
     expect(mocks.applyDrafts).not.toHaveBeenCalled()
   },
 )
+
+it('offers confirmed discard for a damaged journal and restores an editable source without applying', async () => {
+  const directory = await mocks.getDataDir()
+  const key = `switchhosts:editor-draft:v1:${encodeURIComponent(directory)}:local`
+  localStorage.setItem(key, '{broken')
+  const ui = await renderEditor()
+  expect(ui.getByRole('alert')).toBeTruthy()
+  fireEvent.click(ui.getByText('Discard draft'))
+  fireEvent.click(ui.getByText('Cancel'))
+  expect(localStorage.getItem(key)).toBe('{broken')
+  fireEvent.click(ui.getByText('Retry'))
+  await act(async () => {})
+  expect(ui.getByRole('alert')).toBeTruthy()
+  fireEvent.click(ui.getByText('Discard draft'))
+  await act(async () => fireEvent.click(ui.getByText('Confirm discard')))
+  expect(ui.queryByRole('alert')).toBeNull()
+  expect(content()).toBe('original.test')
+  expect(localStorage.getItem(key)).toBeNull()
+  const view = EditorView.findFromDOM(document.querySelector('.cm-editor')!)!
+  expect(view.state.readOnly).toBe(false)
+  await editDocument('after recovery')
+  expect((await getEditorDrafts()).read('local')?.content).toBe('after recovery')
+  expect(mocks.applyDrafts).not.toHaveBeenCalled()
+})
+
+it('retains a damaged journal if recovery cannot read the saved source', async () => {
+  const directory = await mocks.getDataDir()
+  const key = `switchhosts:editor-draft:v1:${encodeURIComponent(directory)}:local`
+  localStorage.setItem(key, '{broken')
+  const ui = await renderEditor()
+  mocks.getHostsContent.mockRejectedValueOnce(new Error('source unavailable'))
+  fireEvent.click(ui.getByText('Discard draft'))
+  await act(async () => fireEvent.click(ui.getByText('Confirm discard')))
+  expect(localStorage.getItem(key)).toBe('{broken')
+  expect(mocks.notify).toHaveBeenCalledTimes(1)
+  expect(ui.getByText('Discard draft').hasAttribute('disabled')).toBe(false)
+})
+
+it.each(['win32', 'darwin', 'linux'])(
+  'does not apply background drafts from a read-only view on %s',
+  async (platform) => {
+    mocks.platform = platform
+    const drafts = await getEditorDrafts()
+    drafts.edit('local', 'background draft', 'base')
+    await act(async () => {
+      render(<HostsEditor />)
+    })
+    fireEvent.keyDown(document.querySelector('.cm-content')!, {
+      key: 's',
+      ctrlKey: platform !== 'darwin',
+      metaKey: platform === 'darwin',
+    })
+    expect(mocks.applyDrafts).not.toHaveBeenCalled()
+    expect(drafts.read('local')?.content).toBe('background draft')
+  },
+)
+
+it('applies through the status button', async () => {
+  const ui = await renderEditor()
+  await editDocument()
+  fireEvent.click(ui.getByText('Apply draft'))
+  expect(mocks.applyDrafts).toHaveBeenCalledTimes(1)
+})
+
+it('reports a repeated storage failure only once until a successful write', async () => {
+  await renderEditor()
+  const fail = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    throw new Error('quota')
+  })
+  await editDocument('first')
+  await editDocument('second')
+  expect(mocks.notify).toHaveBeenCalledTimes(1)
+  expect((await getEditorDrafts()).read('local')?.content).toBe('second')
+  fail.mockRestore()
+  await editDocument('saved draft')
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+    throw new Error('quota')
+  })
+  await editDocument('latest')
+  expect(mocks.notify).toHaveBeenCalledTimes(2)
+})
+
+it('does not suppress blur for a disabled action control', async () => {
+  await renderEditor()
+  await editDocument()
+  const control = document.createElement('button')
+  control.dataset.draftAction = 'apply'
+  control.disabled = true
+  document.body.appendChild(control)
+  await act(async () => {
+    fireEvent.pointerDown(control)
+    fireEvent.blur(document.querySelector('.cm-content')!, { relatedTarget: control })
+    fireEvent.pointerUp(control)
+    await vi.advanceTimersByTimeAsync(1)
+  })
+  expect(mocks.applyDrafts).toHaveBeenCalledTimes(1)
+  control.remove()
+})

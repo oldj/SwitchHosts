@@ -48,6 +48,8 @@ export default {
   import_dependency_error: 'Выберите конфигурации, на которые ссылаются выбранные группы.',
   import_application_recovery:
     'Завершите незавершённую операцию с системным файлом hosts перед импортом.',
+  editor_draft_queue_skipped:
+    'Действие пропущено из-за ошибки предыдущего сохранения. Проверьте ошибку и повторите попытку.',
   editor_draft_pending: 'Ожидает применения',
   editor_draft_apply: 'Применить',
   editor_draft_discard: 'Удалить черновик',

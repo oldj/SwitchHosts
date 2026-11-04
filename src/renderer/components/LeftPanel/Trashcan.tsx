@@ -23,7 +23,9 @@ import styles from './Trashcan.module.scss'
 
 const Trashcan = () => {
   const { lang } = useI18n()
-  const { hostsData, currentHosts, setCurrentHosts, loadHostsData } = useHostsData()
+  const { hostsData, currentHosts, setCurrentHosts, loadHostsData } = useHostsData({
+    manageDrafts: true,
+  })
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false)
 
   const trashList = useMemo<ITrashcanListObject[]>(
@@ -48,6 +50,9 @@ const Trashcan = () => {
     actions
       .clearTrashcan()
       .then(async () => {
+        setCurrentHosts((current) =>
+          trashList.some((item) => item.id === current?.id) ? null : current,
+        )
         await loadHostsData()
         showSuccessNotification({ title: lang.trashcan_clear, message: lang.success })
       })

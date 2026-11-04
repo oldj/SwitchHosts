@@ -10,6 +10,8 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    '前の保存に失敗したため、この操作はスキップされました。エラーを確認して再試行してください。',
   editor_draft_pending: '適用待ち',
   editor_draft_apply: '適用',
   editor_draft_discard: '下書きを破棄',

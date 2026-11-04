@@ -630,6 +630,7 @@
           return null
         case 'get_basic_data':
           return {
+            can_prune_drafts: true,
             list: clone(state.list),
             trashcan: clone(state.trashcan),
             version: '5.0.0-beta.22',

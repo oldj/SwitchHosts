@@ -79,13 +79,24 @@ pub async fn get_basic_data<R: Runtime>(
     state: State<'_, AppState>,
     _args: Args,
 ) -> Result<Value, StorageError> {
-    let (manifest, trashcan) = {
+    let (manifest, trashcan, can_prune_drafts) = {
         let _guard = state.lock_store()?;
-        (load_manifest(&state)?, load_trashcan(&state)?)
+        // Both readers allow missing files for a new store. Such a snapshot
+        // (or a fallback data directory) cannot prove a draft was deleted.
+        let manifest = Manifest::load_if_present(&state.paths)?;
+        let trashcan = Trashcan::load_if_present(&state.paths.trashcan_file)?;
+        let can_prune =
+            state.data_dir_recovery.is_none() && manifest.is_some() && trashcan.is_some();
+        (
+            manifest.unwrap_or_default(),
+            trashcan.unwrap_or_default(),
+            can_prune,
+        )
     };
     Ok(json!({
         "list": manifest.root,
         "trashcan": trashcan.items,
+        "can_prune_drafts": can_prune_drafts,
         "version": env!("SWH_VERSION"),
         "application_recovery": read_application_recovery(&app, &state),
     }))
@@ -389,10 +400,15 @@ pub async fn get_content_of_list(
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
+    get_content_of_list_inner(&state, args)
+}
+
+fn get_content_of_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
     // The renderer hands us its current in-memory list as args[0]; we
-    // intentionally do NOT re-read manifest.json here. The Apply button
+    // use this list for aggregation rather than manifest.json. The Apply button
     // is supposed to write whatever the user is looking at, including
-    // edits that haven't yet been persisted via set_list.
+    // edits that haven't yet been persisted via set_list. Only draft overlays
+    // require the saved manifest, to validate their source identities.
     let list_value = args.first().cloned().unwrap_or(Value::Null);
     let list: Vec<Value> = match list_value {
         Value::Array(arr) => arr,
@@ -411,11 +427,13 @@ pub async fn get_content_of_list(
     };
 
     let _guard = state.lock_store()?;
-    let drafts = parse_editor_drafts(args.get(1))?;
-    validate_editor_drafts(&state, &load_manifest(&state)?.root, &drafts)?;
+    let mut drafts = parse_editor_drafts(args.get(1))?;
+    if !drafts.is_empty() {
+        drafts = changed_editor_drafts(state, &[&load_manifest(state)?.root], drafts)?;
+    }
     let overrides = drafts
-        .iter()
-        .map(|(id, draft)| (id.clone(), draft.content.clone()))
+        .into_iter()
+        .map(|(id, draft)| (id, draft.content))
         .collect();
     let content = hosts_apply::aggregate::aggregate_with_overrides(
         &list,
@@ -448,32 +466,37 @@ fn parse_editor_drafts(value: Option<&Value>) -> Result<EditorDrafts, StorageErr
     }
 }
 
-fn validate_editor_drafts(
+fn changed_editor_drafts(
     state: &AppState,
-    root: &[Value],
-    drafts: &EditorDrafts,
-) -> Result<(), StorageError> {
+    roots: &[&[Value]],
+    drafts: EditorDrafts,
+) -> Result<EditorDrafts, StorageError> {
+    let mut changed = EditorDrafts::new();
     for (id, draft) in drafts {
-        let node = manifest::find_node(root, id).ok_or_else(|| StorageError::Conflict {
-            reason: "A draft's hosts entry no longer exists.".into(),
-        })?;
-        if id == "0"
-            || node.get("is_sys").and_then(Value::as_bool) == Some(true)
-            || node.get("type").and_then(Value::as_str).unwrap_or("local") != "local"
-        {
-            return Err(StorageError::InvalidConfigValue {
-                key: "editor_drafts".into(),
-                reason: "Only local entries accept drafts.".into(),
-            });
+        for root in roots {
+            let node = manifest::find_node(root, &id).ok_or_else(|| StorageError::Conflict {
+                reason: "A draft's hosts entry no longer exists.".into(),
+            })?;
+            if id == "0"
+                || node.get("is_sys").and_then(Value::as_bool) == Some(true)
+                || node.get("type").and_then(Value::as_str).unwrap_or("local") != "local"
+            {
+                return Err(StorageError::InvalidConfigValue {
+                    key: "editor_drafts".into(),
+                    reason: "Only local entries accept drafts.".into(),
+                });
+            }
         }
-        let current = entries::read_entry(&state.paths.entries_dir, id)?;
-        if current != entries::normalize_to_lf(&draft.base_content)
-            && current != entries::normalize_to_lf(&draft.content)
-        {
+        let current = entries::read_entry(&state.paths.entries_dir, &id)?;
+        if current == entries::normalize_to_lf(&draft.content) {
+            continue;
+        }
+        if current != entries::normalize_to_lf(&draft.base_content) {
             return Err(StorageError::Conflict { reason: "The source changed while editing. Keep the draft or discard it and reload before retrying.".into() });
         }
+        changed.insert(id, draft);
     }
-    Ok(())
+    Ok(changed)
 }
 
 #[tauri::command]
@@ -560,17 +583,7 @@ fn set_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
             });
         }
     }
-    validate_editor_drafts(state, &m.root, &drafts)?;
-    validate_editor_drafts(state, &root, &drafts)?;
-    let changed_drafts: Vec<_> = drafts
-        .iter()
-        .filter_map(
-            |(id, draft)| match entries::read_entry(&state.paths.entries_dir, id) {
-                Ok(current) if current == entries::normalize_to_lf(&draft.content) => None,
-                _ => Some((id, draft)),
-            },
-        )
-        .collect();
+    let changed_drafts = changed_editor_drafts(state, &[&m.root, &root], drafts)?;
     // Reapplying the already saved configuration only needs the CAS check.
     // Do not make recovery depend on rewriting unchanged metadata on a full
     // or read-only disk. Compare canonical fields, including collapse state.
@@ -582,11 +595,7 @@ fn set_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
     }
     m.root = root;
     let mut targets = vec![Target::State, Target::Manifest];
-    targets.extend(
-        changed_drafts
-            .iter()
-            .map(|(id, _)| Target::Entry((*id).clone())),
-    );
+    targets.extend(changed_drafts.keys().cloned().map(Target::Entry));
     transaction::run(&state.paths, targets, || {
         for (id, draft) in &changed_drafts {
             entries::write_entry(&state.paths.entries_dir, id, &draft.content)?;

@@ -44,6 +44,8 @@ export default {
   import_reference_error: 'ข้อมูลสำรองมีการอ้างอิงกลุ่มที่ขาดหายหรือวนซ้ำ',
   import_dependency_error: 'โปรดเลือกการกำหนดค่าที่กลุ่มที่เลือกอ้างอิงถึง',
   import_application_recovery: 'โปรดจัดการการดำเนินการ hosts ของระบบที่ค้างอยู่ก่อนนำเข้า',
+  editor_draft_queue_skipped:
+    'ข้ามการดำเนินการนี้เนื่องจากการบันทึกก่อนหน้าล้มเหลว โปรดตรวจสอบข้อผิดพลาดแล้วลองอีกครั้ง',
   editor_draft_pending: 'รอการนำไปใช้',
   editor_draft_apply: 'นำไปใช้',
   editor_draft_discard: 'ทิ้งฉบับร่าง',

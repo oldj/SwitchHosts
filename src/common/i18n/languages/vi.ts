@@ -44,6 +44,8 @@ export default {
   import_reference_error: 'Bản sao lưu chứa tham chiếu nhóm bị thiếu hoặc vòng lặp.',
   import_dependency_error: 'Hãy chọn các cấu hình được các nhóm đã chọn tham chiếu.',
   import_application_recovery: 'Hãy xử lý thao tác hosts hệ thống đang chờ trước khi nhập.',
+  editor_draft_queue_skipped:
+    'Thao tác này đã bị bỏ qua do lần lưu trước thất bại. Hãy kiểm tra lỗi và thử lại.',
   editor_draft_pending: 'Chờ áp dụng',
   editor_draft_apply: 'Áp dụng',
   editor_draft_discard: 'Bỏ bản nháp',

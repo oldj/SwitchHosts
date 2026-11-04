@@ -7,6 +7,8 @@ import { importEnglish } from '../import'
 export default {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    '이전 저장에 실패하여 이 작업을 건너뛰었습니다. 오류를 확인한 후 다시 시도하세요.',
   editor_draft_pending: '적용 대기 중',
   editor_draft_apply: '적용',
   editor_draft_discard: '초안 버리기',

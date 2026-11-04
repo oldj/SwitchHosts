@@ -47,6 +47,8 @@ export default {
   import_reference_error: 'O backup contém referências a grupos ausentes ou circulares.',
   import_dependency_error: 'Selecione as configurações referenciadas pelos grupos selecionados.',
   import_application_recovery: 'Resolva a operação pendente no hosts do sistema antes de importar.',
+  editor_draft_queue_skipped:
+    'Esta ação foi ignorada porque uma gravação anterior falhou. Verifique o erro e tente novamente.',
   editor_draft_pending: 'Pendente de aplicação',
   editor_draft_apply: 'Aplicar',
   editor_draft_discard: 'Descartar rascunho',

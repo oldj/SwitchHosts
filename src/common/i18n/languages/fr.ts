@@ -10,6 +10,8 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    'Cette action a été ignorée car un enregistrement précédent a échoué. Vérifiez l’erreur et réessayez.',
   editor_draft_pending: 'En attente d’application',
   editor_draft_apply: 'Appliquer',
   editor_draft_discard: 'Abandonner le brouillon',

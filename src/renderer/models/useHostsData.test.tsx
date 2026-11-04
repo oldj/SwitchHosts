@@ -28,6 +28,7 @@ vi.mock('@renderer/models/useI18n', () => ({
     lang: {
       fail: 'Failed',
       storage_conflict: 'List changed; retry',
+      editor_draft_queue_skipped: 'Earlier save failed; action skipped',
       hosts_applied_save_failed: 'Applied but save and recovery failed',
       hosts_application_unknown: 'Application state unknown',
     },
@@ -56,7 +57,7 @@ function deferred<T = void>() {
   })
   return { promise, resolve, reject }
 }
-function setup() {
+function setup(manageDrafts = false) {
   const store = createStore()
   store.set(hostsDataAtom, { list: list('original'), trashcan: [], version: 'test' })
   const wrapper = ({ children }: { children: ReactNode }) => (
@@ -64,7 +65,9 @@ function setup() {
   )
   return {
     store,
-    ...renderHook(() => ({ first: useHostsData(), second: useHostsData() }), { wrapper }),
+    ...renderHook(() => ({ first: useHostsData({ manageDrafts }), second: useHostsData() }), {
+      wrapper,
+    }),
   }
 }
 let draftDirectory = 0
@@ -860,6 +863,53 @@ it('stops already queued draft applications after cancellation without discardin
   })
   expect(mocks.setSystemHosts).toHaveBeenCalledTimes(1)
   expect(drafts.read('original')?.content).toBe('draft')
+  expect(mocks.notify).toHaveBeenCalledWith({
+    title: 'Failed',
+    message: 'Earlier save failed; action skipped',
+  })
+})
+
+it('explains a draft source conflict rather than mislabeling it as a list conflict', async () => {
+  const reason =
+    'The source changed while editing. Keep the draft or discard it and reload before retrying.'
+  mocks.getContentOfList.mockRejectedValue({ kind: 'conflict', reason })
+  const { result } = setup()
+  await act(async () => {
+    expect(await result.current.first.applyDrafts()).toBe(true)
+  })
+  ;(await getEditorDrafts()).edit('original', 'draft', 'base')
+  await act(async () => {
+    expect(await result.current.first.applyDrafts()).toBe(false)
+  })
+  expect(mocks.notify).toHaveBeenCalledWith({ title: 'Failed', message: reason })
+  expect(mocks.setSystemHosts).not.toHaveBeenCalled()
+})
+
+it('does not prune drafts using a superseded main-list load', async () => {
+  const drafts = await getEditorDrafts()
+  drafts.edit('original', 'keep', 'base')
+  drafts.edit('deleted', 'remove', 'base')
+  const oldRead = deferred<any>()
+  mocks.getBasicData.mockReturnValueOnce(oldRead.promise).mockResolvedValueOnce({
+    can_prune_drafts: true,
+    list: disk,
+    trashcan: [],
+    version: 'test',
+  })
+  const { result } = setup(true)
+  let loading!: Promise<void>
+  await act(async () => {
+    loading = result.current.first.loadHostsData()
+  })
+  await act(async () => {
+    await result.current.first.loadHostsData()
+  })
+  await act(async () => {
+    oldRead.resolve({ can_prune_drafts: true, list: [], trashcan: [], version: 'test' })
+    await loading
+  })
+  expect(drafts.read('original')?.content).toBe('keep')
+  expect(drafts.read('deleted')).toBeUndefined()
 })
 
 it('retains drafts and compensates when the source/list transaction fails', async () => {

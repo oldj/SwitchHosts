@@ -39,6 +39,7 @@ import {
   draftsChanged,
   scheduleDraftApplication,
   cancelDraftApplication,
+  InvalidEditorDraft,
 } from './editorDrafts'
 
 const HostsEditor = () => {
@@ -55,12 +56,17 @@ const HostsEditor = () => {
       : null
   const [content, setContent] = useState('')
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [invalidDraft, setInvalidDraft] = useState<{
+    id: string
+    drafts: EditorDrafts
+    error: InvalidEditorDraft
+  } | null>(null)
   const [pendingDraft, setPendingDraft] = useState(false)
   const [discardOpen, setDiscardOpen] = useState(false)
   const [isDiscarding, setIsDiscarding] = useState(false)
   const refDiscard = useRef<{
     id: string
-    draft: Draft
+    draft: Draft | InvalidEditorDraft
     drafts: EditorDrafts
     view: EditorView
     restoring: boolean
@@ -68,6 +74,7 @@ const HostsEditor = () => {
   const refBaseContent = useRef('')
   const refBlurAction = useRef<string | null>(null)
   const refPreviousId = useRef(hostsId)
+  const refSaveError = useRef<string | null>(null)
 
   const { lang } = useI18n()
   const labelsCompartment = useRef(new Compartment())
@@ -117,8 +124,13 @@ const HostsEditor = () => {
   }, [hostsId])
 
   useLayoutEffect(() => {
+    // Restoring the selected trash entry changes its access mode without
+    // changing its ID. Keep it locked until its draft journal is loaded.
+    if (refReadOnly.current !== readOnly && refDocumentId.current === hostsId) {
+      refDocumentId.current = null
+    }
     refReadOnly.current = readOnly
-  }, [readOnly])
+  }, [readOnly, hostsId])
 
   const reportSaveError = (error: unknown) => {
     showErrorNotification({
@@ -143,12 +155,15 @@ const HostsEditor = () => {
     refSavePending.current = savePending
   })
 
+  const draftAction = (target: EventTarget | null) => {
+    const control = target instanceof Element ? target.closest('[data-draft-action]') : null
+    if (control?.matches(':disabled, [aria-disabled="true"], [data-disabled]')) return null
+    return control?.getAttribute('data-draft-action') ?? null
+  }
+
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
-      refBlurAction.current =
-        event.target instanceof Element
-          ? (event.target.closest('[data-draft-action]')?.getAttribute('data-draft-action') ?? null)
-          : null
+      refBlurAction.current = draftAction(event.target)
     }
     const onPointerEnd = () => {
       refBlurAction.current = null
@@ -158,7 +173,7 @@ const HostsEditor = () => {
     }
     const onDraftChange = () => {
       const target = refDiscard.current
-      if (target && target.drafts.read(target.id) !== target.draft) cancelDiscard()
+      if (target && !target.drafts.matches(target.id, target.draft)) cancelDiscard()
       const id = refDocumentId.current
       const draft = id ? refDrafts.current?.read(id) : undefined
       setPendingDraft(!!draft)
@@ -189,6 +204,7 @@ const HostsEditor = () => {
   useLayoutEffect(() => {
     if (refPreviousId.current !== hostsId) {
       refPreviousId.current = hostsId
+      refSaveError.current = null
       const hadDiscard = cancelDiscard()
       const previous = refDocumentId.current
       if (!hadDiscard && !refBlurAction.current && previous && refDrafts.current?.read(previous)) {
@@ -212,8 +228,11 @@ const HostsEditor = () => {
     setContent(normalizedContent)
     try {
       refDrafts.current?.edit(refHostsId.current, normalizedContent, refBaseContent.current)
+      refSaveError.current = null
     } catch (error) {
-      reportSaveError(error)
+      const message = getErrorMessage(error, refLang.current.fail)
+      if (refSaveError.current !== message) reportSaveError(error)
+      refSaveError.current = message
     }
   }
 
@@ -329,18 +348,15 @@ const HostsEditor = () => {
               const id = refDocumentId.current
               if (!id || !refDrafts.current?.read(id)) return
               const target = event.relatedTarget
-              if (
-                refBlurAction.current ||
-                (target instanceof Element && target.closest('[data-draft-action]'))
-              )
-                return
+              if (refBlurAction.current || draftAction(target)) return
               scheduleDraftApplication((isCurrent) => refSavePending.current(isCurrent))
             },
             keydown: (event) => {
               const modifier = agent.platform === 'darwin' ? event.metaKey : event.ctrlKey
               if (modifier && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 's') {
                 event.preventDefault()
-                refSavePending.current()
+                if (!refReadOnly.current && refDocumentId.current === refHostsId.current)
+                  refSavePending.current()
                 return true
               }
               return false
@@ -385,14 +401,16 @@ const HostsEditor = () => {
       if (
         refDiscard.current !== target ||
         refView.current !== target.view ||
-        refDocumentId.current !== target.id ||
+        (!(target.draft instanceof InvalidEditorDraft) && refDocumentId.current !== target.id) ||
         refHostsId.current !== target.id ||
         request !== refContentRequest.current ||
-        target.drafts.read(target.id) !== target.draft
+        !target.drafts.matches(target.id, target.draft)
       )
         return
-      const { built, state } = buildEditorState(saved)
       target.drafts.discard(target.id)
+      refDocumentId.current = target.id
+      refDrafts.current = target.drafts
+      const { built, state } = buildEditorState(saved)
       refBaseContent.current = saved
       refBuilt.current = built
       const { scrollTop, scrollLeft } = target.view.scrollDOM
@@ -403,6 +421,7 @@ const HostsEditor = () => {
       target.view.scrollDOM.scrollLeft = scrollLeft
       setContent(saved)
       setLoadError(null)
+      setInvalidDraft(null)
       refreshEditorLayout(target.view)
     } catch (error) {
       if (refDiscard.current === target) reportSaveError(error)
@@ -421,11 +440,13 @@ const HostsEditor = () => {
     if (refDocumentId.current === targetHostsId && refDrafts.current?.read(targetHostsId)) return
     const request = ++refContentRequest.current
     setLoadError(null)
+    setInvalidDraft(null)
     if (refDocumentId.current !== targetHostsId) {
       // A different entry must never display the previous entry's document,
       // including when the new read fails. Keep this placeholder read-only.
       refDocumentId.current = null
       refDrafts.current = null
+      setPendingDraft(false)
       setContent('')
       createEditorView('')
     }
@@ -449,6 +470,8 @@ const HostsEditor = () => {
     } catch (error) {
       if (refHostsId.current === targetHostsId && request === refContentRequest.current) {
         setLoadError(getErrorMessage(error, refLang.current.fail))
+        if (error instanceof InvalidEditorDraft && drafts)
+          setInvalidDraft({ id: targetHostsId, drafts, error })
       }
       return
     }
@@ -492,7 +515,7 @@ const HostsEditor = () => {
     // Reset the external editor and its error/status display for the selected document.
     loadContent(hostsId).catch((e) => console.error(e))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hostsId, groupMembers, groupStructure])
+  }, [hostsId, readOnly, groupMembers, groupStructure])
 
   // Reconfigure before paint so the previous document cannot receive input
   // under the newly selected id while its content is still loading.
@@ -627,6 +650,26 @@ const HostsEditor = () => {
             >
               {lang.history_retry}
             </button>
+            {invalidDraft?.id === hostsId && (
+              <button
+                type="button"
+                disabled={isApplying || isDiscarding}
+                onClick={() => {
+                  if (!refView.current || refDiscard.current) return
+                  cancelDraftApplication()
+                  refDiscard.current = {
+                    id: hostsId,
+                    drafts: invalidDraft.drafts,
+                    draft: invalidDraft.error,
+                    view: refView.current,
+                    restoring: false,
+                  }
+                  setDiscardOpen(true)
+                }}
+              >
+                {lang.editor_draft_discard}
+              </button>
+            )}
           </div>
         )}
         <div ref={refMount} className={styles.mount} />

@@ -10,6 +10,7 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...httpApiChinese,
   ...importChinese,
+  editor_draft_queue_skipped: '前一次保存失败，本次排队操作已取消。请检查错误后重试。',
   editor_draft_pending: '待应用',
   editor_draft_apply: '应用',
   editor_draft_discard: '放弃草稿',

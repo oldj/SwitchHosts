@@ -41,7 +41,7 @@ const StatusBar = (props: Props) => {
       </Group>
       <Box style={{ flex: 1 }} />
       {props.pendingDraft && (
-        <Group gap="8px" data-draft-action="apply">
+        <Group gap="8px">
           <span role="status">{i18n.lang.editor_draft_pending}</span>
           <Tooltip
             label={applyHint}
@@ -52,6 +52,7 @@ const StatusBar = (props: Props) => {
             events={{ hover: true, focus: true, touch: false }}
           >
             <Button
+              data-draft-action="apply"
               className={styles.draftButton}
               variant="subtle"
               size="compact-xs"
@@ -63,6 +64,7 @@ const StatusBar = (props: Props) => {
             </Button>
           </Tooltip>
           <Button
+            data-draft-action="discard"
             className={styles.draftButton}
             variant="subtle"
             size="compact-xs"

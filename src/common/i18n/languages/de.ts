@@ -10,6 +10,8 @@ import { LanguageDict } from '@common/types'
 const lang: LanguageDict = {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    'Diese Aktion wurde übersprungen, weil ein vorheriger Speichervorgang fehlgeschlagen ist. Prüfen Sie den Fehler und versuchen Sie es erneut.',
   editor_draft_pending: 'Noch nicht angewendet',
   editor_draft_apply: 'Anwenden',
   editor_draft_discard: 'Entwurf verwerfen',

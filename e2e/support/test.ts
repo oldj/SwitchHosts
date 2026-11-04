@@ -129,6 +129,17 @@ export async function clearMockCalls(page: Page): Promise<void> {
   await page.evaluate(() => window.__SWITCHHOSTS_E2E__.clearCalls())
 }
 
+export async function saveEditorDraft(page: Page): Promise<void> {
+  const modifier = (await page
+    .locator('body')
+    .evaluate((body) => body.classList.contains('platform-darwin')))
+    ? 'Meta'
+    : 'Control'
+  // Focus without clicking so rectangular selections and the undo history stay intact.
+  await page.locator('.cm-content').press(`${modifier}+s`)
+  await expect(page.getByText('Pending application', { exact: true })).toHaveCount(0)
+}
+
 export async function showRightPanel(page: Page): Promise<void> {
   const state = await getMockState(page)
   if (!state.configs.right_panel_show) {

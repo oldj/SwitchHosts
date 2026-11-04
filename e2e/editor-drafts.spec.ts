@@ -330,5 +330,55 @@ for (const [platform, ua, saveKey] of [
         (await getMockCalls(page)).filter((c) => c.cmd === 'apply_hosts_selection'),
       ).toHaveLength(1)
     })
+    test('recovers a damaged draft with confirmation and can apply through the button', async ({
+      page,
+    }) => {
+      await page.locator('[data-id="local-api"]').click()
+      const editor = page.locator('.cm-content')
+      await expect(editor).toContainText('api.local')
+      await editor.fill('192.0.2.70 damaged-draft.local\n')
+      await page.evaluate(() => {
+        const key = Object.keys(localStorage).find(
+          (key) => key.startsWith('switchhosts:editor-draft:v1:') && key.endsWith(':local-api'),
+        )!
+        localStorage.setItem(key, '{broken')
+      })
+      await page.reload()
+      await page.locator('[data-id="local-api"]').click()
+      await expect(page.getByRole('alert')).toBeVisible()
+      await page.getByRole('alert').getByRole('button', { name: 'Discard draft' }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click()
+      await expect(page.getByRole('alert')).toBeVisible()
+      await page.getByRole('alert').getByRole('button', { name: 'Discard draft' }).click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Discard draft' }).click()
+      await expect(page.getByRole('alert')).toHaveCount(0)
+      await expect(editor).toContainText('api.local')
+      await clearMockCalls(page)
+      await editor.fill('192.0.2.71 recovered-button.local\n')
+      await page.getByRole('button', { name: 'Apply', exact: true }).click()
+      await expect
+        .poll(async () => (await getMockState(page)).systemHosts)
+        .toContain('recovered-button.local')
+      expect(
+        (await getMockCalls(page)).filter((call) => call.cmd === 'apply_hosts_selection'),
+      ).toHaveLength(1)
+    })
+
+    test('clicking the pending label applies on blur without claiming a button action', async ({
+      page,
+    }) => {
+      await page.locator('[data-id="local-api"]').click()
+      const editor = page.locator('.cm-content')
+      await expect(editor).toContainText('api.local')
+      await editor.fill('192.0.2.72 status-blur.local\n')
+      await clearMockCalls(page)
+      await page.getByText('Pending application', { exact: true }).click()
+      await expect
+        .poll(async () => (await getMockState(page)).systemHosts)
+        .toContain('status-blur.local')
+      expect(
+        (await getMockCalls(page)).filter((call) => call.cmd === 'apply_hosts_selection'),
+      ).toHaveLength(1)
+    })
   })
 }

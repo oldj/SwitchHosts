@@ -8,6 +8,8 @@ import { importEnglish } from '../import'
 export default {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    'Önceki kaydetme başarısız olduğu için bu işlem atlandı. Hatayı kontrol edip yeniden deneyin.',
   editor_draft_pending: 'Uygulanmayı bekliyor',
   editor_draft_apply: 'Uygula',
   editor_draft_discard: 'Taslağı sil',

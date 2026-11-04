@@ -2,7 +2,7 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({ getHostsContent: vi.fn() }))
 vi.mock('@renderer/core/agent', () => ({ actions: mocks }))
-import { EditorDrafts } from './editorDrafts'
+import { EditorDrafts, InvalidEditorDraft } from './editorDrafts'
 const list = [{ id: 'a', type: 'local' as const }]
 beforeEach(() => {
   localStorage.clear()
@@ -36,6 +36,14 @@ it('rebases newer typing onto a successful source commit without discarding it',
     base_content: 'submitted',
   })
 })
+it('captures imported entry IDs that are also JavaScript property names', async () => {
+  const drafts = new EditorDrafts(localStorage, '/data')
+  drafts.edit('__proto__', 'edited', 'base')
+  const snapshot = await drafts.capture([{ id: '__proto__', type: 'local' }])
+  expect(Object.keys(snapshot)).toEqual(['__proto__'])
+  expect(JSON.parse(JSON.stringify(snapshot))['__proto__'].content).toBe('edited')
+})
+
 it('excludes deleted, read-only and system entries from a captured application', async () => {
   const drafts = new EditorDrafts(localStorage, '/data')
   for (const id of ['a', 'deleted', 'remote', '0']) drafts.edit(id, 'draft', 'base')
@@ -200,4 +208,90 @@ it('validates every draft lifetime before recording any batch submission', async
   const reopened = new EditorDrafts(localStorage, '/data')
   expect(reopened.read('a')?.pending_content).toBeUndefined()
   expect(reopened.read('b')?.pending_content).toBeUndefined()
+})
+
+it.each(['{broken', '{"content":3}', 'null'])(
+  'retains invalid journal %s until explicitly discarded',
+  (raw) => {
+    const key = 'switchhosts:editor-draft:v1:%2Fdata:a'
+    localStorage.setItem(key, raw)
+    const drafts = new EditorDrafts(localStorage, '/data')
+    expect(() => drafts.read('a')).toThrow(InvalidEditorDraft)
+    expect(localStorage.getItem(key)).toBe(raw)
+    const invalid = new InvalidEditorDraft(raw)
+    expect(drafts.matches('a', invalid)).toBe(true)
+    localStorage.setItem(key, JSON.stringify({ content: 'repaired', base_content: 'original' }))
+    expect(drafts.matches('a', invalid)).toBe(false)
+    expect(drafts.read('a')?.content).toBe('repaired')
+  },
+)
+
+it('removes a reverted draft but retains an in-flight commit receipt', async () => {
+  const drafts = new EditorDrafts(localStorage, '/data')
+  drafts.edit('a', 'edit', 'original')
+  drafts.edit('a', 'original', 'original')
+  expect(drafts.read('a')).toBeUndefined()
+  expect(new EditorDrafts(localStorage, '/data').read('a')).toBeUndefined()
+  drafts.edit('a', 'edit', 'original')
+  const snapshot = await drafts.capture(list)
+  drafts.begin(snapshot)
+  drafts.edit('a', 'original', 'original')
+  expect(drafts.read('a')?.pending_content).toBe('edit')
+  drafts.acknowledge(snapshot)
+  expect(drafts.read('a')).toEqual({ content: 'original', base_content: 'edit' })
+})
+
+it('keeps reverted text in memory if removing the old journal fails', async () => {
+  const drafts = new EditorDrafts(localStorage, '/data')
+  drafts.edit('a', 'old edit', 'original')
+  const failure = vi.spyOn(Storage.prototype, 'removeItem').mockImplementationOnce(() => {
+    throw new Error('storage unavailable')
+  })
+  expect(() => drafts.edit('a', 'original', 'original')).toThrow('storage unavailable')
+  failure.mockRestore()
+  const snapshot = await drafts.capture(list)
+  expect(snapshot).toEqual({ a: { content: 'original', base_content: 'original' } })
+  drafts.begin(snapshot)
+  drafts.acknowledge(snapshot)
+  expect(new EditorDrafts(localStorage, '/data').read('a')).toBeUndefined()
+})
+
+it('prunes only missing entries in this scope, preserving trash and recovery drafts', async () => {
+  const drafts = new EditorDrafts(localStorage, '/data')
+  for (const id of ['a', 'trashed-child', 'recovery', 'deleted']) drafts.edit(id, 'draft', 'base')
+  new EditorDrafts(localStorage, '/other').edit('deleted', 'other scope', 'base')
+  const old = await drafts.capture([{ id: 'deleted', type: 'local' }])
+  drafts.prune({ list: [], trashcan: [], version: 'test', can_prune_drafts: false })
+  expect(drafts.read('a')?.content).toBe('draft')
+  drafts.prune({
+    list: [],
+    trashcan: [],
+    version: 'test',
+    can_prune_drafts: true,
+    application_recovery: { status: 'unknown' },
+  })
+  expect(drafts.read('deleted')).toBeDefined()
+  // A fresh instance also has to discover journals that are not cached yet.
+  new EditorDrafts(localStorage, '/data').edit('uncached', 'draft', 'base')
+  drafts.prune({
+    can_prune_drafts: true,
+    list,
+    trashcan: [
+      {
+        data: { id: 'folder', type: 'folder', children: [{ id: 'trashed-child' }] },
+        add_time_ms: 1,
+        parent_id: null,
+      },
+    ],
+    application_recovery: { status: 'applied', list: [{ id: 'recovery' }] },
+    version: 'test',
+  })
+  expect(drafts.read('a')).toBeDefined()
+  expect(drafts.read('trashed-child')).toBeDefined()
+  expect(drafts.read('recovery')).toBeDefined()
+  expect(drafts.read('deleted')).toBeUndefined()
+  expect(drafts.read('uncached')).toBeUndefined()
+  expect(new EditorDrafts(localStorage, '/other').read('deleted')?.content).toBe('other scope')
+  drafts.edit('deleted', 'imported draft', 'new source')
+  expect(() => drafts.begin(old)).toThrow('discarded')
 })

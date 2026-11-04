@@ -1,10 +1,16 @@
-import { IHostsListObject } from '@common/data'
+import { IHostsBasicData, IHostsListObject } from '@common/data'
 import { flatten } from '@common/hostsFn'
 import { actions } from '@renderer/core/agent'
 
 export type Draft = { content: string; base_content?: string; pending_content?: string }
 export type DraftSnapshot = Record<string, { content: string; base_content: string }>
 export const draftsChanged = 'switchhosts:editor-drafts-changed'
+
+export class InvalidEditorDraft extends Error {
+  constructor(readonly raw: string) {
+    super('Invalid editor draft. Discard the draft to reload the saved source.')
+  }
+}
 
 // An in-window blur is deferred until click handlers can claim the draft as
 // part of a selection apply. Window blur/unmount cancels it, never flushes it.
@@ -52,21 +58,45 @@ export class EditorDrafts {
     if (memory) return memory
     const saved = this.storage.getItem(this.key(id))
     if (saved === null) return undefined
-    const draft = JSON.parse(saved) as Draft
+    let draft: Draft
+    try {
+      draft = JSON.parse(saved) as Draft
+    } catch {
+      throw new InvalidEditorDraft(saved)
+    }
     if (
       !draft ||
       typeof draft.content !== 'string' ||
       (draft.base_content !== undefined && typeof draft.base_content !== 'string') ||
       (draft.pending_content !== undefined && typeof draft.pending_content !== 'string')
     ) {
-      throw new Error('Invalid editor draft')
+      throw new InvalidEditorDraft(saved)
     }
     this.drafts.set(id, draft)
     return draft
   }
+  matches(id: string, expected: Draft | InvalidEditorDraft) {
+    return expected instanceof InvalidEditorDraft
+      ? !this.drafts.has(id) && this.storage.getItem(this.key(id)) === expected.raw
+      : this.read(id) === expected
+  }
   edit(id: string, content: string, base: string) {
     const previous = this.read(id)
     const draft = { ...previous, content, base_content: previous?.base_content ?? base }
+    // A submitted draft may already be changing the source. Keep its receipt
+    // even when typing returns to the old base, so acknowledgement can rebase it.
+    if (draft.pending_content === undefined && content === draft.base_content) {
+      try {
+        this.discard(id)
+      } catch (error) {
+        // This is a text edit, unlike a confirmed discard. If removing the
+        // journal fails, keep the visible text in memory for the next save.
+        this.drafts.set(id, draft)
+        this.notify()
+        throw error
+      }
+      return
+    }
     this.write(id, draft)
   }
   private write(id: string, draft: Draft) {
@@ -78,7 +108,7 @@ export class EditorDrafts {
     }
   }
   async capture(list: IHostsListObject[]): Promise<DraftSnapshot> {
-    const snapshot: DraftSnapshot = {}
+    const snapshot: DraftSnapshot = Object.create(null)
     const versions = new Map<string, number>()
     this.snapshots.set(snapshot, versions)
     for (const item of flatten(list)) {
@@ -143,6 +173,29 @@ export class EditorDrafts {
     this.drafts.delete(id)
     this.discardVersions.set(id, (this.discardVersions.get(id) ?? 0) + 1)
     this.notify()
+  }
+  prune(data: IHostsBasicData) {
+    // An unknown application has no trustworthy list of participating entries.
+    // Defer cleanup until recovery identifies the authoritative selection.
+    if (!data.can_prune_drafts || data.application_recovery?.status === 'unknown') return
+    // Trash is recoverable, including children of trashed folders. An applied
+    // recovery snapshot also still owns its drafts until explicitly resolved.
+    const keep = new Set(
+      flatten([
+        ...data.list,
+        ...data.trashcan.map((item) => item.data),
+        ...(data.application_recovery?.status === 'applied' ? data.application_recovery.list : []),
+      ]).map((item) => item.id),
+    )
+    const ids = new Set(this.drafts.keys())
+    const prefix = this.key('')
+    for (let i = 0; i < this.storage.length; i++) {
+      const key = this.storage.key(i)
+      if (key?.startsWith(prefix)) ids.add(decodeURIComponent(key.slice(prefix.length)))
+    }
+    for (const id of ids) {
+      if (!keep.has(id)) this.discard(id)
+    }
   }
 }
 

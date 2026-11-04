@@ -8,6 +8,8 @@ import { importEnglish } from '../import'
 export default {
   ...httpApiEnglish,
   ...importEnglish,
+  editor_draft_queue_skipped:
+    'This action was skipped because an earlier save failed. Check the error and try again.',
   editor_draft_pending: 'Pending application',
   editor_draft_apply: 'Apply',
   editor_draft_discard: 'Discard draft',
