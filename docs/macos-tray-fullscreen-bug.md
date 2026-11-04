@@ -1,6 +1,12 @@
 # macOS 托盘全屏问题：修复与排查记录
 
-## 当前状态（2026-09-30）
+## 当前状态
+
+针对 [#1067](https://github.com/oldj/SwitchHosts/issues/1067)，托盘改为单独创建非激活
+NSPanel，在显示期间承载 Tauri 的 WebView 内容，关闭时归还。两个原生窗口在整个
+生命周期内保留各自的类，以免破坏 AppKit 的窗口观察者。下文 Fix #4 的原地转换是历史实现。
+
+## 2026-09-30 验证记录
 
 PR [#1051](https://github.com/oldj/SwitchHosts/pull/1051) 已合入 master，修复也已同步到 develop。
 作者已在 PR 描述确认四项手工验证通过：全屏上方显示、窗内移动不关闭、窗外移动不关闭、
@@ -311,8 +317,8 @@ Regular 还是 Accessory，都会要求系统切到 App 的 "home" Space——Re
 的前提下接收鼠标点击。Tauri 的 `WebviewWindowBuilder` 不支持这种面板，需要手写
 AppKit 代码承载 `WKWebView`，工作量明显更大。
 
-## 当前状态
+## 当时的结论
 
-上面的 Fix #1～#3 保留为排查历史，不再代表当前代码。当前实现已经进入 Fix #4：复用
+上面的 Fix #1～#3 保留为排查历史，不再代表当前代码。当时的 Fix #4 选择复用
 原有 Tauri WebView，将 macOS 托盘窗转换为 nonactivating `NSPanel`，并移除托盘显示路径
 中的 App 全局激活。最新代码与验证状态以本文开头的“当前状态”和链接的回归验证记录为准。

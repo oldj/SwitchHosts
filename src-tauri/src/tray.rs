@@ -24,7 +24,9 @@ use serde_json::json;
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Emitter, Manager, Monitor, PhysicalPosition, Rect as TauriRect, Runtime};
+use tauri::{AppHandle, Emitter, Manager, Runtime};
+#[cfg(not(target_os = "macos"))]
+use tauri::{Monitor, PhysicalPosition, Rect as TauriRect};
 
 use crate::i18n::menu_labels;
 use crate::lifecycle;
@@ -32,13 +34,20 @@ use crate::storage::{AppState, StorageError};
 
 mod window;
 pub use window::TRAY_WINDOW_LABEL;
-use window::{TRAY_WINDOW_MAX_HEIGHT, TRAY_WINDOW_WIDTH};
+use window::TRAY_WINDOW_MAX_HEIGHT;
+#[cfg(not(target_os = "macos"))]
+use window::TRAY_WINDOW_WIDTH;
+
+#[cfg(target_os = "macos")]
+type TrayAnchor = Option<window::panel::StatusItemAnchor>;
+#[cfg(not(target_os = "macos"))]
+type TrayAnchor = (PhysicalPosition<f64>, TauriRect);
 
 // Use AppKit's named masks so pointer motion cannot accidentally become a
 // dismissal event (NSEventType::MouseMoved is 5, OtherMouseDown is 25).
 #[cfg(target_os = "macos")]
-const TRAY_DISMISS_MOUSE_EVENTS: tauri_nspanel::objc2_app_kit::NSEventMask = {
-    use tauri_nspanel::objc2_app_kit::NSEventMask;
+const TRAY_DISMISS_MOUSE_EVENTS: objc2_app_kit::NSEventMask = {
+    use objc2_app_kit::NSEventMask;
     NSEventMask::LeftMouseDown
         .union(NSEventMask::RightMouseDown)
         .union(NSEventMask::OtherMouseDown)
@@ -143,7 +152,19 @@ pub fn install_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), tauri::Error> 
                 ..
             } = event
             {
-                handle_left_click(tray.app_handle(), position, rect);
+                #[cfg(target_os = "macos")]
+                let anchor = tray
+                    .with_inner_tray_icon(move |icon| {
+                        let item = icon.ns_status_item()?;
+                        let button = item.button(objc2::MainThreadMarker::new()?)?;
+                        let scale = button.window()?.backingScaleFactor();
+                        window::panel::status_item_anchor(rect, position, scale)
+                    })
+                    .ok()
+                    .flatten();
+                #[cfg(not(target_os = "macos"))]
+                let anchor = (position, rect);
+                handle_left_click(tray.app_handle(), anchor);
             }
         });
 
@@ -155,11 +176,7 @@ pub fn install_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), tauri::Error> 
     Ok(())
 }
 
-fn handle_left_click<R: Runtime + 'static>(
-    app: &AppHandle<R>,
-    cursor: PhysicalPosition<f64>,
-    icon_rect: TauriRect,
-) {
+fn handle_left_click<R: Runtime + 'static>(app: &AppHandle<R>, anchor: TrayAnchor) {
     let (mini_enabled, in_recovery) = {
         let state = app.state::<AppState>();
         let mini = state
@@ -187,11 +204,11 @@ fn handle_left_click<R: Runtime + 'static>(
         //       LAST_TRAY_AUTO_HIDE_MS; skip re-showing so the
         //       dismissal sticks.
         if let Some(window) = app.get_webview_window(TRAY_WINDOW_LABEL) {
-            if window.is_visible().unwrap_or(false) {
+            if window::is_visible(&window) {
                 // Destroy rather than hide so the webview process is
                 // released; `show_tray_window` lazy-recreates the window
                 // on the next icon click.
-                close_tray_window(app, &window);
+                close_tray_window(&window);
                 return;
             }
         }
@@ -199,23 +216,19 @@ fn handle_left_click<R: Runtime + 'static>(
         if last_hide != 0 && now_ms().saturating_sub(last_hide) < TRAY_TOGGLE_DEDUPE_MS {
             return;
         }
-        show_tray_window_from_tray_click(app, cursor, icon_rect);
+        show_tray_window_from_tray_click(app, anchor);
     } else {
         show_main_window(app);
     }
 }
 
-fn show_tray_window_from_tray_click<R: Runtime + 'static>(
-    app: &AppHandle<R>,
-    cursor: PhysicalPosition<f64>,
-    icon_rect: TauriRect,
-) {
+fn show_tray_window_from_tray_click<R: Runtime + 'static>(app: &AppHandle<R>, anchor: TrayAnchor) {
     #[cfg(target_os = "macos")]
     {
         LAST_TRAY_ICON_SHOW_CLICK_MS.store(now_ms(), Ordering::Relaxed);
         let app_for_show = app.clone();
         if let Err(e) = app.run_on_main_thread(move || {
-            if let Err(e) = show_tray_window(&app_for_show, cursor, icon_rect) {
+            if let Err(e) = show_tray_window(&app_for_show, anchor) {
                 log::warn!("failed to show mini window: {e}");
             }
         }) {
@@ -224,7 +237,7 @@ fn show_tray_window_from_tray_click<R: Runtime + 'static>(
     }
     #[cfg(not(target_os = "macos"))]
     {
-        if let Err(e) = show_tray_window(app, cursor, icon_rect) {
+        if let Err(e) = show_tray_window(app, anchor) {
             log::warn!("failed to show mini window: {e}");
         }
     }
@@ -445,41 +458,25 @@ pub fn set_tray_title<R: Runtime>(app: &AppHandle<R>, title: Option<&str>) {
 /// Show the mini tray window. Lazy-creates the window on first call,
 /// computes a position next to the tray icon, and brings it forward.
 /// Subsequent calls reuse the existing webview.
-fn show_tray_window<R: Runtime>(
-    app: &AppHandle<R>,
-    cursor: PhysicalPosition<f64>,
-    icon_rect: TauriRect,
-) -> Result<(), String> {
+fn show_tray_window<R: Runtime>(app: &AppHandle<R>, anchor: TrayAnchor) -> Result<(), String> {
     let window = match app.get_webview_window(TRAY_WINDOW_LABEL) {
         Some(w) => w,
         None => create_tray_window(app).map_err(|e| e.to_string())?,
     };
 
-    // Reused windows retain their initial size. Use their actual logical height
-    // when anchoring above a bottom taskbar or clamping to the monitor work area.
-    let height = window
-        .inner_size()
-        .map_err(|e| e.to_string())?
-        .to_logical::<f64>(window.scale_factor().map_err(|e| e.to_string())?)
-        .height;
-    if let Some(physical_pos) = compute_position(app, cursor, icon_rect, height) {
-        window
-            .set_position(physical_pos)
-            .map_err(|e| e.to_string())?;
-    }
-
-    // A regular NSWindow needs to activate its owning app before it can
-    // reliably become interactive. Activating a Regular app from another
-    // app's full-screen Space switches back to the app's home Space. The
-    // macOS tray window is therefore converted to a non-activating NSPanel
-    // at creation time: it can become key and receive webview input without
-    // activating SwitchHosts or disturbing the current Space.
     #[cfg(target_os = "macos")]
-    {
-        window::show(app)?;
-    }
+    window::panel::show(&window, anchor)?;
     #[cfg(not(target_os = "macos"))]
     {
+        let height = window
+            .inner_size()
+            .map_err(|e| e.to_string())?
+            .to_logical::<f64>(window.scale_factor().map_err(|e| e.to_string())?)
+            .height;
+        let (cursor, icon_rect) = anchor;
+        if let Some(point) = compute_position(app, cursor, icon_rect, height) {
+            window.set_position(point).map_err(|e| e.to_string())?;
+        }
         // Stamp the show *before* show()/set_focus() so the suppression
         // window already covers the whole display+focus phase. If the
         // compositor delivers a transient Focused(false) synchronously
@@ -541,43 +538,14 @@ fn create_tray_window<R: Runtime>(
     Ok(window)
 }
 
-fn close_tray_window<R: Runtime>(app: &AppHandle<R>, window: &tauri::WebviewWindow<R>) {
-    if let Err(error) = window::close(app, window) {
+fn close_tray_window<R: Runtime>(window: &tauri::WebviewWindow<R>) {
+    if let Err(error) = window::close(window) {
         log::warn!("failed to close tray window: {error}");
     }
 }
 
-/// Compute the mini window's position so it sits flush against the
-/// tray icon, clamped inside the active monitor's work area.
-///
-/// All math runs in **physical pixels**:
-///
-/// 1. We can't use `app.monitor_from_point(cursor.x, cursor.y)` on
-///    macOS — under the hood tao calls `CGRectContainsPoint` against
-///    `CGDisplayBounds`, which is in **logical** Cocoa points, but
-///    `cursor` and `icon_rect` from the tray-icon crate are already
-///    multiplied by the status item window's `backingScaleFactor`.
-///    On any Retina mac the cursor coords are ~2× too large, so the
-///    lookup misses every display and falls back to the primary
-///    monitor — which made the mini window pop up on the wrong screen
-///    when the user clicked the tray icon on a secondary display.
-///    Instead we iterate `available_monitors()` and pick the one whose
-///    own physical `(position, size)` rect (in the same Tauri-physical
-///    coord frame as `cursor`) contains the cursor.
-///
-/// 2. We pass `set_position` a `PhysicalPosition` rather than a
-///    `LogicalPosition` so Tauri doesn't apply yet another scale
-///    conversion using the window's *current* monitor.
-///
-/// macOS / Windows: tray icon physical rect is reliable, so we anchor
-/// the window to the icon centre on the X axis and either above or
-/// below it on the Y axis depending on which half of the screen the
-/// icon lives in. Linux GTK status icons don't deliver useful rects,
-/// but we're not in this code path on Linux today (Linux uses the
-/// menu only).
-///
-/// Returns `None` if no monitor information is available; the caller
-/// should fall back to whatever position the window already had.
+/// Anchor to the taskbar icon and clamp to its monitor in physical pixels.
+#[cfg(not(target_os = "macos"))]
 fn compute_position<R: Runtime>(
     app: &AppHandle<R>,
     cursor: PhysicalPosition<f64>,
@@ -634,13 +602,7 @@ fn compute_position<R: Runtime>(
     Some(PhysicalPosition::new(x, y))
 }
 
-/// Find the monitor that contains the tray click. We can't use
-/// `app.monitor_from_point` on macOS (it expects logical Quartz points
-/// but the tray-icon crate hands us physical pixels), so we iterate
-/// `available_monitors()` ourselves and check the cursor against each
-/// monitor's full bounds. If the cursor doesn't land inside any
-/// monitor (it can sit a hair outside on the menu bar's very top
-/// edge), we fall back to the icon-centre, then the primary monitor.
+#[cfg(not(target_os = "macos"))]
 fn pick_monitor_for_cursor<R: Runtime>(
     app: &AppHandle<R>,
     cursor: PhysicalPosition<f64>,
@@ -722,9 +684,10 @@ fn install_dismiss_monitors<R: Runtime>(app: &AppHandle<R>) {
             let click_window: *mut AnyObject = msg_send![event, window];
             let tray_ns = app_for_local
                 .get_webview_window(TRAY_WINDOW_LABEL)
-                .and_then(|w| w.ns_window().ok())
-                .unwrap_or(std::ptr::null_mut());
-            let click_ptr = click_window as *mut std::ffi::c_void;
+                .and_then(|w| window::panel::get(&w))
+                .map(|panel| objc2::rc::Retained::as_ptr(&panel).cast::<AnyObject>())
+                .unwrap_or(std::ptr::null());
+            let click_ptr = click_window.cast_const();
             if !click_ptr.is_null() && click_ptr != tray_ns {
                 hide_tray_if_visible(&app_for_local);
             }
@@ -769,12 +732,12 @@ fn hide_tray_if_visible_unless_recent_icon_show<R: Runtime>(app: &AppHandle<R>) 
 #[cfg(target_os = "macos")]
 fn hide_tray_if_visible<R: Runtime>(app: &AppHandle<R>) {
     if let Some(tray) = app.get_webview_window(TRAY_WINDOW_LABEL) {
-        if tray.is_visible().unwrap_or(false) {
+        if window::is_visible(&tray) {
             LAST_TRAY_AUTO_HIDE_MS.store(now_ms(), Ordering::Relaxed);
             // Destroy rather than hide so the webview process is
             // released; the next tray click recreates it via
             // `show_tray_window`.
-            close_tray_window(app, &tray);
+            close_tray_window(&tray);
         }
     }
 }
@@ -787,7 +750,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn dismiss_monitor_accepts_only_mouse_button_presses() {
-        use tauri_nspanel::objc2_app_kit::NSEventType;
+        use objc2_app_kit::NSEventType;
 
         // Check the mask against event types, including motion, drags,
         // releases, scrolling and keyboard input, rather than source text.

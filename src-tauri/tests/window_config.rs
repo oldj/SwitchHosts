@@ -467,8 +467,8 @@ fn tray_routes_native_operations_through_the_runtime_tested_module() {
     const SOURCE: &str = include_str!("../src/tray.rs");
     for (function, call) in [
         ("fn create_tray_window<", "window::create(app, height)?"),
-        ("fn show_tray_window<", "window::show(app)?"),
-        ("fn close_tray_window<", "window::close(app, window)"),
+        ("fn show_tray_window<", "window::panel::show("),
+        ("fn close_tray_window<", "window::close(window)"),
     ] {
         let body = extract_block_from(SOURCE, function).expect("tray function must exist");
         assert!(body.contains(call), "{function} must delegate to {call}");
@@ -478,7 +478,7 @@ fn tray_routes_native_operations_through_the_runtime_tested_module() {
 #[test]
 fn macos_tray_show_does_not_activate_the_application() {
     const TRAY_SOURCE: &str = include_str!("../src/tray.rs");
-    const WINDOW_SOURCE: &str = include_str!("../src/tray/window.rs");
+    const WINDOW_SOURCE: &str = include_str!("../src/tray/panel.rs");
     let show = extract_block_from(TRAY_SOURCE, "fn show_tray_window<")
         .expect("show_tray_window must exist");
     // Windows/Linux intentionally use set_focus(). Exclude only that block,

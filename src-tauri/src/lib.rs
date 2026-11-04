@@ -135,8 +135,6 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             lifecycle::focus_main_on_second_instance(app, args, cwd)
         }));
-    #[cfg(target_os = "macos")]
-    let builder = builder.plugin(tauri_nspanel::init());
 
     let app = builder
         // The login-start entry (LaunchAgent / run key / autostart file)

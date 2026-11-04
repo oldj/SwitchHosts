@@ -6,21 +6,8 @@ use tauri::webview::WebviewWindowBuilder;
 use tauri::{AppHandle, Runtime, WebviewUrl};
 
 #[cfg(target_os = "macos")]
-use tauri_nspanel::{
-    tauri_panel, CollectionBehavior, ManagerExt as PanelManagerExt, PanelLevel, StyleMask,
-    WebviewWindowExt,
-};
-
-#[cfg(target_os = "macos")]
-tauri_panel! {
-    panel!(TrayPanel {
-        config: {
-            can_become_key_window: true,
-            can_become_main_window: false,
-            is_floating_panel: true
-        }
-    })
-}
+#[path = "panel.rs"]
+pub mod panel;
 
 pub const TRAY_WINDOW_LABEL: &str = "tray";
 pub const TRAY_WINDOW_WIDTH: f64 = 300.0;
@@ -80,75 +67,27 @@ pub fn create<R: Runtime>(
         .build()?;
 
     #[cfg(target_os = "macos")]
-    if let Err(error) = configure_tray_panel(&window) {
-        let _ = close(app, &window);
+    if let Err(error) = panel::attach(&window) {
+        let _ = window.close();
         return Err(error);
     }
-
     Ok(window)
 }
 
-#[cfg(target_os = "macos")]
-pub fn show<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
-    let panel = app
-        .get_webview_panel(TRAY_WINDOW_LABEL)
-        .map_err(|_| "tray NSPanel is not registered".to_string())?;
-    panel.show_and_make_key();
-    Ok(())
-}
-
-#[cfg(target_os = "macos")]
-fn configure_tray_panel<R: Runtime>(window: &tauri::WebviewWindow<R>) -> Result<(), tauri::Error> {
-    let panel = window.to_panel::<TrayPanel<R>>()?;
-
-    // Borderless preserves the existing transparent popover appearance;
-    // NonactivatingPanel is the key behavior that lets the webview receive
-    // input without bringing the whole Regular app (and its home Space) to
-    // the foreground.
-    panel
-        .set_style_mask(
-            StyleMask::empty()
-                .borderless()
-                .nonactivating_panel()
-                .value(),
-        )
-        .map_err(std::io::Error::other)?;
-    panel.set_collection_behavior(
-        CollectionBehavior::new()
-            .can_join_all_spaces()
-            .full_screen_auxiliary()
-            .transient()
-            .ignores_cycle()
-            .value(),
-    );
-    // AppKit's setFloatingPanel(true) resets the level to Floating (3).
-    // Apply it before the explicit PopUpMenu level (101), or that level is lost.
-    panel.set_floating_panel(true);
-    // A tray popover belongs above ordinary floating windows, but should not
-    // cover protected system UI such as the screen saver or lock screen.
-    panel.set_level(PanelLevel::PopUpMenu.value());
-    panel.set_hides_on_deactivate(false);
-
-    Ok(())
-}
-
-pub fn close<R: Runtime>(
-    _app: &AppHandle<R>,
-    window: &tauri::WebviewWindow<R>,
-) -> tauri::Result<()> {
+pub fn is_visible<R: Runtime>(window: &tauri::WebviewWindow<R>) -> bool {
     #[cfg(target_os = "macos")]
     {
-        // `to_window` removes the retained panel handle and restores the
-        // original NSWindow class before Tauri destroys it. This preserves
-        // the lazy-create/release behavior and avoids retaining one closed
-        // panel per tray click.
-        if let Ok(panel) = _app.get_webview_panel(TRAY_WINDOW_LABEL) {
-            if let Some(window) = panel.to_window() {
-                return window.close();
-            }
-        }
+        panel::get(window).is_some_and(|panel| panel.isVisible())
     }
+    #[cfg(not(target_os = "macos"))]
+    {
+        window.is_visible().unwrap_or(false)
+    }
+}
 
+pub fn close<R: Runtime>(window: &tauri::WebviewWindow<R>) -> tauri::Result<()> {
+    #[cfg(target_os = "macos")]
+    panel::detach(window)?;
     window.close()
 }
 

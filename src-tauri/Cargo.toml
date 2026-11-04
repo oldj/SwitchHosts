@@ -57,7 +57,8 @@ libc = "0.2.190"
 objc2 = "0.6.4"
 objc2-foundation = { version = "0.3.2", features = ["NSGeometry", "objc2-core-foundation"] }
 block2 = "0.6.2"
-tauri-nspanel = { git = "https://github.com/ahkohd/tauri-nspanel", rev = "6e595d776e9ac594b73e5a180155800f4da6c87d" }
+objc2-core-graphics = { version = "0.3.2", default-features = false, features = ["CGDirectDisplay"] }
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["NSButton", "NSColor", "NSControl", "NSEvent", "NSGraphics", "NSPanel", "NSResponder", "NSScreen", "NSStatusBarButton", "NSStatusItem", "NSView", "NSWindow"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-sys = { version = "0.61.2", features = [
