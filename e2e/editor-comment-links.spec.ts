@@ -12,10 +12,11 @@ import type { Locator } from '@playwright/test'
 
 async function colorChannels(link: Locator) {
   return link.evaluate((element) => {
+    const text = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode()!
     // Normalize both rgb() and color(srgb ...) returned by color-mix().
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d')!
-    context.fillStyle = getComputedStyle(element).color
+    context.fillStyle = getComputedStyle(text.parentElement!).color
     context.fillRect(0, 0, 1, 1)
     return Array.from(context.getImageData(0, 0, 1, 1).data).slice(0, 3)
   })
@@ -42,6 +43,7 @@ for (const theme of ['light', 'dark']) {
     const links = editor.locator('.hl-comment-link')
     await expect(links).toHaveCount(2)
     const normal = [await colorChannels(links.first()), await colorChannels(links.last())]
+    expect(normal[1]).toEqual(normal[0])
     const modifier = (await page
       .locator('body')
       .evaluate((body) => body.classList.contains('platform-darwin')))
@@ -98,11 +100,16 @@ test('underlines comment URLs and opens them only with the platform modifier', a
   await expect(editor).toContainText('dev.local')
   await editor.click()
   await page.keyboard.press(`${selectAllModifier}+A`)
-  const content =
-    '# See (https://example.test/docs?q=1#intro).\n127.0.0.1 localhost # http://localhost:8080/\nhttps://outside.test/'
+  const content = [
+    '# See (https://example.test/docs?q=1#intro).',
+    '127.0.0.1 localhost # http://localhost:8080/',
+    '127.0.0.1 other ; https://semicolon.test/#part',
+    'https://outside.test/',
+  ].join('\n')
   await page.keyboard.insertText(content)
   const links = editor.locator('.hl-comment-link')
-  await expect(links).toHaveText(['https://example.test/docs?q=1#intro', 'http://localhost:8080/'])
+  const urls = ['https://example.test/docs?q=1#intro', 'http://localhost:8080/']
+  await expect(links).toHaveText(urls)
   await expect(links.first()).toHaveCSS('text-decoration-line', 'underline')
   await saveEditorDraft(page)
   await expect.poll(async () => (await getMockState(page)).contents['local-dev']).toBe(content)
@@ -134,7 +141,7 @@ test('underlines comment URLs and opens them only with the platform modifier', a
     .poll(async () =>
       (await getMockCalls(page)).filter((call) => call.cmd === 'open_url').map(firstInvokeArg),
     )
-    .toEqual(['https://example.test/docs?q=1#intro', 'http://localhost:8080/'])
+    .toEqual(urls)
   // Modifier-click must preserve selection, allowing replacement and undo.
   await page.keyboard.insertText('# replaced')
   await expect(editor).toHaveText('# replaced')

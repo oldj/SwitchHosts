@@ -68,7 +68,9 @@
       color: hsl(0, 0%, 98%);
     }
 
-    .hl-comment .hl-selection {
+    .hl-comment .hl-selection,
+    .hl-selection .hl-comment,
+    .hl-comment.hl-selection {
       color: hsl(var(--swh-editor-comment-hs), 92%);
     }
 
@@ -78,7 +80,9 @@
       color: hsl(var(--swh-editor-ip-hs), 92%);
     }
 
-    .hl-error .hl-selection {
+    .hl-error .hl-selection,
+    .hl-selection .hl-error,
+    .hl-error.hl-selection {
       color: hsl(var(--swh-editor-error-hs), 94%);
     }
   }

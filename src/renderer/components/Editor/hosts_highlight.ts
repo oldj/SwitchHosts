@@ -1,9 +1,8 @@
 /**
  * Hosts file syntax classification and comment toggling.
  *
- * Classification: pure predicates (`isHostsCommentLine`, `isValidHostsLine`)
- * consumed by the CodeMirror ViewPlugin in `hosts_cm.ts` to apply
- * `hl-comment` / `hl-error` line decorations and `hl-ip` mark decorations.
+ * Classification: the editor uses these helpers to highlight hosts entries,
+ * comments and errors.
  *
  * Comment toggling: adds/removes `# ` prefixes while returning both the
  * fully transformed text (for tests / fallbacks) and a list of fine-grained
@@ -65,7 +64,7 @@ export function getHostsBoundary(line: string): 'start' | 'end' | null {
 }
 
 export function isHostsCommentLine(line: string): boolean {
-  return /^\s*#/.test(line)
+  return /^\s*[#;]/.test(line)
 }
 
 export function isValidHostsLine(line: string): boolean {

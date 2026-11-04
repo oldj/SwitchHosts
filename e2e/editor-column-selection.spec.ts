@@ -68,7 +68,7 @@ for (const theme of ['light', 'dark']) {
       await page.getByRole('dialog').getByText('Dark', { exact: true }).click()
       await page.keyboard.press('Escape')
     }
-    await setContent(page, '# comment\n127.0.0.1 localhost\n::1 localhost\ninvalid')
+    await setContent(page, '# comment\n127.0.0.1 localhost\n::1 localhost\n192.0.2.1 ; note\ninvalid')
     const textColors = () =>
       page.locator('.cm-content').evaluate((editor) => {
         const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT)
@@ -96,6 +96,16 @@ for (const theme of ['light', 'dark']) {
       })
       .toBe(true)
     expect(new Set(await textColors()).size).toBe(4)
+    const editor = page.locator('.cm-content')
+    const selectedError = await editor.getByText('invalid', { exact: true }).evaluate(
+      (el) => getComputedStyle(el).color,
+    )
+    const selectedComment = await editor.getByText('# comment', { exact: true }).evaluate(
+      (el) => getComputedStyle(el).color,
+    )
+    expect(selectedError).not.toBe(selectedComment)
+    await expect(editor.getByText('192.0.2.1', { exact: true })).toHaveCSS('color', selectedError)
+    await expect(editor.getByText('; note', { exact: true })).toHaveCSS('color', selectedComment)
 
     await page.keyboard.press('ArrowRight')
     await expect.poll(textColors).toEqual(normalColors)
