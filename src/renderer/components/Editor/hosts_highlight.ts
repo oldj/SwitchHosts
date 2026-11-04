@@ -64,7 +64,7 @@ export function getHostsBoundary(line: string): 'start' | 'end' | null {
 }
 
 export function isHostsCommentLine(line: string): boolean {
-  return /^\s*[#;]/.test(line)
+  return /^\s*#/.test(line)
 }
 
 export function isValidHostsLine(line: string): boolean {

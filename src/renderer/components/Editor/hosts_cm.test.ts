@@ -9,7 +9,7 @@ afterEach(() => view?.destroy())
 
 it('preserves errors before an inline comment and updates both ranges as the entry is edited', () => {
   const prefix = '127.0.0.1 '
-  const comment = '; missing name # TODO'
+  const comment = '# missing name ; note # TODO'
   view = new EditorView({
     doc: prefix + comment,
     extensions: [hostsHighlighter],

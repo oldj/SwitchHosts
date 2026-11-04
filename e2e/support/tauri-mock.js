@@ -930,7 +930,7 @@
             ],
             {
               'imported-local':
-                '# Imported hosts\n::1 localhost ; loopback\n' +
+                '# Imported hosts\n::1 localhost ; alias # loopback\n' +
                 '172.16.0.10 imported-backup.local\n'.repeat(80),
               'imported-folder-child': '172.16.0.11 imported-child.local\n',
               'imported-a': '127.0.0.1 nested-a.local\n',

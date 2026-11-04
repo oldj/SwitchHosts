@@ -214,7 +214,7 @@ test.describe('data transfer', () => {
     await expect(content).toContainText('imported-backup.local')
     await expect(content).toHaveAttribute('contenteditable', 'false')
     const comments = viewer.locator('.hl-comment')
-    await expect(comments).toHaveText(['# Imported hosts', '; loopback'])
+    await expect(comments).toHaveText(['# Imported hosts', '# loopback'])
     await expect(comments.last()).toHaveCSS(
       'color',
       await comments.first().evaluate((el) => getComputedStyle(el).color),

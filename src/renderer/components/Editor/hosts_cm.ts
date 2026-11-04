@@ -95,7 +95,7 @@ function buildDecorations(view: EditorView): DecorationSet {
         } else if (isHostsCommentLine(text)) {
           builder.add(line.from, line.from, commentLineDeco)
         } else {
-          const commentStart = text.search(/[#;]/)
+          const commentStart = text.indexOf('#')
           const ipMatch = isValidHostsLine(text) && text.match(IP_RE)
           if (ipMatch) {
             const ipStart = line.from + ipMatch[1].length
