@@ -707,7 +707,7 @@ async fn permission_failure_preserves_dirty_record_until_access_is_restored() {
     let path = dirty_path(&f.state);
     let original = std::fs::read(&path).unwrap();
     let permissions = std::fs::metadata(&path).unwrap().permissions();
-    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0)).unwrap();
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o000)).unwrap();
     let denied = read_dirty(&f.state).is_err();
     // Privileged runners can bypass Unix mode bits; do not fake a denial there.
     if denied {
