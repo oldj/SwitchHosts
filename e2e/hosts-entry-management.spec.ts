@@ -9,6 +9,17 @@ import {
 } from './support/test'
 
 test.describe('hosts entry management', () => {
+  test('opens only the Add Hosts Entry menu on the list background', async ({ page }) => {
+    const defaultPrevented = await page.getByTestId('left-panel').evaluate((panel) => {
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
+      panel.dispatchEvent(event)
+      return event.defaultPrevented
+    })
+    expect(defaultPrevented).toBe(true)
+    const menus = (await getMockCalls(page)).filter((call) => call.cmd === 'popup_menu')
+    expect(menus).toMatchObject([{ args: { args: [{ items: [{ label: 'Add Hosts Entry' }] }] } }])
+  })
+
   test('adds a local hosts entry from the top bar', async ({ page }) => {
     await page.getByLabel('Add').click()
     const drawer = page.getByRole('dialog')

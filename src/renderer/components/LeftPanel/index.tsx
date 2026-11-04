@@ -33,9 +33,12 @@ const Index = (_props: Props) => {
 
   return (
     <div
+      data-testid="left-panel"
       className={styles.root}
-      onContextMenu={() => {
-        if (view === 'list') menu.show()
+      onContextMenu={(event) => {
+        if (view !== 'list') return
+        event.preventDefault()
+        menu.show()
       }}
     >
       <ScrollArea className={styles.content} scrollbars="y" type="hover">
