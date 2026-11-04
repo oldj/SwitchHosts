@@ -26,7 +26,7 @@
 //! Lock order is always refresh-lock → `store_lock`, never the reverse.
 
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -595,17 +595,48 @@ async fn fetch_remote(url: &str, state: &AppState) -> Result<String, RefreshErro
 }
 
 fn read_file_url(stripped: &str, original: &str) -> Result<String, RefreshError> {
-    // After `strip_prefix("file://")`:
-    //   `file:///Users/x/foo`        → `/Users/x/foo`
-    //   `file://localhost/Users/x/y` → `localhost/Users/x/y`
-    // We tolerate the optional `localhost` host segment so both forms
-    // work the same way. Anything else is treated as an opaque path.
-    let path = stripped.strip_prefix("localhost").unwrap_or(stripped);
-    http::read_text_file_with_limit(Path::new(path), http::MAX_REMOTE_HOSTS_BYTES).map_err(
-        |message| RefreshError::Fetch {
+    let local_path = stripped.find('/').and_then(|separator| {
+        let (host, path) = stripped.split_at(separator);
+        (host.is_empty() || host.eq_ignore_ascii_case("localhost")).then_some(path)
+    });
+    let raw = Path::new(
+        local_path.unwrap_or_else(|| stripped.strip_prefix("localhost").unwrap_or(stripped)),
+    );
+    // A legacy native path can name an existing file literally containing "%20".
+    let decoded = local_path
+        .and_then(local_file_url_path)
+        .filter(|path| path != raw && !(raw.is_absolute() && raw.try_exists().unwrap_or(true)));
+    let path = decoded.as_deref().unwrap_or(raw);
+    http::read_text_file_with_limit(path, http::MAX_REMOTE_HOSTS_BYTES).map_err(|message| {
+        RefreshError::Fetch {
             message: format!("{original}: {message}"),
-        },
-    )
+        }
+    })
+}
+
+#[cfg(unix)]
+fn local_file_url_path(path: &str) -> Option<PathBuf> {
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+
+    // Preserve the native path, including trailing spaces, backslashes and
+    // symlink/.. traversal. Only percent escapes need translation on Unix.
+    if !path.contains('%') || path.contains(['?', '#']) {
+        return None;
+    }
+    let bytes = percent_encoding::percent_decode_str(path).collect();
+    Some(OsString::from_vec(bytes).into())
+}
+
+#[cfg(windows)]
+fn local_file_url_path(path: &str) -> Option<PathBuf> {
+    let url = reqwest::Url::parse(&format!("file://{path}")).ok()?;
+    if url.has_host() || url.query().is_some() || url.fragment().is_some() {
+        return None;
+    }
+    // A drive letter alone (C:) is drive-relative, not an absolute file path.
+    url.path_segments()?.nth(1)?;
+    url.to_file_path().ok()
 }
 
 // ---- tree helpers ----------------------------------------------------------
@@ -943,6 +974,79 @@ mod tests {
     impl Drop for Fixture {
         fn drop(&mut self) {
             let _ = std::fs::remove_dir_all(&self.0.paths.root);
+        }
+    }
+
+    #[tokio::test]
+    async fn refresh_reads_encoded_file_urls_and_legacy_raw_paths() {
+        let fixture = Fixture::new();
+        let path = fixture.0.paths.root.join("My Hosts #1.hosts");
+        std::fs::write(&path, "127.0.0.1 file.test").unwrap();
+        let url = reqwest::Url::from_file_path(&path).unwrap().to_string();
+        let localhost = url.replacen("file:///", "file://localhost/", 1);
+        let raw = format!("file://{}", path.display());
+        for source in [&url, &localhost, &raw] {
+            assert_eq!(
+                fetch_remote(source, &fixture.0).await.unwrap(),
+                "127.0.0.1 file.test"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn refresh_keeps_the_existing_literal_percent_path() {
+        let fixture = Fixture::new();
+        let root = &fixture.0.paths.root;
+        let literal = root.join("My%20Hosts");
+        std::fs::write(&literal, "literal").unwrap();
+        std::fs::write(root.join("My Hosts"), "decoded").unwrap();
+        let source = format!("file://{}", literal.display());
+        assert_eq!(fetch_remote(&source, &fixture.0).await.unwrap(), "literal");
+        #[cfg(unix)]
+        for host in ["localhost", "LOCALHOST"] {
+            let source = format!("file://{host}{}", literal.display());
+            assert_eq!(fetch_remote(&source, &fixture.0).await.unwrap(), "literal");
+        }
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn refresh_does_not_normalize_a_missing_unix_path_to_another_file() {
+        let fixture = Fixture::new();
+        let root = &fixture.0.paths.root;
+        std::fs::write(root.join("My Hosts"), "wrong file").unwrap();
+        for name in ["My Hosts ", "missing/../My Hosts", "missing/../My%20Hosts"] {
+            let source = format!("file://{}", root.join(name).display());
+            assert!(fetch_remote(&source, &fixture.0).await.is_err(), "{source}");
+        }
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn refresh_keeps_a_backslash_in_a_unix_filename() {
+        let fixture = Fixture::new();
+        let root = &fixture.0.paths.root;
+        let literal = root.join(r"hosts\local");
+        std::fs::write(&literal, "literal").unwrap();
+        std::fs::create_dir(root.join("hosts")).unwrap();
+        std::fs::write(root.join("hosts/local"), "nested").unwrap();
+        let source = format!("file://{}", literal.display());
+        assert_eq!(fetch_remote(&source, &fixture.0).await.unwrap(), "literal");
+        std::fs::remove_file(literal).unwrap();
+        assert!(fetch_remote(&source, &fixture.0).await.is_err());
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn refresh_rejects_a_bare_drive_without_panicking() {
+        let fixture = Fixture::new();
+        for source in [
+            "file:///C:",
+            "file://localhost/C:",
+            "file:///C%3A",
+            "file://C:",
+        ] {
+            assert!(fetch_remote(source, &fixture.0).await.is_err(), "{source}");
         }
     }
 
