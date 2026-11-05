@@ -19,6 +19,52 @@ mod storage;
 mod tray;
 mod window_theme;
 
+// Let the opt-in native harness exercise the production ready gate with a
+// blank window, without bootstrapping storage, helpers, or hosts writes.
+#[cfg(all(target_os = "macos", feature = "native-tray-tests"))]
+#[doc(hidden)]
+pub fn install_main_ready_gate_for_native_test(
+    app: &tauri::AppHandle,
+    window: &tauri::WebviewWindow,
+    work_area: objc2_foundation::NSRect,
+) -> NativeMainReadyGate {
+    NativeMainReadyGate(lifecycle::install_main_window_ready_handlers(
+        app,
+        window,
+        Some(work_area),
+    ))
+}
+
+#[cfg(all(target_os = "macos", feature = "native-tray-tests"))]
+#[doc(hidden)]
+pub struct NativeMainReadyGate(lifecycle::MainGate);
+
+#[cfg(all(target_os = "macos", feature = "native-tray-tests"))]
+impl NativeMainReadyGate {
+    pub fn retarget(&self, area: Option<objc2_foundation::NSRect>) {
+        self.0.retarget(area);
+    }
+    pub fn abandon(&self, app: &tauri::AppHandle) {
+        self.0.abandon(app);
+    }
+}
+
+#[cfg(all(target_os = "macos", feature = "native-tray-tests"))]
+#[doc(hidden)]
+pub fn show_main_on_screen_for_native_test(
+    app: &tauri::AppHandle,
+    work_area: Option<objc2_foundation::NSRect>,
+) {
+    lifecycle::show_main_window_on_screen(app, work_area);
+}
+
+#[cfg(all(target_os = "macos", feature = "native-tray-tests"))]
+#[doc(hidden)]
+pub fn show_main_from_menu_for_native_test(app: &tauri::AppHandle, area: objc2_foundation::NSRect) {
+    tray::remember_menu_work_area(Some(area));
+    tray::handle_menu_event(app, tray::MENU_ID_SHOW_MAIN);
+}
+
 use serde_json::json;
 #[cfg(any(target_os = "windows", test))]
 use std::path::{Path, PathBuf};

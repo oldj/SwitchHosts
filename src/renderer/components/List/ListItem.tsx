@@ -178,7 +178,7 @@ const ListItem = (props: Props) => {
         onDoubleClick={() => {
           if (!isTray) return
           agent.broadcast(events.select_hosts, data.id, 1000)
-          agent.broadcast(events.active_main_window)
+          actions.cmdFocusMainWindow().catch((e) => console.error(e))
         }}
       >
         <span className={clsx(styles.icon, isFolder && styles.folder)}>
