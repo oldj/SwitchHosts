@@ -17,6 +17,7 @@ import {
 import events from '@common/events'
 import * as hostsFn from '@common/hostsFn'
 import {
+  Accordion,
   Box,
   Button,
   Group,
@@ -60,6 +61,7 @@ const EditHostsInfo = () => {
   const [savedDomainsValid, setSavedDomainsValid] = useState(false)
   const [savedDomains, setSavedDomains] = useState<string[]>([])
   const [savedRefreshTarget, setSavedRefreshTarget] = useState<string | null>(null)
+  const [customCaExpanded, setCustomCaExpanded] = useState(false)
   const domainInputId = useId()
   const lineNumbersRef = useRef<HTMLDivElement>(null)
   const refreshRequestRef = useRef(0)
@@ -115,6 +117,7 @@ const EditHostsInfo = () => {
     setSavedDomainSource(item?.source === 'domain')
     setSavedDomainsValid(!!item && getRefreshTarget(item) !== null)
     setSavedRefreshTarget(item ? getRefreshTarget(item) : null)
+    setCustomCaExpanded(false)
     setValidateDomains(false)
     refreshRequestRef.current += 1
     setIsRefreshing(false)
@@ -180,7 +183,10 @@ const EditHostsInfo = () => {
     if (data.type === 'remote') {
       data.source = data.source || 'url'
       if (data.source === 'url') {
-        if (customCaError) return
+        if (customCaError) {
+          setCustomCaExpanded(true)
+          return
+        }
         data.custom_ca_pem = customCaPem.trim()
       } else {
         delete data.custom_ca_pem
@@ -458,19 +464,32 @@ const EditHostsInfo = () => {
                   saveFromUI()
                 }
               />
-              <Textarea
+              <Accordion
                 mt="md"
-                label={lang.custom_ca}
-                description={lang.custom_ca_hint}
-                placeholder="-----BEGIN CERTIFICATE-----"
-                value={customCaPem}
-                onChange={(e) => onUpdate({ custom_ca_pem: e.currentTarget.value })}
-                error={customCaError}
-                rows={4}
-                spellCheck={false}
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
+                variant="contained"
+                classNames={{ control: styles.custom_ca_control, label: styles.custom_ca_label }}
+                value={customCaExpanded ? 'custom-ca' : null}
+                onChange={(value) => setCustomCaExpanded(value === 'custom-ca')}
+                keepMounted={false}
+              >
+                <Accordion.Item value="custom-ca">
+                  <Accordion.Control>{lang.custom_ca}</Accordion.Control>
+                  <Accordion.Panel>
+                    <Textarea
+                      aria-label={lang.custom_ca}
+                      description={lang.custom_ca_hint}
+                      placeholder="-----BEGIN CERTIFICATE-----"
+                      value={customCaPem}
+                      onChange={(e) => onUpdate({ custom_ca_pem: e.currentTarget.value })}
+                      error={customCaError}
+                      rows={4}
+                      spellCheck={false}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                    />
+                  </Accordion.Panel>
+                </Accordion.Item>
+              </Accordion>
             </>
           )}
         </Box>

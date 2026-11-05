@@ -143,24 +143,74 @@ describe('EditHostsInfo custom CA', () => {
   }
   const label = 'Custom CA certificates (optional)'
 
+  it('starts collapsed and keeps draft CA text when collapsed and reopened', async () => {
+    openDialog(remote)
+    const toggle = screen.getByRole('button', { name: label })
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByRole('textbox', { name: label })).toBeNull()
+    fireEvent.click(toggle)
+    fireEvent.change(await screen.findByRole('textbox', { name: label }), {
+      target: { value: pem },
+    })
+    fireEvent.click(toggle)
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(toggle)
+    expect(
+      ((await screen.findByRole('textbox', { name: label })) as HTMLTextAreaElement).value,
+    ).toBe(pem)
+  })
+
+  it('reopens collapsed and preserves the saved CA when saving other fields', async () => {
+    const item = { ...remote, custom_ca_pem: pem }
+    mocks.hostsData.list = [item]
+    openDialog(item)
+    fireEvent.click(screen.getByRole('button', { name: label }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    act(() => mocks.handlers.get('edit_hosts_info')?.(item))
+    expect(screen.getByRole('button', { name: label }).getAttribute('aria-expanded')).toBe('false')
+    fireEvent.change(screen.getByLabelText('Hosts Title'), { target: { value: 'Renamed' } })
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    await waitFor(() => expect(mocks.setList).toHaveBeenCalled())
+    expect(mocks.setList.mock.calls[0][0]([structuredClone(item)])[0]).toMatchObject({
+      title: 'Renamed',
+      custom_ca_pem: pem,
+    })
+  })
+
+  it('reveals invalid imported CA settings when saving fails', async () => {
+    openDialog({ ...remote, custom_ca_pem: 'invalid imported CA' })
+    expect(screen.getByRole('button', { name: label }).getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    expect(screen.getByRole('button', { name: label }).getAttribute('aria-expanded')).toBe('true')
+    expect(
+      await screen.findByText('Enter PEM-encoded public certificates only, without private keys.'),
+    ).toBeTruthy()
+    expect(mocks.setList).not.toHaveBeenCalled()
+  })
+
   it.each([
     [undefined, pem],
     [pem, ''],
     [pem, `${pem}\n${pem}`],
   ])('requires saving changed CA settings before refreshing (%#)', async (saved, draft) => {
     openDialog({ ...remote, custom_ca_pem: saved })
+    fireEvent.click(screen.getByRole('button', { name: label }))
     fireEvent.change(screen.getByLabelText('Hosts Title'), { target: { value: 'Renamed' } })
     expect((screen.getByRole('button', { name: 'Refresh' }) as HTMLButtonElement).disabled).toBe(
       false,
     )
-    fireEvent.change(screen.getByLabelText(label), { target: { value: draft } })
+    fireEvent.change(await screen.findByRole('textbox', { name: label }), {
+      target: { value: draft },
+    })
     const refresh = screen.getByRole('button', {
       name: /Refresh|Save to refresh/,
     }) as HTMLButtonElement
     expect(refresh.disabled).toBe(true)
     fireEvent.click(refresh)
     expect(mocks.actions.refreshHosts).not.toHaveBeenCalled()
-    fireEvent.change(screen.getByLabelText(label), { target: { value: saved || '' } })
+    fireEvent.change(await screen.findByRole('textbox', { name: label }), {
+      target: { value: saved || '' },
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
     await waitFor(() => expect(mocks.actions.refreshHosts).toHaveBeenCalledWith(remote.id))
   })
@@ -185,7 +235,10 @@ describe('EditHostsInfo custom CA', () => {
     fireEvent.click(screen.getByText('Remote', { exact: true }))
     fireEvent.change(screen.getByLabelText('Hosts Title'), { target: { value: 'Private' } })
     fireEvent.change(screen.getByLabelText('URL'), { target: { value: remote.url } })
-    fireEvent.change(screen.getByLabelText(label), { target: { value: pem } })
+    fireEvent.click(screen.getByRole('button', { name: label }))
+    fireEvent.change(await screen.findByRole('textbox', { name: label }), {
+      target: { value: pem },
+    })
     fireEvent.click(screen.getByRole('button', { name: 'OK' }))
     await waitFor(() => expect(mocks.setList).toHaveBeenCalled())
     expect(mocks.setList.mock.calls[0][0]([])[0]).toMatchObject({
@@ -198,7 +251,8 @@ describe('EditHostsInfo custom CA', () => {
   it('saves and clears CA text while preserving concurrent toggle and refresh fields', async () => {
     mocks.hostsData.list = [{ ...remote, custom_ca_pem: pem }]
     openDialog(mocks.hostsData.list[0])
-    const input = screen.getByLabelText(label) as HTMLTextAreaElement
+    fireEvent.click(screen.getByRole('button', { name: label }))
+    const input = (await screen.findByRole('textbox', { name: label })) as HTMLTextAreaElement
     expect(input.value).toBe(pem)
     fireEvent.change(input, { target: { value: '' } })
     fireEvent.click(screen.getByRole('button', { name: 'OK' }))
@@ -218,7 +272,10 @@ describe('EditHostsInfo custom CA', () => {
   ])('rejects invalid CA text before saving (%#)', async (text, error) => {
     mocks.hostsData.list = [remote]
     openDialog(remote)
-    fireEvent.change(screen.getByLabelText(label), { target: { value: text } })
+    fireEvent.click(screen.getByRole('button', { name: label }))
+    fireEvent.change(await screen.findByRole('textbox', { name: label }), {
+      target: { value: text },
+    })
     fireEvent.click(screen.getByRole('button', { name: 'OK' }))
     expect(screen.getByText(new RegExp(error))).toBeTruthy()
     expect(mocks.setList).not.toHaveBeenCalled()
@@ -227,7 +284,7 @@ describe('EditHostsInfo custom CA', () => {
   it('keeps a legacy URL subscription editable with no custom CA', async () => {
     mocks.hostsData.list = [remote]
     openDialog(remote)
-    expect((screen.getByLabelText(label) as HTMLTextAreaElement).value).toBe('')
+    expect(screen.queryByRole('textbox', { name: label })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'OK' }))
     await waitFor(() => expect(mocks.setList).toHaveBeenCalled())
   })
@@ -236,7 +293,7 @@ describe('EditHostsInfo custom CA', () => {
     mocks.hostsData.list = [{ ...remote, custom_ca_pem: pem }]
     openDialog(mocks.hostsData.list[0])
     fireEvent.click(screen.getByText('Domain', { exact: true }))
-    expect(screen.queryByLabelText(label)).toBeNull()
+    expect(screen.queryByRole('textbox', { name: label })).toBeNull()
     fireEvent.change(screen.getByLabelText('Domain list'), { target: { value: 'example.com' } })
     fireEvent.click(screen.getByRole('button', { name: 'OK' }))
     await waitFor(() => expect(mocks.setList).toHaveBeenCalled())

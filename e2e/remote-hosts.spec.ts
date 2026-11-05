@@ -39,7 +39,30 @@ test.describe('remote hosts', () => {
     await drawer.getByText('Remote', { exact: true }).click()
     await drawer.getByLabel('Hosts Title', { exact: true }).fill('Private CA hosts')
     await drawer.getByLabel('URL', { exact: true }).fill('https://private.test/hosts')
-    await drawer.getByLabel('Custom CA certificates (optional)', { exact: true }).fill(certificate)
+    await expect(
+      drawer.getByRole('button', { name: 'Custom CA certificates (optional)', exact: true }),
+    ).toHaveAttribute('aria-expanded', 'false')
+    await expect(
+      drawer.getByRole('textbox', { name: 'Custom CA certificates (optional)', exact: true }),
+    ).not.toBeVisible()
+    await drawer
+      .getByRole('button', { name: 'Custom CA certificates (optional)', exact: true })
+      .click()
+    await drawer
+      .getByRole('textbox', { name: 'Custom CA certificates (optional)', exact: true })
+      .fill(certificate)
+    await drawer
+      .getByRole('button', { name: 'Custom CA certificates (optional)', exact: true })
+      .click()
+    await expect(
+      drawer.getByRole('textbox', { name: 'Custom CA certificates (optional)', exact: true }),
+    ).not.toBeVisible()
+    await drawer
+      .getByRole('button', { name: 'Custom CA certificates (optional)', exact: true })
+      .click()
+    await expect(
+      drawer.getByRole('textbox', { name: 'Custom CA certificates (optional)', exact: true }),
+    ).toHaveValue(certificate)
     await drawer.getByRole('button', { name: 'OK', exact: true }).click()
     await expect
       .poll(async () => {
@@ -49,11 +72,17 @@ test.describe('remote hosts', () => {
       .toBe(certificate)
     drawer = await editEntry(page, 'Private CA hosts')
     await expect(
-      drawer.getByLabel('Custom CA certificates (optional)', { exact: true }),
+      drawer.getByRole('button', { name: 'Custom CA certificates (optional)', exact: true }),
+    ).toHaveAttribute('aria-expanded', 'false')
+    await drawer
+      .getByRole('button', { name: 'Custom CA certificates (optional)', exact: true })
+      .click()
+    await expect(
+      drawer.getByRole('textbox', { name: 'Custom CA certificates (optional)', exact: true }),
     ).toHaveValue(certificate)
     await expect(drawer.getByRole('button', { name: 'Refresh', exact: true })).toBeEnabled()
     await drawer
-      .getByLabel('Custom CA certificates (optional)', { exact: true })
+      .getByRole('textbox', { name: 'Custom CA certificates (optional)', exact: true })
       .fill('private key')
     await expect(
       drawer.getByRole('button', { name: 'Save to refresh', exact: true }),
@@ -62,7 +91,9 @@ test.describe('remote hosts', () => {
     await expect(
       drawer.getByText('Enter PEM-encoded public certificates only, without private keys.'),
     ).toBeVisible()
-    await drawer.getByLabel('Custom CA certificates (optional)', { exact: true }).fill('')
+    await drawer
+      .getByRole('textbox', { name: 'Custom CA certificates (optional)', exact: true })
+      .fill('')
     await expect(
       drawer.getByRole('button', { name: 'Save to refresh', exact: true }),
     ).toBeDisabled()
@@ -75,7 +106,13 @@ test.describe('remote hosts', () => {
       .toBe('')
     drawer = await editEntry(page, 'Private CA hosts')
     await expect(
-      drawer.getByLabel('Custom CA certificates (optional)', { exact: true }),
+      drawer.getByRole('button', { name: 'Custom CA certificates (optional)', exact: true }),
+    ).toHaveAttribute('aria-expanded', 'false')
+    await drawer
+      .getByRole('button', { name: 'Custom CA certificates (optional)', exact: true })
+      .click()
+    await expect(
+      drawer.getByRole('textbox', { name: 'Custom CA certificates (optional)', exact: true }),
     ).toHaveValue('')
     await expect(drawer.getByRole('button', { name: 'Refresh', exact: true })).toBeEnabled()
     const state = await getMockState(page)
