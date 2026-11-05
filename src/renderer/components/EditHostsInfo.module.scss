@@ -10,6 +10,16 @@
   --edit-hosts-field-gap: 8px;
 }
 
+.custom_ca_control {
+  // Match the default sm input: 36px including the item's 1px borders.
+  min-height: 34px;
+  padding-inline: 12px;
+}
+
+.custom_ca_label {
+  padding-block: 0;
+}
+
 .refresh_info {
   color: var(--swh-font-color-weak);
 

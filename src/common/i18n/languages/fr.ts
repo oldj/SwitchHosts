@@ -1,5 +1,3 @@
-import { httpApiEnglish } from '../httpApi'
-import { importEnglish } from '../import'
 /**
  * @author: Aktilor
  * @homepage: https://github.com/Aktilor
@@ -8,44 +6,7 @@ import { importEnglish } from '../import'
 import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
-  ...httpApiEnglish,
-  ...importEnglish,
-  editor_draft_queue_skipped:
-    'Cette action a été ignorée car un enregistrement précédent a échoué. Vérifiez l’erreur et réessayez.',
-  editor_draft_pending: 'En attente d’application',
-  editor_draft_apply: 'Appliquer',
-  editor_draft_discard: 'Abandonner le brouillon',
-  editor_draft_apply_hint:
-    'Les modifications sont conservées comme brouillon et ne sont pas encore enregistrées dans le fichier source. Cliquez sur Appliquer ou appuyez sur {0} pour les enregistrer et les appliquer. Elles sont aussi appliquées lorsque vous quittez l’éditeur dans cette fenêtre, sélectionnez une autre entrée ou activez ou désactivez un hosts ou un groupe.',
-  editor_draft_discard_confirm:
-    'Abandonner ce brouillon et restaurer le contenu enregistré ? Les modifications du brouillon seront perdues.',
   _app_name: 'SwitchHosts',
-  hosts_managed_start: 'Début géré',
-  hosts_managed_end: 'Fin gérée',
-  domain_list: 'Liste des domaines',
-  domain_list_hint: 'Un domaine par ligne. Les URL collées sont converties en domaines.',
-  domain_count: '{0} / {1} domaines',
-  domain_limit_exceeded:
-    'La limite est de {0} domaines distincts. Supprimez des domaines avant d’enregistrer.',
-  domain_duplicates: '{0} doublons fusionnés',
-  domain_normalized: '{0} entrées normalisées',
-  domain_line_error: 'La ligne {0} ne contient pas un domaine valide : {1}',
-  domain_list_empty: 'Saisissez au moins un domaine.',
-  domain_save_to_resolve: 'Enregistrer pour résoudre',
-  domain_config_saved: 'Configuration des domaines enregistrée',
-  domain_resolving: 'Résolution des domaines…',
-  domain_results: 'Résultats de résolution',
-  domain_result_summary: '{0} actualisés · {1} avec les anciennes IP · {2} non résolus',
-  domain_resolved: 'Actualisé',
-  domain_stale: 'Échec ; anciennes IP conservées',
-  domain_failed: 'Aucune résolution réussie',
-  domain_pending: 'En attente',
-  domain_pending_count: '{0} en attente',
-  domain_last_success: 'Dernier succès : {0}',
-  domain_last_attempt: 'Dernière tentative : ',
-  domain_saved_resolving: '{0} domaines enregistrés. Résolution en cours…',
-  domain_saved: '{0} domaines enregistrés',
-  domain_resolution_incomplete: 'Certains domaines ne sont pas résolus. Consultez les résultats.',
   _key: 'fr',
   _name: 'Français',
   about: 'À propos',
@@ -86,6 +47,12 @@ const lang: LanguageDict = {
   comment_current_line: 'Commenter cette ligne',
   content: 'Contenu',
   copy: 'Copier',
+  custom_ca: 'Certificats CA personnalisés (facultatif)',
+  custom_ca_hint:
+    'Pour les abonnements HTTPS utilisant une autorité de certification privée. Collez des certificats publics de confiance au format PEM, sans clés privées (64 KiB maximum). Ils sont enregistrés avec cette entrée et inclus dans les sauvegardes. Laissez ce champ vide pour utiliser uniquement les certificats approuvés par le système.',
+  custom_ca_invalid:
+    'Saisissez uniquement des certificats publics au format PEM, sans clés privées.',
+  custom_ca_too_large: 'Les certificats CA personnalisés ne doivent pas dépasser 64 KiB.',
   cut: 'Couper',
   data_dir_already_current: 'Ce dossier est déjà votre emplacement de données actuel.',
   data_dir_change_title: "Changer l'emplacement de stockage des données",
@@ -112,11 +79,44 @@ const lang: LanguageDict = {
   dns_provider_custom: 'Personnalisé',
   dns_provider_desc:
     'Service DNS-over-HTTPS utilisé pour résoudre les entrées hosts distantes de type domaine.',
+  domain_config_saved: 'Configuration des domaines enregistrée',
+  domain_count: '{0} / {1} domaines',
+  domain_duplicates: '{0} doublons fusionnés',
+  domain_failed: 'Aucune résolution réussie',
   domain_hint:
     'Sera résolu en IP via {0} et écrit dans les hosts. Le service DNS peut être modifié dans les préférences.',
+  domain_last_attempt: 'Dernière tentative : ',
+  domain_last_success: 'Dernier succès : {0}',
+  domain_limit_exceeded:
+    'La limite est de {0} domaines distincts. Supprimez des domaines avant d’enregistrer.',
+  domain_line_error: 'La ligne {0} ne contient pas un domaine valide : {1}',
+  domain_list: 'Liste des domaines',
+  domain_list_empty: 'Saisissez au moins un domaine.',
+  domain_list_hint: 'Un domaine par ligne. Les URL collées sont converties en domaines.',
+  domain_normalized: '{0} entrées normalisées',
+  domain_pending: 'En attente',
+  domain_pending_count: '{0} en attente',
   domain_placeholder: 'ex. github.com',
+  domain_resolution_incomplete: 'Certains domaines ne sont pas résolus. Consultez les résultats.',
+  domain_resolved: 'Actualisé',
+  domain_resolving: 'Résolution des domaines…',
+  domain_result_summary: '{0} actualisés · {1} avec les anciennes IP · {2} non résolus',
+  domain_results: 'Résultats de résolution',
+  domain_save_to_resolve: 'Enregistrer pour résoudre',
+  domain_saved: '{0} domaines enregistrés',
+  domain_saved_resolving: '{0} domaines enregistrés. Résolution en cours…',
+  domain_stale: 'Échec ; anciennes IP conservées',
   download: 'Télécharger',
   edit: 'Éditer',
+  editor_draft_apply: 'Appliquer',
+  editor_draft_apply_hint:
+    'Les modifications sont conservées comme brouillon et ne sont pas encore enregistrées dans le fichier source. Cliquez sur Appliquer ou appuyez sur {0} pour les enregistrer et les appliquer. Elles sont aussi appliquées lorsque vous quittez l’éditeur dans cette fenêtre, sélectionnez une autre entrée ou activez ou désactivez un hosts ou un groupe.',
+  editor_draft_discard: 'Abandonner le brouillon',
+  editor_draft_discard_confirm:
+    'Abandonner ce brouillon et restaurer le contenu enregistré ? Les modifications du brouillon seront perdues.',
+  editor_draft_pending: 'En attente d’application',
+  editor_draft_queue_skipped:
+    'Cette action a été ignorée car un enregistrement précédent a échoué. Vérifiez l’erreur et réessayez.',
   export: 'Exporter',
   export_done: "L'export est terminé.",
   fail: 'Échec !',
@@ -148,32 +148,115 @@ const lang: LanguageDict = {
   hide_dock_icon: "Cacher l'icône dans le Dock",
   hide_history: "Cacher l'historique",
   hide_others: 'Cacher les autres',
+  history_clear_confirm:
+    'Effacer tout l’historique du fichier Hosts système ? Cette action est irréversible.',
+  history_count: '{0} entrées enregistrées',
+  history_delete_selected: 'Supprimer la sélection',
+  history_disabled_hint:
+    'L’enregistrement est désactivé. L’historique existant reste consultable et peut être supprimé.',
+  history_error: 'Échec de l’opération sur l’historique',
+  history_irreversible: 'Les entrées supprimées ne pourront pas être récupérées.',
+  history_record: 'Enregistrer l’historique',
+  history_retry: 'Réessayer',
+  history_trim_change: 'Le nombre maximal d’entrées passera de {0} à {1}.',
+  history_trim_confirm: 'Enregistrer et supprimer {0} entrées',
+  history_trim_details:
+    'Conserver les {0} entrées les plus récentes et supprimer les {1} plus anciennes.',
+  history_trim_title: 'Réduire l’historique conservé ?',
+  history_unlimited: 'Illimité',
   homepage: "Page d'accueil",
   host: 'Host',
   hosts_add: 'Ajouter un nouvel hosts',
-  hosts_applied_save_failed:
-    'Le fichier hosts système a été appliqué, mais la sauvegarde et la restauration ont échoué. La liste affiche la configuration appliquée. Réappliquez les paramètres enregistrés avant toute modification.',
   hosts_application_unknown:
     'La sélection active est inconnue car le fichier hosts système a changé ou est illisible. Réappliquez les paramètres enregistrés avant toute modification.',
-  hosts_reapply_saved: 'Réappliquer les paramètres enregistrés',
+  hosts_applied_save_failed:
+    'Le fichier hosts système a été appliqué, mais la sauvegarde et la restauration ont échoué. La liste affiche la configuration appliquée. Réappliquez les paramètres enregistrés avant toute modification.',
   hosts_delete: 'Supprimer cet hosts',
   hosts_delete_confirm: 'Êtes-vous sûr de vouloir supprimer cet hosts ?',
   hosts_edit: "Éditer l'hosts",
+  hosts_managed_end: 'Fin gérée',
+  hosts_managed_start: 'Début géré',
+  hosts_reapply_saved: 'Réappliquer les paramètres enregistrés',
   hosts_title: "Titre de l'hosts",
   hosts_type: "Type d'hosts",
   hosts_updated: 'Le fichier hosts a été mis à jour',
   hour: 'heure',
   hours: 'heures',
+  http_api_description: 'Autoriser Alfred et d’autres outils à changer les hosts via cette API.',
+  http_api_listening: 'À l’écoute',
   http_api_on: 'Activer HTTP API',
   http_api_on_desc:
     "Actif sur le port {0}, peut être utilisé par un logiciel tier comme Alfred pour changer d'hosts",
   http_api_only_local: "L'API HTTP n'écoute que sur 127.0.0.1",
+  http_api_port: 'Port d’écoute',
+  http_api_port_clients:
+    'Après avoir changé le port, mettez aussi à jour le port configuré dans Alfred et les autres outils.',
+  http_api_port_denied:
+    'L’accès au port {0} a été refusé. Il peut être réservé par le système ou nécessiter une autorisation. Essayez un autre port.',
+  http_api_port_help:
+    '1–65535, valeur par défaut : 50761. L’enregistrement prend effet sans redémarrage.',
+  http_api_port_in_use: 'Le port {0} est déjà utilisé. Essayez un autre port.',
+  http_api_port_invalid: 'Saisissez un entier compris entre 1 et 65535.',
+  http_api_reset_port: 'Rétablir la valeur par défaut',
+  http_api_save_port: 'Enregistrer le port',
   http_api_start_failed: "Échec du démarrage de l'API HTTP locale : {0}",
+  http_api_status_unknown: 'Impossible de lire l’état de l’API HTTP',
+  http_api_stopped: 'L’API HTTP est désactivée',
+  http_api_unavailable: 'L’API HTTP n’est pas en cours d’exécution',
   ignore_case: 'Ignorer la casse',
   import: 'Importer',
+  import_append: 'Ajouter',
+  import_append_action: 'Ajouter la sélection',
+  import_append_help:
+    'Conserver les configurations existantes et ajouter les éléments sélectionnés.',
+  import_application_recovery:
+    'Résolvez l’opération en attente sur le fichier hosts du système avant d’importer.',
+  import_back: 'Retour à l’aperçu',
+  import_back_to_list: 'Retour à la liste',
+  import_changed:
+    'Vos configurations ont changé depuis l’aperçu. Rafraîchissez l’aperçu et vérifiez à nouveau les conséquences.',
+  import_collapse: 'Réduire {0}',
+  import_confirm_title: 'Confirmer le remplacement',
+  import_confirm_warning:
+    'La liste existante sera supprimée. Il n’y a ni sauvegarde automatique ni annulation en un clic. Annulez et exportez d’abord si vous souhaitez conserver une copie.',
+  import_content: 'Contenu de la configuration',
+  import_counts: '{0} configurations · {1} dossiers',
+  import_dependencies: 'Configurations référencées',
+  import_dependencies_removed: 'Les groupes dépendants ont également été désélectionnés.',
+  import_dependency_error:
+    'Sélectionnez les configurations référencées par les groupes sélectionnés.',
+  import_destination: 'Importer dans',
+  import_disabled:
+    'Les configurations importées sont initialement désactivées ; le fichier hosts du système reste inchangé.',
   import_done: "L'importation est terminée",
+  import_empty:
+    'La sauvegarde ne contient aucune configuration ni aucun dossier pouvant être importé.',
+  import_expand: 'Développer {0}',
+  import_expired:
+    'Cet aperçu n’est plus disponible. Sélectionnez à nouveau la source d’importation.',
   import_fail: "Échec de l'importation !",
   import_from_url: "Importer à partir d'une URL",
+  import_impact: 'Conserver {0} + ajouter {1} configurations · {2} dossiers source',
+  import_inspect: 'Afficher {0}',
+  import_invalid: 'Sauvegarde invalide ou incomplète. Aucune donnée n’a été importée.',
+  import_new_folder: 'Nouveau dossier : {0}',
+  import_new_version:
+    'Cette sauvegarde utilise un format plus récent. Mettez à jour SwitchHosts avant de l’importer.',
+  import_next_step: 'Suivant',
+  import_preview: 'Aperçu de l’importation',
+  import_recommended: 'Recommandé',
+  import_reference_error:
+    'La sauvegarde contient des références de groupe manquantes ou circulaires.',
+  import_refresh_preview: 'Rafraîchir l’aperçu',
+  import_removed: 'Configurations à supprimer',
+  import_replace: 'Remplacer toutes les configurations',
+  import_replace_help: 'Remplacer la liste actuelle par les configurations du fichier.',
+  import_replace_impact:
+    'Remplacer {0} configurations et {1} dossiers par {2} configurations et {3} dossiers',
+  import_root: 'Racine de la liste',
+  import_same_content: 'Même contenu',
+  import_same_title: 'Même nom · conserver les deux',
+  import_select: 'Sélectionner {0}',
   invalid_domain: "« {0} » n'est pas un nom de domaine valide.",
   is_latest_version_inform: 'La version actuelle est à jour.',
   item_found: '{0} élément trouvé.',
@@ -230,6 +313,7 @@ const lang: LanguageDict = {
   regexp: 'Expression régulière',
   reload: 'Recharger',
   remote: 'Distant',
+  remote_save_to_refresh: 'Enregistrer pour rafraîchir',
   remove_duplicate_records: 'Supprimer les enregistrements doublons',
   remove_duplicate_records_desc:
     'Si un domaine pointe vers plusieurs IPs, seule la première sera prise en compte ; lors de l’application des hosts, les suivantes seront converties en commentaires.',
@@ -259,22 +343,6 @@ const lang: LanguageDict = {
   sudo_prompt_title: 'Entrez votre mot de passe sudo',
   system: 'Système',
   system_hosts: 'Hosts du système',
-  history_record: 'Enregistrer l’historique',
-  history_disabled_hint:
-    'L’enregistrement est désactivé. L’historique existant reste consultable et peut être supprimé.',
-  history_count: '{0} entrées enregistrées',
-  history_unlimited: 'Illimité',
-  history_delete_selected: 'Supprimer la sélection',
-  history_clear_confirm:
-    'Effacer tout l’historique du fichier Hosts système ? Cette action est irréversible.',
-  history_trim_title: 'Réduire l’historique conservé ?',
-  history_trim_change: 'Le nombre maximal d’entrées passera de {0} à {1}.',
-  history_trim_details:
-    'Conserver les {0} entrées les plus récentes et supprimer les {1} plus anciennes.',
-  history_irreversible: 'Les entrées supprimées ne pourront pas être récupérées.',
-  history_trim_confirm: 'Enregistrer et supprimer {0} entrées',
-  history_error: 'Échec de l’opération sur l’historique',
-  history_retry: 'Réessayer',
   system_hosts_history: 'Historique des versions hosts du système',
   system_hosts_history_delete_confirm: 'Êtes-vous sûr de vouloir supprimer cet élément ?',
   system_hosts_history_help:
@@ -286,6 +354,10 @@ const lang: LanguageDict = {
   theme_light: 'Clair',
   theme_system: 'Suivre le système',
   title: 'Titre',
+  tls_ignore_errors: 'Ignorer les erreurs de certificat (non sécurisé)',
+  tls_ignore_errors_hint:
+    'Pour cette entrée uniquement : ne pas vérifier la confiance, l’expiration et le nom d’hôte du certificat. Cela permet des attaques de l’homme du milieu. Les certificats CA personnalisés ne sont pas utilisés lorsque cette option est activée.',
+  tls_settings: 'Paramètres des certificats HTTPS',
   to_show_source: 'Double-cliquez pour afficher le code source',
   toggle_developer_tools: 'Afficher/Masquer les outils de développement',
   toggle_dock_icon: "Afficher/Masquer l'icône dans le Dock",

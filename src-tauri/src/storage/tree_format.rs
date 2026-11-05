@@ -75,6 +75,8 @@ const SYSTEM_NODE_ID: &str = "0";
 // renderer's `source` discriminator is distinct from that envelope.
 const REMOTE_METADATA: &[(&str, &str)] = &[
     ("source", "kind"),
+    ("custom_ca_pem", "customCaPem"),
+    ("ignore_certificate_errors", "ignoreCertificateErrors"),
     ("domains", "domains"),
     ("domain_results", "domainResults"),
     ("domain_refresh_status", "domainRefreshStatus"),

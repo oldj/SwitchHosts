@@ -1,5 +1,3 @@
-import { httpApiEnglish } from '../httpApi'
-import { importEnglish } from '../import'
 /**
  * @author: bergo
  * @homepage: https://bergo.dev
@@ -8,45 +6,7 @@ import { importEnglish } from '../import'
 import { LanguageDict } from '@common/types'
 
 const lang: LanguageDict = {
-  ...httpApiEnglish,
-  ...importEnglish,
-  editor_draft_queue_skipped:
-    'Diese Aktion wurde übersprungen, weil ein vorheriger Speichervorgang fehlgeschlagen ist. Prüfen Sie den Fehler und versuchen Sie es erneut.',
-  editor_draft_pending: 'Noch nicht angewendet',
-  editor_draft_apply: 'Anwenden',
-  editor_draft_discard: 'Entwurf verwerfen',
-  editor_draft_apply_hint:
-    'Änderungen sind als Entwurf vorgemerkt und noch nicht in der Quelldatei gespeichert. Mit Anwenden oder {0} werden sie gespeichert und angewendet. Das gilt auch beim Verlassen des Editors innerhalb dieses Fensters, beim Wechsel zu einem anderen Eintrag oder beim Umschalten eines Hosts- oder Gruppenschalters.',
-  editor_draft_discard_confirm:
-    'Diesen Entwurf verwerfen und den gespeicherten Inhalt wiederherstellen? Änderungen im Entwurf gehen verloren.',
   _app_name: 'SwitchHosts',
-  hosts_managed_start: 'Verwalteter Anfang',
-  hosts_managed_end: 'Verwaltetes Ende',
-  domain_list: 'Domainliste',
-  domain_list_hint: 'Eine Domain pro Zeile. Eingefügte URLs werden in Domains umgewandelt.',
-  domain_count: '{0} / {1} Domains',
-  domain_limit_exceeded:
-    'Maximal {0} unterschiedliche Domains sind erlaubt. Entfernen Sie vor dem Speichern einige Domains.',
-  domain_duplicates: '{0} Duplikate zusammengeführt',
-  domain_normalized: '{0} Einträge normalisiert',
-  domain_line_error: 'Zeile {0} enthält keine gültige Domain: {1}',
-  domain_list_empty: 'Mindestens eine Domain eingeben.',
-  domain_save_to_resolve: 'Zum Auflösen speichern',
-  domain_config_saved: 'Domainkonfiguration gespeichert',
-  domain_resolving: 'Domains werden aufgelöst…',
-  domain_results: 'Auflösungsergebnisse',
-  domain_result_summary: '{0} aktualisiert · {1} mit bisherigen IPs · {2} nicht aufgelöst',
-  domain_resolved: 'Aktualisiert',
-  domain_stale: 'Fehlgeschlagen; bisherige IPs werden verwendet',
-  domain_failed: 'Noch keine erfolgreiche Auflösung',
-  domain_pending: 'Ausstehend',
-  domain_pending_count: '{0} ausstehend',
-  domain_last_success: 'Zuletzt erfolgreich: {0}',
-  domain_last_attempt: 'Letzter Versuch: ',
-  domain_saved_resolving: '{0} Domains gespeichert. Auflösung läuft…',
-  domain_saved: '{0} Domains gespeichert',
-  domain_resolution_incomplete:
-    'Einige Domains konnten nicht aufgelöst werden. Bitte die Ergebnisse prüfen.',
   _key: 'de',
   _name: 'Deutsch',
   about: 'Über',
@@ -87,6 +47,12 @@ const lang: LanguageDict = {
   comment_current_line: 'Aktuelle Zeile kommentieren',
   content: 'Inhalt',
   copy: 'Kopieren',
+  custom_ca: 'Benutzerdefinierte CA-Zertifikate (optional)',
+  custom_ca_hint:
+    'Für HTTPS-Abonnements mit einer privaten CA. Fügen Sie vertrauenswürdige öffentliche Zertifikate im PEM-Format ohne private Schlüssel ein (maximal 64 KiB). Sie werden mit diesem Eintrag gespeichert und in Sicherungen aufgenommen. Lassen Sie das Feld leer, um nur die vom System als vertrauenswürdig eingestuften Zertifikate zu verwenden.',
+  custom_ca_invalid:
+    'Geben Sie nur öffentliche Zertifikate im PEM-Format ohne private Schlüssel ein.',
+  custom_ca_too_large: 'Benutzerdefinierte CA-Zertifikate dürfen 64 KiB nicht überschreiten.',
   cut: 'Ausschneiden',
   data_dir_already_current: 'Dieser Ordner ist bereits Ihr aktueller Datenspeicherort.',
   data_dir_change_title: 'Datenspeicherort ändern',
@@ -113,11 +79,45 @@ const lang: LanguageDict = {
   dns_provider_custom: 'Benutzerdefiniert',
   dns_provider_desc:
     'DNS-over-HTTPS-Dienst zur Auflösung von Remote-Hosts-Einträgen vom Typ „Domäne".',
+  domain_config_saved: 'Domainkonfiguration gespeichert',
+  domain_count: '{0} / {1} Domains',
+  domain_duplicates: '{0} Duplikate zusammengeführt',
+  domain_failed: 'Noch keine erfolgreiche Auflösung',
   domain_hint:
     'Wird über {0} zu einer IP aufgelöst und als Hosts-Eintrag geschrieben. Der DNS-Dienst kann in den Einstellungen geändert werden.',
+  domain_last_attempt: 'Letzter Versuch: ',
+  domain_last_success: 'Zuletzt erfolgreich: {0}',
+  domain_limit_exceeded:
+    'Maximal {0} unterschiedliche Domains sind erlaubt. Entfernen Sie vor dem Speichern einige Domains.',
+  domain_line_error: 'Zeile {0} enthält keine gültige Domain: {1}',
+  domain_list: 'Domainliste',
+  domain_list_empty: 'Mindestens eine Domain eingeben.',
+  domain_list_hint: 'Eine Domain pro Zeile. Eingefügte URLs werden in Domains umgewandelt.',
+  domain_normalized: '{0} Einträge normalisiert',
+  domain_pending: 'Ausstehend',
+  domain_pending_count: '{0} ausstehend',
   domain_placeholder: 'z. B. github.com',
+  domain_resolution_incomplete:
+    'Einige Domains konnten nicht aufgelöst werden. Bitte die Ergebnisse prüfen.',
+  domain_resolved: 'Aktualisiert',
+  domain_resolving: 'Domains werden aufgelöst…',
+  domain_result_summary: '{0} aktualisiert · {1} mit bisherigen IPs · {2} nicht aufgelöst',
+  domain_results: 'Auflösungsergebnisse',
+  domain_save_to_resolve: 'Zum Auflösen speichern',
+  domain_saved: '{0} Domains gespeichert',
+  domain_saved_resolving: '{0} Domains gespeichert. Auflösung läuft…',
+  domain_stale: 'Fehlgeschlagen; bisherige IPs werden verwendet',
   download: 'Herunterladen',
   edit: 'Bearbeiten',
+  editor_draft_apply: 'Anwenden',
+  editor_draft_apply_hint:
+    'Änderungen sind als Entwurf vorgemerkt und noch nicht in der Quelldatei gespeichert. Mit Anwenden oder {0} werden sie gespeichert und angewendet. Das gilt auch beim Verlassen des Editors innerhalb dieses Fensters, beim Wechsel zu einem anderen Eintrag oder beim Umschalten eines Hosts- oder Gruppenschalters.',
+  editor_draft_discard: 'Entwurf verwerfen',
+  editor_draft_discard_confirm:
+    'Diesen Entwurf verwerfen und den gespeicherten Inhalt wiederherstellen? Änderungen im Entwurf gehen verloren.',
+  editor_draft_pending: 'Noch nicht angewendet',
+  editor_draft_queue_skipped:
+    'Diese Aktion wurde übersprungen, weil ein vorheriger Speichervorgang fehlgeschlagen ist. Prüfen Sie den Fehler und versuchen Sie es erneut.',
   export: 'Exportieren',
   export_done: 'Der Export ist abgeschlossen.',
   fail: 'Fehlgeschlagen!',
@@ -149,32 +149,112 @@ const lang: LanguageDict = {
   hide_dock_icon: 'Dock-Symbol ausblenden',
   hide_history: 'Verlauf ausblenden',
   hide_others: 'Andere ausblenden',
+  history_clear_confirm:
+    'Den gesamten System-Hosts-Verlauf löschen? Dies kann nicht rückgängig gemacht werden.',
+  history_count: '{0} gespeicherte Einträge',
+  history_delete_selected: 'Auswahl löschen',
+  history_disabled_hint:
+    'Die Aufzeichnung ist aus. Vorhandene Einträge können weiterhin angezeigt und gelöscht werden.',
+  history_error: 'Verlaufsaktion fehlgeschlagen',
+  history_irreversible: 'Gelöschte Einträge können nicht wiederhergestellt werden.',
+  history_record: 'Verlauf aufzeichnen',
+  history_retry: 'Erneut versuchen',
+  history_trim_change: 'Die maximale Anzahl wird von {0} auf {1} geändert.',
+  history_trim_confirm: 'Speichern und {0} Einträge löschen',
+  history_trim_details:
+    'Die neuesten {0} Einträge bleiben erhalten, die ältesten {1} werden gelöscht.',
+  history_trim_title: 'Weniger Verlaufseinträge behalten?',
+  history_unlimited: 'Unbegrenzt',
   homepage: 'Startseite',
   host: 'Host',
   hosts_add: 'Neue Hosts hinzufügen',
-  hosts_applied_save_failed:
-    'Die System-hosts wurden angewendet, aber Speichern und Wiederherstellen sind fehlgeschlagen. Die Liste zeigt den angewendeten Stand. Wenden Sie vor dem Bearbeiten die gespeicherten Einstellungen erneut an.',
   hosts_application_unknown:
     'Die aktive Auswahl ist unbekannt, da die System-hosts geändert wurden oder nicht lesbar sind. Wenden Sie vor dem Bearbeiten die gespeicherten Einstellungen erneut an.',
-  hosts_reapply_saved: 'Gespeicherte Einstellungen erneut anwenden',
+  hosts_applied_save_failed:
+    'Die System-hosts wurden angewendet, aber Speichern und Wiederherstellen sind fehlgeschlagen. Die Liste zeigt den angewendeten Stand. Wenden Sie vor dem Bearbeiten die gespeicherten Einstellungen erneut an.',
   hosts_delete: 'Diesen Host löschen',
   hosts_delete_confirm: 'Sind Sie sicher, dass Sie die aktuellen Hosts löschen wollen?',
   hosts_edit: 'Hosts bearbeiten',
+  hosts_managed_end: 'Verwaltetes Ende',
+  hosts_managed_start: 'Verwalteter Anfang',
+  hosts_reapply_saved: 'Gespeicherte Einstellungen erneut anwenden',
   hosts_title: 'Titel des Hosts',
   hosts_type: 'Hosts-Typ',
   hosts_updated: 'Die Hosts-Datei wurde aktualisiert.',
   hour: 'Stunde',
   hours: 'Stunden',
+  http_api_description: 'Alfred und anderen Tools erlauben, Hosts über diese API umzuschalten.',
+  http_api_listening: 'Lauscht auf Verbindungen',
   http_api_on: 'HTTP-API eingeschaltet',
   http_api_on_desc:
     'Läuft auf Port {0}, kann von Software von Drittanbietern wie Alfred verwendet werden, um den Host zu wechseln.',
   http_api_only_local: 'HTTP-API nur auf 127.0.0.1 überwachen',
+  http_api_port: 'Überwachter Port',
+  http_api_port_clients:
+    'Aktualisieren Sie nach einer Portänderung auch die Porteinstellung in Alfred und anderen Tools.',
+  http_api_port_denied:
+    'Der Zugriff auf Port {0} wurde verweigert. Er ist möglicherweise vom System reserviert oder erfordert eine Berechtigung. Versuchen Sie einen anderen Port.',
+  http_api_port_help:
+    '1–65535, Standard: 50761. Änderungen werden nach dem Speichern ohne Neustart wirksam.',
+  http_api_port_in_use: 'Port {0} wird bereits verwendet. Versuchen Sie einen anderen Port.',
+  http_api_port_invalid: 'Geben Sie eine ganze Zahl zwischen 1 und 65535 ein.',
+  http_api_reset_port: 'Standard wiederherstellen',
+  http_api_save_port: 'Port speichern',
   http_api_start_failed: 'Lokale HTTP-API konnte nicht gestartet werden: {0}',
+  http_api_status_unknown: 'Der Status der HTTP API konnte nicht gelesen werden',
+  http_api_stopped: 'HTTP API ist ausgeschaltet',
+  http_api_unavailable: 'HTTP API läuft nicht',
   ignore_case: 'Groß- und Kleinschreibung ignorieren',
   import: 'Importieren',
+  import_append: 'Hinzufügen',
+  import_append_action: 'Auswahl hinzufügen',
+  import_append_help: 'Bestehende Konfigurationen behalten und ausgewählte Einträge hinzufügen.',
+  import_application_recovery:
+    'Schließen Sie den ausstehenden Vorgang an der Hosts-Datei des Systems ab, bevor Sie importieren.',
+  import_back: 'Zurück zur Vorschau',
+  import_back_to_list: 'Zurück zur Liste',
+  import_changed:
+    'Ihre Konfigurationen wurden seit der Vorschau geändert. Aktualisieren Sie die Vorschau und prüfen Sie die Auswirkungen erneut.',
+  import_collapse: '{0} einklappen',
+  import_confirm_title: 'Ersetzen bestätigen',
+  import_confirm_warning:
+    'Die bestehende Liste wird entfernt. Es gibt keine automatische Sicherung und kein Rückgängigmachen mit einem Klick. Brechen Sie ab und exportieren Sie zuerst, wenn Sie eine Kopie behalten möchten.',
+  import_content: 'Konfigurationsinhalt',
+  import_counts: '{0} Konfigurationen · {1} Ordner',
+  import_dependencies: 'Referenzierte Konfigurationen',
+  import_dependencies_removed: 'Abhängige Gruppen wurden ebenfalls abgewählt.',
+  import_dependency_error:
+    'Wählen Sie auch die Konfigurationen aus, auf die die ausgewählten Gruppen verweisen.',
+  import_destination: 'Importieren nach',
+  import_disabled:
+    'Importierte Konfigurationen sind zunächst deaktiviert; die Hosts-Datei des Systems bleibt unverändert.',
   import_done: 'Der Import ist abgeschlossen.',
+  import_empty: 'Die Sicherung enthält keine importierbaren Konfigurationen oder Ordner.',
+  import_expand: '{0} ausklappen',
+  import_expired:
+    'Diese Vorschau ist nicht mehr verfügbar. Wählen Sie die Importquelle erneut aus.',
   import_fail: 'Der Import ist fehlgeschlagen!',
   import_from_url: 'Importieren von URL',
+  import_impact: '{0} Konfigurationen behalten + {1} hinzufügen · {2} Quellordner',
+  import_inspect: '{0} anzeigen',
+  import_invalid: 'Ungültige oder unvollständige Sicherung. Es wurden keine Daten importiert.',
+  import_new_folder: 'Neuer Ordner: {0}',
+  import_new_version:
+    'Diese Sicherung verwendet ein neueres Format. Aktualisieren Sie SwitchHosts vor dem Import.',
+  import_next_step: 'Weiter',
+  import_preview: 'Importvorschau',
+  import_recommended: 'Empfohlen',
+  import_reference_error: 'Die Sicherung enthält fehlende oder zirkuläre Gruppenreferenzen.',
+  import_refresh_preview: 'Vorschau aktualisieren',
+  import_removed: 'Zu entfernende Konfigurationen',
+  import_replace: 'Alle Konfigurationen ersetzen',
+  import_replace_help: 'Die aktuelle Liste durch die Konfigurationen aus der Datei ersetzen.',
+  import_replace_impact:
+    '{0} Konfigurationen und {1} Ordner durch {2} Konfigurationen und {3} Ordner ersetzen',
+  import_root: 'Oberste Ebene der Liste',
+  import_same_content: 'Gleicher Inhalt',
+  import_same_title: 'Gleicher Name · beide behalten',
+  import_select: '{0} auswählen',
   invalid_domain: '„{0}" ist kein gültiger Domänenname.',
   is_latest_version_inform: 'Die aktuelle Version ist auf dem neuesten Stand.',
   item_found: '{0} Einträge gefunden.',
@@ -231,6 +311,7 @@ const lang: LanguageDict = {
   regexp: 'Regulärer Ausdruck',
   reload: 'Neu laden',
   remote: 'Entfernt',
+  remote_save_to_refresh: 'Zum Aktualisieren speichern',
   remove_duplicate_records: 'Doppelte Datensätze entfernen',
   remove_duplicate_records_desc:
     'Wenn eine Domain auf mehrere IPs verweist, wird nur die erste wirksam; beim Anwenden der Hosts werden die folgenden in Kommentare umgewandelt.',
@@ -260,22 +341,6 @@ const lang: LanguageDict = {
   sudo_prompt_title: 'Geben Sie Ihr sudo-Passwort ein',
   system: 'System',
   system_hosts: 'System-Hosts',
-  history_record: 'Verlauf aufzeichnen',
-  history_disabled_hint:
-    'Die Aufzeichnung ist aus. Vorhandene Einträge können weiterhin angezeigt und gelöscht werden.',
-  history_count: '{0} gespeicherte Einträge',
-  history_unlimited: 'Unbegrenzt',
-  history_delete_selected: 'Auswahl löschen',
-  history_clear_confirm:
-    'Den gesamten System-Hosts-Verlauf löschen? Dies kann nicht rückgängig gemacht werden.',
-  history_trim_title: 'Weniger Verlaufseinträge behalten?',
-  history_trim_change: 'Die maximale Anzahl wird von {0} auf {1} geändert.',
-  history_trim_details:
-    'Die neuesten {0} Einträge bleiben erhalten, die ältesten {1} werden gelöscht.',
-  history_irreversible: 'Gelöschte Einträge können nicht wiederhergestellt werden.',
-  history_trim_confirm: 'Speichern und {0} Einträge löschen',
-  history_error: 'Verlaufsaktion fehlgeschlagen',
-  history_retry: 'Erneut versuchen',
   system_hosts_history: 'Historische Versionen der System-Hosts',
   system_hosts_history_delete_confirm: 'Sind Sie sicher, dass Sie dieses Element löschen wollen?',
   system_hosts_history_help:
@@ -287,6 +352,10 @@ const lang: LanguageDict = {
   theme_light: 'Hell',
   theme_system: 'System folgen',
   title: 'Titel',
+  tls_ignore_errors: 'Zertifikatsfehler ignorieren (unsicher)',
+  tls_ignore_errors_hint:
+    'Nur für diesen Eintrag: Vertrauen, Gültigkeit und Hostname des Zertifikats werden nicht geprüft. Dies ermöglicht Man-in-the-Middle-Angriffe. Benutzerdefinierte CA-Zertifikate werden bei aktivierter Option nicht verwendet.',
+  tls_settings: 'HTTPS-Zertifikatseinstellungen',
   to_show_source: 'Durch Doppelklick wird der Quellcode angezeigt.',
   toggle_developer_tools: 'Entwicklerwerkzeuge umschalten',
   toggle_dock_icon: 'Dock-Symbol ein-/ausblenden',

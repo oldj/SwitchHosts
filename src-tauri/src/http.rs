@@ -13,6 +13,8 @@ use std::time::Duration;
 use crate::storage::{AppConfig, AppState};
 
 mod error;
+#[cfg(test)]
+pub(crate) mod tls_tests;
 pub use error::request_error_message;
 
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
@@ -36,9 +38,25 @@ const USER_AGENT: &str = concat!(
 /// Returns a `String` error so commands can convert it to whatever
 /// renderer-facing shape they need.
 pub fn build_client(state: &AppState) -> Result<reqwest::Client, String> {
+    build_client_with_tls_options(state, "", false)
+}
+
+/// Extra trust belongs to one subscription's client, never the shared config
+/// or the operating system. Verification is disabled only by explicit per-entry opt-in.
+pub fn build_client_with_tls_options(
+    state: &AppState,
+    ca_pem: &str,
+    ignore_certificate_errors: bool,
+) -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder()
         .timeout(DEFAULT_TIMEOUT)
         .user_agent(USER_AGENT);
+
+    builder = if ignore_certificate_errors {
+        builder.tls_danger_accept_invalid_certs(true)
+    } else {
+        builder.tls_certs_merge(custom_ca_certificates(ca_pem)?)
+    };
 
     let proxy_url = configured_proxy_url_from_state(state);
 
@@ -50,6 +68,61 @@ pub fn build_client(state: &AppState) -> Result<reqwest::Client, String> {
     }
 
     builder.build().map_err(request_error_message)
+}
+
+pub const MAX_CUSTOM_CA_BYTES: usize = 64 * 1024;
+
+fn custom_ca_certificates(pem: &str) -> Result<Vec<reqwest::Certificate>, String> {
+    use rustls::pki_types::{pem::PemObject, CertificateDer};
+
+    const INVALID: &str = "Invalid custom CA certificate. Provide PEM-encoded certificates.";
+    if pem.len() > MAX_CUSTOM_CA_BYTES {
+        return Err("Custom CA certificates must not exceed 64 KiB.".into());
+    }
+    if pem.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    if pem.contains("PRIVATE KEY") {
+        return Err("Provide only public CA certificates, not private keys.".into());
+    }
+    let mut roots = rustls::RootCertStore::empty();
+    let mut certificates = Vec::new();
+    const BEGIN: &str = "-----BEGIN CERTIFICATE-----";
+    const END: &str = "-----END CERTIFICATE-----";
+    let mut remaining = pem.trim();
+    while !remaining.is_empty() {
+        let (body, rest) = remaining
+            .strip_prefix(BEGIN)
+            .and_then(|body| body.split_once(END))
+            .ok_or_else(|| INVALID.to_string())?;
+        // Match the editor's whitespace-tolerant PEM input, but consume every
+        // block. A scanning parser silently skips indented certificate headers.
+        let body: String = body.chars().filter(|c| !c.is_whitespace()).collect();
+        if body.is_empty()
+            || !body
+                .bytes()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'+' | b'/' | b'='))
+        {
+            return Err(INVALID.into());
+        }
+        let normalized = format!("{BEGIN}\n{body}\n{END}\n");
+        let certificate = CertificateDer::from_pem_slice(normalized.as_bytes())
+            .map_err(|_| INVALID.to_string())?;
+        // Validate every DER certificate. Do not silently ignore malformed
+        // entries in an otherwise valid bundle.
+        roots
+            .add(certificate.clone())
+            .map_err(|_| INVALID.to_string())?;
+        certificates.push(
+            reqwest::Certificate::from_der(certificate.as_ref())
+                .map_err(|_| INVALID.to_string())?,
+        );
+        remaining = rest.trim_start();
+    }
+    if certificates.is_empty() {
+        return Err(INVALID.into());
+    }
+    Ok(certificates)
 }
 
 pub async fn response_text_with_limit(
@@ -231,7 +304,7 @@ mod tests {
     #[test]
     fn read_text_file_with_limit_rejects_oversized_files() {
         let path = std::env::temp_dir().join(format!(
-            "switchhosts-limited-read-test-{}-{}",
+            "switchhosts-limited-read-oversized-test-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -249,7 +322,7 @@ mod tests {
     #[test]
     fn read_text_file_with_limit_accepts_files_at_limit() {
         let path = std::env::temp_dir().join(format!(
-            "switchhosts-limited-read-test-{}-{}",
+            "switchhosts-limited-read-boundary-test-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

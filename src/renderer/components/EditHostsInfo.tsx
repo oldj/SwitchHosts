@@ -17,13 +17,16 @@ import {
 import events from '@common/events'
 import * as hostsFn from '@common/hostsFn'
 import {
+  Accordion,
   Box,
   Button,
+  Checkbox,
   Group,
   SegmentedControl,
   Select,
   SimpleGrid,
   Text,
+  Textarea,
   TextInput,
 } from '@mantine/core'
 import DescriptionText from '@renderer/components/DescriptionText'
@@ -41,7 +44,7 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { formatInterval } from '@renderer/utils/formatInterval'
 import lodash from 'lodash'
 import React, { useId, useMemo, useRef, useState } from 'react'
-import { BiEdit, BiTrash } from 'react-icons/bi'
+import { BiEdit, BiError, BiTrash } from 'react-icons/bi'
 import { v4 as uuidv4 } from 'uuid'
 import useHostsData from '../models/useHostsData'
 import useConfigs from '../models/useConfigs'
@@ -58,6 +61,8 @@ const EditHostsInfo = () => {
   const [savedDomainSource, setSavedDomainSource] = useState(false)
   const [savedDomainsValid, setSavedDomainsValid] = useState(false)
   const [savedDomains, setSavedDomains] = useState<string[]>([])
+  const [savedRefreshTarget, setSavedRefreshTarget] = useState<string | null>(null)
+  const [customCaExpanded, setCustomCaExpanded] = useState(false)
   const domainInputId = useId()
   const lineNumbersRef = useRef<HTMLDivElement>(null)
   const refreshRequestRef = useRef(0)
@@ -69,9 +74,25 @@ const EditHostsInfo = () => {
   const domainLimitExceeded = parsedDomains.domains.length > MAX_DOMAINS
 
   const source = (hosts?.source as 'url' | 'domain') || 'url'
+  const customCaPem = typeof hosts?.custom_ca_pem === 'string' ? hosts.custom_ca_pem : ''
+  const ignoreCertificateErrors = hosts?.ignore_certificate_errors === true
+  let customCaError: string | undefined
+  if (hosts?.custom_ca_pem != null && typeof hosts.custom_ca_pem !== 'string') {
+    customCaError = lang.custom_ca_invalid
+  } else if (customCaPem.length > 65536) {
+    customCaError = lang.custom_ca_too_large
+  } else if (
+    customCaPem.trim() &&
+    !/^(?:\s*-----BEGIN CERTIFICATE-----[A-Za-z0-9+/=\s]+-----END CERTIFICATE-----\s*)+$/.test(
+      customCaPem,
+    )
+  ) {
+    customCaError = lang.custom_ca_invalid
+  }
   const [isShow, setIsShow] = useState(false)
   const [isAdd, setIsAdd] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const urlChanged = !hosts || !savedRefreshTarget || getRefreshTarget(hosts) !== savedRefreshTarget
   const domainsChanged =
     !savedDomainSource ||
     !savedDomainsValid ||
@@ -97,6 +118,8 @@ const EditHostsInfo = () => {
     setSavedDomains(parseDomains(domains.join('\n')).domains)
     setSavedDomainSource(item?.source === 'domain')
     setSavedDomainsValid(!!item && getRefreshTarget(item) !== null)
+    setSavedRefreshTarget(item ? getRefreshTarget(item) : null)
+    setCustomCaExpanded(false)
     setValidateDomains(false)
     refreshRequestRef.current += 1
     setIsRefreshing(false)
@@ -159,7 +182,20 @@ const EditHostsInfo = () => {
     const data: Omit<IHostsListObject, 'id'> & { id?: string } = { ...hosts }
     // Persist the displayed default too, so a queued edit cannot leave the
     // latest node's source discriminator paired with this form's old URL.
-    if (data.type === 'remote') data.source = data.source || 'url'
+    if (data.type === 'remote') {
+      data.source = data.source || 'url'
+      if (data.source === 'url') {
+        if (!ignoreCertificateErrors && customCaError) {
+          setCustomCaExpanded(true)
+          return
+        }
+        data.custom_ca_pem = customCaPem.trim()
+        data.ignore_certificate_errors = ignoreCertificateErrors
+      } else {
+        delete data.custom_ca_pem
+        delete data.ignore_certificate_errors
+      }
+    }
 
     const keysToTrim = ['title', 'url']
     keysToTrim.map((k) => {
@@ -202,6 +238,8 @@ const EditHostsInfo = () => {
         'title',
         'type',
         'url',
+        'custom_ca_pem',
+        'ignore_certificate_errors',
         'domains',
         'source',
         'refresh_interval',
@@ -227,6 +265,10 @@ const EditHostsInfo = () => {
           delete h.last_attempt_ms
         }
         if (data.type === 'remote' && data.source !== 'domain') delete h.domains
+        if (data.source === 'domain') {
+          delete h.custom_ca_pem
+          delete h.ignore_certificate_errors
+        }
         Object.assign(h, fields)
         edited = h
         return list
@@ -430,6 +472,50 @@ const EditHostsInfo = () => {
                   saveFromUI()
                 }
               />
+              <Accordion
+                mt="md"
+                variant="contained"
+                classNames={{ control: styles.custom_ca_control, label: styles.custom_ca_label }}
+                value={customCaExpanded ? 'custom-ca' : null}
+                onChange={(value) => setCustomCaExpanded(value === 'custom-ca')}
+                keepMounted={false}
+              >
+                <Accordion.Item value="custom-ca">
+                  <Accordion.Control>
+                    <Group gap="xs" wrap="nowrap">
+                      <span>{lang.tls_settings}</span>
+                      {ignoreCertificateErrors ? (
+                        <BiError aria-hidden color="var(--mantine-color-orange-6)" />
+                      ) : null}
+                    </Group>
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <Checkbox
+                      mb="md"
+                      label={lang.tls_ignore_errors}
+                      description={lang.tls_ignore_errors_hint}
+                      checked={ignoreCertificateErrors}
+                      onChange={(e) =>
+                        onUpdate({ ignore_certificate_errors: e.currentTarget.checked })
+                      }
+                    />
+                    <Textarea
+                      aria-label={lang.custom_ca}
+                      label={lang.custom_ca}
+                      description={lang.custom_ca_hint}
+                      placeholder="-----BEGIN CERTIFICATE-----"
+                      value={customCaPem}
+                      onChange={(e) => onUpdate({ custom_ca_pem: e.currentTarget.value })}
+                      error={ignoreCertificateErrors ? undefined : customCaError}
+                      disabled={ignoreCertificateErrors}
+                      rows={4}
+                      spellCheck={false}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                    />
+                  </Accordion.Panel>
+                </Accordion.Item>
+              </Accordion>
             </>
           )}
         </Box>
@@ -459,9 +545,7 @@ const EditHostsInfo = () => {
                 size={source === 'domain' ? 'compact-sm' : 'sm'}
                 variant="subtle"
                 loading={isRefreshing}
-                disabled={
-                  isRefreshing || (source === 'domain' ? domainsChanged : savedDomainSource)
-                }
+                disabled={isRefreshing || (source === 'domain' ? domainsChanged : urlChanged)}
                 onClick={() => {
                   if (!hosts) return
 
@@ -472,7 +556,11 @@ const EditHostsInfo = () => {
                   })
                 }}
               >
-                {source === 'domain' && domainsChanged ? lang.domain_save_to_resolve : lang.refresh}
+                {source === 'domain' && domainsChanged
+                  ? lang.domain_save_to_resolve
+                  : source === 'url' && urlChanged
+                    ? lang.remote_save_to_refresh
+                    : lang.refresh}
               </Button>
             </Box>
           )}

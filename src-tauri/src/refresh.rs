@@ -212,7 +212,14 @@ async fn refresh_one_inner<R: Runtime>(
                 Some(results),
             )
         }
-        RefreshTarget::Url(url) => (fetch_remote(url, state).await?, None),
+        RefreshTarget::Url {
+            url,
+            ca_pem,
+            ignore_certificate_errors,
+        } => (
+            fetch_remote(url, state, ca_pem, *ignore_certificate_errors).await?,
+            None,
+        ),
     };
 
     // Step 3: re-acquire the manifest under the store lock and stamp
@@ -566,7 +573,12 @@ async fn resolve_domain_batch(
     }
 }
 
-async fn fetch_remote(url: &str, state: &AppState) -> Result<String, RefreshError> {
+async fn fetch_remote(
+    url: &str,
+    state: &AppState,
+    ca_pem: &str,
+    ignore_certificate_errors: bool,
+) -> Result<String, RefreshError> {
     if let Some(stripped) = url.strip_prefix("file://") {
         return read_file_url(stripped, url);
     }
@@ -575,7 +587,8 @@ async fn fetch_remote(url: &str, state: &AppState) -> Result<String, RefreshErro
         .ok()
         .filter(|url| matches!(url.scheme(), "http" | "https") && url.host_str().is_some())
         .ok_or(RefreshError::InvalidUrl)?;
-    let client = http::build_client(state).map_err(|message| RefreshError::Fetch { message })?;
+    let client = http::build_client_with_tls_options(state, ca_pem, ignore_certificate_errors)
+        .map_err(|message| RefreshError::Fetch { message })?;
     let response = client
         .get(url)
         .send()
@@ -649,7 +662,11 @@ fn storage_error(error: crate::storage::StorageError) -> RefreshError {
 
 #[derive(Debug, PartialEq, Eq)]
 enum RefreshTarget {
-    Url(String),
+    Url {
+        url: String,
+        ca_pem: String,
+        ignore_certificate_errors: bool,
+    },
     Domains(Vec<String>),
 }
 
@@ -658,11 +675,33 @@ fn refresh_target(node: &Value) -> Result<RefreshTarget, RefreshError> {
         return Err(RefreshError::NotRemote);
     }
     if node.get("source").and_then(Value::as_str) != Some("domain") {
+        let ignore_certificate_errors = match node.get("ignore_certificate_errors") {
+            None | Some(Value::Null) => false,
+            Some(Value::Bool(value)) => *value,
+            Some(_) => {
+                return Err(RefreshError::Fetch {
+                    message: "Ignore certificate errors must be a boolean.".into(),
+                })
+            }
+        };
+        let ca_pem = match node.get("custom_ca_pem") {
+            None | Some(Value::Null) => "",
+            Some(Value::String(pem)) => pem.trim(),
+            Some(_) => {
+                return Err(RefreshError::Fetch {
+                    message: "Custom CA certificates must be PEM text.".into(),
+                })
+            }
+        };
         return node
             .get("url")
             .and_then(Value::as_str)
             .filter(|url| !url.is_empty())
-            .map(|url| RefreshTarget::Url(url.into()))
+            .map(|url| RefreshTarget::Url {
+                url: url.into(),
+                ca_pem: ca_pem.into(),
+                ignore_certificate_errors,
+            })
             .ok_or(RefreshError::NoUrl);
     }
     let raw: Vec<&str> = match node.get("domains") {
@@ -978,6 +1017,300 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn custom_ca_allows_only_the_configured_subscription_and_keeps_tls_checks() {
+        use crate::http::tls_tests::TlsServer;
+        let fixture = Fixture::new();
+        let server = TlsServer::new(false);
+        server.configure_proxy(&fixture.0);
+        // Concurrent requests share AppState but must keep separate trust roots.
+        let (trusted, untrusted, wrong_ca) = tokio::join!(
+            fetch_remote(&server.url, &fixture.0, &server.ca_pem, false),
+            fetch_remote(&server.url, &fixture.0, "", false),
+            fetch_remote(
+                &server.url,
+                &fixture.0,
+                crate::http::tls_tests::CA_PEM,
+                false
+            ),
+        );
+        assert_eq!(trusted.unwrap(), "192.0.2.46 custom-ca.test\n");
+        for result in [untrusted, wrong_ca] {
+            assert!(
+                matches!(result, Err(RefreshError::Fetch { message }) if message.contains("certificate"))
+            );
+        }
+        // A copied PEM bundle may indent the second root. It must still be
+        // loaded, rather than silently accepting only the unrelated first root.
+        let indented_ca = server
+            .ca_pem
+            .lines()
+            .map(|line| format!("  {line}"))
+            .collect::<Vec<_>>()
+            .join("\r\n");
+        let bundle = format!("{}\n{indented_ca}", crate::http::tls_tests::CA_PEM);
+        assert_eq!(
+            fetch_remote(&server.url, &fixture.0, &bundle, false)
+                .await
+                .unwrap(),
+            "192.0.2.46 custom-ca.test\n"
+        );
+        // Neither another subscription nor the shared import/DoH client
+        // inherits this subscription's private trust root.
+        assert!(fetch_remote(&server.url, &fixture.0, "", false)
+            .await
+            .is_err());
+        assert!(http::build_client(&fixture.0)
+            .unwrap()
+            .get(&server.url)
+            .send()
+            .await
+            .is_err());
+        let mismatch = server.url.replace("localhost", "127.0.0.1");
+        let error = fetch_remote(&mismatch, &fixture.0, &server.ca_pem, false)
+            .await
+            .unwrap_err();
+        assert!(
+            matches!(error, RefreshError::Fetch { message } if message.contains("certificate"))
+        );
+        let expired = TlsServer::new(true);
+        expired.configure_proxy(&fixture.0);
+        let error = fetch_remote(&expired.url, &fixture.0, &expired.ca_pem, false)
+            .await
+            .unwrap_err();
+        assert!(
+            matches!(error, RefreshError::Fetch { message } if message.contains("certificate"))
+        );
+    }
+
+    #[tokio::test]
+    async fn ignoring_certificate_errors_is_explicit_and_isolated() {
+        use crate::http::tls_tests::TlsServer;
+        let fixture = Fixture::new();
+        for expired in [false, true] {
+            let server = TlsServer::new(expired);
+            server.configure_proxy(&fixture.0);
+            for url in [&server.url, &server.url.replace("localhost", "127.0.0.1")] {
+                let (ignored, verified) = tokio::join!(
+                    fetch_remote(url, &fixture.0, "unused invalid CA", true),
+                    fetch_remote(url, &fixture.0, "", false),
+                );
+                assert_eq!(ignored.unwrap(), "192.0.2.46 custom-ca.test\n");
+                assert!(
+                    matches!(verified, Err(RefreshError::Fetch { message }) if message.contains("certificate"))
+                );
+                // A later verified refresh and the import/DoH client remain strict.
+                assert!(fetch_remote(url, &fixture.0, "", false).await.is_err());
+                assert!(http::build_client(&fixture.0)
+                    .unwrap()
+                    .get(url)
+                    .send()
+                    .await
+                    .is_err());
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn saved_certificate_policy_restores_custom_ca_and_all_verification_checks() {
+        use crate::http::tls_tests::TlsServer;
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        for (expired, mismatch, expected_error) in [
+            (false, false, None),
+            (false, true, Some("hostname")),
+            (true, false, Some("expired")),
+        ] {
+            let server = TlsServer::new(expired);
+            server.configure_proxy(state);
+            let url = if mismatch {
+                server.url.replace("localhost", "127.0.0.1")
+            } else {
+                server.url.clone()
+            };
+            let mut manifest = Manifest {
+                root: vec![json!({"id":"remote", "type":"remote", "url":url,
+                    "custom_ca_pem":server.ca_pem, "ignore_certificate_errors":true})],
+                ..Default::default()
+            };
+            entries::write_entry(&state.paths.entries_dir, "remote", "cached").unwrap();
+            for ignore in [true, false] {
+                manifest.root[0]["ignore_certificate_errors"] = json!(ignore);
+                manifest.save(&state.paths).unwrap();
+                let snapshot = read_refresh_snapshot(state, "remote").unwrap();
+                let RefreshTarget::Url {
+                    url,
+                    ca_pem,
+                    ignore_certificate_errors,
+                } = &snapshot.target
+                else {
+                    panic!("expected URL")
+                };
+                assert_eq!(*ignore_certificate_errors, ignore);
+                assert_eq!(ca_pem, server.ca_pem.trim());
+                let result = fetch_remote(url, state, ca_pem, *ignore_certificate_errors).await;
+                if let Some(expected) = expected_error.filter(|_| !ignore) {
+                    assert!(
+                        matches!(result, Err(RefreshError::Fetch { message }) if message.contains(expected)),
+                        "verification must be restored for {expected}"
+                    );
+                } else {
+                    assert_eq!(result.unwrap(), "192.0.2.46 custom-ca.test\n");
+                }
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn disabling_ignored_certificate_errors_discards_the_in_flight_response() {
+        use crate::http::tls_tests::TlsServer;
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        let server = TlsServer::new(false);
+        server.configure_proxy(state);
+        let mut manifest = Manifest {
+            root: vec![json!({"id":"remote", "type":"remote", "url":server.url,
+                "ignore_certificate_errors": true, "last_refresh_ms":10})],
+            ..Default::default()
+        };
+        manifest.save(&state.paths).unwrap();
+        entries::write_entry(&state.paths.entries_dir, "remote", "old").unwrap();
+        let snapshot = read_refresh_snapshot(state, "remote").unwrap();
+        let RefreshTarget::Url {
+            url,
+            ca_pem,
+            ignore_certificate_errors,
+        } = &snapshot.target
+        else {
+            panic!("expected URL")
+        };
+        assert!(*ignore_certificate_errors);
+        let content = fetch_remote(url, state, ca_pem, *ignore_certificate_errors)
+            .await
+            .unwrap();
+        manifest.root[0]["ignore_certificate_errors"] = json!(false);
+        manifest.save(&state.paths).unwrap();
+        assert!(matches!(
+            commit_refresh(state, "remote", &snapshot, &content, None),
+            Err(RefreshError::SourceChanged)
+        ));
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "remote").unwrap(),
+            "old"
+        );
+        assert_eq!(
+            Manifest::load(&state.paths).unwrap().root[0]["last_refresh_ms"],
+            10
+        );
+        assert!(!state.content_sync.is_pending());
+        // The next request must read the persisted opt-out, not reuse the
+        // previous request's insecure client or policy.
+        let RefreshTarget::Url {
+            url,
+            ca_pem,
+            ignore_certificate_errors,
+        } = read_refresh_snapshot(state, "remote").unwrap().target
+        else {
+            panic!("expected URL")
+        };
+        assert!(!ignore_certificate_errors);
+        assert!(
+            fetch_remote(&url, state, &ca_pem, ignore_certificate_errors)
+                .await
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn ignoring_certificate_errors_requires_a_boolean_opt_in() {
+        let original = json!({"type":"remote", "url":"https://example.test"});
+        let mut node = original.clone();
+        for value in [Value::Null, json!(false)] {
+            node["ignore_certificate_errors"] = value;
+            assert_eq!(
+                refresh_target(&original).unwrap(),
+                refresh_target(&node).unwrap()
+            );
+        }
+        for value in [json!("true"), json!(1), json!({})] {
+            node["ignore_certificate_errors"] = value;
+            assert!(refresh_target(&node).is_err());
+        }
+        node["ignore_certificate_errors"] = json!(true);
+        assert_ne!(
+            refresh_target(&original).unwrap(),
+            refresh_target(&node).unwrap()
+        );
+        node["source"] = json!("domain");
+        node["domains"] = json!(["example.test"]);
+        let target = refresh_target(&node).unwrap();
+        node["ignore_certificate_errors"] = json!({});
+        assert_eq!(target, refresh_target(&node).unwrap());
+    }
+
+    #[tokio::test]
+    async fn changing_custom_ca_during_refresh_discards_the_old_response() {
+        use crate::http::tls_tests::TlsServer;
+        let fixture = Fixture::new();
+        let state = &fixture.0;
+        let server = TlsServer::new(false);
+        server.configure_proxy(state);
+        let mut manifest = Manifest {
+            root: vec![json!({"id":"remote", "type":"remote", "url":server.url,
+                "custom_ca_pem": server.ca_pem, "last_refresh_ms": 10})],
+            ..Default::default()
+        };
+        manifest.save(&state.paths).unwrap();
+        entries::write_entry(&state.paths.entries_dir, "remote", "old").unwrap();
+        let snapshot = read_refresh_snapshot(state, "remote").unwrap();
+        let RefreshTarget::Url { url, ca_pem, .. } = &snapshot.target else {
+            panic!("expected URL")
+        };
+        let content = fetch_remote(url, state, ca_pem, false).await.unwrap();
+        manifest.root[0]["custom_ca_pem"] = json!("");
+        manifest.save(&state.paths).unwrap();
+        assert!(matches!(
+            commit_refresh(state, "remote", &snapshot, &content, None),
+            Err(RefreshError::SourceChanged)
+        ));
+        assert_eq!(
+            entries::read_entry(&state.paths.entries_dir, "remote").unwrap(),
+            "old"
+        );
+        assert_eq!(
+            Manifest::load(&state.paths).unwrap().root[0]["last_refresh_ms"],
+            10
+        );
+        assert!(!state.content_sync.is_pending());
+    }
+
+    #[test]
+    fn custom_ca_target_defaults_and_invalid_imports() {
+        let original = json!({"id":"remote", "type":"remote", "url":"https://example.test"});
+        let mut node = original.clone();
+        for empty in [Value::Null, json!(""), json!(" \n")] {
+            node["custom_ca_pem"] = empty;
+            assert_eq!(
+                refresh_target(&original).unwrap(),
+                refresh_target(&node).unwrap()
+            );
+        }
+        for invalid in [json!({}), json!(42), json!(false)] {
+            node["custom_ca_pem"] = invalid;
+            assert!(refresh_target(&node).is_err());
+        }
+        node["custom_ca_pem"] = json!("CA A");
+        let target = refresh_target(&node).unwrap();
+        node["custom_ca_pem"] = json!("CA B");
+        assert_ne!(target, refresh_target(&node).unwrap());
+        // Legacy/imported CA metadata on a DNS source does not affect its target.
+        node["source"] = json!("domain");
+        node["domains"] = json!(["example.test"]);
+        let target = refresh_target(&node).unwrap();
+        node["custom_ca_pem"] = json!({});
+        assert_eq!(target, refresh_target(&node).unwrap());
+    }
+
+    #[tokio::test]
     async fn refresh_reads_encoded_file_urls_and_legacy_raw_paths() {
         let fixture = Fixture::new();
         let path = fixture.0.paths.root.join("My Hosts #1.hosts");
@@ -987,7 +1320,7 @@ mod tests {
         let raw = format!("file://{}", path.display());
         for source in [&url, &localhost, &raw] {
             assert_eq!(
-                fetch_remote(source, &fixture.0).await.unwrap(),
+                fetch_remote(source, &fixture.0, "", false).await.unwrap(),
                 "127.0.0.1 file.test"
             );
         }
@@ -1001,11 +1334,17 @@ mod tests {
         std::fs::write(&literal, "literal").unwrap();
         std::fs::write(root.join("My Hosts"), "decoded").unwrap();
         let source = format!("file://{}", literal.display());
-        assert_eq!(fetch_remote(&source, &fixture.0).await.unwrap(), "literal");
+        assert_eq!(
+            fetch_remote(&source, &fixture.0, "", false).await.unwrap(),
+            "literal"
+        );
         #[cfg(unix)]
         for host in ["localhost", "LOCALHOST"] {
             let source = format!("file://{host}{}", literal.display());
-            assert_eq!(fetch_remote(&source, &fixture.0).await.unwrap(), "literal");
+            assert_eq!(
+                fetch_remote(&source, &fixture.0, "", false).await.unwrap(),
+                "literal"
+            );
         }
     }
 
@@ -1017,7 +1356,10 @@ mod tests {
         std::fs::write(root.join("My Hosts"), "wrong file").unwrap();
         for name in ["My Hosts ", "missing/../My Hosts", "missing/../My%20Hosts"] {
             let source = format!("file://{}", root.join(name).display());
-            assert!(fetch_remote(&source, &fixture.0).await.is_err(), "{source}");
+            assert!(
+                fetch_remote(&source, &fixture.0, "", false).await.is_err(),
+                "{source}"
+            );
         }
     }
 
@@ -1031,9 +1373,12 @@ mod tests {
         std::fs::create_dir(root.join("hosts")).unwrap();
         std::fs::write(root.join("hosts/local"), "nested").unwrap();
         let source = format!("file://{}", literal.display());
-        assert_eq!(fetch_remote(&source, &fixture.0).await.unwrap(), "literal");
+        assert_eq!(
+            fetch_remote(&source, &fixture.0, "", false).await.unwrap(),
+            "literal"
+        );
         std::fs::remove_file(literal).unwrap();
-        assert!(fetch_remote(&source, &fixture.0).await.is_err());
+        assert!(fetch_remote(&source, &fixture.0, "", false).await.is_err());
     }
 
     #[cfg(windows)]
@@ -1046,7 +1391,10 @@ mod tests {
             "file:///C%3A",
             "file://C:",
         ] {
-            assert!(fetch_remote(source, &fixture.0).await.is_err(), "{source}");
+            assert!(
+                fetch_remote(source, &fixture.0, "", false).await.is_err(),
+                "{source}"
+            );
         }
     }
 
@@ -1095,7 +1443,7 @@ mod tests {
             "ftp://example.test/hosts",
             "https://",
         ] {
-            let error = fetch_remote(url, state)
+            let error = fetch_remote(url, state, "", false)
                 .await
                 .unwrap_err()
                 .into_renderer_value();

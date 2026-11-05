@@ -25,6 +25,8 @@ interface MockHostEntry {
   last_attempt?: string
   last_attempt_ms?: number
   refresh_interval?: number
+  custom_ca_pem?: string
+  ignore_certificate_errors?: boolean
   last_refresh?: string
   last_refresh_ms?: number
   include?: string[]

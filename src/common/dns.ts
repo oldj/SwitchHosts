@@ -111,8 +111,19 @@ export const getRefreshTarget = (hosts: IHostsListObject): string | null => {
   if (hosts.type !== 'remote') return null
   const source = hosts.source || 'url'
   if (source === 'url') {
+    if (hosts.custom_ca_pem != null && typeof hosts.custom_ca_pem !== 'string') return null
+    if (
+      hosts.ignore_certificate_errors != null &&
+      typeof hosts.ignore_certificate_errors !== 'boolean'
+    )
+      return null
     return typeof hosts.url === 'string' && hosts.url.trim()
-      ? JSON.stringify(['url', hosts.url.trim()])
+      ? JSON.stringify([
+          'url',
+          hosts.url.trim(),
+          hosts.custom_ca_pem?.trim() || '',
+          hosts.ignore_certificate_errors === true,
+        ])
       : null
   }
   if (source !== 'domain') return null

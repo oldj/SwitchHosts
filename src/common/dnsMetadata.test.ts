@@ -75,6 +75,56 @@ describe('imported domain metadata', () => {
 })
 
 describe('refresh metadata ordering and ownership', () => {
+  it('does not merge results from a different certificate verification policy', () => {
+    const item: IHostsListObject = { id: 'url', type: 'remote', url: 'https://private.test/hosts' }
+    expect(
+      mergeRefreshMetadata(item, {
+        ...item,
+        ignore_certificate_errors: true,
+        last_refresh_ms: 300,
+      }),
+    ).toBe(item)
+    const ignored = { ...item, ignore_certificate_errors: true }
+    expect(mergeRefreshMetadata(ignored, { ...item, last_refresh_ms: 300 })).toBe(ignored)
+    expect(
+      mergeRefreshMetadata(item, {
+        ...item,
+        ignore_certificate_errors: false,
+        last_refresh_ms: 300,
+      }),
+    ).toMatchObject({ last_refresh_ms: 300 })
+    expect(
+      mergeRefreshMetadata(item, {
+        ...item,
+        ignore_certificate_errors: 'true' as any,
+        last_refresh_ms: 300,
+      }),
+    ).toBe(item)
+  })
+  it('discards refresh metadata after a custom CA change and accepts legacy defaults', () => {
+    const item: IHostsListObject = {
+      id: 'url',
+      type: 'remote',
+      url: 'https://private.test/hosts',
+      custom_ca_pem: 'CA A',
+    }
+    expect(
+      mergeRefreshMetadata(item, { ...item, custom_ca_pem: 'CA B', last_refresh_ms: 300 }),
+    ).toBe(item)
+    expect(mergeRefreshMetadata(item, { ...item, custom_ca_pem: '', last_refresh_ms: 300 })).toBe(
+      item,
+    )
+    expect(
+      mergeRefreshMetadata(
+        { ...item, custom_ca_pem: '' },
+        {
+          ...item,
+          custom_ca_pem: undefined,
+          last_refresh_ms: 300,
+        },
+      ),
+    ).toMatchObject({ last_refresh_ms: 300, custom_ca_pem: '' })
+  })
   const current: IHostsListObject = {
     id: 'dns',
     type: 'remote',
