@@ -286,12 +286,25 @@ fn dock_reopen_shows_main_window_unless_in_login_grace_window() {
 
     // Explicit-intent paths must bypass the gate entirely and clear it,
     // so a user summoning the window from the tray is never blocked and
-    // ends the grace window for good.
+    // ends the grace window for good. Both the default and screen-targeted
+    // entry points delegate to the shared implementation (#941).
     let show_body = extract_block_from(LIFECYCLE, "pub fn show_main_window<")
         .expect("lifecycle must define show_main_window");
     assert!(
-        show_body.contains("clear_login_launch_show_suppression"),
-        "show_main_window must clear the login-launch grace window — any explicit show ends it permanently"
+        show_body.contains("show_main_window_impl("),
+        "show_main_window must delegate to the shared show implementation"
+    );
+    let on_screen_body = extract_block_from(LIFECYCLE, "pub fn show_main_window_on_screen<")
+        .expect("lifecycle must define show_main_window_on_screen");
+    assert!(
+        on_screen_body.contains("show_main_window_impl("),
+        "screen-targeted show requests must delegate to the shared show implementation"
+    );
+    let show_impl_body = extract_block_from(LIFECYCLE, "fn show_main_window_impl<")
+        .expect("lifecycle must define show_main_window_impl");
+    assert!(
+        show_impl_body.contains("clear_login_launch_show_suppression();"),
+        "the shared show implementation must clear the login-launch grace window — any explicit show ends it permanently"
     );
     let active_block = extract_block_from(LIB, "app.listen(\"active_main_window\"")
         .expect("setup must listen for active_main_window");
