@@ -153,12 +153,28 @@ fn custom_ca_parser_rejects_empty_bundles_bad_der_private_keys_and_oversize_inpu
             .len(),
         2
     );
+    let indented = CA_PEM
+        .lines()
+        .map(|line| format!("  {line}\t"))
+        .collect::<Vec<_>>()
+        .join("\r\n");
+    for bundle in [
+        format!("{CA_PEM}\n{indented}"),
+        format!("{}{}", CA_PEM.trim(), CA_PEM.trim()),
+        CA_PEM.replace('\n', ""),
+    ] {
+        let expected = bundle.matches("-----BEGIN CERTIFICATE-----").count();
+        assert_eq!(custom_ca_certificates(&bundle).unwrap().len(), expected);
+    }
     for pem in [
         "not a certificate".into(),
         "-----BEGIN CERTIFICATE-----\n!!!!\n-----END CERTIFICATE-----".into(),
         "-----BEGIN CERTIFICATE-----\nYWJj\n-----END CERTIFICATE-----".into(),
         format!("{CA_PEM}\n-----BEGIN CERTIFICATE-----\nYWJj\n-----END CERTIFICATE-----"),
         format!("{CA_PEM}\n-----BEGIN PRIVATE KEY-----\nYWJj\n-----END PRIVATE KEY-----"),
+        format!("-----BEGIN CERTIFICATE-----\n{CA_PEM}"),
+        format!("{CA_PEM}\n-----BEGIN CERTIFICATE-----"),
+        format!("{CA_PEM}\nnot a certificate"),
         "x".repeat(super::MAX_CUSTOM_CA_BYTES + 1),
     ] {
         assert!(custom_ca_certificates(&pem).is_err());

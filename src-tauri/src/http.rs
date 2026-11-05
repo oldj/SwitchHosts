@@ -82,8 +82,27 @@ fn custom_ca_certificates(pem: &str) -> Result<Vec<reqwest::Certificate>, String
     }
     let mut roots = rustls::RootCertStore::empty();
     let mut certificates = Vec::new();
-    for certificate in CertificateDer::pem_slice_iter(pem.as_bytes()) {
-        let certificate = certificate.map_err(|_| INVALID.to_string())?;
+    const BEGIN: &str = "-----BEGIN CERTIFICATE-----";
+    const END: &str = "-----END CERTIFICATE-----";
+    let mut remaining = pem.trim();
+    while !remaining.is_empty() {
+        let (body, rest) = remaining
+            .strip_prefix(BEGIN)
+            .and_then(|body| body.split_once(END))
+            .ok_or_else(|| INVALID.to_string())?;
+        // Match the editor's whitespace-tolerant PEM input, but consume every
+        // block. A scanning parser silently skips indented certificate headers.
+        let body: String = body.chars().filter(|c| !c.is_whitespace()).collect();
+        if body.is_empty()
+            || !body
+                .bytes()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, b'+' | b'/' | b'='))
+        {
+            return Err(INVALID.into());
+        }
+        let normalized = format!("{BEGIN}\n{body}\n{END}\n");
+        let certificate = CertificateDer::from_pem_slice(normalized.as_bytes())
+            .map_err(|_| INVALID.to_string())?;
         // Validate every DER certificate. Do not silently ignore malformed
         // entries in an otherwise valid bundle.
         roots
@@ -93,6 +112,7 @@ fn custom_ca_certificates(pem: &str) -> Result<Vec<reqwest::Certificate>, String
             reqwest::Certificate::from_der(certificate.as_ref())
                 .map_err(|_| INVALID.to_string())?,
         );
+        remaining = rest.trim_start();
     }
     if certificates.is_empty() {
         return Err(INVALID.into());
@@ -279,7 +299,7 @@ mod tests {
     #[test]
     fn read_text_file_with_limit_rejects_oversized_files() {
         let path = std::env::temp_dir().join(format!(
-            "switchhosts-limited-read-test-{}-{}",
+            "switchhosts-limited-read-oversized-test-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -297,7 +317,7 @@ mod tests {
     #[test]
     fn read_text_file_with_limit_accepts_files_at_limit() {
         let path = std::env::temp_dir().join(format!(
-            "switchhosts-limited-read-test-{}-{}",
+            "switchhosts-limited-read-boundary-test-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

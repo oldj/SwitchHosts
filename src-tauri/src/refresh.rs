@@ -1008,8 +1008,17 @@ mod tests {
                 matches!(result, Err(RefreshError::Fetch { message }) if message.contains("certificate"))
             );
         }
+        // A copied PEM bundle may indent the second root. It must still be
+        // loaded, rather than silently accepting only the unrelated first root.
+        let indented_ca = server
+            .ca_pem
+            .lines()
+            .map(|line| format!("  {line}"))
+            .collect::<Vec<_>>()
+            .join("\r\n");
+        let bundle = format!("{}\n{indented_ca}", crate::http::tls_tests::CA_PEM);
         assert_eq!(
-            fetch_remote(&server.url, &fixture.0, &server.ca_pem)
+            fetch_remote(&server.url, &fixture.0, &bundle)
                 .await
                 .unwrap(),
             "192.0.2.46 custom-ca.test\n"
