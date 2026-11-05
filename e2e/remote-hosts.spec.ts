@@ -11,6 +11,7 @@ import {
   test,
 } from './support/test'
 import type { Page } from '@playwright/test'
+import { readFileSync } from 'node:fs'
 
 async function startDomainEntry(page: Page, title: string) {
   await page.getByLabel('Add').click()
@@ -29,6 +30,58 @@ async function editEntry(page: Page, title: string) {
 }
 
 test.describe('remote hosts', () => {
+  test('persists custom CA certificates on one subscription and lets the user clear them', async ({
+    page,
+  }) => {
+    const certificate = readFileSync('src-tauri/src/http/fixtures/ca.pem', 'utf8').trim()
+    await page.getByLabel('Add').click()
+    let drawer = page.getByRole('dialog')
+    await drawer.getByText('Remote', { exact: true }).click()
+    await drawer.getByLabel('Hosts Title', { exact: true }).fill('Private CA hosts')
+    await drawer.getByLabel('URL', { exact: true }).fill('https://private.test/hosts')
+    await drawer.getByLabel('Custom CA certificates (optional)', { exact: true }).fill(certificate)
+    await drawer.getByRole('button', { name: 'OK', exact: true }).click()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.list.find((item) => item.title === 'Private CA hosts')?.custom_ca_pem
+      })
+      .toBe(certificate)
+    drawer = await editEntry(page, 'Private CA hosts')
+    await expect(
+      drawer.getByLabel('Custom CA certificates (optional)', { exact: true }),
+    ).toHaveValue(certificate)
+    await expect(drawer.getByRole('button', { name: 'Refresh', exact: true })).toBeEnabled()
+    await drawer
+      .getByLabel('Custom CA certificates (optional)', { exact: true })
+      .fill('private key')
+    await expect(
+      drawer.getByRole('button', { name: 'Save to refresh', exact: true }),
+    ).toBeDisabled()
+    await drawer.getByRole('button', { name: 'OK', exact: true }).click()
+    await expect(
+      drawer.getByText('Enter PEM-encoded public certificates only, without private keys.'),
+    ).toBeVisible()
+    await drawer.getByLabel('Custom CA certificates (optional)', { exact: true }).fill('')
+    await expect(
+      drawer.getByRole('button', { name: 'Save to refresh', exact: true }),
+    ).toBeDisabled()
+    await drawer.getByRole('button', { name: 'OK', exact: true }).click()
+    await expect
+      .poll(async () => {
+        const state = await getMockState(page)
+        return state.list.find((item) => item.title === 'Private CA hosts')?.custom_ca_pem
+      })
+      .toBe('')
+    drawer = await editEntry(page, 'Private CA hosts')
+    await expect(
+      drawer.getByLabel('Custom CA certificates (optional)', { exact: true }),
+    ).toHaveValue('')
+    await expect(drawer.getByRole('button', { name: 'Refresh', exact: true })).toBeEnabled()
+    const state = await getMockState(page)
+    expect(state.list.find((item) => item.id === 'remote-blocklist')?.custom_ca_pem).toBeUndefined()
+  })
+
   test('refreshes a remote hosts entry and updates its details', async ({ page }) => {
     await page.locator('[data-id="remote-blocklist"]').click()
     await showRightPanel(page)

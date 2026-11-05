@@ -24,6 +24,7 @@ import {
   Select,
   SimpleGrid,
   Text,
+  Textarea,
   TextInput,
 } from '@mantine/core'
 import DescriptionText from '@renderer/components/DescriptionText'
@@ -58,6 +59,7 @@ const EditHostsInfo = () => {
   const [savedDomainSource, setSavedDomainSource] = useState(false)
   const [savedDomainsValid, setSavedDomainsValid] = useState(false)
   const [savedDomains, setSavedDomains] = useState<string[]>([])
+  const [savedRefreshTarget, setSavedRefreshTarget] = useState<string | null>(null)
   const domainInputId = useId()
   const lineNumbersRef = useRef<HTMLDivElement>(null)
   const refreshRequestRef = useRef(0)
@@ -69,9 +71,24 @@ const EditHostsInfo = () => {
   const domainLimitExceeded = parsedDomains.domains.length > MAX_DOMAINS
 
   const source = (hosts?.source as 'url' | 'domain') || 'url'
+  const customCaPem = typeof hosts?.custom_ca_pem === 'string' ? hosts.custom_ca_pem : ''
+  let customCaError: string | undefined
+  if (hosts?.custom_ca_pem != null && typeof hosts.custom_ca_pem !== 'string') {
+    customCaError = lang.custom_ca_invalid
+  } else if (customCaPem.length > 65536) {
+    customCaError = lang.custom_ca_too_large
+  } else if (
+    customCaPem.trim() &&
+    !/^(?:\s*-----BEGIN CERTIFICATE-----[A-Za-z0-9+/=\s]+-----END CERTIFICATE-----\s*)+$/.test(
+      customCaPem,
+    )
+  ) {
+    customCaError = lang.custom_ca_invalid
+  }
   const [isShow, setIsShow] = useState(false)
   const [isAdd, setIsAdd] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const urlChanged = !hosts || !savedRefreshTarget || getRefreshTarget(hosts) !== savedRefreshTarget
   const domainsChanged =
     !savedDomainSource ||
     !savedDomainsValid ||
@@ -97,6 +114,7 @@ const EditHostsInfo = () => {
     setSavedDomains(parseDomains(domains.join('\n')).domains)
     setSavedDomainSource(item?.source === 'domain')
     setSavedDomainsValid(!!item && getRefreshTarget(item) !== null)
+    setSavedRefreshTarget(item ? getRefreshTarget(item) : null)
     setValidateDomains(false)
     refreshRequestRef.current += 1
     setIsRefreshing(false)
@@ -159,7 +177,15 @@ const EditHostsInfo = () => {
     const data: Omit<IHostsListObject, 'id'> & { id?: string } = { ...hosts }
     // Persist the displayed default too, so a queued edit cannot leave the
     // latest node's source discriminator paired with this form's old URL.
-    if (data.type === 'remote') data.source = data.source || 'url'
+    if (data.type === 'remote') {
+      data.source = data.source || 'url'
+      if (data.source === 'url') {
+        if (customCaError) return
+        data.custom_ca_pem = customCaPem.trim()
+      } else {
+        delete data.custom_ca_pem
+      }
+    }
 
     const keysToTrim = ['title', 'url']
     keysToTrim.map((k) => {
@@ -202,6 +228,7 @@ const EditHostsInfo = () => {
         'title',
         'type',
         'url',
+        'custom_ca_pem',
         'domains',
         'source',
         'refresh_interval',
@@ -227,6 +254,7 @@ const EditHostsInfo = () => {
           delete h.last_attempt_ms
         }
         if (data.type === 'remote' && data.source !== 'domain') delete h.domains
+        if (data.source === 'domain') delete h.custom_ca_pem
         Object.assign(h, fields)
         edited = h
         return list
@@ -430,6 +458,19 @@ const EditHostsInfo = () => {
                   saveFromUI()
                 }
               />
+              <Textarea
+                mt="md"
+                label={lang.custom_ca}
+                description={lang.custom_ca_hint}
+                placeholder="-----BEGIN CERTIFICATE-----"
+                value={customCaPem}
+                onChange={(e) => onUpdate({ custom_ca_pem: e.currentTarget.value })}
+                error={customCaError}
+                rows={4}
+                spellCheck={false}
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
             </>
           )}
         </Box>
@@ -459,9 +500,7 @@ const EditHostsInfo = () => {
                 size={source === 'domain' ? 'compact-sm' : 'sm'}
                 variant="subtle"
                 loading={isRefreshing}
-                disabled={
-                  isRefreshing || (source === 'domain' ? domainsChanged : savedDomainSource)
-                }
+                disabled={isRefreshing || (source === 'domain' ? domainsChanged : urlChanged)}
                 onClick={() => {
                   if (!hosts) return
 
@@ -472,7 +511,11 @@ const EditHostsInfo = () => {
                   })
                 }}
               >
-                {source === 'domain' && domainsChanged ? lang.domain_save_to_resolve : lang.refresh}
+                {source === 'domain' && domainsChanged
+                  ? lang.domain_save_to_resolve
+                  : source === 'url' && urlChanged
+                    ? lang.remote_save_to_refresh
+                    : lang.refresh}
               </Button>
             </Box>
           )}

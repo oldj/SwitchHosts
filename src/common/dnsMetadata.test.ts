@@ -75,6 +75,30 @@ describe('imported domain metadata', () => {
 })
 
 describe('refresh metadata ordering and ownership', () => {
+  it('discards refresh metadata after a custom CA change and accepts legacy defaults', () => {
+    const item: IHostsListObject = {
+      id: 'url',
+      type: 'remote',
+      url: 'https://private.test/hosts',
+      custom_ca_pem: 'CA A',
+    }
+    expect(
+      mergeRefreshMetadata(item, { ...item, custom_ca_pem: 'CA B', last_refresh_ms: 300 }),
+    ).toBe(item)
+    expect(mergeRefreshMetadata(item, { ...item, custom_ca_pem: '', last_refresh_ms: 300 })).toBe(
+      item,
+    )
+    expect(
+      mergeRefreshMetadata(
+        { ...item, custom_ca_pem: '' },
+        {
+          ...item,
+          custom_ca_pem: undefined,
+          last_refresh_ms: 300,
+        },
+      ),
+    ).toMatchObject({ last_refresh_ms: 300, custom_ca_pem: '' })
+  })
   const current: IHostsListObject = {
     id: 'dns',
     type: 'remote',

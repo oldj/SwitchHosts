@@ -21,6 +21,7 @@ export interface IHostsListObject {
   // remote
   source?: 'url' | 'domain' // missing ⇒ 'url'; old domain entries use `url`
   url?: string
+  custom_ca_pem?: string // Extra trusted CA certificates for this URL subscription (PEM).
   domains?: string[]
   domain_results?: IDomainResolution[]
   domain_refresh_status?: 'complete' | 'partial' | 'failed'

@@ -133,6 +133,119 @@ beforeEach(() => {
 
 afterEach(cleanup)
 
+describe('EditHostsInfo custom CA', () => {
+  const pem = '-----BEGIN CERTIFICATE-----\nYWJj\n-----END CERTIFICATE-----'
+  const remote = {
+    id: 'private',
+    type: 'remote',
+    title: 'Private',
+    url: 'https://private.test/hosts',
+  }
+  const label = 'Custom CA certificates (optional)'
+
+  it.each([
+    [undefined, pem],
+    [pem, ''],
+    [pem, `${pem}\n${pem}`],
+  ])('requires saving changed CA settings before refreshing (%#)', async (saved, draft) => {
+    openDialog({ ...remote, custom_ca_pem: saved })
+    fireEvent.change(screen.getByLabelText('Hosts Title'), { target: { value: 'Renamed' } })
+    expect((screen.getByRole('button', { name: 'Refresh' }) as HTMLButtonElement).disabled).toBe(
+      false,
+    )
+    fireEvent.change(screen.getByLabelText(label), { target: { value: draft } })
+    const refresh = screen.getByRole('button', {
+      name: /Refresh|Save to refresh/,
+    }) as HTMLButtonElement
+    expect(refresh.disabled).toBe(true)
+    fireEvent.click(refresh)
+    expect(mocks.actions.refreshHosts).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByLabelText(label), { target: { value: saved || '' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+    await waitFor(() => expect(mocks.actions.refreshHosts).toHaveBeenCalledWith(remote.id))
+  })
+
+  it('requires saving a changed URL even when its CA is unchanged', () => {
+    openDialog({ ...remote, custom_ca_pem: pem })
+    fireEvent.change(screen.getByLabelText('URL'), {
+      target: { value: 'https://other.test/hosts' },
+    })
+    const refresh = screen.getByRole('button', {
+      name: /Refresh|Save to refresh/,
+    }) as HTMLButtonElement
+    expect(refresh.disabled).toBe(true)
+    fireEvent.change(screen.getByLabelText('URL'), { target: { value: remote.url } })
+    expect((screen.getByRole('button', { name: 'Refresh' }) as HTMLButtonElement).disabled).toBe(
+      false,
+    )
+  })
+
+  it('creates a URL subscription with its own certificate text', async () => {
+    openDialog()
+    fireEvent.click(screen.getByText('Remote', { exact: true }))
+    fireEvent.change(screen.getByLabelText('Hosts Title'), { target: { value: 'Private' } })
+    fireEvent.change(screen.getByLabelText('URL'), { target: { value: remote.url } })
+    fireEvent.change(screen.getByLabelText(label), { target: { value: pem } })
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    await waitFor(() => expect(mocks.setList).toHaveBeenCalled())
+    expect(mocks.setList.mock.calls[0][0]([])[0]).toMatchObject({
+      type: 'remote',
+      source: 'url',
+      custom_ca_pem: pem,
+    })
+  })
+
+  it('saves and clears CA text while preserving concurrent toggle and refresh fields', async () => {
+    mocks.hostsData.list = [{ ...remote, custom_ca_pem: pem }]
+    openDialog(mocks.hostsData.list[0])
+    const input = screen.getByLabelText(label) as HTMLTextAreaElement
+    expect(input.value).toBe(pem)
+    fireEvent.change(input, { target: { value: '' } })
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    await waitFor(() => expect(mocks.setList).toHaveBeenCalled())
+    const latest = [{ ...remote, custom_ca_pem: pem, on: true, last_refresh_ms: 900 }]
+    expect(mocks.setList.mock.calls[0][0](latest)[0]).toMatchObject({
+      custom_ca_pem: '',
+      on: true,
+      last_refresh_ms: 900,
+    })
+  })
+
+  it.each([
+    ['not a certificate', 'Enter PEM-encoded'],
+    [`${pem}\n-----BEGIN PRIVATE KEY-----\nYWJj\n-----END PRIVATE KEY-----`, 'Enter PEM-encoded'],
+    ['x'.repeat(65537), 'must not exceed 64 KiB'],
+  ])('rejects invalid CA text before saving (%#)', async (text, error) => {
+    mocks.hostsData.list = [remote]
+    openDialog(remote)
+    fireEvent.change(screen.getByLabelText(label), { target: { value: text } })
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    expect(screen.getByText(new RegExp(error))).toBeTruthy()
+    expect(mocks.setList).not.toHaveBeenCalled()
+  })
+
+  it('keeps a legacy URL subscription editable with no custom CA', async () => {
+    mocks.hostsData.list = [remote]
+    openDialog(remote)
+    expect((screen.getByLabelText(label) as HTMLTextAreaElement).value).toBe('')
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    await waitFor(() => expect(mocks.setList).toHaveBeenCalled())
+  })
+
+  it('drops URL certificate settings when switching the entry to domain lookup', async () => {
+    mocks.hostsData.list = [{ ...remote, custom_ca_pem: pem }]
+    openDialog(mocks.hostsData.list[0])
+    fireEvent.click(screen.getByText('Domain', { exact: true }))
+    expect(screen.queryByLabelText(label)).toBeNull()
+    fireEvent.change(screen.getByLabelText('Domain list'), { target: { value: 'example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    await waitFor(() => expect(mocks.setList).toHaveBeenCalled())
+    const saved = mocks.setList.mock.calls[0][0](structuredClone(mocks.hostsData.list))[0]
+    expect(saved.source).toBe('domain')
+    expect(saved.custom_ca_pem).toBeUndefined()
+  })
+})
+
 describe('EditHostsInfo domain source', () => {
   it('shows the DoH hint when editing a domain-sourced remote item', async () => {
     openDialog({ id: 'd1', type: 'remote', source: 'domain', title: 'GH', url: 'github.com' })
@@ -344,7 +457,7 @@ describe('EditHostsInfo domain source', () => {
       target: { value: '' },
     })
     fireEvent.click(screen.getByRole('radio', { name: 'Subscription URL' }))
-    const refresh = screen.getByRole('button', { name: 'Refresh' }) as HTMLButtonElement
+    const refresh = screen.getByRole('button', { name: 'Save to refresh' }) as HTMLButtonElement
     expect(refresh.disabled).toBe(true)
     fireEvent.click(refresh)
     expect(mocks.actions.refreshHosts).not.toHaveBeenCalled()

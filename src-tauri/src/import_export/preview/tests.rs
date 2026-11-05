@@ -43,6 +43,48 @@ fn backup() -> Value {
         "trashcan":{"items":[]}
     })
 }
+
+#[test]
+fn custom_ca_survives_storage_backup_export_and_import() {
+    let source = Fixture::new();
+    let ca = crate::http::tls_tests::CA_PEM;
+    Manifest {
+        root: vec![
+            json!({"id":"private", "type":"remote", "title":"Private hosts",
+            "url":"https://private.test/hosts", "custom_ca_pem":ca}),
+        ],
+        ..Default::default()
+    }
+    .save(&source.0)
+    .unwrap();
+    entries::write_entry(&source.0.entries_dir, "private", "cached hosts").unwrap();
+    let persisted: Value =
+        serde_json::from_slice(&std::fs::read(&source.0.manifest_file).unwrap()).unwrap();
+    assert_eq!(persisted["root"][0]["source"]["customCaPem"], ca);
+    let backup_path = source.0.root.join("backup.json");
+    crate::import_export::export_to_file(&backup_path, &source.0).unwrap();
+    let destination = Fixture::new();
+    let sessions = Sessions::default();
+    let preview = sessions
+        .prepare(
+            parse(&std::fs::read(backup_path).unwrap()).unwrap(),
+            "backup".into(),
+            &destination.0,
+        )
+        .unwrap();
+    sessions
+        .commit(
+            request(&preview, Mode::Append, &["private"]),
+            &destination.0,
+        )
+        .unwrap();
+    let imported = &Manifest::load(&destination.0).unwrap().root[1];
+    assert_eq!(imported["custom_ca_pem"], ca);
+    assert_eq!(
+        entries::read_entry(&destination.0.entries_dir, id(imported)).unwrap(),
+        "cached hosts"
+    );
+}
 fn prepare(sessions: &Sessions, paths: &V5Paths) -> Preview {
     sessions
         .prepare(

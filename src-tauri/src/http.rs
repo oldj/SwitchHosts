@@ -13,6 +13,8 @@ use std::time::Duration;
 use crate::storage::{AppConfig, AppState};
 
 mod error;
+#[cfg(test)]
+pub(crate) mod tls_tests;
 pub use error::request_error_message;
 
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
@@ -36,9 +38,20 @@ const USER_AGENT: &str = concat!(
 /// Returns a `String` error so commands can convert it to whatever
 /// renderer-facing shape they need.
 pub fn build_client(state: &AppState) -> Result<reqwest::Client, String> {
+    build_client_with_custom_ca(state, "")
+}
+
+/// Extra trust belongs to one subscription's client, never the shared config
+/// or the operating system. Normal certificate and hostname checks still apply.
+pub fn build_client_with_custom_ca(
+    state: &AppState,
+    ca_pem: &str,
+) -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder()
         .timeout(DEFAULT_TIMEOUT)
         .user_agent(USER_AGENT);
+
+    builder = builder.tls_certs_merge(custom_ca_certificates(ca_pem)?);
 
     let proxy_url = configured_proxy_url_from_state(state);
 
@@ -50,6 +63,41 @@ pub fn build_client(state: &AppState) -> Result<reqwest::Client, String> {
     }
 
     builder.build().map_err(request_error_message)
+}
+
+pub const MAX_CUSTOM_CA_BYTES: usize = 64 * 1024;
+
+fn custom_ca_certificates(pem: &str) -> Result<Vec<reqwest::Certificate>, String> {
+    use rustls::pki_types::{pem::PemObject, CertificateDer};
+
+    const INVALID: &str = "Invalid custom CA certificate. Provide PEM-encoded certificates.";
+    if pem.len() > MAX_CUSTOM_CA_BYTES {
+        return Err("Custom CA certificates must not exceed 64 KiB.".into());
+    }
+    if pem.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+    if pem.contains("PRIVATE KEY") {
+        return Err("Provide only public CA certificates, not private keys.".into());
+    }
+    let mut roots = rustls::RootCertStore::empty();
+    let mut certificates = Vec::new();
+    for certificate in CertificateDer::pem_slice_iter(pem.as_bytes()) {
+        let certificate = certificate.map_err(|_| INVALID.to_string())?;
+        // Validate every DER certificate. Do not silently ignore malformed
+        // entries in an otherwise valid bundle.
+        roots
+            .add(certificate.clone())
+            .map_err(|_| INVALID.to_string())?;
+        certificates.push(
+            reqwest::Certificate::from_der(certificate.as_ref())
+                .map_err(|_| INVALID.to_string())?,
+        );
+    }
+    if certificates.is_empty() {
+        return Err(INVALID.into());
+    }
+    Ok(certificates)
 }
 
 pub async fn response_text_with_limit(
