@@ -18,6 +18,8 @@
 //! `popup_menu_item_*` events.
 
 use std::sync::atomic::{AtomicU64, Ordering};
+#[cfg(target_os = "macos")]
+use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde_json::json;
@@ -40,6 +42,12 @@ use window::TRAY_WINDOW_WIDTH;
 
 #[cfg(target_os = "macos")]
 type TrayAnchor = Option<window::panel::StatusItemAnchor>;
+#[cfg(target_os = "macos")]
+static MENU_WORK_AREA: Mutex<Option<objc2_foundation::NSRect>> = Mutex::new(None);
+#[cfg(target_os = "macos")]
+pub(crate) fn remember_menu_work_area(area: Option<objc2_foundation::NSRect>) {
+    *MENU_WORK_AREA.lock().expect("tray menu placement mutex poisoned") = area;
+}
 #[cfg(not(target_os = "macos"))]
 type TrayAnchor = (PhysicalPosition<f64>, TauriRect);
 
@@ -145,13 +153,23 @@ pub fn install_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), tauri::Error> 
         .show_menu_on_left_click(false)
         .on_tray_icon_event(|tray, event| {
             if let TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Up,
+                button,
+                button_state,
                 position,
                 rect,
                 ..
             } = event
             {
+                let left_up =
+                    button == MouseButton::Left && button_state == MouseButtonState::Up;
+                #[cfg(target_os = "macos")]
+                let menu_open =
+                    button == MouseButton::Right && button_state == MouseButtonState::Down;
+                #[cfg(not(target_os = "macos"))]
+                let menu_open = false;
+                if !left_up && !menu_open {
+                    return;
+                }
                 #[cfg(target_os = "macos")]
                 let anchor = tray
                     .with_inner_tray_icon(move |icon| {
@@ -164,6 +182,13 @@ pub fn install_tray<R: Runtime>(app: &AppHandle<R>) -> Result<(), tauri::Error> 
                     .flatten();
                 #[cfg(not(target_os = "macos"))]
                 let anchor = (position, rect);
+                #[cfg(target_os = "macos")]
+                if menu_open {
+                    // Capture before the native menu opens. Its selection may
+                    // arrive after the cursor has moved to another display.
+                    remember_menu_work_area(anchor.map(|a| a.work_area));
+                    return;
+                }
                 handle_left_click(tray.app_handle(), anchor);
             }
         });
@@ -218,6 +243,9 @@ fn handle_left_click<R: Runtime + 'static>(app: &AppHandle<R>, anchor: TrayAncho
         }
         show_tray_window_from_tray_click(app, anchor);
     } else {
+        #[cfg(target_os = "macos")]
+        lifecycle::show_main_window_on_screen(app, anchor.map(|a| a.work_area));
+        #[cfg(not(target_os = "macos"))]
         show_main_window(app);
     }
 }
@@ -296,8 +324,16 @@ fn read_hide_dock_icon<R: Runtime>(app: &AppHandle<R>) -> bool {
 /// Called from the global `on_menu_event` handler in `lib.rs` when an
 /// id starts with `tray-`. Returns `true` if the id was handled here.
 pub fn handle_menu_event<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) -> bool {
+    #[cfg(target_os = "macos")]
+    let menu_work_area = MENU_WORK_AREA
+        .lock()
+        .expect("tray menu placement mutex poisoned")
+        .take();
     match id {
         MENU_ID_SHOW_MAIN => {
+            #[cfg(target_os = "macos")]
+            lifecycle::show_main_window_on_screen(app, menu_work_area);
+            #[cfg(not(target_os = "macos"))]
             show_main_window(app);
             true
         }
@@ -317,7 +353,29 @@ pub fn handle_menu_event<R: Runtime + 'static>(app: &AppHandle<R>, id: &str) -> 
     }
 }
 
+#[cfg(not(target_os = "macos"))]
 fn show_main_window<R: Runtime + 'static>(app: &AppHandle<R>) {
+    lifecycle::show_main_window(app);
+}
+
+/// Use the real panel's screen, not the hidden Tauri host or a cursor that
+/// may already have moved to another display while IPC was being delivered.
+pub fn show_main_window_from_panel<R: Runtime + 'static>(app: &AppHandle<R>) {
+    #[cfg(target_os = "macos")]
+    {
+        let app_for_show = app.clone();
+        if let Err(e) = app.run_on_main_thread(move || {
+            let area = app_for_show
+                .get_webview_window(TRAY_WINDOW_LABEL)
+                .and_then(|window| window::panel::get(&window))
+                .and_then(|panel| panel.screen())
+                .map(|screen| screen.visibleFrame());
+            lifecycle::show_main_window_on_screen(&app_for_show, area);
+        }) {
+            log::warn!("failed to schedule tray panel main window show: {e}");
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
     lifecycle::show_main_window(app);
 }
 

@@ -2,7 +2,7 @@ import logo from '@/assets/logo@4x.png'
 import events from '@common/events'
 import { ScrollArea } from '@mantine/core'
 import List from '@renderer/components/List'
-import { agent } from '@renderer/core/agent'
+import { actions, agent } from '@renderer/core/agent'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useConfigs from '@renderer/models/useConfigs'
 import useHostsData from '@renderer/models/useHostsData'
@@ -43,7 +43,7 @@ const TrayPage = () => {
   useOnBroadcast(events.config_updated, loadConfigs, [configs])
 
   const showMain = () => {
-    agent.broadcast(events.active_main_window)
+    actions.cmdFocusMainWindow().catch((e) => console.error(e))
   }
 
   return (

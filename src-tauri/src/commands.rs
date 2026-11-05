@@ -1709,8 +1709,16 @@ pub async fn hide_main_window<R: Runtime>(
 }
 
 #[tauri::command]
-pub async fn focus_main_window<R: Runtime>(app: AppHandle<R>, _args: Args) -> Value {
-    lifecycle::show_main_window(&app);
+pub async fn focus_main_window<R: Runtime>(
+    app: AppHandle<R>,
+    window: tauri::WebviewWindow<R>,
+    _args: Args,
+) -> Value {
+    if window.label() == crate::tray::TRAY_WINDOW_LABEL {
+        crate::tray::show_main_window_from_panel(&app);
+    } else {
+        lifecycle::show_main_window(&app);
+    }
     Value::Null
 }
 

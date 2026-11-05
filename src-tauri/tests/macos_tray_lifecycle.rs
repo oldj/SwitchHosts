@@ -7,7 +7,16 @@
 mod tray_window;
 
 #[cfg(target_os = "macos")]
+#[path = "../src/lifecycle/macos_placement.rs"]
+mod macos_placement;
+
+#[cfg(target_os = "macos")]
+#[path = "macos_tray_lifecycle/main_window_cases.rs"]
+mod macos_main_window_cases;
+
+#[cfg(target_os = "macos")]
 mod native {
+    use super::macos_placement;
     use super::tray_window;
     use objc2::{msg_send, rc::Retained, ClassType, MainThreadOnly};
     use objc2_app_kit::{
@@ -15,7 +24,7 @@ mod native {
         NSWindowStyleMask,
     };
     use objc2_core_graphics::{CGDisplayPixelsHigh, CGMainDisplayID};
-    use objc2_foundation::{ns_string, NSObject};
+    use objc2_foundation::{ns_string, NSObject, NSPoint, NSRect, NSSize};
     use std::sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
@@ -124,6 +133,55 @@ mod native {
         let primary_height = CGDisplayPixelsHigh(CGMainDisplayID()) as f64;
         let screen = screens.objectAtIndex(cycle % screens.len());
         let area = screen.visibleFrame();
+        if let Some(main) = app.get_webview_window("main") {
+            let native_main = unsafe { Retained::retain(main.ns_window()?.cast::<NSWindow>()) }
+                .ok_or("missing native main window")?;
+            // Put the hidden main on a different attached display first, as
+            // happens when reopening a remembered/previously hidden window.
+            let other = screens.objectAtIndex((cycle + 1) % screens.len());
+            let other_area = other.visibleFrame();
+            native_main.setFrame_display(
+                NSRect::new(
+                    NSPoint::new(other_area.origin.x + 30.0, other_area.origin.y + 30.0),
+                    NSSize::new(500.0, 300.0),
+                ),
+                false,
+            );
+            // The menu bar/Dock may have changed since the tray click.
+            let captured_area = NSRect::new(
+                area.origin,
+                NSSize::new(area.size.width, area.size.height - 20.0),
+            );
+            macos_placement::move_to_screen(&main, captured_area)?;
+            check(
+                native_main.screen().as_deref() == Some(&screen),
+                "main stayed on previous display",
+            )?;
+            check(
+                !main.is_visible()?,
+                "placement showed the main before its ready gate",
+            )?;
+            let frame = native_main.frame();
+            check(
+                frame.size == NSSize::new(500.0, 300.0),
+                "cross-screen move changed normal window size",
+            )?;
+            // Move away from center; a repeat invocation on this display
+            // must keep the user's placement rather than center every time.
+            native_main.setFrameOrigin(NSPoint::new(area.origin.x + 20.0, area.origin.y + 20.0));
+            let placed = native_main.frame();
+            macos_placement::move_to_screen(&main, area)?;
+            check(
+                native_main.frame() == placed,
+                "same-screen invocation moved the main window",
+            )?;
+            let missing = NSRect::new(NSPoint::new(999999.0, 999999.0), area.size);
+            macos_placement::move_to_screen(&main, missing)?;
+            check(
+                native_main.frame() == placed,
+                "disconnected display moved the main window",
+            )?;
+        }
         let screen_top = screen.frame().origin.y + screen.frame().size.height;
         let scale = screen.backingScaleFactor();
         let icon = tauri::Rect {
@@ -271,7 +329,7 @@ mod native {
                         std::process::exit(1);
                     }
                     finished = true;
-                    app.exit(0);
+                    super::macos_main_window_cases::run(app.clone());
                     return;
                 }
                 destroyed.store(false, Ordering::SeqCst);

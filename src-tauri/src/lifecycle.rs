@@ -33,6 +33,9 @@ use objc2::{class, msg_send, runtime::AnyObject, MainThreadMarker};
 #[cfg(target_os = "macos")]
 use objc2_foundation::{NSPoint, NSSize};
 
+#[cfg(target_os = "macos")]
+pub(crate) mod macos_placement;
+
 /// Minimum interval between two geometry persists driven by
 /// Moved/Resized events, in milliseconds. macOS fires these events
 /// continuously during a drag (60 Hz), so we coalesce to at most
@@ -82,13 +85,15 @@ const MAIN_WINDOW_READY_FALLBACK_MS: u64 = 5000;
 /// re-create we `abandon()` the previous one so its listener and
 /// fallback timer become no-ops and can't accidentally show an
 /// unrelated window. Mirrors `FindGate` in `find.rs`.
-struct MainGate {
+pub(crate) struct MainGate {
     did_show: Arc<AtomicBool>,
     listener_id: Arc<Mutex<Option<EventId>>>,
+    #[cfg(target_os = "macos")]
+    work_area: Arc<Mutex<Option<objc2_foundation::NSRect>>>,
 }
 
 impl MainGate {
-    fn abandon<R: Runtime>(&self, app: &AppHandle<R>) {
+    pub(crate) fn abandon<R: Runtime>(&self, app: &AppHandle<R>) {
         self.did_show.store(true, Ordering::SeqCst);
         if let Some(id) = self
             .listener_id
@@ -102,6 +107,13 @@ impl MainGate {
 
     fn is_pending(&self) -> bool {
         !self.did_show.load(Ordering::SeqCst)
+    }
+
+    #[cfg(target_os = "macos")]
+    pub(crate) fn retarget(&self, work_area: Option<objc2_foundation::NSRect>) {
+        if self.is_pending() && work_area.is_some() {
+            *self.work_area.lock().expect("main placement mutex poisoned") = work_area;
+        }
     }
 }
 
@@ -271,17 +283,45 @@ fn clear_login_launch_show_suppression() {
 }
 
 pub fn show_main_window<R: Runtime + 'static>(app: &AppHandle<R>) {
+    show_main_window_impl(
+        app,
+        #[cfg(target_os = "macos")]
+        None,
+    );
+}
+
+#[cfg(target_os = "macos")]
+pub fn show_main_window_on_screen<R: Runtime + 'static>(
+    app: &AppHandle<R>,
+    work_area: Option<objc2_foundation::NSRect>,
+) {
+    let app_for_show = app.clone();
+    if let Err(e) = app.run_on_main_thread(move || {
+        show_main_window_impl(&app_for_show, work_area);
+    }) {
+        log::warn!("failed to schedule main window show: {e}");
+    }
+}
+
+fn show_main_window_impl<R: Runtime + 'static>(
+    app: &AppHandle<R>,
+    #[cfg(target_os = "macos")] work_area: Option<objc2_foundation::NSRect>,
+) {
     // Reaching here means an explicit show intent (tray, renderer
     // command, menu) or a gate-approved system signal — either way the
     // login-launch grace window is over for good.
     clear_login_launch_show_suppression();
 
-    #[cfg(target_os = "macos")]
-    {
-        let _ = app.show();
-    }
-
     if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        #[cfg(target_os = "macos")]
+        {
+            if let Some(area) = work_area {
+                if let Err(e) = macos_placement::move_to_screen(&window, area) {
+                    log::warn!("failed to position main window on tray screen: {e}");
+                }
+            }
+            let _ = app.show();
+        }
         // If a previous rebuild is still waiting on `main_window_ready`,
         // let its listener / fallback do the show — pre-empting them
         // would reintroduce a white flash on the unready webview.
@@ -289,7 +329,12 @@ pub fn show_main_window<R: Runtime + 'static>(app: &AppHandle<R>) {
             .lock()
             .expect("main gate mutex poisoned")
             .as_ref()
-            .map(|g| g.is_pending())
+            .map(|g| {
+                let pending = g.is_pending();
+                #[cfg(target_os = "macos")]
+                g.retarget(work_area);
+                pending
+            })
             .unwrap_or(false);
         if pending {
             return;
@@ -297,6 +342,9 @@ pub fn show_main_window<R: Runtime + 'static>(app: &AppHandle<R>) {
         show_main_window_now(&window);
         return;
     }
+
+    #[cfg(target_os = "macos")]
+    let _ = app.show();
 
     // Window was destroyed (lightweight_mode close). Rebuild it.
     {
@@ -319,7 +367,12 @@ pub fn show_main_window<R: Runtime + 'static>(app: &AppHandle<R>) {
         }
     };
     install_main_window_handlers(&window);
-    let gate = install_main_window_ready_handlers(app, &window);
+    let gate = install_main_window_ready_handlers(
+        app,
+        &window,
+        #[cfg(target_os = "macos")]
+        work_area,
+    );
     *MAIN_GATE.lock().expect("main gate mutex poisoned") = Some(gate);
     // Only clear the hide-to-tray state once the new main window is
     // fully wired up — handlers + ready gate in place. If any step
@@ -336,21 +389,40 @@ fn show_main_window_now<R: Runtime>(window: &WebviewWindow<R>) {
 fn show_main_window_once<R: Runtime>(
     app: &AppHandle<R>,
     window: &WebviewWindow<R>,
-    did_show: &AtomicBool,
+    did_show: &Arc<AtomicBool>,
     listener_id: &Arc<Mutex<Option<EventId>>>,
+    #[cfg(target_os = "macos")] work_area: &Arc<Mutex<Option<objc2_foundation::NSRect>>>,
 ) {
-    // `compare_exchange` doubles as the "abandoned" check: when a newer
-    // window supersedes this gate, `MainGate::abandon` forces `did_show`
-    // to true, so this exchange returns Err and we exit without touching
-    // anything.
-    if did_show
-        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
-        .is_err()
-    {
-        return;
+    let app_for_show = app.clone();
+    let window = window.clone();
+    let did_show = did_show.clone();
+    let listener_id = listener_id.clone();
+    #[cfg(target_os = "macos")]
+    let work_area = work_area.clone();
+    if let Err(e) = app.run_on_main_thread(move || {
+        // `compare_exchange` doubles as the "abandoned" check: when a newer
+        // window supersedes this gate, `MainGate::abandon` forces `did_show`
+        // to true, so this exchange returns Err and we exit without touching
+        // anything.
+        if did_show
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
+        {
+            return;
+        }
+        #[cfg(target_os = "macos")]
+        if let Some(area) = *work_area.lock().expect("main placement mutex poisoned") {
+            // Tauri queues a position correction during build. Apply the
+            // tray's target after that correction, immediately before show.
+            if let Err(e) = macos_placement::move_to_screen(&window, area) {
+                log::warn!("failed to position rebuilt main window on tray screen: {e}");
+            }
+        }
+        show_main_window_now(&window);
+        unlisten_main_window_ready(&app_for_show, &listener_id);
+    }) {
+        log::warn!("failed to schedule ready main window show: {e}");
     }
-    show_main_window_now(window);
-    unlisten_main_window_ready(app, listener_id);
 }
 
 fn unlisten_main_window_ready<R: Runtime>(
@@ -366,19 +438,31 @@ fn unlisten_main_window_ready<R: Runtime>(
     }
 }
 
-fn install_main_window_ready_handlers<R: Runtime + 'static>(
+pub(crate) fn install_main_window_ready_handlers<R: Runtime + 'static>(
     app: &AppHandle<R>,
     window: &WebviewWindow<R>,
+    #[cfg(target_os = "macos")] work_area: Option<objc2_foundation::NSRect>,
 ) -> MainGate {
     let did_show = Arc::new(AtomicBool::new(false));
     let listener_id = Arc::new(Mutex::new(None));
+    #[cfg(target_os = "macos")]
+    let work_area = Arc::new(Mutex::new(work_area));
 
     let ready_app = app.clone();
     let ready_window = window.clone();
     let ready_flag = did_show.clone();
     let ready_listener_id = listener_id.clone();
+    #[cfg(target_os = "macos")]
+    let ready_work_area = work_area.clone();
     let id = app.listen(MAIN_WINDOW_READY_EVENT, move |event| {
-        show_main_window_once(&ready_app, &ready_window, &ready_flag, &ready_listener_id);
+        show_main_window_once(
+            &ready_app,
+            &ready_window,
+            &ready_flag,
+            &ready_listener_id,
+            #[cfg(target_os = "macos")]
+            &ready_work_area,
+        );
         ready_app.unlisten(event.id());
     });
     *listener_id.lock().expect("main listener mutex poisoned") = Some(id);
@@ -387,6 +471,8 @@ fn install_main_window_ready_handlers<R: Runtime + 'static>(
     let fallback_window = window.clone();
     let fallback_flag = did_show.clone();
     let fallback_listener_id = listener_id.clone();
+    #[cfg(target_os = "macos")]
+    let fallback_work_area = work_area.clone();
     std::thread::spawn(move || {
         std::thread::sleep(Duration::from_millis(MAIN_WINDOW_READY_FALLBACK_MS));
         if fallback_flag.load(Ordering::SeqCst) {
@@ -404,13 +490,22 @@ fn install_main_window_ready_handlers<R: Runtime + 'static>(
         // the flash. If the captured window has been destroyed, the
         // show call simply fails silently.
         let _ = fallback_app.run_on_main_thread(move || {
-            show_main_window_once(&app, &window, &flag, &listener_id);
+            show_main_window_once(
+                &app,
+                &window,
+                &flag,
+                &listener_id,
+                #[cfg(target_os = "macos")]
+                &fallback_work_area,
+            );
         });
     });
 
     MainGate {
         did_show,
         listener_id,
+        #[cfg(target_os = "macos")]
+        work_area,
     }
 }
 
