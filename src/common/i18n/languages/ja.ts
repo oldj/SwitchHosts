@@ -339,6 +339,10 @@ const lang: LanguageDict = {
   theme_light: 'ライト',
   theme_system: 'システムに合わせる',
   title: 'タイトル',
+  tls_ignore_errors: '証明書エラーを無視する（安全ではありません）',
+  tls_ignore_errors_hint:
+    'この項目に限り、証明書の信頼性、有効期限、ホスト名の検証を省略します。中間者攻撃の危険があります。有効にするとカスタム CA 証明書は使用されません。',
+  tls_settings: 'HTTPS 証明書の設定',
   to_show_source: 'ダブルクリックでソースコードを表示する。',
   toggle_developer_tools: '開発者ツールの表示/非表示',
   toggle_dock_icon: 'Dockアイコンの表示/非表示',

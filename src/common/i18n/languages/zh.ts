@@ -320,6 +320,10 @@ const lang: LanguageDict = {
   theme_light: '浅色',
   theme_system: '跟随系统',
   title: '标题',
+  tls_ignore_errors: '忽略证书错误（不安全）',
+  tls_ignore_errors_hint:
+    '仅对本方案跳过证书信任、有效期和主机名校验，存在中间人攻击风险。启用时不使用自定义 CA 证书。',
+  tls_settings: 'HTTPS 证书设置',
   to_show_source: '双击显示源代码。',
   toggle_developer_tools: '切换开发者工具',
   toggle_dock_icon: '显示/隐藏任务栏图标',

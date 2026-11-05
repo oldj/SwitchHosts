@@ -320,6 +320,10 @@ const lang: LanguageDict = {
   theme_light: '淺色',
   theme_system: '跟隨系統',
   title: '標題',
+  tls_ignore_errors: '忽略憑證錯誤（不安全）',
+  tls_ignore_errors_hint:
+    '僅對本方案略過憑證信任、有效期限和主機名稱驗證，存在中間人攻擊風險。啟用時不使用自訂 CA 憑證。',
+  tls_settings: 'HTTPS 憑證設定',
   to_show_source: '按兩下以顯示原始碼。',
   toggle_developer_tools: '切換開發者工具',
   toggle_dock_icon: '顯示或隱藏 Dock 圖示',

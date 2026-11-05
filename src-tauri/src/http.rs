@@ -38,20 +38,25 @@ const USER_AGENT: &str = concat!(
 /// Returns a `String` error so commands can convert it to whatever
 /// renderer-facing shape they need.
 pub fn build_client(state: &AppState) -> Result<reqwest::Client, String> {
-    build_client_with_custom_ca(state, "")
+    build_client_with_tls_options(state, "", false)
 }
 
 /// Extra trust belongs to one subscription's client, never the shared config
-/// or the operating system. Normal certificate and hostname checks still apply.
-pub fn build_client_with_custom_ca(
+/// or the operating system. Verification is disabled only by explicit per-entry opt-in.
+pub fn build_client_with_tls_options(
     state: &AppState,
     ca_pem: &str,
+    ignore_certificate_errors: bool,
 ) -> Result<reqwest::Client, String> {
     let mut builder = reqwest::Client::builder()
         .timeout(DEFAULT_TIMEOUT)
         .user_agent(USER_AGENT);
 
-    builder = builder.tls_certs_merge(custom_ca_certificates(ca_pem)?);
+    builder = if ignore_certificate_errors {
+        builder.tls_danger_accept_invalid_certs(true)
+    } else {
+        builder.tls_certs_merge(custom_ca_certificates(ca_pem)?)
+    };
 
     let proxy_url = configured_proxy_url_from_state(state);
 

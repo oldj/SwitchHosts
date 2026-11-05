@@ -354,6 +354,10 @@ const lang: LanguageDict = {
   theme_light: 'Clair',
   theme_system: 'Suivre le système',
   title: 'Titre',
+  tls_ignore_errors: 'Ignorer les erreurs de certificat (non sécurisé)',
+  tls_ignore_errors_hint:
+    'Pour cette entrée uniquement : ne pas vérifier la confiance, l’expiration et le nom d’hôte du certificat. Cela permet des attaques de l’homme du milieu. Les certificats CA personnalisés ne sont pas utilisés lorsque cette option est activée.',
+  tls_settings: 'Paramètres des certificats HTTPS',
   to_show_source: 'Double-cliquez pour afficher le code source',
   toggle_developer_tools: 'Afficher/Masquer les outils de développement',
   toggle_dock_icon: "Afficher/Masquer l'icône dans le Dock",

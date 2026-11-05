@@ -347,6 +347,10 @@ export default {
   theme_light: 'Jasny',
   theme_system: 'Zgodnie z systemem',
   title: 'Tytuł',
+  tls_ignore_errors: 'Ignoruj błędy certyfikatu (niebezpieczne)',
+  tls_ignore_errors_hint:
+    'Tylko dla tego wpisu: pomiń sprawdzanie zaufania, terminu ważności i nazwy hosta certyfikatu. Umożliwia to ataki typu man-in-the-middle. Gdy ta opcja jest włączona, niestandardowe certyfikaty CA nie są używane.',
+  tls_settings: 'Ustawienia certyfikatów HTTPS',
   to_show_source: 'Kliknij dwukrotnie, aby wyświetlić kod źródłowy.',
   toggle_developer_tools: 'Przełącz narzędzia deweloperskie',
   toggle_dock_icon: 'Przełącz ikonę docka',

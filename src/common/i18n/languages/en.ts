@@ -336,6 +336,10 @@ export default {
   theme_light: 'Light',
   theme_system: 'Follow System',
   title: 'Title',
+  tls_ignore_errors: 'Ignore certificate errors (insecure)',
+  tls_ignore_errors_hint:
+    'Only for this entry: skip certificate trust, expiry and hostname checks. This allows man-in-the-middle attacks. Custom CA certificates are not used while enabled.',
+  tls_settings: 'HTTPS certificate settings',
   to_show_source: 'Double-click to show the source code.',
   toggle_developer_tools: 'Toggle Developer Tools',
   toggle_dock_icon: 'Toggle Dock Icon',

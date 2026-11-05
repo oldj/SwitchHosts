@@ -342,6 +342,10 @@ export default {
   theme_light: 'Licht',
   theme_system: 'Systeem volgen',
   title: 'Titel',
+  tls_ignore_errors: 'Certificaatfouten negeren (onveilig)',
+  tls_ignore_errors_hint:
+    'Alleen voor dit item: sla controles op vertrouwen, geldigheid en hostnaam van het certificaat over. Dit maakt man-in-the-middle-aanvallen mogelijk. Aangepaste CA-certificaten worden niet gebruikt zolang deze optie is ingeschakeld.',
+  tls_settings: 'HTTPS-certificaatinstellingen',
   to_show_source: 'Dubbelklik om de broncode te tonen.',
   toggle_developer_tools: 'Ontwikkelaarshulpmiddelen in-/uitschakelen',
   toggle_dock_icon: 'Dock-symbool tonen/verbergen',

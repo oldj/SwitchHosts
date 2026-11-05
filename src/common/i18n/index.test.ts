@@ -6,6 +6,17 @@ import type { LanguageKey } from '@common/types'
 const addedLocales = ['es', 'it', 'nl', 'pt', 'vi', 'ru', 'th'] as const
 const placeholders = (value: string) => (value.match(/\{[^{}]+\}/g) ?? []).sort()
 
+describe.each([...new Set(Object.values(languages))])('$_key dictionary', (dictionary) => {
+  it('keeps inline keys sorted and preserves all interpolation placeholders', () => {
+    const keys = Object.keys(dictionary) as LanguageKey[]
+    expect(keys).toEqual(Object.keys(en).sort())
+    for (const key of keys) {
+      expect(dictionary[key].trim(), key).not.toBe('')
+      expect(placeholders(dictionary[key]), key).toEqual(placeholders(en[key]))
+    }
+  })
+})
+
 describe.each(addedLocales)('%s translations', (locale) => {
   const dictionary = languages[locale]
 

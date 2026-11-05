@@ -348,6 +348,10 @@ export default {
   theme_light: 'Claro',
   theme_system: 'Según el sistema',
   title: 'Título',
+  tls_ignore_errors: 'Ignorar errores de certificado (inseguro)',
+  tls_ignore_errors_hint:
+    'Solo para esta entrada: omitir las comprobaciones de confianza, caducidad y nombre de host del certificado. Esto permite ataques de intermediario. Los certificados de CA personalizados no se usan mientras esta opción está activada.',
+  tls_settings: 'Configuración de certificados HTTPS',
   to_show_source: 'Haz doble clic para ver el código fuente.',
   toggle_developer_tools: 'Alternar herramientas de desarrollo',
   toggle_dock_icon: 'Alternar icono del Dock',

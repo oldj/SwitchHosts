@@ -330,6 +330,10 @@ export default {
   theme_light: '라이트',
   theme_system: '시스템 설정 따름',
   title: '제목',
+  tls_ignore_errors: '인증서 오류 무시 (안전하지 않음)',
+  tls_ignore_errors_hint:
+    '이 항목에 한해 인증서 신뢰성, 유효 기간 및 호스트 이름 검증을 건너뜁니다. 중간자 공격의 위험이 있습니다. 이 옵션을 켜면 사용자 지정 CA 인증서를 사용하지 않습니다.',
+  tls_settings: 'HTTPS 인증서 설정',
   to_show_source: '더블 클릭하여 소스코드를 표시합니다.',
   toggle_developer_tools: '개발자 도구 전환',
   toggle_dock_icon: 'Dock 아이콘 전환',

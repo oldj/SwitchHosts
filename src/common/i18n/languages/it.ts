@@ -344,6 +344,10 @@ export default {
   theme_light: 'Chiaro',
   theme_system: 'Segui il sistema',
   title: 'Titolo',
+  tls_ignore_errors: 'Ignora errori dei certificati (non sicuro)',
+  tls_ignore_errors_hint:
+    'Solo per questa voce: ignora i controlli di attendibilità, scadenza e nome host del certificato. Questo consente attacchi man-in-the-middle. I certificati CA personalizzati non vengono utilizzati quando questa opzione è attiva.',
+  tls_settings: 'Impostazioni dei certificati HTTPS',
   to_show_source: 'Fai doppio clic per mostrare il codice sorgente.',
   toggle_developer_tools: 'Attiva/disattiva strumenti sviluppatore',
   toggle_dock_icon: 'Mostra/nascondi icona nel Dock',

@@ -352,6 +352,10 @@ const lang: LanguageDict = {
   theme_light: 'Hell',
   theme_system: 'System folgen',
   title: 'Titel',
+  tls_ignore_errors: 'Zertifikatsfehler ignorieren (unsicher)',
+  tls_ignore_errors_hint:
+    'Nur für diesen Eintrag: Vertrauen, Gültigkeit und Hostname des Zertifikats werden nicht geprüft. Dies ermöglicht Man-in-the-Middle-Angriffe. Benutzerdefinierte CA-Zertifikate werden bei aktivierter Option nicht verwendet.',
+  tls_settings: 'HTTPS-Zertifikatseinstellungen',
   to_show_source: 'Durch Doppelklick wird der Quellcode angezeigt.',
   toggle_developer_tools: 'Entwicklerwerkzeuge umschalten',
   toggle_dock_icon: 'Dock-Symbol ein-/ausblenden',

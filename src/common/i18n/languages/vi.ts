@@ -331,6 +331,10 @@ export default {
   theme_light: 'Sáng',
   theme_system: 'Theo hệ thống',
   title: 'Tiêu đề',
+  tls_ignore_errors: 'Bỏ qua lỗi chứng chỉ (không an toàn)',
+  tls_ignore_errors_hint:
+    'Chỉ với mục này: bỏ qua kiểm tra độ tin cậy, hạn sử dụng và tên máy chủ của chứng chỉ. Điều này tạo nguy cơ bị tấn công xen giữa. Chứng chỉ CA tùy chỉnh không được sử dụng khi bật tùy chọn này.',
+  tls_settings: 'Cài đặt chứng chỉ HTTPS',
   to_show_source: 'Nhấp đúp để hiện mã nguồn.',
   toggle_developer_tools: 'Bật/tắt công cụ nhà phát triển',
   toggle_dock_icon: 'Bật/tắt biểu tượng Dock',

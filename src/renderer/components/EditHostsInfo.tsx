@@ -20,6 +20,7 @@ import {
   Accordion,
   Box,
   Button,
+  Checkbox,
   Group,
   SegmentedControl,
   Select,
@@ -43,7 +44,7 @@ import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import { formatInterval } from '@renderer/utils/formatInterval'
 import lodash from 'lodash'
 import React, { useId, useMemo, useRef, useState } from 'react'
-import { BiEdit, BiTrash } from 'react-icons/bi'
+import { BiEdit, BiError, BiTrash } from 'react-icons/bi'
 import { v4 as uuidv4 } from 'uuid'
 import useHostsData from '../models/useHostsData'
 import useConfigs from '../models/useConfigs'
@@ -74,6 +75,7 @@ const EditHostsInfo = () => {
 
   const source = (hosts?.source as 'url' | 'domain') || 'url'
   const customCaPem = typeof hosts?.custom_ca_pem === 'string' ? hosts.custom_ca_pem : ''
+  const ignoreCertificateErrors = hosts?.ignore_certificate_errors === true
   let customCaError: string | undefined
   if (hosts?.custom_ca_pem != null && typeof hosts.custom_ca_pem !== 'string') {
     customCaError = lang.custom_ca_invalid
@@ -183,13 +185,15 @@ const EditHostsInfo = () => {
     if (data.type === 'remote') {
       data.source = data.source || 'url'
       if (data.source === 'url') {
-        if (customCaError) {
+        if (!ignoreCertificateErrors && customCaError) {
           setCustomCaExpanded(true)
           return
         }
         data.custom_ca_pem = customCaPem.trim()
+        data.ignore_certificate_errors = ignoreCertificateErrors
       } else {
         delete data.custom_ca_pem
+        delete data.ignore_certificate_errors
       }
     }
 
@@ -235,6 +239,7 @@ const EditHostsInfo = () => {
         'type',
         'url',
         'custom_ca_pem',
+        'ignore_certificate_errors',
         'domains',
         'source',
         'refresh_interval',
@@ -260,7 +265,10 @@ const EditHostsInfo = () => {
           delete h.last_attempt_ms
         }
         if (data.type === 'remote' && data.source !== 'domain') delete h.domains
-        if (data.source === 'domain') delete h.custom_ca_pem
+        if (data.source === 'domain') {
+          delete h.custom_ca_pem
+          delete h.ignore_certificate_errors
+        }
         Object.assign(h, fields)
         edited = h
         return list
@@ -473,15 +481,33 @@ const EditHostsInfo = () => {
                 keepMounted={false}
               >
                 <Accordion.Item value="custom-ca">
-                  <Accordion.Control>{lang.custom_ca}</Accordion.Control>
+                  <Accordion.Control>
+                    <Group gap="xs" wrap="nowrap">
+                      <span>{lang.tls_settings}</span>
+                      {ignoreCertificateErrors ? (
+                        <BiError aria-hidden color="var(--mantine-color-orange-6)" />
+                      ) : null}
+                    </Group>
+                  </Accordion.Control>
                   <Accordion.Panel>
+                    <Checkbox
+                      mb="md"
+                      label={lang.tls_ignore_errors}
+                      description={lang.tls_ignore_errors_hint}
+                      checked={ignoreCertificateErrors}
+                      onChange={(e) =>
+                        onUpdate({ ignore_certificate_errors: e.currentTarget.checked })
+                      }
+                    />
                     <Textarea
                       aria-label={lang.custom_ca}
+                      label={lang.custom_ca}
                       description={lang.custom_ca_hint}
                       placeholder="-----BEGIN CERTIFICATE-----"
                       value={customCaPem}
                       onChange={(e) => onUpdate({ custom_ca_pem: e.currentTarget.value })}
-                      error={customCaError}
+                      error={ignoreCertificateErrors ? undefined : customCaError}
+                      disabled={ignoreCertificateErrors}
                       rows={4}
                       spellCheck={false}
                       autoCapitalize="none"

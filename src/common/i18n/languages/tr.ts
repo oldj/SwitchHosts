@@ -343,6 +343,10 @@ export default {
   theme_light: 'Açık',
   theme_system: 'Sistemi takip et',
   title: 'Başlık',
+  tls_ignore_errors: 'Sertifika hatalarını yok say (güvensiz)',
+  tls_ignore_errors_hint:
+    'Yalnızca bu kayıt için sertifikanın güven, geçerlilik süresi ve ana bilgisayar adı denetimlerini atlar. Bu, ortadaki adam saldırılarına olanak tanır. Bu seçenek etkinken özel CA sertifikaları kullanılmaz.',
+  tls_settings: 'HTTPS sertifika ayarları',
   to_show_source: 'Kaynak kodunu göstermek için çift tıklayın.',
   toggle_developer_tools: 'Geliştirici araçlarını aç/kapat',
   toggle_dock_icon: 'Dock simgesini aç/kapat',
