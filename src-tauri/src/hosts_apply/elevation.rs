@@ -144,6 +144,15 @@ pub fn write_privileged(target: &Path, content: &str) -> Result<(), HostsApplyEr
                 return result;
             }
         }
+
+        // Self-owned strategy: elevate once to chown the system hosts
+        // file to the current user, then write directly. After the
+        // one-time chown every subsequent apply is a plain unprivileged
+        // write with no OS password prompt. A macOS update that resets
+        // /etc/hosts ownership triggers a single re-chown prompt.
+        if let Some(result) = try_chown_then_write(target, content) {
+            return result;
+        }
     }
     write_with_elevation(target, content)
 }
@@ -197,6 +206,94 @@ fn try_helper(content: &str, status: HelperStatus) -> Option<Result<(), HostsApp
         | HelperStatus::NotSupported
         | HelperStatus::InstalledUnreachable => None,
     }
+}
+
+/// macOS self-owned write strategy: elevate once to `chown` the system
+/// hosts file to the current user, then write it directly.
+///
+/// The legacy AEWP path (`write_with_elevation`) runs `/bin/cp` as root
+/// on *every* apply whose direct write was denied, prompting for an
+/// administrator password each time the OS auth cache lapses or the
+/// app restarts. This strategy instead spends that one prompt on a
+/// permanent fix — transferring ownership of `/etc/hosts` to the
+/// current user — so every subsequent write succeeds as a plain
+/// unprivileged `std::fs::write` with no prompt at all.
+///
+/// When a macOS update replaces `/etc/hosts` (resetting it to
+/// `root:wheel`), the next apply hits `PermissionDenied` again and
+/// this path re-chowns automatically: one prompt, then silent again.
+///
+/// Returns `Some(Ok)` on success, `Some(Err)` when the user cancelled
+/// the prompt or the post-chown write failed, and `None` to fall back
+/// to the legacy AEWP copy (file already self-owned but still
+/// unwritable, metadata unreadable, or chown itself failed).
+#[cfg(target_os = "macos")]
+fn try_chown_then_write(target: &Path, content: &str) -> Option<Result<(), HostsApplyError>> {
+    use std::os::unix::fs::MetadataExt;
+
+    // Only engage for the exact system hosts path — never for arbitrary
+    // elevation targets.
+    if target != Path::new(crate::helper_proto::SYSTEM_HOSTS_PATH) {
+        return None;
+    }
+
+    let uid = unsafe { libc::getuid() };
+
+    // If the file is already owned by us, the direct write in `apply_at`
+    // failed for a different reason (ACL, SIP, full disk) — this strategy
+    // can't help, defer to the legacy path.
+    match std::fs::metadata(target) {
+        Ok(meta) if meta.uid() == uid => return None,
+        Ok(_) => {}
+        Err(_) => return None,
+    }
+
+    match elevate_chown(target, uid) {
+        Ok(()) => match std::fs::write(target, content) {
+            Ok(()) => Some(Ok(())),
+            Err(e) => Some(Err(HostsApplyError::Io {
+                message: format!("write {} after chown: {e}", target.display()),
+            })),
+        },
+        Err(HostsApplyError::Cancelled) => Some(Err(HostsApplyError::Cancelled)),
+        Err(e) => {
+            log::warn!("chown elevation failed ({e}); falling back to AEWP copy");
+            None
+        }
+    }
+}
+
+/// Run `/usr/sbin/chown <uid> <target>` as root via the cached
+/// `AuthorizationRef` (one OS password prompt on first use).
+#[cfg(target_os = "macos")]
+fn elevate_chown(target: &Path, uid: u32) -> Result<(), HostsApplyError> {
+    let _lock = ELEVATE_LOCK.lock().expect("elevate lock poisoned");
+    let auth_ref = get_or_create_auth()?;
+
+    let uid_arg = format!("{uid}\0");
+    let target_cstr = std::ffi::CString::new(
+        target.to_str().ok_or_else(|| HostsApplyError::Io {
+            message: "target path is not valid UTF-8".into(),
+        })?,
+    )
+    .map_err(|e| HostsApplyError::Io {
+        message: format!("CString from target: {e}"),
+    })?;
+
+    let args: [*const u8; 3] = [
+        uid_arg.as_ptr() as *const u8,
+        target_cstr.as_ptr() as *const u8,
+        std::ptr::null(),
+    ];
+
+    let exit = unsafe { run_privileged(auth_ref, b"/usr/sbin/chown\0".as_ptr(), args.as_ptr()) }
+        .map_err(mac_elevate_to_hosts_error)?;
+    if exit != 0 {
+        return Err(HostsApplyError::Io {
+            message: format!("/usr/sbin/chown exited with status {exit}"),
+        });
+    }
+    Ok(())
 }
 
 fn stage_temp_file(content: impl AsRef<[u8]>) -> Result<PathBuf, HostsApplyError> {
