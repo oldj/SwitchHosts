@@ -16,6 +16,7 @@
 # SwitchHosts
 
 - [Polski](README.pl.md)
+- [Türkçe](README.tr.md)
 - [简体中文](README.zh_hans.md)
 - [繁體中文](README.zh_hant.md)
 

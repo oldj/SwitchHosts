@@ -17,6 +17,7 @@
 
 - [English](README.md)
 - [Polski](README.pl.md)
+- [Türkçe](README.tr.md)
 - [简体中文](README.zh_hans.md)
 
 項目主頁：[https://switchhosts.app](https://switchhosts.app)
