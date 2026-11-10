@@ -7,6 +7,8 @@
 //! - Right-click (or any-click on Linux) opens a context menu with a
 //!   main-window item, a disabled version label, an optional macOS-only
 //!   Dock toggle, and a quit item.
+//! - On Linux, where that menu is the only interaction surface, it also
+//!   lists every hosts entry as a check item for quick switching.
 //! - Left-click on macOS/Windows shows the main window directly. The
 //!   tray mini-window (`/tray` route) is deferred to P2.B.2.
 //! - `update_tray_title` command (in commands.rs) walks the manifest
@@ -24,7 +26,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde_json::json;
 use tauri::image::Image;
-use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder};
+use tauri::menu::{CheckMenuItemBuilder, Menu, MenuBuilder, MenuItemBuilder};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, Runtime};
 #[cfg(not(target_os = "macos"))]
@@ -125,6 +127,11 @@ pub const MENU_ID_VERSION: &str = "tray-version";
 #[cfg(target_os = "macos")]
 pub const MENU_ID_TOGGLE_DOCK: &str = "tray-toggle-dock";
 pub const MENU_ID_QUIT: &str = "tray-quit";
+/// Prefix of the per-entry quick-switch items; the hosts id follows it.
+const MENU_ID_HOSTS_PREFIX: &str = "tray-hosts:";
+/// Shown for entries the user never named. Not localised: the menu labels
+/// table has no equivalent and this is a rare fallback.
+const UNTITLED_LABEL: &str = "Untitled";
 
 const TRAY_MAC_ICON: &[u8] = include_bytes!("../icons/tray-mac.png");
 const TRAY_ICON: &[u8] = include_bytes!("../icons/tray.png");
@@ -289,10 +296,28 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> Result<Menu<R>, tauri::Error> {
         .build(app)?;
     let quit = MenuItemBuilder::with_id(MENU_ID_QUIT, labels.quit).build(app)?;
 
-    let menu_builder = MenuBuilder::new(app)
-        .item(&show_main)
-        .item(&version)
-        .separator();
+    let mut menu_builder = MenuBuilder::new(app);
+
+    // Linux has no tray mini window (GTK status icons only expose a menu),
+    // so the menu itself is the quick-switch surface: one check item per
+    // hosts entry, above the fixed items.
+    if cfg!(target_os = "linux") {
+        let entries = quick_switch_entries(app);
+        for entry in &entries {
+            let item = CheckMenuItemBuilder::with_id(
+                format!("{MENU_ID_HOSTS_PREFIX}{}", entry.id),
+                &entry.label,
+            )
+            .checked(entry.on)
+            .build(app)?;
+            menu_builder = menu_builder.item(&item);
+        }
+        if !entries.is_empty() {
+            menu_builder = menu_builder.separator();
+        }
+    }
+
+    let menu_builder = menu_builder.item(&show_main).item(&version).separator();
 
     #[cfg(target_os = "macos")]
     let menu_builder = {
@@ -307,6 +332,95 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> Result<Menu<R>, tauri::Error> {
     };
 
     menu_builder.item(&quit).build()
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct QuickSwitchEntry {
+    id: String,
+    label: String,
+    on: bool,
+}
+
+/// Entries for the Linux quick-switch menu. Empty while the data directory
+/// is unavailable: the fallback root must not be switchable from the tray
+/// (same rule as the mini window in `handle_left_click`).
+fn quick_switch_entries<R: Runtime>(app: &AppHandle<R>) -> Vec<QuickSwitchEntry> {
+    let state = app.state::<AppState>();
+    if state.data_dir_recovery.is_some() {
+        return Vec::new();
+    }
+    match state.read_manifest() {
+        Ok(manifest) => {
+            let mut entries = Vec::new();
+            collect_quick_switch_entries(&manifest.root, 0, &mut entries);
+            entries
+        }
+        Err(error) => {
+            log::warn!("failed to read hosts list for tray menu: {error}");
+            Vec::new()
+        }
+    }
+}
+
+/// Flatten the tree in display order. Folders stay toggleable like in the
+/// main list, so they are items too and their children are indented below.
+fn collect_quick_switch_entries(
+    nodes: &[serde_json::Value],
+    depth: usize,
+    out: &mut Vec<QuickSwitchEntry>,
+) {
+    for node in nodes {
+        let Some(id) = node.get("id").and_then(serde_json::Value::as_str) else {
+            continue;
+        };
+        let title = node
+            .get("title")
+            .and_then(serde_json::Value::as_str)
+            .map(str::trim)
+            .filter(|title| !title.is_empty())
+            .unwrap_or(UNTITLED_LABEL);
+        // `&` marks a mnemonic in native menus; double it to show it literally.
+        let label = format!("{}{}", "    ".repeat(depth), title.replace('&', "&&"));
+        out.push(QuickSwitchEntry {
+            id: id.to_string(),
+            label,
+            on: node
+                .get("on")
+                .and_then(serde_json::Value::as_bool)
+                .unwrap_or(false),
+        });
+        if let Some(children) = node.get("children").and_then(serde_json::Value::as_array) {
+            collect_quick_switch_entries(children, depth + 1, out);
+        }
+    }
+}
+
+/// The hosts id carried by a quick-switch menu item id, if it is one.
+pub fn hosts_id_of_menu_id(menu_id: &str) -> Option<&str> {
+    menu_id.strip_prefix(MENU_ID_HOSTS_PREFIX)
+}
+
+/// Toggle a hosts entry picked from the tray menu. Pinned to `Wry` because
+/// the shared toggle path is (see `http_api.rs`).
+pub fn toggle_hosts_from_menu(app: &AppHandle<tauri::Wry>, hosts_id: &str) {
+    let app = app.clone();
+    let hosts_id = hosts_id.to_string();
+    tauri::async_runtime::spawn(async move {
+        let result = crate::http_api::toggle_by_id(&app, &hosts_id).await;
+        log::info!("tray toggle {hosts_id}: {result}");
+        // GTK flips the check mark on click before we know the outcome.
+        // Redraw from the stored state so a cancelled or failed toggle
+        // doesn't leave a stale mark.
+        refresh_menu(&app);
+        // These need the user in the main window (write-mode picker,
+        // recovery dialog); a silent no-op in the menu would be confusing.
+        if matches!(result, "write mode not set." | "recovery required.") {
+            let app_for_show = app.clone();
+            if let Err(e) = app.run_on_main_thread(move || show_main_window(&app_for_show)) {
+                log::warn!("failed to schedule main window show: {e}");
+            }
+        }
+    });
 }
 
 #[cfg(target_os = "macos")]
@@ -436,6 +550,11 @@ pub fn refresh_menu<R: Runtime>(app: &AppHandle<R>) {
 
 /// Compute and apply the tray title from the current manifest + config.
 pub fn refresh_title<R: Runtime>(app: &AppHandle<R>, state: &AppState) -> Result<(), StorageError> {
+    // Every list or on/off change funnels through here, so this is also
+    // where the Linux quick-switch menu is kept in sync.
+    if cfg!(target_os = "linux") {
+        refresh_menu(app);
+    }
     let show = {
         let cfg = state.config.lock().expect("config mutex poisoned");
         cfg.show_title_on_tray
@@ -842,6 +961,37 @@ mod tests {
             Some("?".into())
         );
         assert_eq!(compute_recovery_title(&RecoveryView::Unknown, false), None);
+    }
+
+    #[test]
+    fn quick_switch_entries_flatten_tree_with_indent_and_escaped_labels() {
+        let list = vec![
+            json!({"id": "a", "title": "Dev & Test", "on": true}),
+            json!({
+                "id": "f",
+                "title": "Folder",
+                "on": false,
+                "children": [{"id": "c", "title": " ", "on": true}],
+            }),
+            json!({"title": "no id"}),
+        ];
+        let mut entries = Vec::new();
+        collect_quick_switch_entries(&list, 0, &mut entries);
+        let entry = |id: &str, label: &str, on| QuickSwitchEntry {
+            id: id.into(),
+            label: label.into(),
+            on,
+        };
+        assert_eq!(
+            entries,
+            vec![
+                entry("a", "Dev && Test", true),
+                entry("f", "Folder", false),
+                entry("c", "    Untitled", true),
+            ]
+        );
+        assert_eq!(hosts_id_of_menu_id("tray-hosts:a"), Some("a"));
+        assert_eq!(hosts_id_of_menu_id(MENU_ID_QUIT), None);
     }
 
     #[test]
