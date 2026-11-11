@@ -416,7 +416,9 @@ pub fn toggle_hosts_from_menu(app: &AppHandle<tauri::Wry>, hosts_id: &str) {
         // recovery dialog); a silent no-op in the menu would be confusing.
         if matches!(result, "write mode not set." | "recovery required.") {
             let app_for_show = app.clone();
-            if let Err(e) = app.run_on_main_thread(move || show_main_window(&app_for_show)) {
+            if let Err(e) =
+                app.run_on_main_thread(move || lifecycle::show_main_window(&app_for_show))
+            {
                 log::warn!("failed to schedule main window show: {e}");
             }
         }
