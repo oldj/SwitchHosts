@@ -606,18 +606,21 @@ fn set_list_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
 }
 
 #[tauri::command]
-pub async fn move_to_trashcan(
+pub async fn move_to_trashcan<R: Runtime>(
+    app: AppHandle<R>,
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
     state.require_data_dir_usable()?;
     let id = arg_str(&args, 0, "id")?.to_string();
     move_ids_to_trashcan(&state, &[id])?;
+    refresh_tray_after_list_change(&app, &state);
     Ok(Value::Null)
 }
 
 #[tauri::command]
-pub async fn move_many_to_trashcan(
+pub async fn move_many_to_trashcan<R: Runtime>(
+    app: AppHandle<R>,
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
@@ -636,7 +639,17 @@ pub async fn move_many_to_trashcan(
         }
     };
     move_ids_to_trashcan(&state, &ids)?;
+    refresh_tray_after_list_change(&app, &state);
     Ok(Value::Null)
+}
+
+/// Trashcan moves change the list without going through the apply or
+/// `update_tray_title` paths, so the tray title and the Linux quick-switch
+/// menu would otherwise keep showing the removed (or miss the restored) entry.
+fn refresh_tray_after_list_change<R: Runtime>(app: &AppHandle<R>, state: &AppState) {
+    if let Err(e) = tray::refresh_title(app, state) {
+        log::warn!("failed to refresh tray after list change: {e}");
+    }
 }
 
 fn move_ids_to_trashcan(state: &AppState, ids: &[String]) -> Result<(), StorageError> {
@@ -734,11 +747,14 @@ fn delete_item_from_trashcan_inner(state: &AppState, args: Args) -> Result<Value
 }
 
 #[tauri::command]
-pub async fn restore_item_from_trashcan(
+pub async fn restore_item_from_trashcan<R: Runtime>(
+    app: AppHandle<R>,
     state: State<'_, AppState>,
     args: Args,
 ) -> Result<Value, StorageError> {
-    restore_item_from_trashcan_inner(&state, args)
+    let restored = restore_item_from_trashcan_inner(&state, args)?;
+    refresh_tray_after_list_change(&app, &state);
+    Ok(restored)
 }
 
 fn restore_item_from_trashcan_inner(state: &AppState, args: Args) -> Result<Value, StorageError> {
