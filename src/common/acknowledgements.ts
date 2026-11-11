@@ -47,4 +47,5 @@ export default [
   { name: 'kingdom8', link: 'https://github.com/zbeosf' },
   { name: 'cui fliter', link: 'https://github.com/cuishuang' },
   { name: 'Jarvis', link: 'https://github.com/Jarvis636431' },
+  { name: 'Ömer Faruk KAYIKCI', link: 'https://github.com/omerfarukkykc' },
 ]
