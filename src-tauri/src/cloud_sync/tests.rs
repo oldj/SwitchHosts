@@ -1,4 +1,4 @@
-//! Offline unit tests for the cloud sync engine internals. HTTP behaviour
+﻿//! Offline unit tests for the cloud sync engine internals. HTTP behaviour
 //! is covered by the pure parser tests; real platform round trips need
 //! live credentials and are verified manually (see docs/cloud-sync.md).
 
@@ -166,7 +166,7 @@ fn build_backup_value_includes_tree_entries_and_trashcan() {
 }
 
 #[test]
-fn content_hash_is_deterministic_across_key_orders() {
+fn stable_hash_is_deterministic_across_key_orders() {
     let mut a = serde_json::Map::new();
     a.insert("x".into(), json!(1));
     a.insert("y".into(), json!(2));
@@ -174,13 +174,36 @@ fn content_hash_is_deterministic_across_key_orders() {
     b.insert("y".into(), json!(2));
     b.insert("x".into(), json!(1));
     // serde_json's default map is ordered (BTreeMap), so both hash equal.
-    let ha = payload::content_hash(&Value::Object(a)).unwrap();
-    let hb = payload::content_hash(&Value::Object(b)).unwrap();
+    let ha = payload::stable_hash(&Value::Object(a)).unwrap();
+    let hb = payload::stable_hash(&Value::Object(b)).unwrap();
     assert_eq!(ha, hb);
     // Different content hashes differently.
     let mut c = serde_json::Map::new();
     c.insert("x".into(), json!(3));
-    let hc = payload::content_hash(&Value::Object(c)).unwrap();
+    let hc = payload::stable_hash(&Value::Object(c)).unwrap();
+    assert_ne!(ha, hc);
+}
+
+#[test]
+fn stable_hash_ignores_volatile_exported_at() {
+    // Build the same payload twice with different `exportedAt` stamps; the stable
+    // hash must be equal so a freshly rebuilt local payload is not mistaken for a
+    // change against the remote copy (the infinite pull-overwrite bug).
+    let base = json!({
+        "format": "switchhosts-backup",
+        "schemaVersion": 1,
+        "exportedAt": "2026-01-01T00:00:00Z",
+        "entries": {"h1": "127.0.0.1 alpha"},
+    });
+    let mut newer = base.clone();
+    newer["exportedAt"] = json!("2026-11-11T08:00:00Z");
+    let ha = payload::stable_hash(&base).unwrap();
+    let hb = payload::stable_hash(&newer).unwrap();
+    assert_eq!(ha, hb);
+    // Changing actual host content does change the hash.
+    let mut changed = base.clone();
+    changed["entries"]["h1"] = json!("127.0.0.1 beta");
+    let hc = payload::stable_hash(&changed).unwrap();
     assert_ne!(ha, hc);
 }
 

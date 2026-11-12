@@ -1,4 +1,4 @@
-mod app_menu;
+﻿mod app_menu;
 mod cloud_sync;
 mod commands;
 pub mod dns;
@@ -152,6 +152,13 @@ pub fn run() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(log::LevelFilter::Info)
+                .targets([
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+                    tauri_plugin_log::Target::new(
+                        tauri_plugin_log::TargetKind::LogDir { file_name: None },
+                    ),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Webview),
+                ])
                 .build(),
         )
         // Popup menu item clicks are routed back to the renderer as Tauri

@@ -1,4 +1,4 @@
-//! Sync engine: first-time setup, pull-overwrite, push-if-changed, and the
+﻿//! Sync engine: first-time setup, pull-overwrite, push-if-changed, and the
 //! background watchers that keep local and remote in step like a local git
 //! workflow — the auto-push watcher publishes local mutations (debounced),
 //! and the remote poller periodically fetches remote changes.
@@ -313,7 +313,7 @@ pub async fn push_once<R: Runtime>(app: &AppHandle<R>) -> Result<Value, String> 
     let (existing_sha, _remote_hash) = match remote {
         None => (None, None),
         Some(file) => {
-            let rh = payload::hash_bytes(&file.content);
+            let rh = payload::stable_hash_bytes(&file.content).map_err(|e| e.to_string())?;
             if rh == hash {
                 // Someone else pushed our exact payload; just adopt it.
                 let mut account = account.clone();
@@ -344,7 +344,7 @@ pub async fn push_once<R: Runtime>(app: &AppHandle<R>) -> Result<Value, String> 
                 .await
                 .map_err(err_code)?;
             if let Some(fresh) = fresh {
-                let fresh_hash = payload::hash_bytes(&fresh.content);
+                let fresh_hash = payload::stable_hash_bytes(&fresh.content).map_err(|e| e.to_string())?;
                 if fresh_hash == hash {
                     let mut account = account.clone();
                     account.last_push_at = Some(now_rfc3339());
@@ -397,7 +397,7 @@ pub async fn pull_once<R: Runtime>(app: &AppHandle<R>, _silent: bool) -> Result<
         save_account(app, &account)?;
         return Err("nothing_to_pull".to_string());
     };
-    let remote_hash = payload::hash_bytes(&remote.content);
+    let remote_hash = payload::stable_hash_bytes(&remote.content).map_err(|e| e.to_string())?;
     let local = build_local_payload_locked(app)?;
     if local.1 == remote_hash {
         let mut account = account.clone();
@@ -427,6 +427,7 @@ async fn apply_remote<R: Runtime>(
     app: &AppHandle<R>,
     remote_bytes: Vec<u8>,
 ) -> Result<(ApplySummary, String), String> {
+    log::info!("cloud sync setup: parsing remote payload ({} bytes)", remote_bytes.len());
     let parsed =
         payload::parse_backup(&remote_bytes).map_err(|e| err_code(SyncError::Internal(e.to_string())))?;
     let state = app.state::<AppState>();
@@ -434,21 +435,23 @@ async fn apply_remote<R: Runtime>(
         .require_data_dir_usable()
         .map_err(|e| e.to_string())?;
 
-    let (local_value, _) = {
+    let local_value = {
         let _guard = state.lock_store().map_err(|e| e.to_string())?;
         let value = payload::build_backup_value(&state.paths).map_err(|e| e.to_string())?;
-        let hash = payload::content_hash(&value).map_err(|e| e.to_string())?;
-        (value, hash)
+        value
     };
+    log::info!("cloud sync setup: local payload built under lock");
     if let Err(e) = payload::save_snapshot(&state.paths, &local_value) {
         log::warn!("pre-pull snapshot failed; aborting pull to avoid losing data: {e}");
         return Err("snapshot_failed".to_string());
     }
+    log::info!("cloud sync setup: pre-pull snapshot saved");
     let summary = {
         let _guard = state.lock_store().map_err(|e| e.to_string())?;
         payload::apply_backup(&state.paths, parsed).map_err(|e| e.to_string())?
     };
-    let hash = payload::hash_bytes(&remote_bytes);
+    log::info!("cloud sync setup: apply_backup completed (hosts={}, trashcan={})", summary.hosts_count, summary.trashcan_count);
+    let hash = payload::stable_hash_bytes(&remote_bytes).map_err(|e| e.to_string())?;
     Ok((summary, hash))
 }
 
@@ -458,7 +461,9 @@ fn build_local_payload_locked<R: Runtime>(
     let state = app.state::<AppState>();
     let _guard = state.lock_store().map_err(|e| e.to_string())?;
     let value = payload::build_backup_value(&state.paths).map_err(|e| e.to_string())?;
-    payload::payload_bytes_and_hash(&value).map_err(|e| e.to_string())
+    let bytes = serde_json::to_vec_pretty(&value).map_err(|e| e.to_string())?;
+    let hash = payload::stable_hash(&value).map_err(|e| e.to_string())?;
+    Ok((bytes, hash))
 }
 
 fn count_local_hosts<R: Runtime>(app: &AppHandle<R>) -> Result<usize, String> {

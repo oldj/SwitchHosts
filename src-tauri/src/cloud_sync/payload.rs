@@ -1,4 +1,4 @@
-//! Backup payload for cloud sync: build / hash / snapshot / apply.
+﻿//! Backup payload for cloud sync: build / hash / snapshot / apply.
 //!
 //! The wire format is the same `switchhosts-backup` JSON the manual export
 //! produces (`src-tauri/src/import_export.rs::export_to_file`), extended
@@ -86,21 +86,36 @@ fn collect_entries_map(
     Ok(map)
 }
 
-/// Stable content hash for a payload: SHA-256 over the pretty-serialized
-/// bytes. `serde_json`'s default map is a `BTreeMap`, so key order is
-/// deterministic across processes and machines without the
-/// `preserve_order` feature.
-pub fn content_hash(value: &Value) -> Result<String, StorageError> {
-    let bytes = serde_json::to_vec_pretty(value)
+/// Stable content hash for a payload, used for all change detection. SHA-256 over
+/// the pretty-serialized bytes with the volatile `exportedAt` timestamp removed.
+/// `serde_json`'s default map is a `BTreeMap`, so key order is deterministic across
+/// processes and machines without the `preserve_order` feature. The timestamp is
+/// stripped so a freshly rebuilt local payload hashes equal to the remote copy
+/// when the hosts data is identical; otherwise every poll would pull-overwrite.
+pub fn stable_hash(value: &Value) -> Result<String, StorageError> {
+    let mut obj = value
+        .as_object()
+        .ok_or_else(|| StorageError::InvalidConfigValue {
+            key: "cloud_sync_payload".into(),
+            reason: "payload is not a json object".into(),
+        })?
+        .clone();
+    obj.remove("exportedAt");
+    let bytes = serde_json::to_vec_pretty(&Value::Object(obj))
         .map_err(|e| StorageError::serialize("<cloud payload>", e))?;
     Ok(hex_digest(&bytes))
 }
 
-/// SHA-256 hex of raw bytes — used to compare remote file bytes with
-/// the hash we recorded for our own payload at push time.
-pub fn hash_bytes(bytes: &[u8]) -> String {
-    hex_digest(bytes)
+/// Stable hash of remote file bytes: parse then hash with `exportedAt` removed,
+/// matching the hash `build_local_payload_locked` computes for local data. Both
+/// sides use the same normalization so an unchanged remote no longer triggers a
+/// pull-overwrite on every poll.
+pub fn stable_hash_bytes(bytes: &[u8]) -> Result<String, StorageError> {
+    let value: Value = serde_json::from_slice(bytes)
+        .map_err(|e| StorageError::parse("<cloud payload>".to_string(), e))?;
+    stable_hash(&value)
 }
+
 
 fn hex_digest(bytes: &[u8]) -> String {
     let mut out = String::with_capacity(2 * bytes.len());
@@ -109,15 +124,6 @@ fn hex_digest(bytes: &[u8]) -> String {
         let _ = write!(out, "{byte:02x}");
     }
     out
-}
-
-/// Serialize to the compact(ish) pretty bytes that actually travel to the
-/// remote repo, plus the hash computed over those exact bytes.
-pub fn payload_bytes_and_hash(value: &Value) -> Result<(Vec<u8>, String), StorageError> {
-    let bytes = serde_json::to_vec_pretty(value)
-        .map_err(|e| StorageError::serialize("<cloud payload>", e))?;
-    let hash = hex_digest(&bytes);
-    Ok((bytes, hash))
 }
 
 /// Persist a copy of `value` under `internal/snapshots/` before a pull
