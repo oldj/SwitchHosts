@@ -18,7 +18,7 @@ Hosts dosyalarını kolayca yönetin ve aralarında geçiş yapın. [Tauri](http
 
 [Ana sayfa](https://switchhosts.app) · [English](README.md) · [简体中文](README.zh_hans.md) · [繁體中文](README.zh_hant.md) · [Polski](README.pl.md)
 
-<img src="./screenshots/sh_light.png" alt="SwitchHosts ekran görüntüsü" width="978">
+<img src="./screenshots/switchhosts-light.png" alt="SwitchHosts ekran görüntüsü" width="978">
 
 ## Özellikler
 

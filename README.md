@@ -19,7 +19,7 @@ Manage and switch hosts files with ease. Built with [Tauri](https://tauri.app/) 
 
 [Homepage](https://switchhosts.app) · [简体中文](README.zh_hans.md) · [繁體中文](README.zh_hant.md) · [Polski](README.pl.md) · [Türkçe](README.tr.md)
 
-<img src="./screenshots/sh_light.png" alt="SwitchHosts screenshot" width="978">
+<img src="./screenshots/switchhosts-light.png" alt="SwitchHosts screenshot" width="978">
 
 ## Features
 

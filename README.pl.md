@@ -18,7 +18,7 @@
 
 [Strona główna](https://switchhosts.app) · [English](README.md) · [简体中文](README.zh_hans.md) · [繁體中文](README.zh_hant.md) · [Türkçe](README.tr.md)
 
-<img src="./screenshots/sh_light.png" alt="Zrzut ekranu SwitchHosts" width="978">
+<img src="./screenshots/switchhosts-light.png" alt="Zrzut ekranu SwitchHosts" width="978">
 
 ## Funkcje
 

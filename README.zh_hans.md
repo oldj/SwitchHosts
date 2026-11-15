@@ -18,7 +18,7 @@
 
 [项目主页](https://switchhosts.app) · [English](README.md) · [繁體中文](README.zh_hant.md) · [Polski](README.pl.md) · [Türkçe](README.tr.md)
 
-<img src="./screenshots/sh_light.png" alt="SwitchHosts 截图" width="978">
+<img src="./screenshots/switchhosts-light.png" alt="SwitchHosts 截图" width="978">
 
 ## 功能特性
 
