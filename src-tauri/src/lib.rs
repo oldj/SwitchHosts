@@ -206,6 +206,10 @@ pub fn run() {
             let id = event.id().as_ref();
             // Tray menu items go to the tray module.
             if id.starts_with("tray-") {
+                if let Some(hosts_id) = tray::hosts_id_of_menu_id(id) {
+                    tray::toggle_hosts_from_menu(app, hosts_id);
+                    return;
+                }
                 tray::handle_menu_event(app, id);
                 return;
             }

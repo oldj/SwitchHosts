@@ -161,11 +161,16 @@ async fn api_toggle(State(state): State<AppRouterState>, Query(q): Query<IdQuery
         return "bad id.";
     }
     log::info!("toggle: {id}");
+    toggle_by_id(&state.app, &id).await
+}
 
+/// Toggle one hosts entry by id, exactly like `GET /api/toggle`. Shared with
+/// the Linux tray menu, which has the same "maybe no main window" problem.
+pub(crate) async fn toggle_by_id(app: &AppHandle<Wry>, id: &str) -> &'static str {
     // A live main window owns the renderer apply pipeline. With no main
     // window, read and compute the toggle only after acquiring the apply lock.
-    if state.app.get_webview_window(MAIN_WINDOW_LABEL).is_some() {
-        let app_state = state.app.state::<AppState>();
+    if app.get_webview_window(MAIN_WINDOW_LABEL).is_some() {
+        let app_state = app.state::<AppState>();
         if let Err(error) = ensure_toggle_allowed(&app_state.application_recovery) {
             return error.as_body();
         }
@@ -176,18 +181,18 @@ async fn api_toggle(State(state): State<AppRouterState>, Query(q): Query<IdQuery
                 return "not found.";
             }
         };
-        let Some(node) = find_node(&manifest.root, &id) else {
+        let Some(node) = find_node(&manifest.root, id) else {
             return "not found.";
         };
         let on = node.get("on").and_then(Value::as_bool).unwrap_or(false);
-        let _ = state.app.emit("toggle_item", json!({ "_args": [id, !on] }));
+        let _ = app.emit("toggle_item", json!({ "_args": [id, !on] }));
         return "ok";
     }
 
     // No main window: a Tauri event with no listener is dropped, so the
     // broadcast above would silently do nothing. Apply in the handler
     // instead, reusing the same selection rules the renderer applies.
-    match apply_toggle_in_backend(&state.app, &id).await {
+    match apply_toggle_in_backend(app, id).await {
         Ok(()) => "ok",
         Err(e) => {
             // A cancelled prompt is a deliberate user action, not a fault;
