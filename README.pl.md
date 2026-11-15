@@ -14,79 +14,31 @@
 
 # SwitchHosts
 
-- [English](README.md)
-- [Türkçe](README.tr.md)
-- [简体中文](README.zh_hans.md)
-- [繁體中文](README.zh_hant.md)
+Łatwo zarządzaj plikami hosts i przełączaj je. Aplikacja oparta na [Tauri](https://tauri.app/) i [React](https://react.dev/).
 
-Strona główna: [https://switchhosts.app](https://switchhosts.app)
-
-SwitchHosts to aplikacja do zarządzania plikiem hosts, zbudowana na bazie [Tauri](https://tauri.app/), [React](https://facebook.github.io/react/), [Jotai](https://jotai.org/), [Mantine](https://mantine.dev/) i innych.
-
-## Zrzut ekranu
+[Strona główna](https://switchhosts.app) · [English](README.md) · [简体中文](README.zh_hans.md) · [繁體中文](README.zh_hant.md) · [Türkçe](README.tr.md)
 
 <img src="./screenshots/sh_light.png" alt="Zrzut ekranu SwitchHosts" width="978">
 
 ## Funkcje
 
-- Zarządzanie wpisami hosts: systemowymi, lokalnymi, zdalnymi, grupami i folderami
-- Szybkie przełączanie hosts z głównego okna lub zasobnika systemowego
-- Podświetlanie składni plików hosts
-- Wyszukiwanie i zamiana w wielu wpisach hosts
-- Ręczne, zaplanowane lub startowe odświeżanie zdalnych hosts
-- Import i eksport danych hosts, w tym import kopii zapasowej z URL
-- Przenoszenie wpisów do kosza oraz późniejsze przywracanie lub trwałe usuwanie
-- Preferencje dla trybu zapisu, proxy, sprawdzania aktualizacji, uruchamiania przy logowaniu, polecenia po zastosowaniu i lokalnego HTTP API
+- Organizowanie lokalnych i zdalnych plików hosts w grupy i foldery
+- Przełączanie hosts z głównego okna lub zasobnika systemowego
+- Edycja z podświetlaniem składni, wyszukiwaniem i zamianą
+- Automatyczne odświeżanie zdalnych hosts oraz import i eksport kopii zapasowych
 
-## Instalacja
+## Pobieranie
 
-### Pobieranie
+Pobierz SwitchHosts z [GitHub Releases](https://github.com/oldj/SwitchHosts/releases) lub zainstaluj w systemie Windows przez [Chocolatey](https://community.chocolatey.org/packages/switchhosts): `choco install switchhosts`.
 
-Możesz pobrać kod źródłowy i zbudować go samodzielnie, lub pobrać wbudowaną wersję z poniższych linków:
+## Dokumentacja i rozwój
 
-- [Pobierz najnowszą wersję SwitchHosts (GitHub release)](https://github.com/oldj/SwitchHosts/releases)
-
-Możesz także zainstalować build używając [menedżera pakietów Chocolatey](https://community.chocolatey.org/packages/switchhosts):
-```powershell
-choco install switchhosts
-```
-
-## Kopia zapasowa
-
-SwitchHosts przechowuje dane w `~/.SwitchHosts` (lub folder `.SwitchHosts` w ścieżce domowej bieżącego użytkownika na Windows). Układ danych v5:
-
-- `~/.SwitchHosts/manifest.json` przechowuje drzewo hosts
-- `~/.SwitchHosts/entries/` przechowuje zawartość lokalnych i zdalnych hosts
-- `~/.SwitchHosts/trashcan.json` przechowuje wpisy kosza
-- `~/.SwitchHosts/internal/config.json` przechowuje preferencje
-- `~/.SwitchHosts/internal/histories/` przechowuje historię systemowego pliku hosts i uruchomień poleceń
-
-Aby wykonać pełną ręczną kopię zapasową, skopiuj cały folder `~/.SwitchHosts`. Eksport w aplikacji tworzy JSON z kopią zapasową danych hosts; nie zawiera preferencji ani historii.
-
-## Tworzenie i budowanie
-
-### Wymagania wstępne
-
-- [Node.js](https://nodejs.org/) 24 LTS
-- [Rust](https://www.rust-lang.org/tools/install) >= 1.90
-- Zależności systemowe Tauri, zobacz [Wymagania Tauri](https://v2.tauri.app/start/prerequisites/)
-
-### Tworzenie
-
-- Uruchom `npm install` aby zainstalować zależności
-- Uruchom `npm run tauri:dev` aby uruchomić aplikację w trybie deweloperskim
-
-### Budowanie i pakowanie
-
-- Uruchom `npm run tauri:build` aby utworzyć wersję produkcyjną
-- Spakowane pliki będą w `./src-tauri/target/release/bundle/`
+Informacje o kopiach zapasowych i wymaganiach dotyczących budowania znajdziesz w [poradniku](docs/guide.pl.md). Edycję hosts i lokalne HTTP API opisuje [poradnik w języku angielskim](docs/guide.md).
 
 ```bash
-# tworzenie
-npm run tauri:dev
-
-# budowanie produkcyjne
-npm run tauri:build
+npm install
+npm run tauri:dev    # tryb deweloperski
+npm run tauri:build  # wersja produkcyjna
 ```
 
 ## Prawa autorskie
